@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+COPY docker/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Composer (from the official Composer image).
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -44,13 +46,16 @@ RUN composer install --no-scripts --no-interaction --prefer-dist --no-progress
 COPY . .
 RUN composer dump-autoload --optimize
 
-# Entrypoint bootstraps .env, the SQLite file, the app key and migrations.
+# Entrypoint prepares runtime files and runs database migrations.
+# Application configuration and secrets are provided through environment
+# variables, e.g. by Doppler.
+
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint
 RUN chmod +x /usr/local/bin/entrypoint
 
 EXPOSE 8000
 ENTRYPOINT ["entrypoint"]
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000", "--no-reload"]
 
 # -----------------------------------------------------------------------------
 # Node / Vite dev server

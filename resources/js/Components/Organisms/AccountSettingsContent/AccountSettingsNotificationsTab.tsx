@@ -41,7 +41,7 @@ export default function AccountSettingsNotificationsTab() {
                             className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4"
                         >
                             <div className="mb-2 flex items-center justify-between">
-                                <p className="text-sm font-medium text-white">
+                                <p className="text-sm font-medium text-[var(--text-color)]">
                                     {item.title}
                                 </p>
                                 <ToggleSwitch
@@ -49,7 +49,7 @@ export default function AccountSettingsNotificationsTab() {
                                     onChange={item.setChecked}
                                 />
                             </div>
-                            <p className="text-xs text-zinc-400">
+                            <p className="text-xs text-[var(--text-gray-color)]">
                                 {item.subtitle}
                             </p>
                         </div>
@@ -63,7 +63,7 @@ export default function AccountSettingsNotificationsTab() {
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
                     <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
                         <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-white">
+                            <p className="text-sm font-medium text-[var(--text-color)]">
                                 Desktop notifications
                             </p>
                             <ToggleSwitch
@@ -71,12 +71,12 @@ export default function AccountSettingsNotificationsTab() {
                                 onChange={setDesktop}
                             />
                         </div>
-                        <p className="mt-2 text-xs text-zinc-400">
+                        <p className="mt-2 text-xs text-[var(--text-gray-color)]">
                             Show browser alerts while Orbit is open.
                         </p>
                     </div>
                     <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                        <p className="text-sm font-medium text-white">
+                        <p className="text-sm font-medium text-[var(--text-color)]">
                             Digest frequency
                         </p>
                         <div className="mt-3 flex gap-2">
@@ -87,7 +87,7 @@ export default function AccountSettingsNotificationsTab() {
                                     onClick={() =>
                                         setDigestFrequency(frequency)
                                     }
-                                    className={`rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium ${digestFrequency === frequency ? 'border-[var(--accent-color)] text-white' : 'text-zinc-300'}`}
+                                    className={`rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium ${digestFrequency === frequency ? 'border-[var(--accent-color)] text-[var(--text-color)]' : 'text-[var(--text-color)]'}`}
                                 >
                                     {frequency}
                                 </button>

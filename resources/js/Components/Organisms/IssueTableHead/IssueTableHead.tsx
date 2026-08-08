@@ -97,7 +97,7 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
                             <IconButton
                                 iconName="Settings"
                                 iconSize={13}
-                                className="text-zinc-500 opacity-40 transition-opacity hover:opacity-100"
+                                className="text-[var(--text-muted-color)] opacity-40 transition-opacity hover:opacity-100"
                             />
                         }
                     />

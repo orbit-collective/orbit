@@ -23,7 +23,7 @@ export const TableHeaderCell: FC<TableHeaderCellProps> = ({
             style={{ width }}
             className={`sticky top-0 z-30 border-b border-[var(--bg-light-color)] bg-[var(--bg-color)] ${
                 canSort ? 'cursor-pointer' : ''
-            } group relative select-none px-4 py-3 text-left font-medium text-zinc-400 transition-colors hover:text-zinc-200`}
+            } group relative select-none px-4 py-3 text-left font-medium text-[var(--text-gray-color)] transition-colors hover:text-[var(--text-color)]`}
             onClick={() => canSort && onSort(column)}
         >
             <div className="flex items-center justify-start gap-1.5 text-left">

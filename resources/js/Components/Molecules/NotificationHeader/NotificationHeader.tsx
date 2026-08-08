@@ -16,10 +16,10 @@ function NotificationHeader({
     onMarkAllAsRead,
 }: NotificationHeaderProps) {
     return (
-        <div className="flex flex-col gap-3 border-b border-white/10 pb-4">
+        <div className="flex flex-col gap-3 border-b border-[var(--border-color)] pb-4">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-lg font-semibold tracking-tight text-white">
+                    <h1 className="text-lg font-semibold tracking-tight text-[var(--text-color)]">
                         Notifications
                     </h1>
                     {unreadCount > 0 && (
@@ -45,7 +45,7 @@ function NotificationHeader({
             </div>
 
             <div className="flex items-center justify-between pt-1">
-                <span className="text-xs font-medium text-gray-400">
+                <span className="text-xs font-medium text-[var(--text-gray-color)]">
                     Only show unread
                 </span>
                 <ToggleSwitch

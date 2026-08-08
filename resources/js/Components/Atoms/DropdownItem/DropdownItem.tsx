@@ -3,11 +3,11 @@ import { cn } from '@/utils/cn';
 import { cva } from 'class-variance-authority';
 
 export const dropdownItemVariants = cva(
-    'group w-full text-left bg-transparent border-none outline-none px-3 py-2 text-sm text-zinc-400 rounded-md cursor-pointer transition-all duration-150 font-inherit flex items-center gap-2 hover:bg-zinc-800 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-zinc-400',
+    'group w-full text-left bg-transparent border-none outline-none px-3 py-2 text-sm text-[var(--text-gray-color)] rounded-md cursor-pointer transition-all duration-150 font-inherit flex items-center gap-2 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[var(--text-gray-color)]',
     {
         variants: {
             isActive: {
-                true: 'bg-[var(--accent-color)]/10 text-zinc-100',
+                true: 'bg-[var(--accent-color)]/10 text-[var(--text-color)]',
                 false: '',
             },
             variant: {
@@ -51,7 +51,7 @@ export default function DropdownItem({
                 {label}
             </span>
             {trailing && (
-                <span className="flex shrink-0 items-center text-zinc-500">
+                <span className="flex shrink-0 items-center text-[var(--text-muted-color)]">
                     {trailing}
                 </span>
             )}

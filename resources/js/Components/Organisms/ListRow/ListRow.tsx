@@ -13,7 +13,7 @@ import { formatTimeAgo } from '@/utils/time';
 import React, { useEffect, useRef, useState } from 'react';
 
 const cellBase =
-    'px-3 py-2 border-b border-white/[0.04] align-middle text-[12px] font-normal';
+    'px-3 py-2 border-b border-[var(--border-color)] align-middle text-[12px] font-normal';
 
 export const ListRow = ({
     issue,
@@ -92,7 +92,7 @@ export const ListRow = ({
                     }
                 }}
                 className={cn(
-                    'group/row cursor-pointer select-none transition-colors hover:bg-white/[0.03]',
+                    'group/row cursor-pointer select-none transition-colors hover:bg-[var(--bg-light-color)]',
                 )}
                 style={{ height: rowHeight }}
             >
@@ -104,7 +104,7 @@ export const ListRow = ({
                         <input
                             type="checkbox"
                             className={cn(
-                                'h-3.5 w-3.5 cursor-pointer rounded border-zinc-700/60 bg-zinc-900/50 text-indigo-500 transition-opacity focus:ring-0',
+                                'h-3.5 w-3.5 cursor-pointer rounded border-[var(--border-color-strong)] bg-[var(--surface-color)] text-indigo-500 transition-opacity focus:ring-0',
                                 !issue?.isChecked &&
                                     'opacity-0 group-hover/row:opacity-100',
                                 isClosed && 'opacity-20',
@@ -119,7 +119,7 @@ export const ListRow = ({
                     <td
                         className={cn(
                             cellBase,
-                            'w-[75px] font-mono text-[11px] text-zinc-500',
+                            'w-[75px] font-mono text-[11px] text-[var(--text-muted-color)]',
                         )}
                         data-column="id"
                     >
@@ -128,13 +128,17 @@ export const ListRow = ({
                 )}
                 {enabledColumns.title && (
                     <td
-                        className={cn(cellBase, 'truncate text-zinc-200')}
+                        className={cn(
+                            cellBase,
+                            'truncate text-[var(--text-color)]',
+                        )}
                         data-column="title"
                     >
                         <span
                             className={cn(
                                 'truncate font-medium',
-                                isClosed && 'text-zinc-500 line-through',
+                                isClosed &&
+                                    'text-[var(--text-muted-color)] line-through',
                             )}
                         >
                             {issue.title}
@@ -145,7 +149,7 @@ export const ListRow = ({
                     <td className={cellBase} data-column="status">
                         <div className="flex items-center gap-1.5">
                             <StatusIcon status={issue.status} />
-                            <span className="truncate capitalize text-zinc-300">
+                            <span className="truncate capitalize text-[var(--text-color)]">
                                 {formatStatusLabel(issue.status)}
                             </span>
                         </div>
@@ -153,7 +157,10 @@ export const ListRow = ({
                 )}
                 {enabledColumns.assignee && (
                     <td
-                        className={cn(cellBase, 'text-zinc-400')}
+                        className={cn(
+                            cellBase,
+                            'text-[var(--text-gray-color)]',
+                        )}
                         data-column="assignee"
                     >
                         <UserBadge
@@ -167,7 +174,7 @@ export const ListRow = ({
                     <td className={cellBase} data-column="priority">
                         <div className="flex items-center gap-1.5">
                             <PriorityIcon priority={issue.priority} />
-                            <span className="truncate capitalize text-zinc-300">
+                            <span className="truncate capitalize text-[var(--text-color)]">
                                 {issue.priority}
                             </span>
                         </div>
@@ -186,7 +193,7 @@ export const ListRow = ({
                     <td
                         className={cn(
                             cellBase,
-                            'whitespace-nowrap text-[11px] text-zinc-500',
+                            'whitespace-nowrap text-[11px] text-[var(--text-muted-color)]',
                         )}
                         data-column="updated"
                     >
@@ -197,7 +204,7 @@ export const ListRow = ({
                     <td
                         className={cn(
                             cellBase,
-                            'whitespace-nowrap text-[11px] text-zinc-500',
+                            'whitespace-nowrap text-[11px] text-[var(--text-muted-color)]',
                         )}
                         data-column="start_date"
                     >
@@ -208,7 +215,7 @@ export const ListRow = ({
                     <td
                         className={cn(
                             cellBase,
-                            'whitespace-nowrap text-[11px] text-zinc-500',
+                            'whitespace-nowrap text-[11px] text-[var(--text-muted-color)]',
                         )}
                         data-column="end_date"
                     >
@@ -225,7 +232,7 @@ export const ListRow = ({
                         iconName="Ellipsis"
                         onClick={handleEllipsisClick}
                         className={cn(
-                            'rounded p-1 text-zinc-500 opacity-0 hover:bg-white/10 hover:text-zinc-200 group-hover/row:opacity-100',
+                            'rounded p-1 text-[var(--text-muted-color)] opacity-0 hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)] group-hover/row:opacity-100',
                             isMenuOpen && 'opacity-100',
                         )}
                     />

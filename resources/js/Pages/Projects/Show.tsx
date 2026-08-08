@@ -14,7 +14,7 @@ import {
 } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface QueryParams {
     sort?: SortingColumn;
@@ -47,10 +47,6 @@ export default function Show({
         }
         return 'List';
     });
-
-    useEffect(() => {
-        localStorage.setItem('selectedLook', selectedLook);
-    }, [selectedLook]);
 
     return (
         <MainLayout

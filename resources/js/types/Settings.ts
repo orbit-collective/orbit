@@ -23,6 +23,11 @@ export interface SettingsTab {
     icon: keyof typeof icons;
     section: SettingsSectionId;
     description: string;
+    /**
+     * Sections still under construction are kept in the nav but not
+     * navigable. Flip to `true` once a section's content is ready to ship.
+     */
+    enabled: boolean;
 }
 
 export const SETTINGS_TABS: SettingsTab[] = [
@@ -33,6 +38,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         section: 'account',
         description:
             'Control personal experience defaults and display behavior.',
+        enabled: true,
     },
     {
         id: 'profile',
@@ -40,6 +46,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'User',
         section: 'account',
         description: 'Manage your personal details and profile visibility.',
+        enabled: true,
     },
     {
         id: 'notifications',
@@ -48,6 +55,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         section: 'account',
         description:
             'Adjust delivery channels and activity notification rules.',
+        enabled: false,
     },
     {
         id: 'security-access',
@@ -55,6 +63,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'ShieldCheck',
         section: 'account',
         description: 'Review authentication, sessions, and access controls.',
+        enabled: true,
     },
     {
         id: 'integrations',
@@ -62,6 +71,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Plug',
         section: 'account',
         description: 'Connect third-party tools and external workflows.',
+        enabled: false,
     },
     {
         id: 'export',
@@ -69,6 +79,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Download',
         section: 'account',
         description: 'Prepare and download your account-related data exports.',
+        enabled: false,
     },
     {
         id: 'labels',
@@ -76,6 +87,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Tag',
         section: 'workspace',
         description: 'Define label taxonomy used across issues and projects.',
+        enabled: false,
     },
     {
         id: 'statuses',
@@ -83,6 +95,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'ListTodo',
         section: 'workspace',
         description: 'Configure lifecycle statuses for work tracking.',
+        enabled: false,
     },
     {
         id: 'priorities',
@@ -90,6 +103,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Flag',
         section: 'workspace',
         description: 'Standardize priority levels and urgency definitions.',
+        enabled: false,
     },
     {
         id: 'templates',
@@ -97,6 +111,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'FileText',
         section: 'workspace',
         description: 'Create reusable templates for consistent issue creation.',
+        enabled: false,
     },
     {
         id: 'documents',
@@ -104,6 +119,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'File',
         section: 'workspace',
         description: 'Manage workspace documentation structure and defaults.',
+        enabled: false,
     },
     {
         id: 'members',
@@ -111,6 +127,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Users',
         section: 'workspace',
         description: 'View and manage team members in your workspace.',
+        enabled: false,
     },
     {
         id: 'roles-management',
@@ -118,6 +135,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Shield',
         section: 'workspace',
         description: 'Define roles, permissions, and administrative policies.',
+        enabled: false,
     },
 ];
 
@@ -125,6 +143,10 @@ export const SETTINGS_DEFAULT_TAB: SettingsTabId = 'preferences';
 
 export const isSettingsTabId = (value: string): value is SettingsTabId => {
     return SETTINGS_TABS.some((tab) => tab.id === value);
+};
+
+export const isEnabledSettingsTabId = (value: SettingsTabId): boolean => {
+    return SETTINGS_TABS.find((tab) => tab.id === value)?.enabled ?? false;
 };
 
 export const ACCOUNT_SETTINGS_TAB_IDS = [

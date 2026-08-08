@@ -3,6 +3,7 @@ import Divider from '@/Components/Atoms/Divider/Divider';
 import AuthFormHeader from '@/Components/Molecules/AuthFormHeader/AuthFormHeader';
 import FormField from '@/Components/Molecules/FormField/FormField';
 import PasswordField from '@/Components/Molecules/PasswordField/PasswordField';
+import PasswordStrengthMeter from '@/Components/Molecules/PasswordStrengthMeter/PasswordStrengthMeter';
 import SocialLoginButtons from '@/Components/Molecules/SocialLoginButtons/SocialLoginButtons';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -69,15 +70,20 @@ export default function Register() {
                         autoComplete="username"
                         required
                     />
-                    <PasswordField
-                        id="password"
-                        label="Password"
-                        value={data.password}
-                        onChange={(e) => setData('password', e.target.value)}
-                        error={errors.password}
-                        autoComplete="new-password"
-                        required
-                    />
+                    <div className="space-y-1.5">
+                        <PasswordField
+                            id="password"
+                            label="Password"
+                            value={data.password}
+                            onChange={(e) =>
+                                setData('password', e.target.value)
+                            }
+                            error={errors.password}
+                            autoComplete="new-password"
+                            required
+                        />
+                        <PasswordStrengthMeter password={data.password} />
+                    </div>
                     <PasswordField
                         id="password_confirmation"
                         label="Confirm password"

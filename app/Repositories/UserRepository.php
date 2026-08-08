@@ -32,4 +32,13 @@ class UserRepository {
         $user->update(['has_completed_project_onboarding' => true]);
         return $user;
     }
+
+    public function rename(User $user, string $newName): User {
+        $user->update(['name' => $newName]);
+        return $user;
+    }
+    public function updatePassword(User $user, string $newPassword): User {
+        $user->update(['password' => $newPassword]);
+        return $user;
+    }
 }

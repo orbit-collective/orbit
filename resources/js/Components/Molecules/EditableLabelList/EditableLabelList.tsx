@@ -76,16 +76,16 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
                 </button>
             </div>
             {isOpen && (
-                <div className="absolute left-0 top-[calc(100%+6px)] z-[100] w-64 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/95 p-1.5 shadow-2xl backdrop-blur-md">
+                <div className="absolute left-0 top-[calc(100%+6px)] z-[100] w-64 overflow-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] p-1.5 shadow-2xl backdrop-blur-md">
                     <div className="flex items-center justify-between px-2 py-1.5">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                             Labels
                         </p>
                         {labels.length > 0 && (
                             <button
                                 type="button"
                                 onClick={() => onSave([])}
-                                className="cursor-pointer text-[10px] font-medium text-zinc-500 transition-colors hover:text-zinc-200"
+                                className="cursor-pointer text-[10px] font-medium text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
                             >
                                 Clear
                             </button>
@@ -97,12 +97,12 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Change or add labels..."
-                            className="w-full rounded-md bg-zinc-800 px-2 py-1 text-xs text-zinc-100 outline-none placeholder:text-zinc-500"
+                            className="w-full rounded-md bg-[var(--surface-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none placeholder:text-[var(--text-muted-color)]"
                         />
                     </div>
                     <div className="max-h-64 space-y-0.5 overflow-y-auto">
                         {filteredLabels.length === 0 ? (
-                            <p className="px-2 py-2 text-xs text-zinc-500">
+                            <p className="px-2 py-2 text-xs text-[var(--text-muted-color)]">
                                 No labels found.
                             </p>
                         ) : (
@@ -116,8 +116,8 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
                                         className={cn(
                                             'group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-all duration-150',
                                             isSelected
-                                                ? 'bg-[var(--accent-color)]/10 text-zinc-100'
-                                                : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200',
+                                                ? 'bg-[var(--accent-color)]/10 text-[var(--text-color)]'
+                                                : 'text-[var(--text-gray-color)] hover:bg-[var(--surface-color)] hover:text-[var(--text-color)]',
                                         )}
                                     >
                                         <div
@@ -125,7 +125,7 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
                                                 'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all duration-150',
                                                 isSelected
                                                     ? 'border-[var(--accent-color)] bg-[var(--accent-color)]'
-                                                    : 'border-zinc-700 bg-zinc-800 group-hover:border-zinc-600',
+                                                    : 'border-[var(--border-color-strong)] bg-[var(--surface-color)] group-hover:border-[var(--border-color-strong)]',
                                             )}
                                         >
                                             {isSelected && (

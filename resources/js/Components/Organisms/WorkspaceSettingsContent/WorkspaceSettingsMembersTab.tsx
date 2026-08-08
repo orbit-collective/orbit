@@ -43,20 +43,20 @@ export default function WorkspaceSettingsMembersTab() {
                                     {member.initials}
                                 </span>
                                 <div>
-                                    <p className="text-sm text-white">
+                                    <p className="text-sm text-[var(--text-color)]">
                                         {member.name}
                                     </p>
-                                    <p className="text-xs text-zinc-400">
+                                    <p className="text-xs text-[var(--text-gray-color)]">
                                         {member.role}
                                     </p>
-                                    <p className="text-[10px] text-zinc-500">
+                                    <p className="text-[10px] text-[var(--text-muted-color)]">
                                         {member.activity}
                                     </p>
                                 </div>
                             </div>
                             <button
                                 type="button"
-                                className="rounded-md border border-[var(--bg-light-color)] px-2 py-1 text-xs text-zinc-300"
+                                className="rounded-md border border-[var(--bg-light-color)] px-2 py-1 text-xs text-[var(--text-color)]"
                             >
                                 Manage
                             </button>
@@ -88,7 +88,7 @@ export default function WorkspaceSettingsMembersTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                         >
                             Member
                         </button>

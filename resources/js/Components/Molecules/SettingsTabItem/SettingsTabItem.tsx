@@ -1,3 +1,4 @@
+import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { Link } from '@inertiajs/react';
 import { icons } from 'lucide-react';
@@ -6,49 +7,63 @@ interface SettingsTabItemProps {
     label: string;
     href: string;
     icon: keyof typeof icons;
-    description?: string;
     isActive?: boolean;
+    isDisabled?: boolean;
+    onClick?: () => void;
 }
 
 export default function SettingsTabItem({
     label,
     href,
     icon,
-    description,
     isActive = false,
+    isDisabled = false,
+    onClick,
 }: SettingsTabItemProps) {
+    const content = (
+        <>
+            <Icon
+                name={icon}
+                size={16}
+                className={
+                    isActive
+                        ? 'text-[var(--accent-color)]'
+                        : isDisabled
+                          ? 'text-[var(--text-muted-color)]'
+                          : 'text-[var(--text-muted-color)] group-hover:text-[var(--text-color)]'
+                }
+            />
+            <span className="min-w-0 flex-1 truncate font-medium">{label}</span>
+            {isDisabled && (
+                <Badge color="closed" className="shrink-0 tracking-wide">
+                    Soon
+                </Badge>
+            )}
+        </>
+    );
+
+    if (isDisabled) {
+        return (
+            <div
+                aria-disabled="true"
+                className="group flex cursor-not-allowed items-center gap-2.5 rounded-md border-l-2 border-transparent px-2.5 py-2 text-sm text-[var(--text-muted-color)]"
+            >
+                {content}
+            </div>
+        );
+    }
+
     return (
         <Link
             href={href}
-            className={`group flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-xs transition-all sm:text-sm ${
+            onClick={onClick}
+            className={`group flex items-center gap-2.5 rounded-md border-l-2 px-2.5 py-2 text-sm transition-colors ${
                 isActive
-                    ? 'border-[var(--accent-color-opacity)] bg-[var(--accent-color-opacity)] text-white'
-                    : 'border-transparent text-zinc-400 hover:border-[var(--bg-light-color)] hover:bg-[var(--bg-light-color)] hover:text-white'
+                    ? 'border-[var(--accent-color)] bg-[var(--bg-light-color)] text-[var(--text-color)]'
+                    : 'border-transparent text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]'
             }`}
         >
-            <span
-                className={`mt-0.5 rounded-md p-1.5 ${
-                    isActive
-                        ? 'bg-[var(--accent-color)]/20 text-[var(--accent-color)]'
-                        : 'bg-[var(--bg-light-color)] text-zinc-300 group-hover:text-white'
-                }`}
-            >
-                <Icon name={icon} size={14} />
-            </span>
-            <span className="min-w-0 space-y-0.5">
-                <span className="block truncate font-medium">{label}</span>
-                {description ? (
-                    <span
-                        className={`line-clamp-1 hidden text-xs sm:block ${
-                            isActive
-                                ? 'text-zinc-200'
-                                : 'text-zinc-500 group-hover:text-zinc-300'
-                        }`}
-                    >
-                        {description}
-                    </span>
-                ) : null}
-            </span>
+            {content}
         </Link>
     );
 }

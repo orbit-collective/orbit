@@ -11,7 +11,7 @@ export const iconButtonVariants = cva(
                 default:
                     'bg-transparent border-none p-2 rounded-full hover:bg-[var(--bg-light-color)]/30 transition-colors duration-100',
                 onboardingSecondary:
-                    'h-10 w-10 rounded-full border border-zinc-800 bg-zinc-900 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-white disabled:hover:border-zinc-800 disabled:hover:bg-zinc-900',
+                    'h-10 w-10 rounded-full border border-[var(--border-color-strong)] bg-[var(--surface-color)] text-[var(--text-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--surface-color)] hover:text-[var(--text-color)] disabled:hover:border-[var(--border-color-strong)] disabled:hover:bg-[var(--surface-color)]',
                 onboardingPrimary:
                     'h-10 w-10 rounded-full bg-violet-600 text-white shadow-lg shadow-violet-600/30 hover:bg-violet-500 hover:scale-105',
             },

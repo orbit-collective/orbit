@@ -33,7 +33,7 @@ import React, {
 export interface AvatarProps {
     src?: string;
     alt?: string;
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
     initials?: string;
 }
 export interface BadgeProps

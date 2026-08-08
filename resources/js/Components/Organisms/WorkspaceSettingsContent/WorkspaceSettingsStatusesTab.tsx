@@ -16,12 +16,12 @@ export default function WorkspaceSettingsStatusesTab() {
             >
                 <div className="space-y-4 px-5 py-4">
                     <div className="flex items-center justify-between rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-3">
-                        <p className="text-sm font-medium text-white">
+                        <p className="text-sm font-medium text-[var(--text-color)]">
                             Status model
                         </p>
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                             onClick={() =>
                                 setStatusModel(
                                     statusModel === 'Kanban flow'
@@ -34,12 +34,12 @@ export default function WorkspaceSettingsStatusesTab() {
                         </button>
                     </div>
                     <div className="flex items-center justify-between rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] p-3">
-                        <p className="text-sm text-zinc-300">
+                        <p className="text-sm text-[var(--text-color)]">
                             Status set customization
                         </p>
                         <button
                             type="button"
-                            className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:border-zinc-500"
+                            className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
                         >
                             + Add status
                         </button>
@@ -67,7 +67,7 @@ export default function WorkspaceSettingsStatusesTab() {
                                                 | 'closed'
                                         }
                                     />
-                                    <p className="text-sm font-medium text-white">
+                                    <p className="text-sm font-medium text-[var(--text-color)]">
                                         {status.label}
                                     </p>
                                 </div>
@@ -78,16 +78,16 @@ export default function WorkspaceSettingsStatusesTab() {
                                     }
                                     className={`mb-2 rounded-full border px-2 py-0.5 text-[10px] ${
                                         selectedStatus === status.label
-                                            ? 'border-[var(--accent-color)] text-white'
-                                            : 'border-[var(--bg-light-color)] text-zinc-400'
+                                            ? 'border-[var(--accent-color)] text-[var(--text-color)]'
+                                            : 'border-[var(--bg-light-color)] text-[var(--text-gray-color)]'
                                     }`}
                                 >
                                     Configure
                                 </button>
-                                <p className="text-xs text-zinc-400">
+                                <p className="text-xs text-[var(--text-gray-color)]">
                                     {status.count} items in snapshot
                                 </p>
-                                <div className="mt-2 h-1.5 rounded-full bg-zinc-700">
+                                <div className="mt-2 h-1.5 rounded-full bg-[var(--surface-color)]">
                                     <div
                                         className={`h-1.5 rounded-full ${
                                             status.key === 'open'
@@ -122,7 +122,7 @@ export default function WorkspaceSettingsStatusesTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                         >
                             Run migration
                         </button>

@@ -83,10 +83,10 @@ export default function Dashboard({
                         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                             <div className="flex min-h-[400px] flex-col lg:col-span-2">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                                         Recent Work Activity
                                     </h3>
-                                    <span className="text-[10px] font-medium text-zinc-500">
+                                    <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
                                         Showing {issues.slice(0, 20).length}{' '}
                                         latest issues
                                     </span>
@@ -98,10 +98,10 @@ export default function Dashboard({
 
                             <div className="flex flex-col gap-4">
                                 <div className="mb-2 flex items-center justify-between">
-                                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                                         Projects Directory
                                     </h3>
-                                    <span className="text-[10px] font-medium text-zinc-500">
+                                    <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
                                         Showing {projects.slice(0, 3).length}{' '}
                                         latest projects
                                     </span>
@@ -121,7 +121,7 @@ export default function Dashboard({
                                             {projects.length > 3 && (
                                                 <Link
                                                     href="/projects"
-                                                    className="cursor-pointer rounded-lg border border-dashed border-[var(--bg-light-color)] py-2.5 text-center text-xs font-semibold text-zinc-500 transition-colors hover:text-white"
+                                                    className="cursor-pointer rounded-lg border border-dashed border-[var(--bg-light-color)] py-2.5 text-center text-xs font-semibold text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
                                                 >
                                                     View all {projects.length}{' '}
                                                     projects

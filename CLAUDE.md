@@ -28,6 +28,7 @@ The full stack also runs in Docker — two services, `app` (Laravel on :8000) an
 - `make setup` — build images (no cache) and start detached. `make up`/`make dev` — foreground; `make down` — detached; `make clean` — stop and drop volumes.
 - `make test` (PHP/Pest), `make test-js` (Vitest once), `make test-coverage` (PHP with the coverage gate), `make test-js-coverage` (Vitest with the coverage gate), `make lint`, `make type-check` — run the suites inside the containers. The `app` image includes PCOV so PHP coverage works out of the box.
 - `make shell` (app shell), `make tinker`, `make migrate`, `make fresh` (migrate:fresh --seed), `make logs`.
+- `make npm-install` / `make composer-install` — run after adding/updating/removing an npm or composer package (including via a branch merge). `node_modules`/`vendor` are anonymous volumes, so a plain `make up`/`make dev` reuses the stale ones already inside the container image; these targets rebuild the relevant image and recreate its container with `--renew-anon-volumes` to pick up the new dependencies.
 - Uses `.env.docker` for container config.
 
 ## Architecture

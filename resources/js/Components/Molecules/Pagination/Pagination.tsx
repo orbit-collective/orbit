@@ -10,7 +10,7 @@ import { useState } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const paginationVariants = cva(
-    'flex items-center justify-center min-w-[32px] h-[32px] px-2 rounded-md text-sm text-white no-underline transition-all duration-100 ease-in-out border border-solid border-transparent cursor-pointer',
+    'flex items-center justify-center min-w-[32px] h-[32px] px-2 rounded-md text-sm text-[var(--text-color)] no-underline transition-all duration-100 ease-in-out border border-solid border-transparent cursor-pointer',
     {
         variants: {
             active: {
@@ -18,7 +18,7 @@ const paginationVariants = cva(
                 false: 'hover:bg-[var(--accent-color)]/10 hover:border-[var(--accent-color)]/20 hover:text-[var(--accent-color)]',
             },
             disabled: {
-                true: 'text-zinc-400 cursor-not-allowed opacity-40 pointer-events-none',
+                true: 'text-[var(--text-gray-color)] cursor-not-allowed opacity-40 pointer-events-none',
                 false: '',
             },
         },
@@ -72,20 +72,30 @@ const Pagination = ({
 
     return (
         <div className="mt-auto flex flex-col items-center justify-between gap-4 border-t border-solid border-t-[var(--bg-light-color)] bg-[var(--bg-color)] px-6 py-4 sm:flex-row sm:gap-0">
-            <div className="text-sm text-zinc-400">
+            <div className="text-sm text-[var(--text-gray-color)]">
                 Showing{' '}
-                <span className="font-semibold text-white">{from || 0}</span> to{' '}
-                <span className="font-semibold text-white">{to || 0}</span> of{' '}
-                <span className="font-semibold text-white">{total}</span>{' '}
+                <span className="font-semibold text-[var(--text-color)]">
+                    {from || 0}
+                </span>{' '}
+                to{' '}
+                <span className="font-semibold text-[var(--text-color)]">
+                    {to || 0}
+                </span>{' '}
+                of{' '}
+                <span className="font-semibold text-[var(--text-color)]">
+                    {total}
+                </span>{' '}
                 results
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 sm:flex-nowrap sm:gap-6">
                 <div className="relative flex min-w-[140px] items-center gap-2">
-                    <span className="text-zinc-400">Rows per page:</span>
+                    <span className="text-[var(--text-gray-color)]">
+                        Rows per page:
+                    </span>
                     <DropdownTrigger
                         label={
                             <div className="flex items-center gap-2">
-                                <span className="font-semibold text-white">
+                                <span className="font-semibold text-[var(--text-color)]">
                                     {currentPerPage}
                                 </span>
                             </div>

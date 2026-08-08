@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
@@ -65,4 +66,12 @@ test('it can mark project onboarding as completed for a user', function () {
 
     expect($updatedUser->has_completed_project_onboarding)->toBeTrue();
     $this->assertDatabaseHas('users', ['id' => $user->id, 'has_completed_project_onboarding' => true]);
+});
+
+test('it can update a user password', function () {
+    $user = User::factory()->create(['password' => 'old-password']);
+
+    $updatedUser = $this->repository->updatePassword($user, 'new-password');
+
+    expect(Hash::check('new-password', $updatedUser->password))->toBeTrue();
 });

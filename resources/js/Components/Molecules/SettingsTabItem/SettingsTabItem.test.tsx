@@ -8,12 +8,14 @@ vi.mock('@inertiajs/react', () => ({
         children,
         href,
         className,
+        onClick,
     }: {
         children: React.ReactNode;
         href?: string;
         className?: string;
+        onClick?: () => void;
     }) => (
-        <a href={href} className={className}>
+        <a href={href} className={className} onClick={onClick}>
             {children}
         </a>
     ),
@@ -46,7 +48,21 @@ describe('SettingsTabItem', () => {
         );
 
         expect(screen.getByText('Preferences').closest('a')).toHaveClass(
-            'text-white',
+            'text-[var(--text-color)]',
         );
+    });
+
+    test('renders as non-navigable with a "Soon" badge when disabled', () => {
+        render(
+            <SettingsTabItem
+                label="Members"
+                href="/settings?tab=members"
+                icon="Users"
+                isDisabled
+            />,
+        );
+
+        expect(screen.getByText('Members').closest('a')).toBeNull();
+        expect(screen.getByText('Soon')).toBeInTheDocument();
     });
 });

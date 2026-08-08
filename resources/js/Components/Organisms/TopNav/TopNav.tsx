@@ -10,12 +10,12 @@ import Icon from '../../Atoms/Icon/Icon';
 import NewIssueModal from '../NewIssueModal/NewIssueModal';
 
 const buttonVariants = cva(
-    'cursor-pointer py-2 text-sm transition-all duration-100 ease-in-out hover:text-white flex items-center justify-center gap-1',
+    'cursor-pointer py-2 text-sm transition-all duration-100 ease-in-out hover:text-[var(--text-color)] flex items-center justify-center gap-1',
     {
         variants: {
             isActive: {
-                true: 'text-white',
-                false: 'text-zinc-400',
+                true: 'text-[var(--text-color)]',
+                false: 'text-[var(--text-gray-color)]',
             },
         },
     },
@@ -77,7 +77,11 @@ const TopNav: React.FC<TopNavProps> = ({
             >
                 <div className={'flex h-full flex-col justify-center gap-4'}>
                     <div className={'flex items-center gap-2'}>
-                        <h1 className={'m-0 text-sm font-semibold text-white'}>
+                        <h1
+                            className={
+                                'm-0 text-sm font-semibold text-[var(--text-color)]'
+                            }
+                        >
                             {project.name}
                         </h1>
                     </div>
@@ -92,8 +96,8 @@ const TopNav: React.FC<TopNavProps> = ({
                                 name={'Rows3'}
                                 className={
                                     selectedLook === 'List'
-                                        ? 'text-white'
-                                        : 'text-zinc-400'
+                                        ? 'text-[var(--text-color)]'
+                                        : 'text-[var(--text-gray-color)]'
                                 }
                             />
                             List
@@ -108,8 +112,8 @@ const TopNav: React.FC<TopNavProps> = ({
                                 name={'Columns3'}
                                 className={
                                     selectedLook === 'Board'
-                                        ? 'text-white'
-                                        : 'text-zinc-400'
+                                        ? 'text-[var(--text-color)]'
+                                        : 'text-[var(--text-gray-color)]'
                                 }
                             />
                             Board
@@ -124,8 +128,8 @@ const TopNav: React.FC<TopNavProps> = ({
                                 name={'CalendarDays'}
                                 className={
                                     selectedLook === 'Calendar'
-                                        ? 'text-white'
-                                        : 'text-zinc-400'
+                                        ? 'text-[var(--text-color)]'
+                                        : 'text-[var(--text-gray-color)]'
                                 }
                             />
                             Calendar
@@ -153,7 +157,11 @@ const TopNav: React.FC<TopNavProps> = ({
                                     'flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]'
                                 }
                             >
-                                <Icon name="Search" size={18} color="#999" />
+                                <Icon
+                                    name="Search"
+                                    size={18}
+                                    color="var(--text-gray-color)"
+                                />
                             </button>
                             <button
                                 className={
@@ -165,7 +173,11 @@ const TopNav: React.FC<TopNavProps> = ({
                                     )
                                 }
                             >
-                                <Icon name="Bell" size={18} color="#999" />
+                                <Icon
+                                    name="Bell"
+                                    size={18}
+                                    color="var(--text-gray-color)"
+                                />
                             </button>
                             <button
                                 className={
@@ -175,7 +187,7 @@ const TopNav: React.FC<TopNavProps> = ({
                                 <Icon
                                     name="CircleQuestionMark"
                                     size={18}
-                                    color="#999"
+                                    color="var(--text-gray-color)"
                                 />
                             </button>
                         </div>

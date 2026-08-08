@@ -306,7 +306,7 @@ export default function Show({
             </div>
             {(showStartDate || showEndDate) && (
                 <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
                     onClick={() => {
                         setShowStartDate(false);
                         setShowEndDate(false);

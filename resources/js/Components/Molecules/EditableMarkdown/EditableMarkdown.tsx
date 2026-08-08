@@ -38,7 +38,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         ],
         editorProps: {
             attributes: {
-                class: 'prose prose-invert max-w-none text-sm focus:outline-none',
+                class: 'prose max-w-none text-sm focus:outline-none',
             },
         },
         onBlur: ({ editor }) => commit(editor),

@@ -26,7 +26,9 @@ describe('ToggleSwitch Component', () => {
             <ToggleSwitch checked={false} onChange={() => {}} />,
         );
 
-        expect(screen.getByRole('button')).toHaveClass('bg-white/15');
+        expect(screen.getByRole('button')).toHaveClass(
+            'bg-[var(--bg-light-color)]',
+        );
         expect(container.querySelector('span')).toHaveClass('translate-x-0');
     });
 

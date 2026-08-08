@@ -15,7 +15,7 @@ const ModalFooter: React.FC<ModalFooterProps> = ({
                 <>
                     <button
                         type="button"
-                        className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-zinc-400 transition-colors duration-150 hover:text-white"
+                        className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-gray-color)] transition-colors duration-150 hover:text-[var(--text-color)]"
                         onClick={onCancel}
                     >
                         {cancelLabel}

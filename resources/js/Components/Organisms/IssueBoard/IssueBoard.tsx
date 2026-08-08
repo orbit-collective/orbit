@@ -186,7 +186,7 @@ function IssueBoard({ issues }: IssueBoardProps) {
         >
             <div className="flex h-full w-full flex-col bg-[var(--bg-color)]">
                 <div className="flex items-center px-4 pt-4 md:px-6 md:pt-6">
-                    <div className="inline-flex items-center gap-1 rounded-lg border border-white/[0.06] bg-[#141414] p-1">
+                    <div className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-color)] bg-[var(--surface-color)] p-1">
                         {GROUP_BY_OPTIONS.map((option) => (
                             <button
                                 key={option.value}
@@ -195,8 +195,8 @@ function IssueBoard({ issues }: IssueBoardProps) {
                                 className={cn(
                                     'rounded-md px-3 py-1 text-xs font-medium transition-colors',
                                     groupBy === option.value
-                                        ? 'bg-white/10 text-zinc-100'
-                                        : 'text-zinc-500 hover:text-zinc-300',
+                                        ? 'bg-[var(--bg-light-color-hover)] text-[var(--text-color)]'
+                                        : 'text-[var(--text-muted-color)] hover:text-[var(--text-gray-color)]',
                                 )}
                             >
                                 {option.label}

@@ -69,14 +69,14 @@ export const ShortcutHelpModal: React.FC = () => {
     }, [filteredShortcuts]);
 
     return (
-        <div className="animate-in fade-in zoom-in shortcut-modal-marker flex w-full flex-col overflow-hidden rounded-xl border border-[#333] bg-[#1c1c1c] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] duration-200">
-            <div className="flex items-center gap-3 border-b border-[#333] bg-[#1a1a1a] px-4 py-4">
-                <Search size={18} className="text-[#555]" />
+        <div className="animate-in fade-in zoom-in shortcut-modal-marker flex w-full flex-col overflow-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-color)] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] duration-200">
+            <div className="flex items-center gap-3 border-b border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] px-4 py-4">
+                <Search size={18} className="text-[var(--text-muted-color)]" />
                 <input
                     autoFocus
                     type="text"
                     placeholder="Search shortcuts..."
-                    className="flex-1 border-none bg-transparent text-[14px] text-[#eee] placeholder-[#444] outline-none focus:ring-0"
+                    className="flex-1 border-none bg-transparent text-[14px] text-[var(--text-color)] placeholder-[var(--text-muted-color)] outline-none focus:ring-0"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -84,16 +84,16 @@ export const ShortcutHelpModal: React.FC = () => {
             </div>
             <div
                 ref={scrollContainerRef}
-                className="scrollbar-thin scrollbar-thumb-[#333] max-h-[450px] flex-1 overflow-y-auto p-1.5"
+                className="scrollbar-thin scrollbar-thumb-[var(--border-color-strong)] max-h-[450px] flex-1 overflow-y-auto p-1.5"
             >
                 {Object.keys(categories).length === 0 ? (
-                    <div className="py-12 text-center text-sm text-[#555]">
+                    <div className="py-12 text-center text-sm text-[var(--text-muted-color)]">
                         No shortcuts found for "{search}"
                     </div>
                 ) : (
                     Object.entries(categories).map(([category, items]) => (
                         <div key={category} className="mb-2 last:mb-0">
-                            <h3 className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.1em] text-[#555]">
+                            <h3 className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted-color)]">
                                 {category}
                             </h3>
                             <div className="space-y-0.5">
@@ -112,16 +112,16 @@ export const ShortcutHelpModal: React.FC = () => {
                                             className={cn(
                                                 'group flex cursor-default items-center justify-between rounded-md px-3 py-1.5 transition-colors',
                                                 isSelected
-                                                    ? 'bg-[#2a2a2a]'
-                                                    : 'hover:bg-[#2a2a2a]',
+                                                    ? 'bg-[var(--bg-light-color-hover)]'
+                                                    : 'hover:bg-[var(--bg-light-color)]',
                                             )}
                                         >
                                             <span
                                                 className={cn(
-                                                    'text-[13px] text-[#aaa] transition-colors',
+                                                    'text-[13px] text-[var(--text-gray-color)] transition-colors',
                                                     isSelected
-                                                        ? 'text-[#eee]'
-                                                        : 'group-hover:text-[#eee]',
+                                                        ? 'text-[var(--text-color)]'
+                                                        : 'group-hover:text-[var(--text-color)]',
                                                 )}
                                             >
                                                 {s.description}
@@ -144,7 +144,7 @@ export const ShortcutHelpModal: React.FC = () => {
                                                                     >
                                                                         {kIdx >
                                                                             0 && (
-                                                                            <span className="text-[10px] text-[#444]">
+                                                                            <span className="text-[10px] text-[var(--text-muted-color)]">
                                                                                 +
                                                                             </span>
                                                                         )}
@@ -185,7 +185,7 @@ export const ShortcutHelpModal: React.FC = () => {
                                                                     >
                                                                         {pIdx >
                                                                             0 && (
-                                                                            <span className="text-[9px] font-medium text-[#444]">
+                                                                            <span className="text-[9px] font-medium text-[var(--text-muted-color)]">
                                                                                 then
                                                                             </span>
                                                                         )}
@@ -207,24 +207,24 @@ export const ShortcutHelpModal: React.FC = () => {
                     ))
                 )}
             </div>
-            <div className="flex items-center gap-6 border-t border-[#333] bg-[#1a1a1a] px-4 py-2.5">
-                <div className="flex items-center gap-2 text-[10px] text-[#555]">
+            <div className="flex items-center gap-6 border-t border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] px-4 py-2.5">
+                <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted-color)]">
                     <Keybind tooltipText={'Press ESC'} keybind={'ESC'} />
                     <span>close</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#555]">
+                <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted-color)]">
                     <div className="flex gap-1">
-                        <kbd className="rounded border border-[#333] bg-[#222] px-1.5 py-0.5 text-[9px] font-bold text-[#777]">
+                        <kbd className="rounded border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--text-muted-color)]">
                             <ArrowUp size={10} />
                         </kbd>
-                        <kbd className="rounded border border-[#333] bg-[#222] px-1.5 py-0.5 text-[9px] font-bold text-[#777]">
+                        <kbd className="rounded border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--text-muted-color)]">
                             <ArrowDown size={10} />
                         </kbd>
                     </div>
                     <span>navigate</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] text-[#555]">
-                    <kbd className="rounded border border-[#333] bg-[#222] px-1.5 py-0.5 text-[9px] font-bold text-[#777]">
+                <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted-color)]">
+                    <kbd className="rounded border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-bold text-[var(--text-muted-color)]">
                         <CornerDownLeft size={10} />
                     </kbd>
                     <span>open</span>

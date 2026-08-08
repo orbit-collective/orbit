@@ -44,9 +44,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
     };
 
     return (
-        <div className="sticky top-0 z-40 flex w-full flex-col gap-3 border-b border-solid border-zinc-800 bg-[var(--bg-color)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="sticky top-0 z-40 flex w-full flex-col gap-3 border-b border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-1 items-center">
-                <div className="relative flex w-full max-w-md items-center rounded-lg border border-zinc-800 bg-zinc-900/30 px-3 py-1.5 transition-all duration-150 focus-within:border-zinc-700 focus-within:bg-zinc-900/60 focus-within:ring-1 focus-within:ring-zinc-700">
+                <div className="relative flex w-full max-w-md items-center rounded-lg border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-3 py-1.5 transition-all duration-150 focus-within:border-[var(--border-color-strong)] focus-within:bg-[var(--bg-color-hover)] focus-within:ring-1 focus-within:ring-[var(--border-color-strong)]">
                     <Icon name={'Search'} />
                     <Input
                         id="global-search-input"
@@ -56,7 +56,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         onChange={handleSearch}
                         variant={'modal'}
                         ref={input}
-                        className="ml-2.5 w-full border-none bg-transparent p-0 text-sm text-zinc-200 placeholder-zinc-500 shadow-none outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
+                        className="ml-2.5 w-full border-none bg-transparent p-0 text-sm text-[var(--text-color)] placeholder-[var(--text-muted-color)] shadow-none outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
                     />
                     <div className="hidden select-none items-center gap-1 pl-2 sm:flex">
                         <Keybind tooltipText={'Press ⌘ F'} keybind={'⌘ F'} />

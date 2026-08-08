@@ -145,7 +145,7 @@ describe('IssueBoard Component', () => {
         render(<IssueBoard issues={[]} />);
 
         expect(screen.getByRole('button', { name: 'Priority' })).toHaveClass(
-            'bg-white/10',
+            'bg-[var(--bg-light-color-hover)]',
         );
     });
 

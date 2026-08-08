@@ -3,7 +3,7 @@ import { cn } from '@/utils/cn';
 import { cva } from 'class-variance-authority';
 
 const backdropVariants = cva(
-    'fixed inset-0 z-50 flex items-center justify-center bg-black/50',
+    'fixed inset-0 z-50 flex items-center justify-center bg-[var(--overlay-color)]',
     {
         variants: {
             intensity: {

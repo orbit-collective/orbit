@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { icons, X } from 'lucide-react';
 
 const alertVariants = cva(
-    'pointer-events-auto inline-flex max-w-md items-center gap-3 rounded-[24px] border border-zinc-800 bg-zinc-900/95 px-4 py-2.5 shadow-lg backdrop-blur-md transition-all duration-300 text-[var(--text-color)]',
+    'pointer-events-auto inline-flex max-w-md items-center gap-3 rounded-[24px] border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-4 py-2.5 shadow-lg backdrop-blur-md transition-all duration-300 text-[var(--text-color)]',
 );
 
 const iconVariants = cva('w-4 h-4 flex-shrink-0', {

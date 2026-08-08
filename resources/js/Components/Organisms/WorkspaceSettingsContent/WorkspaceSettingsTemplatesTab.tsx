@@ -52,13 +52,13 @@ export default function WorkspaceSettingsTemplatesTab() {
                         <div className="flex gap-2">
                             <button
                                 type="button"
-                                className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-colors hover:border-zinc-500"
+                                className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-semibold text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
                             >
                                 + New template
                             </button>
                             <button
                                 type="button"
-                                className="rounded-md border border-[var(--bg-light-color)] px-3 py-1.5 text-xs text-zinc-300"
+                                className="rounded-md border border-[var(--bg-light-color)] px-3 py-1.5 text-xs text-[var(--text-color)]"
                             >
                                 Import JSON
                             </button>
@@ -71,15 +71,15 @@ export default function WorkspaceSettingsTemplatesTab() {
                                 className={`w-full rounded-xl border p-3 text-left transition-colors ${
                                     activeTemplate === template.id
                                         ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
-                                        : 'border-[var(--bg-light-color)] bg-[var(--bg-color)] hover:border-zinc-500'
+                                        : 'border-[var(--bg-light-color)] bg-[var(--bg-color)] hover:border-[var(--border-color-strong)]'
                                 }`}
                             >
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-white">
+                                        <p className="text-sm font-medium text-[var(--text-color)]">
                                             {template.title}
                                         </p>
-                                        <p className="text-xs text-zinc-400">
+                                        <p className="text-xs text-[var(--text-gray-color)]">
                                             {template.subtitle}
                                         </p>
                                     </div>
@@ -92,7 +92,7 @@ export default function WorkspaceSettingsTemplatesTab() {
                     </div>
                     <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-3">
                         <div className="mb-2 flex items-center justify-between">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
                                 Live template preview
                             </p>
                             <Icon name="LayoutTemplate" size={14} />
@@ -116,7 +116,7 @@ export default function WorkspaceSettingsTemplatesTab() {
                                             {template.fields.map((field) => (
                                                 <div
                                                     key={field}
-                                                    className="flex items-center justify-between rounded-md bg-[var(--bg-light-color)] px-2 py-1 text-[11px] text-zinc-300"
+                                                    className="flex items-center justify-between rounded-md bg-[var(--bg-light-color)] px-2 py-1 text-[11px] text-[var(--text-color)]"
                                                 >
                                                     <span>{field}</span>
                                                     <span className="h-1.5 w-10 rounded-full bg-zinc-600" />
@@ -143,7 +143,7 @@ export default function WorkspaceSettingsTemplatesTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                             onClick={() =>
                                 setTemplateVisibility(
                                     templateVisibility === 'Workspace'
@@ -162,7 +162,7 @@ export default function WorkspaceSettingsTemplatesTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                         >
                             View stats
                         </button>

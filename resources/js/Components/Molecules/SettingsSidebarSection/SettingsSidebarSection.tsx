@@ -10,11 +10,11 @@ export default function SettingsSidebarSection({
     children,
 }: SettingsSidebarSectionProps) {
     return (
-        <section className="space-y-2">
-            <h2 className="px-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+        <section className="space-y-1">
+            <h2 className="px-2.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
                 {title}
             </h2>
-            <div className="space-y-1">{children}</div>
+            <div className="space-y-0.5">{children}</div>
         </section>
     );
 }

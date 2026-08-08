@@ -37,7 +37,7 @@ describe('DropdownItem Component', () => {
         render(<DropdownItem label="Active" isActive />);
 
         expect(screen.getByRole('button')).toHaveClass(
-            'text-zinc-100',
+            'text-[var(--text-color)]',
             'bg-[var(--accent-color)]/10',
         );
     });
@@ -45,7 +45,9 @@ describe('DropdownItem Component', () => {
     test('does not apply active classes when isActive is false', () => {
         render(<DropdownItem label="Inactive" isActive={false} />);
 
-        expect(screen.getByRole('button')).not.toHaveClass('text-zinc-100');
+        expect(screen.getByRole('button')).not.toHaveClass(
+            'bg-[var(--accent-color)]/10',
+        );
     });
 
     test('renders trailing content when provided', () => {

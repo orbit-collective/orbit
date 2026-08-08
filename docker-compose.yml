@@ -4,15 +4,88 @@ services:
             context: .
             dockerfile: Dockerfile
             target: php
+
         ports:
             - "8000:8000"
+
+        environment:
+            APP_NAME: ${APP_NAME}
+            APP_ENV: ${APP_ENV}
+            APP_KEY: ${APP_KEY}
+            APP_DEBUG: ${APP_DEBUG}
+            APP_URL: ${APP_URL}
+            APP_LOCALE: ${APP_LOCALE}
+            APP_FALLBACK_LOCALE: ${APP_FALLBACK_LOCALE}
+            APP_FAKER_LOCALE: ${APP_FAKER_LOCALE}
+            APP_MAINTENANCE_DRIVER: ${APP_MAINTENANCE_DRIVER}
+
+            BCRYPT_ROUNDS: ${BCRYPT_ROUNDS}
+
+            LOG_CHANNEL: ${LOG_CHANNEL}
+            LOG_STACK: ${LOG_STACK}
+            LOG_DEPRECATIONS_CHANNEL: ${LOG_DEPRECATIONS_CHANNEL}
+            LOG_LEVEL: ${LOG_LEVEL}
+
+            DB_CONNECTION: ${DB_CONNECTION}
+
+            SESSION_DRIVER: ${SESSION_DRIVER}
+            SESSION_LIFETIME: ${SESSION_LIFETIME}
+            SESSION_ENCRYPT: ${SESSION_ENCRYPT}
+            SESSION_PATH: ${SESSION_PATH}
+            SESSION_DOMAIN: ${SESSION_DOMAIN}
+
+            BROADCAST_CONNECTION: ${BROADCAST_CONNECTION}
+
+            FILESYSTEM_DISK: ${FILESYSTEM_DISK}
+
+            QUEUE_CONNECTION: ${QUEUE_CONNECTION}
+
+            CACHE_STORE: ${CACHE_STORE}
+
+            MEMCACHED_HOST: ${MEMCACHED_HOST}
+
+            REDIS_CLIENT: ${REDIS_CLIENT}
+            REDIS_HOST: ${REDIS_HOST}
+            REDIS_PASSWORD: ${REDIS_PASSWORD}
+            REDIS_PORT: ${REDIS_PORT}
+
+            MAIL_MAILER: ${MAIL_MAILER}
+            MAIL_SCHEME: ${MAIL_SCHEME}
+            MAIL_HOST: ${MAIL_HOST}
+            MAIL_PORT: ${MAIL_PORT}
+            MAIL_USERNAME: ${MAIL_USERNAME}
+            MAIL_PASSWORD: ${MAIL_PASSWORD}
+            MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+            MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+
+            AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+            AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+            AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+            AWS_BUCKET: ${AWS_BUCKET}
+            AWS_USE_PATH_STYLE_ENDPOINT: ${AWS_USE_PATH_STYLE_ENDPOINT}
+
+            SENTRY_LARAVEL_DSN: ${SENTRY_LARAVEL_DSN}
+            SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE}
+
+            NSFW_DETECTION_ENABLED: ${NSFW_DETECTION_ENABLED}
+            # Hardcoded (not ${NSFW_SERVICE_URL}): inside the app container, the nsfwjs
+            # service is only reachable via its Docker network hostname, never localhost.
+            NSFW_SERVICE_URL: http://nsfwjs:3333
+            NSFW_THRESHOLD: ${NSFW_THRESHOLD}
+
         volumes:
             - .:/app
+
             # Keep the image-installed dependencies instead of the host's.
             - /app/vendor
+
         restart: unless-stopped
         tty: true
         stdin_open: true
+
+        depends_on:
+            - nsfwjs
+
         networks:
             - orbit-network
 
@@ -21,28 +94,57 @@ services:
             context: .
             dockerfile: Dockerfile
             target: node
+
         ports:
             - "5173:5173"
+
         environment:
-            - NODE_ENV=development
+            NODE_ENV: development
+
+            APP_URL: ${APP_URL}
+
+            VITE_APP_NAME: ${VITE_APP_NAME}
+            VITE_SENTRY_DSN: ${VITE_SENTRY_DSN}
+
         volumes:
             - .:/app
-            # Keep the image-installed node_modules instead of the host's.
             - /app/node_modules
-        # NOTE: fs.inotify.max_user_watches is a global (non-namespaced) kernel
-        # sysctl, not a per-container one, so Docker refuses to start the
-        # container if it's set here (tried below — do not re-enable). Vite's
-        # `usePolling` watcher config (see vite.config.js) is the actual
-        # workaround in use; see the Vite HMR troubleshooting section in
-        # CLAUDE.md if hot-reload stops picking up changes.
-#        sysctls:
-#            - fs.inotify.max_user_watches=524288
+
         restart: unless-stopped
         tty: true
         stdin_open: true
+
+        networks:
+            - orbit-network
+
+    nsfwjs:
+        image: andresribeiroo/nsfwjs
+        restart: unless-stopped
+        ports:
+            - "3333:3333"
+
+        networks:
+            - orbit-network
+
+    uptime-kuma:
+        image: louislam/uptime-kuma:2
+        profiles:
+            - monitoring
+
+        ports:
+            - "3001:3001"
+
+        volumes:
+            - uptime-kuma-data:/app/data
+
+        restart: unless-stopped
+
         networks:
             - orbit-network
 
 networks:
     orbit-network:
         driver: bridge
+
+volumes:
+    uptime-kuma-data:

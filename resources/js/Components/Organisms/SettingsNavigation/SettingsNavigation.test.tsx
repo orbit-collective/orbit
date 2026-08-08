@@ -27,6 +27,7 @@ const accountTabs: SettingsTab[] = [
         icon: 'SlidersHorizontal',
         section: 'account',
         description: 'Control personal experience defaults.',
+        enabled: true,
     },
     {
         id: 'integrations',
@@ -34,6 +35,7 @@ const accountTabs: SettingsTab[] = [
         icon: 'Plug',
         section: 'account',
         description: 'Connect third-party tools.',
+        enabled: false,
     },
 ];
 
@@ -44,6 +46,7 @@ const workspaceTabs: SettingsTab[] = [
         icon: 'FileText',
         section: 'workspace',
         description: 'Create reusable issue templates.',
+        enabled: false,
     },
     {
         id: 'members',
@@ -51,6 +54,7 @@ const workspaceTabs: SettingsTab[] = [
         icon: 'Users',
         section: 'workspace',
         description: 'Manage workspace access.',
+        enabled: false,
     },
 ];
 

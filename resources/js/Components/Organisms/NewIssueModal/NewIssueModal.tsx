@@ -91,7 +91,7 @@ const NewIssueModal: React.FC<NewIssueModalProps> = ({
                         <h2 className="text-xl font-semibold text-[var(--text-color)]">
                             Create New Issue
                         </h2>
-                        <p className="mt-1 text-sm text-zinc-400">
+                        <p className="mt-1 text-sm text-[var(--text-gray-color)]">
                             Add a new task to {project.name}
                         </p>
                     </div>
@@ -146,7 +146,7 @@ const NewIssueModal: React.FC<NewIssueModalProps> = ({
                             </div>
                         </div>
 
-                        <div className="flex flex-col gap-6 border-t border-[var(--bg-light-color)] bg-white/[0.01] p-6 md:border-l md:border-t-0">
+                        <div className="flex flex-col gap-6 border-t border-[var(--bg-light-color)] bg-[var(--surface-color)] p-6 md:border-l md:border-t-0">
                             <SidebarField label="Priority">
                                 <div className="flex flex-col gap-1">
                                     {PRIORITIES.map((p) => (
@@ -156,7 +156,7 @@ const NewIssueModal: React.FC<NewIssueModalProps> = ({
                                             className={`flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2 text-sm capitalize transition-all duration-150 ${
                                                 data.priority === p
                                                     ? 'bg-[var(--bg-light-color)] font-medium text-[var(--text-color)]'
-                                                    : 'bg-transparent text-[var(--text-gray-color)] hover:bg-white/[0.04]'
+                                                    : 'bg-transparent text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)]'
                                             }`}
                                             onClick={() =>
                                                 setData('priority', p as string)
@@ -293,7 +293,7 @@ const NewIssueModal: React.FC<NewIssueModalProps> = ({
                                                 setShowStartDate(true);
                                                 setShowEndDate(false);
                                             }}
-                                            className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[var(--bg-light-color)] bg-white/[0.02] px-3 py-2.5 text-[var(--text-color)] hover:border-white/10 hover:bg-white/[0.05]"
+                                            className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-light-color)] px-3 py-2.5 text-[var(--text-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]"
                                         >
                                             <Icon
                                                 name="Calendar"
@@ -316,7 +316,7 @@ const NewIssueModal: React.FC<NewIssueModalProps> = ({
                                                 setShowEndDate(true);
                                                 setShowStartDate(false);
                                             }}
-                                            className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[var(--bg-light-color)] bg-white/[0.02] px-3 py-2.5 text-[var(--text-color)] hover:border-white/10 hover:bg-white/[0.05]"
+                                            className="flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-light-color)] px-3 py-2.5 text-[var(--text-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]"
                                         >
                                             <Icon
                                                 name="Calendar"
@@ -335,7 +335,7 @@ const NewIssueModal: React.FC<NewIssueModalProps> = ({
                     <div className="flex items-center justify-end gap-3 border-t border-[var(--bg-light-color)] px-6 py-4">
                         <button
                             type="button"
-                            className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-zinc-400 transition-colors duration-150 hover:text-white"
+                            className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-gray-color)] transition-colors duration-150 hover:text-[var(--text-color)]"
                             onClick={onClose}
                             disabled={processing}
                         >

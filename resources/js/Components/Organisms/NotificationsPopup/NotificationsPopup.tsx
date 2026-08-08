@@ -30,7 +30,7 @@ function NotificationsPopup() {
     const unreadCount = notifications.filter((n) => !n.read).length;
 
     return (
-        <div className="fixed right-2 top-16 z-[9999] w-[calc(100vw-1rem)] max-w-[420px] rounded-2xl border border-white/10 bg-[var(--bg-dark-color)] p-4 text-gray-200 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:right-4 sm:top-24 sm:w-[420px] sm:p-5">
+        <div className="fixed right-2 top-16 z-[9999] w-[calc(100vw-1rem)] max-w-[420px] rounded-2xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-4 text-[var(--text-color)] shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:right-4 sm:top-24 sm:w-[420px] sm:p-5">
             <NotificationHeader
                 unreadCount={unreadCount}
                 onlyUnread={onlyUnread}

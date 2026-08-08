@@ -100,7 +100,11 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
                 optionRow(
                     value,
                     label,
-                    <Icon name={icon} size={13} color="#999" />,
+                    <Icon
+                        name={icon}
+                        size={13}
+                        color="var(--text-gray-color)"
+                    />,
                 ),
         })),
     },
@@ -246,17 +250,17 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
                             left: coords.left,
                             zIndex: 9999,
                         }}
-                        className="animate-in fade-in zoom-in-95 w-56 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/95 p-1.5 shadow-2xl backdrop-blur-md duration-100"
+                        className="animate-in fade-in zoom-in-95 w-56 overflow-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] p-1.5 shadow-2xl backdrop-blur-md duration-100"
                     >
                         <div className="flex items-center justify-between px-2 py-1.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                                 Filter by {config.label}
                             </p>
                             {selected.length > 0 && (
                                 <button
                                     type="button"
                                     onClick={() => applyFilter([])}
-                                    className="cursor-pointer text-[10px] font-medium text-zinc-500 transition-colors hover:text-zinc-200"
+                                    className="cursor-pointer text-[10px] font-medium text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
                                 >
                                     Clear
                                 </button>
@@ -277,8 +281,8 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
                                         className={cn(
                                             'group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-all duration-150',
                                             isSelected
-                                                ? 'bg-[var(--accent-color)]/10 text-zinc-100'
-                                                : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200',
+                                                ? 'bg-[var(--accent-color)]/10 text-[var(--text-color)]'
+                                                : 'text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
                                         )}
                                     >
                                         <div
@@ -286,7 +290,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
                                                 'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all duration-150',
                                                 isSelected
                                                     ? 'border-[var(--accent-color)] bg-[var(--accent-color)]'
-                                                    : 'border-zinc-700 bg-zinc-800 group-hover:border-zinc-600',
+                                                    : 'border-[var(--border-color-strong)] bg-[var(--surface-color)] group-hover:border-[var(--border-color-strong)]',
                                             )}
                                         >
                                             {isSelected && (

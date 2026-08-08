@@ -6,6 +6,7 @@ use App\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
@@ -103,3 +104,24 @@ test('it delegates completing project onboarding to the repository', function ()
 
     expect($result)->toBe($user);
 });
+
+test('it updates the password when the current password is correct', function () {
+    $user = User::factory()->create(['password' => 'current-password']);
+
+    $this->userRepository->shouldReceive('updatePassword')
+        ->once()
+        ->with($user, 'new-password')
+        ->andReturn($user);
+
+    $result = $this->service->updatePassword($user, 'current-password', 'new-password');
+
+    expect($result)->toBe($user);
+});
+
+test('it throws a validation exception when the current password is incorrect', function () {
+    $user = User::factory()->create(['password' => 'current-password']);
+
+    $this->userRepository->shouldReceive('updatePassword')->never();
+
+    $this->service->updatePassword($user, 'wrong-password', 'new-password');
+})->throws(ValidationException::class);

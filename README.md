@@ -72,7 +72,12 @@ gets you a fully working local instance with its own SQLite database.
 
 ### Option A — Docker (recommended)
 
-All you need is [Docker](https://www.docker.com/) and `make`.
+You'll need [Docker](https://www.docker.com/) and `make`. Doppler is
+optional: the team uses [Doppler](https://www.doppler.com/) to manage the
+Docker stack's environment variables, but you don't need an account or the
+Doppler CLI just to run the project locally — see
+[Environment configuration](#environment-configuration) for exactly how the
+two paths differ and when you'd want each.
 
 ```bash
 git clone https://github.com/Adiksuu/orbit.git
@@ -80,9 +85,13 @@ cd orbit
 make setup
 ```
 
-`make setup` builds the images, starts the stack in the background, and
-bootstraps everything on first boot — `.env`, the SQLite file, the app key,
-and migrations are all handled automatically by the container entrypoint.
+`make setup` builds the images and starts the stack in the background. Every
+`make` target that needs environment variables runs an `ensure-env` step
+first: if this directory isn't linked to a Doppler config (`doppler setup`
+was never run here), it transparently copies `.env.example` to `.env` and
+generates a fresh `APP_KEY` on first run — no manual step required. If the
+directory *is* linked to Doppler, that step is skipped and Doppler is the
+source of truth instead, exactly as before.
 
 Once it's up:
 
@@ -94,18 +103,27 @@ Once it's up:
 Useful commands from here (see the `Makefile` for the full list):
 
 ```bash
-make up          # start in the foreground (Ctrl+C to stop)
-make down         # stop the stack
-make logs         # tail logs from every service
-make shell        # open a shell in the app container
-make migrate      # run new migrations
-make fresh        # drop and re-migrate with seed data
-make test         # run the PHP (Pest) suite
-make test-js      # run the frontend (Vitest) suite
-make lint         # lint the frontend
-make type-check   # type-check the frontend
-make clean        # stop the stack and remove volumes
+make up               # start in the foreground (Ctrl+C to stop)
+make up-d             # start in the background
+make down             # stop the stack
+make build            # rebuild the images
+make npm-install      # run after adding/updating/removing an npm package
+make logs             # tail logs from every service
+make shell            # open a shell in the app container
+make tinker           # open the Laravel tinker REPL
+make migrate          # run new migrations
+make fresh            # drop and re-migrate with seed data
+make test             # run the PHP (Pest) suite
+make test-coverage    # run the PHP suite with the coverage gate
+make test-js          # run the frontend (Vitest) suite
+make test-js-coverage # run the frontend suite with the coverage gate
+make lint             # lint the frontend
+make type-check       # type-check the frontend
+make clean            # stop the stack and remove volumes
 ```
+
+If this directory is linked to Doppler, every one of these already runs
+through `doppler run --`, so don't prefix them yourself.
 
 ### Option B — Native (PHP + Node directly)
 
@@ -137,6 +155,61 @@ composer dev
 
 The app is served at whatever URL `php artisan serve` prints (typically
 http://localhost:8000).
+
+## Environment configuration
+
+This only applies to the **Docker** setup. The native setup configures
+itself the normal Laravel way, through a local `.env` file copied from
+`.env.example` — nothing below affects it.
+
+For Docker, `docker-compose.yml` declares each service's environment as
+`KEY: ${KEY}` — plain interpolation from whatever environment the
+`docker compose` process itself is run in. There is no `.env.docker` and the
+entrypoint never writes a `.env` inside the container, so where those `${KEY}`
+values actually come from depends on whether this directory is linked to
+[Doppler](https://www.doppler.com/):
+
+- **Linked to Doppler** (the core team) — the `Makefile` wraps every command
+  in `doppler run --`, which injects your Doppler config's secrets straight
+  into the `docker compose` process. Doppler is the sole source of truth;
+  no `.env` file is read or written.
+- **Not linked to Doppler** (everyone else — contributors, forks, CI-less
+  local clones) — the `Makefile`'s `ensure-env` step falls back to a plain
+  `.env` file at the repo root instead. `docker compose` reads that file
+  automatically for `${KEY}` interpolation, no flags needed. `ensure-env`
+  copies it from `.env.example` on first run and generates a fresh `APP_KEY`
+  if one isn't set yet — both steps are idempotent, so subsequent runs leave
+  your `.env` alone.
+
+Either way you end up with the exact same set of variables reaching the
+containers; only where they're sourced from differs. You never need to
+choose explicitly — the `Makefile` detects which mode applies by checking
+whether `doppler setup` has ever been run in this directory
+(`doppler configure get project`).
+
+Two behaviors worth knowing about regardless of which mode you're in:
+
+- `php artisan serve` treats the *presence* of a `.env` file as a signal to
+  filter which environment variables reach the request-handling process —
+  so Docker's `CMD` runs `serve` with `--no-reload`, which disables that
+  filtering and always passes the full environment through. Without it, a
+  leftover `.env` (from the fallback mode, or a stray one bind-mounted in)
+  would cause every HTTP request to 500 with `MissingAppKeyException` even
+  though CLI commands in the same container see the correct config.
+- Doppler mode wants a real `APP_KEY` in the linked config *before* your
+  first `make setup`/`make up` — nothing generates one for you there, since
+  the container never writes to Doppler:
+  ```bash
+  php artisan key:generate --show      # prints a fresh base64:... key
+  doppler secrets set APP_KEY="<paste the key here>"
+  ```
+
+If you ever see `MissingAppKeyException` or other config-looking errors:
+in Doppler mode, check `doppler secrets --only-names` against the
+`environment:` blocks in `docker-compose.yml` for anything missing; in
+fallback mode, check that `.env` actually exists and has a non-empty
+`APP_KEY=base64:...` line (delete it and re-run any `make` target to
+regenerate it from scratch).
 
 ## Everyday commands
 

@@ -9,7 +9,9 @@ function ToggleSwitch({ checked, onChange }: ToggleSwitchProps) {
             type="button"
             onClick={() => onChange(!checked)}
             className={`relative h-5 w-9 rounded-full transition-colors duration-200 ease-in-out ${
-                checked ? 'bg-[var(--accent-color)]' : 'bg-white/15'
+                checked
+                    ? 'bg-[var(--accent-color)]'
+                    : 'bg-[var(--bg-light-color)]'
             }`}
         >
             <span
