@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NotificationSettingController;
 use App\Http\Controllers\UserController;
 
 Route::middleware('auth')->group(function () {
@@ -11,4 +12,5 @@ Route::middleware('auth')->group(function () {
    Route::delete('/account/sessions', [UserController::class, 'revokeOtherSessions'])->name('account.sessions.revoke-others');
    Route::post('/account/session-lifetime/{lifetime}', [UserController::class, 'updateSessionLifetime'])->name('account.session-lifetime.update');
    Route::delete('/account/delete', [UserController::class, 'deleteAccount'])->name('account.delete');
+   Route::post('/account/notification-settings', [NotificationSettingController::class, 'update'])->name('account.notification-settings.update');
 });
