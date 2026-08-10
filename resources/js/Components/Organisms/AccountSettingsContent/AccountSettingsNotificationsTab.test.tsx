@@ -11,44 +11,36 @@ describe('AccountSettingsNotificationsTab', () => {
         expect(screen.getByText('Issue updates')).toBeInTheDocument();
         expect(screen.getByText('Comments')).toBeInTheDocument();
         expect(screen.getByText('Project digest')).toBeInTheDocument();
+        expect(screen.getAllByRole('button')).toHaveLength(8);
     });
 
     test('toggling a notification type in-app switch flips only that row', async () => {
         render(<AccountSettingsNotificationsTab />);
 
-        const commentsRow = screen
-            .getByText('Comments')
-            .closest('div.flex.flex-col')!;
-        const inAppToggle = commentsRow.querySelectorAll(
-            'button[type="button"]',
-        )[0];
+        // Rows render in order: assigned issues, issue updates, comments, project digest.
+        // Comments is the third row, so its in-app toggle is the 5th button overall.
+        const toggles = screen.getAllByRole('button');
+        const commentsInAppToggle = toggles[4];
+        const otherToggle = toggles[0];
 
-        expect(inAppToggle).toHaveClass('bg-[var(--accent-color)]');
+        expect(commentsInAppToggle).toHaveClass('bg-[var(--accent-color)]');
 
-        await userEvent.click(inAppToggle);
+        await userEvent.click(commentsInAppToggle);
 
-        expect(inAppToggle).toHaveClass('bg-[var(--bg-light-color)]');
+        expect(commentsInAppToggle).toHaveClass('bg-[var(--bg-light-color)]');
+        expect(otherToggle).toHaveClass('bg-[var(--accent-color)]');
     });
 
     test('toggling a notification type email switch does not affect other rows', async () => {
         render(<AccountSettingsNotificationsTab />);
 
-        const commentsRow = screen
-            .getByText('Comments')
-            .closest('div.flex.flex-col')!;
-        const emailToggle = commentsRow.querySelectorAll(
-            'button[type="button"]',
-        )[1];
-        const digestRow = screen
-            .getByText('Project digest')
-            .closest('div.flex.flex-col')!;
-        const digestEmailToggle = digestRow.querySelectorAll(
-            'button[type="button"]',
-        )[1];
+        const toggles = screen.getAllByRole('button');
+        const commentsEmailToggle = toggles[5];
+        const digestEmailToggle = toggles[7];
 
-        await userEvent.click(emailToggle);
+        await userEvent.click(commentsEmailToggle);
 
-        expect(emailToggle).toHaveClass('bg-[var(--accent-color)]');
+        expect(commentsEmailToggle).toHaveClass('bg-[var(--accent-color)]');
         expect(digestEmailToggle).toHaveClass('bg-[var(--bg-light-color)]');
     });
 });
