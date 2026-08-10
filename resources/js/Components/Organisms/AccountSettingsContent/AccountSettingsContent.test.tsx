@@ -76,8 +76,8 @@ describe('AccountSettingsContent', () => {
     test('renders notifications content', () => {
         render(<AccountSettingsContent tabId="notifications" />);
 
-        expect(screen.getByText('Activity notifications')).toBeInTheDocument();
-        expect(screen.getByText('Digest frequency')).toBeInTheDocument();
+        expect(screen.getByText('Notification types')).toBeInTheDocument();
+        expect(screen.getByText('Assigned issues')).toBeInTheDocument();
     });
 
     test('renders security and access content', () => {

@@ -55,7 +55,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         section: 'account',
         description:
             'Adjust delivery channels and activity notification rules.',
-        enabled: false,
+        enabled: true,
     },
     {
         id: 'security-access',
