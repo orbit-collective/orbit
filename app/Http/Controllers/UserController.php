@@ -135,4 +135,10 @@ class UserController extends Controller
 
         return back()->with('success', 'Session lifetime has been updated.');
     }
+    public function deleteAccount(Request $request): RedirectResponse
+    {
+        $this->userService->removeAccount($request->user());
+
+        return back()->with('success', 'Account has been deleted.');
+    }
 }

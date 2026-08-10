@@ -3,6 +3,7 @@ import Input from '@/Components/Atoms/Input/Input';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
 const CONFIRM_PHRASE = 'DELETE';
@@ -31,11 +32,18 @@ export default function AccountSettingsDeleteAccountModal({
             return;
         }
 
-        addAlert(
-            "Account deletion requested — we've emailed you a confirmation link.",
-            'success',
-        );
-        handleClose();
+        router.delete(route('account.delete'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                addAlert('Account has been deleted.', 'success');
+            },
+            onError: () => {
+                addAlert('Failed to delete account.', 'error');
+            },
+            onFinish: () => {
+                handleClose();
+            },
+        });
     };
 
     return (

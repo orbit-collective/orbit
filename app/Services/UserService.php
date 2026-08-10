@@ -128,4 +128,9 @@ class UserService
 
         return $updatedUser;
     }
+    public function removeAccount(User $user): void {
+        $this->activityLogService->log(null, 'Deleted account', $user->id);
+
+        $this->userRepository->delete($user);
+    }
 }
