@@ -55,8 +55,12 @@ describe('AccountSettingsNotificationsTab', () => {
         expect(screen.getByText('Comments')).toBeInTheDocument();
         expect(screen.getByText('Mentions')).toBeInTheDocument();
         expect(screen.getByText('Status changes')).toBeInTheDocument();
+        expect(screen.getByText('Priority changes')).toBeInTheDocument();
+        expect(screen.getByText('Label updates')).toBeInTheDocument();
+        expect(screen.getByText('Schedule changes')).toBeInTheDocument();
+        expect(screen.getByText('Other issue updates')).toBeInTheDocument();
         expect(screen.getByText('Project invitations')).toBeInTheDocument();
-        expect(screen.getAllByRole('button')).toHaveLength(10);
+        expect(screen.getAllByRole('button')).toHaveLength(18);
     });
 
     test('without a notificationSettings prop, defaults to in-app enabled and email disabled', () => {

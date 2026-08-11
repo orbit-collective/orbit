@@ -128,7 +128,7 @@ test('updateIssue logs activity and notifies only the actor when there is no ass
             $actor->id,
             NotificationType::IssueStatusChanged,
             'info',
-            "Issue #{$issue->id} updated",
+            "Issue #{$issue->id} status changed",
             Mockery::on(fn ($message) => str_contains($message, 'status changed from "open" to "closed"')),
             Mockery::any()
         );
@@ -169,7 +169,7 @@ test('updateIssue also notifies the current assignee when they are not the actor
             $assignee->id,
             NotificationType::IssueStatusChanged,
             'info',
-            "Issue #{$issue->id} updated",
+            "Issue #{$issue->id} status changed",
             Mockery::on(fn ($message) => str_contains($message, 'Bob updated') && str_contains($message, 'assigned to you')),
             Mockery::any()
         );
@@ -252,6 +252,142 @@ test('updateIssue describes a description-only change', function () {
     $this->notificationService->shouldReceive('notify')->once();
 
     $this->service->updateIssue($issue, ['description' => 'A brand new description']);
+});
+
+test('updateIssue notifies with IssuePriorityChanged when only the priority changes', function () {
+    $actor = User::factory()->create();
+    $this->actingAs($actor);
+
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null, 'priority' => 'low']);
+
+    $this->issueRepository->shouldReceive('update')
+        ->once()
+        ->andReturnUsing(function ($issue, $data) {
+            $issue->fill($data);
+            $issue->syncOriginal();
+
+            return $issue;
+        });
+
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with(
+            $actor->id,
+            NotificationType::IssuePriorityChanged,
+            'info',
+            "Issue #{$issue->id} priority changed",
+            Mockery::on(fn ($message) => str_contains($message, 'priority changed from "low" to "high"')),
+            Mockery::any()
+        );
+
+    $this->service->updateIssue($issue, ['priority' => 'high']);
+});
+
+test('updateIssue notifies with IssueLabelsChanged when only labels change', function () {
+    $actor = User::factory()->create();
+    $this->actingAs($actor);
+
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null, 'labels' => []]);
+
+    $this->issueRepository->shouldReceive('update')
+        ->once()
+        ->andReturnUsing(function ($issue, $data) {
+            $issue->fill($data);
+            $issue->syncOriginal();
+
+            return $issue;
+        });
+
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with(
+            $actor->id,
+            NotificationType::IssueLabelsChanged,
+            'info',
+            "Issue #{$issue->id} labels updated",
+            Mockery::any(),
+            Mockery::any()
+        );
+
+    $this->service->updateIssue($issue, ['labels' => [IssueLabel::BUG]]);
+});
+
+test('updateIssue notifies with IssueDatesChanged, grouping start and end date together', function () {
+    $actor = User::factory()->create();
+    $this->actingAs($actor);
+
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create([
+        'project_id' => $project->id,
+        'assignee_id' => null,
+        'start_date' => now(),
+        'end_date' => now()->addDay(),
+    ]);
+
+    $this->issueRepository->shouldReceive('update')
+        ->once()
+        ->andReturnUsing(function ($issue, $data) {
+            $issue->fill($data);
+            $issue->syncOriginal();
+
+            return $issue;
+        });
+
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with(
+            $actor->id,
+            NotificationType::IssueDatesChanged,
+            'info',
+            "Issue #{$issue->id} schedule updated",
+            Mockery::on(fn ($message) => str_contains($message, 'start date changed to none')
+                && str_contains($message, 'end date changed to none')),
+            Mockery::any()
+        );
+
+    $this->service->updateIssue($issue, ['start_date' => null, 'end_date' => null]);
+});
+
+test('updateIssue sends one notification per changed category when multiple unrelated fields change', function () {
+    $actor = User::factory()->create();
+    $this->actingAs($actor);
+
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create([
+        'project_id' => $project->id,
+        'assignee_id' => null,
+        'priority' => 'low',
+        'status' => 'open',
+    ]);
+
+    $this->issueRepository->shouldReceive('update')
+        ->once()
+        ->andReturnUsing(function ($issue, $data) {
+            $issue->fill($data);
+            $issue->syncOriginal();
+
+            return $issue;
+        });
+
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with($actor->id, NotificationType::IssueStatusChanged, 'info', Mockery::any(), Mockery::any(), Mockery::any());
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with($actor->id, NotificationType::IssuePriorityChanged, 'info', Mockery::any(), Mockery::any(), Mockery::any());
+
+    $this->service->updateIssue($issue, ['status' => 'closed', 'priority' => 'high']);
 });
 
 test('updateIssue describes labels changing to a non-empty set', function () {

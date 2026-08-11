@@ -49,6 +49,41 @@ const defaultNotificationTypes: NotificationTypeState[] = [
         email: false,
     },
     {
+        id: 'issue_priority_changed',
+        icon: 'Flag',
+        title: 'Priority changes',
+        description:
+            "When an issue you're involved in has its priority changed.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_labels_changed',
+        icon: 'Tag',
+        title: 'Label updates',
+        description: "When labels change on an issue you're involved in.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_dates_changed',
+        icon: 'CalendarClock',
+        title: 'Schedule changes',
+        description:
+            "When the start or due date changes on an issue you're involved in.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_updated',
+        icon: 'Pencil',
+        title: 'Other issue updates',
+        description:
+            "When any other detail changes on an issue you're involved in.",
+        inApp: true,
+        email: false,
+    },
+    {
         id: 'project_invited',
         icon: 'Users',
         title: 'Project invitations',

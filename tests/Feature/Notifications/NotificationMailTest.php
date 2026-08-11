@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Notifications\NotificationMail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Queue\Middleware\RateLimited;
 
 uses(RefreshDatabase::class);
 
@@ -32,4 +33,26 @@ test('it includes an action button when an action URL is given', function () {
 
     expect($mail->actionText)->toBe('View in Orbit');
     expect($mail->actionUrl)->toBe('/issues/1');
+});
+
+test('it rate-limits the mail channel so a burst of notifications does not exceed the provider limit', function () {
+    $notification = new NotificationMail('Title', 'Body');
+
+    $middleware = $notification->middleware(new User, 'mail');
+
+    expect($middleware)->toHaveCount(1);
+    expect($middleware[0])->toBeInstanceOf(RateLimited::class);
+});
+
+test('it applies no middleware for channels other than mail', function () {
+    $notification = new NotificationMail('Title', 'Body');
+
+    expect($notification->middleware(new User, 'database'))->toBe([]);
+});
+
+test('it retries a few times with increasing delays on transient failures', function () {
+    $notification = new NotificationMail('Title', 'Body');
+
+    expect($notification->tries)->toBe(5);
+    expect($notification->backoff())->toBe([10, 30, 60, 120]);
 });
