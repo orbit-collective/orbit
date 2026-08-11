@@ -1,14 +1,20 @@
 interface ToggleSwitchProps {
     checked: boolean;
     onChange: (checked: boolean) => void;
+    disabled?: boolean;
 }
 
-function ToggleSwitch({ checked, onChange }: ToggleSwitchProps) {
+function ToggleSwitch({
+    checked,
+    onChange,
+    disabled = false,
+}: ToggleSwitchProps) {
     return (
         <button
             type="button"
+            disabled={disabled}
             onClick={() => onChange(!checked)}
-            className={`relative h-5 w-9 rounded-full transition-colors duration-200 ease-in-out ${
+            className={`relative h-5 w-9 rounded-full transition-colors duration-200 ease-in-out disabled:cursor-not-allowed disabled:opacity-50 ${
                 checked
                     ? 'bg-[var(--accent-color)]'
                     : 'bg-[var(--bg-light-color)]'

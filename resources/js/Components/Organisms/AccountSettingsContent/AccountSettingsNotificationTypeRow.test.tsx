@@ -60,4 +60,23 @@ describe('AccountSettingsNotificationTypeRow', () => {
 
         expect(onEmailChange).toHaveBeenCalledWith(true);
     });
+
+    test('disables the in-app or email toggle independently while pending', () => {
+        render(
+            <AccountSettingsNotificationTypeRow
+                icon="Bell"
+                title="Assigned issues"
+                description="When an issue is assigned to you."
+                inAppChecked
+                onInAppChange={() => {}}
+                inAppDisabled
+                emailChecked={false}
+                onEmailChange={() => {}}
+            />,
+        );
+
+        const toggles = screen.getAllByRole('button');
+        expect(toggles[0]).toBeDisabled();
+        expect(toggles[1]).not.toBeDisabled();
+    });
 });

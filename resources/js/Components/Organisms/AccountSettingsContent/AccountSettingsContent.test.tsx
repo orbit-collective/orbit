@@ -6,6 +6,11 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import AccountSettingsContent from './AccountSettingsContent';
 
+vi.stubGlobal(
+    'route',
+    vi.fn((name: string) => `/${name}`),
+);
+
 vi.mock('@inertiajs/react', async () => {
     const actual =
         await vi.importActual<typeof import('@inertiajs/react')>(
@@ -74,7 +79,11 @@ describe('AccountSettingsContent', () => {
     });
 
     test('renders notifications content', () => {
-        render(<AccountSettingsContent tabId="notifications" />);
+        render(
+            <AlertProvider>
+                <AccountSettingsContent tabId="notifications" />
+            </AlertProvider>,
+        );
 
         expect(screen.getByText('Notification types')).toBeInTheDocument();
         expect(screen.getByText('Assigned issues')).toBeInTheDocument();

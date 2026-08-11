@@ -8,8 +8,10 @@ interface AccountSettingsNotificationTypeRowProps {
     description: string;
     inAppChecked: boolean;
     onInAppChange: (checked: boolean) => void;
+    inAppDisabled?: boolean;
     emailChecked: boolean;
     onEmailChange: (checked: boolean) => void;
+    emailDisabled?: boolean;
 }
 
 export default function AccountSettingsNotificationTypeRow({
@@ -18,8 +20,10 @@ export default function AccountSettingsNotificationTypeRow({
     description,
     inAppChecked,
     onInAppChange,
+    inAppDisabled = false,
     emailChecked,
     onEmailChange,
+    emailDisabled = false,
 }: AccountSettingsNotificationTypeRowProps) {
     return (
         <div className="flex items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5">
@@ -41,12 +45,14 @@ export default function AccountSettingsNotificationTypeRow({
                     <ToggleSwitch
                         checked={inAppChecked}
                         onChange={onInAppChange}
+                        disabled={inAppDisabled}
                     />
                 </div>
                 <div className="flex w-12 justify-center sm:w-16">
                     <ToggleSwitch
                         checked={emailChecked}
                         onChange={onEmailChange}
+                        disabled={emailDisabled}
                     />
                 </div>
             </div>

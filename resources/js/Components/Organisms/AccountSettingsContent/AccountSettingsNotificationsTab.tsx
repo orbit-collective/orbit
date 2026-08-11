@@ -1,6 +1,8 @@
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import AccountSettingsNotificationTypeRow from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationTypeRow';
+import { useAlert } from '@/context/AlertContext';
 import { NotificationSettings } from '@/types/Notification';
+import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 
@@ -82,19 +84,62 @@ export default function AccountSettingsNotificationsTab({
 }: {
     notificationSettings?: NotificationSettings;
 }) {
+    const { addAlert } = useAlert();
     const [notificationTypes, setNotificationTypes] = useState(() =>
         mergeNotificationSettings(notificationSettings),
     );
+    const [pendingKey, setPendingKey] = useState<string | null>(null);
 
     const updateNotificationType = (
         id: string,
         channel: 'inApp' | 'email',
         checked: boolean,
     ) => {
+        const previousType = notificationTypes.find((type) => type.id === id);
+        if (!previousType) {
+            return;
+        }
+
+        const updatedType = { ...previousType, [channel]: checked };
+
+        setPendingKey(`${id}:${channel}`);
         setNotificationTypes((current) =>
-            current.map((type) =>
-                type.id === id ? { ...type, [channel]: checked } : type,
-            ),
+            current.map((type) => (type.id === id ? updatedType : type)),
+        );
+
+        router.post(
+            route('account.notification-settings.update'),
+            {
+                settings: {
+                    [id]: {
+                        in_app: updatedType.inApp,
+                        email: updatedType.email,
+                    },
+                },
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    addAlert(
+                        'Notification settings updated successfully.',
+                        'success',
+                    );
+                },
+                onError: () => {
+                    addAlert(
+                        'Failed to update notification settings.',
+                        'error',
+                    );
+                    setNotificationTypes((current) =>
+                        current.map((type) =>
+                            type.id === id ? previousType : type,
+                        ),
+                    );
+                },
+                onFinish: () => {
+                    setPendingKey(null);
+                },
+            },
         );
     };
 
@@ -128,10 +173,12 @@ export default function AccountSettingsNotificationsTab({
                         onInAppChange={(checked) =>
                             updateNotificationType(type.id, 'inApp', checked)
                         }
+                        inAppDisabled={pendingKey === `${type.id}:inApp`}
                         emailChecked={type.email}
                         onEmailChange={(checked) =>
                             updateNotificationType(type.id, 'email', checked)
                         }
+                        emailDisabled={pendingKey === `${type.id}:email`}
                     />
                 ))}
             </SettingsPanel>

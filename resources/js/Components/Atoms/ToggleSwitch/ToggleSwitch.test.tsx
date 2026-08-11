@@ -51,4 +51,16 @@ describe('ToggleSwitch Component', () => {
         expect(onChange).toHaveBeenCalledTimes(1);
         expect(onChange).toHaveBeenCalledWith(false);
     });
+
+    test('disables the button and does not call onChange when clicked while disabled', async () => {
+        const onChange = vi.fn();
+        render(<ToggleSwitch checked={false} onChange={onChange} disabled />);
+
+        const button = screen.getByRole('button');
+        expect(button).toBeDisabled();
+
+        await userEvent.click(button);
+
+        expect(onChange).not.toHaveBeenCalled();
+    });
 });

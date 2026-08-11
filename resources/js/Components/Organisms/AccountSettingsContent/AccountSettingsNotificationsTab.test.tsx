@@ -1,11 +1,55 @@
+import { AlertProvider } from '@/context/AlertContext';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import AccountSettingsNotificationsTab from './AccountSettingsNotificationsTab';
+
+vi.stubGlobal(
+    'route',
+    vi.fn((name: string) => `/${name}`),
+);
+
+const { mockRouterPost } = vi.hoisted(() => ({
+    mockRouterPost: vi.fn(
+        (
+            _url: string,
+            _data?: unknown,
+            opts?: { onSuccess?: () => void; onFinish?: () => void },
+        ) => {
+            opts?.onSuccess?.();
+            opts?.onFinish?.();
+        },
+    ),
+}));
+
+vi.mock('@inertiajs/react', async () => {
+    const actual =
+        await vi.importActual<typeof import('@inertiajs/react')>(
+            '@inertiajs/react',
+        );
+    return {
+        ...actual,
+        usePage: () => ({ props: { flash: {} } }),
+        router: { ...actual.router, post: mockRouterPost },
+    };
+});
+
+const renderTab = (
+    notificationSettings?: Parameters<
+        typeof AccountSettingsNotificationsTab
+    >[0]['notificationSettings'],
+) =>
+    render(
+        <AlertProvider>
+            <AccountSettingsNotificationsTab
+                notificationSettings={notificationSettings}
+            />
+        </AlertProvider>,
+    );
 
 describe('AccountSettingsNotificationsTab', () => {
     test('renders each notification type with its in-app and email toggles', () => {
-        render(<AccountSettingsNotificationsTab />);
+        renderTab();
 
         expect(screen.getByText('Assigned issues')).toBeInTheDocument();
         expect(screen.getByText('Comments')).toBeInTheDocument();
@@ -16,7 +60,7 @@ describe('AccountSettingsNotificationsTab', () => {
     });
 
     test('without a notificationSettings prop, defaults to in-app enabled and email disabled', () => {
-        render(<AccountSettingsNotificationsTab />);
+        renderTab();
 
         const toggles = screen.getAllByRole('button');
 
@@ -25,26 +69,39 @@ describe('AccountSettingsNotificationsTab', () => {
     });
 
     test('hydrates toggles from the notificationSettings prop', () => {
-        render(
-            <AccountSettingsNotificationsTab
-                notificationSettings={{
-                    issue_assigned: { in_app: false, email: true },
-                }}
-            />,
-        );
+        renderTab({
+            issue_assigned: { in_app: false, email: true },
+        });
 
-        // Assigned issues is the first row: in-app toggle then email toggle.
         const toggles = screen.getAllByRole('button');
 
         expect(toggles[0]).toHaveClass('bg-[var(--bg-light-color)]');
         expect(toggles[1]).toHaveClass('bg-[var(--accent-color)]');
     });
 
-    test('toggling a notification type in-app switch flips only that row', async () => {
-        render(<AccountSettingsNotificationsTab />);
+    test('toggling a switch persists it immediately and shows a success alert', async () => {
+        renderTab();
 
-        // Rows render in order: assigned issues, comments, mentions, status changes, project invitations.
-        // Comments is the second row, so its in-app toggle is the 3rd button overall.
+        const toggles = screen.getAllByRole('button');
+        await userEvent.click(toggles[0]);
+
+        expect(mockRouterPost).toHaveBeenCalledWith(
+            '/account.notification-settings.update',
+            {
+                settings: {
+                    issue_assigned: { in_app: false, email: false },
+                },
+            },
+            expect.objectContaining({ preserveScroll: true }),
+        );
+        expect(
+            screen.getByText('Notification settings updated successfully.'),
+        ).toBeInTheDocument();
+    });
+
+    test('toggling a notification type flips only that row', async () => {
+        renderTab();
+
         const toggles = screen.getAllByRole('button');
         const commentsInAppToggle = toggles[2];
         const otherToggle = toggles[0];
@@ -57,18 +114,25 @@ describe('AccountSettingsNotificationsTab', () => {
         expect(otherToggle).toHaveClass('bg-[var(--accent-color)]');
     });
 
-    test('toggling a notification type email switch does not affect other rows', async () => {
-        render(<AccountSettingsNotificationsTab />);
+    test('reverts the toggle and shows an error alert when the request fails', async () => {
+        mockRouterPost.mockImplementationOnce(
+            (
+                _url: string,
+                _data?: unknown,
+                opts?: { onError?: () => void; onFinish?: () => void },
+            ) => {
+                opts?.onError?.();
+                opts?.onFinish?.();
+            },
+        );
+        renderTab();
 
         const toggles = screen.getAllByRole('button');
-        const commentsEmailToggle = toggles[3];
-        const invitationsEmailToggle = toggles[9];
+        await userEvent.click(toggles[0]);
 
-        await userEvent.click(commentsEmailToggle);
-
-        expect(commentsEmailToggle).toHaveClass('bg-[var(--accent-color)]');
-        expect(invitationsEmailToggle).toHaveClass(
-            'bg-[var(--bg-light-color)]',
-        );
+        expect(toggles[0]).toHaveClass('bg-[var(--accent-color)]');
+        expect(
+            screen.getByText('Failed to update notification settings.'),
+        ).toBeInTheDocument();
     });
 });
