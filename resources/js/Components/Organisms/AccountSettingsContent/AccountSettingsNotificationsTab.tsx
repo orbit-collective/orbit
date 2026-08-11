@@ -1,5 +1,6 @@
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import AccountSettingsNotificationTypeRow from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationTypeRow';
+import { NotificationSettings } from '@/types/Notification';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 
@@ -12,9 +13,9 @@ interface NotificationTypeState {
     email: boolean;
 }
 
-const initialNotificationTypes: NotificationTypeState[] = [
+const defaultNotificationTypes: NotificationTypeState[] = [
     {
-        id: 'assigned-issues',
+        id: 'issue_assigned',
         icon: 'UserCheck',
         title: 'Assigned issues',
         description: 'When an issue is assigned or unassigned to you.',
@@ -22,35 +23,67 @@ const initialNotificationTypes: NotificationTypeState[] = [
         email: false,
     },
     {
-        id: 'issue-updates',
-        icon: 'RefreshCw',
-        title: 'Issue updates',
-        description:
-            "When an issue you're involved in changes status, priority, or details.",
-        inApp: true,
-        email: false,
-    },
-    {
-        id: 'comments',
+        id: 'issue_commented',
         icon: 'MessageSquare',
         title: 'Comments',
-        description: 'When someone comments on an issue assigned to you.',
+        description: "When an issue you're involved in is commented on.",
         inApp: true,
         email: false,
     },
     {
-        id: 'project-digest',
-        icon: 'Layers',
-        title: 'Project digest',
-        description: 'Periodic summary of activity across your projects.',
+        id: 'issue_mentioned',
+        icon: 'AtSign',
+        title: 'Mentions',
+        description: 'When someone mentions you in a comment.',
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_status_changed',
+        icon: 'CircleCheckBig',
+        title: 'Status changes',
+        description: "When an issue you're involved in has its status updated.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'project_invited',
+        icon: 'Users',
+        title: 'Project invitations',
+        description: 'When you are invited to join a new project.',
         inApp: true,
         email: false,
     },
 ];
 
-export default function AccountSettingsNotificationsTab() {
-    const [notificationTypes, setNotificationTypes] = useState(
-        initialNotificationTypes,
+function mergeNotificationSettings(
+    notificationSettings?: NotificationSettings,
+): NotificationTypeState[] {
+    if (!notificationSettings) {
+        return defaultNotificationTypes;
+    }
+
+    return defaultNotificationTypes.map((type) => {
+        const settings = notificationSettings[type.id];
+        if (!settings) {
+            return type;
+        }
+
+        return {
+            ...type,
+            inApp: settings.in_app,
+            email: settings.email,
+        };
+    });
+}
+
+export default function AccountSettingsNotificationsTab({
+    notificationSettings,
+}: {
+    notificationSettings?: NotificationSettings;
+}) {
+    const [notificationTypes, setNotificationTypes] = useState(() =>
+        mergeNotificationSettings(notificationSettings),
     );
 
     const updateNotificationType = (

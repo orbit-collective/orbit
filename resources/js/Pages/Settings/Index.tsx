@@ -5,6 +5,7 @@ import AccountSettingsContent from '@/Components/Organisms/AccountSettingsConten
 import SettingsSidebar from '@/Components/Organisms/SettingsSidebar/SettingsSidebar';
 import WorkspaceSettingsContent from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsContent';
 import { PageProps } from '@/types';
+import { NotificationSettings } from '@/types/Notification';
 import {
     SETTINGS_DEFAULT_TAB,
     SETTINGS_TABS,
@@ -19,9 +20,13 @@ import { useMemo } from 'react';
 
 interface SettingsIndexProps {
     sessions?: Session[];
+    notificationSettings?: NotificationSettings;
 }
 
-export default function SettingsIndex({ sessions = [] }: SettingsIndexProps) {
+export default function SettingsIndex({
+    sessions = [],
+    notificationSettings,
+}: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
     const userAvatar = props.auth?.user?.avatar ?? null;
@@ -91,6 +96,7 @@ export default function SettingsIndex({ sessions = [] }: SettingsIndexProps) {
                                 userName={userName}
                                 userAvatar={userAvatar}
                                 sessions={sessions}
+                                notificationSettings={notificationSettings}
                             />
                         ) : isWorkspaceSettingsTabId(activeTab) ? (
                             <WorkspaceSettingsContent tabId={activeTab} />

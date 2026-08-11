@@ -15,7 +15,7 @@ final readonly class NotificationSettingService
     {
         $setting = $this->notificationSettingRepository->find($user, $type, $channel);
 
-        return $setting?->enabled ?? true;
+        return $setting?->enabled ?? $channel->enabledByDefault();
     }
 
     public function update(User $user, NotificationType $type, NotificationChannel $channel, bool $enabled): void
@@ -42,7 +42,7 @@ final readonly class NotificationSettingService
 
         foreach (NotificationType::cases() as $type) {
             foreach (NotificationChannel::cases() as $channel) {
-                $result[$type->value][$channel->value] = true;
+                $result[$type->value][$channel->value] = $channel->enabledByDefault();
             }
         }
 

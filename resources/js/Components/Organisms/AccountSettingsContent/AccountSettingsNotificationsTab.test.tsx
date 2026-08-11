@@ -8,19 +8,45 @@ describe('AccountSettingsNotificationsTab', () => {
         render(<AccountSettingsNotificationsTab />);
 
         expect(screen.getByText('Assigned issues')).toBeInTheDocument();
-        expect(screen.getByText('Issue updates')).toBeInTheDocument();
         expect(screen.getByText('Comments')).toBeInTheDocument();
-        expect(screen.getByText('Project digest')).toBeInTheDocument();
-        expect(screen.getAllByRole('button')).toHaveLength(8);
+        expect(screen.getByText('Mentions')).toBeInTheDocument();
+        expect(screen.getByText('Status changes')).toBeInTheDocument();
+        expect(screen.getByText('Project invitations')).toBeInTheDocument();
+        expect(screen.getAllByRole('button')).toHaveLength(10);
+    });
+
+    test('without a notificationSettings prop, defaults to in-app enabled and email disabled', () => {
+        render(<AccountSettingsNotificationsTab />);
+
+        const toggles = screen.getAllByRole('button');
+
+        expect(toggles[0]).toHaveClass('bg-[var(--accent-color)]');
+        expect(toggles[1]).toHaveClass('bg-[var(--bg-light-color)]');
+    });
+
+    test('hydrates toggles from the notificationSettings prop', () => {
+        render(
+            <AccountSettingsNotificationsTab
+                notificationSettings={{
+                    issue_assigned: { in_app: false, email: true },
+                }}
+            />,
+        );
+
+        // Assigned issues is the first row: in-app toggle then email toggle.
+        const toggles = screen.getAllByRole('button');
+
+        expect(toggles[0]).toHaveClass('bg-[var(--bg-light-color)]');
+        expect(toggles[1]).toHaveClass('bg-[var(--accent-color)]');
     });
 
     test('toggling a notification type in-app switch flips only that row', async () => {
         render(<AccountSettingsNotificationsTab />);
 
-        // Rows render in order: assigned issues, issue updates, comments, project digest.
-        // Comments is the third row, so its in-app toggle is the 5th button overall.
+        // Rows render in order: assigned issues, comments, mentions, status changes, project invitations.
+        // Comments is the second row, so its in-app toggle is the 3rd button overall.
         const toggles = screen.getAllByRole('button');
-        const commentsInAppToggle = toggles[4];
+        const commentsInAppToggle = toggles[2];
         const otherToggle = toggles[0];
 
         expect(commentsInAppToggle).toHaveClass('bg-[var(--accent-color)]');
@@ -35,12 +61,14 @@ describe('AccountSettingsNotificationsTab', () => {
         render(<AccountSettingsNotificationsTab />);
 
         const toggles = screen.getAllByRole('button');
-        const commentsEmailToggle = toggles[5];
-        const digestEmailToggle = toggles[7];
+        const commentsEmailToggle = toggles[3];
+        const invitationsEmailToggle = toggles[9];
 
         await userEvent.click(commentsEmailToggle);
 
         expect(commentsEmailToggle).toHaveClass('bg-[var(--accent-color)]');
-        expect(digestEmailToggle).toHaveClass('bg-[var(--bg-light-color)]');
+        expect(invitationsEmailToggle).toHaveClass(
+            'bg-[var(--bg-light-color)]',
+        );
     });
 });
