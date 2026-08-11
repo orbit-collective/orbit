@@ -35,4 +35,21 @@ final readonly class NotificationSettingService
 
         $this->activityLogService->log(null, 'Updated notification settings', $user->id);
     }
+
+    public function getAllSettings(User $user): array
+    {
+        $result = [];
+
+        foreach (NotificationType::cases() as $type) {
+            foreach (NotificationChannel::cases() as $channel) {
+                $result[$type->value][$channel->value] = true;
+            }
+        }
+
+        foreach ($this->notificationSettingRepository->getForUser($user) as $setting) {
+            $result[$setting->type->value][$setting->channel->value] = $setting->enabled;
+        }
+
+        return $result;
+    }
 }

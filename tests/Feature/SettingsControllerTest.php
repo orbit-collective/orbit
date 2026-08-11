@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\NotificationSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -29,7 +31,7 @@ test('settings page includes the authenticated user sessions with the current on
     $user = User::factory()->create();
 
     $currentSessionId = str_repeat('a', 40);
-    \Illuminate\Support\Facades\DB::table('sessions')->insert([
+    DB::table('sessions')->insert([
         [
             'id' => $currentSessionId,
             'user_id' => $user->id,
@@ -59,5 +61,37 @@ test('settings page includes the authenticated user sessions with the current on
         ->where('sessions', fn ($sessions) => collect($sessions)
             ->firstWhere('id', $currentSessionId)['isCurrent'] === true
             && collect($sessions)->firstWhere('id', 'another-session-id')['isCurrent'] === false)
+    );
+});
+
+test('settings page includes every notification type and channel defaulted to enabled', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/settings');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('Settings/Index')
+        ->where('notificationSettings.issue_assigned.in_app', true)
+        ->where('notificationSettings.issue_assigned.email', true)
+        ->where('notificationSettings.project_invited.email', true)
+    );
+});
+
+test('settings page reflects saved notification setting overrides', function () {
+    $user = User::factory()->create();
+    NotificationSetting::query()->create([
+        'user_id' => $user->id,
+        'type' => 'issue_assigned',
+        'channel' => 'email',
+        'enabled' => false,
+    ]);
+
+    $response = $this->actingAs($user)->get('/settings');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('Settings/Index')
+        ->where('notificationSettings.issue_assigned.email', false)
+        ->where('notificationSettings.issue_assigned.in_app', true)
     );
 });
