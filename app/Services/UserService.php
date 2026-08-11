@@ -133,4 +133,7 @@ class UserService
 
         $this->userRepository->delete($user);
     }
+    public function getUserById(int $userId): ?User {
+        return $this->userRepository->findById($userId);
+    }
 }

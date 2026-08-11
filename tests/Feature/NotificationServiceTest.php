@@ -7,6 +7,7 @@ use App\Models\NotificationSetting;
 use App\Repositories\NotificationRepository;
 use App\Repositories\NotificationSettingRepository;
 use App\Services\ActivityLogService;
+use App\Services\NotificationMailService;
 use App\Services\NotificationService;
 use App\Services\NotificationSettingService;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,7 +20,8 @@ beforeEach(function () {
     $this->notificationSettingRepository = Mockery::mock(NotificationSettingRepository::class);
     $this->activityLogService = Mockery::mock(ActivityLogService::class);
     $this->notificationSettingService = new NotificationSettingService($this->notificationSettingRepository, $this->activityLogService);
-    $this->service = new NotificationService($this->notificationRepository, $this->notificationSettingService);
+    $this->notificationMailService = Mockery::mock(NotificationMailService::class);
+    $this->service = new NotificationService($this->notificationRepository, $this->notificationSettingService, $this->notificationMailService);
 });
 
 test('it can get all notifications for a user', function () {
@@ -77,6 +79,16 @@ test('it can mark all of a user notifications as read', function () {
 test('it notifies a specific user when the notification type is enabled for in-app delivery', function () {
     $notification = new Notification(['id' => 1, 'user_id' => 5]);
 
+    $this->notificationMailService->shouldReceive('send')
+        ->once()
+        ->with(
+            5,
+            NotificationType::IssueStatusChanged,
+            'Issue #1 updated',
+            'You updated "Test": status changed from "open" to "closed".',
+            '/projects/1?issue=1'
+        );
+
     $this->notificationSettingRepository->shouldReceive('find')
         ->once()
         ->with(5, NotificationType::IssueStatusChanged, NotificationChannel::InApp)
@@ -110,6 +122,8 @@ test('it notifies a specific user when the notification type is enabled for in-a
 test('it falls back to the channel default when no setting row exists yet', function () {
     $notification = new Notification(['id' => 1, 'user_id' => 5]);
 
+    $this->notificationMailService->shouldReceive('send')->once();
+
     $this->notificationSettingRepository->shouldReceive('find')
         ->once()
         ->with(5, NotificationType::IssueCommented, NotificationChannel::InApp)
@@ -125,6 +139,8 @@ test('it falls back to the channel default when no setting row exists yet', func
 });
 
 test('it does not create a notification when the type is disabled for in-app delivery', function () {
+    $this->notificationMailService->shouldReceive('send')->once();
+
     $this->notificationSettingRepository->shouldReceive('find')
         ->once()
         ->with(5, NotificationType::IssueCommented, NotificationChannel::InApp)
@@ -141,4 +157,18 @@ test('it does not create a notification when the type is disabled for in-app del
     );
 
     expect($result)->toBeNull();
+});
+
+test('it still delegates the email dispatch even when in-app is disabled', function () {
+    $this->notificationMailService->shouldReceive('send')
+        ->once()
+        ->with(5, NotificationType::IssueCommented, 'Title', 'Message', null);
+
+    $this->notificationSettingRepository->shouldReceive('find')
+        ->once()
+        ->andReturn(new NotificationSetting(['enabled' => false]));
+
+    $this->notificationRepository->shouldNotReceive('store');
+
+    $this->service->notify(5, NotificationType::IssueCommented, 'info', 'Title', 'Message');
 });

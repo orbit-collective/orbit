@@ -73,4 +73,7 @@ class UserRepository {
     public function delete(User $user): bool {
         return $user->delete();
     }
+    public function findById(int $id): ?User {
+        return User::query()->find($id);
+    }
 }

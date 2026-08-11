@@ -12,7 +12,8 @@ class NotificationService
 {
     public function __construct(
         protected NotificationRepository $notificationRepository,
-        protected NotificationSettingService $notificationSettingService
+        protected NotificationSettingService $notificationSettingService,
+        protected NotificationMailService $notificationMailService
     ) {}
 
     public function getAllForUser(int $userId): Collection
@@ -36,11 +37,14 @@ class NotificationService
     }
 
     /**
-     * Create a notification targeted at a single recipient, unless they have
-     * disabled in-app notifications for the given notification type.
+     * Notify a single recipient on every channel they've enabled for the given
+     * notification type: email via NotificationMailService, and in-app by
+     * persisting a Notification row (skipped entirely if in-app is disabled).
      */
     public function notify(int $userId, NotificationType $notificationType, string $type, string $title, string $message, ?string $actionUrl = null): ?Notification
     {
+        $this->notificationMailService->send($userId, $notificationType, $title, $message, $actionUrl);
+
         if (! $this->notificationSettingService->isEnabled($userId, $notificationType, NotificationChannel::InApp)) {
             return null;
         }
