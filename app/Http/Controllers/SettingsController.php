@@ -19,7 +19,7 @@ class SettingsController extends Controller
     {
         return Inertia::render('Settings/Index', [
             'sessions' => $this->userService->getUserSessions($request->user()),
-            'notificationSettings' => $this->notificationSettingService->getAllSettings($request->user()),
+            'notificationSettings' => $this->notificationSettingService->getAllSettings($request->user()->id),
         ]);
     }
 }

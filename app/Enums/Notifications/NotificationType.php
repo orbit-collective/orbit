@@ -8,6 +8,7 @@ enum NotificationType: string
     case IssueMentioned = 'issue_mentioned';
     case IssueCommented = 'issue_commented';
     case IssueStatusChanged = 'issue_status_changed';
+    case IssueUpdated = 'issue_updated';
 
     case ProjectInvited = 'project_invited';
 }

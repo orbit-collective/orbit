@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\Notifications\NotificationType;
 use App\Models\Comment;
 use App\Models\Issue;
 use App\Repositories\CommentRepository;
@@ -15,11 +16,13 @@ class CommentService
         protected NotificationService $notificationService
     ) {}
 
-    public function getForIssue(int $issueId): Collection {
+    public function getForIssue(int $issueId): Collection
+    {
         return $this->commentRepository->getForIssue($issueId);
     }
 
-    public function addComment(Issue $issue, array $data): Comment {
+    public function addComment(Issue $issue, array $data): Comment
+    {
         $data['issue_id'] = $issue->id;
         $data['user_id'] = auth()->id();
 
@@ -35,6 +38,7 @@ class CommentService
         if ($issue->assignee_id && $issue->assignee_id !== $actorId) {
             $this->notificationService->notify(
                 $issue->assignee_id,
+                NotificationType::IssueCommented,
                 'info',
                 'New comment on your issue',
                 "$actorName commented on \"$issue->title\" (#$issue->id).",
@@ -45,7 +49,8 @@ class CommentService
         return $comment;
     }
 
-    public function deleteComment(Comment $comment): void {
+    public function deleteComment(Comment $comment): void
+    {
         $issue = $comment->issue;
         $actorName = auth()->user()?->name ?? 'Someone';
 

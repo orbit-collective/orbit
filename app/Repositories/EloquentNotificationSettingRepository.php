@@ -5,33 +5,32 @@ namespace App\Repositories;
 use App\Enums\Notifications\NotificationChannel;
 use App\Enums\Notifications\NotificationType;
 use App\Models\NotificationSetting;
-use App\Models\User;
 use Illuminate\Support\Collection;
 
 final class EloquentNotificationSettingRepository implements NotificationSettingRepository
 {
-    public function find(User $user, NotificationType $type, NotificationChannel $channel): ?NotificationSetting
+    public function find(int $userId, NotificationType $type, NotificationChannel $channel): ?NotificationSetting
     {
         return NotificationSetting::query()
-            ->where('user_id', $user->id)
+            ->where('user_id', $userId)
             ->where('type', $type)
             ->where('channel', $channel)
             ->first();
     }
 
-    public function getForUser(User $user): Collection
+    public function getForUser(int $userId): Collection
     {
         return NotificationSetting::query()
-            ->where('user_id', $user->id)
+            ->where('user_id', $userId)
             ->get();
     }
 
-    public function updateOrCreate(User $user, NotificationType $type, NotificationChannel $channel, bool $enabled): NotificationSetting
+    public function updateOrCreate(int $userId, NotificationType $type, NotificationChannel $channel, bool $enabled): NotificationSetting
     {
         return NotificationSetting::query()
             ->updateOrCreate(
                 [
-                    'user_id' => $user->id,
+                    'user_id' => $userId,
                     'type' => $type,
                     'channel' => $channel,
                 ],
@@ -40,5 +39,4 @@ final class EloquentNotificationSettingRepository implements NotificationSetting
                 ]
             );
     }
-
 }

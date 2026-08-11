@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\Notifications\NotificationType;
 use App\Models\Issue;
 use App\Models\User;
 use App\Repositories\IssueRepository;
@@ -31,7 +32,8 @@ class IssueService
         protected NotificationService $notificationService
     ) {}
 
-    public function createIssue(array $data): Issue {
+    public function createIssue(array $data): Issue
+    {
         $data['user_id'] = auth()->id();
 
         $issue = $this->issueRepository->store($data);
@@ -40,15 +42,17 @@ class IssueService
         if ($issue->assignee_id && $issue->assignee_id !== auth()->id()) {
             $this->notificationService->notify(
                 $issue->assignee_id,
+                NotificationType::IssueAssigned,
                 'info',
                 'You were assigned to an issue',
-                auth()->user()?->name . " assigned you to \"$issue->title\" (#$issue->id).",
+                auth()->user()?->name." assigned you to \"$issue->title\" (#$issue->id).",
                 $this->buildActionUrl($issue)
             );
         }
 
         return $issue;
     }
+
     public function getAll(): Collection
     {
         return $this->issueRepository->getAll();
@@ -59,7 +63,8 @@ class IssueService
         return $this->issueRepository->findWithRelations($id);
     }
 
-    public function updateIssue(Issue $issue, array $data): Issue {
+    public function updateIssue(Issue $issue, array $data): Issue
+    {
         $before = $this->snapshot($issue);
 
         $this->issueRepository->update($issue, $data);
@@ -74,17 +79,19 @@ class IssueService
 
         $this->activityLogService->log(
             $issue->project_id,
-            "Issue #$issue->id \"$issue->title\" updated by " . ($actor?->name ?? 'someone') . ': ' . $this->summarize($changes)
+            "Issue #$issue->id \"$issue->title\" updated by ".($actor?->name ?? 'someone').': '.$this->summarize($changes)
         );
 
         $this->notifyIssueUpdate($issue, $actor, $changes);
 
         return $issue;
     }
+
     public function getAllByProjectID(int $projectID, array $sortParams = [], int $perPage = 20, array $searchParams = [], array $filters = []): LengthAwarePaginator
     {
         return $this->issueRepository->getAllPaginated($projectID, $perPage, $sortParams, $searchParams, $filters);
     }
+
     public function getProductivityTrend(): array
     {
         return $this->issueRepository->getProductivityTrend();
@@ -145,9 +152,9 @@ class IssueService
             'status' => "status changed from \"$old\" to \"$new\"",
             'priority' => "priority changed from \"$old\" to \"$new\"",
             'assignee_id' => $this->describeAssigneeChange($old, $new),
-            'labels' => 'labels changed to [' . $this->formatLabels($new) . ']',
-            'start_date' => 'start date changed to ' . ($new ?: 'none'),
-            'end_date' => 'end date changed to ' . ($new ?: 'none'),
+            'labels' => 'labels changed to ['.$this->formatLabels($new).']',
+            'start_date' => 'start date changed to '.($new ?: 'none'),
+            'end_date' => 'end date changed to '.($new ?: 'none'),
             default => "$field updated",
         };
     }
@@ -162,7 +169,7 @@ class IssueService
 
     private function formatLabels(mixed $labels, string $glue = ', '): string
     {
-        if (!$labels) {
+        if (! $labels) {
             return $glue === ',' ? '' : 'none';
         }
 
@@ -180,7 +187,7 @@ class IssueService
 
     private function buildActionUrl(Issue $issue): string
     {
-        return route('projects.show', $issue->project_id) . '?issue=' . $issue->id;
+        return route('projects.show', $issue->project_id).'?issue='.$issue->id;
     }
 
     /**
@@ -199,6 +206,7 @@ class IssueService
         if ($actorId) {
             $this->notificationService->notify(
                 $actorId,
+                $this->issueUpdateNotificationType($changes),
                 'info',
                 "Issue #$issue->id updated",
                 "You updated \"$issue->title\": $fullSummary.",
@@ -218,6 +226,7 @@ class IssueService
             if ($oldAssigneeId && $oldAssigneeId !== $newAssigneeId && $oldAssigneeId !== $actorId) {
                 $this->notificationService->notify(
                     $oldAssigneeId,
+                    NotificationType::IssueAssigned,
                     'info',
                     'You were unassigned from an issue',
                     "$actorName unassigned you from \"$issue->title\" (#$issue->id).",
@@ -233,6 +242,7 @@ class IssueService
 
                 $this->notificationService->notify(
                     $newAssigneeId,
+                    NotificationType::IssueAssigned,
                     'info',
                     'You were assigned to an issue',
                     $message,
@@ -246,6 +256,7 @@ class IssueService
         if ($otherSummary && $issue->assignee_id && $issue->assignee_id !== $actorId) {
             $this->notificationService->notify(
                 $issue->assignee_id,
+                $this->issueUpdateNotificationType($otherChanges),
                 'info',
                 "Issue #$issue->id updated",
                 "$actorName updated \"$issue->title\", which is assigned to you: $otherSummary.",
@@ -253,11 +264,26 @@ class IssueService
             );
         }
     }
-    public function deleteIssue(Issue $issue): void {
+
+    /**
+     * The notification type for a generic issue update: precise when the change is a status
+     * transition, and a catch-all for every other tracked field otherwise.
+     */
+    private function issueUpdateNotificationType(array $changes): NotificationType
+    {
+        return array_key_exists('status', $changes)
+            ? NotificationType::IssueStatusChanged
+            : NotificationType::IssueUpdated;
+    }
+
+    public function deleteIssue(Issue $issue): void
+    {
         $this->issueRepository->delete($issue);
         $this->activityLogService->log($issue->project_id, "Deleted issue #$issue->id \"$issue->title\"");
     }
-    public function bulkDeleteIssues(array $issueIds): void {
+
+    public function bulkDeleteIssues(array $issueIds): void
+    {
         $issues = $this->issueRepository->getMany($issueIds);
 
         $this->issueRepository->bulkDelete($issueIds);

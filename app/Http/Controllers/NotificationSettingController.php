@@ -12,7 +12,7 @@ class NotificationSettingController extends Controller
 
     public function update(UpdateNotificationSettingsRequest $request): RedirectResponse
     {
-        $this->notificationSettingService->updateSettings($request->user(), $request->validated('settings'));
+        $this->notificationSettingService->updateSettings($request->user()->id, $request->validated('settings'));
 
         return back()->with('success', 'Notification settings updated successfully.');
     }
