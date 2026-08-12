@@ -47,14 +47,14 @@ client/server version drift to manage.
 
 ## Tech stack
 
-| Layer      | Technology                                                |
-| ---------- | ---------------------------------------------------------- |
-| Backend    | PHP 8.4+, Laravel 13                                       |
-| Bridge     | Inertia.js 3 (no REST/JSON API — Laravel renders React pages directly) |
-| Frontend   | React 19, TypeScript, Vite                                 |
-| Styling    | Tailwind CSS (dark theme only), `class-variance-authority` |
-| Database   | SQLite by default (swappable via Laravel's standard `DB_*` env vars) |
-| Testing    | Pest (PHP), Vitest + Testing Library (React)                |
+| Layer    | Technology                                                             |
+|----------|------------------------------------------------------------------------|
+| Backend  | PHP 8.5+, Laravel 13                                                   |
+| Bridge   | Inertia.js 3 (no REST/JSON API — Laravel renders React pages directly) |
+| Frontend | React 19, TypeScript, Vite                                             |
+| Styling  | Tailwind CSS (dark theme only), `class-variance-authority`             |
+| Database | SQLite by default (swappable via Laravel's standard `DB_*` env vars)   |
+| Testing  | Pest (PHP), Vitest + Testing Library (React)                           |
 
 The backend follows a layered **Controller → Service → Repository**
 architecture: controllers stay thin (validate, delegate, redirect),
@@ -95,10 +95,10 @@ source of truth instead, exactly as before.
 
 Once it's up:
 
-| Service          | URL                     |
-| ---------------- | ----------------------- |
-| App (Laravel)    | http://localhost:8000   |
-| Vite (assets/HMR)| http://localhost:5173   |
+| Service           | URL                   |
+|-------------------|-----------------------|
+| App (Laravel)     | http://localhost:8000 |
+| Vite (assets/HMR) | http://localhost:5173 |
 
 Useful commands from here (see the `Makefile` for the full list):
 
@@ -127,7 +127,7 @@ through `doppler run --`, so don't prefix them yourself.
 
 ### Option B — Native (PHP + Node directly)
 
-You'll need PHP 8.3+, Composer, and Node.js installed locally.
+You'll need PHP 8.5+, Composer, and Node.js installed locally.
 
 ```bash
 git clone https://github.com/Adiksuu/orbit.git

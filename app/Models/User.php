@@ -21,8 +21,6 @@ class User extends Authenticatable
         'role',
         'has_completed_onboarding',
         'has_completed_project_onboarding',
-//        'avatar',
-//        'type'
         'avatar',
         'session_lifetime',
     ];
