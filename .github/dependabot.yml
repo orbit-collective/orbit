@@ -5,9 +5,16 @@ updates:
     schedule:
       interval: "daily"
     open-pull-requests-limit: 20
+    commit-message:
+      prefix: "deps"
+      prefix-development: "chore"
+      include: "scope"
 
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "daily"
-    open-pull-requests-limit: 20   
+    open-pull-requests-limit: 20
+    commit-message:
+      prefix: "deps"
+      include: "scope"
