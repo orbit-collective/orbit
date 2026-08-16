@@ -37,13 +37,73 @@ client/server version drift to manage.
 - **A dashboard** with productivity trends, priority breakdowns, and
   completion ratios across every project.
 - **An activity log** recording who did what, so project history isn't lost.
-- **In-app notifications**, scoped per user and markable as read individually
-  or all at once.
+- **In-app and email notifications**, scoped per user and markable as read
+  individually or all at once. Nine notification types (issue assigned,
+  commented, mentioned, status/priority/labels/dates changed, other issue
+  updates, project invitations) are each independently toggleable per
+  channel — see [Notifications](#notifications) below.
 - **Accounts with roles** — anyone can register; the very first account
   becomes an admin, everyone after that registers as a member.
+- **A full account settings area** (`/settings`) covering profile, security,
+  preferences, and notifications — see
+  [Account settings](#account-settings) below.
+- **Light, dark, and system theme**, plus a choice of 10 accent colors,
+  applied instantly and persisted per browser (no flash of the wrong theme
+  on load).
 - **Guided onboarding**, shown once per account and tracked server-side: a
   welcome tour for every new user, followed by a dedicated "create your first
   project" flow for the first (admin) account when the workspace is empty.
+
+## Account settings
+
+Every user gets a settings area at `/settings`, organized into an Account
+section (Preferences, Profile, Notifications, Security & access — plus
+Integrations and Export, present in the nav but disabled pending future
+work) and a Workspace section (currently all "coming soon" placeholders:
+Labels, Statuses, Priorities, Templates, Documents, Members, Roles &
+management). Enabled tabs:
+
+- **Profile** — change your display name and upload/reset a profile photo
+  (JPEG/PNG/GIF, 5 MB max), with a live preview of both.
+- **Preferences** — pick a theme (light/dark/system), an accent color (10
+  options or the default), and your default issue view.
+- **Notifications** — toggle each of the 9 notification types independently
+  for in-app and email delivery.
+- **Security & access** — change your password (with a strength meter), see
+  and revoke individual active sessions (or all others at once), choose how
+  long a session stays alive before re-authentication (1 hour / 8 hours / 24
+  hours / 7 days), and permanently delete your account.
+
+Uploaded avatars are screened server-side for inappropriate content before
+being accepted — see [Content moderation](#content-moderation).
+
+## Notifications
+
+Notifications are emitted for nine `App\Enums\Notifications\NotificationType`
+cases: issue assigned, commented, mentioned, status changed, priority
+changed, labels changed, dates changed, other issue updates, and project
+invitations. Each type can be delivered over two independent
+`App\Enums\Notifications\NotificationChannel`s — in-app (on by default) and
+email (off by default) — configurable per user via
+`NotificationSettingService`/`NotificationSettingRepository` and the
+`POST /account/notification-settings` route.
+
+Email delivery reuses a single queued `App\Notifications\NotificationMail`
+class for every notification type (no per-type Mailable needed), rate-limited
+and retried with backoff to stay within the mail provider's send limits.
+Queued jobs run through the database queue driver — the `queue` container
+in Docker (`php artisan queue:work --tries=3`) is what actually sends them,
+so email notifications won't go out unless that service (or a local
+`php artisan queue:work`) is running.
+
+## Content moderation
+
+Profile photo uploads are checked with [nsfwjs](https://github.com/infinitered/nsfwjs)
+before they're accepted, via `App\Services\NsfwDetectionService`. In Docker
+this runs as its own `nsfwjs` service/container; natively it's expected at
+`http://localhost:3333` (see `NSFW_SERVICE_URL` in `.env.example`).
+Detection can be disabled entirely with `NSFW_DETECTION_ENABLED=false`, and
+the sensitivity tuned with `NSFW_THRESHOLD` (0–1, default `0.70`).
 
 ## Tech stack
 
@@ -52,7 +112,7 @@ client/server version drift to manage.
 | Backend  | PHP 8.5+, Laravel 13                                                   |
 | Bridge   | Inertia.js 3 (no REST/JSON API — Laravel renders React pages directly) |
 | Frontend | React 19, TypeScript, Vite                                             |
-| Styling  | Tailwind CSS (dark theme only), `class-variance-authority`             |
+| Styling  | Tailwind CSS, `class-variance-authority`, light/dark/system theming    |
 | Database | SQLite by default (swappable via Laravel's standard `DB_*` env vars)   |
 | Testing  | Pest (PHP), Vitest + Testing Library (React)                           |
 
@@ -95,10 +155,15 @@ source of truth instead, exactly as before.
 
 Once it's up:
 
-| Service           | URL                   |
-|-------------------|-----------------------|
-| App (Laravel)     | http://localhost:8000 |
-| Vite (assets/HMR) | http://localhost:5173 |
+| Service                  | URL                    |
+|--------------------------|------------------------|
+| App (Laravel)            | http://localhost:8000  |
+| Vite (assets/HMR)        | http://localhost:5173  |
+| nsfwjs (image moderation)| http://localhost:3333  |
+
+A `queue` container also starts automatically, running
+`php artisan queue:work --tries=3` — this is what actually sends queued
+email notifications, so nothing extra to start there.
 
 Useful commands from here (see the `Makefile` for the full list):
 
@@ -108,6 +173,7 @@ make up-d             # start in the background
 make down             # stop the stack
 make build            # rebuild the images
 make npm-install      # run after adding/updating/removing an npm package
+make composer-install # run after adding/updating/removing a composer package
 make logs             # tail logs from every service
 make shell            # open a shell in the app container
 make tinker           # open the Laravel tinker REPL
@@ -120,6 +186,15 @@ make test-js-coverage # run the frontend suite with the coverage gate
 make lint             # lint the frontend
 make type-check       # type-check the frontend
 make clean            # stop the stack and remove volumes
+```
+
+There's also an optional monitoring stack ([Uptime Kuma](https://github.com/louislam/uptime-kuma)),
+kept behind a Compose profile so it doesn't start with the rest of the stack:
+
+```bash
+make up-monitoring     # start Uptime Kuma at http://localhost:3001
+make down-monitoring   # stop it
+make logs-monitoring   # tail its logs
 ```
 
 If this directory is linked to Doppler, every one of these already runs
@@ -304,22 +379,24 @@ production build on every push and pull request against `master`.
 ```
 app/
   Http/Controllers/   Thin HTTP layer — validate, delegate, redirect
-  Services/           Business logic and side effects (activity logging, etc.)
+  Services/           Business logic and side effects (activity logging, notification mail, NSFW detection, etc.)
   Repositories/       All Eloquent query logic
-  Models/             Issue, Project, User, Notification, SavedFilter, ActivityLog
+  Models/             Issue, Project, User, Notification, NotificationSetting, SavedFilter, ActivityLog
   Enums/              IssueLabel, UserRole
+  Enums/Notifications/ NotificationType, NotificationChannel
+  Notifications/      NotificationMail — the single mailable used for every notification type
 
 resources/js/
-  Pages/              Inertia pages, resolved by name (Dashboard, Projects/Show, Auth/Login, ...)
+  Pages/              Inertia pages, resolved by name (Dashboard, Projects/Show, Settings/Index, Auth/Login, ...)
   Components/
     Atoms/            Smallest building blocks (Button, Badge, Input, ...)
-    Molecules/         Composed from atoms (BoardColumn, IssueRowDetail, ...)
-    Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, ...)
+    Molecules/         Composed from atoms (BoardColumn, Breadcrumb, IssueRowDetail, ...)
+    Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, AccountSettingsContent, SettingsSidebar, ...)
   Layouts/            Page shells (sidebar, top nav, ...)
-  context/            React context providers (alerts, global modal, keyboard shortcuts)
+  context/            React context providers (alerts, theme, accent color, global modal, keyboard shortcuts)
   hooks/              Reusable hooks (saved filters, resizable table columns, ...)
-  types/              Shared TypeScript types (Issues, Projects, Users, ...)
-  utils/              cn() (Tailwind class merging), colors, time helpers
+  types/              Shared TypeScript types (Issues, Projects, Users, Settings, Theme, Accent, Notification, ...)
+  utils/              cn() (Tailwind class merging), colors, time helpers, accent color CSS variables, password strength
 
 database/
   migrations/         Schema history
@@ -338,8 +415,12 @@ routes/
 - Mutating routes (`issues.store`, `issues.update`, `projects.store`, ...)
   return a redirect rather than JSON; Inertia re-fetches the page props and
   re-renders, so controllers never hand-build response payloads.
-- The theme is dark-only, driven by CSS custom properties consumed via Tailwind arbitrary values
-  like `bg-[var(--bg-color)]`. Prefer these variables over hardcoded colors.
+- Theme (light/dark/system) and accent color are driven by CSS custom
+  properties consumed via Tailwind arbitrary values like
+  `bg-[var(--bg-color)]`, set by `ThemeContext`/`AccentContext` and mirrored
+  in `localStorage` (`theme`, `accentColor`) plus an inline script in
+  `app.blade.php` that applies them before first paint. Prefer these
+  variables over hardcoded colors.
 - Prettier (single quotes, auto-organized imports, Tailwind class sorting)
   and ESLint should both pass clean before a commit.
 - Roles are a plain `App\Enums\UserRole` (`admin` / `member`), assigned at
