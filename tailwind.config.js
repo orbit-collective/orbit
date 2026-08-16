@@ -1,6 +1,6 @@
 import forms from '@tailwindcss/forms';
-import defaultTheme from 'tailwindcss/defaultTheme';
 import scrollbar from 'tailwind-scrollbar';
+import defaultTheme from 'tailwindcss/defaultTheme';
 
 import generated from '@tailwindcss/typography';
 
