@@ -14,17 +14,17 @@ function NotificationItem({
         <div
             className={`group relative flex items-start justify-between rounded-xl p-3 transition-all duration-150 ${
                 notification.read
-                    ? 'hover:bg-white/[0.03]'
-                    : 'bg-white/[0.02] hover:bg-white/[0.05]'
+                    ? 'hover:bg-[var(--bg-light-color)]'
+                    : 'bg-[var(--bg-light-color)] hover:bg-[var(--bg-light-color-hover)]'
             }`}
         >
             <div className="min-w-0 flex-1 pr-2">
-                <h2 className="break-words text-sm font-semibold tracking-tight text-white transition-colors group-hover:text-[var(--accent-color)]">
+                <h2 className="break-words text-sm font-semibold tracking-tight text-[var(--text-color)] transition-colors group-hover:text-[var(--accent-color)]">
                     {notification.title}
                 </h2>
 
                 {notification.message && (
-                    <p className="mt-1 break-words text-xs leading-relaxed text-gray-400">
+                    <p className="mt-1 break-words text-xs leading-relaxed text-[var(--text-gray-color)]">
                         {notification.message}
                     </p>
                 )}
@@ -48,7 +48,7 @@ function NotificationItem({
                         variant={'ghost'}
                         tooltip={true}
                         tooltipText={'Mark as read'}
-                        className="group/btn cursor-pointer justify-center rounded-full p-2 transition-all hover:bg-white/10"
+                        className="group/btn cursor-pointer justify-center rounded-full p-2 transition-all hover:bg-[var(--bg-light-color-hover)]"
                     >
                         <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent-color)] shadow-[0_0_8px_var(--accent-color)] transition-transform group-hover/btn:scale-125" />
                     </Badge>

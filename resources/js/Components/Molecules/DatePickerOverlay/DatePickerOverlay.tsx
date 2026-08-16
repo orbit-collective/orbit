@@ -32,7 +32,7 @@ const DatePickerOverlay: React.FC<DatePickerOverlayProps> = ({
         <AnimatePresence>
             {isOpen && (
                 <div
-                    className="absolute inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
+                    className="absolute inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
                     onClick={onClose}
                 >
                     <div onClick={(e) => e.stopPropagation()}>

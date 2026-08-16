@@ -26,7 +26,9 @@ describe('ToggleSwitch Component', () => {
             <ToggleSwitch checked={false} onChange={() => {}} />,
         );
 
-        expect(screen.getByRole('button')).toHaveClass('bg-white/15');
+        expect(screen.getByRole('button')).toHaveClass(
+            'bg-[var(--bg-light-color)]',
+        );
         expect(container.querySelector('span')).toHaveClass('translate-x-0');
     });
 
@@ -48,5 +50,17 @@ describe('ToggleSwitch Component', () => {
 
         expect(onChange).toHaveBeenCalledTimes(1);
         expect(onChange).toHaveBeenCalledWith(false);
+    });
+
+    test('disables the button and does not call onChange when clicked while disabled', async () => {
+        const onChange = vi.fn();
+        render(<ToggleSwitch checked={false} onChange={onChange} disabled />);
+
+        const button = screen.getByRole('button');
+        expect(button).toBeDisabled();
+
+        await userEvent.click(button);
+
+        expect(onChange).not.toHaveBeenCalled();
     });
 });

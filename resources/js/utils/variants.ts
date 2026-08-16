@@ -15,8 +15,8 @@ export const boardCardVariants = cva(
     {
         variants: {
             isActive: {
-                true: 'border-zinc-600 bg-[#242424] ring-1 ring-[var(--accent-color)]/40',
-                false: 'border-white/[0.08] bg-[#1c1c1c] hover:border-white/[0.16] hover:bg-[#212121]',
+                true: 'border-[var(--border-color-strong)] bg-[var(--bg-light-color-hover)] ring-1 ring-[var(--accent-color)]/40',
+                false: 'border-[var(--border-color)] bg-[var(--bg-light-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
             },
             isClosed: { true: 'opacity-50 hover:opacity-90', false: '' },
         },
@@ -29,7 +29,7 @@ export const listRowVariants = cva(
         variants: {
             isActive: {
                 true: 'bg-[var(--bg-light-color-hover)] text-[var(--text-color)]',
-                false: 'hover:bg-[var(--bg-light-color-hover)]/50 text-zinc-300 bg-[var(--bg-color)]',
+                false: 'hover:bg-[var(--bg-light-color-hover)]/50 text-[var(--text-color)] bg-[var(--bg-color)]',
             },
         },
     },

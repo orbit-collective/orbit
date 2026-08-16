@@ -1,95 +1,151 @@
+import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
-import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
-import { useState } from 'react';
+import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
+import AccountSettingsAvatarUploader from '@/Components/Organisms/AccountSettingsContent/AccountSettingsAvatarUploader';
+import AccountSettingsProfilePreview from '@/Components/Organisms/AccountSettingsContent/AccountSettingsProfilePreview';
+import { useAlert } from '@/context/AlertContext';
+import { cn } from '@/utils/cn';
+import { useForm } from '@inertiajs/react';
+import { SyntheticEvent, useState } from 'react';
 
-export default function AccountSettingsProfileTab() {
-    const [fullName, setFullName] = useState('John Doe');
-    const [email, setEmail] = useState('john@acme.com');
-    const [title, setTitle] = useState('Product Engineer');
-    const [timezone, setTimezone] = useState('Europe/Warsaw');
-    const [pronouns, setPronouns] = useState('he/him');
+const getInitials = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) {
+        return '?';
+    }
+
+    const [first, ...rest] = trimmed.split(/\s+/);
+    const last = rest.length > 0 ? rest[rest.length - 1] : '';
+
+    return (first.charAt(0) + last.charAt(0)).toUpperCase();
+};
+
+interface AccountSettingsProfileTabProps {
+    userName?: string;
+    userAvatar?: string | null;
+}
+
+export default function AccountSettingsProfileTab({
+    userName = 'John Doe',
+    userAvatar = null,
+}: AccountSettingsProfileTabProps) {
+    const { addAlert } = useAlert();
+
+    const { data, setData, post, errors, processing, clearErrors } = useForm({
+        name: userName,
+    });
+    const [avatarSrc, setAvatarSrc] = useState<string | null>(userAvatar);
+    const [savedName, setSavedName] = useState(userName);
+
+    const initials = getInitials(data.name);
+    const hasUnsavedChanges = data.name.trim() !== savedName.trim();
+
+    const handleSubmitUsername = (e: SyntheticEvent) => {
+        e.preventDefault();
+        post(route('account.rename'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setSavedName(data.name);
+                clearErrors('name');
+            },
+        });
+    };
+
+    const handleResetAvatar = () => {
+        setAvatarSrc(null);
+        addAlert('Avatar reset to default.', 'information');
+    };
 
     return (
         <div className="space-y-5">
             <SettingsPanel
-                title="Profile details"
-                description="Information shown to teammates in Orbit."
+                title="Profile"
+                description="Manage your personal details and how you appear to teammates."
+                icon="User"
             >
-                <div className="grid grid-cols-1 gap-5 px-5 py-4 lg:grid-cols-[1.4fr_1fr]">
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <Input
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                        />
-                        <Input
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                        <Input
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
-                        <Input
-                            value={timezone}
-                            onChange={(e) => setTimezone(e.target.value)}
-                        />
-                        <div className="md:col-span-2">
+                <SettingsPanelRow
+                    title="Username"
+                    description="Teammates will see this name and can @mention you with it."
+                    action={
+                        <form
+                            onSubmit={handleSubmitUsername}
+                            className="flex flex-col gap-1.5"
+                        >
                             <Input
-                                value={pronouns}
-                                onChange={(e) => setPronouns(e.target.value)}
+                                name="name"
+                                value={data.name}
+                                onChange={(event) => {
+                                    setData('name', event.target.value);
+                                    if (errors.name) {
+                                        clearErrors('name');
+                                    }
+                                }}
+                                placeholder="Your name"
+                                className={cn(
+                                    'w-56',
+                                    errors.name &&
+                                        'border-[var(--error-color)] focus:border-[var(--error-color)]',
+                                )}
                             />
-                        </div>
-                    </div>
-                    <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                            Profile preview
-                        </p>
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--accent-color-opacity)] text-sm font-semibold text-white">
-                                JD
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-white">
-                                    {fullName}
-                                </p>
-                                <p className="text-xs text-zinc-400">{title}</p>
-                            </div>
-                        </div>
-                        <div className="mt-4 space-y-2 text-xs text-zinc-400">
-                            <p>{email}</p>
-                            <p>{timezone}</p>
-                            <p>{pronouns}</p>
-                        </div>
-                    </div>
-                </div>
+                            {errors.name && (
+                                <span className="text-xs text-[var(--error-color)]">
+                                    {errors.name}
+                                </span>
+                            )}
+                            <span className="flex items-center gap-1.5 text-xs text-[var(--text-gray-color)]">
+                                {processing ? (
+                                    <>
+                                        <Icon
+                                            name="LoaderCircle"
+                                            size={14}
+                                            className="animate-spin"
+                                        />
+                                        Saving...
+                                    </>
+                                ) : hasUnsavedChanges ? (
+                                    <>
+                                        <Icon name="CircleAlert" size={14} />
+                                        Unsaved changes
+                                    </>
+                                ) : (
+                                    <>
+                                        <Icon
+                                            name="CircleCheck"
+                                            size={14}
+                                            className="text-[var(--success-color)]"
+                                        />
+                                        Changes saved
+                                    </>
+                                )}
+                            </span>
+                        </form>
+                    }
+                />
+                <SettingsPanelRow
+                    title="Profile photo"
+                    description="This photo will be visible to others across Orbit."
+                    action={
+                        <AccountSettingsAvatarUploader
+                            avatarSrc={avatarSrc}
+                            initials={initials}
+                            onUpload={setAvatarSrc}
+                            onReset={() => handleResetAvatar()}
+                        />
+                    }
+                />
             </SettingsPanel>
+
             <SettingsPanel
-                title="Profile actions"
-                description="Access profile-level appearance and visibility controls."
+                title="Live preview"
+                description="Updates instantly as you edit your photo and name."
+                icon="Eye"
             >
-                <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
-                    <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                        <p className="text-sm font-medium text-white">
-                            Avatar and cover
-                        </p>
-                        <p className="mt-1 text-sm text-zinc-400">
-                            Upload profile media and personalize your presence.
-                        </p>
-                    </div>
-                    <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Public profile visibility
-                            </p>
-                            <ToggleSwitch checked onChange={() => {}} />
-                        </div>
-                        <p className="mt-2 text-sm text-zinc-400">
-                            Allow workspace members to discover your profile
-                            details.
-                        </p>
-                    </div>
-                </div>
+                <AccountSettingsProfilePreview
+                    name={data.name}
+                    avatarSrc={avatarSrc}
+                    initials={initials}
+                />
             </SettingsPanel>
         </div>
     );

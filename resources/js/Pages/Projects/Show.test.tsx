@@ -286,10 +286,6 @@ describe('Projects Show Page', () => {
         expect(screen.getByTestId('issue-board')).toBeInTheDocument();
         expect(screen.getByTestId('pagination')).toBeInTheDocument();
         expect(screen.queryByTestId('issue-table')).not.toBeInTheDocument();
-        expect(localStorage.setItem).toHaveBeenCalledWith(
-            'selectedLook',
-            'Board',
-        );
     });
 
     test('switches to the Calendar view and hides pagination', async () => {
@@ -308,12 +304,12 @@ describe('Projects Show Page', () => {
             screen.getByRole('button', { name: 'Switch to Calendar' }),
         );
 
-        expect(screen.getByTestId('calendar-view')).toBeInTheDocument();
-        expect(screen.queryByTestId('pagination')).not.toBeInTheDocument();
-        expect(localStorage.setItem).toHaveBeenCalledWith(
-            'selectedLook',
+        expect(screen.getByTestId('main-layout')).toHaveAttribute(
+            'data-selected-look',
             'Calendar',
         );
+        expect(screen.getByTestId('calendar-view')).toBeInTheDocument();
+        expect(screen.queryByTestId('pagination')).not.toBeInTheDocument();
     });
 
     test('forwards queryParams to FilterBar and IssueTable', () => {

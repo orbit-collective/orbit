@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'nsfw' => [
+        'enabled' => env('NSFW_DETECTION_ENABLED', true),
+        'url' => env('NSFW_SERVICE_URL', 'http://nsfwjs:3333'),
+        'threshold' => (float) env('NSFW_THRESHOLD', 0.70),
+    ],
 ];

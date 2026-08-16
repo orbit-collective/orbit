@@ -4,9 +4,11 @@ import './bootstrap';
 import { ModalContainer } from '@/Components/Organisms/Modal';
 import OnboardingModal from '@/Components/Organisms/OnboardingModal/OnboardingModal';
 import ProjectOnboardingModal from '@/Components/Organisms/ProjectOnboardingModal/ProjectOnboardingModal';
+import { AccentProvider } from '@/context/AccentContext';
 import { AlertProvider } from '@/context/AlertContext';
 import { ModalProvider } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { PageProps } from '@/types';
 import type { ResolvedComponent } from '@inertiajs/react';
 import { createInertiaApp, router, usePage } from '@inertiajs/react';
@@ -84,15 +86,19 @@ createInertiaApp({
         root.render(
             <App {...props}>
                 {({ Component, props: pageProps, key }) => (
-                    <ModalProvider>
-                        <AlertProvider>
-                            <ShortcutProvider>
-                                <ModalContainer />
-                                <Component {...pageProps} key={key} />
-                                <OnboardingGate />
-                            </ShortcutProvider>
-                        </AlertProvider>
-                    </ModalProvider>
+                    <ThemeProvider>
+                        <AccentProvider>
+                            <ModalProvider>
+                                <AlertProvider>
+                                    <ShortcutProvider>
+                                        <ModalContainer />
+                                        <Component {...pageProps} key={key} />
+                                        <OnboardingGate />
+                                    </ShortcutProvider>
+                                </AlertProvider>
+                            </ModalProvider>
+                        </AccentProvider>
+                    </ThemeProvider>
                 )}
             </App>,
         );

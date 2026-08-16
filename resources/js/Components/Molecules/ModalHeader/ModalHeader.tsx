@@ -14,7 +14,7 @@ const ModalHeader: React.FC<ModalHeaderProps> = ({ title, onClose, icon }) => {
             <IconButton
                 iconName="X"
                 iconSize={18}
-                iconColor="#999"
+                iconColor="var(--text-gray-color)"
                 onClick={onClose}
             />
         </header>

@@ -155,7 +155,7 @@ describe('BoardCard Component', () => {
 
         const title = screen.getByText('Fix the login page');
         expect(title).toHaveClass('line-through');
-        expect(title).toHaveClass('text-zinc-500');
+        expect(title).toHaveClass('text-[var(--text-muted-color)]');
     });
 
     test('shows the priority dot when the issue is open, and the status dot when closed', () => {

@@ -35,7 +35,7 @@ export default function ProjectOnboardingModal({
                     className={`pointer-events-none absolute -inset-16 rounded-[80px] opacity-25 blur-3xl transition-colors duration-500 ${theme.accent}`}
                 />
 
-                <div className="relative z-50 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-zinc-800/80 bg-zinc-950/95 text-zinc-100 shadow-2xl backdrop-blur-2xl sm:max-h-[calc(100vh-3rem)] sm:rounded-3xl">
+                <div className="relative z-50 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] text-[var(--text-color)] shadow-2xl backdrop-blur-2xl sm:max-h-[calc(100vh-3rem)] sm:rounded-3xl">
                     <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr]">
                         <div className="order-2 flex flex-col gap-6 p-6 sm:p-8 md:order-1 md:p-10">
                             <ProjectOnboardingHeader userName={userName} />

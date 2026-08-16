@@ -29,7 +29,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                             className="group flex h-full flex-1 flex-col items-center justify-end"
                         >
                             <div className="relative flex h-20 w-full flex-col items-center justify-end">
-                                <span className="absolute -top-7 z-20 scale-0 whitespace-nowrap rounded border border-solid border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[9px] font-semibold text-white transition-all group-hover:scale-100">
+                                <span className="absolute -top-7 z-20 scale-0 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-color)] transition-all group-hover:scale-100">
                                     {day.count}
                                 </span>
                                 <div
@@ -37,11 +37,11 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                     className={`w-full max-w-[16px] rounded-t-sm transition-all duration-500 ${
                                         isActive
                                             ? 'bg-gradient-to-t from-[var(--accent-color)] to-[var(--accent-light-color)] shadow-[0_0_10px_rgba(136,68,218,0.3)]'
-                                            : 'bg-zinc-800 group-hover:bg-zinc-700'
+                                            : 'bg-[var(--bg-light-color)] group-hover:bg-[var(--bg-light-color-hover)]'
                                     }`}
                                 />
                             </div>
-                            <span className="mt-2 text-[10px] font-semibold text-zinc-500">
+                            <span className="mt-2 text-[10px] font-semibold text-[var(--text-muted-color)]">
                                 {day.day}
                             </span>
                         </div>

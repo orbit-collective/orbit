@@ -11,7 +11,7 @@ export default function OnboardingModalFooter({
     onNext,
 }: OnboardingModalFooterProps) {
     return (
-        <div className="mt-8 flex items-center justify-between border-t border-zinc-800/80 pt-6 md:mt-12">
+        <div className="mt-8 flex items-center justify-between border-t border-[var(--border-color-strong)] pt-6 md:mt-12">
             <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
             <div className="flex items-center gap-2">
                 <IconButton

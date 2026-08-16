@@ -125,10 +125,10 @@ describe('TopNav Component', () => {
         });
 
         expect(screen.getByRole('button', { name: /list/i })).toHaveClass(
-            'text-white',
+            'text-[var(--text-color)]',
         );
         expect(screen.getByRole('button', { name: /board/i })).toHaveClass(
-            'text-zinc-400',
+            'text-[var(--text-gray-color)]',
         );
     });
 
@@ -143,10 +143,10 @@ describe('TopNav Component', () => {
         const calendarButton = screen.getByRole('button', {
             name: /calendar/i,
         });
-        expect(calendarButton).toHaveClass('text-white');
+        expect(calendarButton).toHaveClass('text-[var(--text-color)]');
         expect(
             calendarButton.querySelector('.lucide-calendar-days'),
-        ).toHaveClass('text-white');
+        ).toHaveClass('text-[var(--text-color)]');
     });
 
     test('switches the view when a toggle is clicked', async () => {

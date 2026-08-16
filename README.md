@@ -37,24 +37,84 @@ client/server version drift to manage.
 - **A dashboard** with productivity trends, priority breakdowns, and
   completion ratios across every project.
 - **An activity log** recording who did what, so project history isn't lost.
-- **In-app notifications**, scoped per user and markable as read individually
-  or all at once.
+- **In-app and email notifications**, scoped per user and markable as read
+  individually or all at once. Nine notification types (issue assigned,
+  commented, mentioned, status/priority/labels/dates changed, other issue
+  updates, project invitations) are each independently toggleable per
+  channel — see [Notifications](#notifications) below.
 - **Accounts with roles** — anyone can register; the very first account
   becomes an admin, everyone after that registers as a member.
+- **A full account settings area** (`/settings`) covering profile, security,
+  preferences, and notifications — see
+  [Account settings](#account-settings) below.
+- **Light, dark, and system theme**, plus a choice of 10 accent colors,
+  applied instantly and persisted per browser (no flash of the wrong theme
+  on load).
 - **Guided onboarding**, shown once per account and tracked server-side: a
   welcome tour for every new user, followed by a dedicated "create your first
   project" flow for the first (admin) account when the workspace is empty.
 
+## Account settings
+
+Every user gets a settings area at `/settings`, organized into an Account
+section (Preferences, Profile, Notifications, Security & access — plus
+Integrations and Export, present in the nav but disabled pending future
+work) and a Workspace section (currently all "coming soon" placeholders:
+Labels, Statuses, Priorities, Templates, Documents, Members, Roles &
+management). Enabled tabs:
+
+- **Profile** — change your display name and upload/reset a profile photo
+  (JPEG/PNG/GIF, 5 MB max), with a live preview of both.
+- **Preferences** — pick a theme (light/dark/system), an accent color (10
+  options or the default), and your default issue view.
+- **Notifications** — toggle each of the 9 notification types independently
+  for in-app and email delivery.
+- **Security & access** — change your password (with a strength meter), see
+  and revoke individual active sessions (or all others at once), choose how
+  long a session stays alive before re-authentication (1 hour / 8 hours / 24
+  hours / 7 days), and permanently delete your account.
+
+Uploaded avatars are screened server-side for inappropriate content before
+being accepted — see [Content moderation](#content-moderation).
+
+## Notifications
+
+Notifications are emitted for nine `App\Enums\Notifications\NotificationType`
+cases: issue assigned, commented, mentioned, status changed, priority
+changed, labels changed, dates changed, other issue updates, and project
+invitations. Each type can be delivered over two independent
+`App\Enums\Notifications\NotificationChannel`s — in-app (on by default) and
+email (off by default) — configurable per user via
+`NotificationSettingService`/`NotificationSettingRepository` and the
+`POST /account/notification-settings` route.
+
+Email delivery reuses a single queued `App\Notifications\NotificationMail`
+class for every notification type (no per-type Mailable needed), rate-limited
+and retried with backoff to stay within the mail provider's send limits.
+Queued jobs run through the database queue driver — the `queue` container
+in Docker (`php artisan queue:work --tries=3`) is what actually sends them,
+so email notifications won't go out unless that service (or a local
+`php artisan queue:work`) is running.
+
+## Content moderation
+
+Profile photo uploads are checked with [nsfwjs](https://github.com/infinitered/nsfwjs)
+before they're accepted, via `App\Services\NsfwDetectionService`. In Docker
+this runs as its own `nsfwjs` service/container; natively it's expected at
+`http://localhost:3333` (see `NSFW_SERVICE_URL` in `.env.example`).
+Detection can be disabled entirely with `NSFW_DETECTION_ENABLED=false`, and
+the sensitivity tuned with `NSFW_THRESHOLD` (0–1, default `0.70`).
+
 ## Tech stack
 
-| Layer      | Technology                                                |
-| ---------- | ---------------------------------------------------------- |
-| Backend    | PHP 8.4+, Laravel 13                                       |
-| Bridge     | Inertia.js 3 (no REST/JSON API — Laravel renders React pages directly) |
-| Frontend   | React 19, TypeScript, Vite                                 |
-| Styling    | Tailwind CSS (dark theme only), `class-variance-authority` |
-| Database   | SQLite by default (swappable via Laravel's standard `DB_*` env vars) |
-| Testing    | Pest (PHP), Vitest + Testing Library (React)                |
+| Layer    | Technology                                                             |
+|----------|------------------------------------------------------------------------|
+| Backend  | PHP 8.5+, Laravel 13                                                   |
+| Bridge   | Inertia.js 3 (no REST/JSON API — Laravel renders React pages directly) |
+| Frontend | React 19, TypeScript, Vite                                             |
+| Styling  | Tailwind CSS, `class-variance-authority`, light/dark/system theming    |
+| Database | SQLite by default (swappable via Laravel's standard `DB_*` env vars)   |
+| Testing  | Pest (PHP), Vitest + Testing Library (React)                           |
 
 The backend follows a layered **Controller → Service → Repository**
 architecture: controllers stay thin (validate, delegate, redirect),
@@ -72,7 +132,12 @@ gets you a fully working local instance with its own SQLite database.
 
 ### Option A — Docker (recommended)
 
-All you need is [Docker](https://www.docker.com/) and `make`.
+You'll need [Docker](https://www.docker.com/) and `make`. Doppler is
+optional: the team uses [Doppler](https://www.doppler.com/) to manage the
+Docker stack's environment variables, but you don't need an account or the
+Doppler CLI just to run the project locally — see
+[Environment configuration](#environment-configuration) for exactly how the
+two paths differ and when you'd want each.
 
 ```bash
 git clone https://github.com/Adiksuu/orbit.git
@@ -80,36 +145,64 @@ cd orbit
 make setup
 ```
 
-`make setup` builds the images, starts the stack in the background, and
-bootstraps everything on first boot — `.env`, the SQLite file, the app key,
-and migrations are all handled automatically by the container entrypoint.
+`make setup` builds the images and starts the stack in the background. Every
+`make` target that needs environment variables runs an `ensure-env` step
+first: if this directory isn't linked to a Doppler config (`doppler setup`
+was never run here), it transparently copies `.env.example` to `.env` and
+generates a fresh `APP_KEY` on first run — no manual step required. If the
+directory *is* linked to Doppler, that step is skipped and Doppler is the
+source of truth instead, exactly as before.
 
 Once it's up:
 
-| Service          | URL                     |
-| ---------------- | ----------------------- |
-| App (Laravel)    | http://localhost:8000   |
-| Vite (assets/HMR)| http://localhost:5173   |
+| Service                  | URL                    |
+|--------------------------|------------------------|
+| App (Laravel)            | http://localhost:8000  |
+| Vite (assets/HMR)        | http://localhost:5173  |
+| nsfwjs (image moderation)| http://localhost:3333  |
+
+A `queue` container also starts automatically, running
+`php artisan queue:work --tries=3` — this is what actually sends queued
+email notifications, so nothing extra to start there.
 
 Useful commands from here (see the `Makefile` for the full list):
 
 ```bash
-make up          # start in the foreground (Ctrl+C to stop)
-make down         # stop the stack
-make logs         # tail logs from every service
-make shell        # open a shell in the app container
-make migrate      # run new migrations
-make fresh        # drop and re-migrate with seed data
-make test         # run the PHP (Pest) suite
-make test-js      # run the frontend (Vitest) suite
-make lint         # lint the frontend
-make type-check   # type-check the frontend
-make clean        # stop the stack and remove volumes
+make up               # start in the foreground (Ctrl+C to stop)
+make up-d             # start in the background
+make down             # stop the stack
+make build            # rebuild the images
+make npm-install      # run after adding/updating/removing an npm package
+make composer-install # run after adding/updating/removing a composer package
+make logs             # tail logs from every service
+make shell            # open a shell in the app container
+make tinker           # open the Laravel tinker REPL
+make migrate          # run new migrations
+make fresh            # drop and re-migrate with seed data
+make test             # run the PHP (Pest) suite
+make test-coverage    # run the PHP suite with the coverage gate
+make test-js          # run the frontend (Vitest) suite
+make test-js-coverage # run the frontend suite with the coverage gate
+make lint             # lint the frontend
+make type-check       # type-check the frontend
+make clean            # stop the stack and remove volumes
 ```
+
+There's also an optional monitoring stack ([Uptime Kuma](https://github.com/louislam/uptime-kuma)),
+kept behind a Compose profile so it doesn't start with the rest of the stack:
+
+```bash
+make up-monitoring     # start Uptime Kuma at http://localhost:3001
+make down-monitoring   # stop it
+make logs-monitoring   # tail its logs
+```
+
+If this directory is linked to Doppler, every one of these already runs
+through `doppler run --`, so don't prefix them yourself.
 
 ### Option B — Native (PHP + Node directly)
 
-You'll need PHP 8.3+, Composer, and Node.js installed locally.
+You'll need PHP 8.5+, Composer, and Node.js installed locally.
 
 ```bash
 git clone https://github.com/Adiksuu/orbit.git
@@ -137,6 +230,61 @@ composer dev
 
 The app is served at whatever URL `php artisan serve` prints (typically
 http://localhost:8000).
+
+## Environment configuration
+
+This only applies to the **Docker** setup. The native setup configures
+itself the normal Laravel way, through a local `.env` file copied from
+`.env.example` — nothing below affects it.
+
+For Docker, `docker-compose.yml` declares each service's environment as
+`KEY: ${KEY}` — plain interpolation from whatever environment the
+`docker compose` process itself is run in. There is no `.env.docker` and the
+entrypoint never writes a `.env` inside the container, so where those `${KEY}`
+values actually come from depends on whether this directory is linked to
+[Doppler](https://www.doppler.com/):
+
+- **Linked to Doppler** (the core team) — the `Makefile` wraps every command
+  in `doppler run --`, which injects your Doppler config's secrets straight
+  into the `docker compose` process. Doppler is the sole source of truth;
+  no `.env` file is read or written.
+- **Not linked to Doppler** (everyone else — contributors, forks, CI-less
+  local clones) — the `Makefile`'s `ensure-env` step falls back to a plain
+  `.env` file at the repo root instead. `docker compose` reads that file
+  automatically for `${KEY}` interpolation, no flags needed. `ensure-env`
+  copies it from `.env.example` on first run and generates a fresh `APP_KEY`
+  if one isn't set yet — both steps are idempotent, so subsequent runs leave
+  your `.env` alone.
+
+Either way you end up with the exact same set of variables reaching the
+containers; only where they're sourced from differs. You never need to
+choose explicitly — the `Makefile` detects which mode applies by checking
+whether `doppler setup` has ever been run in this directory
+(`doppler configure get project`).
+
+Two behaviors worth knowing about regardless of which mode you're in:
+
+- `php artisan serve` treats the *presence* of a `.env` file as a signal to
+  filter which environment variables reach the request-handling process —
+  so Docker's `CMD` runs `serve` with `--no-reload`, which disables that
+  filtering and always passes the full environment through. Without it, a
+  leftover `.env` (from the fallback mode, or a stray one bind-mounted in)
+  would cause every HTTP request to 500 with `MissingAppKeyException` even
+  though CLI commands in the same container see the correct config.
+- Doppler mode wants a real `APP_KEY` in the linked config *before* your
+  first `make setup`/`make up` — nothing generates one for you there, since
+  the container never writes to Doppler:
+  ```bash
+  php artisan key:generate --show      # prints a fresh base64:... key
+  doppler secrets set APP_KEY="<paste the key here>"
+  ```
+
+If you ever see `MissingAppKeyException` or other config-looking errors:
+in Doppler mode, check `doppler secrets --only-names` against the
+`environment:` blocks in `docker-compose.yml` for anything missing; in
+fallback mode, check that `.env` actually exists and has a non-empty
+`APP_KEY=base64:...` line (delete it and re-run any `make` target to
+regenerate it from scratch).
 
 ## Everyday commands
 
@@ -231,22 +379,24 @@ production build on every push and pull request against `master`.
 ```
 app/
   Http/Controllers/   Thin HTTP layer — validate, delegate, redirect
-  Services/           Business logic and side effects (activity logging, etc.)
+  Services/           Business logic and side effects (activity logging, notification mail, NSFW detection, etc.)
   Repositories/       All Eloquent query logic
-  Models/             Issue, Project, User, Notification, SavedFilter, ActivityLog
+  Models/             Issue, Project, User, Notification, NotificationSetting, SavedFilter, ActivityLog
   Enums/              IssueLabel, UserRole
+  Enums/Notifications/ NotificationType, NotificationChannel
+  Notifications/      NotificationMail — the single mailable used for every notification type
 
 resources/js/
-  Pages/              Inertia pages, resolved by name (Dashboard, Projects/Show, Auth/Login, ...)
+  Pages/              Inertia pages, resolved by name (Dashboard, Projects/Show, Settings/Index, Auth/Login, ...)
   Components/
     Atoms/            Smallest building blocks (Button, Badge, Input, ...)
-    Molecules/         Composed from atoms (BoardColumn, IssueRowDetail, ...)
-    Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, ...)
+    Molecules/         Composed from atoms (BoardColumn, Breadcrumb, IssueRowDetail, ...)
+    Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, AccountSettingsContent, SettingsSidebar, ...)
   Layouts/            Page shells (sidebar, top nav, ...)
-  context/            React context providers (alerts, global modal, keyboard shortcuts)
+  context/            React context providers (alerts, theme, accent color, global modal, keyboard shortcuts)
   hooks/              Reusable hooks (saved filters, resizable table columns, ...)
-  types/              Shared TypeScript types (Issues, Projects, Users, ...)
-  utils/              cn() (Tailwind class merging), colors, time helpers
+  types/              Shared TypeScript types (Issues, Projects, Users, Settings, Theme, Accent, Notification, ...)
+  utils/              cn() (Tailwind class merging), colors, time helpers, accent color CSS variables, password strength
 
 database/
   migrations/         Schema history
@@ -265,8 +415,12 @@ routes/
 - Mutating routes (`issues.store`, `issues.update`, `projects.store`, ...)
   return a redirect rather than JSON; Inertia re-fetches the page props and
   re-renders, so controllers never hand-build response payloads.
-- The theme is dark-only, driven by CSS custom properties consumed via Tailwind arbitrary values
-  like `bg-[var(--bg-color)]`. Prefer these variables over hardcoded colors.
+- Theme (light/dark/system) and accent color are driven by CSS custom
+  properties consumed via Tailwind arbitrary values like
+  `bg-[var(--bg-color)]`, set by `ThemeContext`/`AccentContext` and mirrored
+  in `localStorage` (`theme`, `accentColor`) plus an inline script in
+  `app.blade.php` that applies them before first paint. Prefer these
+  variables over hardcoded colors.
 - Prettier (single quotes, auto-organized imports, Tailwind class sorting)
   and ESLint should both pass clean before a commit.
 - Roles are a plain `App\Enums\UserRole` (`admin` / `member`), assigned at

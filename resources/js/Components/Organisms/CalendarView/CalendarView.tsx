@@ -97,28 +97,28 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
         <div className="flex h-full flex-col bg-[var(--bg-color)] p-6">
             <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-2xl font-bold text-white">
+                    <h2 className="text-2xl font-bold text-[var(--text-color)]">
                         {monthNames[month]}{' '}
-                        <span className="font-medium text-zinc-500">
+                        <span className="font-medium text-[var(--text-muted-color)]">
                             {year}
                         </span>
                     </h2>
-                    <div className="flex items-center gap-1 rounded-xl border border-white/[0.05] bg-white/[0.03] p-1">
+                    <div className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-light-color)] p-1">
                         <button
                             onClick={prevMonth}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-all hover:bg-white/[0.05] hover:text-white"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-all hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]"
                         >
                             <Icon name="ChevronLeft" size={18} />
                         </button>
                         <button
                             onClick={goToToday}
-                            className="px-3 py-1 text-xs font-semibold text-zinc-400 transition-all hover:text-white"
+                            className="px-3 py-1 text-xs font-semibold text-[var(--text-gray-color)] transition-all hover:text-[var(--text-color)]"
                         >
                             Today
                         </button>
                         <button
                             onClick={nextMonth}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 transition-all hover:bg-white/[0.05] hover:text-white"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-all hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]"
                         >
                             <Icon name="ChevronRight" size={18} />
                         </button>
@@ -126,17 +126,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                 </div>
             </div>
 
-            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.01] backdrop-blur-sm">
-                <div className="grid grid-cols-1 border-b border-white/[0.08] bg-white/[0.02] sm:grid-cols-7">
+            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] backdrop-blur-sm">
+                <div className="grid grid-cols-1 border-b border-[var(--border-color)] bg-[var(--bg-light-color)] sm:grid-cols-7">
                     {weekDays.map((day) => (
                         <div
                             key={day}
-                            className="hidden py-3 text-center text-[10px] font-bold uppercase tracking-widest text-zinc-500 sm:block"
+                            className="hidden py-3 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted-color)] sm:block"
                         >
                             {day}
                         </div>
                     ))}
-                    <div className="py-3 text-center text-[10px] font-bold uppercase tracking-widest text-zinc-500 sm:hidden">
+                    <div className="py-3 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted-color)] sm:hidden">
                         Schedule
                     </div>
                 </div>
@@ -156,9 +156,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                             <div
                                 key={i}
                                 className={cn(
-                                    'relative flex flex-col gap-1 border-b border-white/[0.05] p-2 transition-colors hover:bg-white/[0.02] sm:border-r',
+                                    'relative flex flex-col gap-1 border-b border-[var(--border-color)] p-2 transition-colors hover:bg-[var(--bg-light-color)] sm:border-r',
                                     !dayObj.isCurrentMonth &&
-                                        'hidden bg-black/[0.1] opacity-40 sm:flex',
+                                        'hidden bg-[var(--overlay-color)] opacity-40 sm:flex',
                                     i % 7 === 6 && 'sm:border-r-0',
                                     dayIssues.length === 0 && 'hidden sm:flex',
                                 )}
@@ -170,17 +170,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                                 'flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all',
                                                 isToday
                                                     ? 'shadow-[0_0_15px_var(--accent-color)]/30 bg-[var(--accent-color)] text-white'
-                                                    : 'text-zinc-500',
+                                                    : 'text-[var(--text-muted-color)]',
                                             )}
                                         >
                                             {dayObj.day}
                                         </span>
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 sm:hidden">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted-color)] sm:hidden">
                                             {weekDays[i % 7]}
                                         </span>
                                     </div>
                                     {dayIssues.length > 0 && (
-                                        <span className="text-[10px] font-bold text-zinc-600">
+                                        <span className="text-[10px] font-bold text-[var(--text-muted-color)]">
                                             {dayIssues.length}{' '}
                                             {dayIssues.length === 1
                                                 ? 'item'
@@ -204,7 +204,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                                 )
                                             }
                                             className={cn(
-                                                'hover:border-[var(--accent-color)]/50 group flex items-center gap-2 rounded-lg border border-white/[0.05] bg-white/[0.03] p-1.5 text-left transition-all hover:bg-white/[0.08] sm:p-1.5',
+                                                'hover:border-[var(--accent-color)]/50 group flex items-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-light-color)] p-1.5 text-left transition-all hover:bg-[var(--bg-light-color-hover)] sm:p-1.5',
                                                 'px-3 py-2.5 sm:px-1.5 sm:py-1.5', // Larger on mobile
                                             )}
                                         >
@@ -212,7 +212,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                                 status={issue.priority}
                                                 size="xs"
                                             />
-                                            <span className="truncate text-xs font-medium text-zinc-300 group-hover:text-white sm:text-[11px]">
+                                            <span className="truncate text-xs font-medium text-[var(--text-color)] group-hover:text-[var(--text-color)] sm:text-[11px]">
                                                 {issue.title}
                                             </span>
                                         </motion.button>

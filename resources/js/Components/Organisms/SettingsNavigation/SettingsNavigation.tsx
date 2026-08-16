@@ -78,9 +78,9 @@ export default function SettingsNavigation({
                                     key={tab.id}
                                     icon={tab.icon}
                                     label={tab.label}
-                                    description={tab.description}
                                     href={`/settings?tab=${tab.id}`}
                                     isActive={tab.id === activeTab}
+                                    isDisabled={!tab.enabled}
                                 />
                             ))}
                         </div>
@@ -93,9 +93,9 @@ export default function SettingsNavigation({
                                     key={tab.id}
                                     icon={tab.icon}
                                     label={tab.label}
-                                    description={tab.description}
                                     href={`/settings?tab=${tab.id}`}
                                     isActive={tab.id === activeTab}
+                                    isDisabled={!tab.enabled}
                                 />
                             ))}
                         </div>

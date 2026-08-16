@@ -27,6 +27,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'avatar' => fake()->imageUrl(),
             'role' => UserRole::MEMBER,
+            'session_lifetime' => 480
         ];
     }
 

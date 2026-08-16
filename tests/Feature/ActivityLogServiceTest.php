@@ -54,3 +54,17 @@ test('it can log activity without user if not authenticated', function () {
         'body' => 'System action',
     ]);
 });
+
+test('it can log account-level activity without a project', function () {
+    $user = User::factory()->create();
+
+    $log = $this->service->log(null, 'Changed account password', $user->id);
+
+    expect($log->project_id)->toBeNull();
+    expect($log->user_id)->toBe($user->id);
+    $this->assertDatabaseHas('activity_logs', [
+        'project_id' => null,
+        'user_id' => $user->id,
+        'body' => 'Changed account password',
+    ]);
+});

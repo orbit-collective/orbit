@@ -57,18 +57,18 @@ export default function WorkspaceSettingsRolesTab() {
                                 className={`w-full rounded-xl border p-3 text-left transition-colors ${
                                     selectedRole === role.id
                                         ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
-                                        : 'border-[var(--bg-light-color)] bg-[var(--bg-color)] hover:border-zinc-500'
+                                        : 'border-[var(--bg-light-color)] bg-[var(--bg-color)] hover:border-[var(--border-color-strong)]'
                                 }`}
                             >
                                 <div className="mb-2 flex items-center justify-between">
-                                    <p className="text-sm font-medium text-white">
+                                    <p className="text-sm font-medium text-[var(--text-color)]">
                                         {role.label}
                                     </p>
                                     <span
                                         className={`h-2 w-2 rounded-full ${role.accentClassName}`}
                                     />
                                 </div>
-                                <p className="text-xs text-zinc-400">
+                                <p className="text-xs text-[var(--text-gray-color)]">
                                     {role.permissions[0]}
                                 </p>
                             </button>
@@ -77,7 +77,7 @@ export default function WorkspaceSettingsRolesTab() {
                     <div className="space-y-3">
                         <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
                             <div className="mb-2 flex items-center justify-between">
-                                <p className="text-sm font-medium text-white">
+                                <p className="text-sm font-medium text-[var(--text-color)]">
                                     Permission matrix preview
                                 </p>
                                 <Icon name="Shield" size={14} />
@@ -94,7 +94,7 @@ export default function WorkspaceSettingsRolesTab() {
                                                 (permission) => (
                                                     <div
                                                         key={permission}
-                                                        className="flex items-center justify-between rounded-md bg-[var(--bg-light-color)] px-2 py-1 text-xs text-zinc-300"
+                                                        className="flex items-center justify-between rounded-md bg-[var(--bg-light-color)] px-2 py-1 text-xs text-[var(--text-color)]"
                                                     >
                                                         <span>
                                                             {permission}
@@ -110,11 +110,11 @@ export default function WorkspaceSettingsRolesTab() {
                             </div>
                         </div>
                         <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                            <p className="text-sm font-medium text-white">
+                            <p className="text-sm font-medium text-[var(--text-color)]">
                                 Role change policy
                             </p>
                             <div className="mt-3 flex items-center justify-between">
-                                <span className="text-xs text-zinc-400">
+                                <span className="text-xs text-[var(--text-gray-color)]">
                                     Approval workflow
                                 </span>
                                 <ToggleSwitch
@@ -140,7 +140,7 @@ export default function WorkspaceSettingsRolesTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-colors hover:border-zinc-500"
+                            className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-semibold text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
                         >
                             + Create role
                         </button>

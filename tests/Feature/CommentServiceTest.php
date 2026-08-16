@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Notifications\NotificationType;
 use App\Models\Comment;
 use App\Models\Issue;
 use App\Models\User;
@@ -70,6 +71,7 @@ test('addComment notifies the assignee when someone else comments', function () 
         ->once()
         ->with(
             $assignee->id,
+            NotificationType::IssueCommented,
             'info',
             'New comment on your issue',
             'Jane Cooper commented on "Fix login crash" (#4).',

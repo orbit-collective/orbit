@@ -1,4 +1,6 @@
+import { NotificationSettings } from '@/types/Notification';
 import { AccountSettingsTabId } from '@/types/Settings';
+import { Session } from '@/types/Users';
 import AccountSettingsExportTab from './AccountSettingsExportTab';
 import AccountSettingsIntegrationsTab from './AccountSettingsIntegrationsTab';
 import AccountSettingsNotificationsTab from './AccountSettingsNotificationsTab';
@@ -8,25 +10,42 @@ import AccountSettingsSecurityTab from './AccountSettingsSecurityTab';
 
 interface AccountSettingsContentProps {
     tabId: AccountSettingsTabId;
+    userName?: string;
+    userAvatar?: string | null;
+    sessions?: Session[];
+    notificationSettings?: NotificationSettings;
 }
 
 export default function AccountSettingsContent({
     tabId,
+    userName,
+    userAvatar,
+    sessions = [],
+    notificationSettings,
 }: AccountSettingsContentProps) {
     if (tabId === 'preferences') {
         return <AccountSettingsPreferencesTab />;
     }
 
     if (tabId === 'profile') {
-        return <AccountSettingsProfileTab />;
+        return (
+            <AccountSettingsProfileTab
+                userName={userName}
+                userAvatar={userAvatar}
+            />
+        );
     }
 
     if (tabId === 'notifications') {
-        return <AccountSettingsNotificationsTab />;
+        return (
+            <AccountSettingsNotificationsTab
+                notificationSettings={notificationSettings}
+            />
+        );
     }
 
     if (tabId === 'security-access') {
-        return <AccountSettingsSecurityTab />;
+        return <AccountSettingsSecurityTab sessions={sessions} />;
     }
 
     if (tabId === 'integrations') {

@@ -58,3 +58,20 @@ test('deleting the user cascades to delete their activity logs', function () {
 
     $this->assertDatabaseMissing('activity_logs', ['id' => $log->id]);
 });
+
+test('an activity log can be created without a project for account-level activity', function () {
+    $user = User::factory()->create();
+
+    $log = ActivityLog::create([
+        'project_id' => null,
+        'user_id' => $user->id,
+        'body' => 'Changed account password',
+    ]);
+
+    expect($log->project_id)->toBeNull();
+    $this->assertDatabaseHas('activity_logs', [
+        'id' => $log->id,
+        'project_id' => null,
+        'user_id' => $user->id,
+    ]);
+});

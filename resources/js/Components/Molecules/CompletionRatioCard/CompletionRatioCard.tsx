@@ -24,44 +24,50 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                         stroke={8}
                         progress={closedPct}
                         colorClass="stroke-[var(--success-color)]"
-                        bgColorClass="stroke-zinc-800"
+                        bgColorClass="stroke-[var(--bg-light-color)]"
                     />
                     <div className="absolute flex flex-col items-center justify-center">
-                        <span className="text-2xl font-bold leading-none text-white">
+                        <span className="text-2xl font-bold leading-none text-[var(--text-color)]">
                             {closedPct}%
                         </span>
-                        <span className="mt-1 text-[10px] font-semibold uppercase text-zinc-500">
+                        <span className="mt-1 text-[10px] font-semibold uppercase text-[var(--text-muted-color)]">
                             Resolved
                         </span>
                     </div>
                 </div>
             </div>
-            <div className="mt-auto flex items-center justify-around border-t border-solid border-zinc-800/60 pt-3 text-xs">
+            <div className="mt-auto flex items-center justify-around border-t border-solid border-[var(--border-color-strong)] pt-3 text-xs">
                 <div className="flex flex-col items-center">
-                    <span className="font-medium text-zinc-500">Open</span>
-                    <span className="mt-0.5 font-semibold text-white">
+                    <span className="font-medium text-[var(--text-muted-color)]">
+                        Open
+                    </span>
+                    <span className="mt-0.5 font-semibold text-[var(--text-color)]">
                         {open}
                     </span>
                 </div>
-                <div className="h-6 w-px bg-zinc-800" />
+                <div className="h-6 w-px bg-[var(--border-color-strong)]" />
                 <div className="flex flex-col items-center">
-                    <span className="font-medium text-zinc-500">
+                    <span className="font-medium text-[var(--text-muted-color)]">
                         In Progress
                     </span>
                     <span className="mt-0.5 font-semibold text-[var(--accent-color)]">
                         {inProgress}
                     </span>
                 </div>
-                <div className="h-6 w-px bg-zinc-800" />
+                <div className="h-6 w-px bg-[var(--border-color-strong)]" />
                 <div className="flex flex-col items-center">
-                    <span className="font-medium text-zinc-500">Closed</span>
+                    <span className="font-medium text-[var(--text-muted-color)]">
+                        Closed
+                    </span>
                     <span className="mt-0.5 font-semibold text-[var(--success-color)]">
                         {closed}
                     </span>
                 </div>
-                <div className="h-6 w-px bg-zinc-800" />
+                <div className="h-6 w-px bg-[var(--border-color-strong)]" />
                 <div className="flex flex-col items-center">
-                    <span className="font-medium text-zinc-500">Total</span>
+                    <span className="font-medium text-[var(--text-muted-color)]">
+                        Total
+                    </span>
                     <span className="mt-0.5 font-semibold text-[var(--accent-color)]">
                         {total}
                     </span>

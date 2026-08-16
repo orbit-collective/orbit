@@ -1,100 +1,221 @@
-import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import AccountSettingsNotificationTypeRow from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationTypeRow';
+import { useAlert } from '@/context/AlertContext';
+import { NotificationSettings } from '@/types/Notification';
+import { router } from '@inertiajs/react';
+import { icons } from 'lucide-react';
 import { useState } from 'react';
 
-export default function AccountSettingsNotificationsTab() {
-    const [assignedIssues, setAssignedIssues] = useState(true);
-    const [mentions, setMentions] = useState(true);
-    const [projectDigest, setProjectDigest] = useState(false);
-    const [desktop, setDesktop] = useState(true);
-    const [digestFrequency, setDigestFrequency] = useState('Daily');
+interface NotificationTypeState {
+    id: string;
+    icon: keyof typeof icons;
+    title: string;
+    description: string;
+    inApp: boolean;
+    email: boolean;
+}
+
+const defaultNotificationTypes: NotificationTypeState[] = [
+    {
+        id: 'issue_assigned',
+        icon: 'UserCheck',
+        title: 'Assigned issues',
+        description: 'When an issue is assigned or unassigned to you.',
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_commented',
+        icon: 'MessageSquare',
+        title: 'Comments',
+        description: "When an issue you're involved in is commented on.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_mentioned',
+        icon: 'AtSign',
+        title: 'Mentions',
+        description: 'When someone mentions you in a comment.',
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_status_changed',
+        icon: 'CircleCheckBig',
+        title: 'Status changes',
+        description: "When an issue you're involved in has its status updated.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_priority_changed',
+        icon: 'Flag',
+        title: 'Priority changes',
+        description:
+            "When an issue you're involved in has its priority changed.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_labels_changed',
+        icon: 'Tag',
+        title: 'Label updates',
+        description: "When labels change on an issue you're involved in.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_dates_changed',
+        icon: 'CalendarClock',
+        title: 'Schedule changes',
+        description:
+            "When the start or due date changes on an issue you're involved in.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'issue_updated',
+        icon: 'Pencil',
+        title: 'Other issue updates',
+        description:
+            "When any other detail changes on an issue you're involved in.",
+        inApp: true,
+        email: false,
+    },
+    {
+        id: 'project_invited',
+        icon: 'Users',
+        title: 'Project invitations',
+        description: 'When you are invited to join a new project.',
+        inApp: true,
+        email: false,
+    },
+];
+
+function mergeNotificationSettings(
+    notificationSettings?: NotificationSettings,
+): NotificationTypeState[] {
+    if (!notificationSettings) {
+        return defaultNotificationTypes;
+    }
+
+    return defaultNotificationTypes.map((type) => {
+        const settings = notificationSettings[type.id];
+        if (!settings) {
+            return type;
+        }
+
+        return {
+            ...type,
+            inApp: settings.in_app,
+            email: settings.email,
+        };
+    });
+}
+
+export default function AccountSettingsNotificationsTab({
+    notificationSettings,
+}: {
+    notificationSettings?: NotificationSettings;
+}) {
+    const { addAlert } = useAlert();
+    const [notificationTypes, setNotificationTypes] = useState(() =>
+        mergeNotificationSettings(notificationSettings),
+    );
+    const [pendingKey, setPendingKey] = useState<string | null>(null);
+
+    const updateNotificationType = (
+        id: string,
+        channel: 'inApp' | 'email',
+        checked: boolean,
+    ) => {
+        const previousType = notificationTypes.find((type) => type.id === id);
+        if (!previousType) {
+            return;
+        }
+
+        const updatedType = { ...previousType, [channel]: checked };
+
+        setPendingKey(`${id}:${channel}`);
+        setNotificationTypes((current) =>
+            current.map((type) => (type.id === id ? updatedType : type)),
+        );
+
+        router.post(
+            route('account.notification-settings.update'),
+            {
+                settings: {
+                    [id]: {
+                        in_app: updatedType.inApp,
+                        email: updatedType.email,
+                    },
+                },
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    addAlert(
+                        'Notification settings updated successfully.',
+                        'success',
+                    );
+                },
+                onError: () => {
+                    addAlert(
+                        'Failed to update notification settings.',
+                        'error',
+                    );
+                    setNotificationTypes((current) =>
+                        current.map((type) =>
+                            type.id === id ? previousType : type,
+                        ),
+                    );
+                },
+                onFinish: () => {
+                    setPendingKey(null);
+                },
+            },
+        );
+    };
 
     return (
         <div className="space-y-5">
             <SettingsPanel
-                title="Activity notifications"
-                description="Choose which events should notify you."
+                title="Notification types"
+                description="Choose which activity notifies you, and where."
+                icon="Bell"
             >
-                <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
-                    {[
-                        {
-                            title: 'Assigned issues',
-                            subtitle: 'Direct ownership',
-                            checked: assignedIssues,
-                            setChecked: setAssignedIssues,
-                        },
-                        {
-                            title: 'Mentions and replies',
-                            subtitle: 'Conversation activity',
-                            checked: mentions,
-                            setChecked: setMentions,
-                        },
-                        {
-                            title: 'Project digest',
-                            subtitle: 'Workspace summaries',
-                            checked: projectDigest,
-                            setChecked: setProjectDigest,
-                        },
-                    ].map((item) => (
-                        <div
-                            key={item.title}
-                            className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4"
-                        >
-                            <div className="mb-2 flex items-center justify-between">
-                                <p className="text-sm font-medium text-white">
-                                    {item.title}
-                                </p>
-                                <ToggleSwitch
-                                    checked={item.checked}
-                                    onChange={item.setChecked}
-                                />
-                            </div>
-                            <p className="text-xs text-zinc-400">
-                                {item.subtitle}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </SettingsPanel>
-            <SettingsPanel
-                title="Delivery preferences"
-                description="Control how and when notifications are sent."
-            >
-                <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
-                    <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                        <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-white">
-                                Desktop notifications
-                            </p>
-                            <ToggleSwitch
-                                checked={desktop}
-                                onChange={setDesktop}
-                            />
-                        </div>
-                        <p className="mt-2 text-xs text-zinc-400">
-                            Show browser alerts while Orbit is open.
-                        </p>
-                    </div>
-                    <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                        <p className="text-sm font-medium text-white">
-                            Digest frequency
-                        </p>
-                        <div className="mt-3 flex gap-2">
-                            {['Daily', 'Weekly'].map((frequency) => (
-                                <button
-                                    key={frequency}
-                                    type="button"
-                                    onClick={() =>
-                                        setDigestFrequency(frequency)
-                                    }
-                                    className={`rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium ${digestFrequency === frequency ? 'border-[var(--accent-color)] text-white' : 'text-zinc-300'}`}
-                                >
-                                    {frequency}
-                                </button>
-                            ))}
-                        </div>
+                <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted-color)]">
+                        Type
+                    </span>
+                    <div className="flex items-center gap-2 sm:gap-6">
+                        <span className="w-12 whitespace-nowrap text-center text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted-color)] sm:w-16">
+                            In-app
+                        </span>
+                        <span className="w-12 whitespace-nowrap text-center text-[10px] font-medium uppercase tracking-wide text-[var(--text-muted-color)] sm:w-16">
+                            Email
+                        </span>
                     </div>
                 </div>
+                {notificationTypes.map((type) => (
+                    <AccountSettingsNotificationTypeRow
+                        key={type.id}
+                        icon={type.icon}
+                        title={type.title}
+                        description={type.description}
+                        inAppChecked={type.inApp}
+                        onInAppChange={(checked) =>
+                            updateNotificationType(type.id, 'inApp', checked)
+                        }
+                        inAppDisabled={pendingKey === `${type.id}:inApp`}
+                        emailChecked={type.email}
+                        onEmailChange={(checked) =>
+                            updateNotificationType(type.id, 'email', checked)
+                        }
+                        emailDisabled={pendingKey === `${type.id}:email`}
+                    />
+                ))}
             </SettingsPanel>
         </div>
     );

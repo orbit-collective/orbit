@@ -13,3 +13,11 @@ export interface AssignableUser {
     name: string;
     avatar?: string | null;
 }
+
+export interface Session {
+    id: string;
+    ipAddress: string | null;
+    userAgent: string | null;
+    lastActiveAt: string;
+    isCurrent: boolean;
+}

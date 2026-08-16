@@ -30,7 +30,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                 description="Issues distribution by level of urgency"
             />
             <div className="flex flex-1 flex-col justify-center py-4">
-                <div className="flex h-3 w-full overflow-hidden rounded-full bg-zinc-800">
+                <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
                     <div
                         style={{ width: `${highPct}%` }}
                         className="h-full bg-[var(--error-color)] transition-all"
@@ -55,13 +55,13 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                         >
                             <div className="flex items-center gap-2">
                                 <StatusDot status={item.status} size={'md'} />
-                                <span className="font-medium text-zinc-300">
+                                <span className="font-medium text-[var(--text-color)]">
                                     {item.label}
                                 </span>
                             </div>
-                            <span className="font-semibold text-white">
+                            <span className="font-semibold text-[var(--text-color)]">
                                 {item.count}{' '}
-                                <span className="font-medium text-zinc-500">
+                                <span className="font-medium text-[var(--text-muted-color)]">
                                     ({item.pct}%)
                                 </span>
                             </span>

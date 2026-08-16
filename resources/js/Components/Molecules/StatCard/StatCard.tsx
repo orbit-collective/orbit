@@ -10,9 +10,9 @@ export const statCardVariants = cva(
         variants: {
             variant: {
                 default:
-                    'bg-[var(--bg-dark-color)] border-[var(--bg-light-color)] hover:border-zinc-700',
+                    'bg-[var(--bg-dark-color)] border-[var(--bg-light-color)] hover:border-[var(--border-color-strong)]',
                 accent: 'bg-gradient-to-br from-[var(--bg-dark-color)] to-[var(--accent-color-opacity)] border-[var(--accent-color)] shadow-[0_0_15px_rgba(136,68,218,0.15)]',
-                glass: 'bg-white/[0.02] backdrop-blur-md border-[var(--bg-light-color)] hover:bg-white/[0.04]',
+                glass: 'bg-[var(--surface-color)] backdrop-blur-md border-[var(--bg-light-color)] hover:bg-[var(--bg-light-color-hover)]',
             },
         },
         defaultVariants: {
@@ -58,10 +58,10 @@ const StatCard: React.FC<StatCardProps> = ({
         <div className={cn(statCardVariants({ variant }), className)}>
             <div className="flex items-start justify-between">
                 <div className="min-w-0">
-                    <span className="block truncate text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    <span className="block truncate text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                         {title}
                     </span>
-                    <h4 className="mt-2 text-3xl font-bold leading-none tracking-tight text-white">
+                    <h4 className="mt-2 text-3xl font-bold leading-none tracking-tight text-[var(--text-color)]">
                         {value}
                     </h4>
                 </div>
@@ -94,7 +94,7 @@ const StatCard: React.FC<StatCardProps> = ({
                             style={{ width: `${progress}%` }}
                         />
                     </div>
-                    <span className="text-xs font-semibold text-zinc-300">
+                    <span className="text-xs font-semibold text-[var(--text-color)]">
                         {progress}%
                     </span>
                 </div>
@@ -120,14 +120,14 @@ const StatCard: React.FC<StatCardProps> = ({
                         {trend.isPositive ? '+' : ''}
                         {trend.value}%
                     </span>
-                    <span className="font-medium text-zinc-500">
+                    <span className="font-medium text-[var(--text-muted-color)]">
                         {trend.label}
                     </span>
                 </div>
             )}
 
             {description && !trend && progress === undefined && (
-                <p className="mt-4 text-xs font-medium leading-relaxed text-zinc-500">
+                <p className="mt-4 text-xs font-medium leading-relaxed text-[var(--text-muted-color)]">
                     {description}
                 </p>
             )}

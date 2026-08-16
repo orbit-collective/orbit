@@ -45,7 +45,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                         <h2 className="text-xl font-semibold text-[var(--text-color)]">
                             Create New Project
                         </h2>
-                        <p className="mt-1 text-sm text-zinc-400">
+                        <p className="mt-1 text-sm text-[var(--text-gray-color)]">
                             Set up a new project to organize your work and
                             collaborate with your team
                         </p>
@@ -160,7 +160,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                     <div className="flex items-center justify-end gap-3 border-t border-[var(--bg-light-color)] px-6 py-4">
                         <button
                             type="button"
-                            className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-zinc-400 transition-colors duration-150 hover:text-white"
+                            className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-gray-color)] transition-colors duration-150 hover:text-[var(--text-color)]"
                             onClick={onClose}
                             disabled={processing}
                         >

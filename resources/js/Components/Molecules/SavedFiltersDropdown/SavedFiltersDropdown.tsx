@@ -182,27 +182,27 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                             zIndex: 9999,
                             width: PANEL_WIDTH,
                         }}
-                        className="animate-in fade-in zoom-in-95 flex max-h-[26rem] flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/95 shadow-2xl backdrop-blur-md duration-100"
+                        className="animate-in fade-in zoom-in-95 flex max-h-[26rem] flex-col overflow-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] shadow-2xl backdrop-blur-md duration-100"
                     >
                         <div className="flex items-center justify-between px-3 py-2.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                                 Filters
                             </p>
                             {activeFilterCount > 0 && (
                                 <button
                                     type="button"
                                     onClick={handleClearAll}
-                                    className="cursor-pointer text-[10px] font-medium text-zinc-500 transition-colors hover:text-zinc-200"
+                                    className="cursor-pointer text-[10px] font-medium text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
                                 >
                                     Clear all
                                 </button>
                             )}
                         </div>
 
-                        <div className="border-t border-zinc-800/80 px-3 py-2.5">
+                        <div className="border-[var(--border-color-strong)]/80 border-t px-3 py-2.5">
                             {activeFilterCount > 0 ? (
                                 <div className="flex flex-col gap-2">
-                                    <p className="truncate text-[11px] text-zinc-500">
+                                    <p className="truncate text-[11px] text-[var(--text-muted-color)]">
                                         {describeFilters(activeFilters)}
                                     </p>
                                     <div className="flex items-center gap-1.5">
@@ -216,7 +216,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                                     handleSave();
                                             }}
                                             placeholder="Name this view…"
-                                            className="w-full rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] px-2.5 py-1.5 text-xs text-zinc-200 placeholder-zinc-500 outline-none transition-colors focus:border-[var(--accent-color)]"
+                                            className="w-full rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] px-2.5 py-1.5 text-xs text-[var(--text-color)] placeholder-[var(--text-muted-color)] outline-none transition-colors focus:border-[var(--accent-color)]"
                                         />
                                         <button
                                             type="button"
@@ -224,7 +224,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                             disabled={!name.trim()}
                                             className={cn(
                                                 'border-[var(--accent-color)]/30 bg-[var(--accent-color)]/10 hover:bg-[var(--accent-color)]/20 flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium text-[var(--accent-color)] transition-colors',
-                                                'disabled:cursor-not-allowed disabled:border-zinc-700 disabled:bg-transparent disabled:text-zinc-600',
+                                                'disabled:cursor-not-allowed disabled:border-[var(--border-color-strong)] disabled:bg-transparent disabled:text-[var(--text-muted-color)]',
                                             )}
                                         >
                                             <Icon
@@ -236,18 +236,18 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                     </div>
                                 </div>
                             ) : (
-                                <p className="text-[11px] text-zinc-500">
+                                <p className="text-[11px] text-[var(--text-muted-color)]">
                                     Apply a filter above to save it as a view.
                                 </p>
                             )}
                         </div>
 
-                        <div className="flex items-center justify-between border-t border-zinc-800/80 px-3 pb-1.5 pt-2.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                        <div className="border-[var(--border-color-strong)]/80 flex items-center justify-between border-t px-3 pb-1.5 pt-2.5">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                                 Saved Views
                             </p>
                             {savedFilters.length > 0 && (
-                                <span className="text-[10px] text-zinc-600">
+                                <span className="text-[10px] text-[var(--text-muted-color)]">
                                     {savedFilters.length}
                                 </span>
                             )}
@@ -258,12 +258,12 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                 <Icon
                                     name="BookmarkX"
                                     size={20}
-                                    color="#52525b"
+                                    color="var(--text-gray-color)"
                                 />
-                                <p className="text-xs font-medium text-zinc-500">
+                                <p className="text-xs font-medium text-[var(--text-muted-color)]">
                                     No saved views yet
                                 </p>
-                                <p className="text-[11px] text-zinc-600">
+                                <p className="text-[11px] text-[var(--text-muted-color)]">
                                     Save a filter combination above to reuse it
                                     later.
                                 </p>
@@ -297,7 +297,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                                 'group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left transition-all duration-150',
                                                 isActiveView
                                                     ? 'bg-[var(--accent-color)]/10'
-                                                    : 'hover:bg-zinc-800',
+                                                    : 'hover:bg-[var(--bg-light-color)]',
                                             )}
                                         >
                                             <Icon
@@ -316,12 +316,12 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                                         'truncate text-xs font-medium',
                                                         isActiveView
                                                             ? 'text-[var(--accent-color)]'
-                                                            : 'text-zinc-200',
+                                                            : 'text-[var(--text-color)]',
                                                     )}
                                                 >
                                                     {filter.name}
                                                 </p>
-                                                <p className="truncate text-[10px] text-zinc-500">
+                                                <p className="truncate text-[10px] text-[var(--text-muted-color)]">
                                                     {describeFilters(
                                                         filter.query_params,
                                                     )}
@@ -332,7 +332,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                                 onClick={(e) =>
                                                     handleDelete(e, filter.id)
                                                 }
-                                                className="shrink-0 cursor-pointer rounded p-1 text-zinc-600 opacity-0 transition-all duration-150 hover:bg-zinc-700 hover:text-zinc-200 group-hover:opacity-100"
+                                                className="shrink-0 cursor-pointer rounded p-1 text-[var(--text-muted-color)] opacity-0 transition-all duration-150 hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)] group-hover:opacity-100"
                                             >
                                                 <Icon name="Trash2" size={12} />
                                             </button>

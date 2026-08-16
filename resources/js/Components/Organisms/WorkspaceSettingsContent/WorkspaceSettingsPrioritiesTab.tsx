@@ -36,11 +36,11 @@ export default function WorkspaceSettingsPrioritiesTab() {
                                     priority={priority.key}
                                     tooltip={false}
                                 />
-                                <p className="text-sm font-medium text-white">
+                                <p className="text-sm font-medium text-[var(--text-color)]">
                                     {priority.label}
                                 </p>
                             </div>
-                            <p className="text-xs text-zinc-400">
+                            <p className="text-xs text-[var(--text-gray-color)]">
                                 {priority.info}
                             </p>
                             <button
@@ -48,8 +48,8 @@ export default function WorkspaceSettingsPrioritiesTab() {
                                 onClick={() => setActivePriority(priority.key)}
                                 className={`mt-2 rounded-full border px-2 py-0.5 text-[10px] ${
                                     activePriority === priority.key
-                                        ? 'border-[var(--accent-color)] text-white'
-                                        : 'border-[var(--bg-light-color)] text-zinc-400'
+                                        ? 'border-[var(--accent-color)] text-[var(--text-color)]'
+                                        : 'border-[var(--bg-light-color)] text-[var(--text-gray-color)]'
                                 }`}
                             >
                                 Edit level
@@ -60,7 +60,7 @@ export default function WorkspaceSettingsPrioritiesTab() {
                 <div className="px-5 pb-4">
                     <button
                         type="button"
-                        className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-colors hover:border-zinc-500"
+                        className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-semibold text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
                     >
                         + Add priority level
                     </button>
@@ -71,7 +71,7 @@ export default function WorkspaceSettingsPrioritiesTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                             onClick={() =>
                                 setPriorityScale(
                                     priorityScale === 'Three levels'
@@ -95,7 +95,7 @@ export default function WorkspaceSettingsPrioritiesTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                         >
                             Medium
                         </button>
@@ -107,7 +107,7 @@ export default function WorkspaceSettingsPrioritiesTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                         >
                             Configure rules
                         </button>

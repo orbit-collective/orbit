@@ -177,4 +177,7 @@ class IssueRepository
     public function bulkDelete(array $ids): void {
         Issue::whereIn('id', $ids)->delete();
     }
+    public function getMany(array $ids): Collection {
+        return Issue::query()->whereIn('id', $ids)->get(['id', 'project_id', 'title']);
+    }
 }

@@ -37,24 +37,24 @@ const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
                             {project.name}
                         </h4>
                     </div>
-                    <div className="shrink-0 rounded bg-zinc-800/40 p-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
+                    <div className="shrink-0 rounded bg-[var(--bg-light-color)] p-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
                         <Icon
                             name="ArrowRight"
                             size={12}
-                            className="text-zinc-400 group-hover:text-white"
+                            className="text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]"
                         />
                     </div>
                 </div>
-                <p className="mt-2.5 line-clamp-2 min-h-[2rem] break-all text-xs leading-relaxed text-zinc-400">
+                <p className="mt-2.5 line-clamp-2 min-h-[2rem] break-all text-xs leading-relaxed text-[var(--text-gray-color)]">
                     {project.description || 'No description provided.'}
                 </p>
             </div>
             <div className="mt-5">
-                <div className="mb-2 flex items-center justify-between text-xs text-zinc-400">
-                    <span className="font-semibold text-zinc-300">
+                <div className="mb-2 flex items-center justify-between text-xs text-[var(--text-gray-color)]">
+                    <span className="font-semibold text-[var(--text-color)]">
                         {completionRate}% Completed
                     </span>
-                    <span className="ml-2 whitespace-nowrap text-zinc-500">
+                    <span className="ml-2 whitespace-nowrap text-[var(--text-muted-color)]">
                         {closedIssuesCount}/{totalIssuesCount} Issues
                     </span>
                 </div>
@@ -64,19 +64,19 @@ const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
                         style={{ width: `${completionRate}%` }}
                     />
                 </div>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-solid border-zinc-800/60 pt-3.5 text-[11px]">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-solid border-[var(--border-color-strong)] pt-3.5 text-[11px]">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                        <span className="flex items-center gap-1.5 whitespace-nowrap text-zinc-400">
+                        <span className="flex items-center gap-1.5 whitespace-nowrap text-[var(--text-gray-color)]">
                             <StatusDot status={'open'} />
                             {openIssuesCount} Open
                         </span>
-                        <span className="flex items-center gap-1.5 whitespace-nowrap text-zinc-400">
+                        <span className="flex items-center gap-1.5 whitespace-nowrap text-[var(--text-gray-color)]">
                             <StatusDot status={'closed'} />
                             {closedIssuesCount} Closed
                         </span>
                     </div>
                     <span
-                        className="inline-block max-w-[70px] truncate rounded bg-zinc-800/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-zinc-500 sm:max-w-[100px]"
+                        className="inline-block max-w-[70px] truncate rounded bg-[var(--bg-light-color)] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)] sm:max-w-[100px]"
                         title={project.slug}
                     >
                         {project.slug}
@@ -101,10 +101,10 @@ export function ProjectNewCard() {
                 <Icon
                     name="Plus"
                     size={18}
-                    className="text-zinc-500 transition-colors duration-200 group-hover:text-[var(--accent-color)]"
+                    className="text-[var(--text-muted-color)] transition-colors duration-200 group-hover:text-[var(--accent-color)]"
                 />
             </div>
-            <span className="text-xs font-semibold text-zinc-500 transition-colors duration-200 group-hover:text-[var(--accent-color)]">
+            <span className="text-xs font-semibold text-[var(--text-muted-color)] transition-colors duration-200 group-hover:text-[var(--accent-color)]">
                 New Project
             </span>
         </Link>

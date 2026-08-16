@@ -33,7 +33,7 @@ export default function WorkspaceSettingsLabelsTab() {
                         ))}
                     </div>
                     <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] p-3">
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
                             New label preview
                         </p>
                         <div className="flex flex-col gap-2 md:flex-row">
@@ -44,7 +44,7 @@ export default function WorkspaceSettingsLabelsTab() {
                             />
                             <button
                                 type="button"
-                                className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-500"
+                                className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
                             >
                                 Add label
                             </button>
@@ -52,7 +52,7 @@ export default function WorkspaceSettingsLabelsTab() {
                     </div>
                     <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-3">
                         <div className="mb-2 flex items-center justify-between">
-                            <p className="text-sm font-medium text-white">
+                            <p className="text-sm font-medium text-[var(--text-color)]">
                                 Auto-assign label colors
                             </p>
                             <ToggleSwitch
@@ -82,7 +82,7 @@ export default function WorkspaceSettingsLabelsTab() {
                     action={
                         <button
                             type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-zinc-300"
+                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
                         >
                             Merge labels
                         </button>

@@ -23,7 +23,8 @@ html, body, #app {
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+[data-theme='dark'] {
     --accent-color: #8844da;
     --accent-light-color: rgb(183 103 255 / 0.8);
     --accent-color-opacity: rgba(136, 68, 218, 0.2);
@@ -39,7 +40,34 @@ html, body, #app {
     --bg-light-color-hover: rgb(255 255 255 / 0.12);
     --text-color: #f7f7f8;
     --text-gray-color: #8a8f98;
+    --text-muted-color: #71717a;
     --border-color: rgb(255 255 255 / 0.08);
+    --border-color-strong: rgb(255 255 255 / 0.14);
+    --surface-color: rgb(255 255 255 / 0.03);
+    --overlay-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='light'] {
+    --accent-color: #8844da;
+    --accent-light-color: rgb(183 103 255 / 0.8);
+    --accent-color-opacity: rgba(136, 68, 218, 0.12);
+    --success-color: #2e7d32;
+    --error-color: #d32f2f;
+    --warning-color: #b26a00;
+    --pending-color: #6b7280;
+    --info-color: #1565c0;
+    --bg-color: #f7f8fa;
+    --bg-color-hover: #ffffff;
+    --bg-dark-color: #eef0f4;
+    --bg-light-color: rgb(0 0 0 / 0.045);
+    --bg-light-color-hover: rgb(0 0 0 / 0.07);
+    --text-color: #14161a;
+    --text-gray-color: #5b6472;
+    --text-muted-color: #8a8f98;
+    --border-color: rgb(0 0 0 / 0.08);
+    --border-color-strong: rgb(0 0 0 / 0.14);
+    --surface-color: rgb(0 0 0 / 0.03);
+    --overlay-color: rgba(0, 0, 0, 0.06);
 }
 
 @layer utilities {
@@ -84,6 +112,28 @@ html, body, #app {
 
 .prose :where(ol > li) {
     list-style: revert;
+}
+
+/* Tailwind Typography's own color variables, pointed at our theme tokens so
+   rendered markdown (issue descriptions, etc.) follows the active theme
+   instead of the fixed light-on-dark palette `prose-invert` would apply. */
+.prose {
+    --tw-prose-body: var(--text-color);
+    --tw-prose-headings: var(--text-color);
+    --tw-prose-lead: var(--text-gray-color);
+    --tw-prose-links: var(--accent-color);
+    --tw-prose-bold: var(--text-color);
+    --tw-prose-counters: var(--text-gray-color);
+    --tw-prose-bullets: var(--text-gray-color);
+    --tw-prose-hr: var(--border-color);
+    --tw-prose-quotes: var(--text-gray-color);
+    --tw-prose-quote-borders: var(--border-color-strong);
+    --tw-prose-captions: var(--text-muted-color);
+    --tw-prose-code: var(--text-color);
+    --tw-prose-pre-code: var(--text-color);
+    --tw-prose-pre-bg: var(--surface-color);
+    --tw-prose-th-borders: var(--border-color-strong);
+    --tw-prose-td-borders: var(--border-color);
 }
 
 .tiptap p.is-editor-empty:first-child::before {

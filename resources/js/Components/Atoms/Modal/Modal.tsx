@@ -75,7 +75,7 @@ const Modal: React.FC<ModalProps> = ({
             `}</style>
             <div
                 className={
-                    'fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm [animation:modalFadeIn_0.2s_ease-out]'
+                    'fixed inset-0 z-[1000] flex items-center justify-center bg-[var(--overlay-color)] p-4 backdrop-blur-sm [animation:modalFadeIn_0.2s_ease-out]'
                 }
                 onClick={onClose}
             >

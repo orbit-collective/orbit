@@ -14,13 +14,13 @@ export default function ProjectOnboardingHeader({
                     <p className="text-xs font-semibold uppercase tracking-wider text-violet-400">
                         One last step
                     </p>
-                    <h2 className="text-xl font-bold text-white sm:text-2xl">
+                    <h2 className="text-xl font-bold text-[var(--text-color)] sm:text-2xl">
                         Create your first project
                     </h2>
                 </div>
             </div>
 
-            <p className="-mt-2 text-sm leading-relaxed text-zinc-400">
+            <p className="-mt-2 text-sm leading-relaxed text-[var(--text-gray-color)]">
                 Welcome aboard, {userName}. Every issue, sprint and teammate
                 lives inside a project — let's spin up your workspace.
             </p>

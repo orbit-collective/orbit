@@ -286,7 +286,7 @@ describe('Sidebar Component', () => {
         render(<Sidebar projects={[]} />);
 
         const projectsLink = screen.getByText('Projects').closest('a');
-        expect(projectsLink).toHaveClass('text-white');
+        expect(projectsLink).toHaveClass('text-[var(--text-color)]');
     });
 
     test('marks project as active when url starts with project path', () => {
@@ -298,7 +298,7 @@ describe('Sidebar Component', () => {
         );
 
         const projectLink = screen.getByText('Test Project').closest('a');
-        expect(projectLink).toHaveClass('text-white');
+        expect(projectLink).toHaveClass('text-[var(--text-color)]');
     });
 
     test('registers a "p" shortcut that opens the new project modal', () => {

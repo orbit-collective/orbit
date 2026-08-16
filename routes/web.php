@@ -34,4 +34,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
 });
 
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+    ]);
+});
+
 require __DIR__.'/auth.php';
+require __DIR__.'/account.php';

@@ -34,14 +34,14 @@ describe('boardCardVariants', () => {
 
     test('applies active border/background classes when active', () => {
         const result = boardCardVariants({ isActive: true, isClosed: false });
-        expect(result).toContain('border-zinc-600');
-        expect(result).toContain('bg-[#242424]');
+        expect(result).toContain('border-[var(--border-color-strong)]');
+        expect(result).toContain('bg-[var(--bg-light-color-hover)]');
     });
 
     test('applies inactive border/background classes when not active', () => {
         const result = boardCardVariants({ isActive: false, isClosed: false });
-        expect(result).toContain('border-white/[0.08]');
-        expect(result).toContain('bg-[#1c1c1c]');
+        expect(result).toContain('border-[var(--border-color)]');
+        expect(result).toContain('bg-[var(--bg-light-color)]');
     });
 
     test('applies reduced opacity when closed', () => {
@@ -72,7 +72,7 @@ describe('listRowVariants', () => {
 
     test('applies inactive background/text classes when not active', () => {
         const result = listRowVariants({ isActive: false });
-        expect(result).toContain('text-zinc-300');
+        expect(result).toContain('text-[var(--text-color)]');
         expect(result).toContain('bg-[var(--bg-color)]');
     });
 });

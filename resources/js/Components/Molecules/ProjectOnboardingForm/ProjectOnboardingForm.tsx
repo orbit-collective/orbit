@@ -16,7 +16,7 @@ export default function ProjectOnboardingForm({
     return (
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-white">
+                <label className="text-sm font-medium text-[var(--text-color)]">
                     Project name
                     <span className="text-[var(--error-color)]"> *</span>
                 </label>
@@ -34,7 +34,7 @@ export default function ProjectOnboardingForm({
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-white">
+                <label className="text-sm font-medium text-[var(--text-color)]">
                     Slug
                     <span className="text-[var(--error-color)]"> *</span>
                 </label>
@@ -52,7 +52,7 @@ export default function ProjectOnboardingForm({
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-white">
+                <label className="text-sm font-medium text-[var(--text-color)]">
                     Description
                 </label>
                 <TextArea
@@ -64,7 +64,9 @@ export default function ProjectOnboardingForm({
             </div>
 
             <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-white">Color</label>
+                <label className="text-sm font-medium text-[var(--text-color)]">
+                    Color
+                </label>
                 <div className="flex flex-wrap gap-3">
                     {AVAILABLE_COLORS.map((color) => (
                         <button
@@ -82,12 +84,12 @@ export default function ProjectOnboardingForm({
                 </div>
             </div>
 
-            <div className="mt-2 flex items-center justify-between gap-3 border-t border-zinc-800/80 pt-6">
+            <div className="mt-2 flex items-center justify-between gap-3 border-t border-[var(--border-color-strong)] pt-6">
                 <button
                     type="button"
                     onClick={onSkip}
                     disabled={processing}
-                    className="cursor-pointer rounded-lg border-none bg-transparent px-2 py-2 text-sm font-medium text-zinc-500 transition-colors duration-150 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    className="cursor-pointer rounded-lg border-none bg-transparent px-2 py-2 text-sm font-medium text-[var(--text-muted-color)] transition-colors duration-150 hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     I'll do this later
                 </button>

@@ -17,6 +17,7 @@ export default defineConfig({
         host: '0.0.0.0',
         port: 5173,
         strictPort: true,
+        allowedHosts: ['vite'],
         // HMR websocket connects back through the host-mapped port.
         hmr: {
             host: 'localhost',

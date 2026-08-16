@@ -18,7 +18,7 @@ export default function ProjectOnboardingPreview({
         <div
             className={`relative order-1 flex flex-col justify-center gap-5 overflow-hidden bg-gradient-to-br p-6 sm:p-8 md:order-2 md:p-10 ${theme.gradient}`}
         >
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
                 Live preview
             </span>
             <ProjectCard
@@ -37,7 +37,7 @@ export default function ProjectOnboardingPreview({
                 {PERKS.map((perk) => (
                     <li
                         key={perk}
-                        className="flex items-center gap-2.5 text-xs text-zinc-400"
+                        className="flex items-center gap-2.5 text-xs text-[var(--text-gray-color)]"
                     >
                         <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
                             <Icon name="Check" size={11} />

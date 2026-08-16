@@ -109,10 +109,10 @@ export default function SelectionDropdown({
                             left: `${coords.left - 224}px`, // 224 is w-56
                             zIndex: 9999,
                         }}
-                        className="animate-in fade-in zoom-in-95 w-56 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/95 p-1.5 shadow-2xl backdrop-blur-md duration-100"
+                        className="animate-in fade-in zoom-in-95 w-56 overflow-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] p-1.5 shadow-2xl backdrop-blur-md duration-100"
                     >
                         <div className="px-2 py-1.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                                 Display Columns
                             </p>
                         </div>
@@ -126,7 +126,7 @@ export default function SelectionDropdown({
                                     return (
                                         <div
                                             key={option.value}
-                                            className="my-1 border-t border-zinc-800"
+                                            className="my-1 border-t border-[var(--border-color-strong)]"
                                         />
                                     );
                                 }
@@ -144,8 +144,8 @@ export default function SelectionDropdown({
                                         className={cn(
                                             'group flex w-full items-center justify-between rounded-md px-2 py-1.5 text-xs transition-all duration-200',
                                             isSelected
-                                                ? 'bg-[var(--accent-color)]/10 text-zinc-100'
-                                                : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200',
+                                                ? 'bg-[var(--accent-color)]/10 text-[var(--text-color)]'
+                                                : 'text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
                                             option.disabled &&
                                                 'cursor-default opacity-50 hover:bg-transparent',
                                         )}
@@ -160,7 +160,7 @@ export default function SelectionDropdown({
                                                             'flex h-4 w-4 items-center justify-center rounded border transition-all duration-200',
                                                             isSelected
                                                                 ? 'border-[var(--accent-color)] bg-[var(--accent-color)]'
-                                                                : 'border-zinc-700 bg-zinc-800 group-hover:border-zinc-600',
+                                                                : 'border-[var(--border-color-strong)] bg-[var(--surface-color)] group-hover:border-[var(--border-color-strong)]',
                                                         )}
                                                     >
                                                         {isSelected && (

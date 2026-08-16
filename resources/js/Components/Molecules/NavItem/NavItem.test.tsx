@@ -56,7 +56,9 @@ describe('NavItem Component', () => {
     test('applies active styling when isActive is true', () => {
         render(<NavItem icon="Inbox" label="Inbox" link="/inbox" isActive />);
 
-        expect(screen.getByRole('link')).toHaveClass('text-white');
+        expect(screen.getByRole('link')).toHaveClass(
+            'text-[var(--text-color)]',
+        );
     });
 
     test('applies inactive styling when isActive is false', () => {
@@ -69,7 +71,9 @@ describe('NavItem Component', () => {
             />,
         );
 
-        expect(screen.getByRole('link')).toHaveClass('text-zinc-400');
+        expect(screen.getByRole('link')).toHaveClass(
+            'text-[var(--text-gray-color)]',
+        );
     });
 
     test('calls onClick when clicked', async () => {

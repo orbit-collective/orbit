@@ -22,18 +22,18 @@ const BoardCardContent = ({
         <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5">
                 <StatusDot status={isClosed ? issue.status : issue.priority} />
-                <span className="truncate text-[11px] font-semibold text-zinc-500">
+                <span className="truncate text-[11px] font-semibold text-[var(--text-muted-color)]">
                     {issue.assignee?.name || 'Unassigned'}
                 </span>
             </div>
-            <span className="shrink-0 font-mono text-[10px] font-medium text-zinc-600">
+            <span className="shrink-0 font-mono text-[10px] font-medium text-[var(--text-muted-color)]">
                 #{issue.id}
             </span>
         </div>
         <h4
             className={cn(
-                'line-clamp-2 text-[13px] font-medium leading-snug text-zinc-200',
-                isClosed && 'text-zinc-500 line-through',
+                'line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-color)]',
+                isClosed && 'text-[var(--text-muted-color)] line-through',
             )}
         >
             {issue.title}
@@ -44,7 +44,7 @@ const BoardCardContent = ({
                 badgeClassName="px-1.5 py-0.5 text-[9px]"
             />
         )}
-        <div className="mt-0.5 flex items-center justify-between gap-2 border-t border-white/[0.04] pt-2.5">
+        <div className="mt-0.5 flex items-center justify-between gap-2 border-t border-[var(--border-color)] pt-2.5">
             <Badge
                 color={issue.status}
                 variant="default"
@@ -61,7 +61,7 @@ const BoardCardContent = ({
                     size="sm"
                 />
             ) : (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full border border-dashed border-zinc-700 bg-zinc-900 text-[8px] text-zinc-500">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full border border-dashed border-[var(--border-color-strong)] bg-[var(--surface-color)] text-[8px] text-[var(--text-muted-color)]">
                     -
                 </div>
             )}

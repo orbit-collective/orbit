@@ -274,6 +274,18 @@ test('it can bulk delete issues, only affecting the given ids', function () {
     $this->assertDatabaseHas('issues', ['id' => $toKeep->id]);
 });
 
+test('it can get many issues by id with just their project and title', function () {
+    $project = Project::factory()->create();
+    $matching = Issue::factory()->count(2)->create(['project_id' => $project->id]);
+    Issue::factory()->create();
+
+    $issues = $this->repository->getMany($matching->pluck('id')->toArray());
+
+    expect($issues)->toHaveCount(2)
+        ->and($issues->pluck('id')->all())->toEqualCanonicalizing($matching->pluck('id')->all())
+        ->and($issues->first()->project_id)->toBe($project->id);
+});
+
 test('it can filter issues by assignee given as an array instead of a comma string', function () {
     $project = Project::factory()->create();
     $first = User::factory()->create();

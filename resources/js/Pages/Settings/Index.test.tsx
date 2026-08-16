@@ -1,9 +1,20 @@
+import { AccentProvider } from '@/context/AccentContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SettingsIndex from './Index';
 
 const pageState = vi.hoisted(() => ({ url: '/settings' }));
+
+const renderSettingsIndex = () =>
+    render(
+        <ThemeProvider>
+            <AccentProvider>
+                <SettingsIndex />
+            </AccentProvider>
+        </ThemeProvider>,
+    );
 
 vi.mock('@inertiajs/react', () => ({
     Link: ({
@@ -31,7 +42,7 @@ describe('Settings Index Page', () => {
     });
 
     test('renders account and workspace sections with tabs', () => {
-        render(<SettingsIndex />);
+        renderSettingsIndex();
 
         expect(screen.getByText('Account')).toBeInTheDocument();
         expect(screen.getByText('Workspace')).toBeInTheDocument();
@@ -46,7 +57,7 @@ describe('Settings Index Page', () => {
     });
 
     test('renders heading and back link', () => {
-        render(<SettingsIndex />);
+        renderSettingsIndex();
 
         expect(
             screen.getByRole('heading', { name: 'Preferences' }),
@@ -57,29 +68,26 @@ describe('Settings Index Page', () => {
         );
     });
 
-    test('reads active tab from query param', () => {
+    test('falls back to the default tab when the requested tab is disabled', () => {
         pageState.url = '/settings?tab=members';
-        render(<SettingsIndex />);
+        renderSettingsIndex();
 
         expect(
-            screen.getByRole('heading', { name: 'Members' }),
+            screen.getByRole('heading', { name: 'Preferences' }),
         ).toBeInTheDocument();
-        expect(screen.getByText('Member access')).toBeInTheDocument();
     });
 
-    test('renders account tab content for selected account tab', () => {
-        pageState.url = '/settings?tab=notifications';
-        render(<SettingsIndex />);
+    test('renders account tab content for the enabled preferences tab', () => {
+        pageState.url = '/settings?tab=preferences';
+        renderSettingsIndex();
 
-        expect(screen.getByText('Activity notifications')).toBeInTheDocument();
-        expect(screen.getByText('Delivery preferences')).toBeInTheDocument();
+        expect(screen.getByText('Default issue view')).toBeInTheDocument();
     });
 
-    test('renders workspace tab content for selected workspace tab', () => {
-        pageState.url = '/settings?tab=templates';
-        render(<SettingsIndex />);
+    test('renders disabled tabs without a link and with a "Soon" badge', () => {
+        renderSettingsIndex();
 
-        expect(screen.getByText('Issue templates')).toBeInTheDocument();
-        expect(screen.getByText('Quality controls')).toBeInTheDocument();
+        expect(screen.getByText('Members').closest('a')).toBeNull();
+        expect(screen.getAllByText('Soon').length).toBeGreaterThan(0);
     });
 });

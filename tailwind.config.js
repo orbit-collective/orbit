@@ -1,4 +1,5 @@
 import forms from '@tailwindcss/forms';
+import scrollbar from 'tailwind-scrollbar';
 import defaultTheme from 'tailwindcss/defaultTheme';
 
 import generated from '@tailwindcss/typography';
@@ -20,5 +21,5 @@ export default {
         },
     },
 
-    plugins: [forms, generated],
+    plugins: [forms, generated, scrollbar],
 };

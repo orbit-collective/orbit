@@ -75,7 +75,7 @@ export default function OnboardingModal({
             <div className="relative z-50 w-full max-w-5xl">
                 <BorderOverlay />
 
-                <div className="relative z-50 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-zinc-950/90 text-zinc-100 shadow-2xl backdrop-blur-2xl sm:max-h-[calc(100vh-3rem)] sm:rounded-3xl">
+                <div className="relative z-50 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl bg-[var(--surface-color)] text-[var(--text-color)] shadow-2xl backdrop-blur-2xl sm:max-h-[calc(100vh-3rem)] sm:rounded-3xl">
                     <div className="grid grid-cols-1 md:min-h-[500px] md:grid-cols-2">
                         <div className="relative order-1 h-48 w-full overflow-hidden sm:h-64 md:order-2 md:h-full">
                             <img
@@ -89,7 +89,7 @@ export default function OnboardingModal({
                             <div className="space-y-6 md:space-y-8">
                                 <div className="flex items-center gap-4">
                                     <Avatar src={logo} size={'lg'} />
-                                    <span className="text-xl font-bold tracking-tight text-white">
+                                    <span className="text-xl font-bold tracking-tight text-[var(--text-color)]">
                                         Orbit
                                     </span>
                                 </div>
