@@ -10,7 +10,7 @@ export default function DropdownMenu({
     return (
         <div
             className={cn(
-                'absolute left-0 z-[100] flex max-h-[320px] flex-col overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] p-1.5 shadow-2xl backdrop-blur-md',
+                'absolute left-0 z-[100] flex max-h-[320px] flex-col overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] p-1.5 shadow-2xl backdrop-blur-md scrollbar-none',
                 stretch ? 'right-0' : 'w-max min-w-[180px]',
                 direction === 'bottom'
                     ? 'top-[calc(100%+6px)]'

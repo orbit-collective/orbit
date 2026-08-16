@@ -1,8 +1,21 @@
 import { AlertProvider } from '@/context/AlertContext';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import AccountSettingsDeleteAccountModal from './AccountSettingsDeleteAccountModal';
+
+const mockDelete = vi.hoisted(() =>
+    vi.fn(
+        (
+            _url: string,
+            opts?: { onSuccess?: () => void; onFinish?: () => void },
+        ) => {
+            opts?.onSuccess?.();
+            opts?.onFinish?.();
+        },
+    ),
+);
+const mockRoute = vi.hoisted(() => vi.fn((name: string) => `/${name}`));
 
 vi.mock('@inertiajs/react', async () => {
     const actual =
@@ -12,7 +25,17 @@ vi.mock('@inertiajs/react', async () => {
     return {
         ...actual,
         usePage: () => ({ props: { flash: {} } }),
+        router: { ...actual.router, delete: mockDelete },
     };
+});
+
+beforeEach(() => {
+    vi.stubGlobal('route', mockRoute);
+});
+
+afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
 });
 
 const renderModal = (onClose = vi.fn()) => {
@@ -65,10 +88,12 @@ describe('AccountSettingsDeleteAccountModal', () => {
         );
 
         expect(onClose).toHaveBeenCalledTimes(1);
+        expect(mockDelete).toHaveBeenCalledWith(
+            '/account.delete',
+            expect.objectContaining({ preserveScroll: true }),
+        );
         expect(
-            screen.getByText(
-                "Account deletion requested — we've emailed you a confirmation link.",
-            ),
+            screen.getByText('Account has been deleted.'),
         ).toBeInTheDocument();
     });
 });

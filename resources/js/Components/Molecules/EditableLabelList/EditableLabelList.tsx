@@ -76,7 +76,7 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
                 </button>
             </div>
             {isOpen && (
-                <div className="absolute left-0 top-[calc(100%+6px)] z-[100] w-64 overflow-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] p-1.5 shadow-2xl backdrop-blur-md">
+                <div className="absolute left-0 top-[calc(100%+6px)] z-[100] w-64 overflow-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] p-1.5 shadow-2xl backdrop-blur-md">
                     <div className="flex items-center justify-between px-2 py-1.5">
                         <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                             Labels
