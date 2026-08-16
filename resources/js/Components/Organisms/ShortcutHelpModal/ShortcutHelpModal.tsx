@@ -84,7 +84,7 @@ export const ShortcutHelpModal: React.FC = () => {
             </div>
             <div
                 ref={scrollContainerRef}
-                className="scrollbar-thin scrollbar-thumb-[var(--border-color-strong)] max-h-[450px] flex-1 overflow-y-auto p-1.5"
+                className="scrollbar-thumb-[var(--border-color-strong)] max-h-[450px] flex-1 overflow-y-auto p-1.5 scrollbar-thin"
             >
                 {Object.keys(categories).length === 0 ? (
                     <div className="py-12 text-center text-sm text-[var(--text-muted-color)]">
