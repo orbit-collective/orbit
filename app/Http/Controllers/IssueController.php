@@ -29,6 +29,8 @@ class IssueController extends Controller
             throw new NotFoundHttpException;
         }
 
+        $this->authorize('view', $issue);
+
         return Inertia::render('Issues/Show', [
             'project' => $project,
             'projects' => $this->projectService->getAllForUser($request->user()->id),
@@ -39,6 +41,8 @@ class IssueController extends Controller
 
     public function update(Request $request, Issue $issue): RedirectResponse
     {
+        $this->authorize('update', $issue);
+
         $data = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
@@ -77,6 +81,8 @@ class IssueController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
+        $this->authorize('view', Project::findOrFail($data['project_id']));
+
         $issue = $this->issueService->createIssue($data);
 
         return redirect()->back()
@@ -85,6 +91,8 @@ class IssueController extends Controller
     }
     public function destroy(Issue $issue): RedirectResponse
     {
+        $this->authorize('delete', $issue);
+
         $this->issueService->deleteIssue($issue);
 
         return redirect()->back()
@@ -96,6 +104,10 @@ class IssueController extends Controller
             'ids' => ['required', 'array'],
             'ids.*' => ['required', 'integer', 'exists:issues,id'],
         ]);
+
+        foreach (Issue::whereIn('id', $validated['ids'])->get() as $issue) {
+            $this->authorize('delete', $issue);
+        }
 
         $this->issueService->bulkDeleteIssues($validated['ids']);
 

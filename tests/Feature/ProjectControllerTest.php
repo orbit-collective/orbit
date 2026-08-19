@@ -110,11 +110,13 @@ test('guests cannot create a project', function () {
 });
 
 test('the project show page returns the expected Inertia props', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
     Issue::factory()->count(3)->create(['project_id' => $project->id]);
     $filter = SavedFilter::factory()->create(['project_id' => $project->id]);
 
-    $response = $this->actingAs(User::factory()->create())->get("/projects/{$project->id}");
+    $response = $this->actingAs($user)->get("/projects/{$project->id}");
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -127,10 +129,12 @@ test('the project show page returns the expected Inertia props', function () {
 });
 
 test('the project show page defaults to 10 issues per page', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
     Issue::factory()->count(12)->create(['project_id' => $project->id]);
 
-    $response = $this->actingAs(User::factory()->create())->get("/projects/{$project->id}");
+    $response = $this->actingAs($user)->get("/projects/{$project->id}");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->has('issues.data', 10)
@@ -138,10 +142,12 @@ test('the project show page defaults to 10 issues per page', function () {
 });
 
 test('the project show page respects a custom perPage query parameter', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
     Issue::factory()->count(12)->create(['project_id' => $project->id]);
 
-    $response = $this->actingAs(User::factory()->create())->get("/projects/{$project->id}?perPage=5");
+    $response = $this->actingAs($user)->get("/projects/{$project->id}?perPage=5");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->has('issues.data', 5)
@@ -149,9 +155,11 @@ test('the project show page respects a custom perPage query parameter', function
 });
 
 test('the project show page parses comma-separated status, priority and label filters into arrays', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())
+    $response = $this->actingAs($user)
         ->get("/projects/{$project->id}?status=open,closed&priority=high&labels=bug,design");
 
     $response->assertInertia(fn (Assert $page) => $page
@@ -162,9 +170,11 @@ test('the project show page parses comma-separated status, priority and label fi
 });
 
 test('the project show page exposes the raw query params when present', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())
+    $response = $this->actingAs($user)
         ->get("/projects/{$project->id}?search=foo");
 
     $response->assertInertia(fn (Assert $page) => $page
@@ -186,10 +196,20 @@ test('guests cannot view a project', function () {
     $response->assertRedirect(route('login'));
 });
 
-test('a project\'s visible columns can be updated', function () {
-    $project = Project::factory()->create(['columns' => ['id' => true, 'title' => true]]);
+test('a non-member cannot view a project', function () {
+    $project = Project::factory()->create();
 
-    $response = $this->actingAs(User::factory()->create())->patch("/projects/{$project->id}/columns", [
+    $response = $this->actingAs(User::factory()->create())->get("/projects/{$project->id}");
+
+    $response->assertForbidden();
+});
+
+test('a project\'s visible columns can be updated', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create(['columns' => ['id' => true, 'title' => true]]);
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->patch("/projects/{$project->id}/columns", [
         'columns' => ['title' => false, 'status' => true],
     ]);
 
@@ -201,9 +221,11 @@ test('a project\'s visible columns can be updated', function () {
 });
 
 test('updating columns requires the columns field to be an array', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/projects/{$project->id}/columns", [
+    $response = $this->actingAs($user)->patch("/projects/{$project->id}/columns", [
         'columns' => 'not-an-array',
     ]);
 
@@ -211,13 +233,25 @@ test('updating columns requires the columns field to be an array', function () {
 });
 
 test('updating columns rejects non-boolean column values', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/projects/{$project->id}/columns", [
+    $response = $this->actingAs($user)->patch("/projects/{$project->id}/columns", [
         'columns' => ['title' => 'not-a-boolean'],
     ]);
 
     $response->assertSessionHasErrors('columns.title');
+});
+
+test('a non-member cannot update project columns', function () {
+    $project = Project::factory()->create();
+
+    $response = $this->actingAs(User::factory()->create())->patch("/projects/{$project->id}/columns", [
+        'columns' => ['title' => false],
+    ]);
+
+    $response->assertForbidden();
 });
 
 test('guests cannot update project columns', function () {

@@ -35,6 +35,8 @@ class ProjectController extends Controller
      */
     public function show(Request $request, Project $project): Response
     {
+        $this->authorize('view', $project);
+
         $projects = $this->projectService->getAllForUser($request->user()->id);
 
         $sortParams = request()->only(['sort', 'direction']);
@@ -86,6 +88,8 @@ class ProjectController extends Controller
     }
     public function updateColumns(Request $request, Project $project): RedirectResponse
     {
+        $this->authorize('update', $project);
+
         $validated = $request->validate([
             'columns' => 'required|array',
             'columns.id' => 'sometimes|boolean',

@@ -7,9 +7,18 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+function actingAsProjectMember(Project $project, string $role = 'member'): User
+{
+    $user = User::factory()->create();
+    $project->users()->attach($user->id, ['role' => $role]);
+
+    return $user;
+}
+
 test('an issue detail page can be viewed', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
 
     // The "Issues/Show" frontend page doesn't exist yet (added in a later step), so the
     // Vite manifest has no entry for it. Requesting via the X-Inertia XHR path bypasses
@@ -17,7 +26,7 @@ test('an issue detail page can be viewed', function () {
     $manifest = public_path('build/manifest.json');
     $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
 
-    $response = $this->actingAs(User::factory()->create())
+    $response = $this->actingAs($user)
         ->withHeaders([
             'X-Inertia' => 'true',
             'X-Inertia-Version' => $version,
@@ -52,9 +61,19 @@ test('an issue detail page 404s when the issue does not belong to the project', 
     $response->assertNotFound();
 });
 
-test('a project member can create an issue', function () {
-    $user = User::factory()->create();
+test('a non-member cannot view an issue detail page', function () {
     $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+
+    $response = $this->actingAs(User::factory()->create())
+        ->get("/projects/{$project->id}/issues/{$issue->id}");
+
+    $response->assertForbidden();
+});
+
+test('a project member can create an issue', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
 
     $response = $this->actingAs($user)->post('/issues', [
         'title' => 'New issue',
@@ -72,9 +91,22 @@ test('a project member can create an issue', function () {
     ]);
 });
 
-test('creating an issue stamps the authenticated user as the creator', function () {
-    $user = User::factory()->create();
+test('a non-member cannot create an issue in a project they do not belong to', function () {
     $project = Project::factory()->create();
+
+    $response = $this->actingAs(User::factory()->create())->post('/issues', [
+        'title' => 'New issue',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+    ]);
+
+    $response->assertForbidden();
+});
+
+test('creating an issue stamps the authenticated user as the creator', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
 
     $this->actingAs($user)->post('/issues', [
         'title' => 'New issue',
@@ -88,8 +120,8 @@ test('creating an issue stamps the authenticated user as the creator', function 
 });
 
 test('creating an issue redirects back with a success flash message and an action url', function () {
-    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
 
     $response = $this->actingAs($user)->post('/issues', [
         'title' => 'Flash message issue',
@@ -123,8 +155,9 @@ test('creating an issue requires the project_id to reference a real project', fu
 
 test('creating an issue requires the assignee_id to reference a real user when given', function () {
     $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->post('/issues', [
+    $response = $this->actingAs($user)->post('/issues', [
         'title' => 'Bad assignee',
         'project_id' => $project->id,
         'priority' => 'high',
@@ -137,8 +170,9 @@ test('creating an issue requires the assignee_id to reference a real user when g
 
 test('creating an issue rejects an end_date before the start_date', function () {
     $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->post('/issues', [
+    $response = $this->actingAs($user)->post('/issues', [
         'title' => 'Bad dates',
         'project_id' => $project->id,
         'priority' => 'high',
@@ -157,9 +191,11 @@ test('guests cannot create an issue', function () {
 });
 
 test('a project member can update an issue', function () {
-    $issue = Issue::factory()->create(['title' => 'Old title']);
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Old title']);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/issues/{$issue->id}", [
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
         'title' => 'New title',
     ]);
 
@@ -167,10 +203,22 @@ test('a project member can update an issue', function () {
     $this->assertDatabaseHas('issues', ['id' => $issue->id, 'title' => 'New title']);
 });
 
-test('updating an issue redirects back with a summary of what changed', function () {
-    $issue = Issue::factory()->create(['title' => 'Old title', 'priority' => 'low']);
+test('a non-member cannot update an issue', function () {
+    $issue = Issue::factory()->create(['title' => 'Old title']);
 
     $response = $this->actingAs(User::factory()->create())->patch("/issues/{$issue->id}", [
+        'title' => 'New title',
+    ]);
+
+    $response->assertForbidden();
+});
+
+test('updating an issue redirects back with a summary of what changed', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Old title', 'priority' => 'low']);
+    $user = actingAsProjectMember($project);
+
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
         'priority' => 'high',
     ]);
 
@@ -181,9 +229,11 @@ test('updating an issue redirects back with a summary of what changed', function
 });
 
 test('updating an issue with no actual changes says so in the flash message', function () {
-    $issue = Issue::factory()->create(['title' => 'Same title', 'priority' => 'high']);
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Same title', 'priority' => 'high']);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/issues/{$issue->id}", [
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
         'priority' => 'high',
     ]);
 
@@ -202,12 +252,15 @@ test('updating a non-existent issue returns a 404', function () {
 });
 
 test('updating an issue rejects an end_date before a start_date sent in the same request', function () {
+    $project = Project::factory()->create();
     $issue = Issue::factory()->create([
+        'project_id' => $project->id,
         'start_date' => now(),
         'end_date' => now()->addDay(),
     ]);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/issues/{$issue->id}", [
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
         'start_date' => now()->toDateString(),
         'end_date' => now()->subDay()->toDateString(),
     ]);
@@ -221,12 +274,15 @@ test('updating an issue rejects an end_date before a start_date sent in the same
 // trigger throws a raw exception that Laravel renders as a 500 instead of a normal
 // validation redirect.
 test('updating only end_date without start_date bypasses validation and returns a server error', function () {
+    $project = Project::factory()->create();
     $issue = Issue::factory()->create([
+        'project_id' => $project->id,
         'start_date' => now(),
         'end_date' => now()->addDay(),
     ]);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/issues/{$issue->id}", [
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
         'end_date' => now()->subDay()->toDateString(),
     ]);
 
@@ -234,9 +290,11 @@ test('updating only end_date without start_date bypasses validation and returns 
 });
 
 test('updating an issue rejects an invalid status or priority value type', function () {
-    $issue = Issue::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/issues/{$issue->id}", [
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
         'status' => '',
     ]);
 
@@ -244,9 +302,11 @@ test('updating an issue rejects an invalid status or priority value type', funct
 });
 
 test('updating an issue accepts in_progress as a valid status', function () {
-    $issue = Issue::factory()->create(['status' => 'open']);
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'status' => 'open']);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/issues/{$issue->id}", [
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
         'status' => 'in_progress',
     ]);
 
@@ -255,9 +315,11 @@ test('updating an issue accepts in_progress as a valid status', function () {
 });
 
 test('updating an issue rejects a status value outside the enum', function () {
-    $issue = Issue::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->patch("/issues/{$issue->id}", [
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
         'status' => 'archived',
     ]);
 
@@ -273,13 +335,23 @@ test('guests cannot update an issue', function () {
 });
 
 test('a project member can delete an issue', function () {
-    $issue = Issue::factory()->create(['title' => 'Delete me']);
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Delete me']);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->delete("/issues/{$issue->id}");
+    $response = $this->actingAs($user)->delete("/issues/{$issue->id}");
 
     $response->assertRedirect();
     $response->assertSessionHas('success', "Issue #{$issue->id} \"Delete me\" has been deleted successfully.");
     $this->assertDatabaseMissing('issues', ['id' => $issue->id]);
+});
+
+test('a non-member cannot delete an issue', function () {
+    $issue = Issue::factory()->create();
+
+    $response = $this->actingAs(User::factory()->create())->delete("/issues/{$issue->id}");
+
+    $response->assertForbidden();
 });
 
 test('deleting a non-existent issue returns a 404', function () {
@@ -313,9 +385,11 @@ test('bulk deleting issues requires each id to reference a real issue', function
 });
 
 test('a project member can bulk delete issues', function () {
-    $issues = Issue::factory()->count(3)->create();
+    $project = Project::factory()->create();
+    $issues = Issue::factory()->count(3)->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs(User::factory()->create())->delete('/issues/bulk-destroy', [
+    $response = $this->actingAs($user)->delete('/issues/bulk-destroy', [
         'ids' => $issues->pluck('id')->toArray(),
     ]);
 
@@ -325,6 +399,20 @@ test('a project member can bulk delete issues', function () {
     foreach ($issues as $issue) {
         $this->assertDatabaseMissing('issues', ['id' => $issue->id]);
     }
+});
+
+test('bulk deleting rejects the batch if any issue does not belong to the user\'s projects', function () {
+    $project = Project::factory()->create();
+    $ownIssue = Issue::factory()->create(['project_id' => $project->id]);
+    $foreignIssue = Issue::factory()->create();
+    $user = actingAsProjectMember($project);
+
+    $response = $this->actingAs($user)->delete('/issues/bulk-destroy', [
+        'ids' => [$ownIssue->id, $foreignIssue->id],
+    ]);
+
+    $response->assertForbidden();
+    $this->assertDatabaseHas('issues', ['id' => $ownIssue->id]);
 });
 
 test('guests cannot bulk delete issues', function () {
