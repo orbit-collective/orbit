@@ -17,28 +17,14 @@ beforeEach(function () {
     $this->service = new UserService($this->userRepository, $this->activityLogService);
 });
 
-test('it delegates fetching a project\'s assignable users to the repository', function () {
+test('it delegates fetching assignable users to the repository', function () {
     $users = User::factory()->count(2)->make();
 
-    $this->userRepository->shouldReceive('getAssignableUsersForProject')
+    $this->userRepository->shouldReceive('getAssignableUsers')
         ->once()
-        ->with(1)
         ->andReturn($users);
 
-    $result = $this->service->getAssignableUsersForProject(1);
-
-    expect($result)->toBe($users);
-});
-
-test('it delegates fetching a user\'s assignable users across their projects to the repository', function () {
-    $users = User::factory()->count(2)->make();
-
-    $this->userRepository->shouldReceive('getAssignableUsersForUserProjects')
-        ->once()
-        ->with(7)
-        ->andReturn($users);
-
-    $result = $this->service->getAssignableUsersForUserProjects(7);
+    $result = $this->service->getAssignableUsers();
 
     expect($result)->toBe($users);
 });

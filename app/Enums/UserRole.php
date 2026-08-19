@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum ProjectRole: string
+enum UserRole: string
 {
     case ADMIN = 'admin';
     case MEMBER = 'member';

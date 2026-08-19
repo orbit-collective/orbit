@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Auth\Events\Registered;
@@ -15,6 +16,8 @@ class AuthService
 
     public function register(array $data): User
     {
+        $data['role'] = $this->userRepository->hasAnyUsers() ? UserRole::MEMBER : UserRole::ADMIN;
+
         $user = $this->userRepository->create($data);
 
         event(new Registered($user));

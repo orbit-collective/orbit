@@ -7,12 +7,6 @@ import WorkspaceSettingsContent from '@/Components/Organisms/WorkspaceSettingsCo
 import { PageProps } from '@/types';
 import { NotificationSettings } from '@/types/Notification';
 import {
-    MemberProjectSummary,
-    PendingProjectInvitation,
-    ProjectMember,
-    ProjectMemberRole,
-} from '@/types/ProjectMembers';
-import {
     SETTINGS_DEFAULT_TAB,
     SETTINGS_TABS,
     isAccountSettingsTabId,
@@ -27,21 +21,11 @@ import { useMemo } from 'react';
 interface SettingsIndexProps {
     sessions?: Session[];
     notificationSettings?: NotificationSettings;
-    memberProjects?: MemberProjectSummary[];
-    selectedProjectId?: number | null;
-    viewerRole?: ProjectMemberRole | null;
-    members?: ProjectMember[];
-    pendingInvitations?: PendingProjectInvitation[];
 }
 
 export default function SettingsIndex({
     sessions = [],
     notificationSettings,
-    memberProjects = [],
-    selectedProjectId = null,
-    viewerRole = null,
-    members = [],
-    pendingInvitations = [],
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -115,14 +99,7 @@ export default function SettingsIndex({
                                 notificationSettings={notificationSettings}
                             />
                         ) : isWorkspaceSettingsTabId(activeTab) ? (
-                            <WorkspaceSettingsContent
-                                tabId={activeTab}
-                                memberProjects={memberProjects}
-                                selectedProjectId={selectedProjectId}
-                                viewerRole={viewerRole}
-                                members={members}
-                                pendingInvitations={pendingInvitations}
-                            />
+                            <WorkspaceSettingsContent tabId={activeTab} />
                         ) : (
                             <SettingsPanel
                                 title={activeTabConfig.label}

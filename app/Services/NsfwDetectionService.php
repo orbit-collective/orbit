@@ -2,16 +2,12 @@
 
 namespace App\Services;
 
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 class NsfwDetectionService
 {
-    /**
-     * @throws ConnectionException
-     */
     public function classify(UploadedFile $file): array
     {
         if (! config('services.nsfw.enabled')) {

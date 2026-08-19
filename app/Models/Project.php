@@ -5,7 +5,6 @@ namespace App\Models;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
@@ -32,17 +31,5 @@ class Project extends Model
     public function savedFilters(): HasMany
     {
         return $this->hasMany(SavedFilter::class);
-    }
-
-    public function users(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class)
-            ->withPivot('role')
-            ->withTimestamps();
-    }
-
-    public function invitations(): HasMany
-    {
-        return $this->hasMany(ProjectInvitation::class);
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Project;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,40 +12,13 @@ beforeEach(function () {
     $this->repository = new UserRepository();
 });
 
-test('it can get assignable users scoped to a project', function () {
-    $project = Project::factory()->create();
-    $members = User::factory()->count(3)->create();
+test('it can get assignable users', function () {
+    User::factory()->count(5)->create();
 
-    foreach ($members as $member) {
-        $project->users()->attach($member->id, ['role' => 'member']);
-    }
+    $users = $this->repository->getAssignableUsers();
 
-    User::factory()->count(2)->create();
-
-    $users = $this->repository->getAssignableUsersForProject($project->id);
-
-    expect($users)->toHaveCount(3)
+    expect($users)->toHaveCount(5)
         ->and($users->first())->toHaveKeys(['id', 'name', 'avatar']);
-});
-
-test('it can get assignable users across every project a user belongs to', function () {
-    $user = User::factory()->create();
-    $projectA = Project::factory()->create();
-    $projectB = Project::factory()->create();
-    $projectA->users()->attach($user->id, ['role' => 'member']);
-    $projectB->users()->attach($user->id, ['role' => 'member']);
-
-    $memberOfA = User::factory()->create();
-    $projectA->users()->attach($memberOfA->id, ['role' => 'member']);
-    $memberOfB = User::factory()->create();
-    $projectB->users()->attach($memberOfB->id, ['role' => 'member']);
-
-    User::factory()->create();
-
-    $users = $this->repository->getAssignableUsersForUserProjects($user->id);
-
-    expect($users->pluck('id')->sort()->values()->all())
-        ->toBe(collect([$user->id, $memberOfA->id, $memberOfB->id])->sort()->values()->all());
 });
 
 test('it can update a user', function () {

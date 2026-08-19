@@ -1,7 +1,7 @@
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import { CommentFormProps } from '@/types/Components';
-import React, { SyntheticEvent, useState } from 'react';
+import React, { useState } from 'react';
 
 const CommentForm: React.FC<CommentFormProps> = ({
     onSubmit,
@@ -9,7 +9,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
 }) => {
     const [body, setBody] = useState('');
 
-    const handleSubmit = (e: SyntheticEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!body.trim()) return;
 

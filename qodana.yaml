@@ -7,7 +7,7 @@ version: "1.0"
 linter: qodana-php
 
 php:
-  version: "8.5"
+  version: "8.4"
 
 profile:
   name: qodana.recommended
@@ -23,8 +23,6 @@ exclude:
       - tests/_output/
   - name: DuplicatedCode
   - name: PhpDynamicAsStaticMethodCallInspection
-  - name: JsCoverageInspection
-  - name: PhpCoverageInspection
 
 include:
   - name: PhpCSFixerValidationInspection

@@ -1,5 +1,4 @@
 import { AccentProvider } from '@/context/AccentContext';
-import { AlertProvider } from '@/context/AlertContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
@@ -12,9 +11,7 @@ const renderSettingsIndex = () =>
     render(
         <ThemeProvider>
             <AccentProvider>
-                <AlertProvider>
-                    <SettingsIndex />
-                </AlertProvider>
+                <SettingsIndex />
             </AccentProvider>
         </ThemeProvider>,
     );
@@ -35,9 +32,8 @@ vi.mock('@inertiajs/react', () => ({
     ),
     usePage: () => ({
         url: pageState.url,
-        props: { flash: {}, emailEnabled: true },
+        props: {},
     }),
-    router: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), delete: vi.fn() },
 }));
 
 describe('Settings Index Page', () => {
@@ -73,7 +69,7 @@ describe('Settings Index Page', () => {
     });
 
     test('falls back to the default tab when the requested tab is disabled', () => {
-        pageState.url = '/settings?tab=integrations';
+        pageState.url = '/settings?tab=members';
         renderSettingsIndex();
 
         expect(
@@ -88,22 +84,10 @@ describe('Settings Index Page', () => {
         expect(screen.getByText('Default issue view')).toBeInTheDocument();
     });
 
-    test('renders the members tab content for the now-enabled members tab', () => {
-        pageState.url = '/settings?tab=members';
-        renderSettingsIndex();
-
-        expect(
-            screen.getByRole('heading', { name: 'Members', level: 1 }),
-        ).toBeInTheDocument();
-        expect(
-            screen.getByText("You're not part of any project yet"),
-        ).toBeInTheDocument();
-    });
-
     test('renders disabled tabs without a link and with a "Soon" badge', () => {
         renderSettingsIndex();
 
-        expect(screen.getByText('Integrations').closest('a')).toBeNull();
+        expect(screen.getByText('Members').closest('a')).toBeNull();
         expect(screen.getAllByText('Soon').length).toBeGreaterThan(0);
     });
 });

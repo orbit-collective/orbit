@@ -1,9 +1,3 @@
-import {
-    MemberProjectSummary,
-    PendingProjectInvitation,
-    ProjectMember,
-    ProjectMemberRole,
-} from '@/types/ProjectMembers';
 import { WorkspaceSettingsTabId } from '@/types/Settings';
 import WorkspaceSettingsDocumentsTab from './WorkspaceSettingsDocumentsTab';
 import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
@@ -15,20 +9,10 @@ import WorkspaceSettingsTemplatesTab from './WorkspaceSettingsTemplatesTab';
 
 interface WorkspaceSettingsContentProps {
     tabId: WorkspaceSettingsTabId;
-    memberProjects?: MemberProjectSummary[];
-    selectedProjectId?: number | null;
-    viewerRole?: ProjectMemberRole | null;
-    members?: ProjectMember[];
-    pendingInvitations?: PendingProjectInvitation[];
 }
 
 export default function WorkspaceSettingsContent({
     tabId,
-    memberProjects = [],
-    selectedProjectId = null,
-    viewerRole = null,
-    members = [],
-    pendingInvitations = [],
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return <WorkspaceSettingsLabelsTab />;
@@ -51,15 +35,7 @@ export default function WorkspaceSettingsContent({
     }
 
     if (tabId === 'members') {
-        return (
-            <WorkspaceSettingsMembersTab
-                memberProjects={memberProjects}
-                selectedProjectId={selectedProjectId}
-                viewerRole={viewerRole}
-                members={members}
-                pendingInvitations={pendingInvitations}
-            />
-        );
+        return <WorkspaceSettingsMembersTab />;
     }
 
     return <WorkspaceSettingsRolesTab />;

@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ProjectRepository;
@@ -16,7 +15,7 @@ beforeEach(function () {
     $this->service = new ProjectService($this->projectRepository, $this->activityLogService);
 });
 
-test('it can create a project, attach the creator as admin and log activity', function () {
+test('it can create a project and log activity', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -30,24 +29,19 @@ test('it can create a project, attach the creator as admin and log activity', fu
         }))
         ->andReturn($project);
 
-    $this->projectRepository->shouldReceive('attachMember')
-        ->once()
-        ->with($project, $user->id, ProjectRole::ADMIN);
-
     $this->activityLogService->shouldReceive('log')
         ->once()
         ->with(1, 'Created project: Test Project');
 
-    $result = $this->service->createProject($data, $user->id);
+    $result = $this->service->createProject($data);
 
     expect($result)->toBe($project);
 });
 
 test('it delegates checking for existing projects to the repository', function () {
-    $this->projectRepository->shouldReceive('hasAnyProjectsForUser')
+    $this->projectRepository->shouldReceive('hasAnyProjects')
         ->once()
-        ->with(5)
         ->andReturn(true);
 
-    expect($this->service->hasAnyProjectsForUser(5))->toBeTrue();
+    expect($this->service->hasAnyProjects())->toBeTrue();
 });

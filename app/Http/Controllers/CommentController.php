@@ -16,8 +16,6 @@ class CommentController extends Controller
 
     public function store(Request $request, Issue $issue): RedirectResponse
     {
-        $this->authorize('view', $issue);
-
         $data = $request->validate([
             'body' => 'required|string',
         ]);

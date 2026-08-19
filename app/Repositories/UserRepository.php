@@ -7,25 +7,9 @@ use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 
 class UserRepository {
-    public function getAssignableUsersForProject(int $projectId): Collection
+    public function getAssignableUsers(): Collection
     {
-        return User::query()
-            ->select('users.id', 'users.name', 'users.avatar')
-            ->whereHas('projects', fn ($query) => $query->where('projects.id', $projectId))
-            ->get();
-    }
-
-    public function getAssignableUsersForUserProjects(int $userId): Collection
-    {
-        return User::query()
-            ->select('users.id', 'users.name', 'users.avatar')
-            ->whereHas('projects', function ($query) use ($userId) {
-                $query->whereIn('projects.id', function ($subQuery) use ($userId) {
-                    $subQuery->select('project_id')->from('project_user')->where('user_id', $userId);
-                });
-            })
-            ->distinct()
-            ->get();
+        return User::query()->select('id', 'name', 'avatar')->get();
     }
 
     public function update(User $user, array $data): User {
@@ -91,8 +75,5 @@ class UserRepository {
     }
     public function findById(int $id): ?User {
         return User::query()->find($id);
-    }
-    public function findByEmail(string $email): ?User {
-        return User::query()->where('email', $email)->first();
     }
 }

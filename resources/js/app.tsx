@@ -50,7 +50,11 @@ function OnboardingGate() {
         return <OnboardingModal onClose={handleClose} />;
     }
 
-    if (!user.has_completed_project_onboarding && !props.hasProjects) {
+    if (
+        user.role === 'admin' &&
+        !user.has_completed_project_onboarding &&
+        !props.hasProjects
+    ) {
         const handleSkip = () => {
             router.post(
                 route('onboarding.project.complete'),

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Services\IssueService;
 use App\Services\ProjectService;
 use App\Services\UserService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,19 +23,17 @@ class DashboardController extends Controller
     /**
      * Display the dashboard.
      */
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $userId = $request->user()->id;
-
-        $issues = $this->issueService->getAllForUser($userId);
-        $projects = $this->projectService->getAllForUser($userId);
-        $productivity_trend = $this->issueService->getProductivityTrendForUser($userId);
+        $issues = $this->issueService->getAll();
+        $projects = $this->projectService->getAll();
+        $productivity_trend = $this->issueService->getProductivityTrend();
 
         return Inertia::render('Dashboard', [
             'issues' => $issues,
             'projects' => $projects,
             'productivity_trend' => $productivity_trend,
-            'users' => $this->userService->getAssignableUsersForUserProjects($userId),
+            'users' => $this->userService->getAssignableUsers(),
         ]);
     }
 }

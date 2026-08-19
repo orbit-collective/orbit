@@ -19,12 +19,8 @@ class UserService
         protected ActivityLogService $activityLogService
     ) {}
 
-    public function getAssignableUsersForProject(int $projectId): Collection {
-        return $this->userRepository->getAssignableUsersForProject($projectId);
-    }
-
-    public function getAssignableUsersForUserProjects(int $userId): Collection {
-        return $this->userRepository->getAssignableUsersForUserProjects($userId);
+    public function getAssignableUsers(): Collection {
+        return $this->userRepository->getAssignableUsers();
     }
 
     public function updateProfile(User $user, array $data, ?UploadedFile $avatarFile = null): User {
@@ -139,8 +135,5 @@ class UserService
     }
     public function getUserById(int $userId): ?User {
         return $this->userRepository->findById($userId);
-    }
-    public function getUserByEmail(string $email): ?User {
-        return $this->userRepository->findByEmail($email);
     }
 }

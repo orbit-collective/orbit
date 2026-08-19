@@ -1,13 +1,9 @@
 <?php
 
 use App\Models\NotificationSetting;
-use App\Models\Project;
 use App\Models\User;
-use App\Services\ProjectInvitationService;
-use App\Enums\ProjectRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -79,67 +75,6 @@ test('settings page defaults in-app notifications to enabled and email notificat
         ->where('notificationSettings.issue_assigned.in_app', true)
         ->where('notificationSettings.issue_assigned.email', false)
         ->where('notificationSettings.project_invited.email', false)
-    );
-});
-
-test('settings page has no selected project when the user belongs to none', function () {
-    $response = $this->actingAs(User::factory()->create())->get('/settings');
-
-    $response->assertInertia(fn (Assert $page) => $page
-        ->where('memberProjects', [])
-        ->where('selectedProjectId', null)
-        ->where('viewerRole', null)
-        ->where('members', [])
-        ->where('pendingInvitations', [])
-    );
-});
-
-test('settings page defaults to the user\'s first project and lists its members', function () {
-    $user = User::factory()->create();
-    $otherMember = User::factory()->create();
-    $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
-    $project->users()->attach($otherMember->id, ['role' => 'member']);
-
-    $response = $this->actingAs($user)->get('/settings');
-
-    $response->assertInertia(fn (Assert $page) => $page
-        ->where('selectedProjectId', $project->id)
-        ->where('viewerRole', 'admin')
-        ->has('members', 2)
-        ->where('memberProjects.0.id', $project->id)
-    );
-});
-
-test('settings page respects the project query parameter', function () {
-    $user = User::factory()->create();
-    $projectA = Project::factory()->create();
-    $projectB = Project::factory()->create();
-    $projectA->users()->attach($user->id, ['role' => 'admin']);
-    $projectB->users()->attach($user->id, ['role' => 'member']);
-
-    $response = $this->actingAs($user)->get("/settings?project={$projectB->id}");
-
-    $response->assertInertia(fn (Assert $page) => $page
-        ->where('selectedProjectId', $projectB->id)
-        ->where('viewerRole', 'member')
-    );
-});
-
-test('settings page lists pending invitations for the selected project', function () {
-    config(['mail.default' => 'smtp']);
-    Notification::fake();
-
-    $user = User::factory()->create();
-    $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
-    app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $user);
-
-    $response = $this->actingAs($user)->get('/settings');
-
-    $response->assertInertia(fn (Assert $page) => $page
-        ->has('pendingInvitations', 1)
-        ->where('pendingInvitations.0.email', 'invitee@example.com')
     );
 });
 

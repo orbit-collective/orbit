@@ -127,7 +127,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Users',
         section: 'workspace',
         description: 'View and manage team members in your workspace.',
-        enabled: true,
+        enabled: false,
     },
     {
         id: 'roles-management',

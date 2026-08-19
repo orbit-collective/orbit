@@ -23,14 +23,12 @@ test('guests are redirected to login instead of seeing the dashboard', function 
 });
 
 test('the dashboard renders the expected Inertia component and props', function () {
-    $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
     // Each factory-created issue also creates its own creator/assignee users,
     // so the exact `users` count isn't asserted here — only its shape.
     Issue::factory()->count(3)->create(['project_id' => $project->id]);
 
-    $response = $this->actingAs($user)->get('/');
+    $response = $this->actingAs(User::factory()->create())->get('/');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('Dashboard')
