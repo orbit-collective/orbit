@@ -7,6 +7,7 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
+import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useAlert } from '@/context/AlertContext';
 import { PageProps } from '@/types';
 import {
@@ -16,6 +17,7 @@ import {
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
+import { getColorTheme } from '@/utils/colors';
 import { formatDate } from '@/utils/time';
 import { router, usePage } from '@inertiajs/react';
 import {
@@ -31,6 +33,60 @@ const ROLE_LABELS: Record<ProjectMemberRole, string> = {
     admin: 'Admin',
     member: 'Member',
 };
+
+const ROLE_ICONS: Record<ProjectMemberRole, 'ShieldCheck' | 'User'> = {
+    admin: 'ShieldCheck',
+    member: 'User',
+};
+
+function RoleBadge({ role }: { role: ProjectMemberRole }) {
+    return (
+        <Badge
+            className={cn(
+                'gap-1',
+                role === 'admin' &&
+                    'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]',
+            )}
+        >
+            <Icon name={ROLE_ICONS[role]} size={11} />
+            {ROLE_LABELS[role]}
+        </Badge>
+    );
+}
+
+function TeamAvatarStack({ members }: { members: ProjectMember[] }) {
+    const visible = members.slice(0, 8);
+    const overflow = members.length - visible.length;
+
+    return (
+        <div className="flex items-center gap-4 px-4 py-4 sm:px-5">
+            <div className="flex -space-x-2">
+                {visible.map((member) => (
+                    <div
+                        key={member.id}
+                        className="rounded-full ring-2 ring-[var(--surface-color)]"
+                    >
+                        <Avatar
+                            src={member.avatar ?? undefined}
+                            initials={member.name.charAt(0)}
+                            size="lg"
+                        />
+                    </div>
+                ))}
+                {overflow > 0 && (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-xs font-medium text-[var(--text-color)] ring-2 ring-[var(--surface-color)]">
+                        +{overflow}
+                    </div>
+                )}
+            </div>
+            <p className="text-sm text-[var(--text-gray-color)]">
+                {members.length}{' '}
+                {members.length === 1 ? 'person has' : 'people have'} access to
+                this project.
+            </p>
+        </div>
+    );
+}
 
 interface PortalDropdownProps {
     isOpen: boolean;
@@ -181,7 +237,6 @@ export default function WorkspaceSettingsMembersTab({
     const emailEnabled = props.emailEnabled;
     const { addAlert } = useAlert();
     const isAdmin = viewerRole === 'admin';
-    const [isProjectMenuOpen, setIsProjectMenuOpen] = useState(false);
 
     const selectedProject =
         memberProjects.find((project) => project.id === selectedProjectId) ??
@@ -193,8 +248,11 @@ export default function WorkspaceSettingsMembersTab({
             {},
             { preserveScroll: true, preserveState: true },
         );
-        setIsProjectMenuOpen(false);
     };
+
+    const adminCount = members.filter(
+        (member) => member.role === 'admin',
+    ).length;
 
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<ProjectMemberRole>('member');
@@ -318,46 +376,77 @@ export default function WorkspaceSettingsMembersTab({
 
     return (
         <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <StatCard
+                    title="Team members"
+                    value={members.length}
+                    icon="Users"
+                    color="accent"
+                    description={`Across "${selectedProject.name}"`}
+                />
+                <StatCard
+                    title="Admins"
+                    value={adminCount}
+                    icon="ShieldCheck"
+                    color="info"
+                    description="Can manage members & invites"
+                />
+                <StatCard
+                    title="Pending invites"
+                    value={pendingInvitations.length}
+                    icon="Mail"
+                    color="warning"
+                    description={
+                        emailEnabled
+                            ? 'Awaiting a response'
+                            : 'Invitations are disabled'
+                    }
+                />
+            </div>
+
             {memberProjects.length > 1 && (
                 <SettingsPanel
                     title="Project"
                     description="Choose which project's members to manage."
                     icon="FolderKanban"
                 >
-                    <SettingsPanelRow
-                        title="Active project"
-                        description="Member lists and invitations below apply to this project."
-                        action={
-                            <PortalDropdown
-                                isOpen={isProjectMenuOpen}
-                                onOpenChange={setIsProjectMenuOpen}
-                                trigger={
-                                    <DropdownTrigger
-                                        className="w-56"
-                                        label={selectedProject.name}
-                                        onClick={() =>
-                                            setIsProjectMenuOpen(
-                                                !isProjectMenuOpen,
-                                            )
-                                        }
+                    <div className="grid grid-cols-1 gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-3">
+                        {memberProjects.map((project) => {
+                            const theme = getColorTheme(project.color);
+                            const selected = project.id === selectedProject.id;
+
+                            return (
+                                <button
+                                    key={project.id}
+                                    type="button"
+                                    onClick={() => switchProject(project.id)}
+                                    className={cn(
+                                        'flex items-center gap-2.5 rounded-xl border p-3 text-left transition-colors',
+                                        selected
+                                            ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
+                                            : 'border-[var(--border-color)] bg-[var(--surface-color)] hover:border-[var(--border-color-strong)]',
+                                    )}
+                                >
+                                    <span
+                                        className={cn(
+                                            'h-2.5 w-2.5 shrink-0 rounded-full',
+                                            theme.accent,
+                                        )}
                                     />
-                                }
-                            >
-                                {memberProjects.map((project) => (
-                                    <DropdownItem
-                                        key={project.id}
-                                        label={project.name}
-                                        isActive={
-                                            project.id === selectedProject.id
-                                        }
-                                        onClick={() =>
-                                            switchProject(project.id)
-                                        }
-                                    />
-                                ))}
-                            </PortalDropdown>
-                        }
-                    />
+                                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text-color)]">
+                                        {project.name}
+                                    </span>
+                                    {selected && (
+                                        <Icon
+                                            name="Check"
+                                            size={14}
+                                            className="shrink-0 text-[var(--accent-color)]"
+                                        />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </SettingsPanel>
             )}
 
@@ -366,6 +455,7 @@ export default function WorkspaceSettingsMembersTab({
                 description={`People with access to "${selectedProject.name}".`}
                 icon="Users"
             >
+                <TeamAvatarStack members={members} />
                 {members.map((member) => (
                     <SettingsPanelRow
                         key={member.id}
@@ -386,7 +476,7 @@ export default function WorkspaceSettingsMembersTab({
                                         }
                                     />
                                 ) : (
-                                    <Badge>{ROLE_LABELS[member.role]}</Badge>
+                                    <RoleBadge role={member.role} />
                                 )}
                                 {isAdmin && (
                                     <button
@@ -477,23 +567,39 @@ export default function WorkspaceSettingsMembersTab({
                         />
                     ) : (
                         pendingInvitations.map((invitation) => (
-                            <SettingsPanelRow
+                            <div
                                 key={invitation.id}
-                                title={invitation.email}
-                                description={`Invited by ${invitation.invitedByName ?? 'someone'} as ${ROLE_LABELS[invitation.role]} · expires ${formatDate(invitation.expiresAt)}`}
-                                action={
-                                    <Button
-                                        type="button"
-                                        isBox
-                                        className="px-3 py-1.5"
-                                        onClick={() =>
-                                            revokeInvitation(invitation.id)
-                                        }
-                                    >
-                                        Revoke
-                                    </Button>
-                                }
-                            />
+                                className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:items-center md:justify-between"
+                            >
+                                <div className="flex min-w-0 items-center gap-3">
+                                    <span className="bg-[var(--warning-color)]/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--warning-color)]">
+                                        <Icon name="Mail" size={14} />
+                                    </span>
+                                    <div className="min-w-0 space-y-1">
+                                        <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                            {invitation.email}
+                                        </p>
+                                        <p className="text-sm text-[var(--text-gray-color)]">
+                                            Invited by{' '}
+                                            {invitation.invitedByName ??
+                                                'someone'}{' '}
+                                            as {ROLE_LABELS[invitation.role]} ·
+                                            expires{' '}
+                                            {formatDate(invitation.expiresAt)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    type="button"
+                                    isBox
+                                    className="shrink-0 px-3 py-1.5"
+                                    onClick={() =>
+                                        revokeInvitation(invitation.id)
+                                    }
+                                >
+                                    Revoke
+                                </Button>
+                            </div>
                         ))
                     )}
                 </SettingsPanel>
