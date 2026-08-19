@@ -2,9 +2,29 @@ import Button from '@/Components/Atoms/Button/Button';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
+import {
+    MemberProjectSummary,
+    PendingProjectInvitation,
+    ProjectMember,
+    ProjectMemberRole,
+} from '@/types/ProjectMembers';
 import { useState } from 'react';
 
-export default function WorkspaceSettingsMembersTab() {
+interface WorkspaceSettingsMembersTabProps {
+    memberProjects?: MemberProjectSummary[];
+    selectedProjectId?: number | null;
+    viewerRole?: ProjectMemberRole | null;
+    members?: ProjectMember[];
+    pendingInvitations?: PendingProjectInvitation[];
+}
+
+export default function WorkspaceSettingsMembersTab({
+    memberProjects: _memberProjects = [],
+    selectedProjectId: _selectedProjectId = null,
+    viewerRole: _viewerRole = null,
+    members: _members = [],
+    pendingInvitations: _pendingInvitations = [],
+}: WorkspaceSettingsMembersTabProps) {
     const [guestInvites, setGuestInvites] = useState(true);
 
     return (
