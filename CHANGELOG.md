@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/orbit-collective/orbit/compare/v0.2.0...v0.3.0) (2026-08-19)
+
+
+### Features
+
+* **projects:** add project-scoped roles, member management, and email invitations ([#133](https://github.com/orbit-collective/orbit/issues/133)) ([01dd84e](https://github.com/orbit-collective/orbit/commit/01dd84e6ce977a8910056d68340436b2509033b0))
+
 ## [0.2.0](https://github.com/orbit-collective/orbit/compare/v0.1.0...v0.2.0) (2026-08-16)
 
 
