@@ -20,6 +20,8 @@ Calendar, whichever fits the moment. It's built as a single Laravel +
 Inertia.js + React monolith, so there's no separate API to stand up and no
 client/server version drift to manage.
 
+### Edited: 19.08.2026
+
 ## What's inside
 
 - **Projects** with a name, color, description, and a slug-based URL. Each
