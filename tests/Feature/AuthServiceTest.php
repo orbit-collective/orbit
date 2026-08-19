@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\UserRole;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use App\Services\AuthService;
@@ -15,33 +14,15 @@ beforeEach(function () {
     $this->service = new AuthService($this->userRepository);
 });
 
-test('it assigns the admin role when no users exist yet', function () {
+test('it creates the user via the repository', function () {
     Event::fake();
 
     $data = ['name' => 'First User', 'email' => 'first@example.com', 'password' => 'password123'];
     $user = User::factory()->make(array_merge($data, ['id' => 1]));
 
-    $this->userRepository->shouldReceive('hasAnyUsers')->once()->andReturn(false);
     $this->userRepository->shouldReceive('create')
         ->once()
-        ->with(Mockery::on(fn ($arg) => $arg['role'] === UserRole::ADMIN))
-        ->andReturn($user);
-
-    $result = $this->service->register($data);
-
-    expect($result)->toBe($user);
-});
-
-test('it assigns the member role when a user already exists', function () {
-    Event::fake();
-
-    $data = ['name' => 'Second User', 'email' => 'second@example.com', 'password' => 'password123'];
-    $user = User::factory()->make(array_merge($data, ['id' => 2]));
-
-    $this->userRepository->shouldReceive('hasAnyUsers')->once()->andReturn(true);
-    $this->userRepository->shouldReceive('create')
-        ->once()
-        ->with(Mockery::on(fn ($arg) => $arg['role'] === UserRole::MEMBER))
+        ->with($data)
         ->andReturn($user);
 
     $result = $this->service->register($data);
@@ -55,7 +36,6 @@ test('it fires the Registered event on register', function () {
     $data = ['name' => 'Third User', 'email' => 'third@example.com', 'password' => 'password123'];
     $user = User::factory()->make(array_merge($data, ['id' => 3]));
 
-    $this->userRepository->shouldReceive('hasAnyUsers')->once()->andReturn(true);
     $this->userRepository->shouldReceive('create')->once()->andReturn($user);
 
     $this->service->register($data);
@@ -69,7 +49,6 @@ test('it logs the user in on register', function () {
     $data = ['name' => 'Fourth User', 'email' => 'fourth@example.com', 'password' => 'password123'];
     $user = User::factory()->make(array_merge($data, ['id' => 4]));
 
-    $this->userRepository->shouldReceive('hasAnyUsers')->once()->andReturn(true);
     $this->userRepository->shouldReceive('create')->once()->andReturn($user);
 
     $this->service->register($data);
