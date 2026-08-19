@@ -1,9 +1,11 @@
 <?php
 
 use App\Enums\ProjectRole;
+use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
+use App\Notifications\NotificationMail;
 use App\Notifications\ProjectInvitationMail;
 use App\Services\ProjectInvitationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,6 +36,94 @@ test('it sends an invitation email and creates a pending invitation', function (
     ]);
 
     Notification::assertSentOnDemand(ProjectInvitationMail::class);
+});
+
+test('inviting an email with no existing account always sends the dedicated invitation email', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+
+    $this->service->invite($project, 'stranger@example.com', ProjectRole::MEMBER, $admin);
+
+    Notification::assertSentOnDemand(ProjectInvitationMail::class);
+    Notification::assertNothingSentTo(User::all());
+});
+
+test('inviting an existing user sends the normal notification instead of the on-demand invitation email', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    NotificationSetting::query()->create([
+        'user_id' => $invitee->id,
+        'type' => 'project_invited',
+        'channel' => 'email',
+        'enabled' => true,
+    ]);
+
+    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+
+    Notification::assertSentTo($invitee, NotificationMail::class);
+    Notification::assertSentOnDemandTimes(ProjectInvitationMail::class, 0);
+});
+
+test('inviting an existing user who disabled email invitations does not email them', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    NotificationSetting::query()->create([
+        'user_id' => $invitee->id,
+        'type' => 'project_invited',
+        'channel' => 'email',
+        'enabled' => false,
+    ]);
+
+    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+
+    Notification::assertNotSentTo($invitee, NotificationMail::class);
+    Notification::assertSentOnDemandTimes(ProjectInvitationMail::class, 0);
+});
+
+test('inviting an existing user who enabled email invitations does email them', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    NotificationSetting::query()->create([
+        'user_id' => $invitee->id,
+        'type' => 'project_invited',
+        'channel' => 'email',
+        'enabled' => true,
+    ]);
+
+    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+
+    Notification::assertSentTo($invitee, NotificationMail::class);
+});
+
+test('inviting an existing user still creates an in-app notification by default', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+
+    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+
+    $this->assertDatabaseHas('notifications', [
+        'user_id' => $invitee->id,
+        'notification_type' => 'project_invited',
+    ]);
 });
 
 test('it refuses to invite when email is not configured', function () {
