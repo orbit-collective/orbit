@@ -18,9 +18,10 @@ class NsfwDetectionService
             return [];
         }
 
-        $response = $file->getRealPath()
-            |> file_get_contents(...)
-            |> (fn($x) => Http::withBody($x, 'application/octet-stream'))
+        $response = Http::withBody(
+            file_get_contents($file->getRealPath()),
+            'application/octet-stream'
+        )
             ->timeout(5)
             ->retry(2, 100)
             ->post(config('services.nsfw.url') . '/classify');

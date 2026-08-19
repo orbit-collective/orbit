@@ -42,11 +42,13 @@ class SettingsController extends Controller
             'members' => $selectedProject
                 ? $this->mapMembers($this->projectMemberService->getMembers($selectedProject))
                 : [],
-            'pendingInvitations' => $this->mapInvitations($this->projectInvitationService->getPending($selectedProject)),
+            'pendingInvitations' => $selectedProject
+                ? $this->mapInvitations($this->projectInvitationService->getPending($selectedProject))
+                : [],
         ]);
     }
 
-    private function resolveSelectedProject(Collection $projects, ?string $projectId): \Closure
+    private function resolveSelectedProject(Collection $projects, ?string $projectId): ?Project
     {
         if ($projectId && $project = $projects->firstWhere('id', (int) $projectId)) {
             return $project;
