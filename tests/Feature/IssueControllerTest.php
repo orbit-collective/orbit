@@ -168,6 +168,22 @@ test('creating an issue requires the assignee_id to reference a real user when g
     $response->assertSessionHasErrors('assignee_id');
 });
 
+test('creating an issue rejects an assignee who is not a member of the project', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+    $outsider = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/issues', [
+        'title' => 'Wrong assignee',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+        'assignee_id' => $outsider->id,
+    ]);
+
+    $response->assertSessionHasErrors('assignee_id');
+});
+
 test('creating an issue rejects an end_date before the start_date', function () {
     $project = Project::factory()->create();
     $user = actingAsProjectMember($project);
@@ -201,6 +217,19 @@ test('a project member can update an issue', function () {
 
     $response->assertRedirect();
     $this->assertDatabaseHas('issues', ['id' => $issue->id, 'title' => 'New title']);
+});
+
+test('updating an issue rejects an assignee who is not a member of the project', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+    $outsider = User::factory()->create();
+
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
+        'assignee_id' => $outsider->id,
+    ]);
+
+    $response->assertSessionHasErrors('assignee_id');
 });
 
 test('a non-member cannot update an issue', function () {

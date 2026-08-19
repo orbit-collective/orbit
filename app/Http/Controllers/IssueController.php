@@ -35,7 +35,7 @@ class IssueController extends Controller
             'project' => $project,
             'projects' => $this->projectService->getAllForUser($request->user()->id),
             'issue' => $this->issueService->getIssueWithRelations($issue->id),
-            'users' => $this->userService->getAssignableUsers(),
+            'users' => $this->userService->getAssignableUsersForProject($project->id),
         ]);
     }
 
@@ -48,7 +48,12 @@ class IssueController extends Controller
             'description' => 'sometimes|nullable|string',
             'status' => ['sometimes', 'required', Rule::enum(IssueStatus::class)],
             'priority' => 'sometimes|required|string',
-            'assignee_id' => 'sometimes|nullable|exists:users,id',
+            'assignee_id' => [
+                'sometimes',
+                'nullable',
+                'exists:users,id',
+                Rule::exists('project_user', 'user_id')->where('project_id', $issue->project_id),
+            ],
             'labels' => 'sometimes|nullable|array',
             'start_date' => 'sometimes|nullable|date',
             'end_date' => 'sometimes|nullable|date|after_or_equal:start_date',
@@ -75,7 +80,11 @@ class IssueController extends Controller
             'project_id' => 'required|exists:projects,id',
             'priority' => 'required|string',
             'status' => ['required', Rule::enum(IssueStatus::class)],
-            'assignee_id' => 'nullable|exists:users,id',
+            'assignee_id' => [
+                'nullable',
+                'exists:users,id',
+                Rule::exists('project_user', 'user_id')->where('project_id', $request->input('project_id')),
+            ],
             'labels' => 'nullable|array',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',

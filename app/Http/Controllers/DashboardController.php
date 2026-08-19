@@ -36,7 +36,7 @@ class DashboardController extends Controller
             'issues' => $issues,
             'projects' => $projects,
             'productivity_trend' => $productivity_trend,
-            'users' => $this->userService->getAssignableUsers(),
+            'users' => $this->userService->getAssignableUsersForUserProjects($userId),
         ]);
     }
 }

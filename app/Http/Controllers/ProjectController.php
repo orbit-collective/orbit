@@ -59,7 +59,7 @@ class ProjectController extends Controller
             'queryParams' => request()->query() ?: null,
             'filters' => $filters,
             'savedFilters' => $project->savedFilters()->latest()->get(),
-            'users' => $this->userService->getAssignableUsers(),
+            'users' => $this->userService->getAssignableUsersForProject($project->id),
         ]);
     }
 
