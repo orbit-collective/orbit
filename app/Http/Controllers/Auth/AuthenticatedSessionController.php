@@ -35,7 +35,9 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('projects.show', $project->id)
                     ->with('success', "You've joined \"{$project->name}\".");
             } catch (ValidationException $exception) {
-                return redirect()->intended(route('dashboard'))->with('error', $exception->getMessage());
+                $message = collect($exception->errors())->flatten()->first() ?? $exception->getMessage();
+
+                return redirect()->intended(route('dashboard'))->with('error', $message);
             }
         }
 

@@ -121,6 +121,41 @@ test('clicking the invitation link while logged out redirects to login and remem
     $this->assertEquals($invitation->token, session('pending_invitation_token'));
 });
 
+test('clicking an unknown invitation link redirects to login with an error, without remembering it', function () {
+    $response = $this->get('/invitations/not-a-real-token');
+
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHas('error', 'This invitation link is invalid or has expired.');
+    $this->assertNull(session('pending_invitation_token'));
+});
+
+test('clicking an expired invitation link while logged in redirects to the dashboard with an error', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation->update(['expires_at' => now()->subDay()]);
+
+    $response = $this->actingAs($invitee)->get("/invitations/{$invitation->token}");
+
+    $response->assertRedirect(route('dashboard'));
+    $response->assertSessionHas('error', 'This invitation link is invalid or has expired.');
+});
+
+test('clicking the invitation link with a mismatched account email surfaces the specific error', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $wrongUser = User::factory()->create(['email' => 'someone-else@example.com']);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+
+    $response = $this->actingAs($wrongUser)->get("/invitations/{$invitation->token}");
+
+    $response->assertRedirect(route('dashboard'));
+    $response->assertSessionHas('error', 'This invitation was sent to a different email address.');
+});
+
 test('logging in after clicking an invitation link accepts it automatically', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
@@ -137,6 +172,24 @@ test('logging in after clicking an invitation link accepts it automatically', fu
 
     $response->assertRedirect(route('projects.show', $project->id));
     expect($project->users()->where('users.id', $invitee->id)->exists())->toBeTrue();
+});
+
+test('logging in with a mismatched email after clicking an invitation link surfaces the specific error', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $wrongUser = User::factory()->create(['email' => 'someone-else@example.com', 'password' => 'password123']);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+
+    $this->get("/invitations/{$invitation->token}");
+
+    $response = $this->post('/login', [
+        'email' => 'someone-else@example.com',
+        'password' => 'password123',
+    ]);
+
+    $response->assertSessionHas('error', 'This invitation was sent to a different email address.');
+    expect($project->users()->where('users.id', $wrongUser->id)->exists())->toBeFalse();
 });
 
 test('registering after clicking an invitation link accepts it automatically', function () {

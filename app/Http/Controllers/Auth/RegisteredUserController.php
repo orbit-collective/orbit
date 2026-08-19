@@ -42,7 +42,9 @@ class RegisteredUserController extends Controller
                 return redirect()->route('projects.show', $project->id)
                     ->with('success', "You've joined \"{$project->name}\".");
             } catch (ValidationException $exception) {
-                return redirect()->route('dashboard')->with('error', $exception->getMessage());
+                $message = collect($exception->errors())->flatten()->first() ?? $exception->getMessage();
+
+                return redirect()->route('dashboard')->with('error', $message);
             }
         }
 

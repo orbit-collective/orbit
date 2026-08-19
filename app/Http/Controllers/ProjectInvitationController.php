@@ -49,6 +49,11 @@ class ProjectInvitationController extends Controller
 
     public function accept(Request $request, string $token): RedirectResponse
     {
+        if (! $this->projectInvitationService->findValidByToken($token)) {
+            return redirect()->route($request->user() ? 'dashboard' : 'login')
+                ->with('error', 'This invitation link is invalid or has expired.');
+        }
+
         if (! $request->user()) {
             $request->session()->put('pending_invitation_token', $token);
 
@@ -59,7 +64,7 @@ class ProjectInvitationController extends Controller
         try {
             $project = $this->projectInvitationService->acceptByToken($token, $request->user());
         } catch (ValidationException $exception) {
-            return redirect()->route('dashboard')->with('error', $exception->getMessage());
+            return redirect()->route('dashboard')->with('error', $this->firstErrorMessage($exception));
         }
 
         return redirect()->route('projects.show', $project->id)
@@ -76,5 +81,10 @@ class ProjectInvitationController extends Controller
 
         return redirect()->route('projects.show', $project->id)
             ->with('success', "You've joined \"{$project->name}\".");
+    }
+
+    private function firstErrorMessage(ValidationException $exception): string
+    {
+        return collect($exception->errors())->flatten()->first() ?? $exception->getMessage();
     }
 }
