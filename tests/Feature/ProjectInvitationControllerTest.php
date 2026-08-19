@@ -69,6 +69,20 @@ test('an admin can revoke a pending invitation', function () {
     $this->assertDatabaseMissing('project_invitations', ['id' => $invitation->id]);
 });
 
+test('revoking an invitation via the wrong project returns a 404', function () {
+    $projectA = Project::factory()->create();
+    $projectB = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project = User::factory()->create();
+    $projectA->users()->attach($admin->id, ['role' => 'admin']);
+    $projectB->users()->attach($project->id, ['role' => 'admin']);
+    $invitation = app(ProjectInvitationService::class)->invite($projectB, 'invitee@example.com', ProjectRole::MEMBER, $project);
+
+    $response = $this->actingAs($admin)->delete("/projects/{$projectA->id}/invitations/{$invitation->id}");
+
+    $response->assertNotFound();
+});
+
 test('a member cannot revoke an invitation', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
