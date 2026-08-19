@@ -1,14 +1,67 @@
+import Avatar from '@/Components/Atoms/Avatar/Avatar';
+import Badge from '@/Components/Atoms/Badge/Badge';
 import Button from '@/Components/Atoms/Button/Button';
-import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
+import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
+import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
+import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import Input from '@/Components/Atoms/Input/Input';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
+import { useAlert } from '@/context/AlertContext';
+import { PageProps } from '@/types';
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
-import { useState } from 'react';
+import { formatDate } from '@/utils/time';
+import { router, usePage } from '@inertiajs/react';
+import { SyntheticEvent, useState } from 'react';
+
+const ROLE_LABELS: Record<ProjectMemberRole, string> = {
+    admin: 'Admin',
+    member: 'Member',
+};
+
+interface RoleDropdownProps {
+    value: ProjectMemberRole;
+    onChange: (role: ProjectMemberRole) => void;
+    disabled?: boolean;
+}
+
+function RoleDropdown({ value, onChange, disabled }: RoleDropdownProps) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <div className="relative">
+            <DropdownTrigger
+                className="w-32"
+                disabled={disabled}
+                label={ROLE_LABELS[value]}
+                onClick={() => setIsOpen(!isOpen)}
+            />
+            {isOpen && (
+                <DropdownMenu>
+                    {(Object.keys(ROLE_LABELS) as ProjectMemberRole[]).map(
+                        (role) => (
+                            <DropdownItem
+                                key={role}
+                                label={ROLE_LABELS[role]}
+                                isActive={value === role}
+                                onClick={() => {
+                                    onChange(role);
+                                    setIsOpen(false);
+                                }}
+                            />
+                        ),
+                    )}
+                </DropdownMenu>
+            )}
+        </div>
+    );
+}
 
 interface WorkspaceSettingsMembersTabProps {
     memberProjects?: MemberProjectSummary[];
@@ -19,113 +72,364 @@ interface WorkspaceSettingsMembersTabProps {
 }
 
 export default function WorkspaceSettingsMembersTab({
-    memberProjects: _memberProjects = [],
-    selectedProjectId: _selectedProjectId = null,
-    viewerRole: _viewerRole = null,
-    members: _members = [],
-    pendingInvitations: _pendingInvitations = [],
+    memberProjects = [],
+    selectedProjectId = null,
+    viewerRole = null,
+    members = [],
+    pendingInvitations = [],
 }: WorkspaceSettingsMembersTabProps) {
-    const [guestInvites, setGuestInvites] = useState(true);
+    const { props } = usePage<PageProps>();
+    const emailEnabled = props.emailEnabled;
+    const { addAlert } = useAlert();
+    const isAdmin = viewerRole === 'admin';
+    const [isProjectMenuOpen, setIsProjectMenuOpen] = useState(false);
+
+    const selectedProject =
+        memberProjects.find((project) => project.id === selectedProjectId) ??
+        null;
+
+    const switchProject = (projectId: number) => {
+        router.get(
+            `/settings?tab=members&project=${projectId}`,
+            {},
+            { preserveScroll: true, preserveState: true },
+        );
+        setIsProjectMenuOpen(false);
+    };
+
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteRole, setInviteRole] = useState<ProjectMemberRole>('member');
+    const [inviteError, setInviteError] = useState<string | null>(null);
+    const [isInviting, setIsInviting] = useState(false);
+
+    const submitInvite = (event: SyntheticEvent) => {
+        event.preventDefault();
+        if (!selectedProject) {
+            return;
+        }
+
+        router.post(
+            `/projects/${selectedProject.id}/invitations`,
+            { email: inviteEmail, role: inviteRole },
+            {
+                preserveScroll: true,
+                onStart: () => setIsInviting(true),
+                onFinish: () => setIsInviting(false),
+                onSuccess: () => {
+                    setInviteEmail('');
+                    setInviteError(null);
+                },
+                onError: (errors) => {
+                    setInviteError(errors.email ?? null);
+                    if (errors.email) {
+                        addAlert(errors.email, 'error');
+                    }
+                },
+            },
+        );
+    };
+
+    const [invitationToken, setInvitationToken] = useState('');
+    const [tokenError, setTokenError] = useState<string | null>(null);
+    const [isJoining, setIsJoining] = useState(false);
+
+    const submitManualAccept = (event: SyntheticEvent) => {
+        event.preventDefault();
+
+        router.post(
+            '/invitations/accept',
+            { token: invitationToken },
+            {
+                preserveScroll: true,
+                onStart: () => setIsJoining(true),
+                onFinish: () => setIsJoining(false),
+                onSuccess: () => {
+                    setInvitationToken('');
+                    setTokenError(null);
+                },
+                onError: (errors) => {
+                    setTokenError(errors.token ?? null);
+                    if (errors.token) {
+                        addAlert(errors.token, 'error');
+                    }
+                },
+            },
+        );
+    };
+
+    const changeMemberRole = (memberId: number, role: ProjectMemberRole) => {
+        if (!selectedProject) {
+            return;
+        }
+
+        router.patch(
+            `/projects/${selectedProject.id}/members/${memberId}`,
+            { role },
+            {
+                preserveScroll: true,
+                onError: (errors) => {
+                    if (errors.role) {
+                        addAlert(errors.role, 'error');
+                    }
+                },
+            },
+        );
+    };
+
+    const removeMember = (memberId: number) => {
+        if (!selectedProject) {
+            return;
+        }
+
+        router.delete(`/projects/${selectedProject.id}/members/${memberId}`, {
+            preserveScroll: true,
+            onError: (errors) => {
+                if (errors.member) {
+                    addAlert(errors.member, 'error');
+                }
+            },
+        });
+    };
+
+    const revokeInvitation = (invitationId: number) => {
+        if (!selectedProject) {
+            return;
+        }
+
+        router.delete(
+            `/projects/${selectedProject.id}/invitations/${invitationId}`,
+            { preserveScroll: true },
+        );
+    };
+
+    if (!selectedProject) {
+        return (
+            <SettingsPanel
+                title="Members"
+                description="View and manage the people who have access to your projects."
+                icon="Users"
+            >
+                <SettingsPanelRow
+                    title="You're not part of any project yet"
+                    description="Create or join a project to manage its members here."
+                />
+            </SettingsPanel>
+        );
+    }
 
     return (
         <div className="space-y-5">
+            {memberProjects.length > 1 && (
+                <SettingsPanel
+                    title="Project"
+                    description="Choose which project's members to manage."
+                    icon="FolderKanban"
+                >
+                    <SettingsPanelRow
+                        title="Active project"
+                        description="Member lists and invitations below apply to this project."
+                        action={
+                            <div className="relative">
+                                <DropdownTrigger
+                                    className="w-56"
+                                    label={selectedProject.name}
+                                    onClick={() =>
+                                        setIsProjectMenuOpen(!isProjectMenuOpen)
+                                    }
+                                />
+                                {isProjectMenuOpen && (
+                                    <DropdownMenu>
+                                        {memberProjects.map((project) => (
+                                            <DropdownItem
+                                                key={project.id}
+                                                label={project.name}
+                                                isActive={
+                                                    project.id ===
+                                                    selectedProject.id
+                                                }
+                                                onClick={() =>
+                                                    switchProject(project.id)
+                                                }
+                                            />
+                                        ))}
+                                    </DropdownMenu>
+                                )}
+                            </div>
+                        }
+                    />
+                </SettingsPanel>
+            )}
+
             <SettingsPanel
-                title="Member access"
-                description="Manage invites, directory controls, and workspace onboarding."
+                title="Members"
+                description={`People with access to "${selectedProject.name}".`}
+                icon="Users"
             >
-                <div className="space-y-2 px-5 py-4">
-                    {[
-                        {
-                            initials: 'JD',
-                            name: 'John Doe',
-                            role: 'Admin',
-                            activity: 'Last active now',
-                        },
-                        {
-                            initials: 'AK',
-                            name: 'Anna Kowalska',
-                            role: 'Member',
-                            activity: 'Last active 12 min ago',
-                        },
-                        {
-                            initials: 'MK',
-                            name: 'Marek Kowal',
-                            role: 'Member',
-                            activity: 'Last active 2h ago',
-                        },
-                    ].map((member) => (
-                        <div
-                            key={member.name}
-                            className="flex items-center justify-between rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-color)] px-3 py-2"
+                {members.map((member) => (
+                    <SettingsPanelRow
+                        key={member.id}
+                        title={member.name}
+                        description={member.email}
+                        action={
+                            <div className="flex items-center gap-2">
+                                <Avatar
+                                    src={member.avatar ?? undefined}
+                                    initials={member.name.charAt(0)}
+                                    size="md"
+                                />
+                                {isAdmin ? (
+                                    <RoleDropdown
+                                        value={member.role}
+                                        onChange={(role) =>
+                                            changeMemberRole(member.id, role)
+                                        }
+                                    />
+                                ) : (
+                                    <Badge>{ROLE_LABELS[member.role]}</Badge>
+                                )}
+                                {isAdmin && (
+                                    <button
+                                        type="button"
+                                        title="Remove from project"
+                                        onClick={() => removeMember(member.id)}
+                                        className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
+                                    >
+                                        <Icon name="UserMinus" size={15} />
+                                    </button>
+                                )}
+                            </div>
+                        }
+                    />
+                ))}
+            </SettingsPanel>
+
+            <SettingsPanel
+                title="Invite by email"
+                description={
+                    emailEnabled
+                        ? "Send a one-time invite link to a teammate's email address."
+                        : "Email notifications aren't configured yet, so invitations are disabled."
+                }
+                icon="Mail"
+            >
+                {!emailEnabled ? (
+                    <SettingsPanelRow
+                        title="Invitations unavailable"
+                        description="Ask an administrator to configure outgoing email to enable project invitations."
+                    />
+                ) : isAdmin ? (
+                    <SettingsPanelRow
+                        title="Invite a teammate"
+                        description="They'll receive a one-time link to join this project."
+                        action={
+                            <form
+                                onSubmit={submitInvite}
+                                className="flex flex-col items-end gap-1.5"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        type="email"
+                                        value={inviteEmail}
+                                        onChange={(event) =>
+                                            setInviteEmail(event.target.value)
+                                        }
+                                        placeholder="teammate@company.com"
+                                        className="w-56"
+                                    />
+                                    <RoleDropdown
+                                        value={inviteRole}
+                                        onChange={setInviteRole}
+                                    />
+                                    <Button
+                                        type="submit"
+                                        isDisabled={isInviting}
+                                    >
+                                        Invite
+                                    </Button>
+                                </div>
+                                {inviteError && (
+                                    <span className="text-xs text-[var(--error-color)]">
+                                        {inviteError}
+                                    </span>
+                                )}
+                            </form>
+                        }
+                    />
+                ) : (
+                    <SettingsPanelRow
+                        title="Only admins can invite"
+                        description="Ask a project admin to invite new teammates."
+                    />
+                )}
+            </SettingsPanel>
+
+            {emailEnabled && isAdmin && (
+                <SettingsPanel
+                    title="Pending invitations"
+                    description="Invitations that haven't been accepted yet."
+                    icon="Clock"
+                >
+                    {pendingInvitations.length === 0 ? (
+                        <SettingsPanelRow
+                            title="No pending invitations"
+                            description="Everyone you've invited has already joined, or you haven't invited anyone yet."
+                        />
+                    ) : (
+                        pendingInvitations.map((invitation) => (
+                            <SettingsPanelRow
+                                key={invitation.id}
+                                title={invitation.email}
+                                description={`Invited by ${invitation.invitedByName ?? 'someone'} as ${ROLE_LABELS[invitation.role]} · expires ${formatDate(invitation.expiresAt)}`}
+                                action={
+                                    <Button
+                                        type="button"
+                                        isBox
+                                        className="px-3 py-1.5"
+                                        onClick={() =>
+                                            revokeInvitation(invitation.id)
+                                        }
+                                    >
+                                        Revoke
+                                    </Button>
+                                }
+                            />
+                        ))
+                    )}
+                </SettingsPanel>
+            )}
+
+            <SettingsPanel
+                title="Join with an invite code"
+                description="Already have an invitation? Paste its code to join instantly."
+                icon="Link"
+            >
+                <SettingsPanelRow
+                    title="Invitation code"
+                    description="If the link in your email doesn't work, paste the code here."
+                    action={
+                        <form
+                            onSubmit={submitManualAccept}
+                            className="flex flex-col items-end gap-1.5"
                         >
                             <div className="flex items-center gap-2">
-                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent-color-opacity)] text-xs font-semibold text-white">
-                                    {member.initials}
-                                </span>
-                                <div>
-                                    <p className="text-sm text-[var(--text-color)]">
-                                        {member.name}
-                                    </p>
-                                    <p className="text-xs text-[var(--text-gray-color)]">
-                                        {member.role}
-                                    </p>
-                                    <p className="text-[10px] text-[var(--text-muted-color)]">
-                                        {member.activity}
-                                    </p>
-                                </div>
+                                <Input
+                                    value={invitationToken}
+                                    onChange={(event) =>
+                                        setInvitationToken(event.target.value)
+                                    }
+                                    placeholder="Invitation code"
+                                    className="w-56"
+                                />
+                                <Button type="submit" isDisabled={isJoining}>
+                                    Join
+                                </Button>
                             </div>
-                            <button
-                                type="button"
-                                className="rounded-md border border-[var(--bg-light-color)] px-2 py-1 text-xs text-[var(--text-color)]"
-                            >
-                                Manage
-                            </button>
-                        </div>
-                    ))}
-                </div>
-                <SettingsPanelRow
-                    title="Invite members"
-                    description="Add teammates and assign default role at invitation time."
-                    action={
-                        <Button type="button" isBox className="px-3 py-1.5">
-                            Invite
-                        </Button>
-                    }
-                />
-                <SettingsPanelRow
-                    title="Allow guest invites"
-                    description="Allow members to invite external collaborators."
-                    action={
-                        <ToggleSwitch
-                            checked={guestInvites}
-                            onChange={setGuestInvites}
-                        />
-                    }
-                />
-                <SettingsPanelRow
-                    title="Default invite role"
-                    description="Set role automatically assigned to invited teammates."
-                    action={
-                        <button
-                            type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
-                        >
-                            Member
-                        </button>
-                    }
-                />
-            </SettingsPanel>
-            <SettingsPanel
-                title="Directory"
-                description="Centralized directory controls for teams."
-            >
-                <SettingsPanelRow
-                    title="SCIM sync"
-                    description="Manage automatic membership provisioning."
-                    action={
-                        <Button type="button" isBox className="px-3 py-1.5">
-                            Configure
-                        </Button>
+                            {tokenError && (
+                                <span className="text-xs text-[var(--error-color)]">
+                                    {tokenError}
+                                </span>
+                            )}
+                        </form>
                     }
                 />
             </SettingsPanel>
