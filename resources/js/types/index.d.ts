@@ -19,4 +19,5 @@ export type PageProps<
     };
     notifications: Notification[];
     hasProjects: boolean;
+    emailEnabled: boolean;
 };

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\MailConfigurationService;
 use App\Services\NotificationService;
 use App\Services\ProjectService;
 use Illuminate\Http\Request;
@@ -11,7 +12,8 @@ class HandleInertiaRequests extends Middleware
 {
     public function __construct(
         protected NotificationService $notificationService,
-        protected ProjectService $projectService
+        protected ProjectService $projectService,
+        protected MailConfigurationService $mailConfigurationService
     ) {}
 
     /**
@@ -52,6 +54,7 @@ class HandleInertiaRequests extends Middleware
             'hasProjects' => fn () => $request->user()
                 ? $this->projectService->hasAnyProjectsForUser($request->user()->id)
                 : true,
+            'emailEnabled' => fn () => $this->mailConfigurationService->isEnabled(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
