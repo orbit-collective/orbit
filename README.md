@@ -38,10 +38,10 @@ client/server version drift to manage.
   completion ratios across every project.
 - **An activity log** recording who did what, so project history isn't lost.
 - **In-app and email notifications**, scoped per user and markable as read
-  individually or all at once. Eight notification types (issue assigned,
+  individually or all at once. Nine notification types (issue assigned,
   commented, mentioned, status/priority/labels/dates changed, other issue
-  updates) are each independently toggleable per channel — see
-  [Notifications](#notifications) below.
+  updates, project invitations) are each independently toggleable per
+  channel — see [Notifications](#notifications) below.
 - **Project-scoped roles** — registering an account grants no role at all;
   you become ADMIN of a project the moment you create it, and MEMBER of any
   project you're invited into. There's no global "admin" — the same person
@@ -90,21 +90,25 @@ being accepted — see [Content moderation](#content-moderation).
 
 ## Notifications
 
-Notifications are emitted for eight `App\Enums\Notifications\NotificationType`
+Notifications are emitted for nine `App\Enums\Notifications\NotificationType`
 cases: issue assigned, commented, mentioned, status changed, priority
-changed, labels changed, dates changed, and other issue updates. Each type
-can be delivered over two independent
+changed, labels changed, dates changed, other issue updates, and project
+invitations. Each type can be delivered over two independent
 `App\Enums\Notifications\NotificationChannel`s — in-app (on by default) and
 email (off by default) — configurable per user via
 `NotificationSettingService`/`NotificationSettingRepository` and the
 `POST /account/notification-settings` route.
 
-A ninth case, `NotificationType::ProjectInvited`, exists on the same enum
-but isn't part of that per-user toggle matrix: project invitation emails
-(see [Project membership & invitations](#project-membership--invitations))
-are sent as a fixed one-time transactional email via a dedicated
-`ProjectInvitationMail` notification, since the invited address may not
-even belong to a `User` yet — there's no account to hold a preference for.
+`NotificationType::ProjectInvited` is the one case with a twist, because the
+invited email address doesn't necessarily belong to a `User` yet — there's
+no account to hold a preference for. `ProjectInvitationService` resolves
+this per invitation: if the address already belongs to an account, the
+invite goes through the normal `NotificationService::notify()` pipeline and
+respects that person's own in-app/email toggles for `project_invited` like
+any other type; if it doesn't, there's nothing to respect a preference for,
+so it always gets a one-time transactional email via a dedicated
+`ProjectInvitationMail` notification instead — otherwise they'd have no way
+to ever find out about the invitation at all.
 
 Email delivery reuses a single queued `App\Notifications\NotificationMail`
 class for every notification type (no per-type Mailable needed), rate-limited
@@ -133,14 +137,21 @@ per-project `App\Enums\ProjectRole` (`admin` / `member`):
   admin — `ProjectMemberService` rejects a demotion/removal that would leave
   it with none.
 - **Inviting someone by email** creates an `App\Models\ProjectInvitation`
-  with a random one-time token and a 7-day expiry, then emails a
-  `App\Notifications\ProjectInvitationMail` with an accept link. Clicking it
-  joins the project immediately if you're logged in with the invited
-  address; if you're not, it remembers the token, sends you to log in or
-  register, and finishes the join automatically right after. The same
-  invitation can also be accepted by pasting its token manually in the
+  with a random one-time token and a 7-day expiry, then emails an accept
+  link. Clicking it joins the project immediately if you're logged in with
+  the invited address; if you're not, it remembers the token, sends you to
+  log in or register, and finishes the join automatically right after. The
+  same invitation can also be accepted by pasting its token manually in the
   Members tab — useful if the emailed link itself doesn't work. A token is
   single-use and is tied to the invited email address.
+- **Whether — and how — that email actually gets sent depends on whether
+  the invited address already has an account.** No account means no
+  preference to respect, so it always gets a dedicated one-time
+  `App\Notifications\ProjectInvitationMail`. An existing account instead
+  goes through the normal notification pipeline and respects that person's
+  own "Project invitations" in-app/email toggles from
+  [Notifications](#notifications) — including a real in-app (bell icon)
+  notification, not just an email.
 - **Invitations are gated on email actually working.** `App\Services\
   MailConfigurationService::isEnabled()` treats the `log`/`array` mail
   drivers as "not really sending anything" — with either configured (the
