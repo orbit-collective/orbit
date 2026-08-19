@@ -50,7 +50,7 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'hasProjects' => fn () => $request->user()
-                ? $this->projectService->hasAnyProjects()
+                ? $this->projectService->hasAnyProjectsForUser($request->user()->id)
                 : true,
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

@@ -23,7 +23,7 @@ class IssueController extends Controller
         protected ProjectService $projectService
     ) {}
 
-    public function show(Project $project, Issue $issue): Response
+    public function show(Request $request, Project $project, Issue $issue): Response
     {
         if ($issue->project_id !== $project->id) {
             throw new NotFoundHttpException;
@@ -31,7 +31,7 @@ class IssueController extends Controller
 
         return Inertia::render('Issues/Show', [
             'project' => $project,
-            'projects' => $this->projectService->getAll(),
+            'projects' => $this->projectService->getAllForUser($request->user()->id),
             'issue' => $this->issueService->getIssueWithRelations($issue->id),
             'users' => $this->userService->getAssignableUsers(),
         ]);

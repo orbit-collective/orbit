@@ -77,9 +77,9 @@ class IssueService
         return $issue;
     }
 
-    public function getAll(): Collection
+    public function getAllForUser(int $userId): Collection
     {
-        return $this->issueRepository->getAll();
+        return $this->issueRepository->getAllForUser($userId);
     }
 
     public function getIssueWithRelations(int $id): Issue
@@ -116,9 +116,9 @@ class IssueService
         return $this->issueRepository->getAllPaginated($projectID, $perPage, $sortParams, $searchParams, $filters);
     }
 
-    public function getProductivityTrend(): array
+    public function getProductivityTrendForUser(int $userId): array
     {
-        return $this->issueRepository->getProductivityTrend();
+        return $this->issueRepository->getProductivityTrendForUser($userId);
     }
 
     /**

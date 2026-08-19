@@ -9,12 +9,19 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
-test('the projects index page lists every project with its issues', function () {
-    $projectWithIssues = Project::factory()->create(['name' => 'Has issues']);
-    Issue::factory()->count(2)->create(['project_id' => $projectWithIssues->id]);
-    Project::factory()->create(['name' => 'No issues']);
+test('the projects index page lists only the projects the user is a member of, with their issues', function () {
+    $user = User::factory()->create();
 
-    $response = $this->actingAs(User::factory()->create())->get('/projects');
+    $projectWithIssues = Project::factory()->create(['name' => 'Has issues']);
+    $projectWithIssues->users()->attach($user->id, ['role' => 'admin']);
+    Issue::factory()->count(2)->create(['project_id' => $projectWithIssues->id]);
+
+    $memberProject = Project::factory()->create(['name' => 'No issues']);
+    $memberProject->users()->attach($user->id, ['role' => 'member']);
+
+    Project::factory()->create(['name' => 'Not a member of this one']);
+
+    $response = $this->actingAs($user)->get('/projects');
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -39,6 +46,20 @@ test('a project can be created', function () {
 
     $response->assertRedirect();
     $this->assertDatabaseHas('projects', ['name' => 'My New Project']);
+});
+
+test('the creator of a project is automatically attached to it as admin', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/projects', [
+        'name' => 'Owned Project',
+        'slug' => 'owned-project',
+        'color' => 'blue',
+    ]);
+
+    $project = Project::where('name', 'Owned Project')->firstOrFail();
+
+    expect($project->users()->where('users.id', $user->id)->first()->pivot->role)->toBe('admin');
 });
 
 test('creating a project always slugifies the name, ignoring any client-submitted slug', function () {

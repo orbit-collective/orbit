@@ -35,7 +35,7 @@ class ProjectController extends Controller
      */
     public function show(Request $request, Project $project): Response
     {
-        $projects = $this->projectService->getAll();
+        $projects = $this->projectService->getAllForUser($request->user()->id);
 
         $sortParams = request()->only(['sort', 'direction']);
         $perPage = (int) request()->get('perPage', 10);
@@ -61,9 +61,9 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $projects = Project::with('issues')->latest()->get();
+        $projects = $this->projectService->getAllForUser($request->user()->id)->load('issues');
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
@@ -78,7 +78,7 @@ class ProjectController extends Controller
             'color' => 'required|string'
         ]);
 
-        $project = $this->projectService->createProject($data);
+        $project = $this->projectService->createProject($data, $request->user()->id);
 
         return redirect()->back()
             ->with('success', 'Project has been created successfully.')
