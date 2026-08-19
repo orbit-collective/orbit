@@ -28,8 +28,12 @@ class IssueRepository
         $issue->update($data);
         return $issue;
     }
-    public function getAll(): Collection {
-        return Issue::query()->with(['creator', 'assignee'])->latest()->get();
+    public function getAllForUser(int $userId): Collection {
+        return Issue::query()
+            ->whereHas('project.users', fn ($query) => $query->where('users.id', $userId))
+            ->with(['creator', 'assignee'])
+            ->latest()
+            ->get();
     }
     public function getAllPaginated(string | int $projectID = 'all', int $perPage = 20, array $sortParams = [], array $searchParams = [], array $filters = []): LengthAwarePaginator {
         $query = Issue::query()->with(['creator', 'assignee']);
@@ -142,12 +146,13 @@ class IssueRepository
 
         return $query->paginate($perPage)->withQueryString();
     }
-    public function getProductivityTrend(): array
+    public function getProductivityTrendForUser(int $userId): array
     {
         $startOfWeek = Carbon::now()->startOfWeek();
         $endOfWeek = Carbon::now()->endOfWeek();
 
         $issues = Issue::query()
+            ->whereHas('project.users', fn ($query) => $query->where('users.id', $userId))
             ->whereBetween('updated_at', [$startOfWeek, $endOfWeek])
             ->select('updated_at')
             ->get();

@@ -8,9 +8,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 test('a saved filter can be created', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())->post('/saved-filters', [
+    $response = $this->actingAs($user)->post('/saved-filters', [
         'project_id' => $project->id,
         'name' => 'My filter',
         'context' => 'project_issues',
@@ -23,6 +25,19 @@ test('a saved filter can be created', function () {
         'project_id' => $project->id,
         'name' => 'My filter',
     ]);
+});
+
+test('a non-member cannot create a saved filter for a project they do not belong to', function () {
+    $project = Project::factory()->create();
+
+    $response = $this->actingAs(User::factory()->create())->post('/saved-filters', [
+        'project_id' => $project->id,
+        'name' => 'My filter',
+        'context' => 'project_issues',
+        'query_params' => ['status' => 'open'],
+    ]);
+
+    $response->assertForbidden();
 });
 
 test('creating a saved filter requires project_id, name, context and query_params', function () {
@@ -43,9 +58,11 @@ test('creating a saved filter requires the project_id to reference a real projec
 });
 
 test('creating a saved filter enforces a 20 character max length on the name', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())->post('/saved-filters', [
+    $response = $this->actingAs($user)->post('/saved-filters', [
         'project_id' => $project->id,
         'name' => str_repeat('a', 21),
         'context' => 'project_issues',
@@ -62,13 +79,23 @@ test('guests cannot create a saved filter', function () {
 });
 
 test('a saved filter can be deleted', function () {
+    $user = User::factory()->create();
     $filter = SavedFilter::factory()->create(['project_id' => Project::factory()]);
+    $filter->project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())->delete("/saved-filters/{$filter->id}");
+    $response = $this->actingAs($user)->delete("/saved-filters/{$filter->id}");
 
     $response->assertRedirect();
     $response->assertSessionHas('success', 'Saved filters has been deleted successfully.');
     $this->assertDatabaseMissing('saved_filters', ['id' => $filter->id]);
+});
+
+test('a non-member cannot delete a saved filter belonging to another project', function () {
+    $filter = SavedFilter::factory()->create(['project_id' => Project::factory()]);
+
+    $response = $this->actingAs(User::factory()->create())->delete("/saved-filters/{$filter->id}");
+
+    $response->assertForbidden();
 });
 
 test('deleting a non-existent saved filter returns a 404', function () {

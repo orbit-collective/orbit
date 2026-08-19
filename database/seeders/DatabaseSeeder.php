@@ -20,6 +20,12 @@ class DatabaseSeeder extends Seeder
     {
         $users = User::factory()->count(10)->create();
         $projects = Project::factory()->count(3)->create();
+
+        foreach ($projects as $project) {
+            $project->users()->attach($users->first()->id, ['role' => 'admin']);
+            $project->users()->attach($users->slice(1)->pluck('id'), ['role' => 'member']);
+        }
+
         Issue::factory()->count(10)->recycle([$users, $projects])->create();
         ActivityLog::factory()->count(20)->recycle([$users, $projects])->create();
     }

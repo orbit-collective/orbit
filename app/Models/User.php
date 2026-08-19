@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
@@ -18,7 +18,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
         'has_completed_onboarding',
         'has_completed_project_onboarding',
         'avatar',
@@ -35,9 +34,15 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class,
             'has_completed_onboarding' => 'boolean',
             'has_completed_project_onboarding' => 'boolean',
         ];
+    }
+
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class)
+            ->withPivot('role')
+            ->withTimestamps();
     }
 }
