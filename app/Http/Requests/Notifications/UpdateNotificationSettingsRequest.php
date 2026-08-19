@@ -30,7 +30,7 @@ class UpdateNotificationSettingsRequest extends FormRequest
 
             foreach (array_keys($this->input('settings', [])) as $type) {
                 if (! in_array($type, $allowedTypes, true)) {
-                    $validator->errors()->add('settings', "Invalid notification type: {$type}");
+                    $validator->errors()->add('settings', "Invalid notification type: $type");
                 }
             }
         });

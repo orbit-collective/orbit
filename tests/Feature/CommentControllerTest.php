@@ -12,6 +12,7 @@ test('a project member can comment on an issue', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $project->users()->attach($user->id, ['role' => 'member']);
 
     $response = $this->actingAs($user)->post("/issues/{$issue->id}/comments", [
         'body' => 'This looks great!',
@@ -26,10 +27,12 @@ test('a project member can comment on an issue', function () {
 });
 
 test('commenting on an issue redirects back with a success flash message and an action url', function () {
+    $user = User::factory()->create();
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())->post("/issues/{$issue->id}/comments", [
+    $response = $this->actingAs($user)->post("/issues/{$issue->id}/comments", [
         'body' => 'Nice work',
     ]);
 
@@ -38,11 +41,23 @@ test('commenting on an issue redirects back with a success flash message and an 
 });
 
 test('commenting on an issue requires a body', function () {
+    $user = User::factory()->create();
     $issue = Issue::factory()->create();
+    $issue->project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs(User::factory()->create())->post("/issues/{$issue->id}/comments", []);
+    $response = $this->actingAs($user)->post("/issues/{$issue->id}/comments", []);
 
     $response->assertSessionHasErrors('body');
+});
+
+test('a non-member cannot comment on an issue', function () {
+    $issue = Issue::factory()->create();
+
+    $response = $this->actingAs(User::factory()->create())->post("/issues/{$issue->id}/comments", [
+        'body' => 'Not allowed',
+    ]);
+
+    $response->assertForbidden();
 });
 
 test('guests cannot comment on an issue', function () {

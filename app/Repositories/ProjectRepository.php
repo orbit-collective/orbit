@@ -2,13 +2,17 @@
 
 namespace App\Repositories;
 
+use App\Enums\ProjectRole;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Collection;
 
 class ProjectRepository
 {
-    public function getAll(): Collection {
-        return Project::query()->latest()->get();
+    public function getAllForUser(int $userId): Collection {
+        return Project::query()
+            ->whereHas('users', fn ($query) => $query->where('users.id', $userId))
+            ->latest()
+            ->get();
     }
     public function findBySlug(string $slug): ?Project {
         return Project::query()->where('slug', $slug)->firstOrFail();
@@ -20,7 +24,12 @@ class ProjectRepository
         $project->update($data);
         return $project;
     }
-    public function hasAnyProjects(): bool {
-        return Project::query()->exists();
+    public function hasAnyProjectsForUser(int $userId): bool {
+        return Project::query()
+            ->whereHas('users', fn ($query) => $query->where('users.id', $userId))
+            ->exists();
+    }
+    public function attachMember(Project $project, int $userId, ProjectRole $role): void {
+        $project->users()->attach($userId, ['role' => $role->value]);
     }
 }

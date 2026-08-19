@@ -23,28 +23,37 @@ class IssueController extends Controller
         protected ProjectService $projectService
     ) {}
 
-    public function show(Project $project, Issue $issue): Response
+    public function show(Request $request, Project $project, Issue $issue): Response
     {
         if ($issue->project_id !== $project->id) {
             throw new NotFoundHttpException;
         }
 
+        $this->authorize('view', $issue);
+
         return Inertia::render('Issues/Show', [
             'project' => $project,
-            'projects' => $this->projectService->getAll(),
+            'projects' => $this->projectService->getAllForUser($request->user()->id),
             'issue' => $this->issueService->getIssueWithRelations($issue->id),
-            'users' => $this->userService->getAssignableUsers(),
+            'users' => $this->userService->getAssignableUsersForProject($project->id),
         ]);
     }
 
     public function update(Request $request, Issue $issue): RedirectResponse
     {
+        $this->authorize('update', $issue);
+
         $data = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
             'status' => ['sometimes', 'required', Rule::enum(IssueStatus::class)],
             'priority' => 'sometimes|required|string',
-            'assignee_id' => 'sometimes|nullable|exists:users,id',
+            'assignee_id' => [
+                'sometimes',
+                'nullable',
+                'exists:users,id',
+                Rule::exists('project_user', 'user_id')->where('project_id', $issue->project_id),
+            ],
             'labels' => 'sometimes|nullable|array',
             'start_date' => 'sometimes|nullable|date',
             'end_date' => 'sometimes|nullable|date|after_or_equal:start_date',
@@ -71,11 +80,17 @@ class IssueController extends Controller
             'project_id' => 'required|exists:projects,id',
             'priority' => 'required|string',
             'status' => ['required', Rule::enum(IssueStatus::class)],
-            'assignee_id' => 'nullable|exists:users,id',
+            'assignee_id' => [
+                'nullable',
+                'exists:users,id',
+                Rule::exists('project_user', 'user_id')->where('project_id', $request->input('project_id')),
+            ],
             'labels' => 'nullable|array',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
+
+        $this->authorize('view', Project::findOrFail($data['project_id']));
 
         $issue = $this->issueService->createIssue($data);
 
@@ -85,6 +100,8 @@ class IssueController extends Controller
     }
     public function destroy(Issue $issue): RedirectResponse
     {
+        $this->authorize('delete', $issue);
+
         $this->issueService->deleteIssue($issue);
 
         return redirect()->back()
@@ -96,6 +113,10 @@ class IssueController extends Controller
             'ids' => ['required', 'array'],
             'ids.*' => ['required', 'integer', 'exists:issues,id'],
         ]);
+
+        foreach (Issue::whereIn('id', $validated['ids'])->get() as $issue) {
+            $this->authorize('delete', $issue);
+        }
 
         $this->issueService->bulkDeleteIssues($validated['ids']);
 

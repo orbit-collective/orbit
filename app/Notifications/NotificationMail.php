@@ -56,7 +56,7 @@ class NotificationMail extends Notification implements ShouldQueue
     {
         $mail = (new MailMessage)
             ->subject($this->title)
-            ->greeting("Hello {$notifiable->name}!")
+            ->greeting("Hello $notifiable->name!")
             ->line($this->body)
             ->line('')
             ->line("You're receiving this because of activity on Orbit. You can fine-tune which notifications reach your inbox at any time from your account settings.");

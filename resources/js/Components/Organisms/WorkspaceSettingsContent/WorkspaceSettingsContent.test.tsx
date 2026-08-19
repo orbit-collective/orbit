@@ -1,6 +1,23 @@
+import { AlertProvider } from '@/context/AlertContext';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsContent from './WorkspaceSettingsContent';
+
+vi.stubGlobal(
+    'route',
+    vi.fn((name: string) => `/${name}`),
+);
+
+vi.mock('@inertiajs/react', async () => {
+    const actual =
+        await vi.importActual<typeof import('@inertiajs/react')>(
+            '@inertiajs/react',
+        );
+    return {
+        ...actual,
+        usePage: () => ({ props: { flash: {}, emailEnabled: true } }),
+    };
+});
 
 describe('WorkspaceSettingsContent', () => {
     test('renders labels content', () => {
@@ -39,10 +56,35 @@ describe('WorkspaceSettingsContent', () => {
     });
 
     test('renders members content', () => {
-        render(<WorkspaceSettingsContent tabId="members" />);
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsContent
+                    tabId="members"
+                    memberProjects={[{ id: 1, name: 'Orbit', color: 'blue' }]}
+                    selectedProjectId={1}
+                    viewerRole="admin"
+                    members={[]}
+                    pendingInvitations={[]}
+                />
+            </AlertProvider>,
+        );
 
-        expect(screen.getByText('Member access')).toBeInTheDocument();
-        expect(screen.getByText('Directory')).toBeInTheDocument();
+        expect(
+            screen.getByText('People with access to "Orbit".'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Invite a teammate')).toBeInTheDocument();
+    });
+
+    test('renders an empty state when the user has no project', () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsContent tabId="members" />
+            </AlertProvider>,
+        );
+
+        expect(
+            screen.getByText("You're not part of any project yet"),
+        ).toBeInTheDocument();
     });
 
     test('renders roles and management content', () => {

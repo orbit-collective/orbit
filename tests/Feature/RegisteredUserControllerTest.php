@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Event;
@@ -49,7 +48,7 @@ test('registering fires the Registered event', function () {
     Event::assertDispatched(Registered::class);
 });
 
-test('the first registered user becomes an admin', function () {
+test('a newly registered user has no project memberships', function () {
     $this->post('/register', [
         'name' => 'First User',
         'email' => 'first@example.com',
@@ -59,37 +58,7 @@ test('the first registered user becomes an admin', function () {
 
     $user = User::where('email', 'first@example.com')->first();
 
-    expect($user->role)->toBe(UserRole::ADMIN);
-});
-
-test('subsequent registered users become members', function () {
-    User::factory()->create();
-
-    $this->post('/register', [
-        'name' => 'Second User',
-        'email' => 'second@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-    ]);
-
-    $user = User::where('email', 'second@example.com')->first();
-
-    expect($user->role)->toBe(UserRole::MEMBER);
-});
-
-test('the third and later registered users also become members', function () {
-    User::factory()->count(2)->create();
-
-    $this->post('/register', [
-        'name' => 'Third User',
-        'email' => 'third@example.com',
-        'password' => 'password123',
-        'password_confirmation' => 'password123',
-    ]);
-
-    $user = User::where('email', 'third@example.com')->first();
-
-    expect($user->role)->toBe(UserRole::MEMBER);
+    expect($user->projects)->toHaveCount(0);
 });
 
 test('registration requires a name', function () {

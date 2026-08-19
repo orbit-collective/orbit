@@ -6,7 +6,6 @@ export interface User {
     email: string;
     avatar?: string | null;
     email_verified_at?: string;
-    role: 'admin' | 'member';
     has_completed_onboarding: boolean;
     has_completed_project_onboarding: boolean;
     session_lifetime: number;
@@ -20,4 +19,5 @@ export type PageProps<
     };
     notifications: Notification[];
     hasProjects: boolean;
+    emailEnabled: boolean;
 };
