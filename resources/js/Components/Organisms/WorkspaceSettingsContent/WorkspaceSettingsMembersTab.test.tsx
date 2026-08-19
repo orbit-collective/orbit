@@ -313,7 +313,7 @@ describe('WorkspaceSettingsMembersTab', () => {
         const roleTriggers = screen.getAllByText('Admin');
         await user.click(roleTriggers[0]);
         const memberOptions = screen.getAllByText('Member');
-        await user.click(memberOptions[0]);
+        await user.click(memberOptions[memberOptions.length - 1]);
 
         expect(
             await screen.findAllByText(

@@ -2,7 +2,6 @@ import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Button from '@/Components/Atoms/Button/Button';
 import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
-import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
 import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -16,14 +15,115 @@ import {
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
+import { cn } from '@/utils/cn';
 import { formatDate } from '@/utils/time';
 import { router, usePage } from '@inertiajs/react';
-import { SyntheticEvent, useState } from 'react';
+import {
+    SyntheticEvent,
+    useCallback,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
+import { createPortal } from 'react-dom';
 
 const ROLE_LABELS: Record<ProjectMemberRole, string> = {
     admin: 'Admin',
     member: 'Member',
 };
+
+interface PortalDropdownProps {
+    isOpen: boolean;
+    onOpenChange: (isOpen: boolean) => void;
+    trigger: React.ReactNode;
+    children: React.ReactNode;
+}
+
+/**
+ * Renders its menu into a portal at document.body instead of positioning it
+ * relative to the trigger. SettingsPanel clips overflow to keep its rounded
+ * corners, which would otherwise cut off an absolutely-positioned dropdown.
+ */
+function PortalDropdown({
+    isOpen,
+    onOpenChange,
+    trigger,
+    children,
+}: PortalDropdownProps) {
+    const triggerRef = useRef<HTMLDivElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [coords, setCoords] = useState<{
+        top: number;
+        left: number;
+        width: number;
+    } | null>(null);
+
+    const updateCoords = useCallback(() => {
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setCoords({
+                top: rect.bottom + 8,
+                left: rect.left,
+                width: rect.width,
+            });
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        updateCoords();
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node;
+            if (
+                triggerRef.current?.contains(target) ||
+                menuRef.current?.contains(target)
+            ) {
+                return;
+            }
+            onOpenChange(false);
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('resize', updateCoords);
+        window.addEventListener('scroll', updateCoords, true);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('resize', updateCoords);
+            window.removeEventListener('scroll', updateCoords, true);
+        };
+    }, [isOpen, onOpenChange, updateCoords]);
+
+    return (
+        <div ref={triggerRef}>
+            {trigger}
+            {isOpen &&
+                coords &&
+                createPortal(
+                    <div
+                        ref={menuRef}
+                        style={{
+                            position: 'fixed',
+                            top: coords.top,
+                            left: coords.left,
+                            minWidth: coords.width,
+                            zIndex: 9999,
+                        }}
+                        className={cn(
+                            'flex max-h-[320px] flex-col overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] p-1.5 shadow-2xl backdrop-blur-md scrollbar-none',
+                        )}
+                    >
+                        <div className="space-y-0.5">{children}</div>
+                    </div>,
+                    document.body,
+                )}
+        </div>
+    );
+}
 
 interface RoleDropdownProps {
     value: ProjectMemberRole;
@@ -35,31 +135,30 @@ function RoleDropdown({ value, onChange, disabled }: RoleDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <div className="relative">
-            <DropdownTrigger
-                className="w-32"
-                disabled={disabled}
-                label={ROLE_LABELS[value]}
-                onClick={() => setIsOpen(!isOpen)}
-            />
-            {isOpen && (
-                <DropdownMenu>
-                    {(Object.keys(ROLE_LABELS) as ProjectMemberRole[]).map(
-                        (role) => (
-                            <DropdownItem
-                                key={role}
-                                label={ROLE_LABELS[role]}
-                                isActive={value === role}
-                                onClick={() => {
-                                    onChange(role);
-                                    setIsOpen(false);
-                                }}
-                            />
-                        ),
-                    )}
-                </DropdownMenu>
-            )}
-        </div>
+        <PortalDropdown
+            isOpen={isOpen}
+            onOpenChange={setIsOpen}
+            trigger={
+                <DropdownTrigger
+                    className="w-32"
+                    disabled={disabled}
+                    label={ROLE_LABELS[value]}
+                    onClick={() => setIsOpen(!isOpen)}
+                />
+            }
+        >
+            {(Object.keys(ROLE_LABELS) as ProjectMemberRole[]).map((role) => (
+                <DropdownItem
+                    key={role}
+                    label={ROLE_LABELS[role]}
+                    isActive={value === role}
+                    onClick={() => {
+                        onChange(role);
+                        setIsOpen(false);
+                    }}
+                />
+            ))}
+        </PortalDropdown>
     );
 }
 
@@ -229,32 +328,34 @@ export default function WorkspaceSettingsMembersTab({
                         title="Active project"
                         description="Member lists and invitations below apply to this project."
                         action={
-                            <div className="relative">
-                                <DropdownTrigger
-                                    className="w-56"
-                                    label={selectedProject.name}
-                                    onClick={() =>
-                                        setIsProjectMenuOpen(!isProjectMenuOpen)
-                                    }
-                                />
-                                {isProjectMenuOpen && (
-                                    <DropdownMenu>
-                                        {memberProjects.map((project) => (
-                                            <DropdownItem
-                                                key={project.id}
-                                                label={project.name}
-                                                isActive={
-                                                    project.id ===
-                                                    selectedProject.id
-                                                }
-                                                onClick={() =>
-                                                    switchProject(project.id)
-                                                }
-                                            />
-                                        ))}
-                                    </DropdownMenu>
-                                )}
-                            </div>
+                            <PortalDropdown
+                                isOpen={isProjectMenuOpen}
+                                onOpenChange={setIsProjectMenuOpen}
+                                trigger={
+                                    <DropdownTrigger
+                                        className="w-56"
+                                        label={selectedProject.name}
+                                        onClick={() =>
+                                            setIsProjectMenuOpen(
+                                                !isProjectMenuOpen,
+                                            )
+                                        }
+                                    />
+                                }
+                            >
+                                {memberProjects.map((project) => (
+                                    <DropdownItem
+                                        key={project.id}
+                                        label={project.name}
+                                        isActive={
+                                            project.id === selectedProject.id
+                                        }
+                                        onClick={() =>
+                                            switchProject(project.id)
+                                        }
+                                    />
+                                ))}
+                            </PortalDropdown>
                         }
                     />
                 </SettingsPanel>
