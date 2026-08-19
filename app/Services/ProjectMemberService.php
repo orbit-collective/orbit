@@ -37,7 +37,7 @@ class ProjectMemberService
         }
 
         $this->projectMemberRepository->updateRole($project, $member->id, $newRole);
-        $this->activityLogService->log($project->id, "Changed $member->name's role to {$newRole->value}");
+        $this->activityLogService->log($project->id, "Changed $member->name's role to $newRole->value");
     }
 
     public function removeMember(Project $project, User $member): void

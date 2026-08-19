@@ -38,19 +38,15 @@ class SettingsController extends Controller
                 'color' => $project->color,
             ])->values(),
             'selectedProjectId' => $selectedProject?->id,
-            'viewerRole' => $selectedProject
-                ? $selectedProject->users()->where('users.id', $user->id)->first()?->pivot->role
-                : null,
+            'viewerRole' => $selectedProject?->users()->where('users.id', $user->id)->first()?->pivot->role,
             'members' => $selectedProject
                 ? $this->mapMembers($this->projectMemberService->getMembers($selectedProject))
                 : [],
-            'pendingInvitations' => $selectedProject
-                ? $this->mapInvitations($this->projectInvitationService->getPending($selectedProject))
-                : [],
+            'pendingInvitations' => $this->mapInvitations($this->projectInvitationService->getPending($selectedProject)),
         ]);
     }
 
-    private function resolveSelectedProject(Collection $projects, ?string $projectId): ?Project
+    private function resolveSelectedProject(Collection $projects, ?string $projectId): \Closure
     {
         if ($projectId && $project = $projects->firstWhere('id', (int) $projectId)) {
             return $project;

@@ -21,6 +21,7 @@ import { getColorTheme } from '@/utils/colors';
 import { formatDate } from '@/utils/time';
 import { router, usePage } from '@inertiajs/react';
 import {
+    ReactNode,
     SyntheticEvent,
     useCallback,
     useEffect,
@@ -91,8 +92,8 @@ function TeamAvatarStack({ members }: { members: ProjectMember[] }) {
 interface PortalDropdownProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
-    trigger: React.ReactNode;
-    children: React.ReactNode;
+    trigger: ReactNode;
+    children: ReactNode;
 }
 
 /**

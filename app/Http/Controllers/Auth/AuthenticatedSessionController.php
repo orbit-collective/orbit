@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
                 $project = $this->projectInvitationService->acceptByToken($token, $request->user());
 
                 return redirect()->route('projects.show', $project->id)
-                    ->with('success', "You've joined \"{$project->name}\".");
+                    ->with('success', "You've joined \"$project->name\".");
             } catch (ValidationException $exception) {
                 $message = collect($exception->errors())->flatten()->first() ?? $exception->getMessage();
 

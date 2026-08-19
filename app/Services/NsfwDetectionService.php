@@ -2,22 +2,25 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 class NsfwDetectionService
 {
+    /**
+     * @throws ConnectionException
+     */
     public function classify(UploadedFile $file): array
     {
         if (! config('services.nsfw.enabled')) {
             return [];
         }
 
-        $response = Http::withBody(
-            file_get_contents($file->getRealPath()),
-            'application/octet-stream'
-        )
+        $response = $file->getRealPath()
+            |> file_get_contents(...)
+            |> (fn($x) => Http::withBody($x, 'application/octet-stream'))
             ->timeout(5)
             ->retry(2, 100)
             ->post(config('services.nsfw.url') . '/classify');
