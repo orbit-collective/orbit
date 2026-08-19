@@ -1,5 +1,9 @@
 import { AlertProvider } from '@/context/AlertContext';
-import { MemberProjectSummary, ProjectMember } from '@/types/ProjectMembers';
+import {
+    MemberProjectSummary,
+    PendingProjectInvitation,
+    ProjectMember,
+} from '@/types/ProjectMembers';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -10,20 +14,30 @@ vi.stubGlobal(
     vi.fn((name: string) => `/${name}`),
 );
 
+type VisitOptions = {
+    onStart?: () => void;
+    onSuccess?: () => void;
+    onError?: (errors: Record<string, string>) => void;
+    onFinish?: () => void;
+};
+
 const { mockRouterPost, mockRouterPatch, mockRouterDelete, mockRouterGet } =
     vi.hoisted(() => ({
         mockRouterPost: vi.fn(
-            (
-                _url: string,
-                _data?: unknown,
-                opts?: { onSuccess?: () => void; onFinish?: () => void },
-            ) => {
+            (_url: string, _data?: unknown, opts?: VisitOptions) => {
+                opts?.onStart?.();
                 opts?.onSuccess?.();
                 opts?.onFinish?.();
             },
         ),
-        mockRouterPatch: vi.fn(),
-        mockRouterDelete: vi.fn(),
+        mockRouterPatch: vi.fn(
+            (_url: string, _data?: unknown, opts?: VisitOptions) => {
+                opts?.onSuccess?.();
+            },
+        ),
+        mockRouterDelete: vi.fn((_url: string, opts?: VisitOptions) => {
+            opts?.onSuccess?.();
+        }),
         mockRouterGet: vi.fn(),
     }));
 
@@ -172,5 +186,175 @@ describe('WorkspaceSettingsMembersTab', () => {
                 expect.any(Object),
             );
         });
+    });
+
+    test("an admin can change a member's role via the role dropdown", async () => {
+        const user = userEvent.setup();
+        renderTab();
+
+        const roleTriggers = screen.getAllByText('Member');
+        await user.click(roleTriggers[0]);
+        const adminOptions = screen.getAllByText('Admin');
+        await user.click(adminOptions[adminOptions.length - 1]);
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects/1/members/2',
+            { role: 'admin' },
+            expect.any(Object),
+        );
+    });
+
+    test('non-admins see a static role badge instead of a dropdown', () => {
+        renderTab({ viewerRole: 'member' });
+
+        expect(screen.getAllByText('Admin')).toHaveLength(1);
+        expect(screen.getAllByText('Member')).toHaveLength(1);
+    });
+
+    test('switching the active project navigates to its members', async () => {
+        const otherProject: MemberProjectSummary = {
+            id: 2,
+            name: 'Second Project',
+            color: 'green',
+        };
+        const user = userEvent.setup();
+        renderTab({ memberProjects: [project, otherProject] });
+
+        await user.click(screen.getByText('Orbit'));
+        await user.click(screen.getByText('Second Project'));
+
+        expect(mockRouterGet).toHaveBeenCalledWith(
+            '/settings?tab=members&project=2',
+            {},
+            expect.any(Object),
+        );
+    });
+
+    test('shows an empty state for pending invitations when there are none', () => {
+        renderTab();
+
+        expect(screen.getByText('No pending invitations')).toBeInTheDocument();
+    });
+
+    test('lists pending invitations and lets an admin revoke one', async () => {
+        const invitation: PendingProjectInvitation = {
+            id: 5,
+            email: 'invitee@example.com',
+            role: 'member',
+            invitedByName: 'Ada Admin',
+            expiresAt: new Date().toISOString(),
+        };
+        const user = userEvent.setup();
+        renderTab({ pendingInvitations: [invitation] });
+
+        expect(screen.getByText('invitee@example.com')).toBeInTheDocument();
+
+        await user.click(screen.getByText('Revoke'));
+
+        expect(mockRouterDelete).toHaveBeenCalledWith(
+            '/projects/1/invitations/5',
+            expect.any(Object),
+        );
+    });
+
+    test('shows an inline and toast error when inviting fails validation', async () => {
+        mockRouterPost.mockImplementationOnce(
+            (_url: string, _data?: unknown, opts?: VisitOptions) => {
+                opts?.onError?.({ email: 'This user is already a member.' });
+                opts?.onFinish?.();
+            },
+        );
+        const user = userEvent.setup();
+        renderTab();
+
+        await user.type(
+            screen.getByPlaceholderText('teammate@company.com'),
+            'existing@example.com',
+        );
+        await user.click(screen.getByText('Invite'));
+
+        expect(
+            await screen.findAllByText('This user is already a member.'),
+        ).not.toHaveLength(0);
+    });
+
+    test('shows an inline and toast error when joining with a bad code fails', async () => {
+        mockRouterPost.mockImplementationOnce(
+            (_url: string, _data?: unknown, opts?: VisitOptions) => {
+                opts?.onError?.({ token: 'This invitation link is invalid.' });
+                opts?.onFinish?.();
+            },
+        );
+        const user = userEvent.setup();
+        renderTab();
+
+        await user.type(
+            screen.getByPlaceholderText('Invitation code'),
+            'bad-token',
+        );
+        await user.click(screen.getByText('Join'));
+
+        expect(
+            await screen.findAllByText('This invitation link is invalid.'),
+        ).not.toHaveLength(0);
+    });
+
+    test('shows a toast error when changing a role fails', async () => {
+        mockRouterPatch.mockImplementationOnce(
+            (_url: string, _data?: unknown, opts?: VisitOptions) => {
+                opts?.onError?.({
+                    role: 'A project must have at least one admin.',
+                });
+            },
+        );
+        const user = userEvent.setup();
+        renderTab();
+
+        const roleTriggers = screen.getAllByText('Admin');
+        await user.click(roleTriggers[0]);
+        const memberOptions = screen.getAllByText('Member');
+        await user.click(memberOptions[0]);
+
+        expect(
+            await screen.findAllByText(
+                'A project must have at least one admin.',
+            ),
+        ).not.toHaveLength(0);
+    });
+
+    test('shows a toast error when removing a member fails', async () => {
+        mockRouterDelete.mockImplementationOnce(
+            (_url: string, opts?: VisitOptions) => {
+                opts?.onError?.({
+                    member: 'A project must have at least one admin.',
+                });
+            },
+        );
+        const user = userEvent.setup();
+        renderTab();
+
+        const removeButtons = screen.getAllByTitle('Remove from project');
+        await user.click(removeButtons[0]);
+
+        expect(
+            await screen.findAllByText(
+                'A project must have at least one admin.',
+            ),
+        ).not.toHaveLength(0);
+    });
+
+    test('pending invitations are hidden from non-admins', () => {
+        const invitation: PendingProjectInvitation = {
+            id: 5,
+            email: 'invitee@example.com',
+            role: 'member',
+            invitedByName: 'Ada Admin',
+            expiresAt: new Date().toISOString(),
+        };
+        renderTab({ viewerRole: 'member', pendingInvitations: [invitation] });
+
+        expect(
+            screen.queryByText('invitee@example.com'),
+        ).not.toBeInTheDocument();
     });
 });
