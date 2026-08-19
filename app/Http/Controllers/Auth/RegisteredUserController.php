@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AuthService;
+use App\Services\ProjectInvitationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
     public function __construct(
-        protected AuthService $authService
+        protected AuthService $authService,
+        protected ProjectInvitationService $projectInvitationService
     ) {}
 
     public function create(): Response
@@ -30,7 +33,18 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $this->authService->register($data);
+        $user = $this->authService->register($data);
+
+        if ($token = $request->session()->pull('pending_invitation_token')) {
+            try {
+                $project = $this->projectInvitationService->acceptByToken($token, $user);
+
+                return redirect()->route('projects.show', $project->id)
+                    ->with('success', "You've joined \"{$project->name}\".");
+            } catch (ValidationException $exception) {
+                return redirect()->route('dashboard')->with('error', $exception->getMessage());
+            }
+        }
 
         return redirect()->route('dashboard');
     }
