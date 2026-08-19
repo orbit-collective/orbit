@@ -38,30 +38,35 @@ client/server version drift to manage.
   completion ratios across every project.
 - **An activity log** recording who did what, so project history isn't lost.
 - **In-app and email notifications**, scoped per user and markable as read
-  individually or all at once. Nine notification types (issue assigned,
+  individually or all at once. Eight notification types (issue assigned,
   commented, mentioned, status/priority/labels/dates changed, other issue
-  updates, project invitations) are each independently toggleable per
-  channel — see [Notifications](#notifications) below.
-- **Accounts with roles** — anyone can register; the very first account
-  becomes an admin, everyone after that registers as a member.
+  updates) are each independently toggleable per channel — see
+  [Notifications](#notifications) below.
+- **Project-scoped roles** — registering an account grants no role at all;
+  you become ADMIN of a project the moment you create it, and MEMBER of any
+  project you're invited into. There's no global "admin" — the same person
+  can be an admin of one project and a plain member of another. See
+  [Project membership & invitations](#project-membership--invitations) below.
+- **Email invitations**, gated on whether outgoing email is actually
+  configured — see [Project membership & invitations](#project-membership--invitations).
 - **A full account settings area** (`/settings`) covering profile, security,
-  preferences, and notifications — see
+  preferences, notifications, and project members — see
   [Account settings](#account-settings) below.
 - **Light, dark, and system theme**, plus a choice of 10 accent colors,
   applied instantly and persisted per browser (no flash of the wrong theme
   on load).
 - **Guided onboarding**, shown once per account and tracked server-side: a
   welcome tour for every new user, followed by a dedicated "create your first
-  project" flow for the first (admin) account when the workspace is empty.
+  project" flow shown to any account that isn't a member of a project yet.
 
 ## Account settings
 
 Every user gets a settings area at `/settings`, organized into an Account
 section (Preferences, Profile, Notifications, Security & access — plus
 Integrations and Export, present in the nav but disabled pending future
-work) and a Workspace section (currently all "coming soon" placeholders:
-Labels, Statuses, Priorities, Templates, Documents, Members, Roles &
-management). Enabled tabs:
+work) and a Workspace section (Members is fully functional; Labels,
+Statuses, Priorities, Templates, Documents, and Roles & management are still
+"coming soon" placeholders). Enabled tabs:
 
 - **Profile** — change your display name and upload/reset a profile photo
   (JPEG/PNG/GIF, 5 MB max), with a live preview of both.
@@ -73,20 +78,33 @@ management). Enabled tabs:
   and revoke individual active sessions (or all others at once), choose how
   long a session stays alive before re-authentication (1 hour / 8 hours / 24
   hours / 7 days), and permanently delete your account.
+- **Members** (Workspace section) — pick which of your projects to manage
+  with a project switcher, see everyone with access (with a live avatar
+  stack and member/admin counts), promote or demote roles, remove members,
+  send one-time email invitations, and review or revoke invitations still
+  pending. See [Project membership & invitations](#project-membership--invitations)
+  for the full picture.
 
 Uploaded avatars are screened server-side for inappropriate content before
 being accepted — see [Content moderation](#content-moderation).
 
 ## Notifications
 
-Notifications are emitted for nine `App\Enums\Notifications\NotificationType`
+Notifications are emitted for eight `App\Enums\Notifications\NotificationType`
 cases: issue assigned, commented, mentioned, status changed, priority
-changed, labels changed, dates changed, other issue updates, and project
-invitations. Each type can be delivered over two independent
+changed, labels changed, dates changed, and other issue updates. Each type
+can be delivered over two independent
 `App\Enums\Notifications\NotificationChannel`s — in-app (on by default) and
 email (off by default) — configurable per user via
 `NotificationSettingService`/`NotificationSettingRepository` and the
 `POST /account/notification-settings` route.
+
+A ninth case, `NotificationType::ProjectInvited`, exists on the same enum
+but isn't part of that per-user toggle matrix: project invitation emails
+(see [Project membership & invitations](#project-membership--invitations))
+are sent as a fixed one-time transactional email via a dedicated
+`ProjectInvitationMail` notification, since the invited address may not
+even belong to a `User` yet — there's no account to hold a preference for.
 
 Email delivery reuses a single queued `App\Notifications\NotificationMail`
 class for every notification type (no per-type Mailable needed), rate-limited
@@ -95,6 +113,40 @@ Queued jobs run through the database queue driver — the `queue` container
 in Docker (`php artisan queue:work --tries=3`) is what actually sends them,
 so email notifications won't go out unless that service (or a local
 `php artisan queue:work`) is running.
+
+## Project membership & invitations
+
+Roles live entirely at the project level — there is no global `role` column
+on `users` at all. Membership is a `project_user` pivot table
+(`App\Models\Project::users()` / `App\Models\User::projects()`) carrying a
+per-project `App\Enums\ProjectRole` (`admin` / `member`):
+
+- **Creating a project** attaches you to it as `admin` automatically
+  (`ProjectService::createProject`). Every other project you haven't been
+  added to is invisible to you — project/issue listings, the assignee
+  picker, and direct URL access are all scoped to your memberships and
+  enforced server-side by `App\Policies\ProjectPolicy` /
+  `App\Policies\IssuePolicy` (a `403` for anyone who isn't a member, not
+  just a hidden UI element).
+- **Only admins** can change another member's role or remove them
+  (`ProjectPolicy::manageMembers`), and a project always keeps at least one
+  admin — `ProjectMemberService` rejects a demotion/removal that would leave
+  it with none.
+- **Inviting someone by email** creates an `App\Models\ProjectInvitation`
+  with a random one-time token and a 7-day expiry, then emails a
+  `App\Notifications\ProjectInvitationMail` with an accept link. Clicking it
+  joins the project immediately if you're logged in with the invited
+  address; if you're not, it remembers the token, sends you to log in or
+  register, and finishes the join automatically right after. The same
+  invitation can also be accepted by pasting its token manually in the
+  Members tab — useful if the emailed link itself doesn't work. A token is
+  single-use and is tied to the invited email address.
+- **Invitations are gated on email actually working.** `App\Services\
+  MailConfigurationService::isEnabled()` treats the `log`/`array` mail
+  drivers as "not really sending anything" — with either configured (the
+  default), the invite form and pending-invitations list disappear from the
+  Members tab and the invite endpoint itself refuses the request, instead of
+  silently generating tokens nobody receives.
 
 ## Content moderation
 
@@ -379,12 +431,13 @@ production build on every push and pull request against `master`.
 ```
 app/
   Http/Controllers/   Thin HTTP layer — validate, delegate, redirect
-  Services/           Business logic and side effects (activity logging, notification mail, NSFW detection, etc.)
+  Services/           Business logic and side effects (activity logging, notification mail, NSFW detection, project membership, invitations, mail-config detection, etc.)
   Repositories/       All Eloquent query logic
-  Models/             Issue, Project, User, Notification, NotificationSetting, SavedFilter, ActivityLog
-  Enums/              IssueLabel, UserRole
+  Policies/           ProjectPolicy, IssuePolicy — project-membership-based authorization
+  Models/             Issue, Project, User, ProjectInvitation, Notification, NotificationSetting, SavedFilter, ActivityLog
+  Enums/              IssueLabel, ProjectRole
   Enums/Notifications/ NotificationType, NotificationChannel
-  Notifications/      NotificationMail — the single mailable used for every notification type
+  Notifications/      NotificationMail (every in-app/activity notification type), ProjectInvitationMail (invite emails)
 
 resources/js/
   Pages/              Inertia pages, resolved by name (Dashboard, Projects/Show, Settings/Index, Auth/Login, ...)
@@ -423,8 +476,11 @@ routes/
   variables over hardcoded colors.
 - Prettier (single quotes, auto-organized imports, Tailwind class sorting)
   and ESLint should both pass clean before a commit.
-- Roles are a plain `App\Enums\UserRole` (`admin` / `member`), assigned at
-  registration — there's no separate roles table or permissions matrix.
+- Roles are per-project, not global: `App\Enums\ProjectRole` (`admin` /
+  `member`) lives on the `project_user` pivot, not on `users`. Registering an
+  account grants no role — you only get one by creating or joining a
+  project. Authorization is enforced in `ProjectPolicy`/`IssuePolicy`, not
+  just hidden in the UI.
 - Per-user flags like onboarding completion are columns on `users`, shared
   to every Inertia page via `HandleInertiaRequests` — the frontend reads
   them from `usePage().props.auth.user` rather than local/localStorage state.
