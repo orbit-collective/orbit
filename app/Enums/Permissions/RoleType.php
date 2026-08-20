@@ -8,4 +8,5 @@ enum RoleType: string
     case ADMIN = 'admin';
     case MEMBER = 'member';
     case VIEWER = 'viewer';
+    case CUSTOM = 'custom';
 }

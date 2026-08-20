@@ -4,32 +4,27 @@ namespace App\Enums\Permissions;
 
 enum Permission: string
 {
-// WORKSPACE PERMISSIONS
-    case WORKSPACE_VIEW = 'workspace.view';
-    case WORKSPACE_UPDATE = 'workspace.update';
-    case WORKSPACE_DELETE = 'workspace.delete';
+    // PROJECT PERMISSIONS
+    case PROJECT_VIEW = 'projects.view';
+    case PROJECT_CREATE = 'projects.create';
+    case PROJECT_UPDATE = 'projects.update';
+    case PROJECT_DELETE = 'projects.delete';
 
-    case MEMBERS_VIEW = 'workspace.members.view';
-    case MEMBERS_INVITE = 'workspace.members.invite';
-    case MEMBERS_UPDATE = 'workspace.members.update';
-    case MEMBERS_DELETE = 'workspace.members.delete';
+    case MEMBERS_VIEW = 'projects.members.view';
+    case MEMBERS_INVITE = 'projects.members.invite';
+    case MEMBERS_UPDATE = 'projects.members.update';
+    case MEMBERS_DELETE = 'projects.members.delete';
 
-    case ROLES_VIEW = 'workspace.roles.view';
-    case ROLES_CREATE = 'workspace.roles.create';
-    case ROLES_UPDATE = 'workspace.roles.update';
-    case ROLES_DELETE = 'workspace.roles.delete';
-    case ROLES_ASSIGN = 'workspace.roles.assign';
+    case ROLES_VIEW = 'projects.roles.view';
+    case ROLES_CREATE = 'projects.roles.create';
+    case ROLES_UPDATE = 'projects.roles.update';
+    case ROLES_DELETE = 'projects.roles.delete';
+    case ROLES_ASSIGN = 'projects.roles.assign';
 
-    case SETTINGS_VIEW = 'workspace.settings.view';
-    case SETTINGS_UPDATE = 'workspace.settings.update';
+    case SETTINGS_VIEW = 'projects.settings.view';
+    case SETTINGS_UPDATE = 'projects.settings.update';
 
-// PROJECTS PERMISSIONS
-    case PROJECTS_VIEW = 'projects.view';
-    case PROJECTS_CREATE = 'projects.create';
-    case PROJECTS_UPDATE = 'projects.update';
-    case PROJECTS_DELETE = 'projects.delete';
-
-// ISSUES PERMISSIONS
+    // ISSUES PERMISSIONS
     case ISSUES_VIEW = 'issues.view';
     case ISSUES_CREATE = 'issues.create';
     case ISSUES_UPDATE = 'issues.update';
@@ -39,7 +34,7 @@ enum Permission: string
     case ISSUES_CHANGE_PRIORITY = 'issues.change_priority';
     case ISSUES_CHANGE_LABELS = 'issues.change_labels';
 
-// COMMENTS PERMISSIONS
+    // COMMENTS PERMISSIONS
     case COMMENTS_CREATE = 'comments.create';
     case COMMENTS_UPDATE_OWN = 'comments.update_own';
     case COMMENTS_UPDATE_ANY = 'comments.update_any';
