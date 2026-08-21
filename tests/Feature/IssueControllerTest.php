@@ -91,6 +91,20 @@ test('a project member can create an issue', function () {
     ]);
 });
 
+test('a viewer cannot create an issue', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project, 'viewer');
+
+    $response = $this->actingAs($user)->post('/issues', [
+        'title' => 'New issue',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+    ]);
+
+    $response->assertForbidden();
+});
+
 test('a non-member cannot create an issue in a project they do not belong to', function () {
     $project = Project::factory()->create();
 
@@ -217,6 +231,18 @@ test('a project member can update an issue', function () {
 
     $response->assertRedirect();
     $this->assertDatabaseHas('issues', ['id' => $issue->id, 'title' => 'New title']);
+});
+
+test('a viewer cannot update an issue', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Old title']);
+    $user = actingAsProjectMember($project, 'viewer');
+
+    $response = $this->actingAs($user)->patch("/issues/{$issue->id}", [
+        'title' => 'New title',
+    ]);
+
+    $response->assertForbidden();
 });
 
 test('updating an issue rejects an assignee who is not a member of the project', function () {
@@ -373,6 +399,17 @@ test('a project member can delete an issue', function () {
     $response->assertRedirect();
     $response->assertSessionHas('success', "Issue #{$issue->id} \"Delete me\" has been deleted successfully.");
     $this->assertDatabaseMissing('issues', ['id' => $issue->id]);
+});
+
+test('a viewer cannot delete an issue', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project, 'viewer');
+
+    $response = $this->actingAs($user)->delete("/issues/{$issue->id}");
+
+    $response->assertForbidden();
+    $this->assertDatabaseHas('issues', ['id' => $issue->id]);
 });
 
 test('a non-member cannot delete an issue', function () {

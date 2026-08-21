@@ -90,7 +90,7 @@ class IssueController extends Controller
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        $this->authorize('view', Project::findOrFail($data['project_id']));
+        $this->authorize('create', [Issue::class, Project::findOrFail($data['project_id'])]);
 
         $issue = $this->issueService->createIssue($data);
 
