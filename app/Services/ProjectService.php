@@ -12,13 +12,15 @@ class ProjectService
 {
     public function __construct(
         protected ProjectRepository $projectRepository,
-        protected ActivityLogService $activityLogService
+        protected ActivityLogService $activityLogService,
+        protected RoleService $roleService
     ) {}
 
     public function createProject(array $data, int $creatorId): Project {
         $data['slug'] = Str::slug($data['name']);
         $project = $this->projectRepository->store($data);
         $this->projectRepository->attachMember($project, $creatorId, ProjectRole::ADMIN);
+        $this->roleService->syncSystemRoleForMember($project, $creatorId, ProjectRole::ADMIN);
         $this->activityLogService->log($project->id, "Created project: $project->name");
 
         return $project;

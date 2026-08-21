@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Enums\ProjectRole;
 use App\Models\Project;
 use App\Models\ProjectUser;
+use App\Models\Role;
 use Illuminate\Database\Eloquent\Collection;
 
 class ProjectMemberRepository
@@ -57,5 +58,17 @@ class ProjectMemberRepository
         $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $userId)->first();
 
         $projectUser?->roles()->sync($roleIds);
+    }
+
+    public function syncSystemRole(Project $project, int $userId, Role $targetSystemRole, array $systemRoleIds): void
+    {
+        $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $userId)->first();
+
+        if (! $projectUser) {
+            return;
+        }
+
+        $projectUser->roles()->detach($systemRoleIds);
+        $projectUser->roles()->attach($targetSystemRole->id);
     }
 }

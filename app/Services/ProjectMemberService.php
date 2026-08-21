@@ -13,7 +13,8 @@ class ProjectMemberService
 {
     public function __construct(
         protected ProjectMemberRepository $projectMemberRepository,
-        protected ActivityLogService $activityLogService
+        protected ActivityLogService $activityLogService,
+        protected RoleService $roleService
     ) {}
 
     public function getMembers(Project $project): Collection
@@ -37,6 +38,7 @@ class ProjectMemberService
         }
 
         $this->projectMemberRepository->updateRole($project, $member->id, $newRole);
+        $this->roleService->syncSystemRoleForMember($project, $member->id, $newRole);
         $this->activityLogService->log($project->id, "Changed $member->name's role to $newRole->value");
     }
 

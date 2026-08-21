@@ -26,7 +26,8 @@ class ProjectInvitationService
         protected MailConfigurationService $mailConfigurationService,
         protected ActivityLogService $activityLogService,
         protected UserService $userService,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected RoleService $roleService
     ) {}
 
     public function invite(Project $project, string $email, ProjectRole $role, User $invitedBy): ProjectInvitation
@@ -108,6 +109,7 @@ class ProjectInvitationService
 
         if (! $this->projectMemberRepository->isMember($project, $user->id)) {
             $project->users()->attach($user->id, ['role' => $invitation->role->value]);
+            $this->roleService->syncSystemRoleForMember($project, $user->id, $invitation->role);
             $this->activityLogService->log($project->id, "$user->name joined the project", $user->id);
         }
 
