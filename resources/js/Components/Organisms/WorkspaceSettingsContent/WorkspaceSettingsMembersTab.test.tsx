@@ -160,7 +160,7 @@ describe('WorkspaceSettingsMembersTab', () => {
             screen.getByPlaceholderText('teammate@company.com'),
             'new@example.com',
         );
-        await user.click(screen.getByText('No custom roles'));
+        await user.click(screen.getByText('Member'));
         await user.click(screen.getByText('QA'));
         await user.click(screen.getByText('Invite'));
 
@@ -177,10 +177,13 @@ describe('WorkspaceSettingsMembersTab', () => {
         });
     });
 
-    test('the custom roles dropdown is hidden from the invite form without roles.assign', () => {
+    test('the custom roles section is hidden from the invite form without roles.assign', async () => {
+        const user = userEvent.setup();
         renderTab({ members: [], roles: [qaRole], canAssignRoles: false });
 
-        expect(screen.queryByText('No custom roles')).not.toBeInTheDocument();
+        await user.click(screen.getByText('Member'));
+
+        expect(screen.queryByText('QA')).not.toBeInTheDocument();
     });
 
     test('invitations are disabled when email is not configured', () => {
@@ -248,10 +251,14 @@ describe('WorkspaceSettingsMembersTab', () => {
         );
     });
 
-    test('hides the custom roles dropdown when the project has no custom roles', () => {
+    test('hides the custom roles section when the project has no custom roles', async () => {
+        const user = userEvent.setup();
         renderTab({ canAssignRoles: true });
 
-        expect(screen.queryByText('No custom roles')).not.toBeInTheDocument();
+        const triggers = screen.getAllByText('Member');
+        await user.click(triggers[0]);
+
+        expect(screen.queryByText('Custom roles')).not.toBeInTheDocument();
     });
 
     test('a user allowed to assign roles can grant a custom role to a member', async () => {
@@ -262,7 +269,7 @@ describe('WorkspaceSettingsMembersTab', () => {
             canAssignRoles: true,
         });
 
-        const triggers = screen.getAllByText('No custom roles');
+        const triggers = screen.getAllByText('Member');
         await user.click(triggers[0]);
         await user.click(screen.getByText('QA'));
 
@@ -273,11 +280,14 @@ describe('WorkspaceSettingsMembersTab', () => {
         );
     });
 
-    test('a user without roles.assign sees a disabled custom roles trigger', () => {
+    test('a user without roles.assign sees disabled custom role options', async () => {
+        const user = userEvent.setup();
         renderTab({ roles: [qaRole], canAssignRoles: false });
 
-        const triggers = screen.getAllByText('No custom roles');
-        expect(triggers[0].closest('button')).toBeDisabled();
+        const triggers = screen.getAllByText('Member');
+        await user.click(triggers[0]);
+
+        expect(screen.getByText('QA').closest('button')).toBeDisabled();
     });
 
     test('non-admins see a static role badge instead of a dropdown', () => {

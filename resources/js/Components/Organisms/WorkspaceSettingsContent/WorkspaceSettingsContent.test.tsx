@@ -72,7 +72,7 @@ describe('WorkspaceSettingsContent', () => {
         expect(
             screen.getByText('People with access to "Orbit".'),
         ).toBeInTheDocument();
-        expect(screen.getByText('Invite a teammate')).toBeInTheDocument();
+        expect(screen.getByText('Invite by email')).toBeInTheDocument();
     });
 
     test('renders an empty state when the user has no project', () => {

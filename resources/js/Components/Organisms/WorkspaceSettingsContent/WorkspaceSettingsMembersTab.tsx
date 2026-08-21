@@ -189,7 +189,7 @@ export default function WorkspaceSettingsMembersTab({
             )}
 
             <InviteByEmailPanel
-                emailEnabled={!!emailEnabled}
+                emailEnabled={emailEnabled}
                 isManager={isManager}
                 canAssignRoles={canAssignRoles}
                 assignableRoles={assignableRoles}

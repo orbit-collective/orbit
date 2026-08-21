@@ -1,5 +1,6 @@
 import { badgeVariants } from '@/Components/Atoms/Badge/Badge';
 import { dropdownItemVariants } from '@/Components/Atoms/DropdownItem/DropdownItem';
+import { dropdownTriggerVariants } from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import { iconButtonVariants } from '@/Components/Atoms/IconButton/IconButton';
 import { inputVariants } from '@/Components/Atoms/Input/Input';
 import { statusDotVariants } from '@/Components/Atoms/StatusDot/StatusDot';
@@ -65,9 +66,16 @@ export interface DropdownMenuProps extends ChildrenItemProps {
     direction?: 'top' | 'bottom';
     header?: ReactNode;
     stretch?: boolean;
+    position?: 'inline' | 'floating';
+    style?: React.CSSProperties;
+    className?: string;
 }
-export interface DropdownTriggerProps {
+export interface DropdownTriggerProps extends VariantProps<
+    typeof dropdownTriggerVariants
+> {
     label: ReactNode;
+    icon?: keyof typeof icons;
+    badge?: number;
     onClick: () => void;
     disabled?: boolean;
     className?: string;

@@ -1,8 +1,7 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
-import CustomRolesDropdown from '@/Components/Molecules/CustomRolesDropdown/CustomRolesDropdown';
+import MemberRoleDropdown from '@/Components/Molecules/MemberRoleDropdown/MemberRoleDropdown';
 import MemberRow from '@/Components/Molecules/MemberRow/MemberRow';
 import RoleBadge from '@/Components/Molecules/RoleBadge/RoleBadge';
-import RoleDropdown from '@/Components/Molecules/RoleDropdown/RoleDropdown';
 import TeamAvatarStack from '@/Components/Molecules/TeamAvatarStack/TeamAvatarStack';
 import {
     AssignableProjectMemberRole,
@@ -36,36 +35,43 @@ export default function MemberList({
     return (
         <>
             <TeamAvatarStack members={members} />
-            {members.map((member) => (
-                <MemberRow key={member.id} member={member}>
-                    {isManager && member.role !== 'owner' ? (
-                        <RoleDropdown
-                            value={member.role}
-                            onChange={(role) => onChangeRole(member.id, role)}
-                        />
-                    ) : (
-                        <RoleBadge role={member.role} />
-                    )}
-                    <CustomRolesDropdown
-                        roles={assignableRoles}
-                        selectedRoleIds={member.roleIds}
-                        disabled={!canAssignRoles}
-                        onToggle={(roleId, enabled) =>
-                            onToggleCustomRole(member, roleId, enabled)
-                        }
-                    />
-                    {isManager && member.role !== 'owner' && (
-                        <button
-                            type="button"
-                            title="Remove from project"
-                            onClick={() => onRemove(member.id)}
-                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
-                        >
-                            <Icon name="UserMinus" size={15} />
-                        </button>
-                    )}
-                </MemberRow>
-            ))}
+            {members.map((member) => {
+                const canChangeRole = isManager && member.role !== 'owner';
+                const hasRoleControl =
+                    canChangeRole || assignableRoles.length > 0;
+
+                return (
+                    <MemberRow key={member.id} member={member}>
+                        {hasRoleControl ? (
+                            <MemberRoleDropdown
+                                role={member.role}
+                                canChangeRole={canChangeRole}
+                                onChangeRole={(role) =>
+                                    onChangeRole(member.id, role)
+                                }
+                                customRoles={assignableRoles}
+                                selectedCustomRoleIds={member.roleIds}
+                                canAssignCustomRoles={canAssignRoles}
+                                onToggleCustomRole={(roleId, enabled) =>
+                                    onToggleCustomRole(member, roleId, enabled)
+                                }
+                            />
+                        ) : (
+                            <RoleBadge role={member.role} />
+                        )}
+                        {canChangeRole && (
+                            <button
+                                type="button"
+                                title="Remove from project"
+                                onClick={() => onRemove(member.id)}
+                                className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
+                            >
+                                <Icon name="UserMinus" size={15} />
+                            </button>
+                        )}
+                    </MemberRow>
+                );
+            })}
         </>
     );
 }

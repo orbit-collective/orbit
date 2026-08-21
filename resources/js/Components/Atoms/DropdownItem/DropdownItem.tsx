@@ -3,7 +3,7 @@ import { cn } from '@/utils/cn';
 import { cva } from 'class-variance-authority';
 
 export const dropdownItemVariants = cva(
-    'group w-full text-left bg-transparent border-none outline-none px-3 py-2 text-sm text-[var(--text-gray-color)] rounded-md cursor-pointer transition-all duration-150 font-inherit flex items-center gap-2 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[var(--text-gray-color)]',
+    'group w-full text-left bg-transparent border-none outline-none text-sm text-[var(--text-gray-color)] cursor-pointer transition-all duration-150 font-inherit flex items-center disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[var(--text-gray-color)]',
     {
         variants: {
             isActive: {
@@ -19,10 +19,15 @@ export const dropdownItemVariants = cva(
                     'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10',
                 info: 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/10',
             },
+            appearance: {
+                flat: 'gap-2 rounded-md px-3 py-2 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                pill: 'gap-2.5 rounded-lg px-2.5 py-2.5 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+            },
         },
         defaultVariants: {
             isActive: false,
             variant: 'default',
+            appearance: 'flat',
         },
     },
 );
@@ -33,16 +38,20 @@ export default function DropdownItem({
     onClick,
     isActive,
     variant,
+    appearance,
     className,
     ...props
-}: DropdownItemProps & {
-    variant?: 'default' | 'danger' | 'success' | 'warning' | 'info';
-}) {
+}: DropdownItemProps) {
     return (
         <button
             type="button"
             className={cn(
-                dropdownItemVariants({ isActive, variant, className }),
+                dropdownItemVariants({
+                    isActive,
+                    variant,
+                    appearance,
+                    className,
+                }),
             )}
             onClick={onClick}
             {...props}
