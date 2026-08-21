@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Repositories\ProjectRepository;
 use App\Services\ActivityLogService;
 use App\Services\ProjectService;
+use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -13,7 +14,8 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->projectRepository = Mockery::mock(ProjectRepository::class);
     $this->activityLogService = Mockery::mock(ActivityLogService::class);
-    $this->service = new ProjectService($this->projectRepository, $this->activityLogService);
+    $this->roleService = Mockery::mock(RoleService::class);
+    $this->service = new ProjectService($this->projectRepository, $this->activityLogService, $this->roleService);
 });
 
 test('it can create a project, attach the creator as admin and log activity', function () {
@@ -31,6 +33,10 @@ test('it can create a project, attach the creator as admin and log activity', fu
         ->andReturn($project);
 
     $this->projectRepository->shouldReceive('attachMember')
+        ->once()
+        ->with($project, $user->id, ProjectRole::ADMIN);
+
+    $this->roleService->shouldReceive('syncSystemRoleForMember')
         ->once()
         ->with($project, $user->id, ProjectRole::ADMIN);
 

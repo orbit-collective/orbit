@@ -4,6 +4,7 @@ use App\Enums\ProjectRole;
 use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
+use App\Models\ProjectUser;
 use App\Models\User;
 use App\Notifications\NotificationMail;
 use App\Notifications\ProjectInvitationMail;
@@ -178,6 +179,9 @@ test('a valid token can be accepted and attaches the user with the invited role'
     expect($result->id)->toBe($project->id);
     expect($project->users()->where('users.id', $invitee->id)->first()->pivot->role)->toBe('admin');
     expect($invitation->fresh()->isAccepted())->toBeTrue();
+
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $invitee->id)->first();
+    expect($projectUser->roles()->pluck('slug')->all())->toBe(['admin']);
 });
 
 test('accepting a token twice fails the second time', function () {

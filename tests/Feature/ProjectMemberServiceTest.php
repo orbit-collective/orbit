@@ -5,6 +5,7 @@ use App\Models\Project;
 use App\Models\ProjectUser;
 use App\Models\User;
 use App\Services\ProjectMemberService;
+use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 
@@ -32,6 +33,22 @@ test('it can promote a member to admin', function () {
     $this->service->updateRole($project, $member, ProjectRole::ADMIN);
 
     expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('admin');
+});
+
+test('promoting a member swaps their system role while keeping custom roles', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $projectUser->roles()->attach($customRole->id);
+    app(RoleService::class)->syncSystemRoleForMember($project, $member->id, ProjectRole::MEMBER);
+
+    $this->service->updateRole($project, $member, ProjectRole::ADMIN);
+
+    expect($projectUser->roles()->pluck('slug')->sort()->values()->all())->toBe(['admin', 'qa']);
 });
 
 test('it prevents demoting the only admin', function () {

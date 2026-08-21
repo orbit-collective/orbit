@@ -1,8 +1,12 @@
 <?php
 
+use App\Enums\ProjectRole;
 use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectUser;
+use App\Models\User;
 use App\Services\RoleService;
+use Database\Seeders\PermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 
@@ -73,3 +77,54 @@ test('it prevents syncing permissions on a system role', function () {
 
     $this->service->syncPermissions($project, $role, [$permission->id]);
 })->throws(ValidationException::class);
+
+test('it creates the admin and member system roles with their default permissions', function () {
+    $this->seed(PermissionSeeder::class);
+    $project = Project::factory()->create();
+
+    $systemRoles = $this->service->ensureSystemRoles($project);
+
+    expect($systemRoles->keys()->all())->toBe(['admin', 'member']);
+    expect($systemRoles['admin']->is_system)->toBeTrue();
+    expect($systemRoles['admin']->permissions()->count())->toBe(Permission::count());
+    expect($systemRoles['member']->is_system)->toBeTrue();
+    expect($systemRoles['member']->permissions()->count())->toBeGreaterThan(0);
+    expect($systemRoles['member']->permissions()->count())->toBeLessThan(Permission::count());
+});
+
+test('it is idempotent and does not duplicate system roles', function () {
+    $this->seed(PermissionSeeder::class);
+    $project = Project::factory()->create();
+
+    $this->service->ensureSystemRoles($project);
+    $this->service->ensureSystemRoles($project);
+
+    expect($project->roles()->where('is_system', true)->count())->toBe(2);
+});
+
+test('syncSystemRoleForMember assigns the matching system role and keeps custom roles', function () {
+    $this->seed(PermissionSeeder::class);
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $projectUser->roles()->attach($customRole->id);
+
+    $this->service->syncSystemRoleForMember($project, $member->id, ProjectRole::MEMBER);
+
+    expect($projectUser->roles()->pluck('slug')->sort()->values()->all())->toBe(['member', 'qa']);
+});
+
+test('syncSystemRoleForMember swaps the previous system role when promoted', function () {
+    $this->seed(PermissionSeeder::class);
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $this->service->syncSystemRoleForMember($project, $member->id, ProjectRole::MEMBER);
+
+    $this->service->syncSystemRoleForMember($project, $member->id, ProjectRole::ADMIN);
+
+    expect($projectUser->roles()->pluck('slug')->all())->toBe(['admin']);
+});
