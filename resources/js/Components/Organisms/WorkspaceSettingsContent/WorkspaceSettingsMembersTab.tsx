@@ -389,8 +389,15 @@ export default function WorkspaceSettingsMembersTab({
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] =
         useState<AssignableProjectMemberRole>('member');
+    const [inviteRoleIds, setInviteRoleIds] = useState<number[]>([]);
     const [inviteError, setInviteError] = useState<string | null>(null);
     const [isInviting, setIsInviting] = useState(false);
+
+    const toggleInviteRoleId = (roleId: number, enabled: boolean) => {
+        setInviteRoleIds((prev) =>
+            enabled ? [...prev, roleId] : prev.filter((id) => id !== roleId),
+        );
+    };
 
     const submitInvite = (event: SyntheticEvent) => {
         event.preventDefault();
@@ -400,13 +407,14 @@ export default function WorkspaceSettingsMembersTab({
 
         router.post(
             `/projects/${selectedProject.id}/invitations`,
-            { email: inviteEmail, role: inviteRole },
+            { email: inviteEmail, role: inviteRole, roles: inviteRoleIds },
             {
                 preserveScroll: true,
                 onStart: () => setIsInviting(true),
                 onFinish: () => setIsInviting(false),
                 onSuccess: () => {
                     setInviteEmail('');
+                    setInviteRoleIds([]);
                     setInviteError(null);
                 },
                 onError: (errors) => {
@@ -841,6 +849,13 @@ export default function WorkspaceSettingsMembersTab({
                                         value={inviteRole}
                                         onChange={setInviteRole}
                                     />
+                                    {canAssignRoles && (
+                                        <CustomRolesDropdown
+                                            roles={assignableRoles}
+                                            selectedRoleIds={inviteRoleIds}
+                                            onToggle={toggleInviteRoleId}
+                                        />
+                                    )}
                                     <Button
                                         type="submit"
                                         isDisabled={isInviting}
@@ -897,6 +912,22 @@ export default function WorkspaceSettingsMembersTab({
                                             expires{' '}
                                             {formatDate(invitation.expiresAt)}
                                         </p>
+                                        {invitation.roleIds.length > 0 && (
+                                            <p className="text-xs text-[var(--text-gray-color)]">
+                                                + custom roles:{' '}
+                                                {invitation.roleIds
+                                                    .map(
+                                                        (roleId) =>
+                                                            assignableRoles.find(
+                                                                (role) =>
+                                                                    role.id ===
+                                                                    roleId,
+                                                            )?.name ??
+                                                            'Unknown role',
+                                                    )
+                                                    .join(', ')}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                                 <Button

@@ -55,6 +55,17 @@ class ProjectMemberRepository
         $projectUser?->roles()->sync($roleIds);
     }
 
+    /**
+     * Grants the given custom roles in addition to whatever the member already
+     * holds — unlike syncRoles(), this never detaches their current system role.
+     */
+    public function attachRoles(Project $project, int $userId, array $roleIds): void
+    {
+        $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $userId)->first();
+
+        $projectUser?->roles()->syncWithoutDetaching($roleIds);
+    }
+
     public function syncSystemRole(Project $project, int $userId, Role $targetSystemRole, array $systemRoleIds): void
     {
         $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $userId)->first();

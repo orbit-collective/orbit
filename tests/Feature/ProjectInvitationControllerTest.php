@@ -2,6 +2,7 @@
 
 use App\Enums\Permissions\RoleType;
 use App\Models\Project;
+use App\Models\ProjectInvitation;
 use App\Models\User;
 use App\Services\ProjectInvitationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,6 +27,54 @@ test('an admin can invite someone by email', function () {
 
     $response->assertRedirect();
     $this->assertDatabaseHas('project_invitations', ['email' => 'invitee@example.com']);
+});
+
+test('an owner can invite someone with a custom role attached', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($owner)->post("/projects/{$project->id}/invitations", [
+        'email' => 'invitee@example.com',
+        'role' => 'member',
+        'roles' => [$customRole->id],
+    ]);
+
+    $response->assertRedirect();
+    $invitation = ProjectInvitation::where('email', 'invitee@example.com')->first();
+    expect($invitation->roles()->pluck('roles.id')->all())->toBe([$customRole->id]);
+});
+
+test('an admin without the roles.assign permission cannot invite with a custom role attached', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($admin)->post("/projects/{$project->id}/invitations", [
+        'email' => 'invitee@example.com',
+        'role' => 'member',
+        'roles' => [$customRole->id],
+    ]);
+
+    $response->assertForbidden();
+});
+
+test('inviting with a role from another project is rejected', function () {
+    $project = Project::factory()->create();
+    $otherProject = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $foreignRole = $otherProject->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($owner)->post("/projects/{$project->id}/invitations", [
+        'email' => 'invitee@example.com',
+        'role' => 'member',
+        'roles' => [$foreignRole->id],
+    ]);
+
+    $response->assertSessionHasErrors('roles.0');
 });
 
 test('a member cannot invite anyone', function () {

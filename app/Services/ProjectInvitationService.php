@@ -30,7 +30,7 @@ class ProjectInvitationService
         protected RoleService $roleService
     ) {}
 
-    public function invite(Project $project, string $email, RoleType $role, User $invitedBy): ProjectInvitation
+    public function invite(Project $project, string $email, RoleType $role, User $invitedBy, array $roleIds = []): ProjectInvitation
     {
         if (! $this->mailConfigurationService->isEnabled()) {
             throw ValidationException::withMessages([
@@ -58,6 +58,10 @@ class ProjectInvitationService
             'role' => $role->value,
             'expires_at' => Carbon::now()->addDays(self::EXPIRES_IN_DAYS),
         ]);
+
+        if (! empty($roleIds)) {
+            $this->projectInvitationRepository->syncRoles($invitation, $roleIds);
+        }
 
         $this->sendInvitationNotification($invitation, $project, $email, $invitedBy);
 
@@ -110,6 +114,12 @@ class ProjectInvitationService
         if (! $this->projectMemberRepository->isMember($project, $user->id)) {
             $project->users()->attach($user->id, ['role' => $invitation->role->value]);
             $this->roleService->syncSystemRoleForMember($project, $user->id, $invitation->role);
+
+            $invitedRoleIds = $invitation->roles()->pluck('roles.id')->all();
+            if (! empty($invitedRoleIds)) {
+                $this->projectMemberRepository->attachRoles($project, $user->id, $invitedRoleIds);
+            }
+
             $this->activityLogService->log($project->id, "$user->name joined the project", $user->id);
         }
 

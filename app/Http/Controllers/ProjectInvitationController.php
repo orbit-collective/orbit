@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
+use App\Models\Role;
 use App\Services\ProjectInvitationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,13 +25,20 @@ class ProjectInvitationController extends Controller
         $validated = $request->validate([
             'email' => 'required|string|email|max:255',
             'role' => ['required', Rule::enum(RoleType::class)->except([RoleType::OWNER, RoleType::CUSTOM])],
+            'roles' => ['sometimes', 'array'],
+            'roles.*' => ['integer', Rule::exists('roles', 'id')->where('project_id', $project->id)],
         ]);
+
+        if (! empty($validated['roles'])) {
+            $this->authorize('assign', [Role::class, $project]);
+        }
 
         $this->projectInvitationService->invite(
             $project,
             $validated['email'],
             RoleType::from($validated['role']),
-            $request->user()
+            $request->user(),
+            $validated['roles'] ?? []
         );
 
         return redirect()->back()->with('success', "An invitation has been sent to {$validated['email']}.");

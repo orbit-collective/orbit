@@ -112,6 +112,7 @@ class SettingsController extends Controller
             'id' => $invitation->id,
             'email' => $invitation->email,
             'role' => $invitation->role->value,
+            'roleIds' => $invitation->roles->pluck('id')->values()->all(),
             'invitedByName' => $invitation->invitedBy?->name,
             'expiresAt' => $invitation->expires_at,
         ])->values()->all();
