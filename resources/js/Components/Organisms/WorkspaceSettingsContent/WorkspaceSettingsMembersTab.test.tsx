@@ -146,10 +146,41 @@ describe('WorkspaceSettingsMembersTab', () => {
         await waitFor(() => {
             expect(mockRouterPost).toHaveBeenCalledWith(
                 '/projects/1/invitations',
-                { email: 'new@example.com', role: 'member' },
+                { email: 'new@example.com', role: 'member', roles: [] },
                 expect.any(Object),
             );
         });
+    });
+
+    test('a manager allowed to assign roles can invite with a custom role attached', async () => {
+        const user = userEvent.setup();
+        renderTab({ members: [], roles: [qaRole], canAssignRoles: true });
+
+        await user.type(
+            screen.getByPlaceholderText('teammate@company.com'),
+            'new@example.com',
+        );
+        await user.click(screen.getByText('No custom roles'));
+        await user.click(screen.getByText('QA'));
+        await user.click(screen.getByText('Invite'));
+
+        await waitFor(() => {
+            expect(mockRouterPost).toHaveBeenCalledWith(
+                '/projects/1/invitations',
+                {
+                    email: 'new@example.com',
+                    role: 'member',
+                    roles: [10],
+                },
+                expect.any(Object),
+            );
+        });
+    });
+
+    test('the custom roles dropdown is hidden from the invite form without roles.assign', () => {
+        renderTab({ members: [], roles: [qaRole], canAssignRoles: false });
+
+        expect(screen.queryByText('No custom roles')).not.toBeInTheDocument();
     });
 
     test('invitations are disabled when email is not configured', () => {
@@ -231,7 +262,8 @@ describe('WorkspaceSettingsMembersTab', () => {
             canAssignRoles: true,
         });
 
-        await user.click(screen.getByText('No custom roles'));
+        const triggers = screen.getAllByText('No custom roles');
+        await user.click(triggers[0]);
         await user.click(screen.getByText('QA'));
 
         expect(mockRouterPatch).toHaveBeenCalledWith(
@@ -312,6 +344,7 @@ describe('WorkspaceSettingsMembersTab', () => {
             id: 5,
             email: 'invitee@example.com',
             role: 'member',
+            roleIds: [],
             invitedByName: 'Ada Admin',
             expiresAt: new Date().toISOString(),
         };
@@ -419,6 +452,7 @@ describe('WorkspaceSettingsMembersTab', () => {
             id: 5,
             email: 'invitee@example.com',
             role: 'member',
+            roleIds: [],
             invitedByName: 'Ada Admin',
             expiresAt: new Date().toISOString(),
         };

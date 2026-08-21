@@ -18,6 +18,7 @@ export interface PendingProjectInvitation {
     id: number;
     email: string;
     role: ProjectMemberRole;
+    roleIds: number[];
     invitedByName: string | null;
     expiresAt: string;
 }

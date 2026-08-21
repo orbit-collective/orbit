@@ -184,6 +184,35 @@ test('a valid token can be accepted and attaches the user with the invited role'
     expect($projectUser->roles()->pluck('slug')->all())->toBe(['admin']);
 });
 
+test('invite() attaches the given custom roles to the invitation', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin, [$customRole->id]);
+
+    expect($invitation->roles()->pluck('roles.id')->all())->toBe([$customRole->id]);
+});
+
+test('accepting an invitation with custom roles grants them to the new member', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin, [$customRole->id]);
+    $this->service->acceptByToken($invitation->token, $invitee);
+
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $invitee->id)->first();
+    expect($projectUser->roles()->pluck('slug')->sort()->values()->all())->toBe(['member', 'qa']);
+});
+
 test('accepting a token twice fails the second time', function () {
     Notification::fake();
 
