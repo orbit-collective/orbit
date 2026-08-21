@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
     Route::post('/projects/{project}/roles', [RoleController::class, 'store'])->name('projects.roles.store');
     Route::patch('/projects/{project}/roles/{role}', [RoleController::class, 'update'])->name('projects.roles.update');
+    Route::patch('/projects/{project}/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('projects.roles.permissions.update');
     Route::delete('/projects/{project}/roles/{role}', [RoleController::class, 'destroy'])->name('projects.roles.destroy');
     Route::post('/projects/{project}/invitations', [ProjectInvitationController::class, 'store'])->name('projects.invitations.store');
     Route::delete('/projects/{project}/invitations/{invitation}', [ProjectInvitationController::class, 'destroy'])->name('projects.invitations.destroy');

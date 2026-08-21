@@ -23,7 +23,7 @@ class RoleController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'alpha_dash'],
+            'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('roles')->where('project_id', $project->id)],
             'role' => ['required', Rule::enum(RoleType::class)],
         ]);
 
@@ -39,7 +39,7 @@ class RoleController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'alpha_dash'],
+            'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('roles')->where('project_id', $project->id)->ignore($role->id)],
         ]);
 
         $this->roleService->updateRole($project, $role, $validated);
@@ -55,6 +55,21 @@ class RoleController extends Controller
         $this->roleService->deleteRole($project, $role);
 
         return redirect()->back()->with('success', "The \"$role->name\" role has been deleted.");
+    }
+
+    public function syncPermissions(Request $request, Project $project, Role $role): RedirectResponse
+    {
+        $this->ensureRoleBelongsToProject($project, $role);
+        $this->authorize('update', $role);
+
+        $validated = $request->validate([
+            'permissions' => ['present', 'array'],
+            'permissions.*' => ['integer', 'exists:permissions,id'],
+        ]);
+
+        $this->roleService->syncPermissions($project, $role, $validated['permissions']);
+
+        return redirect()->back()->with('success', "Permissions for \"{$role->name}\" have been updated.");
     }
 
     private function ensureRoleBelongsToProject(Project $project, Role $role): void

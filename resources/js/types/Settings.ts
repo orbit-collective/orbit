@@ -135,7 +135,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Shield',
         section: 'workspace',
         description: 'Define roles, permissions, and administrative policies.',
-        enabled: false,
+        enabled: true,
     },
 ];
 

@@ -49,6 +49,17 @@ class RoleService
         $this->activityLogService->log($project->id, "Deleted the \"$role->name\" role");
     }
 
+    public function syncPermissions(Project $project, Role $role, array $permissionIds): Role
+    {
+        $this->assertEditable($role);
+
+        $role = $this->roleRepository->syncPermissions($role, $permissionIds);
+
+        $this->activityLogService->log($project->id, "Updated permissions for the \"$role->name\" role");
+
+        return $role;
+    }
+
     private function assertEditable(Role $role): void
     {
         if ($role->is_system) {

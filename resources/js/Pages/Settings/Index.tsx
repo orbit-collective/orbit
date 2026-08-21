@@ -12,6 +12,7 @@ import {
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
+import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import {
     SETTINGS_DEFAULT_TAB,
     SETTINGS_TABS,
@@ -32,6 +33,9 @@ interface SettingsIndexProps {
     viewerRole?: ProjectMemberRole | null;
     members?: ProjectMember[];
     pendingInvitations?: PendingProjectInvitation[];
+    roles?: WorkspaceRole[];
+    permissions?: PermissionDefinition[];
+    canManageRoles?: boolean;
 }
 
 export default function SettingsIndex({
@@ -42,6 +46,9 @@ export default function SettingsIndex({
     viewerRole = null,
     members = [],
     pendingInvitations = [],
+    roles = [],
+    permissions = [],
+    canManageRoles = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -122,6 +129,9 @@ export default function SettingsIndex({
                                 viewerRole={viewerRole}
                                 members={members}
                                 pendingInvitations={pendingInvitations}
+                                roles={roles}
+                                permissions={permissions}
+                                canManageRoles={canManageRoles}
                             />
                         ) : (
                             <SettingsPanel

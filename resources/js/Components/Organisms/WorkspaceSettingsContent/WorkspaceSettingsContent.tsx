@@ -4,6 +4,7 @@ import {
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
+import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import { WorkspaceSettingsTabId } from '@/types/Settings';
 import WorkspaceSettingsDocumentsTab from './WorkspaceSettingsDocumentsTab';
 import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
@@ -20,6 +21,9 @@ interface WorkspaceSettingsContentProps {
     viewerRole?: ProjectMemberRole | null;
     members?: ProjectMember[];
     pendingInvitations?: PendingProjectInvitation[];
+    roles?: WorkspaceRole[];
+    permissions?: PermissionDefinition[];
+    canManageRoles?: boolean;
 }
 
 export default function WorkspaceSettingsContent({
@@ -29,6 +33,9 @@ export default function WorkspaceSettingsContent({
     viewerRole = null,
     members = [],
     pendingInvitations = [],
+    roles = [],
+    permissions = [],
+    canManageRoles = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return <WorkspaceSettingsLabelsTab />;
@@ -62,5 +69,13 @@ export default function WorkspaceSettingsContent({
         );
     }
 
-    return <WorkspaceSettingsRolesTab />;
+    return (
+        <WorkspaceSettingsRolesTab
+            memberProjects={memberProjects}
+            selectedProjectId={selectedProjectId}
+            roles={roles}
+            permissions={permissions}
+            canManageRoles={canManageRoles}
+        />
+    );
 }
