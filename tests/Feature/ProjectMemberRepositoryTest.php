@@ -2,6 +2,7 @@
 
 use App\Enums\ProjectRole;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
 use App\Repositories\ProjectMemberRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -9,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->repository = new ProjectMemberRepository();
+    $this->repository = new ProjectMemberRepository;
 });
 
 test('it can get the members of a project', function () {
@@ -30,7 +31,7 @@ test('it eager loads each member\'s custom roles on the pivot', function () {
     $project->users()->attach($member->id, ['role' => 'member']);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
-    $projectUser = App\Models\ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     $projectUser->roles()->attach($role->id);
 
     $members = $this->repository->getMembers($project);
@@ -105,7 +106,7 @@ test('it can sync a member\'s custom roles', function () {
 
     $this->repository->syncRoles($project, $member->id, [$role->id]);
 
-    $projectUser = App\Models\ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
 });
 
@@ -116,5 +117,5 @@ test('syncing roles for a non-member does nothing', function () {
 
     $this->repository->syncRoles($project, $outsider->id, [$role->id]);
 
-    expect(App\Models\ProjectUser::where('project_id', $project->id)->where('user_id', $outsider->id)->exists())->toBeFalse();
+    expect(ProjectUser::where('project_id', $project->id)->where('user_id', $outsider->id)->exists())->toBeFalse();
 });

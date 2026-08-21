@@ -4,6 +4,7 @@ import {
     PendingProjectInvitation,
     ProjectMember,
 } from '@/types/ProjectMembers';
+import { WorkspaceRole } from '@/types/Roles';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -83,6 +84,16 @@ const member: ProjectMember = {
     role: 'member',
     joinedAt: new Date().toISOString(),
     roleIds: [],
+};
+
+const qaRole: WorkspaceRole = {
+    id: 10,
+    name: 'QA',
+    slug: 'qa',
+    type: 'custom',
+    isSystem: false,
+    memberCount: 0,
+    permissionIds: [],
 };
 
 const renderTab = (
@@ -204,6 +215,37 @@ describe('WorkspaceSettingsMembersTab', () => {
             { role: 'admin' },
             expect.any(Object),
         );
+    });
+
+    test('hides the custom roles dropdown when the project has no custom roles', () => {
+        renderTab({ canAssignRoles: true });
+
+        expect(screen.queryByText('No custom roles')).not.toBeInTheDocument();
+    });
+
+    test('a user allowed to assign roles can grant a custom role to a member', async () => {
+        const user = userEvent.setup();
+        renderTab({
+            members: [member],
+            roles: [qaRole],
+            canAssignRoles: true,
+        });
+
+        await user.click(screen.getByText('No custom roles'));
+        await user.click(screen.getByText('QA'));
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects/1/members/2/roles',
+            { roles: [10] },
+            expect.any(Object),
+        );
+    });
+
+    test('a user without roles.assign sees a disabled custom roles trigger', () => {
+        renderTab({ roles: [qaRole], canAssignRoles: false });
+
+        const triggers = screen.getAllByText('No custom roles');
+        expect(triggers[0].closest('button')).toBeDisabled();
     });
 
     test('non-admins see a static role badge instead of a dropdown', () => {

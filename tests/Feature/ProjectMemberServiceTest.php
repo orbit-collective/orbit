@@ -2,6 +2,7 @@
 
 use App\Enums\ProjectRole;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
 use App\Services\ProjectMemberService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -95,7 +96,7 @@ test('it can sync a member\'s custom roles and logs the change', function () {
 
     $this->service->syncRoles($project, $member, [$role->id]);
 
-    $projectUser = App\Models\ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
     $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => "Updated {$member->name}'s custom roles"]);
 });
