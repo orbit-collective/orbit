@@ -23,4 +23,9 @@ class RolePolicy
     {
         return $role->project->hasPermission($user, Permission::ROLES_DELETE);
     }
+
+    public function assign(User $user, Project $project): bool
+    {
+        return $project->hasPermission($user, Permission::ROLES_ASSIGN);
+    }
 }

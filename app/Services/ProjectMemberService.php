@@ -56,6 +56,14 @@ class ProjectMemberService
         $this->activityLogService->log($project->id, "Removed $member->name from the project");
     }
 
+    public function syncRoles(Project $project, User $member, array $roleIds): void
+    {
+        $this->assertIsMember($project, $member);
+
+        $this->projectMemberRepository->syncRoles($project, $member->id, $roleIds);
+        $this->activityLogService->log($project->id, "Updated $member->name's custom roles");
+    }
+
     private function assertIsMember(Project $project, User $member): void
     {
         if (! $this->projectMemberRepository->isMember($project, $member->id)) {

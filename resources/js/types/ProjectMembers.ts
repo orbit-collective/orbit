@@ -9,6 +9,7 @@ export interface ProjectMember {
     avatar: string | null;
     role: ProjectMemberRole;
     joinedAt: string;
+    roleIds: number[];
 }
 
 export interface PendingProjectInvitation {
