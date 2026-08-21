@@ -1,9 +1,13 @@
 <?php
 
+use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Models\ActivityLog;
 use App\Models\Issue;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\SavedFilter;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -83,4 +87,42 @@ test('deleting a project cascades to delete its saved filters and activity logs'
 
     $this->assertDatabaseMissing('saved_filters', ['id' => $filter->id]);
     $this->assertDatabaseMissing('activity_logs', ['id' => $log->id]);
+});
+
+test('hasPermission() grants everything to an admin', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+
+    expect($project->hasPermission($admin, PermissionEnum::ROLES_DELETE))->toBeTrue();
+});
+
+test('hasPermission() denies a member without a matching role', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    expect($project->hasPermission($member, PermissionEnum::ROLES_DELETE))->toBeFalse();
+});
+
+test('hasPermission() denies a non-member', function () {
+    $project = Project::factory()->create();
+
+    expect($project->hasPermission(User::factory()->create(), PermissionEnum::ROLES_DELETE))->toBeFalse();
+});
+
+test('hasPermission() grants access through a custom role holding the permission', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $permission = Permission::create(['key' => 'projects.roles.delete', 'name' => 'Delete roles', 'group' => 'projects']);
+    $role = $project->roles()->create(['name' => 'Role Manager', 'slug' => 'role-manager', 'role' => 'custom']);
+    $role->permissions()->attach($permission);
+
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $projectUser->roles()->attach($role->id);
+
+    expect($project->hasPermission($member, PermissionEnum::ROLES_DELETE))->toBeTrue();
+    expect($project->hasPermission($member, PermissionEnum::ROLES_CREATE))->toBeFalse();
 });
