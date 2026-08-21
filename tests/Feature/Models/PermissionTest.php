@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 test('a permission can belong to many roles', function () {
-    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    $permission = Permission::where('key', 'issues.view')->first();
     $project = Project::factory()->create();
     $roleA = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $roleB = $project->roles()->create(['name' => 'Support', 'slug' => 'support', 'role' => 'custom']);
@@ -19,8 +19,8 @@ test('a permission can belong to many roles', function () {
 });
 
 test('the key column must be unique', function () {
-    Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    Permission::create(['key' => 'custom.test.permission', 'name' => 'Test', 'group' => 'custom']);
 
-    expect(fn () => Permission::create(['key' => 'issues.view', 'name' => 'Duplicate', 'group' => 'issues']))
+    expect(fn () => Permission::create(['key' => 'custom.test.permission', 'name' => 'Duplicate', 'group' => 'custom']))
         ->toThrow(QueryException::class);
 });

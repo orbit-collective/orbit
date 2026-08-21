@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Permissions\Permission as PermissionEnum;
+use App\Enums\Permissions\RoleType;
 use App\Models\ActivityLog;
 use App\Models\Issue;
 use App\Models\Permission;
@@ -8,6 +9,7 @@ use App\Models\Project;
 use App\Models\ProjectUser;
 use App\Models\SavedFilter;
 use App\Models\User;
+use App\Services\RoleService;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -89,12 +91,29 @@ test('deleting a project cascades to delete its saved filters and activity logs'
     $this->assertDatabaseMissing('activity_logs', ['id' => $log->id]);
 });
 
-test('hasPermission() grants everything to an admin', function () {
+test('hasPermission() grants everything to an owner', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+
+    expect($project->hasPermission($owner, PermissionEnum::ROLES_DELETE))->toBeTrue();
+});
+
+test('hasPermission() grants everything to an admin once their system role is synced', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
+
+    expect($project->hasPermission($admin, PermissionEnum::ROLES_DELETE))->toBeTrue();
+});
+
+test('hasPermission() denies an admin whose system role has not been synced yet', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    expect($project->hasPermission($admin, PermissionEnum::ROLES_DELETE))->toBeTrue();
+    expect($project->hasPermission($admin, PermissionEnum::ROLES_DELETE))->toBeFalse();
 });
 
 test('hasPermission() denies a member without a matching role', function () {
@@ -116,7 +135,7 @@ test('hasPermission() grants access through a custom role holding the permission
     $member = User::factory()->create();
     $project->users()->attach($member->id, ['role' => 'member']);
 
-    $permission = Permission::create(['key' => 'projects.roles.delete', 'name' => 'Delete roles', 'group' => 'projects']);
+    $permission = Permission::where('key', 'projects.roles.delete')->first();
     $role = $project->roles()->create(['name' => 'Role Manager', 'slug' => 'role-manager', 'role' => 'custom']);
     $role->permissions()->attach($permission);
 

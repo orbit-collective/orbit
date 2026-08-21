@@ -1,6 +1,8 @@
 import { ProjectColors } from '@/types/Projects';
 
-export type ProjectMemberRole = 'admin' | 'member';
+export type ProjectMemberRole = 'owner' | 'admin' | 'member' | 'viewer';
+
+export type AssignableProjectMemberRole = Exclude<ProjectMemberRole, 'owner'>;
 
 export interface ProjectMember {
     id: number;

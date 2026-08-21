@@ -48,7 +48,7 @@ test('a project can be created', function () {
     $this->assertDatabaseHas('projects', ['name' => 'My New Project']);
 });
 
-test('the creator of a project is automatically attached to it as admin', function () {
+test('the creator of a project is automatically attached to it as owner', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)->post('/projects', [
@@ -59,7 +59,7 @@ test('the creator of a project is automatically attached to it as admin', functi
 
     $project = Project::where('name', 'Owned Project')->firstOrFail();
 
-    expect($project->users()->where('users.id', $user->id)->first()->pivot->role)->toBe('admin');
+    expect($project->users()->where('users.id', $user->id)->first()->pivot->role)->toBe('owner');
 });
 
 test('creating a project always slugifies the name, ignoring any client-submitted slug', function () {

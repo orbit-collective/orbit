@@ -1,9 +1,11 @@
 <?php
 
+use App\Enums\Permissions\RoleType;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Models\ProjectUser;
 use App\Models\User;
+use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -12,6 +14,7 @@ test('an admin can create a role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
 
     $response = $this->actingAs($admin)->post("/projects/{$project->id}/roles", [
         'name' => 'QA',
@@ -42,7 +45,7 @@ test('a member with a custom role granting roles.create can create a role', func
     $member = User::factory()->create();
     $project->users()->attach($member->id, ['role' => 'member']);
 
-    $permission = Permission::create(['key' => 'projects.roles.create', 'name' => 'Create roles', 'group' => 'projects']);
+    $permission = Permission::where('key', 'projects.roles.create')->first();
     $grantingRole = $project->roles()->create(['name' => 'Role Manager', 'slug' => 'role-manager', 'role' => 'custom']);
     $grantingRole->permissions()->attach($permission);
 
@@ -75,6 +78,7 @@ test('a role slug must be unique within the project', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->post("/projects/{$project->id}/roles", [
@@ -92,6 +96,8 @@ test('the same slug can be reused across different projects', function () {
     $admin = User::factory()->create();
     $projectA->users()->attach($admin->id, ['role' => 'admin']);
     $projectB->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($projectA, $admin->id, RoleType::ADMIN);
+    app(RoleService::class)->syncSystemRoleForMember($projectB, $admin->id, RoleType::ADMIN);
     $projectA->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->post("/projects/{$projectB->id}/roles", [
@@ -108,6 +114,7 @@ test('updating a role can keep its own slug without a uniqueness conflict', func
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}", [
@@ -122,6 +129,7 @@ test('updating a role rejects a slug already used by another role in the project
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $roleToRename = $project->roles()->create(['name' => 'Support', 'slug' => 'support', 'role' => 'custom']);
 
@@ -137,8 +145,9 @@ test('an admin can sync permissions for a role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
-    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    $permission = Permission::where('key', 'issues.view')->first();
 
     $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}/permissions", [
         'permissions' => [$permission->id],
@@ -152,8 +161,9 @@ test('syncing permissions accepts an empty array to clear all permissions', func
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
-    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    $permission = Permission::where('key', 'issues.view')->first();
     $role->permissions()->attach($permission);
 
     $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}/permissions", [
@@ -168,6 +178,7 @@ test('syncing permissions rejects an id that does not exist', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}/permissions", [
@@ -182,7 +193,7 @@ test('a member without the roles.update permission cannot sync permissions', fun
     $member = User::factory()->create();
     $project->users()->attach($member->id, ['role' => 'member']);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
-    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    $permission = Permission::where('key', 'issues.view')->first();
 
     $response = $this->actingAs($member)->patch("/projects/{$project->id}/roles/{$role->id}/permissions", [
         'permissions' => [$permission->id],
@@ -195,6 +206,7 @@ test('creating a role requires a name, slug and valid role type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
 
     $response = $this->actingAs($admin)->post("/projects/{$project->id}/roles", [
         'role' => 'owner-that-does-not-exist',
@@ -207,6 +219,7 @@ test('an admin can update a role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}", [
@@ -237,6 +250,7 @@ test('a role from another project cannot be updated through a mismatched project
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $otherProject->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}", [
@@ -251,6 +265,7 @@ test('an admin can delete a custom role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->delete("/projects/{$project->id}/roles/{$role->id}");

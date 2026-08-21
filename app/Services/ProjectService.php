@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Repositories\ProjectRepository;
 use Illuminate\Support\Collection;
@@ -19,8 +19,8 @@ class ProjectService
     public function createProject(array $data, int $creatorId): Project {
         $data['slug'] = Str::slug($data['name']);
         $project = $this->projectRepository->store($data);
-        $this->projectRepository->attachMember($project, $creatorId, ProjectRole::ADMIN);
-        $this->roleService->syncSystemRoleForMember($project, $creatorId, ProjectRole::ADMIN);
+        $this->projectRepository->attachMember($project, $creatorId, RoleType::OWNER);
+        $this->roleService->syncSystemRoleForMember($project, $creatorId, RoleType::OWNER);
         $this->activityLogService->log($project->id, "Created project: $project->name");
 
         return $project;

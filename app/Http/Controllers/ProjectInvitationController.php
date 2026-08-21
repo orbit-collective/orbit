@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Services\ProjectInvitationService;
@@ -23,13 +23,13 @@ class ProjectInvitationController extends Controller
 
         $validated = $request->validate([
             'email' => 'required|string|email|max:255',
-            'role' => ['required', Rule::enum(ProjectRole::class)],
+            'role' => ['required', Rule::enum(RoleType::class)->except([RoleType::OWNER, RoleType::CUSTOM])],
         ]);
 
         $this->projectInvitationService->invite(
             $project,
             $validated['email'],
-            ProjectRole::from($validated['role']),
+            RoleType::from($validated['role']),
             $request->user()
         );
 

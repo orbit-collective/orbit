@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\User;
 
@@ -22,7 +22,7 @@ class ProjectPolicy
     {
         return $project->users()
             ->where('users.id', $user->id)
-            ->wherePivot('role', ProjectRole::ADMIN->value)
+            ->wherePivotIn('role', [RoleType::OWNER->value, RoleType::ADMIN->value])
             ->exists();
     }
 }
