@@ -4,13 +4,25 @@ namespace App\Repositories;
 
 use App\Enums\ProjectRole;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use Illuminate\Database\Eloquent\Collection;
 
 class ProjectMemberRepository
 {
     public function getMembers(Project $project): Collection
     {
-        return $project->users()->get();
+        $members = $project->users()->get();
+
+        $rolesByPivotId = ProjectUser::with('roles')
+            ->whereIn('id', $members->pluck('pivot.id'))
+            ->get()
+            ->keyBy('id');
+
+        $members->each(
+            fn ($member) => $member->pivot->setRelation('roles', $rolesByPivotId[$member->pivot->id]->roles)
+        );
+
+        return $members;
     }
 
     public function isMember(Project $project, int $userId): bool
@@ -38,5 +50,12 @@ class ProjectMemberRepository
     public function removeMember(Project $project, int $userId): void
     {
         $project->users()->detach($userId);
+    }
+
+    public function syncRoles(Project $project, int $userId, array $roleIds): void
+    {
+        $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $userId)->first();
+
+        $projectUser?->roles()->sync($roleIds);
     }
 }

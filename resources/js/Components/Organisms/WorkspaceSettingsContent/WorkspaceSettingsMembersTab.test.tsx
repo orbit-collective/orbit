@@ -72,6 +72,7 @@ const admin: ProjectMember = {
     avatar: null,
     role: 'admin',
     joinedAt: new Date().toISOString(),
+    roleIds: [],
 };
 
 const member: ProjectMember = {
@@ -81,6 +82,7 @@ const member: ProjectMember = {
     avatar: null,
     role: 'member',
     joinedAt: new Date().toISOString(),
+    roleIds: [],
 };
 
 const renderTab = (

@@ -24,6 +24,22 @@ test('it can get the members of a project', function () {
     expect($members)->toHaveCount(2);
 });
 
+test('it eager loads each member\'s custom roles on the pivot', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $projectUser = App\Models\ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $projectUser->roles()->attach($role->id);
+
+    $members = $this->repository->getMembers($project);
+    $loadedMember = $members->firstWhere('id', $member->id);
+
+    expect($loadedMember->pivot->roles)->toHaveCount(1);
+    expect($loadedMember->pivot->roles->first()->id)->toBe($role->id);
+});
+
 test('it reports whether a user is a member of a project', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
@@ -79,4 +95,26 @@ test('it can remove a member from a project', function () {
     $this->repository->removeMember($project, $member->id);
 
     expect($this->repository->isMember($project, $member->id))->toBeFalse();
+});
+
+test('it can sync a member\'s custom roles', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $this->repository->syncRoles($project, $member->id, [$role->id]);
+
+    $projectUser = App\Models\ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
+});
+
+test('syncing roles for a non-member does nothing', function () {
+    $project = Project::factory()->create();
+    $outsider = User::factory()->create();
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $this->repository->syncRoles($project, $outsider->id, [$role->id]);
+
+    expect(App\Models\ProjectUser::where('project_id', $project->id)->where('user_id', $outsider->id)->exists())->toBeFalse();
 });

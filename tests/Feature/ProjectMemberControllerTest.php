@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -116,4 +118,92 @@ test('guests cannot manage project members', function () {
     $response = $this->delete("/projects/{$project->id}/members/{$member->id}");
 
     $response->assertRedirect(route('login'));
+});
+
+test('an admin can assign a custom role to a member', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/members/{$member->id}/roles", [
+        'roles' => [$role->id],
+    ]);
+
+    $response->assertRedirect();
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
+});
+
+test('a member with the roles.assign permission can assign a custom role', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $target = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $project->users()->attach($target->id, ['role' => 'member']);
+
+    $permission = Permission::create(['key' => 'projects.roles.assign', 'name' => 'Assign roles', 'group' => 'projects']);
+    $grantingRole = $project->roles()->create(['name' => 'Role Manager', 'slug' => 'role-manager', 'role' => 'custom']);
+    $grantingRole->permissions()->attach($permission);
+    $memberPivot = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $memberPivot->roles()->attach($grantingRole->id);
+
+    $qaRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($member)->patch("/projects/{$project->id}/members/{$target->id}/roles", [
+        'roles' => [$qaRole->id],
+    ]);
+
+    $response->assertRedirect();
+});
+
+test('a member without the roles.assign permission cannot assign a custom role', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $target = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $project->users()->attach($target->id, ['role' => 'member']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($member)->patch("/projects/{$project->id}/members/{$target->id}/roles", [
+        'roles' => [$role->id],
+    ]);
+
+    $response->assertForbidden();
+});
+
+test('assigning roles accepts an empty array to clear all custom roles', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $projectUser->roles()->attach($role->id);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/members/{$member->id}/roles", [
+        'roles' => [],
+    ]);
+
+    $response->assertRedirect();
+    expect($projectUser->roles()->count())->toBe(0);
+});
+
+test('assigning a role from another project is rejected', function () {
+    $project = Project::factory()->create();
+    $otherProject = Project::factory()->create();
+    $admin = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $foreignRole = $otherProject->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/members/{$member->id}/roles", [
+        'roles' => [$foreignRole->id],
+    ]);
+
+    $response->assertSessionHasErrors('roles.0');
 });

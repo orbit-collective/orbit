@@ -24,6 +24,7 @@ interface WorkspaceSettingsContentProps {
     roles?: WorkspaceRole[];
     permissions?: PermissionDefinition[];
     canManageRoles?: boolean;
+    canAssignRoles?: boolean;
 }
 
 export default function WorkspaceSettingsContent({
@@ -36,6 +37,7 @@ export default function WorkspaceSettingsContent({
     roles = [],
     permissions = [],
     canManageRoles = false,
+    canAssignRoles = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return <WorkspaceSettingsLabelsTab />;
@@ -65,6 +67,8 @@ export default function WorkspaceSettingsContent({
                 viewerRole={viewerRole}
                 members={members}
                 pendingInvitations={pendingInvitations}
+                roles={roles}
+                canAssignRoles={canAssignRoles}
             />
         );
     }

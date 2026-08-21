@@ -59,6 +59,9 @@ class SettingsController extends Controller
             'canManageRoles' => $selectedProject
                 ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_UPDATE)
                 : false,
+            'canAssignRoles' => $selectedProject
+                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_ASSIGN)
+                : false,
         ]);
     }
 
@@ -80,6 +83,7 @@ class SettingsController extends Controller
             'avatar' => $member->avatar,
             'role' => $member->pivot->role,
             'joinedAt' => $member->pivot->created_at,
+            'roleIds' => $member->pivot->roles->pluck('id')->values()->all(),
         ])->values()->all();
     }
 

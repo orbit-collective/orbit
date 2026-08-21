@@ -36,6 +36,7 @@ interface SettingsIndexProps {
     roles?: WorkspaceRole[];
     permissions?: PermissionDefinition[];
     canManageRoles?: boolean;
+    canAssignRoles?: boolean;
 }
 
 export default function SettingsIndex({
@@ -49,6 +50,7 @@ export default function SettingsIndex({
     roles = [],
     permissions = [],
     canManageRoles = false,
+    canAssignRoles = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -132,6 +134,7 @@ export default function SettingsIndex({
                                 roles={roles}
                                 permissions={permissions}
                                 canManageRoles={canManageRoles}
+                                canAssignRoles={canAssignRoles}
                             />
                         ) : (
                             <SettingsPanel

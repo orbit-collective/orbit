@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/{project}/columns', [ProjectController::class, 'updateColumns'])->name('projects.columns.update');
     Route::patch('/projects/{project}/members/{user}', [ProjectMemberController::class, 'updateRole'])->name('projects.members.update-role');
     Route::delete('/projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+    Route::patch('/projects/{project}/members/{user}/roles', [ProjectMemberController::class, 'syncRoles'])->name('projects.members.roles.update');
     Route::post('/projects/{project}/roles', [RoleController::class, 'store'])->name('projects.roles.store');
     Route::patch('/projects/{project}/roles/{role}', [RoleController::class, 'update'])->name('projects.roles.update');
     Route::patch('/projects/{project}/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('projects.roles.permissions.update');

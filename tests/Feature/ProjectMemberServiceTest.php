@@ -86,3 +86,24 @@ test('it throws when removing someone who is not a member', function () {
 
     $this->service->removeMember($project, $outsider);
 })->throws(ValidationException::class);
+
+test('it can sync a member\'s custom roles and logs the change', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $this->service->syncRoles($project, $member, [$role->id]);
+
+    $projectUser = App\Models\ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => "Updated {$member->name}'s custom roles"]);
+});
+
+test('it throws when syncing roles for someone who is not a member', function () {
+    $project = Project::factory()->create();
+    $outsider = User::factory()->create();
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $this->service->syncRoles($project, $outsider, [$role->id]);
+})->throws(ValidationException::class);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ProjectRole;
 use App\Models\Project;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\ProjectMemberService;
 use Illuminate\Http\RedirectResponse;
@@ -36,5 +37,19 @@ class ProjectMemberController extends Controller
         $this->projectMemberService->removeMember($project, $user);
 
         return redirect()->back()->with('success', "$user->name has been removed from the project.");
+    }
+
+    public function syncRoles(Request $request, Project $project, User $user): RedirectResponse
+    {
+        $this->authorize('assign', [Role::class, $project]);
+
+        $validated = $request->validate([
+            'roles' => ['present', 'array'],
+            'roles.*' => ['integer', Rule::exists('roles', 'id')->where('project_id', $project->id)],
+        ]);
+
+        $this->projectMemberService->syncRoles($project, $user, $validated['roles']);
+
+        return redirect()->back()->with('success', "$user->name's roles have been updated.");
     }
 }

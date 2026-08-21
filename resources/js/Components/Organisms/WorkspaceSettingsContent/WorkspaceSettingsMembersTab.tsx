@@ -1,6 +1,7 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Button from '@/Components/Atoms/Button/Button';
+import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
 import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -16,6 +17,7 @@ import {
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
+import { WorkspaceRole } from '@/types/Roles';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
 import { formatDate } from '@/utils/time';
@@ -219,12 +221,70 @@ function RoleDropdown({ value, onChange, disabled }: RoleDropdownProps) {
     );
 }
 
+interface CustomRolesDropdownProps {
+    roles: WorkspaceRole[];
+    selectedRoleIds: number[];
+    onToggle: (roleId: number, enabled: boolean) => void;
+    disabled?: boolean;
+}
+
+function CustomRolesDropdown({
+    roles,
+    selectedRoleIds,
+    onToggle,
+    disabled,
+}: CustomRolesDropdownProps) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    if (roles.length === 0) {
+        return null;
+    }
+
+    const label =
+        selectedRoleIds.length === 0
+            ? 'No custom roles'
+            : `${selectedRoleIds.length} custom role${
+                  selectedRoleIds.length === 1 ? '' : 's'
+              }`;
+
+    return (
+        <PortalDropdown
+            isOpen={isOpen}
+            onOpenChange={setIsOpen}
+            trigger={
+                <DropdownTrigger
+                    className="w-44"
+                    disabled={disabled}
+                    label={label}
+                    onClick={() => setIsOpen(!isOpen)}
+                />
+            }
+        >
+            {roles.map((role) => (
+                <Checkbox
+                    key={role.id}
+                    id={`member-role-${role.id}`}
+                    className="w-full px-3 py-2"
+                    label={role.name}
+                    checked={selectedRoleIds.includes(role.id)}
+                    isDisabled={disabled}
+                    onChange={(event) =>
+                        onToggle(role.id, event.target.checked)
+                    }
+                />
+            ))}
+        </PortalDropdown>
+    );
+}
+
 interface WorkspaceSettingsMembersTabProps {
     memberProjects?: MemberProjectSummary[];
     selectedProjectId?: number | null;
     viewerRole?: ProjectMemberRole | null;
     members?: ProjectMember[];
     pendingInvitations?: PendingProjectInvitation[];
+    roles?: WorkspaceRole[];
+    canAssignRoles?: boolean;
 }
 
 export default function WorkspaceSettingsMembersTab({
@@ -233,11 +293,14 @@ export default function WorkspaceSettingsMembersTab({
     viewerRole = null,
     members = [],
     pendingInvitations = [],
+    roles = [],
+    canAssignRoles = false,
 }: WorkspaceSettingsMembersTabProps) {
     const { props } = usePage<PageProps>();
     const emailEnabled = props.emailEnabled;
     const { addAlert } = useAlert();
     const isAdmin = viewerRole === 'admin';
+    const assignableRoles = roles.filter((role) => !role.isSystem);
 
     const selectedProject =
         memberProjects.find((project) => project.id === selectedProjectId) ??
@@ -329,6 +392,35 @@ export default function WorkspaceSettingsMembersTab({
                     if (errors.role) {
                         addAlert(errors.role, 'error');
                     }
+                },
+            },
+        );
+    };
+
+    const toggleMemberCustomRole = (
+        member: ProjectMember,
+        roleId: number,
+        enabled: boolean,
+    ) => {
+        if (!selectedProject) {
+            return;
+        }
+
+        const nextRoleIds = enabled
+            ? [...member.roleIds, roleId]
+            : member.roleIds.filter((id) => id !== roleId);
+
+        router.patch(
+            `/projects/${selectedProject.id}/members/${member.id}/roles`,
+            { roles: nextRoleIds },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => {
+                    addAlert(
+                        `Couldn't update ${member.name}'s roles.`,
+                        'error',
+                    );
                 },
             },
         );
@@ -479,6 +571,18 @@ export default function WorkspaceSettingsMembersTab({
                                 ) : (
                                     <RoleBadge role={member.role} />
                                 )}
+                                <CustomRolesDropdown
+                                    roles={assignableRoles}
+                                    selectedRoleIds={member.roleIds}
+                                    disabled={!canAssignRoles}
+                                    onToggle={(roleId, enabled) =>
+                                        toggleMemberCustomRole(
+                                            member,
+                                            roleId,
+                                            enabled,
+                                        )
+                                    }
+                                />
                                 {isAdmin && (
                                     <button
                                         type="button"
