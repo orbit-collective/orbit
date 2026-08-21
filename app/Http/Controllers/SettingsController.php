@@ -56,8 +56,14 @@ class SettingsController extends Controller
                 ? $this->mapRoles($this->roleService->getRoles($selectedProject)->loadMissing('members'))
                 : [],
             'permissions' => $this->mapPermissions($this->permissionService->getAll()),
-            'canManageRoles' => $selectedProject
+            'canCreateRoles' => $selectedProject
+                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_CREATE)
+                : false,
+            'canUpdateRoles' => $selectedProject
                 ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_UPDATE)
+                : false,
+            'canDeleteRoles' => $selectedProject
+                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_DELETE)
                 : false,
             'canAssignRoles' => $selectedProject
                 ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_ASSIGN)

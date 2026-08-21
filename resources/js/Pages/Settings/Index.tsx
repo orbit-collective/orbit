@@ -35,7 +35,9 @@ interface SettingsIndexProps {
     pendingInvitations?: PendingProjectInvitation[];
     roles?: WorkspaceRole[];
     permissions?: PermissionDefinition[];
-    canManageRoles?: boolean;
+    canCreateRoles?: boolean;
+    canUpdateRoles?: boolean;
+    canDeleteRoles?: boolean;
     canAssignRoles?: boolean;
 }
 
@@ -49,7 +51,9 @@ export default function SettingsIndex({
     pendingInvitations = [],
     roles = [],
     permissions = [],
-    canManageRoles = false,
+    canCreateRoles = false,
+    canUpdateRoles = false,
+    canDeleteRoles = false,
     canAssignRoles = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
@@ -133,7 +137,9 @@ export default function SettingsIndex({
                                 pendingInvitations={pendingInvitations}
                                 roles={roles}
                                 permissions={permissions}
-                                canManageRoles={canManageRoles}
+                                canCreateRoles={canCreateRoles}
+                                canUpdateRoles={canUpdateRoles}
+                                canDeleteRoles={canDeleteRoles}
                                 canAssignRoles={canAssignRoles}
                             />
                         ) : (

@@ -49,6 +49,33 @@ class ProjectMemberService
         $this->activityLogService->log($project->id, "Updated $member->name's custom roles");
     }
 
+    public function transferOwnership(Project $project, User $currentOwner, User $newOwner): void
+    {
+        if ($this->projectMemberRepository->roleOf($project, $currentOwner->id) !== RoleType::OWNER) {
+            throw ValidationException::withMessages([
+                'owner' => 'Only the current owner can transfer ownership.',
+            ]);
+        }
+
+        $this->assertIsMember($project, $newOwner);
+
+        if ($newOwner->id === $currentOwner->id) {
+            throw ValidationException::withMessages([
+                'user' => 'This user already owns the project.',
+            ]);
+        }
+
+        $this->projectMemberRepository->updateRole($project, $currentOwner->id, RoleType::ADMIN);
+        $this->projectMemberRepository->updateRole($project, $newOwner->id, RoleType::OWNER);
+        $this->roleService->syncSystemRoleForMember($project, $currentOwner->id, RoleType::ADMIN);
+        $this->roleService->syncSystemRoleForMember($project, $newOwner->id, RoleType::OWNER);
+
+        $this->activityLogService->log(
+            $project->id,
+            "Transferred project ownership from $currentOwner->name to $newOwner->name"
+        );
+    }
+
     private function assertIsMember(Project $project, User $member): void
     {
         if (! $this->projectMemberRepository->isMember($project, $member->id)) {

@@ -125,7 +125,9 @@ interface WorkspaceSettingsRolesTabProps {
     selectedProjectId?: number | null;
     roles?: WorkspaceRole[];
     permissions?: PermissionDefinition[];
-    canManageRoles?: boolean;
+    canCreateRoles?: boolean;
+    canUpdateRoles?: boolean;
+    canDeleteRoles?: boolean;
 }
 
 export default function WorkspaceSettingsRolesTab({
@@ -133,7 +135,9 @@ export default function WorkspaceSettingsRolesTab({
     selectedProjectId = null,
     roles = [],
     permissions = [],
-    canManageRoles = false,
+    canCreateRoles = false,
+    canUpdateRoles = false,
+    canDeleteRoles = false,
 }: WorkspaceSettingsRolesTabProps) {
     const { addAlert } = useAlert();
 
@@ -211,7 +215,7 @@ export default function WorkspaceSettingsRolesTab({
     );
 
     const canEditSelectedRole =
-        canManageRoles && selectedRole !== null && !selectedRole.isSystem;
+        canUpdateRoles && selectedRole !== null && !selectedRole.isSystem;
 
     const togglePermission = (
         role: WorkspaceRole,
@@ -433,7 +437,7 @@ export default function WorkspaceSettingsRolesTab({
                             to members, on top of their base Admin/Member
                             access.
                         </p>
-                        {canManageRoles && (
+                        {canCreateRoles && (
                             <button
                                 type="button"
                                 onClick={() => setIsCreateModalOpen(true)}
@@ -502,7 +506,7 @@ export default function WorkspaceSettingsRolesTab({
                                     );
                                 })}
 
-                                {canManageRoles && (
+                                {canCreateRoles && (
                                     <button
                                         type="button"
                                         onClick={() =>
@@ -639,8 +643,8 @@ export default function WorkspaceSettingsRolesTab({
                                                             System role
                                                         </span>
                                                     ) : (
-                                                        canManageRoles && (
-                                                            <>
+                                                        <>
+                                                            {canUpdateRoles && (
                                                                 <button
                                                                     type="button"
                                                                     title="Rename role"
@@ -658,6 +662,8 @@ export default function WorkspaceSettingsRolesTab({
                                                                         }
                                                                     />
                                                                 </button>
+                                                            )}
+                                                            {canDeleteRoles && (
                                                                 <button
                                                                     type="button"
                                                                     title="Delete role"
@@ -675,8 +681,8 @@ export default function WorkspaceSettingsRolesTab({
                                                                         }
                                                                     />
                                                                 </button>
-                                                            </>
-                                                        )
+                                                            )}
+                                                        </>
                                                     )}
                                                 </div>
                                             )}
@@ -875,7 +881,7 @@ export default function WorkspaceSettingsRolesTab({
                 )}
             </SettingsPanel>
 
-            {!canManageRoles && (
+            {!canCreateRoles && !canUpdateRoles && !canDeleteRoles && (
                 <SettingsPanel
                     title="Read-only access"
                     description="You can see how roles are configured, but you don't have permission to change them."
@@ -883,7 +889,7 @@ export default function WorkspaceSettingsRolesTab({
                 >
                     <SettingsPanelRow
                         title="Ask a project admin"
-                        description="Only members with the roles.update permission can edit roles or their permissions."
+                        description="Only members with the roles.create, roles.update or roles.delete permission can manage roles."
                     />
                 </SettingsPanel>
             )}

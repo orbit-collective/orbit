@@ -52,4 +52,19 @@ class ProjectMemberController extends Controller
 
         return redirect()->back()->with('success', "$user->name's roles have been updated.");
     }
+
+    public function transferOwnership(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorize('transferOwnership', $project);
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', Rule::exists('project_user', 'user_id')->where('project_id', $project->id)],
+        ]);
+
+        $newOwner = User::findOrFail($validated['user_id']);
+
+        $this->projectMemberService->transferOwnership($project, $request->user(), $newOwner);
+
+        return redirect()->back()->with('success', "Ownership has been transferred to $newOwner->name.");
+    }
 }

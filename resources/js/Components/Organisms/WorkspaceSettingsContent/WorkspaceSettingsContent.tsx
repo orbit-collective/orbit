@@ -23,7 +23,9 @@ interface WorkspaceSettingsContentProps {
     pendingInvitations?: PendingProjectInvitation[];
     roles?: WorkspaceRole[];
     permissions?: PermissionDefinition[];
-    canManageRoles?: boolean;
+    canCreateRoles?: boolean;
+    canUpdateRoles?: boolean;
+    canDeleteRoles?: boolean;
     canAssignRoles?: boolean;
 }
 
@@ -36,7 +38,9 @@ export default function WorkspaceSettingsContent({
     pendingInvitations = [],
     roles = [],
     permissions = [],
-    canManageRoles = false,
+    canCreateRoles = false,
+    canUpdateRoles = false,
+    canDeleteRoles = false,
     canAssignRoles = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
@@ -79,7 +83,9 @@ export default function WorkspaceSettingsContent({
             selectedProjectId={selectedProjectId}
             roles={roles}
             permissions={permissions}
-            canManageRoles={canManageRoles}
+            canCreateRoles={canCreateRoles}
+            canUpdateRoles={canUpdateRoles}
+            canDeleteRoles={canDeleteRoles}
         />
     );
 }

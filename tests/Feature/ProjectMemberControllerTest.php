@@ -212,3 +212,60 @@ test('assigning a role from another project is rejected', function () {
 
     $response->assertSessionHasErrors('roles.0');
 });
+
+test('an owner can transfer ownership to another member', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $response = $this->actingAs($owner)->patch("/projects/{$project->id}/transfer-ownership", [
+        'user_id' => $member->id,
+    ]);
+
+    $response->assertRedirect();
+    expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('owner');
+    expect($project->users()->where('users.id', $owner->id)->first()->pivot->role)->toBe('admin');
+});
+
+test('an admin cannot transfer ownership', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/transfer-ownership", [
+        'user_id' => $member->id,
+    ]);
+
+    $response->assertForbidden();
+});
+
+test('ownership cannot be transferred to a non-member', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $outsider = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($owner)->patch("/projects/{$project->id}/transfer-ownership", [
+        'user_id' => $outsider->id,
+    ]);
+
+    $response->assertSessionHasErrors('user_id');
+});
+
+test('guests cannot transfer ownership', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $response = $this->patch("/projects/{$project->id}/transfer-ownership", [
+        'user_id' => $member->id,
+    ]);
+
+    $response->assertRedirect(route('login'));
+});

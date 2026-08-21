@@ -255,6 +255,33 @@ describe('WorkspaceSettingsMembersTab', () => {
         expect(screen.getAllByText('Member')).toHaveLength(1);
     });
 
+    test('a non-owner does not see the transfer ownership panel', () => {
+        renderTab({ viewerRole: 'admin' });
+
+        expect(screen.queryByText('Ownership')).not.toBeInTheDocument();
+    });
+
+    test('an owner can transfer ownership to another member', async () => {
+        const user = userEvent.setup();
+        renderTab({ viewerRole: 'owner' });
+
+        await user.click(
+            screen.getByRole('button', { name: 'Transfer ownership' }),
+        );
+        const candidateNames = screen.getAllByText('Mark Member');
+        await user.click(candidateNames[candidateNames.length - 1]);
+        const transferButtons = screen.getAllByRole('button', {
+            name: 'Transfer ownership',
+        });
+        await user.click(transferButtons[transferButtons.length - 1]);
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects/1/transfer-ownership',
+            { user_id: 2 },
+            expect.any(Object),
+        );
+    });
+
     test('switching the active project navigates to its members', async () => {
         const otherProject: MemberProjectSummary = {
             id: 2,
