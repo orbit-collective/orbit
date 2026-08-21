@@ -41,4 +41,18 @@ class ProjectService
 
         return $project;
     }
+
+    public function updateDetails(Project $project, array $data): Project
+    {
+        $project = $this->projectRepository->update($project, $data);
+
+        $this->activityLogService->log($project->id, "Updated project details");
+
+        return $project;
+    }
+
+    public function deleteProject(Project $project): void
+    {
+        $this->projectRepository->delete($project);
+    }
 }

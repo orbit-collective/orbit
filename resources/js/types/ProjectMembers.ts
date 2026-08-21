@@ -27,3 +27,9 @@ export interface MemberProjectSummary {
     name: string;
     color: ProjectColors;
 }
+
+export interface ProjectDetails {
+    name: string;
+    description: string | null;
+    color: ProjectColors;
+}

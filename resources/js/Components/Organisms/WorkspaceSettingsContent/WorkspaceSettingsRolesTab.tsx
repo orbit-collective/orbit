@@ -128,6 +128,7 @@ interface WorkspaceSettingsRolesTabProps {
     canCreateRoles?: boolean;
     canUpdateRoles?: boolean;
     canDeleteRoles?: boolean;
+    hasSettingsAccess?: boolean;
 }
 
 export default function WorkspaceSettingsRolesTab({
@@ -138,6 +139,7 @@ export default function WorkspaceSettingsRolesTab({
     canCreateRoles = false,
     canUpdateRoles = false,
     canDeleteRoles = false,
+    hasSettingsAccess = false,
 }: WorkspaceSettingsRolesTabProps) {
     const { addAlert } = useAlert();
 
@@ -342,6 +344,21 @@ export default function WorkspaceSettingsRolesTab({
                 <SettingsPanelRow
                     title="You're not part of any project yet"
                     description="Create or join a project to manage its roles here."
+                />
+            </SettingsPanel>
+        );
+    }
+
+    if (!hasSettingsAccess) {
+        return (
+            <SettingsPanel
+                title="Roles and permissions"
+                description="Define granular roles and control exactly what each one can do."
+                icon="Shield"
+            >
+                <SettingsPanelRow
+                    title="You don't have access to this project's settings"
+                    description="Ask a project admin for the settings.view permission to see roles and permissions here."
                 />
             </SettingsPanel>
         );

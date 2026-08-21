@@ -62,6 +62,28 @@ test('a member with a custom role granting roles.create can create a role', func
     $this->assertDatabaseHas('roles', ['project_id' => $project->id, 'name' => 'QA']);
 });
 
+test('a member with a custom role granting only settings.update can create a role', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $permission = Permission::where('key', 'projects.settings.update')->first();
+    $grantingRole = $project->roles()->create(['name' => 'Settings Manager', 'slug' => 'settings-manager', 'role' => 'custom']);
+    $grantingRole->permissions()->attach($permission);
+
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $projectUser->roles()->attach($grantingRole->id);
+
+    $response = $this->actingAs($member)->post("/projects/{$project->id}/roles", [
+        'name' => 'QA',
+        'slug' => 'qa',
+        'role' => 'custom',
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('roles', ['project_id' => $project->id, 'name' => 'QA']);
+});
+
 test('an outsider cannot create a role', function () {
     $project = Project::factory()->create();
 

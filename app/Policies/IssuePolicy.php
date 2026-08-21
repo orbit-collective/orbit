@@ -10,6 +10,8 @@ use App\Models\User;
 
 class IssuePolicy
 {
+    private const array MODIFY_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
+
     public function view(User $user, Issue $issue): bool
     {
         return $issue->project->users()->where('users.id', $user->id)->exists();
@@ -17,32 +19,36 @@ class IssuePolicy
 
     public function create(User $user, Project $project): bool
     {
-        return $this->canModify($user, $project, Permission::ISSUES_CREATE);
+        return $project->hasPermissionOrTier($user, Permission::ISSUES_CREATE, self::MODIFY_TIERS);
     }
 
     public function update(User $user, Issue $issue): bool
     {
-        return $this->canModify($user, $issue->project, Permission::ISSUES_UPDATE);
+        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_UPDATE, self::MODIFY_TIERS);
     }
 
     public function delete(User $user, Issue $issue): bool
     {
-        return $this->canModify($user, $issue->project, Permission::ISSUES_DELETE);
+        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_DELETE, self::MODIFY_TIERS);
     }
 
-    /**
-     * Owner/Admin/Member keep working regardless of whether their system role has
-     * been synced yet — only the read-only Viewer tier (and anyone else lacking the
-     * permission) is turned away here, falling back to the granular permission.
-     */
-    private function canModify(User $user, Project $project, Permission $permission): bool
+    public function assign(User $user, Issue $issue): bool
     {
-        $role = $project->users()->where('users.id', $user->id)->first()?->pivot->role;
+        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_ASSIGN, self::MODIFY_TIERS);
+    }
 
-        if (in_array($role, [RoleType::OWNER->value, RoleType::ADMIN->value, RoleType::MEMBER->value], true)) {
-            return true;
-        }
+    public function changeStatus(User $user, Issue $issue): bool
+    {
+        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_CHANGE_STATUS, self::MODIFY_TIERS);
+    }
 
-        return $project->hasPermission($user, $permission);
+    public function changePriority(User $user, Issue $issue): bool
+    {
+        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_CHANGE_PRIORITY, self::MODIFY_TIERS);
+    }
+
+    public function changeLabels(User $user, Issue $issue): bool
+    {
+        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_CHANGE_LABELS, self::MODIFY_TIERS);
     }
 }

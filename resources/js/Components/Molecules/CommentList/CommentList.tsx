@@ -4,7 +4,7 @@ import React from 'react';
 
 const CommentList: React.FC<CommentListProps> = ({
     comments,
-    currentUserId,
+    onEdit,
     onDelete,
 }) => {
     if (comments.length === 0) {
@@ -21,7 +21,7 @@ const CommentList: React.FC<CommentListProps> = ({
                 <CommentItem
                     key={comment.id}
                     comment={comment}
-                    canDelete={comment.user_id === currentUserId}
+                    onEdit={onEdit}
                     onDelete={onDelete}
                 />
             ))}

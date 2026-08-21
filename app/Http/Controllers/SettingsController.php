@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Permissions\Permission as PermissionEnum;
+use App\Enums\Permissions\RoleType;
 use App\Models\Permission as PermissionModel;
 use App\Models\Project;
 use App\Models\Role;
@@ -36,6 +37,10 @@ class SettingsController extends Controller
         $projects = $this->projectService->getAllForUser($user->id);
         $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
 
+        $viewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
+        $hasSettingsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::SETTINGS_VIEW, $viewTiers) ?? false;
+        $hasRolesAccess = $hasSettingsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::ROLES_VIEW, $viewTiers);
+
         return Inertia::render('Settings/Index', [
             'sessions' => $this->userService->getUserSessions($user),
             'notificationSettings' => $this->notificationSettingService->getAllSettings($user->id),
@@ -45,6 +50,11 @@ class SettingsController extends Controller
                 'color' => $project->color,
             ])->values(),
             'selectedProjectId' => $selectedProject?->id,
+            'selectedProjectDetails' => $selectedProject ? [
+                'name' => $selectedProject->name,
+                'description' => $selectedProject->description,
+                'color' => $selectedProject->color,
+            ] : null,
             'viewerRole' => $selectedProject?->users()->where('users.id', $user->id)->first()?->pivot->role,
             'members' => $selectedProject
                 ? $this->mapMembers($this->projectMemberService->getMembers($selectedProject))
@@ -52,21 +62,24 @@ class SettingsController extends Controller
             'pendingInvitations' => $selectedProject
                 ? $this->mapInvitations($this->projectInvitationService->getPending($selectedProject))
                 : [],
-            'roles' => $selectedProject
+            'roles' => $hasRolesAccess
                 ? $this->mapRoles($this->roleService->getRoles($selectedProject)->loadMissing('members'))
                 : [],
-            'permissions' => $this->mapPermissions($this->permissionService->getAll()),
-            'canCreateRoles' => $selectedProject
-                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_CREATE)
-                : false,
-            'canUpdateRoles' => $selectedProject
-                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_UPDATE)
-                : false,
-            'canDeleteRoles' => $selectedProject
-                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_DELETE)
-                : false,
+            'permissions' => $hasRolesAccess
+                ? $this->mapPermissions($this->permissionService->getAll())
+                : [],
+            'hasSettingsAccess' => $hasSettingsAccess,
+            'canCreateRoles' => $hasRolesAccess && $selectedProject->hasPermission($user, PermissionEnum::ROLES_CREATE),
+            'canUpdateRoles' => $hasRolesAccess && $selectedProject->hasPermission($user, PermissionEnum::ROLES_UPDATE),
+            'canDeleteRoles' => $hasRolesAccess && $selectedProject->hasPermission($user, PermissionEnum::ROLES_DELETE),
             'canAssignRoles' => $selectedProject
                 ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_ASSIGN)
+                : false,
+            'canUpdateProjectDetails' => $selectedProject
+                ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_UPDATE, [RoleType::OWNER, RoleType::ADMIN])
+                : false,
+            'canDeleteProject' => $selectedProject
+                ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
                 : false,
         ]);
     }

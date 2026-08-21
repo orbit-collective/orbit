@@ -6,6 +6,7 @@ import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
 import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
+import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
@@ -15,9 +16,11 @@ import {
     AssignableProjectMemberRole,
     MemberProjectSummary,
     PendingProjectInvitation,
+    ProjectDetails,
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
+import { AVAILABLE_COLORS } from '@/types/Projects';
 import { WorkspaceRole } from '@/types/Roles';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
@@ -32,6 +35,7 @@ import {
     useState,
 } from 'react';
 import { createPortal } from 'react-dom';
+import WorkspaceSettingsDeleteProjectModal from './WorkspaceSettingsDeleteProjectModal';
 import WorkspaceSettingsTransferOwnershipModal from './WorkspaceSettingsTransferOwnershipModal';
 
 const ROLE_LABELS: Record<ProjectMemberRole, string> = {
@@ -300,6 +304,9 @@ interface WorkspaceSettingsMembersTabProps {
     pendingInvitations?: PendingProjectInvitation[];
     roles?: WorkspaceRole[];
     canAssignRoles?: boolean;
+    selectedProjectDetails?: ProjectDetails | null;
+    canUpdateProjectDetails?: boolean;
+    canDeleteProject?: boolean;
 }
 
 export default function WorkspaceSettingsMembersTab({
@@ -310,6 +317,9 @@ export default function WorkspaceSettingsMembersTab({
     pendingInvitations = [],
     roles = [],
     canAssignRoles = false,
+    selectedProjectDetails = null,
+    canUpdateProjectDetails = false,
+    canDeleteProject = false,
 }: WorkspaceSettingsMembersTabProps) {
     const { props } = usePage<PageProps>();
     const emailEnabled = props.emailEnabled;
@@ -317,7 +327,48 @@ export default function WorkspaceSettingsMembersTab({
     const isManager = viewerRole === 'owner' || viewerRole === 'admin';
     const [isTransferOwnershipModalOpen, setIsTransferOwnershipModalOpen] =
         useState(false);
+    const [isDeleteProjectModalOpen, setIsDeleteProjectModalOpen] =
+        useState(false);
+    const [projectDetailsDraft, setProjectDetailsDraft] =
+        useState<ProjectDetails | null>(selectedProjectDetails);
+    const [isSavingDetails, setIsSavingDetails] = useState(false);
+    useEffect(() => {
+        setProjectDetailsDraft(selectedProjectDetails);
+    }, [selectedProjectDetails]);
     const assignableRoles = roles.filter((role) => !role.isSystem);
+
+    const saveProjectDetails = (event: SyntheticEvent) => {
+        event.preventDefault();
+        if (!selectedProjectId || !projectDetailsDraft) {
+            return;
+        }
+
+        router.patch(
+            `/projects/${selectedProjectId}/details`,
+            {
+                name: projectDetailsDraft.name,
+                description: projectDetailsDraft.description,
+                color: projectDetailsDraft.color,
+            },
+            {
+                preserveScroll: true,
+                onStart: () => setIsSavingDetails(true),
+                onFinish: () => setIsSavingDetails(false),
+                onSuccess: () =>
+                    addAlert('Project details updated.', 'success'),
+                onError: () =>
+                    addAlert("Couldn't update project details.", 'error'),
+            },
+        );
+    };
+
+    const deleteProject = () => {
+        if (!selectedProjectId) {
+            return;
+        }
+
+        router.delete(`/projects/${selectedProjectId}`);
+    };
 
     const selectedProject =
         memberProjects.find((project) => project.id === selectedProjectId) ??
@@ -620,6 +671,91 @@ export default function WorkspaceSettingsMembersTab({
                 ))}
             </SettingsPanel>
 
+            {canUpdateProjectDetails && projectDetailsDraft && (
+                <SettingsPanel
+                    title="Project details"
+                    description="Rename the project, update its description, or change its color."
+                    icon="FolderCog"
+                >
+                    <form
+                        onSubmit={saveProjectDetails}
+                        className="flex flex-col gap-4 px-4 py-4 sm:px-5"
+                    >
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-medium text-[var(--text-color)]">
+                                Name
+                            </label>
+                            <Input
+                                value={projectDetailsDraft.name}
+                                onChange={(event) =>
+                                    setProjectDetailsDraft(
+                                        (prev) =>
+                                            prev && {
+                                                ...prev,
+                                                name: event.target.value,
+                                            },
+                                    )
+                                }
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-sm font-medium text-[var(--text-color)]">
+                                Description
+                            </label>
+                            <TextArea
+                                value={projectDetailsDraft.description ?? ''}
+                                onChange={(event) =>
+                                    setProjectDetailsDraft(
+                                        (prev) =>
+                                            prev && {
+                                                ...prev,
+                                                description: event.target.value,
+                                            },
+                                    )
+                                }
+                                placeholder="What is this project about?"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-[var(--text-color)]">
+                                Color
+                            </label>
+                            <div className="flex flex-wrap gap-3">
+                                {AVAILABLE_COLORS.map((color) => (
+                                    <button
+                                        key={color}
+                                        type="button"
+                                        onClick={() =>
+                                            setProjectDetailsDraft(
+                                                (prev) =>
+                                                    prev && { ...prev, color },
+                                            )
+                                        }
+                                        aria-label={`Select ${color} color`}
+                                        className={cn(
+                                            'h-6 w-6 rounded-full border border-solid transition-transform',
+                                            getColorTheme(color).accent,
+                                            projectDetailsDraft.color === color
+                                                ? 'scale-110 border-white'
+                                                : 'border-transparent hover:scale-110',
+                                        )}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={isSavingDetails}
+                                className="cursor-pointer rounded-lg bg-[var(--accent-color)] px-4 py-2 text-sm font-medium text-[var(--text-color)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                {isSavingDetails ? 'Saving...' : 'Save changes'}
+                            </button>
+                        </div>
+                    </form>
+                </SettingsPanel>
+            )}
+
             {viewerRole === 'owner' && (
                 <SettingsPanel
                     title="Ownership"
@@ -638,6 +774,30 @@ export default function WorkspaceSettingsMembersTab({
                                 className="cursor-pointer rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
                             >
                                 Transfer ownership
+                            </button>
+                        }
+                    />
+                </SettingsPanel>
+            )}
+
+            {canDeleteProject && selectedProject && (
+                <SettingsPanel
+                    title="Danger zone"
+                    description="Deleting a project permanently removes it and everything in it."
+                    icon="TriangleAlert"
+                >
+                    <SettingsPanelRow
+                        title={`Delete "${selectedProject.name}"`}
+                        description="This cannot be undone. All issues, comments, roles and activity for this project will be permanently deleted."
+                        action={
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsDeleteProjectModalOpen(true)
+                                }
+                                className="cursor-pointer rounded-lg border border-[var(--error-color)] px-3 py-1.5 text-sm font-medium text-[var(--error-color)] transition-colors hover:bg-red-500/10"
+                            >
+                                Delete project
                             </button>
                         }
                     />
@@ -797,6 +957,15 @@ export default function WorkspaceSettingsMembersTab({
                     onClose={() => setIsTransferOwnershipModalOpen(false)}
                     projectId={selectedProject.id}
                     members={members}
+                />
+            )}
+
+            {canDeleteProject && (
+                <WorkspaceSettingsDeleteProjectModal
+                    isOpen={isDeleteProjectModalOpen}
+                    onClose={() => setIsDeleteProjectModalOpen(false)}
+                    projectId={selectedProject.id}
+                    projectName={selectedProject.name}
                 />
             )}
         </div>

@@ -19,7 +19,7 @@ class ProjectInvitationController extends Controller
 
     public function store(Request $request, Project $project): RedirectResponse
     {
-        $this->authorize('manageMembers', $project);
+        $this->authorize('inviteMembers', $project);
 
         $validated = $request->validate([
             'email' => 'required|string|email|max:255',
@@ -38,7 +38,7 @@ class ProjectInvitationController extends Controller
 
     public function destroy(Project $project, ProjectInvitation $invitation): RedirectResponse
     {
-        $this->authorize('manageMembers', $project);
+        $this->authorize('inviteMembers', $project);
 
         abort_if($invitation->project_id !== $project->id, 404);
 

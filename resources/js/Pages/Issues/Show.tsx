@@ -12,13 +12,12 @@ import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import IssuePageHeader from '@/Components/Organisms/IssuePageHeader/IssuePageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
-import { PageProps } from '@/types';
 import { IssuePageProps } from '@/types/Components';
 import { Comment, IssueLabel, IssuePriority, Status } from '@/types/Issues';
 import { formatStatusLabel } from '@/utils/text';
 import { formatDate } from '@/utils/time';
 import type { FormDataConvertible } from '@inertiajs/core';
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 const STATUSES: Status[] = ['open', 'in_progress', 'closed'];
@@ -30,9 +29,6 @@ export default function Show({
     issue,
     users,
 }: IssuePageProps) {
-    const {
-        props: { auth },
-    } = usePage<PageProps>();
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
 
@@ -55,6 +51,14 @@ export default function Show({
     const addComment = (body: string) => {
         router.post(
             route('comments.store', issue.id),
+            { body },
+            { preserveScroll: true },
+        );
+    };
+
+    const editComment = (comment: Comment, body: string) => {
+        router.patch(
+            route('comments.update', comment.id),
             { body },
             { preserveScroll: true },
         );
@@ -142,7 +146,7 @@ export default function Show({
                                 </span>
                                 <CommentList
                                     comments={issue.comments || []}
-                                    currentUserId={auth.user.id}
+                                    onEdit={editComment}
                                     onDelete={deleteComment}
                                 />
                                 <CommentForm onSubmit={addComment} />

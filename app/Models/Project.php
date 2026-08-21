@@ -72,4 +72,21 @@ class Project extends Model
             ->whereHas('permissions', fn ($query) => $query->where('key', $permission->value))
             ->exists();
     }
+
+    /**
+     * The tiers listed keep working regardless of whether their system role has
+     * been synced onto the project_user_role pivot yet — only a tier outside the
+     * list (and anyone whose system role hasn't synced) falls through to the
+     * granular permission, which a custom role can still grant them.
+     */
+    public function hasPermissionOrTier(User $user, PermissionEnum $permission, array $tiers): bool
+    {
+        $role = $this->users()->where('users.id', $user->id)->first()?->pivot->role;
+
+        if (in_array($role, array_map(fn (RoleType $tier) => $tier->value, $tiers), true)) {
+            return true;
+        }
+
+        return $this->hasPermission($user, $permission);
+    }
 }

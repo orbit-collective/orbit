@@ -29,7 +29,8 @@ class RoleService
 
     /**
      * The baseline a plain project member gets out of the box: full control over
-     * issues and comments, but no ability to manage members, roles, or settings.
+     * their own issues and comments, but no moderation rights over other
+     * people's comments, and no ability to manage members, roles, or settings.
      */
     private const array MEMBER_DEFAULT_PERMISSIONS = [
         Permission::PROJECT_VIEW,
@@ -46,20 +47,18 @@ class RoleService
         Permission::ISSUES_CHANGE_LABELS,
         Permission::COMMENTS_CREATE,
         Permission::COMMENTS_UPDATE_OWN,
-        Permission::COMMENTS_UPDATE_ANY,
         Permission::COMMENTS_DELETE_OWN,
-        Permission::COMMENTS_DELETE_ANY,
     ];
 
     /**
-     * A read-only tier: can see the project, its members, roles and settings,
-     * and browse issues, but cannot create/change/manage anything.
+     * A read-only tier: can see the project, its members, and browse issues,
+     * but cannot create/change/manage anything — including the project's own
+     * settings/roles area, which stays hidden from this tier.
      */
     private const array VIEWER_DEFAULT_PERMISSIONS = [
         Permission::PROJECT_VIEW,
         Permission::MEMBERS_VIEW,
         Permission::ROLES_VIEW,
-        Permission::SETTINGS_VIEW,
         Permission::ISSUES_VIEW,
     ];
 

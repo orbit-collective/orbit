@@ -10,31 +10,34 @@ use App\Models\User;
 
 class CommentPolicy
 {
+    private const array OWN_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
+
+    private const array ANY_TIERS = [RoleType::OWNER, RoleType::ADMIN];
+
     public function create(User $user, Issue $issue): bool
     {
-        $project = $issue->project;
-        $role = $project->users()->where('users.id', $user->id)->first()?->pivot->role;
+        return $issue->project->hasPermissionOrTier($user, Permission::COMMENTS_CREATE, self::OWN_TIERS);
+    }
 
-        if (in_array($role, [RoleType::OWNER->value, RoleType::ADMIN->value, RoleType::MEMBER->value], true)) {
-            return true;
+    public function update(User $user, Comment $comment): bool
+    {
+        $project = $comment->issue->project;
+
+        if ($comment->user_id === $user->id) {
+            return $project->hasPermissionOrTier($user, Permission::COMMENTS_UPDATE_OWN, self::OWN_TIERS);
         }
 
-        return $project->hasPermission($user, Permission::COMMENTS_CREATE);
+        return $project->hasPermissionOrTier($user, Permission::COMMENTS_UPDATE_ANY, self::ANY_TIERS);
     }
 
     public function delete(User $user, Comment $comment): bool
     {
-        if ($comment->user_id === $user->id) {
-            return true;
-        }
-
         $project = $comment->issue->project;
-        $role = $project->users()->where('users.id', $user->id)->first()?->pivot->role;
 
-        if (in_array($role, [RoleType::OWNER->value, RoleType::ADMIN->value], true)) {
-            return true;
+        if ($comment->user_id === $user->id) {
+            return $project->hasPermissionOrTier($user, Permission::COMMENTS_DELETE_OWN, self::OWN_TIERS);
         }
 
-        return $project->hasPermission($user, Permission::COMMENTS_DELETE_ANY);
+        return $project->hasPermissionOrTier($user, Permission::COMMENTS_DELETE_ANY, self::ANY_TIERS);
     }
 }

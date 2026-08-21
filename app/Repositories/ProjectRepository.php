@@ -44,4 +44,9 @@ class ProjectRepository
     {
         $project->users()->attach($userId, ['role' => $role->value]);
     }
+
+    public function delete(Project $project): void
+    {
+        $project->delete();
+    }
 }
