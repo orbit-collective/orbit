@@ -7,6 +7,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectInvitationController;
 use App\Http\Controllers\ProjectMemberController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SavedFilterController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
@@ -27,6 +28,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/{project}/columns', [ProjectController::class, 'updateColumns'])->name('projects.columns.update');
     Route::patch('/projects/{project}/members/{user}', [ProjectMemberController::class, 'updateRole'])->name('projects.members.update-role');
     Route::delete('/projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
+    Route::post('/projects/{project}/roles', [RoleController::class, 'store'])->name('projects.roles.store');
+    Route::patch('/projects/{project}/roles/{role}', [RoleController::class, 'update'])->name('projects.roles.update');
+    Route::delete('/projects/{project}/roles/{role}', [RoleController::class, 'destroy'])->name('projects.roles.destroy');
     Route::post('/projects/{project}/invitations', [ProjectInvitationController::class, 'store'])->name('projects.invitations.store');
     Route::delete('/projects/{project}/invitations/{invitation}', [ProjectInvitationController::class, 'destroy'])->name('projects.invitations.destroy');
     Route::post('/invitations/accept', [ProjectInvitationController::class, 'acceptManual'])->name('invitations.accept-manual');

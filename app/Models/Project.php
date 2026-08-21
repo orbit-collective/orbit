@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\Permissions\Permission as PermissionEnum;
+use App\Enums\ProjectRole;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,8 +21,9 @@ class Project extends Model
         'slug',
         'description',
         'color',
-        'columns'
+        'columns',
     ];
+
     protected $casts = [
         'columns' => 'array',
     ];
@@ -29,6 +32,7 @@ class Project extends Model
     {
         return $this->hasMany(Issue::class);
     }
+
     public function savedFilters(): HasMany
     {
         return $this->hasMany(SavedFilter::class);
@@ -38,7 +42,7 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class)
             ->using(ProjectUser::class)
-            ->withPivot('role')
+            ->withPivot('id', 'role')
             ->withTimestamps();
     }
 
@@ -50,5 +54,22 @@ class Project extends Model
     public function invitations(): HasMany
     {
         return $this->hasMany(ProjectInvitation::class);
+    }
+
+    public function hasPermission(User $user, PermissionEnum $permission): bool
+    {
+        $member = $this->users()->where('users.id', $user->id)->first();
+
+        if (! $member) {
+            return false;
+        }
+
+        if ($member->pivot->role === ProjectRole::ADMIN->value) {
+            return true;
+        }
+
+        return $member->pivot->roles()
+            ->whereHas('permissions', fn ($query) => $query->where('key', $permission->value))
+            ->exists();
     }
 }
