@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Permissions\Permission as PermissionEnum;
+use App\Models\Permission as PermissionModel;
 use App\Models\Project;
+use App\Models\Role;
 use App\Services\NotificationSettingService;
+use App\Services\PermissionService;
 use App\Services\ProjectInvitationService;
 use App\Services\ProjectMemberService;
 use App\Services\ProjectService;
+use App\Services\RoleService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -21,6 +26,8 @@ class SettingsController extends Controller
         protected ProjectService $projectService,
         protected ProjectMemberService $projectMemberService,
         protected ProjectInvitationService $projectInvitationService,
+        protected RoleService $roleService,
+        protected PermissionService $permissionService,
     ) {}
 
     public function index(Request $request): Response
@@ -45,6 +52,13 @@ class SettingsController extends Controller
             'pendingInvitations' => $selectedProject
                 ? $this->mapInvitations($this->projectInvitationService->getPending($selectedProject))
                 : [],
+            'roles' => $selectedProject
+                ? $this->mapRoles($this->roleService->getRoles($selectedProject)->loadMissing('members'))
+                : [],
+            'permissions' => $this->mapPermissions($this->permissionService->getAll()),
+            'canManageRoles' => $selectedProject
+                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_UPDATE)
+                : false,
         ]);
     }
 
@@ -77,6 +91,28 @@ class SettingsController extends Controller
             'role' => $invitation->role->value,
             'invitedByName' => $invitation->invitedBy?->name,
             'expiresAt' => $invitation->expires_at,
+        ])->values()->all();
+    }
+
+    private function mapRoles(Collection $roles): array
+    {
+        return $roles->map(fn (Role $role) => [
+            'id' => $role->id,
+            'name' => $role->name,
+            'slug' => $role->slug,
+            'type' => $role->role,
+            'isSystem' => $role->is_system,
+            'memberCount' => $role->members->count(),
+            'permissionIds' => $role->permissions->pluck('id')->values()->all(),
+        ])->values()->all();
+    }
+
+    private function mapPermissions(Collection $permissions): array
+    {
+        return $permissions->map(fn (PermissionModel $permission) => [
+            'id' => $permission->id,
+            'key' => $permission->key,
+            'group' => $permission->group,
         ])->values()->all();
     }
 }

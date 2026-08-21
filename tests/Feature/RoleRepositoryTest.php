@@ -60,3 +60,15 @@ test('it can delete a role', function () {
 
     $this->assertDatabaseMissing('roles', ['id' => $role->id]);
 });
+
+test('it can sync the permissions of a role', function () {
+    $project = Project::factory()->create();
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $permissionA = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    $permissionB = Permission::create(['key' => 'issues.create', 'name' => 'Create issues', 'group' => 'issues']);
+    $role->permissions()->attach($permissionA);
+
+    $this->repository->syncPermissions($role, [$permissionB->id]);
+
+    expect($role->permissions()->pluck('permissions.id')->all())->toBe([$permissionB->id]);
+});

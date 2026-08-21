@@ -29,4 +29,11 @@ class RoleRepository
     {
         $role->delete();
     }
+
+    public function syncPermissions(Role $role, array $permissionIds): Role
+    {
+        $role->permissions()->sync($permissionIds);
+
+        return $role->load('permissions');
+    }
 }

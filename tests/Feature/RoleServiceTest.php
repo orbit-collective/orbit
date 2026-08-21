@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Permission;
 use App\Models\Project;
 use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,4 +53,23 @@ test('it prevents deleting a system role', function () {
     $role = $project->roles()->create(['name' => 'Admin', 'slug' => 'admin', 'role' => 'admin', 'is_system' => true]);
 
     $this->service->deleteRole($project, $role);
+})->throws(ValidationException::class);
+
+test('it can sync a role\'s permissions and logs the change', function () {
+    $project = Project::factory()->create();
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+
+    $this->service->syncPermissions($project, $role, [$permission->id]);
+
+    expect($role->permissions()->pluck('permissions.id')->all())->toBe([$permission->id]);
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => 'Updated permissions for the "QA" role']);
+});
+
+test('it prevents syncing permissions on a system role', function () {
+    $project = Project::factory()->create();
+    $role = $project->roles()->create(['name' => 'Admin', 'slug' => 'admin', 'role' => 'admin', 'is_system' => true]);
+    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+
+    $this->service->syncPermissions($project, $role, [$permission->id]);
 })->throws(ValidationException::class);

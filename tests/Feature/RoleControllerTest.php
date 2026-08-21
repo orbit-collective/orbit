@@ -71,6 +71,126 @@ test('an outsider cannot create a role', function () {
     $response->assertForbidden();
 });
 
+test('a role slug must be unique within the project', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($admin)->post("/projects/{$project->id}/roles", [
+        'name' => 'QA 2',
+        'slug' => 'qa',
+        'role' => 'custom',
+    ]);
+
+    $response->assertSessionHasErrors('slug');
+});
+
+test('the same slug can be reused across different projects', function () {
+    $projectA = Project::factory()->create();
+    $projectB = Project::factory()->create();
+    $admin = User::factory()->create();
+    $projectA->users()->attach($admin->id, ['role' => 'admin']);
+    $projectB->users()->attach($admin->id, ['role' => 'admin']);
+    $projectA->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($admin)->post("/projects/{$projectB->id}/roles", [
+        'name' => 'QA',
+        'slug' => 'qa',
+        'role' => 'custom',
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('roles', ['project_id' => $projectB->id, 'slug' => 'qa']);
+});
+
+test('updating a role can keep its own slug without a uniqueness conflict', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}", [
+        'name' => 'Quality Assurance',
+        'slug' => 'qa',
+    ]);
+
+    $response->assertRedirect();
+});
+
+test('updating a role rejects a slug already used by another role in the project', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $roleToRename = $project->roles()->create(['name' => 'Support', 'slug' => 'support', 'role' => 'custom']);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$roleToRename->id}", [
+        'name' => 'Support',
+        'slug' => 'qa',
+    ]);
+
+    $response->assertSessionHasErrors('slug');
+});
+
+test('an admin can sync permissions for a role', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}/permissions", [
+        'permissions' => [$permission->id],
+    ]);
+
+    $response->assertRedirect();
+    expect($role->permissions()->pluck('permissions.id')->all())->toBe([$permission->id]);
+});
+
+test('syncing permissions accepts an empty array to clear all permissions', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    $role->permissions()->attach($permission);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}/permissions", [
+        'permissions' => [],
+    ]);
+
+    $response->assertRedirect();
+    expect($role->permissions()->count())->toBe(0);
+});
+
+test('syncing permissions rejects an id that does not exist', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/roles/{$role->id}/permissions", [
+        'permissions' => [999],
+    ]);
+
+    $response->assertSessionHasErrors('permissions.0');
+});
+
+test('a member without the roles.update permission cannot sync permissions', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+
+    $response = $this->actingAs($member)->patch("/projects/{$project->id}/roles/{$role->id}/permissions", [
+        'permissions' => [$permission->id],
+    ]);
+
+    $response->assertForbidden();
+});
+
 test('creating a role requires a name, slug and valid role type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
