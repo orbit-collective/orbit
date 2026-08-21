@@ -1,13 +1,14 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Button from '@/Components/Atoms/Button/Button';
-import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
-import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
-import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import MemberRow from '@/Components/Molecules/MemberRow/MemberRow';
+import PillDropdown, {
+    PillDropdownCheckOption,
+    PillDropdownOption,
+} from '@/Components/Molecules/PillDropdown/PillDropdown';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
@@ -27,15 +28,7 @@ import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
 import { formatDate } from '@/utils/time';
 import { router, usePage } from '@inertiajs/react';
-import {
-    ReactNode,
-    SyntheticEvent,
-    useCallback,
-    useEffect,
-    useRef,
-    useState,
-} from 'react';
-import { createPortal } from 'react-dom';
+import { SyntheticEvent, useEffect, useState } from 'react';
 import WorkspaceSettingsDeleteProjectModal from './WorkspaceSettingsDeleteProjectModal';
 import WorkspaceSettingsTransferOwnershipModal from './WorkspaceSettingsTransferOwnershipModal';
 
@@ -111,99 +104,6 @@ function TeamAvatarStack({ members }: { members: ProjectMember[] }) {
     );
 }
 
-interface PortalDropdownProps {
-    isOpen: boolean;
-    onOpenChange: (isOpen: boolean) => void;
-    trigger: ReactNode;
-    children: ReactNode;
-}
-
-/**
- * Renders its menu into a portal at document.body instead of positioning it
- * relative to the trigger. SettingsPanel clips overflow to keep its rounded
- * corners, which would otherwise cut off an absolutely-positioned dropdown.
- */
-function PortalDropdown({
-    isOpen,
-    onOpenChange,
-    trigger,
-    children,
-}: PortalDropdownProps) {
-    const triggerRef = useRef<HTMLDivElement>(null);
-    const menuRef = useRef<HTMLDivElement>(null);
-    const [coords, setCoords] = useState<{
-        top: number;
-        left: number;
-        width: number;
-    } | null>(null);
-
-    const updateCoords = useCallback(() => {
-        if (triggerRef.current) {
-            const rect = triggerRef.current.getBoundingClientRect();
-            setCoords({
-                top: rect.bottom + 8,
-                left: rect.left,
-                width: rect.width,
-            });
-        }
-    }, []);
-
-    useEffect(() => {
-        if (!isOpen) {
-            return;
-        }
-
-        updateCoords();
-
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as Node;
-            if (
-                triggerRef.current?.contains(target) ||
-                menuRef.current?.contains(target)
-            ) {
-                return;
-            }
-            onOpenChange(false);
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        window.addEventListener('resize', updateCoords);
-        window.addEventListener('scroll', updateCoords, true);
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            window.removeEventListener('resize', updateCoords);
-            window.removeEventListener('scroll', updateCoords, true);
-        };
-    }, [isOpen, onOpenChange, updateCoords]);
-
-    return (
-        <div ref={triggerRef}>
-            {trigger}
-            {isOpen &&
-                coords &&
-                createPortal(
-                    <div
-                        ref={menuRef}
-                        style={{
-                            position: 'fixed',
-                            top: coords.top,
-                            left: coords.left,
-                            minWidth: coords.width,
-                            zIndex: 9999,
-                        }}
-                        className={cn(
-                            'flex max-h-[320px] flex-col overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] p-1.5 shadow-2xl backdrop-blur-md scrollbar-none',
-                        )}
-                    >
-                        <div className="space-y-0.5">{children}</div>
-                    </div>,
-                    document.body,
-                )}
-        </div>
-    );
-}
-
 interface RoleDropdownProps {
     value: AssignableProjectMemberRole;
     onChange: (role: AssignableProjectMemberRole) => void;
@@ -211,33 +111,28 @@ interface RoleDropdownProps {
 }
 
 function RoleDropdown({ value, onChange, disabled }: RoleDropdownProps) {
-    const [isOpen, setIsOpen] = useState(false);
-
     return (
-        <PortalDropdown
-            isOpen={isOpen}
-            onOpenChange={setIsOpen}
-            trigger={
-                <DropdownTrigger
-                    className="h-9 w-32 py-0"
-                    disabled={disabled}
-                    label={ROLE_LABELS[value]}
-                    onClick={() => setIsOpen(!isOpen)}
-                />
-            }
+        <PillDropdown
+            label={ROLE_LABELS[value]}
+            icon={ROLE_ICONS[value]}
+            disabled={disabled}
+            className="w-32"
         >
-            {ASSIGNABLE_ROLES.map((role) => (
-                <DropdownItem
-                    key={role}
-                    label={ROLE_LABELS[role]}
-                    isActive={value === role}
-                    onClick={() => {
-                        onChange(role);
-                        setIsOpen(false);
-                    }}
-                />
-            ))}
-        </PortalDropdown>
+            {(close) =>
+                ASSIGNABLE_ROLES.map((role) => (
+                    <PillDropdownOption
+                        key={role}
+                        label={ROLE_LABELS[role]}
+                        icon={ROLE_ICONS[role]}
+                        isActive={value === role}
+                        onClick={() => {
+                            onChange(role);
+                            close();
+                        }}
+                    />
+                ))
+            }
+        </PillDropdown>
     );
 }
 
@@ -254,8 +149,6 @@ function CustomRolesDropdown({
     onToggle,
     disabled,
 }: CustomRolesDropdownProps) {
-    const [isOpen, setIsOpen] = useState(false);
-
     if (roles.length === 0) {
         return null;
     }
@@ -268,32 +161,23 @@ function CustomRolesDropdown({
               }`;
 
     return (
-        <PortalDropdown
-            isOpen={isOpen}
-            onOpenChange={setIsOpen}
-            trigger={
-                <DropdownTrigger
-                    className="h-9 w-44 py-0"
-                    disabled={disabled}
-                    label={label}
-                    onClick={() => setIsOpen(!isOpen)}
-                />
-            }
+        <PillDropdown
+            label={label}
+            icon="Sparkles"
+            badge={selectedRoleIds.length}
+            disabled={disabled}
+            className="w-44"
         >
             {roles.map((role) => (
-                <Checkbox
+                <PillDropdownCheckOption
                     key={role.id}
-                    id={`member-role-${role.id}`}
-                    className="w-full px-3 py-2"
                     label={role.name}
                     checked={selectedRoleIds.includes(role.id)}
-                    isDisabled={disabled}
-                    onChange={(event) =>
-                        onToggle(role.id, event.target.checked)
-                    }
+                    disabled={disabled}
+                    onChange={(checked) => onToggle(role.id, checked)}
                 />
             ))}
-        </PortalDropdown>
+        </PillDropdown>
     );
 }
 
