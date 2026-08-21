@@ -217,7 +217,9 @@ export default function WorkspaceSettingsRolesTab({
     );
 
     const canEditSelectedRole =
-        canUpdateRoles && selectedRole !== null && !selectedRole.isSystem;
+        canUpdateRoles &&
+        selectedRole !== null &&
+        selectedRole.type !== 'owner';
 
     const togglePermission = (
         role: WorkspaceRole,
@@ -559,22 +561,26 @@ export default function WorkspaceSettingsRolesTab({
                                                         placeholder="Role name"
                                                         className="sm:w-48"
                                                     />
-                                                    <Input
-                                                        value={renameDraft.slug}
-                                                        onChange={(event) =>
-                                                            setRenameDraft(
-                                                                (prev) =>
-                                                                    prev && {
-                                                                        ...prev,
-                                                                        slug: event
-                                                                            .target
-                                                                            .value,
-                                                                    },
-                                                            )
-                                                        }
-                                                        placeholder="slug"
-                                                        className="sm:w-32"
-                                                    />
+                                                    {!selectedRole.isSystem && (
+                                                        <Input
+                                                            value={
+                                                                renameDraft.slug
+                                                            }
+                                                            onChange={(event) =>
+                                                                setRenameDraft(
+                                                                    (prev) =>
+                                                                        prev && {
+                                                                            ...prev,
+                                                                            slug: event
+                                                                                .target
+                                                                                .value,
+                                                                        },
+                                                                )
+                                                            }
+                                                            placeholder="slug"
+                                                            className="sm:w-32"
+                                                        />
+                                                    )}
                                                     <div className="flex items-center gap-1.5">
                                                         <button
                                                             type="button"
@@ -651,13 +657,17 @@ export default function WorkspaceSettingsRolesTab({
 
                                             {!renameDraft && (
                                                 <div className="flex shrink-0 items-center gap-1.5">
-                                                    {selectedRole.isSystem ? (
-                                                        <span className="flex items-center gap-1 text-xs text-[var(--text-gray-color)]">
+                                                    {selectedRole.type ===
+                                                    'owner' ? (
+                                                        <span
+                                                            className="flex items-center gap-1 text-xs text-[var(--text-gray-color)]"
+                                                            title="The owner always has every permission and can't be changed."
+                                                        >
                                                             <Icon
                                                                 name="Lock"
                                                                 size={12}
                                                             />
-                                                            System role
+                                                            Owner role
                                                         </span>
                                                     ) : (
                                                         <>
@@ -680,24 +690,38 @@ export default function WorkspaceSettingsRolesTab({
                                                                     />
                                                                 </button>
                                                             )}
-                                                            {canDeleteRoles && (
-                                                                <button
-                                                                    type="button"
-                                                                    title="Delete role"
-                                                                    onClick={() =>
-                                                                        setRoleToDelete(
-                                                                            selectedRole,
-                                                                        )
-                                                                    }
-                                                                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
+                                                            {selectedRole.isSystem ? (
+                                                                <span
+                                                                    className="flex h-8 w-8 items-center justify-center text-[var(--text-gray-color)]"
+                                                                    title="System roles can't be deleted."
                                                                 >
                                                                     <Icon
-                                                                        name="Trash2"
+                                                                        name="Lock"
                                                                         size={
-                                                                            14
+                                                                            12
                                                                         }
                                                                     />
-                                                                </button>
+                                                                </span>
+                                                            ) : (
+                                                                canDeleteRoles && (
+                                                                    <button
+                                                                        type="button"
+                                                                        title="Delete role"
+                                                                        onClick={() =>
+                                                                            setRoleToDelete(
+                                                                                selectedRole,
+                                                                            )
+                                                                        }
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
+                                                                    >
+                                                                        <Icon
+                                                                            name="Trash2"
+                                                                            size={
+                                                                                14
+                                                                            }
+                                                                        />
+                                                                    </button>
+                                                                )
                                                             )}
                                                         </>
                                                     )}

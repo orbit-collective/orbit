@@ -84,7 +84,14 @@ class RoleService
 
     public function updateRole(Project $project, Role $role, array $data): Role
     {
-        $this->assertEditable($role);
+        $this->assertNotOwnerRole($role);
+
+        // The slug is how ensureSystemRoles() finds a project's Admin/Member/Viewer
+        // rows again later — letting it change would orphan the role and cause a
+        // fresh duplicate (with reset default permissions) to be created next time.
+        if ($role->is_system) {
+            $data['slug'] = $role->slug;
+        }
 
         $role = $this->roleRepository->update($role, $data);
 
@@ -95,7 +102,7 @@ class RoleService
 
     public function deleteRole(Project $project, Role $role): void
     {
-        $this->assertEditable($role);
+        $this->assertNotSystemRole($role);
 
         $this->roleRepository->delete($role);
 
@@ -104,7 +111,7 @@ class RoleService
 
     public function syncPermissions(Project $project, Role $role, array $permissionIds): Role
     {
-        $this->assertEditable($role);
+        $this->assertNotOwnerRole($role);
 
         $role = $this->roleRepository->syncPermissions($role, $permissionIds);
 
@@ -114,9 +121,13 @@ class RoleService
     }
 
     /**
-     * Creates the project's system roles (one per RoleType tier) on first use
-     * and keeps their permissions in sync with the current defaults, so existing
-     * projects created before this system existed get backfilled lazily.
+     * Creates the project's system roles (one per RoleType tier) on first use.
+     * Default permissions are only seeded the moment a tier's role is first
+     * created — Admin/Member/Viewer can be customized afterwards without this
+     * being called again (e.g. whenever another member's role changes)
+     * silently reverting that customization. Owner is the exception: its
+     * permission set is reset back to "everything" on every call, since it's
+     * never editable and must always stay maximal.
      *
      * @return SupportCollection<string, Role> keyed by RoleType value
      */
@@ -125,7 +136,9 @@ class RoleService
         return collect(self::SYSTEM_ROLE_TYPES)->mapWithKeys(function (RoleType $role) use ($project) {
             $systemRole = $this->roleRepository->firstOrCreateSystemRole($project, $role);
 
-            $this->roleRepository->syncPermissions($systemRole, $this->defaultPermissionIdsFor($role));
+            if ($systemRole->wasRecentlyCreated || $role === RoleType::OWNER) {
+                $this->roleRepository->syncPermissions($systemRole, $this->defaultPermissionIdsFor($role));
+            }
 
             return [$role->value => $systemRole];
         });
@@ -155,11 +168,20 @@ class RoleService
         return PermissionModel::query()->whereIn('key', $keys)->pluck('id')->all();
     }
 
-    private function assertEditable(Role $role): void
+    private function assertNotOwnerRole(Role $role): void
+    {
+        if ($role->role === RoleType::OWNER->value) {
+            throw ValidationException::withMessages([
+                'role' => 'The Owner role always has every permission and cannot be modified.',
+            ]);
+        }
+    }
+
+    private function assertNotSystemRole(Role $role): void
     {
         if ($role->is_system) {
             throw ValidationException::withMessages([
-                'role' => 'System roles cannot be modified or deleted.',
+                'role' => 'System roles cannot be deleted.',
             ]);
         }
     }

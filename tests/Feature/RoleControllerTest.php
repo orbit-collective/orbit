@@ -253,6 +253,74 @@ test('an admin can update a role', function () {
     expect($role->refresh()->name)->toBe('Quality Assurance');
 });
 
+test('an owner can rename a non-owner system role and its permissions', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $systemRoles = app(RoleService::class)->ensureSystemRoles($project);
+    $adminRole = $systemRoles['member'];
+    $permission = Permission::where('key', 'issues.view')->first();
+
+    $renameResponse = $this->actingAs($owner)->patch("/projects/{$project->id}/roles/{$adminRole->id}", [
+        'name' => 'Contributor',
+        'slug' => 'ignored-should-stay-member',
+    ]);
+
+    $renameResponse->assertRedirect();
+    expect($adminRole->refresh()->name)->toBe('Contributor');
+    expect($adminRole->slug)->toBe('member');
+
+    $permissionsResponse = $this->actingAs($owner)->patch("/projects/{$project->id}/roles/{$adminRole->id}/permissions", [
+        'permissions' => [$permission->id],
+    ]);
+
+    $permissionsResponse->assertRedirect();
+    expect($adminRole->permissions()->pluck('permissions.id')->all())->toBe([$permission->id]);
+});
+
+test('the owner role cannot be renamed', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $systemRoles = app(RoleService::class)->ensureSystemRoles($project);
+    $ownerRole = $systemRoles['owner'];
+
+    $response = $this->actingAs($owner)->patch("/projects/{$project->id}/roles/{$ownerRole->id}", [
+        'name' => 'Renamed',
+        'slug' => 'owner',
+    ]);
+
+    $response->assertSessionHasErrors('role');
+});
+
+test('the owner role\'s permissions cannot be changed', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $systemRoles = app(RoleService::class)->ensureSystemRoles($project);
+    $ownerRole = $systemRoles['owner'];
+    $permission = Permission::where('key', 'issues.view')->first();
+
+    $response = $this->actingAs($owner)->patch("/projects/{$project->id}/roles/{$ownerRole->id}/permissions", [
+        'permissions' => [$permission->id],
+    ]);
+
+    $response->assertSessionHasErrors('role');
+});
+
+test('a non-owner system role still cannot be deleted', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $systemRoles = app(RoleService::class)->ensureSystemRoles($project);
+    $memberRole = $systemRoles['member'];
+
+    $response = $this->actingAs($owner)->delete("/projects/{$project->id}/roles/{$memberRole->id}");
+
+    $response->assertSessionHasErrors('role');
+    $this->assertDatabaseHas('roles', ['id' => $memberRole->id]);
+});
+
 test('a member without the roles.update permission cannot update a role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
