@@ -16,7 +16,7 @@ class CommentController extends Controller
 
     public function store(Request $request, Issue $issue): RedirectResponse
     {
-        $this->authorize('view', $issue);
+        $this->authorize('create', [Comment::class, $issue]);
 
         $data = $request->validate([
             'body' => 'required|string',
@@ -31,7 +31,7 @@ class CommentController extends Controller
 
     public function destroy(Comment $comment): RedirectResponse
     {
-        abort_if($comment->user_id !== auth()->id(), 403);
+        $this->authorize('delete', $comment);
 
         $issue = $comment->issue;
 

@@ -50,6 +50,19 @@ test('commenting on an issue requires a body', function () {
     $response->assertSessionHasErrors('body');
 });
 
+test('a viewer cannot comment on an issue', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = User::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($user)->post("/issues/{$issue->id}/comments", [
+        'body' => 'Not allowed',
+    ]);
+
+    $response->assertForbidden();
+});
+
 test('a non-member cannot comment on an issue', function () {
     $issue = Issue::factory()->create();
 
@@ -85,6 +98,51 @@ test('a user cannot delete someone else\'s comment', function () {
 
     $response->assertForbidden();
     $this->assertDatabaseHas('comments', ['id' => $comment->id]);
+});
+
+test('a plain member cannot delete another member\'s comment', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $author = User::factory()->create();
+    $project->users()->attach($author->id, ['role' => 'member']);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
+    $otherMember = User::factory()->create();
+    $project->users()->attach($otherMember->id, ['role' => 'member']);
+
+    $response = $this->actingAs($otherMember)->delete("/comments/{$comment->id}");
+
+    $response->assertForbidden();
+    $this->assertDatabaseHas('comments', ['id' => $comment->id]);
+});
+
+test('a project owner can delete another member\'s comment', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $author = User::factory()->create();
+    $project->users()->attach($author->id, ['role' => 'member']);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($owner)->delete("/comments/{$comment->id}");
+
+    $response->assertRedirect();
+    $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
+});
+
+test('a project admin can delete another member\'s comment', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $author = User::factory()->create();
+    $project->users()->attach($author->id, ['role' => 'member']);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+
+    $response = $this->actingAs($admin)->delete("/comments/{$comment->id}");
+
+    $response->assertRedirect();
+    $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
 });
 
 test('guests cannot delete a comment', function () {
