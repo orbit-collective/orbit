@@ -7,6 +7,7 @@ import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger'
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
+import MemberRow from '@/Components/Molecules/MemberRow/MemberRow';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
@@ -218,7 +219,7 @@ function RoleDropdown({ value, onChange, disabled }: RoleDropdownProps) {
             onOpenChange={setIsOpen}
             trigger={
                 <DropdownTrigger
-                    className="w-32"
+                    className="h-9 w-32 py-0"
                     disabled={disabled}
                     label={ROLE_LABELS[value]}
                     onClick={() => setIsOpen(!isOpen)}
@@ -272,7 +273,7 @@ function CustomRolesDropdown({
             onOpenChange={setIsOpen}
             trigger={
                 <DropdownTrigger
-                    className="w-44"
+                    className="h-9 w-44 py-0"
                     disabled={disabled}
                     label={label}
                     onClick={() => setIsOpen(!isOpen)}
@@ -630,52 +631,36 @@ export default function WorkspaceSettingsMembersTab({
             >
                 <TeamAvatarStack members={members} />
                 {members.map((member) => (
-                    <SettingsPanelRow
-                        key={member.id}
-                        title={member.name}
-                        description={member.email}
-                        action={
-                            <div className="flex items-center gap-2">
-                                <Avatar
-                                    src={member.avatar ?? undefined}
-                                    initials={member.name.charAt(0)}
-                                    size="md"
-                                />
-                                {isManager && member.role !== 'owner' ? (
-                                    <RoleDropdown
-                                        value={member.role}
-                                        onChange={(role) =>
-                                            changeMemberRole(member.id, role)
-                                        }
-                                    />
-                                ) : (
-                                    <RoleBadge role={member.role} />
-                                )}
-                                <CustomRolesDropdown
-                                    roles={assignableRoles}
-                                    selectedRoleIds={member.roleIds}
-                                    disabled={!canAssignRoles}
-                                    onToggle={(roleId, enabled) =>
-                                        toggleMemberCustomRole(
-                                            member,
-                                            roleId,
-                                            enabled,
-                                        )
-                                    }
-                                />
-                                {isManager && member.role !== 'owner' && (
-                                    <button
-                                        type="button"
-                                        title="Remove from project"
-                                        onClick={() => removeMember(member.id)}
-                                        className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
-                                    >
-                                        <Icon name="UserMinus" size={15} />
-                                    </button>
-                                )}
-                            </div>
-                        }
-                    />
+                    <MemberRow key={member.id} member={member}>
+                        {isManager && member.role !== 'owner' ? (
+                            <RoleDropdown
+                                value={member.role}
+                                onChange={(role) =>
+                                    changeMemberRole(member.id, role)
+                                }
+                            />
+                        ) : (
+                            <RoleBadge role={member.role} />
+                        )}
+                        <CustomRolesDropdown
+                            roles={assignableRoles}
+                            selectedRoleIds={member.roleIds}
+                            disabled={!canAssignRoles}
+                            onToggle={(roleId, enabled) =>
+                                toggleMemberCustomRole(member, roleId, enabled)
+                            }
+                        />
+                        {isManager && member.role !== 'owner' && (
+                            <button
+                                type="button"
+                                title="Remove from project"
+                                onClick={() => removeMember(member.id)}
+                                className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
+                            >
+                                <Icon name="UserMinus" size={15} />
+                            </button>
+                        )}
+                    </MemberRow>
                 ))}
             </SettingsPanel>
 
@@ -755,7 +740,7 @@ export default function WorkspaceSettingsMembersTab({
                             <button
                                 type="submit"
                                 disabled={isSavingDetails}
-                                className="cursor-pointer rounded-lg bg-[var(--accent-color)] px-4 py-2 text-sm font-medium text-[var(--text-color)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                className="flex h-9 cursor-pointer items-center justify-center rounded-lg bg-[var(--accent-color)] px-4 text-sm font-medium text-[var(--text-color)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 {isSavingDetails ? 'Saving...' : 'Save changes'}
                             </button>
@@ -779,7 +764,7 @@ export default function WorkspaceSettingsMembersTab({
                                 onClick={() =>
                                     setIsTransferOwnershipModalOpen(true)
                                 }
-                                className="cursor-pointer rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                                className="flex h-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-color)] px-3 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
                             >
                                 Transfer ownership
                             </button>
@@ -803,7 +788,7 @@ export default function WorkspaceSettingsMembersTab({
                                 onClick={() =>
                                     setIsDeleteProjectModalOpen(true)
                                 }
-                                className="cursor-pointer rounded-lg border border-[var(--error-color)] px-3 py-1.5 text-sm font-medium text-[var(--error-color)] transition-colors hover:bg-red-500/10"
+                                className="flex h-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--error-color)] px-3 text-sm font-medium text-[var(--error-color)] transition-colors hover:bg-red-500/10"
                             >
                                 Delete project
                             </button>
@@ -835,7 +820,7 @@ export default function WorkspaceSettingsMembersTab({
                                 onSubmit={submitInvite}
                                 className="flex flex-col items-end gap-1.5"
                             >
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                     <Input
                                         type="email"
                                         value={inviteEmail}
@@ -843,7 +828,7 @@ export default function WorkspaceSettingsMembersTab({
                                             setInviteEmail(event.target.value)
                                         }
                                         placeholder="teammate@company.com"
-                                        className="w-56"
+                                        className="h-9 w-56"
                                     />
                                     <RoleDropdown
                                         value={inviteRole}
@@ -859,6 +844,7 @@ export default function WorkspaceSettingsMembersTab({
                                     <Button
                                         type="submit"
                                         isDisabled={isInviting}
+                                        className="h-9"
                                     >
                                         Invite
                                     </Button>
@@ -897,7 +883,7 @@ export default function WorkspaceSettingsMembersTab({
                                 className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:items-center md:justify-between"
                             >
                                 <div className="flex min-w-0 items-center gap-3">
-                                    <span className="bg-[var(--warning-color)]/10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--warning-color)]">
+                                    <span className="bg-[var(--warning-color)]/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--warning-color)]">
                                         <Icon name="Mail" size={14} />
                                     </span>
                                     <div className="min-w-0 space-y-1">
@@ -933,7 +919,7 @@ export default function WorkspaceSettingsMembersTab({
                                 <Button
                                     type="button"
                                     isBox
-                                    className="shrink-0 px-3 py-1.5"
+                                    className="h-9 shrink-0 px-3"
                                     onClick={() =>
                                         revokeInvitation(invitation.id)
                                     }
@@ -966,9 +952,13 @@ export default function WorkspaceSettingsMembersTab({
                                         setInvitationToken(event.target.value)
                                     }
                                     placeholder="Invitation code"
-                                    className="w-56"
+                                    className="h-9 w-56"
                                 />
-                                <Button type="submit" isDisabled={isJoining}>
+                                <Button
+                                    type="submit"
+                                    isDisabled={isJoining}
+                                    className="h-9"
+                                >
                                     Join
                                 </Button>
                             </div>
