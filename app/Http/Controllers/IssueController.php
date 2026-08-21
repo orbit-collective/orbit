@@ -59,6 +59,19 @@ class IssueController extends Controller
             'end_date' => 'sometimes|nullable|date|after_or_equal:start_date',
         ]);
 
+        if (array_key_exists('assignee_id', $data)) {
+            $this->authorize('assign', $issue);
+        }
+        if (array_key_exists('status', $data)) {
+            $this->authorize('changeStatus', $issue);
+        }
+        if (array_key_exists('priority', $data)) {
+            $this->authorize('changePriority', $issue);
+        }
+        if (array_key_exists('labels', $data)) {
+            $this->authorize('changeLabels', $issue);
+        }
+
         $before = $this->issueService->snapshot($issue);
 
         $this->issueService->updateIssue($issue, $data);

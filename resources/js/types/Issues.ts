@@ -8,6 +8,8 @@ export interface Comment {
     body: string;
     created_at: string;
     updated_at: string;
+    can_edit: boolean;
+    can_delete: boolean;
     user?: {
         id: number;
         name: string;

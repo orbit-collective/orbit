@@ -1,4 +1,5 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
+import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { CommentItemProps } from '@/types/Components';
 import { formatTimeAgo } from '@/utils/time';
@@ -6,7 +7,7 @@ import React from 'react';
 
 const CommentItem: React.FC<CommentItemProps> = ({
     comment,
-    canDelete = false,
+    onEdit,
     onDelete,
 }) => {
     return (
@@ -25,19 +26,24 @@ const CommentItem: React.FC<CommentItemProps> = ({
                         {formatTimeAgo(comment.created_at)} ago
                     </span>
                 </div>
-                <p className="whitespace-pre-wrap text-sm text-[var(--text-color)]">
-                    {comment.body}
-                </p>
-            </div>
-            {canDelete && (
-                <IconButton
-                    iconName="Trash2"
-                    iconSize={14}
-                    ariaLabel="Delete comment"
-                    className="opacity-0 group-hover:opacity-100"
-                    onClick={() => onDelete?.(comment)}
+                <EditableText
+                    value={comment.body}
+                    onSave={(body) => onEdit?.(comment, body)}
+                    multiline
+                    disabled={!comment.can_edit}
+                    displayClassName="whitespace-pre-wrap text-sm text-[var(--text-color)]"
                 />
-            )}
+            </div>
+            <div className="flex items-start gap-1 opacity-0 group-hover:opacity-100">
+                {comment.can_delete && (
+                    <IconButton
+                        iconName="Trash2"
+                        iconSize={14}
+                        ariaLabel="Delete comment"
+                        onClick={() => onDelete?.(comment)}
+                    />
+                )}
+            </div>
         </div>
     );
 };

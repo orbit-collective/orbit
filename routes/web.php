@@ -18,6 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{project}/issues/{issue}', [IssueController::class, 'show'])->name('issues.show');
     Route::delete('/issues/bulk-destroy', [IssueController::class, 'bulkDestroy'])->name('issues.bulk-destroy');
     Route::post('/issues/{issue}/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::patch('/comments/{comment}', [CommentController::class, 'update'])->name('comments.update');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
     Route::patch('/issues/{issue}', [IssueController::class, 'update'])->name('issues.update');
     Route::delete('/issues/{issue}', [IssueController::class, 'destroy'])->name('issues.destroy');
@@ -26,6 +27,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::patch('/projects/{project}/columns', [ProjectController::class, 'updateColumns'])->name('projects.columns.update');
+    Route::patch('/projects/{project}/details', [ProjectController::class, 'updateDetails'])->name('projects.details.update');
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::patch('/projects/{project}/members/{user}', [ProjectMemberController::class, 'updateRole'])->name('projects.members.update-role');
     Route::delete('/projects/{project}/members/{user}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
     Route::patch('/projects/{project}/members/{user}/roles', [ProjectMemberController::class, 'syncRoles'])->name('projects.members.roles.update');

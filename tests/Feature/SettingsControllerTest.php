@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
 use App\Models\NotificationSetting;
 use App\Models\Project;
@@ -138,6 +139,49 @@ test('settings page denies a plain member all granular role permissions', functi
         ->where('canUpdateRoles', false)
         ->where('canDeleteRoles', false)
         ->where('canAssignRoles', false)
+    );
+});
+
+test('settings page hides roles and permissions data from a viewer', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasSettingsAccess', false)
+        ->where('roles', [])
+        ->where('permissions', [])
+        ->where('canCreateRoles', false)
+        ->where('canUpdateRoles', false)
+        ->where('canDeleteRoles', false)
+    );
+});
+
+test('settings page exposes roles and permissions data to a member', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasSettingsAccess', true)
+        ->has('permissions', count(PermissionEnum::cases()))
+    );
+});
+
+test('settings page grants an owner control over project details', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($user)->get('/settings');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('canUpdateProjectDetails', true)
+        ->where('canDeleteProject', true)
     );
 });
 

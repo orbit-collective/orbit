@@ -11,6 +11,8 @@ const makeComment = (overrides: Partial<Comment> = {}): Comment => ({
     body: 'A comment',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    can_edit: false,
+    can_delete: false,
     user: { id: 1, name: 'Jane Cooper' },
     ...overrides,
 });
@@ -36,14 +38,17 @@ describe('CommentList Component', () => {
         expect(screen.getByText('Second')).toBeInTheDocument();
     });
 
-    test('only shows the delete button for comments owned by the current user', () => {
+    test('only shows the delete button for comments the server marked as deletable', () => {
         render(
             <CommentList
                 comments={[
-                    makeComment({ id: 1, user_id: 1, body: 'Mine' }),
-                    makeComment({ id: 2, user_id: 2, body: 'Someone else' }),
+                    makeComment({ id: 1, body: 'Mine', can_delete: true }),
+                    makeComment({
+                        id: 2,
+                        body: 'Someone else',
+                        can_delete: false,
+                    }),
                 ]}
-                currentUserId={1}
             />,
         );
 
@@ -54,14 +59,8 @@ describe('CommentList Component', () => {
 
     test('calls onDelete with the deleted comment', async () => {
         const handleDelete = vi.fn();
-        const comment = makeComment({ id: 5, user_id: 1 });
-        render(
-            <CommentList
-                comments={[comment]}
-                currentUserId={1}
-                onDelete={handleDelete}
-            />,
-        );
+        const comment = makeComment({ id: 5, can_delete: true });
+        render(<CommentList comments={[comment]} onDelete={handleDelete} />);
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Delete comment' }),

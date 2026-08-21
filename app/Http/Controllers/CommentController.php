@@ -29,6 +29,23 @@ class CommentController extends Controller
             ->with('action_url', route('issues.show', [$issue->project_id, $issue->id]));
     }
 
+    public function update(Request $request, Comment $comment): RedirectResponse
+    {
+        $this->authorize('update', $comment);
+
+        $data = $request->validate([
+            'body' => 'required|string',
+        ]);
+
+        $this->commentService->updateComment($comment, $data);
+
+        $issue = $comment->issue;
+
+        return redirect()->back()
+            ->with('success', 'Comment updated.')
+            ->with('action_url', route('issues.show', [$issue->project_id, $issue->id]));
+    }
+
     public function destroy(Comment $comment): RedirectResponse
     {
         $this->authorize('delete', $comment);

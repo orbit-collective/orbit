@@ -261,3 +261,61 @@ test('guests cannot update project columns', function () {
 
     $response->assertRedirect(route('login'));
 });
+
+test('an owner can update project details', function () {
+    $owner = User::factory()->create();
+    $project = Project::factory()->create(['name' => 'Old Name']);
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($owner)->patch("/projects/{$project->id}/details", [
+        'name' => 'New Name',
+        'description' => 'A new description',
+        'color' => 'red',
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('projects', ['id' => $project->id, 'name' => 'New Name']);
+});
+
+test('a plain member cannot update project details', function () {
+    $member = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $response = $this->actingAs($member)->patch("/projects/{$project->id}/details", [
+        'name' => 'New Name',
+        'color' => 'red',
+    ]);
+
+    $response->assertForbidden();
+});
+
+test('an owner can delete a project', function () {
+    $owner = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($owner)->delete("/projects/{$project->id}");
+
+    $response->assertRedirect(route('projects.index'));
+    $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+});
+
+test('a plain member cannot delete a project', function () {
+    $member = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $response = $this->actingAs($member)->delete("/projects/{$project->id}");
+
+    $response->assertForbidden();
+    $this->assertDatabaseHas('projects', ['id' => $project->id]);
+});
+
+test('guests cannot delete a project', function () {
+    $project = Project::factory()->create();
+
+    $response = $this->delete("/projects/{$project->id}");
+
+    $response->assertRedirect(route('login'));
+});

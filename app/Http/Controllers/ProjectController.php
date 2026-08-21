@@ -107,4 +107,28 @@ class ProjectController extends Controller
 
         return redirect()->back()->with('success', 'Columns configuration updated successfully.');
     }
+
+    public function updateDetails(Request $request, Project $project): RedirectResponse
+    {
+        $this->authorize('updateDetails', $project);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:30',
+            'description' => 'nullable|string',
+            'color' => 'required|string',
+        ]);
+
+        $this->projectService->updateDetails($project, $validated);
+
+        return redirect()->back()->with('success', 'Project details updated successfully.');
+    }
+
+    public function destroy(Project $project): RedirectResponse
+    {
+        $this->authorize('delete', $project);
+
+        $this->projectService->deleteProject($project);
+
+        return redirect()->route('projects.index')->with('success', "\"$project->name\" has been deleted.");
+    }
 }

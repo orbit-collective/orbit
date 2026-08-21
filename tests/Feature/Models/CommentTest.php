@@ -2,6 +2,7 @@
 
 use App\Models\Comment;
 use App\Models\Issue;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -65,4 +66,35 @@ test('deleting the user cascades to delete their comments', function () {
     $user->delete();
 
     $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
+});
+
+test('can_edit and can_delete are false with no authenticated user', function () {
+    $comment = Comment::factory()->create();
+
+    expect($comment->can_edit)->toBeFalse();
+    expect($comment->can_delete)->toBeFalse();
+});
+
+test('can_edit and can_delete are true for the comment author', function () {
+    $user = User::factory()->create();
+    $comment = Comment::factory()->create(['user_id' => $user->id]);
+    $comment->issue->project->users()->attach($user->id, ['role' => 'member']);
+    $this->actingAs($user);
+
+    expect($comment->can_edit)->toBeTrue();
+    expect($comment->can_delete)->toBeTrue();
+});
+
+test('can_edit and can_delete are false for another plain member', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $author = User::factory()->create();
+    $project->users()->attach($author->id, ['role' => 'member']);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
+    $otherMember = User::factory()->create();
+    $project->users()->attach($otherMember->id, ['role' => 'member']);
+    $this->actingAs($otherMember);
+
+    expect($comment->can_edit)->toBeFalse();
+    expect($comment->can_delete)->toBeFalse();
 });

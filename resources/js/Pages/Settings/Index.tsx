@@ -9,6 +9,7 @@ import { NotificationSettings } from '@/types/Notification';
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
+    ProjectDetails,
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
@@ -39,6 +40,10 @@ interface SettingsIndexProps {
     canUpdateRoles?: boolean;
     canDeleteRoles?: boolean;
     canAssignRoles?: boolean;
+    hasSettingsAccess?: boolean;
+    selectedProjectDetails?: ProjectDetails | null;
+    canUpdateProjectDetails?: boolean;
+    canDeleteProject?: boolean;
 }
 
 export default function SettingsIndex({
@@ -55,6 +60,10 @@ export default function SettingsIndex({
     canUpdateRoles = false,
     canDeleteRoles = false,
     canAssignRoles = false,
+    hasSettingsAccess = false,
+    selectedProjectDetails = null,
+    canUpdateProjectDetails = false,
+    canDeleteProject = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -141,6 +150,12 @@ export default function SettingsIndex({
                                 canUpdateRoles={canUpdateRoles}
                                 canDeleteRoles={canDeleteRoles}
                                 canAssignRoles={canAssignRoles}
+                                hasSettingsAccess={hasSettingsAccess}
+                                selectedProjectDetails={selectedProjectDetails}
+                                canUpdateProjectDetails={
+                                    canUpdateProjectDetails
+                                }
+                                canDeleteProject={canDeleteProject}
                             />
                         ) : (
                             <SettingsPanel

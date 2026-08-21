@@ -19,7 +19,7 @@ class ProjectMemberController extends Controller
 
     public function updateRole(Request $request, Project $project, User $user): RedirectResponse
     {
-        $this->authorize('manageMembers', $project);
+        $this->authorize('updateMemberRole', $project);
 
         $validated = $request->validate([
             'role' => ['required', Rule::enum(RoleType::class)->except([RoleType::OWNER, RoleType::CUSTOM])],
@@ -32,7 +32,7 @@ class ProjectMemberController extends Controller
 
     public function destroy(Project $project, User $user): RedirectResponse
     {
-        $this->authorize('manageMembers', $project);
+        $this->authorize('removeMember', $project);
 
         $this->projectMemberService->removeMember($project, $user);
 

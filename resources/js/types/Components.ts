@@ -488,12 +488,12 @@ export interface IssuePageHeaderProps {
 }
 export interface CommentItemProps {
     comment: Comment;
-    canDelete?: boolean;
+    onEdit?: (comment: Comment, body: string) => void;
     onDelete?: (comment: Comment) => void;
 }
 export interface CommentListProps {
     comments: Comment[];
-    currentUserId?: number;
+    onEdit?: (comment: Comment, body: string) => void;
     onDelete?: (comment: Comment) => void;
 }
 export interface CommentFormProps {
