@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Permissions\Permission;
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Permission as PermissionModel;
 use App\Models\Project;
 use App\Models\Role;
@@ -16,10 +16,20 @@ use Illuminate\Validation\ValidationException;
 class RoleService
 {
     /**
+     * The base RoleType tiers every project gets a system role for. CUSTOM is
+     * excluded here — it's not a tier, it's what user-created roles are tagged
+     * with.
+     */
+    private const array SYSTEM_ROLE_TYPES = [
+        RoleType::OWNER,
+        RoleType::ADMIN,
+        RoleType::MEMBER,
+        RoleType::VIEWER,
+    ];
+
+    /**
      * The baseline a plain project member gets out of the box: full control over
      * issues and comments, but no ability to manage members, roles, or settings.
-     * Admins get every permission (see defaultPermissionsFor()), so this list only
-     * needs to cover the "member" tier.
      */
     private const array MEMBER_DEFAULT_PERMISSIONS = [
         Permission::PROJECT_VIEW,
@@ -39,6 +49,18 @@ class RoleService
         Permission::COMMENTS_UPDATE_ANY,
         Permission::COMMENTS_DELETE_OWN,
         Permission::COMMENTS_DELETE_ANY,
+    ];
+
+    /**
+     * A read-only tier: can see the project, its members, roles and settings,
+     * and browse issues, but cannot create/change/manage anything.
+     */
+    private const array VIEWER_DEFAULT_PERMISSIONS = [
+        Permission::PROJECT_VIEW,
+        Permission::MEMBERS_VIEW,
+        Permission::ROLES_VIEW,
+        Permission::SETTINGS_VIEW,
+        Permission::ISSUES_VIEW,
     ];
 
     public function __construct(
@@ -93,15 +115,15 @@ class RoleService
     }
 
     /**
-     * Creates the project's system roles (one per ProjectRole tier) on first use
+     * Creates the project's system roles (one per RoleType tier) on first use
      * and keeps their permissions in sync with the current defaults, so existing
      * projects created before this system existed get backfilled lazily.
      *
-     * @return SupportCollection<string, Role> keyed by ProjectRole value
+     * @return SupportCollection<string, Role> keyed by RoleType value
      */
     public function ensureSystemRoles(Project $project): SupportCollection
     {
-        return collect(ProjectRole::cases())->mapWithKeys(function (ProjectRole $role) use ($project) {
+        return collect(self::SYSTEM_ROLE_TYPES)->mapWithKeys(function (RoleType $role) use ($project) {
             $systemRole = $this->roleRepository->firstOrCreateSystemRole($project, $role);
 
             $this->roleRepository->syncPermissions($systemRole, $this->defaultPermissionIdsFor($role));
@@ -110,7 +132,7 @@ class RoleService
         });
     }
 
-    public function syncSystemRoleForMember(Project $project, int $userId, ProjectRole $role): void
+    public function syncSystemRoleForMember(Project $project, int $userId, RoleType $role): void
     {
         $systemRoles = $this->ensureSystemRoles($project);
 
@@ -122,11 +144,13 @@ class RoleService
         );
     }
 
-    private function defaultPermissionIdsFor(ProjectRole $role): array
+    private function defaultPermissionIdsFor(RoleType $role): array
     {
         $keys = match ($role) {
-            ProjectRole::ADMIN => array_map(fn (Permission $permission) => $permission->value, Permission::cases()),
-            ProjectRole::MEMBER => array_map(fn (Permission $permission) => $permission->value, self::MEMBER_DEFAULT_PERMISSIONS),
+            RoleType::OWNER, RoleType::ADMIN => array_map(fn (Permission $permission) => $permission->value, Permission::cases()),
+            RoleType::MEMBER => array_map(fn (Permission $permission) => $permission->value, self::MEMBER_DEFAULT_PERMISSIONS),
+            RoleType::VIEWER => array_map(fn (Permission $permission) => $permission->value, self::VIEWER_DEFAULT_PERMISSIONS),
+            RoleType::CUSTOM => [],
         };
 
         return PermissionModel::query()->whereIn('key', $keys)->pluck('id')->all();

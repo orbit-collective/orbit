@@ -13,7 +13,7 @@ beforeEach(function () {
 
 test('it can get the roles of a project with their permissions eager loaded', function () {
     $project = Project::factory()->create();
-    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    $permission = Permission::where('key', 'issues.view')->first();
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $role->permissions()->attach($permission);
 
@@ -64,8 +64,8 @@ test('it can delete a role', function () {
 test('it can sync the permissions of a role', function () {
     $project = Project::factory()->create();
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
-    $permissionA = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
-    $permissionB = Permission::create(['key' => 'issues.create', 'name' => 'Create issues', 'group' => 'issues']);
+    $permissionA = Permission::where('key', 'issues.view')->first();
+    $permissionB = Permission::where('key', 'issues.create')->first();
     $role->permissions()->attach($permissionA);
 
     $this->repository->syncPermissions($role, [$permissionB->id]);

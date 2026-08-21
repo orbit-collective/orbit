@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\ProjectUser;
 use App\Models\User;
@@ -30,7 +30,7 @@ test('it can promote a member to admin', function () {
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $project->users()->attach($member->id, ['role' => 'member']);
 
-    $this->service->updateRole($project, $member, ProjectRole::ADMIN);
+    $this->service->updateRole($project, $member, RoleType::ADMIN);
 
     expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('admin');
 });
@@ -44,38 +44,38 @@ test('promoting a member swaps their system role while keeping custom roles', fu
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $projectUser->roles()->attach($customRole->id);
-    app(RoleService::class)->syncSystemRoleForMember($project, $member->id, ProjectRole::MEMBER);
+    app(RoleService::class)->syncSystemRoleForMember($project, $member->id, RoleType::MEMBER);
 
-    $this->service->updateRole($project, $member, ProjectRole::ADMIN);
+    $this->service->updateRole($project, $member, RoleType::ADMIN);
 
     expect($projectUser->roles()->pluck('slug')->sort()->values()->all())->toBe(['admin', 'qa']);
 });
 
-test('it prevents demoting the only admin', function () {
+test('it allows demoting an admin freely since the owner remains the permanent manager', function () {
     $project = Project::factory()->create();
+    $owner = User::factory()->create();
     $admin = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    $this->service->updateRole($project, $admin, ProjectRole::MEMBER);
-})->throws(ValidationException::class);
+    $this->service->updateRole($project, $admin, RoleType::MEMBER);
 
-test('it allows demoting an admin when another admin remains', function () {
-    $project = Project::factory()->create();
-    $adminA = User::factory()->create();
-    $adminB = User::factory()->create();
-    $project->users()->attach($adminA->id, ['role' => 'admin']);
-    $project->users()->attach($adminB->id, ['role' => 'admin']);
-
-    $this->service->updateRole($project, $adminA, ProjectRole::MEMBER);
-
-    expect($project->users()->where('users.id', $adminA->id)->first()->pivot->role)->toBe('member');
+    expect($project->users()->where('users.id', $admin->id)->first()->pivot->role)->toBe('member');
 });
+
+test('it prevents changing the owner\'s role', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+
+    $this->service->updateRole($project, $owner, RoleType::ADMIN);
+})->throws(ValidationException::class);
 
 test('it throws when updating the role of someone who is not a member', function () {
     $project = Project::factory()->create();
     $outsider = User::factory()->create();
 
-    $this->service->updateRole($project, $outsider, ProjectRole::ADMIN);
+    $this->service->updateRole($project, $outsider, RoleType::ADMIN);
 })->throws(ValidationException::class);
 
 test('it can remove a member from a project', function () {
@@ -90,12 +90,12 @@ test('it can remove a member from a project', function () {
     expect($project->users()->where('users.id', $member->id)->exists())->toBeFalse();
 });
 
-test('it prevents removing the only admin', function () {
+test('it prevents removing the owner from the project', function () {
     $project = Project::factory()->create();
-    $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
 
-    $this->service->removeMember($project, $admin);
+    $this->service->removeMember($project, $owner);
 })->throws(ValidationException::class);
 
 test('it throws when removing someone who is not a member', function () {

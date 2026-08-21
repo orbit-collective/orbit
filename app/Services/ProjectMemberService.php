@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ProjectMemberRepository;
@@ -22,20 +22,10 @@ class ProjectMemberService
         return $this->projectMemberRepository->getMembers($project);
     }
 
-    public function updateRole(Project $project, User $member, ProjectRole $newRole): void
+    public function updateRole(Project $project, User $member, RoleType $newRole): void
     {
         $this->assertIsMember($project, $member);
-
-        $currentRole = $this->projectMemberRepository->roleOf($project, $member->id);
-
-        if ($currentRole === ProjectRole::ADMIN
-            && $newRole === ProjectRole::MEMBER
-            && $this->projectMemberRepository->countAdmins($project) <= 1
-        ) {
-            throw ValidationException::withMessages([
-                'role' => 'A project must have at least one admin.',
-            ]);
-        }
+        $this->assertNotOwner($project, $member, 'role', "The project owner's role cannot be changed.");
 
         $this->projectMemberRepository->updateRole($project, $member->id, $newRole);
         $this->roleService->syncSystemRoleForMember($project, $member->id, $newRole);
@@ -45,14 +35,7 @@ class ProjectMemberService
     public function removeMember(Project $project, User $member): void
     {
         $this->assertIsMember($project, $member);
-
-        $currentRole = $this->projectMemberRepository->roleOf($project, $member->id);
-
-        if ($currentRole === ProjectRole::ADMIN && $this->projectMemberRepository->countAdmins($project) <= 1) {
-            throw ValidationException::withMessages([
-                'member' => 'A project must have at least one admin.',
-            ]);
-        }
+        $this->assertNotOwner($project, $member, 'member', 'The project owner cannot be removed from the project.');
 
         $this->projectMemberRepository->removeMember($project, $member->id);
         $this->activityLogService->log($project->id, "Removed $member->name from the project");
@@ -71,6 +54,15 @@ class ProjectMemberService
         if (! $this->projectMemberRepository->isMember($project, $member->id)) {
             throw ValidationException::withMessages([
                 'member' => 'This user is not a member of the project.',
+            ]);
+        }
+    }
+
+    private function assertNotOwner(Project $project, User $member, string $field, string $message): void
+    {
+        if ($this->projectMemberRepository->roleOf($project, $member->id) === RoleType::OWNER) {
+            throw ValidationException::withMessages([
+                $field => $message,
             ]);
         }
     }

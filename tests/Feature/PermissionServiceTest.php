@@ -1,15 +1,13 @@
 <?php
 
-use App\Models\Permission;
+use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Services\PermissionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('it lists all permissions via the repository', function () {
-    Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
-
+test('it lists all seeded permissions via the repository', function () {
     $service = app(PermissionService::class);
 
-    expect($service->getAll())->toHaveCount(1);
+    expect($service->getAll())->toHaveCount(count(PermissionEnum::cases()));
 });

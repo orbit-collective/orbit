@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Permissions\Permission as PermissionEnum;
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -64,7 +64,7 @@ class Project extends Model
             return false;
         }
 
-        if ($member->pivot->role === ProjectRole::ADMIN->value) {
+        if ($member->pivot->role === RoleType::OWNER->value) {
             return true;
         }
 

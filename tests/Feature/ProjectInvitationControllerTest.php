@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\User;
 use App\Services\ProjectInvitationService;
@@ -61,7 +61,7 @@ test('an admin can revoke a pending invitation', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->actingAs($admin)->delete("/projects/{$project->id}/invitations/{$invitation->id}");
 
@@ -76,7 +76,7 @@ test('revoking an invitation via the wrong project returns a 404', function () {
     $project = User::factory()->create();
     $projectA->users()->attach($admin->id, ['role' => 'admin']);
     $projectB->users()->attach($project->id, ['role' => 'admin']);
-    $invitation = app(ProjectInvitationService::class)->invite($projectB, 'invitee@example.com', ProjectRole::MEMBER, $project);
+    $invitation = app(ProjectInvitationService::class)->invite($projectB, 'invitee@example.com', RoleType::MEMBER, $project);
 
     $response = $this->actingAs($admin)->delete("/projects/{$projectA->id}/invitations/{$invitation->id}");
 
@@ -89,7 +89,7 @@ test('a member cannot revoke an invitation', function () {
     $member = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $project->users()->attach($member->id, ['role' => 'member']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->actingAs($member)->delete("/projects/{$project->id}/invitations/{$invitation->id}");
 
@@ -101,7 +101,7 @@ test('clicking the invitation link while logged in with the matching email joins
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->actingAs($invitee)->get("/invitations/{$invitation->token}");
 
@@ -113,7 +113,7 @@ test('clicking the invitation link while logged out redirects to login and remem
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->get("/invitations/{$invitation->token}");
 
@@ -134,7 +134,7 @@ test('clicking an expired invitation link while logged in redirects to the dashb
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
     $invitation->update(['expires_at' => now()->subDay()]);
 
     $response = $this->actingAs($invitee)->get("/invitations/{$invitation->token}");
@@ -148,7 +148,7 @@ test('clicking the invitation link with a mismatched account email surfaces the 
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $wrongUser = User::factory()->create(['email' => 'someone-else@example.com']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->actingAs($wrongUser)->get("/invitations/{$invitation->token}");
 
@@ -161,7 +161,7 @@ test('logging in after clicking an invitation link accepts it automatically', fu
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $invitee = User::factory()->create(['email' => 'invitee@example.com', 'password' => 'password123']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $this->get("/invitations/{$invitation->token}");
 
@@ -179,7 +179,7 @@ test('logging in with a mismatched email after clicking an invitation link surfa
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $wrongUser = User::factory()->create(['email' => 'someone-else@example.com', 'password' => 'password123']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $this->get("/invitations/{$invitation->token}");
 
@@ -196,7 +196,7 @@ test('registering after clicking an invitation link accepts it automatically', f
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'new-person@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'new-person@example.com', RoleType::MEMBER, $admin);
 
     $this->get("/invitations/{$invitation->token}");
 
@@ -217,7 +217,7 @@ test('a logged-in user can manually accept an invitation by pasting its token', 
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
-    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->actingAs($invitee)->post('/invitations/accept', [
         'token' => $invitation->token,

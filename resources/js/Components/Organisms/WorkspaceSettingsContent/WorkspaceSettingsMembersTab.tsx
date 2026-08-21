@@ -12,6 +12,7 @@ import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useAlert } from '@/context/AlertContext';
 import { PageProps } from '@/types';
 import {
+    AssignableProjectMemberRole,
     MemberProjectSummary,
     PendingProjectInvitation,
     ProjectMember,
@@ -33,21 +34,34 @@ import {
 import { createPortal } from 'react-dom';
 
 const ROLE_LABELS: Record<ProjectMemberRole, string> = {
+    owner: 'Owner',
     admin: 'Admin',
     member: 'Member',
+    viewer: 'Viewer',
 };
 
-const ROLE_ICONS: Record<ProjectMemberRole, 'ShieldCheck' | 'User'> = {
+const ROLE_ICONS: Record<
+    ProjectMemberRole,
+    'Crown' | 'ShieldCheck' | 'User' | 'Eye'
+> = {
+    owner: 'Crown',
     admin: 'ShieldCheck',
     member: 'User',
+    viewer: 'Eye',
 };
+
+const ASSIGNABLE_ROLES: AssignableProjectMemberRole[] = [
+    'admin',
+    'member',
+    'viewer',
+];
 
 function RoleBadge({ role }: { role: ProjectMemberRole }) {
     return (
         <Badge
             className={cn(
                 'gap-1',
-                role === 'admin' &&
+                (role === 'admin' || role === 'owner') &&
                     'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]',
             )}
         >
@@ -185,8 +199,8 @@ function PortalDropdown({
 }
 
 interface RoleDropdownProps {
-    value: ProjectMemberRole;
-    onChange: (role: ProjectMemberRole) => void;
+    value: AssignableProjectMemberRole;
+    onChange: (role: AssignableProjectMemberRole) => void;
     disabled?: boolean;
 }
 
@@ -206,7 +220,7 @@ function RoleDropdown({ value, onChange, disabled }: RoleDropdownProps) {
                 />
             }
         >
-            {(Object.keys(ROLE_LABELS) as ProjectMemberRole[]).map((role) => (
+            {ASSIGNABLE_ROLES.map((role) => (
                 <DropdownItem
                     key={role}
                     label={ROLE_LABELS[role]}
@@ -299,7 +313,7 @@ export default function WorkspaceSettingsMembersTab({
     const { props } = usePage<PageProps>();
     const emailEnabled = props.emailEnabled;
     const { addAlert } = useAlert();
-    const isAdmin = viewerRole === 'admin';
+    const isManager = viewerRole === 'owner' || viewerRole === 'admin';
     const assignableRoles = roles.filter((role) => !role.isSystem);
 
     const selectedProject =
@@ -314,12 +328,13 @@ export default function WorkspaceSettingsMembersTab({
         );
     };
 
-    const adminCount = members.filter(
-        (member) => member.role === 'admin',
+    const managerCount = members.filter(
+        (member) => member.role === 'owner' || member.role === 'admin',
     ).length;
 
     const [inviteEmail, setInviteEmail] = useState('');
-    const [inviteRole, setInviteRole] = useState<ProjectMemberRole>('member');
+    const [inviteRole, setInviteRole] =
+        useState<AssignableProjectMemberRole>('member');
     const [inviteError, setInviteError] = useState<string | null>(null);
     const [isInviting, setIsInviting] = useState(false);
 
@@ -378,7 +393,10 @@ export default function WorkspaceSettingsMembersTab({
         );
     };
 
-    const changeMemberRole = (memberId: number, role: ProjectMemberRole) => {
+    const changeMemberRole = (
+        memberId: number,
+        role: AssignableProjectMemberRole,
+    ) => {
         if (!selectedProject) {
             return;
         }
@@ -478,8 +496,8 @@ export default function WorkspaceSettingsMembersTab({
                     description={`Across "${selectedProject.name}"`}
                 />
                 <StatCard
-                    title="Admins"
-                    value={adminCount}
+                    title="Managers"
+                    value={managerCount}
                     icon="ShieldCheck"
                     color="info"
                     description="Can manage members & invites"
@@ -561,7 +579,7 @@ export default function WorkspaceSettingsMembersTab({
                                     initials={member.name.charAt(0)}
                                     size="md"
                                 />
-                                {isAdmin ? (
+                                {isManager && member.role !== 'owner' ? (
                                     <RoleDropdown
                                         value={member.role}
                                         onChange={(role) =>
@@ -583,7 +601,7 @@ export default function WorkspaceSettingsMembersTab({
                                         )
                                     }
                                 />
-                                {isAdmin && (
+                                {isManager && member.role !== 'owner' && (
                                     <button
                                         type="button"
                                         title="Remove from project"
@@ -613,7 +631,7 @@ export default function WorkspaceSettingsMembersTab({
                         title="Invitations unavailable"
                         description="Ask an administrator to configure outgoing email to enable project invitations."
                     />
-                ) : isAdmin ? (
+                ) : isManager ? (
                     <SettingsPanelRow
                         title="Invite a teammate"
                         description="They'll receive a one-time link to join this project."
@@ -659,7 +677,7 @@ export default function WorkspaceSettingsMembersTab({
                 )}
             </SettingsPanel>
 
-            {emailEnabled && isAdmin && (
+            {emailEnabled && isManager && (
                 <SettingsPanel
                     title="Pending invitations"
                     description="Invitations that haven't been accepted yet."

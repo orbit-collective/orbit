@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Notifications\NotificationType;
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
@@ -30,7 +30,7 @@ class ProjectInvitationService
         protected RoleService $roleService
     ) {}
 
-    public function invite(Project $project, string $email, ProjectRole $role, User $invitedBy): ProjectInvitation
+    public function invite(Project $project, string $email, RoleType $role, User $invitedBy): ProjectInvitation
     {
         if (! $this->mailConfigurationService->isEnabled()) {
             throw ValidationException::withMessages([

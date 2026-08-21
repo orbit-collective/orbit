@@ -1,9 +1,11 @@
 <?php
 
+use App\Enums\Permissions\RoleType;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Models\ProjectUser;
 use App\Models\User;
+use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -63,12 +65,12 @@ test('changing a role requires a valid role value', function () {
     $response->assertSessionHasErrors('role');
 });
 
-test('demoting the only admin fails with a validation error', function () {
+test('changing the owner\'s role fails with a validation error', function () {
     $project = Project::factory()->create();
-    $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
 
-    $response = $this->actingAs($admin)->patch("/projects/{$project->id}/members/{$admin->id}", [
+    $response = $this->actingAs($owner)->patch("/projects/{$project->id}/members/{$owner->id}", [
         'role' => 'member',
     ]);
 
@@ -100,12 +102,12 @@ test('a member cannot remove another member', function () {
     $response->assertForbidden();
 });
 
-test('removing the only admin fails with a validation error', function () {
+test('removing the owner fails with a validation error', function () {
     $project = Project::factory()->create();
-    $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
 
-    $response = $this->actingAs($admin)->delete("/projects/{$project->id}/members/{$admin->id}");
+    $response = $this->actingAs($owner)->delete("/projects/{$project->id}/members/{$owner->id}");
 
     $response->assertSessionHasErrors('member');
 });
@@ -126,6 +128,7 @@ test('an admin can assign a custom role to a member', function () {
     $member = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $project->users()->attach($member->id, ['role' => 'member']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->patch("/projects/{$project->id}/members/{$member->id}/roles", [
@@ -144,7 +147,7 @@ test('a member with the roles.assign permission can assign a custom role', funct
     $project->users()->attach($member->id, ['role' => 'member']);
     $project->users()->attach($target->id, ['role' => 'member']);
 
-    $permission = Permission::create(['key' => 'projects.roles.assign', 'name' => 'Assign roles', 'group' => 'projects']);
+    $permission = Permission::where('key', 'projects.roles.assign')->first();
     $grantingRole = $project->roles()->create(['name' => 'Role Manager', 'slug' => 'role-manager', 'role' => 'custom']);
     $grantingRole->permissions()->attach($permission);
     $memberPivot = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
@@ -180,6 +183,7 @@ test('assigning roles accepts an empty array to clear all custom roles', functio
     $member = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $project->users()->attach($member->id, ['role' => 'member']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     $projectUser->roles()->attach($role->id);
@@ -199,6 +203,7 @@ test('assigning a role from another project is rejected', function () {
     $member = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $project->users()->attach($member->id, ['role' => 'member']);
+    app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $foreignRole = $otherProject->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($admin)->patch("/projects/{$project->id}/members/{$member->id}/roles", [

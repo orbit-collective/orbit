@@ -19,7 +19,7 @@ test('a role belongs to a project', function () {
 test('a role can have many permissions', function () {
     $project = Project::factory()->create();
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
-    $permission = Permission::create(['key' => 'issues.view', 'name' => 'View issues', 'group' => 'issues']);
+    $permission = Permission::where('key', 'issues.view')->first();
 
     $role->permissions()->attach($permission);
 

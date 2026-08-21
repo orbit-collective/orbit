@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
@@ -22,10 +22,10 @@ class ProjectMemberController extends Controller
         $this->authorize('manageMembers', $project);
 
         $validated = $request->validate([
-            'role' => ['required', Rule::enum(ProjectRole::class)],
+            'role' => ['required', Rule::enum(RoleType::class)->except([RoleType::OWNER, RoleType::CUSTOM])],
         ]);
 
-        $this->projectMemberService->updateRole($project, $user, ProjectRole::from($validated['role']));
+        $this->projectMemberService->updateRole($project, $user, RoleType::from($validated['role']));
 
         return redirect()->back()->with('success', "$user->name's role has been updated.");
     }

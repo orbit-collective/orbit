@@ -1,6 +1,6 @@
 <?php
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\ProjectUser;
 use App\Models\User;
@@ -56,7 +56,7 @@ test('it returns the role of a member', function () {
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    expect($this->repository->roleOf($project, $admin->id))->toBe(ProjectRole::ADMIN);
+    expect($this->repository->roleOf($project, $admin->id))->toBe(RoleType::ADMIN);
 });
 
 test('it returns null for the role of a non-member', function () {
@@ -66,26 +66,14 @@ test('it returns null for the role of a non-member', function () {
     expect($this->repository->roleOf($project, $outsider->id))->toBeNull();
 });
 
-test('it counts the number of admins on a project', function () {
-    $project = Project::factory()->create();
-    $adminA = User::factory()->create();
-    $adminB = User::factory()->create();
-    $member = User::factory()->create();
-    $project->users()->attach($adminA->id, ['role' => 'admin']);
-    $project->users()->attach($adminB->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
-
-    expect($this->repository->countAdmins($project))->toBe(2);
-});
-
 test('it can update a member\'s role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
     $project->users()->attach($member->id, ['role' => 'member']);
 
-    $this->repository->updateRole($project, $member->id, ProjectRole::ADMIN);
+    $this->repository->updateRole($project, $member->id, RoleType::ADMIN);
 
-    expect($this->repository->roleOf($project, $member->id))->toBe(ProjectRole::ADMIN);
+    expect($this->repository->roleOf($project, $member->id))->toBe(RoleType::ADMIN);
 });
 
 test('it can remove a member from a project', function () {

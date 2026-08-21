@@ -1,15 +1,16 @@
 <?php
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ProjectRepository;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->repository = new ProjectRepository();
+    $this->repository = new ProjectRepository;
 });
 
 test('it can get all projects for a user', function () {
@@ -17,7 +18,7 @@ test('it can get all projects for a user', function () {
     $projects = Project::factory()->count(3)->create();
 
     foreach ($projects as $project) {
-        $project->users()->attach($user->id, ['role' => ProjectRole::MEMBER->value]);
+        $project->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
     }
 
     Project::factory()->create();
@@ -51,7 +52,7 @@ test('it can store a new project', function () {
 
 test('it throws exception when project slug is not found', function () {
     $this->repository->findBySlug('non-existent');
-})->throws(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+})->throws(ModelNotFoundException::class);
 
 test('it reports no projects exist for a user when they belong to none', function () {
     $user = User::factory()->create();
@@ -63,7 +64,7 @@ test('it reports no projects exist for a user when they belong to none', functio
 test('it reports projects exist once the user has been attached to one', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => ProjectRole::MEMBER->value]);
+    $project->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
 
     expect($this->repository->hasAnyProjectsForUser($user->id))->toBeTrue();
 });
@@ -72,7 +73,7 @@ test('it can attach a member with a role to a project', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
-    $this->repository->attachMember($project, $user->id, ProjectRole::ADMIN);
+    $this->repository->attachMember($project, $user->id, RoleType::ADMIN);
 
-    expect($project->users()->first()->pivot->role)->toBe(ProjectRole::ADMIN->value);
+    expect($project->users()->first()->pivot->role)->toBe(RoleType::ADMIN->value);
 });
