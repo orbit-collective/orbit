@@ -1,6 +1,8 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
-import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
+import ProgressRing from '@/Components/Atoms/ProgressRing/ProgressRing';
+import PermissionGroupCard from '@/Components/Molecules/PermissionGroupCard/PermissionGroupCard';
+import RoleListItem from '@/Components/Molecules/RoleListItem/RoleListItem';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
@@ -13,11 +15,7 @@ import {
 } from '@/types/Roles';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
-import {
-    getPermissionDescription,
-    getPermissionLabel,
-    getPermissionSection,
-} from '@/utils/permissions';
+import { getPermissionLabel, getPermissionSection } from '@/utils/permissions';
 import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -27,7 +25,9 @@ import WorkspaceSettingsDeleteRoleModal from './WorkspaceSettingsDeleteRoleModal
 interface RoleTypeTheme {
     label: string;
     dot: string;
+    ring: string;
     badgeClass: string;
+    gradient: string;
     icon: keyof typeof icons;
 }
 
@@ -35,31 +35,41 @@ const ROLE_TYPE_THEME: Record<RoleTypeValue, RoleTypeTheme> = {
     owner: {
         label: 'Owner',
         dot: 'bg-amber-400',
+        ring: 'stroke-amber-400',
         badgeClass: 'bg-amber-400/10 text-amber-400',
+        gradient: 'from-amber-400/20 to-amber-400/5',
         icon: 'Crown',
     },
     admin: {
         label: 'Admin',
         dot: 'bg-emerald-400',
+        ring: 'stroke-emerald-400',
         badgeClass: 'bg-emerald-400/10 text-emerald-400',
+        gradient: 'from-emerald-400/20 to-emerald-400/5',
         icon: 'ShieldCheck',
     },
     member: {
         label: 'Member',
         dot: 'bg-violet-400',
+        ring: 'stroke-violet-400',
         badgeClass: 'bg-violet-400/10 text-violet-400',
+        gradient: 'from-violet-400/20 to-violet-400/5',
         icon: 'User',
     },
     viewer: {
         label: 'Viewer',
         dot: 'bg-sky-400',
+        ring: 'stroke-sky-400',
         badgeClass: 'bg-sky-400/10 text-sky-400',
+        gradient: 'from-sky-400/20 to-sky-400/5',
         icon: 'Eye',
     },
     custom: {
         label: 'Custom',
         dot: 'bg-slate-400',
+        ring: 'stroke-slate-400',
         badgeClass: 'bg-slate-400/10 text-slate-400',
+        gradient: 'from-slate-400/20 to-slate-400/5',
         icon: 'Sparkles',
     },
 };
@@ -220,6 +230,14 @@ export default function WorkspaceSettingsRolesTab({
         canUpdateRoles &&
         selectedRole !== null &&
         selectedRole.type !== 'owner';
+
+    const selectedRoleRatio =
+        selectedRole === null || permissions.length === 0
+            ? 0
+            : Math.round(
+                  (selectedRole.permissionIds.length / permissions.length) *
+                      100,
+              );
 
     const togglePermission = (
         role: WorkspaceRole,
@@ -471,59 +489,18 @@ export default function WorkspaceSettingsRolesTab({
                     <>
                         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr]">
                             <div className="space-y-2 border-b border-[var(--border-color)] p-4 lg:border-b-0 lg:border-r">
-                                {localRoles.map((role) => {
-                                    const theme = ROLE_TYPE_THEME[role.type];
-                                    const selected = role.id === selectedRoleId;
-
-                                    return (
-                                        <button
-                                            key={role.id}
-                                            type="button"
-                                            onClick={() =>
-                                                setSelectedRoleId(role.id)
-                                            }
-                                            className={cn(
-                                                'w-full rounded-xl border p-3 text-left transition-colors',
-                                                selected
-                                                    ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
-                                                    : 'border-[var(--border-color)] bg-[var(--bg-color)] hover:border-[var(--border-color-strong)]',
-                                            )}
-                                        >
-                                            <div className="mb-1.5 flex items-center justify-between gap-2">
-                                                <p className="min-w-0 truncate text-sm font-medium text-[var(--text-color)]">
-                                                    {role.name}
-                                                </p>
-                                                {role.isSystem && (
-                                                    <Icon
-                                                        name="Lock"
-                                                        size={12}
-                                                        className="shrink-0 text-[var(--text-gray-color)]"
-                                                    />
-                                                )}
-                                            </div>
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span
-                                                    className={cn(
-                                                        'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium',
-                                                        theme.badgeClass,
-                                                    )}
-                                                >
-                                                    <span
-                                                        className={cn(
-                                                            'h-1.5 w-1.5 rounded-full',
-                                                            theme.dot,
-                                                        )}
-                                                    />
-                                                    {theme.label}
-                                                </span>
-                                                <span className="text-[11px] text-[var(--text-gray-color)]">
-                                                    {role.permissionIds.length}{' '}
-                                                    perms
-                                                </span>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
+                                {localRoles.map((role) => (
+                                    <RoleListItem
+                                        key={role.id}
+                                        role={role}
+                                        theme={ROLE_TYPE_THEME[role.type]}
+                                        totalPermissions={permissions.length}
+                                        selected={role.id === selectedRoleId}
+                                        onClick={() =>
+                                            setSelectedRoleId(role.id)
+                                        }
+                                    />
+                                ))}
 
                                 {canCreateRoles && (
                                     <button
@@ -616,40 +593,92 @@ export default function WorkspaceSettingsRolesTab({
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="flex min-w-0 items-center gap-2.5">
-                                                    <span
-                                                        className={cn(
-                                                            'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                                                            ROLE_TYPE_THEME[
-                                                                selectedRole
-                                                                    .type
-                                                            ].badgeClass,
-                                                        )}
-                                                    >
-                                                        <Icon
-                                                            name={
+                                                <div className="flex min-w-0 items-center gap-3">
+                                                    <div className="relative shrink-0">
+                                                        <ProgressRing
+                                                            radius={22}
+                                                            stroke={2.5}
+                                                            progress={
+                                                                selectedRoleRatio
+                                                            }
+                                                            colorClass={
                                                                 ROLE_TYPE_THEME[
                                                                     selectedRole
                                                                         .type
-                                                                ].icon
+                                                                ].ring
                                                             }
-                                                            size={16}
+                                                            bgColorClass="stroke-[var(--bg-light-color)]"
                                                         />
-                                                    </span>
+                                                        <span
+                                                            className={cn(
+                                                                'absolute inset-[3px] flex items-center justify-center rounded-full bg-gradient-to-br',
+                                                                ROLE_TYPE_THEME[
+                                                                    selectedRole
+                                                                        .type
+                                                                ].gradient,
+                                                                ROLE_TYPE_THEME[
+                                                                    selectedRole
+                                                                        .type
+                                                                ].badgeClass,
+                                                            )}
+                                                        >
+                                                            <Icon
+                                                                name={
+                                                                    ROLE_TYPE_THEME[
+                                                                        selectedRole
+                                                                            .type
+                                                                    ].icon
+                                                                }
+                                                                size={15}
+                                                            />
+                                                        </span>
+                                                    </div>
                                                     <div className="min-w-0">
                                                         <p className="truncate text-sm font-semibold text-[var(--text-color)]">
                                                             {selectedRole.name}
                                                         </p>
-                                                        <p className="text-xs text-[var(--text-gray-color)]">
-                                                            {
-                                                                selectedRole.memberCount
-                                                            }{' '}
-                                                            {selectedRole.memberCount ===
-                                                            1
-                                                                ? 'member'
-                                                                : 'members'}{' '}
-                                                            &middot; /
-                                                            {selectedRole.slug}
+                                                        <p className="flex items-center gap-1.5 text-xs text-[var(--text-gray-color)]">
+                                                            <span
+                                                                className={cn(
+                                                                    'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium',
+                                                                    ROLE_TYPE_THEME[
+                                                                        selectedRole
+                                                                            .type
+                                                                    ]
+                                                                        .badgeClass,
+                                                                )}
+                                                            >
+                                                                <span
+                                                                    className={cn(
+                                                                        'h-1.5 w-1.5 rounded-full',
+                                                                        ROLE_TYPE_THEME[
+                                                                            selectedRole
+                                                                                .type
+                                                                        ].dot,
+                                                                    )}
+                                                                />
+                                                                {
+                                                                    ROLE_TYPE_THEME[
+                                                                        selectedRole
+                                                                            .type
+                                                                    ].label
+                                                                }
+                                                            </span>
+                                                            <span>
+                                                                {
+                                                                    selectedRole.memberCount
+                                                                }{' '}
+                                                                {selectedRole.memberCount ===
+                                                                1
+                                                                    ? 'member'
+                                                                    : 'members'}
+                                                            </span>
+                                                            <span>
+                                                                &middot; /
+                                                                {
+                                                                    selectedRole.slug
+                                                                }
+                                                            </span>
                                                         </p>
                                                     </div>
                                                 </div>
@@ -729,7 +758,12 @@ export default function WorkspaceSettingsRolesTab({
                                             )}
                                         </div>
 
-                                        <div className="px-5 py-4">
+                                        <div className="relative px-5 py-4">
+                                            <Icon
+                                                name="Search"
+                                                size={14}
+                                                className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 text-[var(--text-gray-color)]"
+                                            />
                                             <Input
                                                 value={search}
                                                 onChange={(event) =>
@@ -738,10 +772,11 @@ export default function WorkspaceSettingsRolesTab({
                                                     )
                                                 }
                                                 placeholder="Search permissions..."
+                                                className="pl-8"
                                             />
                                         </div>
 
-                                        <div className="max-h-[520px] space-y-5 overflow-y-auto px-5 pb-5">
+                                        <div className="max-h-[520px] space-y-3 overflow-y-auto px-5 pb-5">
                                             {filteredGroups.length === 0 && (
                                                 <p className="py-6 text-center text-sm text-[var(--text-gray-color)]">
                                                     No permissions match "
@@ -749,170 +784,43 @@ export default function WorkspaceSettingsRolesTab({
                                                 </p>
                                             )}
 
-                                            {filteredGroups.map((group) => {
-                                                const groupPermissionIds =
-                                                    group.permissions.map(
+                                            {filteredGroups.map((group) => (
+                                                <PermissionGroupCard
+                                                    key={group.group}
+                                                    label={group.label}
+                                                    icon={group.icon}
+                                                    sections={group.sections}
+                                                    permissionIds={group.permissions.map(
                                                         (p) => p.id,
-                                                    );
-                                                const enabledCount =
-                                                    groupPermissionIds.filter(
-                                                        (id) =>
-                                                            selectedRole.permissionIds.includes(
-                                                                id,
-                                                            ),
-                                                    ).length;
-                                                const ratio =
-                                                    groupPermissionIds.length ===
-                                                    0
-                                                        ? 0
-                                                        : Math.round(
-                                                              (enabledCount /
-                                                                  groupPermissionIds.length) *
-                                                                  100,
-                                                          );
-
-                                                return (
-                                                    <div
-                                                        key={group.group}
-                                                        className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)]"
-                                                    >
-                                                        <div className="flex items-center justify-between gap-3 border-b border-[var(--border-color)] px-4 py-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <Icon
-                                                                    name={
-                                                                        group.icon
-                                                                    }
-                                                                    size={14}
-                                                                    className="text-[var(--text-gray-color)]"
-                                                                />
-                                                                <span className="text-sm font-semibold text-[var(--text-color)]">
-                                                                    {
-                                                                        group.label
-                                                                    }
-                                                                </span>
-                                                                <span className="text-xs text-[var(--text-gray-color)]">
-                                                                    {
-                                                                        enabledCount
-                                                                    }
-                                                                    /
-                                                                    {
-                                                                        groupPermissionIds.length
-                                                                    }
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--bg-light-color)]">
-                                                                    <div
-                                                                        className="h-full rounded-full bg-[var(--accent-color)] transition-all duration-300"
-                                                                        style={{
-                                                                            width: `${ratio}%`,
-                                                                        }}
-                                                                    />
-                                                                </div>
-                                                                {canEditSelectedRole && (
-                                                                    <div className="flex items-center gap-2 text-[11px] font-medium">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() =>
-                                                                                setSectionPermissions(
-                                                                                    selectedRole,
-                                                                                    group.permissions,
-                                                                                    true,
-                                                                                )
-                                                                            }
-                                                                            className="text-[var(--accent-color)] hover:underline"
-                                                                        >
-                                                                            All
-                                                                        </button>
-                                                                        <span className="text-[var(--text-gray-color)]">
-                                                                            /
-                                                                        </span>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() =>
-                                                                                setSectionPermissions(
-                                                                                    selectedRole,
-                                                                                    group.permissions,
-                                                                                    false,
-                                                                                )
-                                                                            }
-                                                                            className="text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
-                                                                        >
-                                                                            None
-                                                                        </button>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="divide-y divide-[var(--border-color)]">
-                                                            {group.sections.map(
-                                                                (section) => (
-                                                                    <div
-                                                                        key={
-                                                                            section.section
-                                                                        }
-                                                                        className="px-4 py-3"
-                                                                    >
-                                                                        {section.section !==
-                                                                            'General' && (
-                                                                            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
-                                                                                {
-                                                                                    section.section
-                                                                                }
-                                                                            </p>
-                                                                        )}
-                                                                        <div className="space-y-2.5">
-                                                                            {section.permissions.map(
-                                                                                (
-                                                                                    permission,
-                                                                                ) => (
-                                                                                    <div
-                                                                                        key={
-                                                                                            permission.id
-                                                                                        }
-                                                                                        className="flex items-center justify-between gap-3"
-                                                                                    >
-                                                                                        <div className="min-w-0">
-                                                                                            <p className="text-sm text-[var(--text-color)]">
-                                                                                                {getPermissionLabel(
-                                                                                                    permission,
-                                                                                                )}
-                                                                                            </p>
-                                                                                            <p className="text-xs text-[var(--text-gray-color)]">
-                                                                                                {getPermissionDescription(
-                                                                                                    permission,
-                                                                                                )}
-                                                                                            </p>
-                                                                                        </div>
-                                                                                        <ToggleSwitch
-                                                                                            checked={selectedRole.permissionIds.includes(
-                                                                                                permission.id,
-                                                                                            )}
-                                                                                            disabled={
-                                                                                                !canEditSelectedRole
-                                                                                            }
-                                                                                            onChange={(
-                                                                                                checked,
-                                                                                            ) =>
-                                                                                                togglePermission(
-                                                                                                    selectedRole,
-                                                                                                    permission.id,
-                                                                                                    checked,
-                                                                                                )
-                                                                                            }
-                                                                                        />
-                                                                                    </div>
-                                                                                ),
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                ),
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
+                                                    )}
+                                                    enabledIds={
+                                                        selectedRole.permissionIds
+                                                    }
+                                                    canEdit={
+                                                        canEditSelectedRole
+                                                    }
+                                                    forceExpanded={
+                                                        search.trim() !== ''
+                                                    }
+                                                    onToggle={(
+                                                        permissionId,
+                                                        enabled,
+                                                    ) =>
+                                                        togglePermission(
+                                                            selectedRole,
+                                                            permissionId,
+                                                            enabled,
+                                                        )
+                                                    }
+                                                    onSetAll={(_, enable) =>
+                                                        setSectionPermissions(
+                                                            selectedRole,
+                                                            group.permissions,
+                                                            enable,
+                                                        )
+                                                    }
+                                                />
+                                            ))}
                                         </div>
                                     </>
                                 )}
