@@ -32,6 +32,7 @@ import {
     useState,
 } from 'react';
 import { createPortal } from 'react-dom';
+import WorkspaceSettingsTransferOwnershipModal from './WorkspaceSettingsTransferOwnershipModal';
 
 const ROLE_LABELS: Record<ProjectMemberRole, string> = {
     owner: 'Owner',
@@ -314,6 +315,8 @@ export default function WorkspaceSettingsMembersTab({
     const emailEnabled = props.emailEnabled;
     const { addAlert } = useAlert();
     const isManager = viewerRole === 'owner' || viewerRole === 'admin';
+    const [isTransferOwnershipModalOpen, setIsTransferOwnershipModalOpen] =
+        useState(false);
     const assignableRoles = roles.filter((role) => !role.isSystem);
 
     const selectedProject =
@@ -617,6 +620,30 @@ export default function WorkspaceSettingsMembersTab({
                 ))}
             </SettingsPanel>
 
+            {viewerRole === 'owner' && (
+                <SettingsPanel
+                    title="Ownership"
+                    description="Transfer full, unconditional control of this project to another member."
+                    icon="Crown"
+                >
+                    <SettingsPanelRow
+                        title="Transfer ownership"
+                        description="You'll be demoted to Admin once the transfer completes."
+                        action={
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setIsTransferOwnershipModalOpen(true)
+                                }
+                                className="cursor-pointer rounded-lg border border-[var(--border-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                            >
+                                Transfer ownership
+                            </button>
+                        }
+                    />
+                </SettingsPanel>
+            )}
+
             <SettingsPanel
                 title="Invite by email"
                 description={
@@ -763,6 +790,15 @@ export default function WorkspaceSettingsMembersTab({
                     }
                 />
             </SettingsPanel>
+
+            {viewerRole === 'owner' && (
+                <WorkspaceSettingsTransferOwnershipModal
+                    isOpen={isTransferOwnershipModalOpen}
+                    onClose={() => setIsTransferOwnershipModalOpen(false)}
+                    projectId={selectedProject.id}
+                    members={members}
+                />
+            )}
         </div>
     );
 }

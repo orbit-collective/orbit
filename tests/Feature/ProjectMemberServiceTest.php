@@ -125,3 +125,62 @@ test('it throws when syncing roles for someone who is not a member', function ()
 
     $this->service->syncRoles($project, $outsider, [$role->id]);
 })->throws(ValidationException::class);
+
+test('it can transfer ownership to another member and demotes the previous owner to admin', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $this->service->transferOwnership($project, $owner, $member);
+
+    expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('owner');
+    expect($project->users()->where('users.id', $owner->id)->first()->pivot->role)->toBe('admin');
+    $this->assertDatabaseHas('activity_logs', [
+        'project_id' => $project->id,
+        'body' => "Transferred project ownership from {$owner->name} to {$member->name}",
+    ]);
+});
+
+test('transferring ownership swaps system roles for both parties', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $this->service->transferOwnership($project, $owner, $member);
+
+    $newOwnerPivot = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
+    $formerOwnerPivot = ProjectUser::where('project_id', $project->id)->where('user_id', $owner->id)->first();
+    expect($newOwnerPivot->roles()->pluck('slug')->all())->toBe(['owner']);
+    expect($formerOwnerPivot->roles()->pluck('slug')->all())->toBe(['admin']);
+});
+
+test('only the current owner can transfer ownership', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $this->service->transferOwnership($project, $admin, $member);
+})->throws(ValidationException::class);
+
+test('ownership cannot be transferred to someone who is not a member', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $outsider = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+
+    $this->service->transferOwnership($project, $owner, $outsider);
+})->throws(ValidationException::class);
+
+test('an owner cannot transfer ownership to themselves', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+
+    $this->service->transferOwnership($project, $owner, $owner);
+})->throws(ValidationException::class);

@@ -25,4 +25,12 @@ class ProjectPolicy
             ->wherePivotIn('role', [RoleType::OWNER->value, RoleType::ADMIN->value])
             ->exists();
     }
+
+    public function transferOwnership(User $user, Project $project): bool
+    {
+        return $project->users()
+            ->where('users.id', $user->id)
+            ->wherePivot('role', RoleType::OWNER->value)
+            ->exists();
+    }
 }

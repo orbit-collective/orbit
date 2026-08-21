@@ -111,6 +111,36 @@ test('settings page defaults to the user\'s first project and lists its members'
     );
 });
 
+test('settings page grants an owner all granular role permissions', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('canCreateRoles', true)
+        ->where('canUpdateRoles', true)
+        ->where('canDeleteRoles', true)
+        ->where('canAssignRoles', true)
+    );
+});
+
+test('settings page denies a plain member all granular role permissions', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('canCreateRoles', false)
+        ->where('canUpdateRoles', false)
+        ->where('canDeleteRoles', false)
+        ->where('canAssignRoles', false)
+    );
+});
+
 test('settings page respects the project query parameter', function () {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
