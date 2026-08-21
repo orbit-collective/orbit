@@ -1,134 +1,17 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
-import Input from '@/Components/Atoms/Input/Input';
-import ProgressRing from '@/Components/Atoms/ProgressRing/ProgressRing';
-import PermissionGroupCard from '@/Components/Molecules/PermissionGroupCard/PermissionGroupCard';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
-import RoleListItem from '@/Components/Molecules/RoleListItem/RoleListItem';
+import RoleDetailHeader from '@/Components/Molecules/RoleDetailHeader/RoleDetailHeader';
+import RolePermissionsList from '@/Components/Molecules/RolePermissionsList/RolePermissionsList';
+import RoleSidebar from '@/Components/Molecules/RoleSidebar/RoleSidebar';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
-import { useAlert } from '@/context/AlertContext';
+import { useRolesManagement } from '@/hooks/useRolesManagement';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import {
-    PermissionDefinition,
-    RoleTypeValue,
-    WorkspaceRole,
-} from '@/types/Roles';
-import { cn } from '@/utils/cn';
-import { getPermissionLabel, getPermissionSection } from '@/utils/permissions';
+import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import { router } from '@inertiajs/react';
-import { icons } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
 import WorkspaceSettingsCreateRoleModal from './WorkspaceSettingsCreateRoleModal';
 import WorkspaceSettingsDeleteRoleModal from './WorkspaceSettingsDeleteRoleModal';
-
-interface RoleTypeTheme {
-    label: string;
-    dot: string;
-    ring: string;
-    badgeClass: string;
-    gradient: string;
-    icon: keyof typeof icons;
-}
-
-const ROLE_TYPE_THEME: Record<RoleTypeValue, RoleTypeTheme> = {
-    owner: {
-        label: 'Owner',
-        dot: 'bg-amber-400',
-        ring: 'stroke-amber-400',
-        badgeClass: 'bg-amber-400/10 text-amber-400',
-        gradient: 'from-amber-400/20 to-amber-400/5',
-        icon: 'Crown',
-    },
-    admin: {
-        label: 'Admin',
-        dot: 'bg-emerald-400',
-        ring: 'stroke-emerald-400',
-        badgeClass: 'bg-emerald-400/10 text-emerald-400',
-        gradient: 'from-emerald-400/20 to-emerald-400/5',
-        icon: 'ShieldCheck',
-    },
-    member: {
-        label: 'Member',
-        dot: 'bg-violet-400',
-        ring: 'stroke-violet-400',
-        badgeClass: 'bg-violet-400/10 text-violet-400',
-        gradient: 'from-violet-400/20 to-violet-400/5',
-        icon: 'User',
-    },
-    viewer: {
-        label: 'Viewer',
-        dot: 'bg-sky-400',
-        ring: 'stroke-sky-400',
-        badgeClass: 'bg-sky-400/10 text-sky-400',
-        gradient: 'from-sky-400/20 to-sky-400/5',
-        icon: 'Eye',
-    },
-    custom: {
-        label: 'Custom',
-        dot: 'bg-slate-400',
-        ring: 'stroke-slate-400',
-        badgeClass: 'bg-slate-400/10 text-slate-400',
-        gradient: 'from-slate-400/20 to-slate-400/5',
-        icon: 'Sparkles',
-    },
-};
-
-const GROUP_META: Record<string, { label: string; icon: keyof typeof icons }> =
-    {
-        projects: { label: 'Project', icon: 'FolderKanban' },
-        issues: { label: 'Issues', icon: 'ListTodo' },
-        comments: { label: 'Comments', icon: 'MessageSquare' },
-    };
-
-interface PermissionSection {
-    section: string;
-    permissions: PermissionDefinition[];
-}
-
-interface PermissionGroup {
-    group: string;
-    label: string;
-    icon: keyof typeof icons;
-    sections: PermissionSection[];
-    permissions: PermissionDefinition[];
-}
-
-function buildPermissionGroups(
-    permissions: PermissionDefinition[],
-): PermissionGroup[] {
-    const groups = new Map<string, PermissionGroup>();
-
-    permissions.forEach((permission) => {
-        const meta = GROUP_META[permission.group] ?? {
-            label: permission.group,
-            icon: 'Key' as keyof typeof icons,
-        };
-
-        if (!groups.has(permission.group)) {
-            groups.set(permission.group, {
-                group: permission.group,
-                label: meta.label,
-                icon: meta.icon,
-                sections: [],
-                permissions: [],
-            });
-        }
-
-        const group = groups.get(permission.group)!;
-        group.permissions.push(permission);
-
-        const sectionName = getPermissionSection(permission.key);
-        let section = group.sections.find((s) => s.section === sectionName);
-        if (!section) {
-            section = { section: sectionName, permissions: [] };
-            group.sections.push(section);
-        }
-        section.permissions.push(permission);
-    });
-
-    return Array.from(groups.values());
-}
 
 interface WorkspaceSettingsRolesTabProps {
     memberProjects?: MemberProjectSummary[];
@@ -151,8 +34,6 @@ export default function WorkspaceSettingsRolesTab({
     canDeleteRoles = false,
     hasSettingsAccess = false,
 }: WorkspaceSettingsRolesTabProps) {
-    const { addAlert } = useAlert();
-
     const selectedProject =
         memberProjects.find((project) => project.id === selectedProjectId) ??
         null;
@@ -165,196 +46,36 @@ export default function WorkspaceSettingsRolesTab({
         );
     };
 
-    const [localRoles, setLocalRoles] = useState<WorkspaceRole[]>(roles);
-    useEffect(() => setLocalRoles(roles), [roles]);
+    const {
+        localRoles,
+        selectedRoleId,
+        setSelectedRoleId,
+        selectedRole,
+        search,
+        setSearch,
+        isCreateModalOpen,
+        setIsCreateModalOpen,
+        roleToDelete,
+        setRoleToDelete,
+        renameDraft,
+        setRenameDraft,
+        isSavingRename,
+        filteredGroups,
+        totalMembersGoverned,
+        canEditSelectedRole,
+        selectedRoleRatio,
+        togglePermission,
+        setSectionPermissions,
+        startRename,
+        saveRename,
+    } = useRolesManagement({
+        roles,
+        permissions,
+        selectedProjectId,
+        canUpdateRoles,
+    });
 
-    const [selectedRoleId, setSelectedRoleId] = useState<number | null>(
-        roles[0]?.id ?? null,
-    );
-    useEffect(() => {
-        if (!localRoles.some((role) => role.id === selectedRoleId)) {
-            setSelectedRoleId(localRoles[0]?.id ?? null);
-        }
-    }, [localRoles, selectedRoleId]);
-
-    const selectedRole =
-        localRoles.find((role) => role.id === selectedRoleId) ?? null;
-
-    const [search, setSearch] = useState('');
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [roleToDelete, setRoleToDelete] = useState<WorkspaceRole | null>(
-        null,
-    );
-    const [renameDraft, setRenameDraft] = useState<{
-        name: string;
-        slug: string;
-    } | null>(null);
-    const [isSavingRename, setIsSavingRename] = useState(false);
-
-    const permissionGroups = useMemo(
-        () => buildPermissionGroups(permissions),
-        [permissions],
-    );
-
-    const filteredGroups = useMemo(() => {
-        const query = search.trim().toLowerCase();
-        if (!query) {
-            return permissionGroups;
-        }
-
-        return permissionGroups
-            .map((group) => ({
-                ...group,
-                sections: group.sections
-                    .map((section) => ({
-                        ...section,
-                        permissions: section.permissions.filter(
-                            (permission) =>
-                                getPermissionLabel(permission)
-                                    .toLowerCase()
-                                    .includes(query) ||
-                                permission.key.toLowerCase().includes(query),
-                        ),
-                    }))
-                    .filter((section) => section.permissions.length > 0),
-            }))
-            .filter((group) => group.sections.length > 0);
-    }, [permissionGroups, search]);
-
-    const totalMembersGoverned = localRoles.reduce(
-        (sum, role) => sum + role.memberCount,
-        0,
-    );
-
-    const canEditSelectedRole =
-        canUpdateRoles &&
-        selectedRole !== null &&
-        selectedRole.type !== 'owner';
-
-    const selectedRoleRatio =
-        selectedRole === null || permissions.length === 0
-            ? 0
-            : Math.round(
-                  (selectedRole.permissionIds.length / permissions.length) *
-                      100,
-              );
-
-    const togglePermission = (
-        role: WorkspaceRole,
-        permissionId: number,
-        enabled: boolean,
-    ) => {
-        const previousIds = role.permissionIds;
-        const nextIds = enabled
-            ? [...previousIds, permissionId]
-            : previousIds.filter((id) => id !== permissionId);
-
-        setLocalRoles((prev) =>
-            prev.map((entry) =>
-                entry.id === role.id
-                    ? { ...entry, permissionIds: nextIds }
-                    : entry,
-            ),
-        );
-
-        if (!selectedProjectId) {
-            return;
-        }
-
-        router.patch(
-            `/projects/${selectedProjectId}/roles/${role.id}/permissions`,
-            { permissions: nextIds },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onError: () => {
-                    addAlert("Couldn't update that permission.", 'error');
-                    setLocalRoles((prev) =>
-                        prev.map((entry) =>
-                            entry.id === role.id
-                                ? { ...entry, permissionIds: previousIds }
-                                : entry,
-                        ),
-                    );
-                },
-            },
-        );
-    };
-
-    const setSectionPermissions = (
-        role: WorkspaceRole,
-        sectionPermissions: PermissionDefinition[],
-        enable: boolean,
-    ) => {
-        const previousIds = role.permissionIds;
-        const sectionIds = sectionPermissions.map((p) => p.id);
-        const nextIds = enable
-            ? Array.from(new Set([...previousIds, ...sectionIds]))
-            : previousIds.filter((id) => !sectionIds.includes(id));
-
-        setLocalRoles((prev) =>
-            prev.map((entry) =>
-                entry.id === role.id
-                    ? { ...entry, permissionIds: nextIds }
-                    : entry,
-            ),
-        );
-
-        if (!selectedProjectId) {
-            return;
-        }
-
-        router.patch(
-            `/projects/${selectedProjectId}/roles/${role.id}/permissions`,
-            { permissions: nextIds },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onError: () => {
-                    addAlert("Couldn't update those permissions.", 'error');
-                    setLocalRoles((prev) =>
-                        prev.map((entry) =>
-                            entry.id === role.id
-                                ? { ...entry, permissionIds: previousIds }
-                                : entry,
-                        ),
-                    );
-                },
-            },
-        );
-    };
-
-    const startRename = (role: WorkspaceRole) => {
-        setRenameDraft({ name: role.name, slug: role.slug });
-    };
-
-    const saveRename = (role: WorkspaceRole) => {
-        if (!renameDraft || !selectedProjectId) {
-            return;
-        }
-
-        router.patch(
-            `/projects/${selectedProjectId}/roles/${role.id}`,
-            renameDraft,
-            {
-                preserveScroll: true,
-                onStart: () => setIsSavingRename(true),
-                onFinish: () => setIsSavingRename(false),
-                onSuccess: () => {
-                    addAlert('Role updated.', 'success');
-                    setRenameDraft(null);
-                },
-                onError: (errors) => {
-                    addAlert(
-                        errors.name ?? errors.slug ?? 'Failed to update role.',
-                        'error',
-                    );
-                },
-            },
-        );
-    };
-
-    if (!selectedProject) {
+    if (!selectedProject || !hasSettingsAccess) {
         return (
             <SettingsPanel
                 title="Roles and permissions"
@@ -362,23 +83,16 @@ export default function WorkspaceSettingsRolesTab({
                 icon="Shield"
             >
                 <SettingsPanelRow
-                    title="You're not part of any project yet"
-                    description="Create or join a project to manage its roles here."
-                />
-            </SettingsPanel>
-        );
-    }
-
-    if (!hasSettingsAccess) {
-        return (
-            <SettingsPanel
-                title="Roles and permissions"
-                description="Define granular roles and control exactly what each one can do."
-                icon="Shield"
-            >
-                <SettingsPanelRow
-                    title="You don't have access to this project's settings"
-                    description="Ask a project admin for the settings.view permission to see roles and permissions here."
+                    title={
+                        !selectedProject
+                            ? "You're not part of any project yet"
+                            : "You don't have access to this project's settings"
+                    }
+                    description={
+                        !selectedProject
+                            ? 'Create or join a project to manage its roles here.'
+                            : 'Ask a project admin for the settings.view permission to see roles and permissions here.'
+                    }
                 />
             </SettingsPanel>
         );
@@ -447,347 +161,66 @@ export default function WorkspaceSettingsRolesTab({
                         )}
                     </div>
                 ) : (
-                    <>
-                        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr]">
-                            <div className="space-y-2 border-b border-[var(--border-color)] p-4 lg:border-b-0 lg:border-r">
-                                {localRoles.map((role) => (
-                                    <RoleListItem
-                                        key={role.id}
-                                        role={role}
-                                        theme={ROLE_TYPE_THEME[role.type]}
-                                        totalPermissions={permissions.length}
-                                        selected={role.id === selectedRoleId}
-                                        onClick={() =>
-                                            setSelectedRoleId(role.id)
+                    <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr]">
+                        <RoleSidebar
+                            roles={localRoles}
+                            selectedRoleId={selectedRoleId}
+                            totalPermissions={permissions.length}
+                            canCreateRoles={canCreateRoles}
+                            onSelect={setSelectedRoleId}
+                            onCreateRequest={() => setIsCreateModalOpen(true)}
+                        />
+
+                        <div className="min-w-0">
+                            {selectedRole && (
+                                <>
+                                    <RoleDetailHeader
+                                        role={selectedRole}
+                                        ratio={selectedRoleRatio}
+                                        renameDraft={renameDraft}
+                                        isSavingRename={isSavingRename}
+                                        canUpdateRoles={canUpdateRoles}
+                                        canDeleteRoles={canDeleteRoles}
+                                        onRenameDraftChange={setRenameDraft}
+                                        onStartRename={() =>
+                                            startRename(selectedRole)
+                                        }
+                                        onSaveRename={() =>
+                                            saveRename(selectedRole)
+                                        }
+                                        onCancelRename={() =>
+                                            setRenameDraft(null)
+                                        }
+                                        onDeleteRequest={() =>
+                                            setRoleToDelete(selectedRole)
                                         }
                                     />
-                                ))}
 
-                                {canCreateRoles && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setIsCreateModalOpen(true)
+                                    <RolePermissionsList
+                                        groups={filteredGroups}
+                                        search={search}
+                                        onSearchChange={setSearch}
+                                        enabledIds={selectedRole.permissionIds}
+                                        canEdit={canEditSelectedRole}
+                                        onToggle={(permissionId, enabled) =>
+                                            togglePermission(
+                                                selectedRole,
+                                                permissionId,
+                                                enabled,
+                                            )
                                         }
-                                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--bg-light-color)] px-3 py-2.5 text-xs font-semibold text-[var(--text-gray-color)] transition-colors hover:border-[var(--border-color-strong)] hover:text-[var(--text-color)]"
-                                    >
-                                        <Icon name="Plus" size={13} />
-                                        Create role
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="min-w-0">
-                                {selectedRole && (
-                                    <>
-                                        <div className="flex flex-col gap-3 border-b border-[var(--border-color)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                                            {renameDraft ? (
-                                                <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
-                                                    <Input
-                                                        value={renameDraft.name}
-                                                        onChange={(event) =>
-                                                            setRenameDraft(
-                                                                (prev) =>
-                                                                    prev && {
-                                                                        ...prev,
-                                                                        name: event
-                                                                            .target
-                                                                            .value,
-                                                                    },
-                                                            )
-                                                        }
-                                                        placeholder="Role name"
-                                                        className="sm:w-48"
-                                                    />
-                                                    {!selectedRole.isSystem && (
-                                                        <Input
-                                                            value={
-                                                                renameDraft.slug
-                                                            }
-                                                            onChange={(event) =>
-                                                                setRenameDraft(
-                                                                    (prev) =>
-                                                                        prev && {
-                                                                            ...prev,
-                                                                            slug: event
-                                                                                .target
-                                                                                .value,
-                                                                        },
-                                                                )
-                                                            }
-                                                            placeholder="slug"
-                                                            className="sm:w-32"
-                                                        />
-                                                    )}
-                                                    <div className="flex items-center gap-1.5">
-                                                        <button
-                                                            type="button"
-                                                            disabled={
-                                                                isSavingRename
-                                                            }
-                                                            onClick={() =>
-                                                                saveRename(
-                                                                    selectedRole,
-                                                                )
-                                                            }
-                                                            className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--accent-color)] text-[var(--text-color)] transition-opacity hover:opacity-90 disabled:opacity-50"
-                                                        >
-                                                            <Icon
-                                                                name="Check"
-                                                                size={14}
-                                                            />
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                setRenameDraft(
-                                                                    null,
-                                                                )
-                                                            }
-                                                            className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)]"
-                                                        >
-                                                            <Icon
-                                                                name="X"
-                                                                size={14}
-                                                            />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="flex min-w-0 items-center gap-3">
-                                                    <div className="relative shrink-0">
-                                                        <ProgressRing
-                                                            radius={22}
-                                                            stroke={2.5}
-                                                            progress={
-                                                                selectedRoleRatio
-                                                            }
-                                                            colorClass={
-                                                                ROLE_TYPE_THEME[
-                                                                    selectedRole
-                                                                        .type
-                                                                ].ring
-                                                            }
-                                                            bgColorClass="stroke-[var(--bg-light-color)]"
-                                                        />
-                                                        <span
-                                                            className={cn(
-                                                                'absolute inset-[3px] flex items-center justify-center rounded-full bg-gradient-to-br',
-                                                                ROLE_TYPE_THEME[
-                                                                    selectedRole
-                                                                        .type
-                                                                ].gradient,
-                                                                ROLE_TYPE_THEME[
-                                                                    selectedRole
-                                                                        .type
-                                                                ].badgeClass,
-                                                            )}
-                                                        >
-                                                            <Icon
-                                                                name={
-                                                                    ROLE_TYPE_THEME[
-                                                                        selectedRole
-                                                                            .type
-                                                                    ].icon
-                                                                }
-                                                                size={15}
-                                                            />
-                                                        </span>
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className="truncate text-sm font-semibold text-[var(--text-color)]">
-                                                            {selectedRole.name}
-                                                        </p>
-                                                        <p className="flex items-center gap-1.5 text-xs text-[var(--text-gray-color)]">
-                                                            <span
-                                                                className={cn(
-                                                                    'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium',
-                                                                    ROLE_TYPE_THEME[
-                                                                        selectedRole
-                                                                            .type
-                                                                    ]
-                                                                        .badgeClass,
-                                                                )}
-                                                            >
-                                                                <span
-                                                                    className={cn(
-                                                                        'h-1.5 w-1.5 rounded-full',
-                                                                        ROLE_TYPE_THEME[
-                                                                            selectedRole
-                                                                                .type
-                                                                        ].dot,
-                                                                    )}
-                                                                />
-                                                                {
-                                                                    ROLE_TYPE_THEME[
-                                                                        selectedRole
-                                                                            .type
-                                                                    ].label
-                                                                }
-                                                            </span>
-                                                            <span>
-                                                                {
-                                                                    selectedRole.memberCount
-                                                                }{' '}
-                                                                {selectedRole.memberCount ===
-                                                                1
-                                                                    ? 'member'
-                                                                    : 'members'}
-                                                            </span>
-                                                            <span>
-                                                                &middot; /
-                                                                {
-                                                                    selectedRole.slug
-                                                                }
-                                                            </span>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {!renameDraft && (
-                                                <div className="flex shrink-0 items-center gap-1.5">
-                                                    {selectedRole.type ===
-                                                    'owner' ? (
-                                                        <span
-                                                            className="flex items-center gap-1 text-xs text-[var(--text-gray-color)]"
-                                                            title="The owner always has every permission and can't be changed."
-                                                        >
-                                                            <Icon
-                                                                name="Lock"
-                                                                size={12}
-                                                            />
-                                                            Owner role
-                                                        </span>
-                                                    ) : (
-                                                        <>
-                                                            {canUpdateRoles && (
-                                                                <button
-                                                                    type="button"
-                                                                    title="Rename role"
-                                                                    onClick={() =>
-                                                                        startRename(
-                                                                            selectedRole,
-                                                                        )
-                                                                    }
-                                                                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
-                                                                >
-                                                                    <Icon
-                                                                        name="Pencil"
-                                                                        size={
-                                                                            14
-                                                                        }
-                                                                    />
-                                                                </button>
-                                                            )}
-                                                            {selectedRole.isSystem ? (
-                                                                <span
-                                                                    className="flex h-8 w-8 items-center justify-center text-[var(--text-gray-color)]"
-                                                                    title="System roles can't be deleted."
-                                                                >
-                                                                    <Icon
-                                                                        name="Lock"
-                                                                        size={
-                                                                            12
-                                                                        }
-                                                                    />
-                                                                </span>
-                                                            ) : (
-                                                                canDeleteRoles && (
-                                                                    <button
-                                                                        type="button"
-                                                                        title="Delete role"
-                                                                        onClick={() =>
-                                                                            setRoleToDelete(
-                                                                                selectedRole,
-                                                                            )
-                                                                        }
-                                                                        className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
-                                                                    >
-                                                                        <Icon
-                                                                            name="Trash2"
-                                                                            size={
-                                                                                14
-                                                                            }
-                                                                        />
-                                                                    </button>
-                                                                )
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="relative px-5 py-4">
-                                            <Icon
-                                                name="Search"
-                                                size={14}
-                                                className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 text-[var(--text-gray-color)]"
-                                            />
-                                            <Input
-                                                value={search}
-                                                onChange={(event) =>
-                                                    setSearch(
-                                                        event.target.value,
-                                                    )
-                                                }
-                                                placeholder="Search permissions..."
-                                                className="pl-8"
-                                            />
-                                        </div>
-
-                                        <div className="max-h-[520px] space-y-3 overflow-y-auto px-5 pb-5">
-                                            {filteredGroups.length === 0 && (
-                                                <p className="py-6 text-center text-sm text-[var(--text-gray-color)]">
-                                                    No permissions match "
-                                                    {search}".
-                                                </p>
-                                            )}
-
-                                            {filteredGroups.map((group) => (
-                                                <PermissionGroupCard
-                                                    key={group.group}
-                                                    label={group.label}
-                                                    icon={group.icon}
-                                                    sections={group.sections}
-                                                    permissionIds={group.permissions.map(
-                                                        (p) => p.id,
-                                                    )}
-                                                    enabledIds={
-                                                        selectedRole.permissionIds
-                                                    }
-                                                    canEdit={
-                                                        canEditSelectedRole
-                                                    }
-                                                    forceExpanded={
-                                                        search.trim() !== ''
-                                                    }
-                                                    onToggle={(
-                                                        permissionId,
-                                                        enabled,
-                                                    ) =>
-                                                        togglePermission(
-                                                            selectedRole,
-                                                            permissionId,
-                                                            enabled,
-                                                        )
-                                                    }
-                                                    onSetAll={(_, enable) =>
-                                                        setSectionPermissions(
-                                                            selectedRole,
-                                                            group.permissions,
-                                                            enable,
-                                                        )
-                                                    }
-                                                />
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
+                                        onSetAll={(perms, enable) =>
+                                            setSectionPermissions(
+                                                selectedRole,
+                                                perms,
+                                                enable,
+                                            )
+                                        }
+                                    />
+                                </>
+                            )}
                         </div>
-                    </>
+                    </div>
                 )}
             </SettingsPanel>
 
