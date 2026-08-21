@@ -9,6 +9,7 @@ import PillDropdown, {
     PillDropdownCheckOption,
     PillDropdownOption,
 } from '@/Components/Molecules/PillDropdown/PillDropdown';
+import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
@@ -462,51 +463,12 @@ export default function WorkspaceSettingsMembersTab({
                 />
             </div>
 
-            {memberProjects.length > 1 && (
-                <SettingsPanel
-                    title="Project"
-                    description="Choose which project's members to manage."
-                    icon="FolderKanban"
-                >
-                    <div className="grid grid-cols-1 gap-3 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-3">
-                        {memberProjects.map((project) => {
-                            const theme = getColorTheme(project.color);
-                            const selected = project.id === selectedProject.id;
-
-                            return (
-                                <button
-                                    key={project.id}
-                                    type="button"
-                                    onClick={() => switchProject(project.id)}
-                                    className={cn(
-                                        'flex items-center gap-2.5 rounded-xl border p-3 text-left transition-colors',
-                                        selected
-                                            ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
-                                            : 'border-[var(--border-color)] bg-[var(--surface-color)] hover:border-[var(--border-color-strong)]',
-                                    )}
-                                >
-                                    <span
-                                        className={cn(
-                                            'h-2.5 w-2.5 shrink-0 rounded-full',
-                                            theme.accent,
-                                        )}
-                                    />
-                                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text-color)]">
-                                        {project.name}
-                                    </span>
-                                    {selected && (
-                                        <Icon
-                                            name="Check"
-                                            size={14}
-                                            className="shrink-0 text-[var(--accent-color)]"
-                                        />
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-                </SettingsPanel>
-            )}
+            <ProjectPickerPanel
+                projects={memberProjects}
+                selectedProjectId={selectedProject.id}
+                description="Choose which project's members to manage."
+                onSelect={switchProject}
+            />
 
             <SettingsPanel
                 title="Members"
