@@ -63,6 +63,38 @@ test('a viewer cannot comment on an issue', function () {
     $response->assertForbidden();
 });
 
+test('an Inertia request denied from commenting redirects back with a flash error', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = User::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true'])
+        ->post("/issues/$issue->id/comments", [
+            'body' => 'Not allowed',
+        ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
+
+    // Follow the redirect exactly like a real Inertia visit would, and check
+    // the flash actually reaches the next page's rendered props.
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $followUp = $this->actingAs($user)
+        ->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => $version,
+        ])
+        ->get($response->headers->get('Location'));
+
+    $followUp->assertOk();
+    $page = json_decode($followUp->getContent(), true);
+    expect($page['props']['flash']['error'] ?? null)->not->toBeNull();
+});
+
 test('a non-member cannot comment on an issue', function () {
     $issue = Issue::factory()->create();
 
