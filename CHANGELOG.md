@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.4.0](https://github.com/orbit-collective/orbit/compare/v0.3.0...v0.4.0) (2026-08-22)
+
+
+### Features
+
+* **alerts:** improve flash alert handling with initial load support ([5ef4564](https://github.com/orbit-collective/orbit/commit/5ef45645113772e43b883300c46296db88b0e5e0))
+* **comments:** add edit and delete functionality with permissions ([d8b9096](https://github.com/orbit-collective/orbit/commit/d8b9096d1ffb28f8bf1b2d1e336c08479ac44970))
+* **comments:** implement authorization for comment creation and deletion ([9048cd6](https://github.com/orbit-collective/orbit/commit/9048cd60dc47a184af8f1e024c09ad58da9c011d))
+* **exceptions:** redirect Inertia requests on access denial with flash error ([690b587](https://github.com/orbit-collective/orbit/commit/690b58726197b80df6c00d13be61cdcc808c3dbc))
+* **invitation:** add support for custom roles in project invitations ([c253d40](https://github.com/orbit-collective/orbit/commit/c253d40d88c79bff6bc801c27d114f1eb204576d))
+* **members:** implement MemberRoleDropdown for role management ([b07f1f2](https://github.com/orbit-collective/orbit/commit/b07f1f259b47d0b14cb729466724a87fa90081b2))
+* **members:** implement PillDropdown for role selection ([5ceb63a](https://github.com/orbit-collective/orbit/commit/5ceb63abf7c4949f6f8c20c9c9f7bae034c9fd4a))
+* **members:** refactor member display with new MemberRow component ([d0ef57b](https://github.com/orbit-collective/orbit/commit/d0ef57b8d6d26695d6f8a52039264e633264ed79))
+* **ownership:** implement project ownership transfer functionality ([5884849](https://github.com/orbit-collective/orbit/commit/5884849ad956d1012d5315b174243f99a1cd886f))
+* **permissions:** add enums for permissions and role types ([9dc99f1](https://github.com/orbit-collective/orbit/commit/9dc99f1507a60473fc9f2ce71d7c8b9c752c2db9))
+* **permissions:** create migrations for permissions and roles ([994e85e](https://github.com/orbit-collective/orbit/commit/994e85e0c43f3cec2943482a5caf39a7d1064d08))
+* **projects:** add ProjectPickerPanel for project selection ([368c90f](https://github.com/orbit-collective/orbit/commit/368c90fd84f04ec7e6ac9ec93ed5c1e9e0c45772))
+* **roles:** add role management components and utilities ([046a17b](https://github.com/orbit-collective/orbit/commit/046a17b510f92d65fd899a9c67d8f784450100f8))
+* **roles:** add role permission syncing functionality ([da656af](https://github.com/orbit-collective/orbit/commit/da656afa0dc00b4074a4b6c8ea7001cf08ea223f))
+* **roles:** enhance role management UI with new components ([b490f43](https://github.com/orbit-collective/orbit/commit/b490f4343f645a9aa2c2a7deff7b7e6835b56ce0))
+* **roles:** implement role assignment and syncing functionality ([0db600c](https://github.com/orbit-collective/orbit/commit/0db600cc2dffaaea6862961aa59d662f50f026a9))
+* **roles:** implement role management with permissions ([bfada63](https://github.com/orbit-collective/orbit/commit/bfada63a631c3020bbecb74001d688d788c4b197))
+* **roles:** sync system roles for project members ([2aac48c](https://github.com/orbit-collective/orbit/commit/2aac48c07daf60dec3491548d212c7fdf39a2d5e))
+* **stat-card:** enhance visual representation with vivid variant ([2176c6e](https://github.com/orbit-collective/orbit/commit/2176c6ee0a068e31920461a67cacf5b3ba1bd278))
+
 ## [0.3.0](https://github.com/orbit-collective/orbit/compare/v0.2.0...v0.3.0) (2026-08-19)
 
 
