@@ -3,6 +3,7 @@ import { cn } from '@/utils/cn';
 import { cva } from 'class-variance-authority';
 import React from 'react';
 import Icon from '../../Atoms/Icon/Icon';
+import ProgressRing from '../../Atoms/ProgressRing/ProgressRing';
 
 export const statCardVariants = cva(
     'relative flex flex-col p-5 rounded-lg border border-solid transition-all duration-300 hover:-translate-y-0.5 overflow-hidden',
@@ -13,6 +14,7 @@ export const statCardVariants = cva(
                     'bg-[var(--bg-dark-color)] border-[var(--bg-light-color)] hover:border-[var(--border-color-strong)]',
                 accent: 'bg-gradient-to-br from-[var(--bg-dark-color)] to-[var(--accent-color-opacity)] border-[var(--accent-color)] shadow-[0_0_15px_rgba(136,68,218,0.15)]',
                 glass: 'bg-[var(--surface-color)] backdrop-blur-md border-[var(--bg-light-color)] hover:bg-[var(--bg-light-color-hover)]',
+                vivid: 'flex-row items-center gap-4 rounded-2xl border-[var(--border-color)] bg-[var(--surface-color)] p-4 hover:border-[var(--border-color-strong)] hover:-translate-y-0',
             },
         },
         defaultVariants: {
@@ -20,6 +22,46 @@ export const statCardVariants = cva(
         },
     },
 );
+
+const COLOR_BLOB_CLASSES = {
+    accent: 'bg-[var(--accent-color)]',
+    success: 'bg-[#4caf50]',
+    warning: 'bg-[#ff9800]',
+    error: 'bg-[#f44336]',
+    info: 'bg-[#2196f3]',
+};
+
+const COLOR_RING_CLASSES = {
+    accent: 'stroke-[var(--accent-color)]',
+    success: 'stroke-[#4caf50]',
+    warning: 'stroke-[#ff9800]',
+    error: 'stroke-[#f44336]',
+    info: 'stroke-[#2196f3]',
+};
+
+const COLOR_TEXT_CLASSES = {
+    accent: 'text-[var(--accent-color)]',
+    success: 'text-[var(--success-color)]',
+    warning: 'text-[var(--warning-color)]',
+    error: 'text-[var(--error-color)]',
+    info: 'text-[var(--info-color)]',
+};
+
+const COLOR_BG_CLASSES = {
+    accent: 'bg-[var(--accent-color-opacity)]',
+    success: 'bg-[#4caf50]/10',
+    warning: 'bg-[#ff9800]/10',
+    error: 'bg-[#f44336]/10',
+    info: 'bg-[#2196f3]/10',
+};
+
+const COLOR_FILL_CLASSES = {
+    accent: 'bg-[var(--accent-color)]',
+    success: 'bg-[var(--success-color)]',
+    warning: 'bg-[var(--warning-color)]',
+    error: 'bg-[var(--error-color)]',
+    info: 'bg-[var(--info-color)]',
+};
 
 const StatCard: React.FC<StatCardProps> = ({
     title,
@@ -32,48 +74,115 @@ const StatCard: React.FC<StatCardProps> = ({
     color = 'accent',
     className,
 }) => {
-    const getColorClass = () => {
-        const colors = {
-            accent: 'text-[var(--accent-color)]',
-            success: 'text-[var(--success-color)]',
-            warning: 'text-[var(--warning-color)]',
-            error: 'text-[var(--error-color)]',
-            info: 'text-[var(--info-color)]',
-        };
-        return colors[color];
-    };
+    const isVivid = variant === 'vivid';
 
-    const getBgColorClass = () => {
-        const bgColors = {
-            accent: 'bg-[var(--accent-color-opacity)]',
-            success: 'bg-[#4caf50]/10',
-            warning: 'bg-[#ff9800]/10',
-            error: 'bg-[#f44336]/10',
-            info: 'bg-[#2196f3]/10',
-        };
-        return bgColors[color];
-    };
+    if (isVivid) {
+        return (
+            <div className={cn(statCardVariants({ variant }), className)}>
+                <span
+                    aria-hidden="true"
+                    className={cn(
+                        'absolute -right-6 -top-8 h-24 w-24 rounded-full opacity-[0.07] blur-2xl',
+                        COLOR_BLOB_CLASSES[color],
+                    )}
+                />
 
-    return (
-        <div className={cn(statCardVariants({ variant }), className)}>
-            <div className="flex items-start justify-between">
-                <div className="min-w-0">
+                <span
+                    className={cn(
+                        'relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                        COLOR_BG_CLASSES[color],
+                    )}
+                >
+                    <Icon
+                        name={icon}
+                        size={20}
+                        className={COLOR_TEXT_CLASSES[color]}
+                    />
+                </span>
+
+                <div className="relative z-10 min-w-0 flex-1">
                     <span className="block truncate text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                         {title}
                     </span>
-                    <h4 className="mt-2 text-3xl font-bold leading-none tracking-tight text-[var(--text-color)]">
-                        {value}
-                    </h4>
+                    <div className="mt-1 flex flex-wrap items-baseline gap-1.5">
+                        <h4 className="text-2xl font-bold leading-none tracking-tight text-[var(--text-color)]">
+                            {value}
+                        </h4>
+                        {trend && (
+                            <span
+                                className={cn(
+                                    'flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold',
+                                    trend.isPositive
+                                        ? 'bg-[var(--success-color)]/10 text-[var(--success-color)]'
+                                        : 'bg-[var(--error-color)]/10 text-[var(--error-color)]',
+                                )}
+                            >
+                                <Icon
+                                    name={
+                                        trend.isPositive
+                                            ? 'TrendingUp'
+                                            : 'TrendingDown'
+                                    }
+                                    size={11}
+                                />
+                                {trend.isPositive ? '+' : ''}
+                                {trend.value}%
+                            </span>
+                        )}
+                        {trend?.label && (
+                            <span className="truncate text-xs font-medium text-[var(--text-muted-color)]">
+                                {trend.label}
+                            </span>
+                        )}
+                    </div>
+                    {description && !trend && (
+                        <p className="mt-0.5 truncate text-xs font-medium text-[var(--text-muted-color)]">
+                            {description}
+                        </p>
+                    )}
                 </div>
+
+                {progress !== undefined && (
+                    <div className="relative z-10 flex shrink-0 items-center justify-center">
+                        <ProgressRing
+                            radius={22}
+                            stroke={4}
+                            progress={progress}
+                            colorClass={COLOR_RING_CLASSES[color]}
+                            bgColorClass="stroke-[var(--bg-light-color)]"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--text-color)]">
+                            {progress}%
+                        </span>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    return (
+        <div className={cn(statCardVariants({ variant }), className)}>
+            <div className="flex items-start justify-between gap-3">
+                <span className="block min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                    {title}
+                </span>
                 <div
                     className={cn(
                         'ml-4 shrink-0 rounded-md p-2',
-                        getBgColorClass(),
+                        COLOR_BG_CLASSES[color],
                     )}
                 >
-                    <Icon name={icon} size={18} className={getColorClass()} />
+                    <Icon
+                        name={icon}
+                        size={18}
+                        className={COLOR_TEXT_CLASSES[color]}
+                    />
                 </div>
             </div>
+
+            <h4 className="mt-2 text-3xl font-bold leading-none tracking-tight text-[var(--text-color)]">
+                {value}
+            </h4>
 
             {progress !== undefined && (
                 <div className="mt-5 flex items-center justify-between gap-4">
@@ -81,15 +190,7 @@ const StatCard: React.FC<StatCardProps> = ({
                         <div
                             className={cn(
                                 'h-full rounded-full transition-all duration-500',
-                                color === 'accent'
-                                    ? 'bg-[var(--accent-color)]'
-                                    : color === 'success'
-                                      ? 'bg-[var(--success-color)]'
-                                      : color === 'warning'
-                                        ? 'bg-[var(--warning-color)]'
-                                        : color === 'error'
-                                          ? 'bg-[var(--error-color)]'
-                                          : 'bg-[var(--info-color)]',
+                                COLOR_FILL_CLASSES[color],
                             )}
                             style={{ width: `${progress}%` }}
                         />

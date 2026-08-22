@@ -113,6 +113,7 @@ export default function WorkspaceSettingsMembersTab({
                     value={members.length}
                     icon="Users"
                     color="accent"
+                    variant="vivid"
                     description={`Across "${selectedProject.name}"`}
                 />
                 <StatCard
@@ -120,6 +121,7 @@ export default function WorkspaceSettingsMembersTab({
                     value={managerCount}
                     icon="ShieldCheck"
                     color="info"
+                    variant="vivid"
                     description="Can manage members & invites"
                 />
                 <StatCard
@@ -127,6 +129,7 @@ export default function WorkspaceSettingsMembersTab({
                     value={pendingInvitations.length}
                     icon="Mail"
                     color="warning"
+                    variant="vivid"
                     description={
                         emailEnabled
                             ? 'Awaiting a response'
