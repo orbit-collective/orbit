@@ -20,8 +20,8 @@ test('it only returns notifications for the given user', function () {
 
     $notifications = $this->repository->getAllForUser($user->id);
 
-    expect($notifications)->toHaveCount(3);
-    expect($notifications->pluck('user_id')->unique()->all())->toBe([$user->id]);
+    expect($notifications)->toHaveCount(3)
+        ->and($notifications->pluck('user_id')->unique()->all())->toBe([$user->id]);
 });
 
 test('it can store a new notification', function () {
@@ -59,7 +59,7 @@ test('it only marks the given user unread notifications as read', function () {
 
     $count = $this->repository->markAllAsReadForUser($user->id);
 
-    expect($count)->toBe(2);
-    expect(Notification::where('user_id', $user->id)->where('read', false)->count())->toBe(0);
-    expect(Notification::where('user_id', $otherUser->id)->where('read', false)->count())->toBe(1);
+    expect($count)->toBe(2)
+        ->and(Notification::where('user_id', $user->id)->where('read', false)->count())->toBe(0)
+        ->and(Notification::where('user_id', $otherUser->id)->where('read', false)->count())->toBe(1);
 });

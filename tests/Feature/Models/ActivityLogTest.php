@@ -11,8 +11,8 @@ uses(RefreshDatabase::class);
 test('a factory-created activity log persists with the expected attributes', function () {
     $log = ActivityLog::factory()->create();
 
-    expect($log->exists)->toBeTrue();
-    expect($log->body)->toBeString();
+    expect($log->exists)->toBeTrue()
+        ->and($log->body)->toBeString();
 });
 
 test('mass assignment via fillable creates an activity log', function () {
@@ -37,8 +37,8 @@ test('user() belongs to the user referenced by user_id', function () {
     $user = User::factory()->create();
     $log = ActivityLog::factory()->create(['user_id' => $user->id]);
 
-    expect($log->user())->toBeInstanceOf(BelongsTo::class);
-    expect($log->user->id)->toBe($user->id);
+    expect($log->user())->toBeInstanceOf(BelongsTo::class)
+        ->and($log->user->id)->toBe($user->id);
 });
 
 test('deleting the project cascades to delete its activity logs', function () {

@@ -18,9 +18,9 @@ test('it can log activity', function () {
 
     $log = $this->service->log($project->id, 'Test body');
 
-    expect($log->project_id)->toBe($project->id);
-    expect($log->user_id)->toBe($user->id);
-    expect($log->body)->toBe('Test body');
+    expect($log->project_id)->toBe($project->id)
+        ->and($log->user_id)->toBe($user->id)
+        ->and($log->body)->toBe('Test body');
     $this->assertDatabaseHas('activity_logs', [
         'project_id' => $project->id,
         'user_id' => $user->id,
@@ -60,8 +60,8 @@ test('it can log account-level activity without a project', function () {
 
     $log = $this->service->log(null, 'Changed account password', $user->id);
 
-    expect($log->project_id)->toBeNull();
-    expect($log->user_id)->toBe($user->id);
+    expect($log->project_id)->toBeNull()
+        ->and($log->user_id)->toBe($user->id);
     $this->assertDatabaseHas('activity_logs', [
         'project_id' => null,
         'user_id' => $user->id,

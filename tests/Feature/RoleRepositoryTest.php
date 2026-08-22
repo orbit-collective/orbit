@@ -19,8 +19,8 @@ test('it can get the roles of a project with their permissions eager loaded', fu
 
     $roles = $this->repository->getForProject($project);
 
-    expect($roles)->toHaveCount(1);
-    expect($roles->first()->permissions)->toHaveCount(1);
+    expect($roles)->toHaveCount(1)
+        ->and($roles->first()->permissions)->toHaveCount(1);
 });
 
 test('it does not return roles belonging to another project', function () {

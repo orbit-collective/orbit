@@ -37,8 +37,8 @@ test('it eager loads each member\'s custom roles on the pivot', function () {
     $members = $this->repository->getMembers($project);
     $loadedMember = $members->firstWhere('id', $member->id);
 
-    expect($loadedMember->pivot->roles)->toHaveCount(1);
-    expect($loadedMember->pivot->roles->first()->id)->toBe($role->id);
+    expect($loadedMember->pivot->roles)->toHaveCount(1)
+        ->and($loadedMember->pivot->roles->first()->id)->toBe($role->id);
 });
 
 test('it reports whether a user is a member of a project', function () {
@@ -47,8 +47,8 @@ test('it reports whether a user is a member of a project', function () {
     $outsider = User::factory()->create();
     $project->users()->attach($member->id, ['role' => 'member']);
 
-    expect($this->repository->isMember($project, $member->id))->toBeTrue();
-    expect($this->repository->isMember($project, $outsider->id))->toBeFalse();
+    expect($this->repository->isMember($project, $member->id))->toBeTrue()
+        ->and($this->repository->isMember($project, $outsider->id))->toBeFalse();
 });
 
 test('it returns the role of a member', function () {

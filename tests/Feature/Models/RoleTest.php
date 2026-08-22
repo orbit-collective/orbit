@@ -23,8 +23,8 @@ test('a role can have many permissions', function () {
 
     $role->permissions()->attach($permission);
 
-    expect($role->permissions)->toHaveCount(1);
-    expect($role->permissions->first()->key)->toBe('issues.view');
+    expect($role->permissions)->toHaveCount(1)
+        ->and($role->permissions->first()->key)->toBe('issues.view');
 });
 
 test('a role can have many members', function () {

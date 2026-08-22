@@ -250,11 +250,11 @@ source of truth instead, exactly as before.
 
 Once it's up:
 
-| Service                  | URL                    |
-|--------------------------|------------------------|
-| App (Laravel)            | http://localhost:8000  |
-| Vite (assets/HMR)        | http://localhost:5173  |
-| nsfwjs (image moderation)| http://localhost:3333  |
+| Service                   | URL                   |
+|---------------------------|-----------------------|
+| App (Laravel)             | http://localhost:8000 |
+| Vite (assets/HMR)         | http://localhost:5173 |
+| nsfwjs (image moderation) | http://localhost:3333 |
 
 A `queue` container also starts automatically, running
 `php artisan queue:work --tries=3` — this is what actually sends queued

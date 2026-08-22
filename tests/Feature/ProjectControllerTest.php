@@ -88,7 +88,7 @@ test('creating a project redirects back with a success message and the show-page
 });
 
 test('creating a project requires a name, slug and color', function () {
-    $response = $this->actingAs(User::factory()->create())->post('/projects', []);
+    $response = $this->actingAs(User::factory()->create())->post('/projects');
 
     $response->assertSessionHasErrors(['name', 'slug', 'color']);
 });
@@ -104,7 +104,7 @@ test('creating a project enforces a 30 character max length on the name', functi
 });
 
 test('guests cannot create a project', function () {
-    $response = $this->post('/projects', []);
+    $response = $this->post('/projects');
 
     $response->assertRedirect(route('login'));
 });
@@ -116,7 +116,7 @@ test('the project show page returns the expected Inertia props', function () {
     Issue::factory()->count(3)->create(['project_id' => $project->id]);
     $filter = SavedFilter::factory()->create(['project_id' => $project->id]);
 
-    $response = $this->actingAs($user)->get("/projects/{$project->id}");
+    $response = $this->actingAs($user)->get("/projects/$project->id");
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
@@ -134,7 +134,7 @@ test('the project show page defaults to 10 issues per page', function () {
     $project->users()->attach($user->id, ['role' => 'member']);
     Issue::factory()->count(12)->create(['project_id' => $project->id]);
 
-    $response = $this->actingAs($user)->get("/projects/{$project->id}");
+    $response = $this->actingAs($user)->get("/projects/$project->id");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->has('issues.data', 10)
@@ -147,7 +147,7 @@ test('the project show page respects a custom perPage query parameter', function
     $project->users()->attach($user->id, ['role' => 'member']);
     Issue::factory()->count(12)->create(['project_id' => $project->id]);
 
-    $response = $this->actingAs($user)->get("/projects/{$project->id}?perPage=5");
+    $response = $this->actingAs($user)->get("/projects/$project->id?perPage=5");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->has('issues.data', 5)
@@ -160,7 +160,7 @@ test('the project show page parses comma-separated status, priority and label fi
     $project->users()->attach($user->id, ['role' => 'member']);
 
     $response = $this->actingAs($user)
-        ->get("/projects/{$project->id}?status=open,closed&priority=high&labels=bug,design");
+        ->get("/projects/$project->id?status=open,closed&priority=high&labels=bug,design");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('filters.status', ['open', 'closed'])
@@ -175,7 +175,7 @@ test('the project show page exposes the raw query params when present', function
     $project->users()->attach($user->id, ['role' => 'member']);
 
     $response = $this->actingAs($user)
-        ->get("/projects/{$project->id}?search=foo");
+        ->get("/projects/$project->id?search=foo");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('queryParams.search', 'foo')
@@ -191,7 +191,7 @@ test('visiting a non-existent project returns a 404', function () {
 test('guests cannot view a project', function () {
     $project = Project::factory()->create();
 
-    $response = $this->get("/projects/{$project->id}");
+    $response = $this->get("/projects/$project->id");
 
     $response->assertRedirect(route('login'));
 });
@@ -199,7 +199,7 @@ test('guests cannot view a project', function () {
 test('a non-member cannot view a project', function () {
     $project = Project::factory()->create();
 
-    $response = $this->actingAs(User::factory()->create())->get("/projects/{$project->id}");
+    $response = $this->actingAs(User::factory()->create())->get("/projects/$project->id");
 
     $response->assertForbidden();
 });
@@ -209,7 +209,7 @@ test('a project\'s visible columns can be updated', function () {
     $project = Project::factory()->create(['columns' => ['id' => true, 'title' => true]]);
     $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->patch("/projects/{$project->id}/columns", [
+    $response = $this->actingAs($user)->patch("/projects/$project->id/columns", [
         'columns' => ['title' => false, 'status' => true],
     ]);
 
@@ -225,7 +225,7 @@ test('updating columns requires the columns field to be an array', function () {
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->patch("/projects/{$project->id}/columns", [
+    $response = $this->actingAs($user)->patch("/projects/$project->id/columns", [
         'columns' => 'not-an-array',
     ]);
 
@@ -237,7 +237,7 @@ test('updating columns rejects non-boolean column values', function () {
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->patch("/projects/{$project->id}/columns", [
+    $response = $this->actingAs($user)->patch("/projects/$project->id/columns", [
         'columns' => ['title' => 'not-a-boolean'],
     ]);
 
@@ -247,7 +247,7 @@ test('updating columns rejects non-boolean column values', function () {
 test('a non-member cannot update project columns', function () {
     $project = Project::factory()->create();
 
-    $response = $this->actingAs(User::factory()->create())->patch("/projects/{$project->id}/columns", [
+    $response = $this->actingAs(User::factory()->create())->patch("/projects/$project->id/columns", [
         'columns' => ['title' => false],
     ]);
 
@@ -257,7 +257,7 @@ test('a non-member cannot update project columns', function () {
 test('guests cannot update project columns', function () {
     $project = Project::factory()->create();
 
-    $response = $this->patch("/projects/{$project->id}/columns", ['columns' => []]);
+    $response = $this->patch("/projects/$project->id/columns", ['columns' => []]);
 
     $response->assertRedirect(route('login'));
 });
@@ -267,7 +267,7 @@ test('an owner can update project details', function () {
     $project = Project::factory()->create(['name' => 'Old Name']);
     $project->users()->attach($owner->id, ['role' => 'owner']);
 
-    $response = $this->actingAs($owner)->patch("/projects/{$project->id}/details", [
+    $response = $this->actingAs($owner)->patch("/projects/$project->id/details", [
         'name' => 'New Name',
         'description' => 'A new description',
         'color' => 'red',
@@ -282,7 +282,7 @@ test('a plain member cannot update project details', function () {
     $project = Project::factory()->create();
     $project->users()->attach($member->id, ['role' => 'member']);
 
-    $response = $this->actingAs($member)->patch("/projects/{$project->id}/details", [
+    $response = $this->actingAs($member)->patch("/projects/$project->id/details", [
         'name' => 'New Name',
         'color' => 'red',
     ]);
@@ -295,7 +295,7 @@ test('an owner can delete a project', function () {
     $project = Project::factory()->create();
     $project->users()->attach($owner->id, ['role' => 'owner']);
 
-    $response = $this->actingAs($owner)->delete("/projects/{$project->id}");
+    $response = $this->actingAs($owner)->delete("/projects/$project->id");
 
     $response->assertRedirect(route('projects.index'));
     $this->assertDatabaseMissing('projects', ['id' => $project->id]);
@@ -306,7 +306,7 @@ test('a plain member cannot delete a project', function () {
     $project = Project::factory()->create();
     $project->users()->attach($member->id, ['role' => 'member']);
 
-    $response = $this->actingAs($member)->delete("/projects/{$project->id}");
+    $response = $this->actingAs($member)->delete("/projects/$project->id");
 
     $response->assertForbidden();
     $this->assertDatabaseHas('projects', ['id' => $project->id]);
@@ -315,7 +315,7 @@ test('a plain member cannot delete a project', function () {
 test('guests cannot delete a project', function () {
     $project = Project::factory()->create();
 
-    $response = $this->delete("/projects/{$project->id}");
+    $response = $this->delete("/projects/$project->id");
 
     $response->assertRedirect(route('login'));
 });
