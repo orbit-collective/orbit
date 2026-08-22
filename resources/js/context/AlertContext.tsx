@@ -90,6 +90,10 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     // completed visit instead, regardless of whether the flash content
     // repeats.
     useEffect(() => {
+        if (typeof router.on !== 'function') {
+            return;
+        }
+
         return router.on('success', (event) => {
             const flash = (
                 event.detail.page.props as unknown as InertiaPageProps
