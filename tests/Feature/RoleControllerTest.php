@@ -40,6 +40,23 @@ test('a member without the roles.create permission cannot create a role', functi
     $response->assertForbidden();
 });
 
+test('an Inertia request denied by a policy redirects back with a flash error instead of a 403 page', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $response = $this->actingAs($member)
+        ->withHeaders(['X-Inertia' => 'true'])
+        ->post("/projects/$project->id/roles", [
+            'name' => 'QA',
+            'slug' => 'qa',
+            'role' => 'custom',
+        ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
+});
+
 test('a member with a custom role granting roles.create can create a role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();

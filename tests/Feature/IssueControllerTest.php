@@ -245,6 +245,36 @@ test('a viewer cannot update an issue', function () {
     $response->assertForbidden();
 });
 
+test('an Inertia request denied from updating an issue redirects back with a flash error', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Old title']);
+    $user = actingAsProjectMember($project, 'viewer');
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true'])
+        ->patch("/issues/$issue->id", [
+            'title' => 'New title',
+        ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('error');
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $followUp = $this->actingAs($user)
+        ->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => $version,
+        ])
+        ->get($response->headers->get('Location'));
+
+    $followUp->assertOk();
+    $page = json_decode($followUp->getContent(), true);
+    expect($page['props']['flash']['error'] ?? null)->not->toBeNull();
+    expect($issue->refresh()->title)->toBe('Old title');
+});
+
 test('updating an issue rejects an assignee who is not a member of the project', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
