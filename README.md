@@ -20,7 +20,7 @@ Calendar, whichever fits the moment. It's built as a single Laravel +
 Inertia.js + React monolith, so there's no separate API to stand up and no
 client/server version drift to manage.
 
-### Edited: 19.08.2026
+### Edited: 22.08.2026
 
 ## What's inside
 
@@ -44,11 +44,15 @@ client/server version drift to manage.
   commented, mentioned, status/priority/labels/dates changed, other issue
   updates, project invitations) are each independently toggleable per
   channel — see [Notifications](#notifications) below.
-- **Project-scoped roles** — registering an account grants no role at all;
-  you become ADMIN of a project the moment you create it, and MEMBER of any
-  project you're invited into. There's no global "admin" — the same person
-  can be an admin of one project and a plain member of another. See
-  [Project membership & invitations](#project-membership--invitations) below.
+- **Project-scoped roles and granular permissions** — registering an account
+  grants no role at all; you become OWNER of a project the moment you create
+  it, and MEMBER of any project you're invited into. There's no global
+  "admin" — the same person can own one project and be a plain member of
+  another. Every project ships with four system role tiers (Owner, Admin,
+  Member, Viewer) backed by 28 fine-grained permissions, and admins can
+  create their own custom roles or edit the non-Owner system tiers' exact
+  permission set. See [Project membership & invitations](#project-membership--invitations)
+  below.
 - **Email invitations**, gated on whether outgoing email is actually
   configured — see [Project membership & invitations](#project-membership--invitations).
 - **A full account settings area** (`/settings`) covering profile, security,
@@ -66,8 +70,8 @@ client/server version drift to manage.
 Every user gets a settings area at `/settings`, organized into an Account
 section (Preferences, Profile, Notifications, Security & access — plus
 Integrations and Export, present in the nav but disabled pending future
-work) and a Workspace section (Members is fully functional; Labels,
-Statuses, Priorities, Templates, Documents, and Roles & management are still
+work) and a Workspace section (Members and Roles & management are fully
+functional; Labels, Statuses, Priorities, Templates, and Documents are still
 "coming soon" placeholders). Enabled tabs:
 
 - **Profile** — change your display name and upload/reset a profile photo
@@ -82,10 +86,20 @@ Statuses, Priorities, Templates, Documents, and Roles & management are still
   hours / 7 days), and permanently delete your account.
 - **Members** (Workspace section) — pick which of your projects to manage
   with a project switcher, see everyone with access (with a live avatar
-  stack and member/admin counts), promote or demote roles, remove members,
-  send one-time email invitations, and review or revoke invitations still
-  pending. See [Project membership & invitations](#project-membership--invitations)
-  for the full picture.
+  stack and member/admin counts), promote or demote a member's base role
+  and grant them any number of custom roles from a single merged dropdown,
+  remove members, transfer ownership, send one-time email invitations
+  (optionally pre-assigning a custom role), and review or revoke
+  invitations still pending. See
+  [Project membership & invitations](#project-membership--invitations) for
+  the full picture.
+- **Roles & management** (Workspace section) — see every system and custom
+  role for a project side by side, with a live ring showing what percentage
+  of all permissions each one grants; edit the Admin/Member/Viewer system
+  tiers' permissions (Owner always keeps every permission and can't be
+  edited) or create/rename/delete custom roles entirely; toggle individual
+  permissions or a whole permission group at once, with a search box to
+  jump straight to one.
 
 Uploaded avatars are screened server-side for inappropriate content before
 being accepted — see [Content moderation](#content-moderation).
@@ -125,22 +139,38 @@ so email notifications won't go out unless that service (or a local
 Roles live entirely at the project level — there is no global `role` column
 on `users` at all. Membership is a `project_user` pivot table
 (`App\Models\Project::users()` / `App\Models\User::projects()`) carrying a
-per-project `App\Enums\ProjectRole` (`admin` / `member`):
+per-project base tier from `App\Enums\Permissions\RoleType` (`owner` /
+`admin` / `member` / `viewer` / `custom`), plus an optional set of
+project-defined `App\Models\Role` records a member can additionally hold.
 
-- **Creating a project** attaches you to it as `admin` automatically
+- **Creating a project** attaches you to it as `owner` automatically
   (`ProjectService::createProject`). Every other project you haven't been
   added to is invisible to you — project/issue listings, the assignee
   picker, and direct URL access are all scoped to your memberships and
-  enforced server-side by `App\Policies\ProjectPolicy` /
-  `App\Policies\IssuePolicy` (a `403` for anyone who isn't a member, not
-  just a hidden UI element).
-- **Only admins** can change another member's role or remove them
-  (`ProjectPolicy::manageMembers`), and a project always keeps at least one
-  admin — `ProjectMemberService` rejects a demotion/removal that would leave
-  it with none.
+  enforced server-side by policies (a `403` for anyone who isn't a member,
+  not just a hidden UI element).
+- **Permissions are granular, not just four fixed tiers.** Every project
+  lazily gets one `App\Models\Role` row per system tier (`RoleService::
+  ensureSystemRoles`) carrying a specific set of `App\Enums\Permissions\
+  Permission` cases (~28 across projects, members, roles, settings, issues,
+  and comments). Admins can tweak the Admin/Member/Viewer tiers' exact
+  permissions, or create entirely custom roles and grant them to any
+  member on top of their base tier — all from the Roles & management
+  settings tab. `App\Policies\RolePolicy` / `IssuePolicy` / `CommentPolicy`
+  / `ProjectPolicy` check the resolved permission set (falling back to the
+  member's tier default), not a hardcoded role name.
+- **Owner is special and singular.** The Owner tier always holds every
+  permission and can't be edited, demoted by anyone but itself, or have its
+  permissions changed. Owners can transfer ownership to another member from
+  the Members tab (`ProjectMemberService::transferOwnership`); the previous
+  owner is automatically demoted to Admin. A project always keeps exactly
+  one owner and at least one admin-or-above — `ProjectMemberService`
+  rejects any demotion/removal that would leave it without one.
 - **Inviting someone by email** creates an `App\Models\ProjectInvitation`
   with a random one-time token and a 7-day expiry, then emails an accept
-  link. Clicking it joins the project immediately if you're logged in with
+  link — optionally pre-assigning one or more custom roles alongside the
+  base tier, which apply automatically the moment the invite is accepted.
+  Clicking the link joins the project immediately if you're logged in with
   the invited address; if you're not, it remembers the token, sends you to
   log in or register, and finishes the join automatically right after. The
   same invitation can also be accepted by pasting its token manually in the
@@ -446,9 +476,10 @@ app/
   Http/Controllers/   Thin HTTP layer — validate, delegate, redirect
   Services/           Business logic and side effects (activity logging, notification mail, NSFW detection, project membership, invitations, mail-config detection, etc.)
   Repositories/       All Eloquent query logic
-  Policies/           ProjectPolicy, IssuePolicy — project-membership-based authorization
-  Models/             Issue, Project, User, ProjectInvitation, Notification, NotificationSetting, SavedFilter, ActivityLog
-  Enums/              IssueLabel, ProjectRole
+  Policies/           ProjectPolicy, IssuePolicy, CommentPolicy, RolePolicy — permission- and project-membership-based authorization
+  Models/             Issue, Project, User, ProjectInvitation, Role, Permission, Notification, NotificationSetting, SavedFilter, ActivityLog
+  Enums/              IssueLabel
+  Enums/Permissions/  RoleType (owner/admin/member/viewer/custom), Permission (~28 granular cases)
   Enums/Notifications/ NotificationType, NotificationChannel
   Notifications/      NotificationMail (every in-app/activity notification type), ProjectInvitationMail (invite emails)
 
@@ -460,9 +491,9 @@ resources/js/
     Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, AccountSettingsContent, SettingsSidebar, ...)
   Layouts/            Page shells (sidebar, top nav, ...)
   context/            React context providers (alerts, theme, accent color, global modal, keyboard shortcuts)
-  hooks/              Reusable hooks (saved filters, resizable table columns, ...)
-  types/              Shared TypeScript types (Issues, Projects, Users, Settings, Theme, Accent, Notification, ...)
-  utils/              cn() (Tailwind class merging), colors, time helpers, accent color CSS variables, password strength
+  hooks/              Reusable hooks (saved filters, resizable table columns, floating-dropdown positioning, roles/members settings state, ...)
+  types/              Shared TypeScript types (Issues, Projects, Users, Settings, Roles, Theme, Accent, Notification, ...)
+  utils/              cn() (Tailwind class merging), colors, time, permission labels/grouping, role theming, password strength
 
 database/
   migrations/         Schema history
@@ -489,11 +520,14 @@ routes/
   variables over hardcoded colors.
 - Prettier (single quotes, auto-organized imports, Tailwind class sorting)
   and ESLint should both pass clean before a commit.
-- Roles are per-project, not global: `App\Enums\ProjectRole` (`admin` /
-  `member`) lives on the `project_user` pivot, not on `users`. Registering an
-  account grants no role — you only get one by creating or joining a
-  project. Authorization is enforced in `ProjectPolicy`/`IssuePolicy`, not
-  just hidden in the UI.
+- Roles are per-project, not global: the base tier
+  (`App\Enums\Permissions\RoleType`) lives on the `project_user` pivot, not
+  on `users`, and the actual permission checks resolve against a member's
+  `App\Models\Role` grants (system tier + any custom roles), not the tier
+  name alone. Registering an account grants no role — you only get one by
+  creating or joining a project. Authorization is enforced in
+  `ProjectPolicy`/`IssuePolicy`/`CommentPolicy`/`RolePolicy`, not just
+  hidden in the UI.
 - Per-user flags like onboarding completion are columns on `users`, shared
   to every Inertia page via `HandleInertiaRequests` — the frontend reads
   them from `usePage().props.auth.user` rather than local/localStorage state.

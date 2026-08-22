@@ -14,7 +14,7 @@ export const statCardVariants = cva(
                     'bg-[var(--bg-dark-color)] border-[var(--bg-light-color)] hover:border-[var(--border-color-strong)]',
                 accent: 'bg-gradient-to-br from-[var(--bg-dark-color)] to-[var(--accent-color-opacity)] border-[var(--accent-color)] shadow-[0_0_15px_rgba(136,68,218,0.15)]',
                 glass: 'bg-[var(--surface-color)] backdrop-blur-md border-[var(--bg-light-color)] hover:bg-[var(--bg-light-color-hover)]',
-                vivid: 'flex-row items-center gap-4 rounded-2xl border-[var(--border-color)] bg-[var(--surface-color)] p-4 hover:border-[var(--border-color-strong)] hover:-translate-y-0',
+                vivid: 'flex-row items-center gap-3 rounded-2xl border-[var(--border-color)] bg-[var(--surface-color)] p-3.5 hover:border-[var(--border-color-strong)] hover:-translate-y-0',
             },
         },
         defaultVariants: {
@@ -82,36 +82,36 @@ const StatCard: React.FC<StatCardProps> = ({
                 <span
                     aria-hidden="true"
                     className={cn(
-                        'absolute -right-6 -top-8 h-24 w-24 rounded-full opacity-[0.07] blur-2xl',
+                        'absolute -right-4 -top-6 h-16 w-16 rounded-full opacity-[0.08] blur-2xl',
                         COLOR_BLOB_CLASSES[color],
                     )}
                 />
 
                 <span
                     className={cn(
-                        'relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl',
+                        'relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
                         COLOR_BG_CLASSES[color],
                     )}
                 >
                     <Icon
                         name={icon}
-                        size={20}
+                        size={16}
                         className={COLOR_TEXT_CLASSES[color]}
                     />
                 </span>
 
                 <div className="relative z-10 min-w-0 flex-1">
-                    <span className="block truncate text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                    <span className="block truncate text-[11px] font-semibold uppercase tracking-wide text-[var(--text-gray-color)]">
                         {title}
                     </span>
-                    <div className="mt-1 flex flex-wrap items-baseline gap-1.5">
-                        <h4 className="text-2xl font-bold leading-none tracking-tight text-[var(--text-color)]">
+                    <div className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
+                        <h4 className="text-xl font-bold leading-none tracking-tight text-[var(--text-color)]">
                             {value}
                         </h4>
                         {trend && (
                             <span
                                 className={cn(
-                                    'flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold',
+                                    'flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
                                     trend.isPositive
                                         ? 'bg-[var(--success-color)]/10 text-[var(--success-color)]'
                                         : 'bg-[var(--error-color)]/10 text-[var(--error-color)]',
@@ -123,20 +123,20 @@ const StatCard: React.FC<StatCardProps> = ({
                                             ? 'TrendingUp'
                                             : 'TrendingDown'
                                     }
-                                    size={11}
+                                    size={10}
                                 />
                                 {trend.isPositive ? '+' : ''}
                                 {trend.value}%
                             </span>
                         )}
                         {trend?.label && (
-                            <span className="truncate text-xs font-medium text-[var(--text-muted-color)]">
+                            <span className="truncate text-[11px] font-medium text-[var(--text-muted-color)]">
                                 {trend.label}
                             </span>
                         )}
                     </div>
                     {description && !trend && (
-                        <p className="mt-0.5 truncate text-xs font-medium text-[var(--text-muted-color)]">
+                        <p className="mt-0.5 truncate text-[11px] font-medium text-[var(--text-muted-color)]">
                             {description}
                         </p>
                     )}
@@ -145,13 +145,13 @@ const StatCard: React.FC<StatCardProps> = ({
                 {progress !== undefined && (
                     <div className="relative z-10 flex shrink-0 items-center justify-center">
                         <ProgressRing
-                            radius={22}
-                            stroke={4}
+                            radius={19}
+                            stroke={3}
                             progress={progress}
                             colorClass={COLOR_RING_CLASSES[color]}
                             bgColorClass="stroke-[var(--bg-light-color)]"
                         />
-                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--text-color)]">
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-[var(--text-color)]">
                             {progress}%
                         </span>
                     </div>
