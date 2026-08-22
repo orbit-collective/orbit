@@ -22,6 +22,8 @@ class Project extends Model
         'description',
         'color',
         'columns',
+        'role',
+        'is_system',
     ];
 
     protected $casts = [

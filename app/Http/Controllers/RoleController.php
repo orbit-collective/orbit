@@ -69,7 +69,7 @@ class RoleController extends Controller
 
         $this->roleService->syncPermissions($project, $role, $validated['permissions']);
 
-        return redirect()->back()->with('success', "Permissions for \"{$role->name}\" have been updated.");
+        return redirect()->back()->with('success', "Permissions for \"$role->name\" have been updated.");
     }
 
     private function ensureRoleBelongsToProject(Project $project, Role $role): void
