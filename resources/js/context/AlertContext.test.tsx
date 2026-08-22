@@ -4,10 +4,29 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 const pageState = vi.hoisted(() => ({
     flash: {} as Record<string, string | undefined>,
+    successHandlers: [] as Array<(event: unknown) => void>,
 }));
+
+const fireRouterSuccess = (flash: Record<string, string | undefined>) => {
+    pageState.successHandlers.forEach((handler) =>
+        handler({ detail: { page: { props: { flash } } } }),
+    );
+};
 
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({ props: { flash: pageState.flash } }),
+    router: {
+        on: (event: string, handler: (e: unknown) => void) => {
+            if (event === 'success') {
+                pageState.successHandlers.push(handler);
+            }
+            return () => {
+                pageState.successHandlers = pageState.successHandlers.filter(
+                    (h) => h !== handler,
+                );
+            };
+        },
+    },
 }));
 
 vi.mock('@/Components/Organisms/AlertContainer/AlertContainer', () => ({
@@ -22,6 +41,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 
 beforeEach(() => {
     pageState.flash = {};
+    pageState.successHandlers = [];
     vi.useFakeTimers();
 });
 
@@ -154,4 +174,63 @@ describe('useAlert', () => {
             });
         },
     );
+
+    test('surfaces a flash error from a subsequent Inertia visit', () => {
+        const { result } = renderHook(() => useAlert(), { wrapper });
+
+        act(() => {
+            fireRouterSuccess({ error: 'This action is unauthorized.' });
+        });
+
+        expect(result.current.alerts).toHaveLength(1);
+        expect(result.current.alerts[0]).toMatchObject({
+            message: 'This action is unauthorized.',
+            type: 'error',
+        });
+    });
+
+    test('surfaces the same flash message again on a second, later visit', () => {
+        // Regression test: the router used to hand back the same `flash`
+        // object reference across visits whose content was identical, so a
+        // `useEffect` keyed on that object never re-ran for the second
+        // occurrence of the same message (e.g. two authorization failures
+        // in a row). Alerts must come from the router's own visit-completion
+        // event instead, which fires unconditionally every time.
+        const { result } = renderHook(() => useAlert(), { wrapper });
+
+        act(() => {
+            fireRouterSuccess({ error: 'This action is unauthorized.' });
+        });
+        act(() => {
+            vi.advanceTimersByTime(4000);
+        });
+        expect(result.current.alerts).toHaveLength(0);
+
+        act(() => {
+            fireRouterSuccess({ error: 'This action is unauthorized.' });
+        });
+
+        expect(result.current.alerts).toHaveLength(1);
+        expect(result.current.alerts[0]).toMatchObject({
+            message: 'This action is unauthorized.',
+            type: 'error',
+        });
+    });
+
+    test('does not show flash alerts from the initial page load a second time', () => {
+        pageState.flash = { success: 'Welcome back' };
+
+        const { result } = renderHook(() => useAlert(), { wrapper });
+        expect(result.current.alerts).toHaveLength(1);
+
+        act(() => {
+            vi.advanceTimersByTime(4000);
+        });
+        expect(result.current.alerts).toHaveLength(0);
+
+        act(() => {
+            fireRouterSuccess({});
+        });
+        expect(result.current.alerts).toHaveLength(0);
+    });
 });
