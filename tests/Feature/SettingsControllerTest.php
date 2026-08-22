@@ -1,10 +1,11 @@
 <?php
 
+use App\Enums\Permissions\Permission as PermissionEnum;
+use App\Enums\Permissions\RoleType;
 use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\User;
 use App\Services\ProjectInvitationService;
-use App\Enums\ProjectRole;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -111,6 +112,79 @@ test('settings page defaults to the user\'s first project and lists its members'
     );
 });
 
+test('settings page grants an owner all granular role permissions', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('canCreateRoles', true)
+        ->where('canUpdateRoles', true)
+        ->where('canDeleteRoles', true)
+        ->where('canAssignRoles', true)
+    );
+});
+
+test('settings page denies a plain member all granular role permissions', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('canCreateRoles', false)
+        ->where('canUpdateRoles', false)
+        ->where('canDeleteRoles', false)
+        ->where('canAssignRoles', false)
+    );
+});
+
+test('settings page hides roles and permissions data from a viewer', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasSettingsAccess', false)
+        ->where('roles', [])
+        ->where('permissions', [])
+        ->where('canCreateRoles', false)
+        ->where('canUpdateRoles', false)
+        ->where('canDeleteRoles', false)
+    );
+});
+
+test('settings page exposes roles and permissions data to a member', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+
+    $response->assertInertia(fn (Assert $page) => PermissionEnum::cases()
+            |> count(...)
+            |> (fn($x) => $page->where('hasSettingsAccess', true)->has('permissions', $x))
+    );
+});
+
+test('settings page grants an owner control over project details', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($user)->get('/settings');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('canUpdateProjectDetails', true)
+        ->where('canDeleteProject', true)
+    );
+});
+
 test('settings page respects the project query parameter', function () {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
@@ -118,7 +192,7 @@ test('settings page respects the project query parameter', function () {
     $projectA->users()->attach($user->id, ['role' => 'admin']);
     $projectB->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->get("/settings?project={$projectB->id}");
+    $response = $this->actingAs($user)->get("/settings?project=$projectB->id");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('selectedProjectId', $projectB->id)
@@ -133,7 +207,7 @@ test('settings page lists pending invitations for the selected project', functio
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'admin']);
-    app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $user);
+    app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $user);
 
     $response = $this->actingAs($user)->get('/settings');
 

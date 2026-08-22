@@ -4,6 +4,7 @@ import {
     PendingProjectInvitation,
     ProjectMember,
 } from '@/types/ProjectMembers';
+import { WorkspaceRole } from '@/types/Roles';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
@@ -72,6 +73,7 @@ const admin: ProjectMember = {
     avatar: null,
     role: 'admin',
     joinedAt: new Date().toISOString(),
+    roleIds: [],
 };
 
 const member: ProjectMember = {
@@ -81,6 +83,17 @@ const member: ProjectMember = {
     avatar: null,
     role: 'member',
     joinedAt: new Date().toISOString(),
+    roleIds: [],
+};
+
+const qaRole: WorkspaceRole = {
+    id: 10,
+    name: 'QA',
+    slug: 'qa',
+    type: 'custom',
+    isSystem: false,
+    memberCount: 0,
+    permissionIds: [],
 };
 
 const renderTab = (
@@ -133,10 +146,44 @@ describe('WorkspaceSettingsMembersTab', () => {
         await waitFor(() => {
             expect(mockRouterPost).toHaveBeenCalledWith(
                 '/projects/1/invitations',
-                { email: 'new@example.com', role: 'member' },
+                { email: 'new@example.com', role: 'member', roles: [] },
                 expect.any(Object),
             );
         });
+    });
+
+    test('a manager allowed to assign roles can invite with a custom role attached', async () => {
+        const user = userEvent.setup();
+        renderTab({ members: [], roles: [qaRole], canAssignRoles: true });
+
+        await user.type(
+            screen.getByPlaceholderText('teammate@company.com'),
+            'new@example.com',
+        );
+        await user.click(screen.getByText('Member'));
+        await user.click(screen.getByText('QA'));
+        await user.click(screen.getByText('Invite'));
+
+        await waitFor(() => {
+            expect(mockRouterPost).toHaveBeenCalledWith(
+                '/projects/1/invitations',
+                {
+                    email: 'new@example.com',
+                    role: 'member',
+                    roles: [10],
+                },
+                expect.any(Object),
+            );
+        });
+    });
+
+    test('the custom roles section is hidden from the invite form without roles.assign', async () => {
+        const user = userEvent.setup();
+        renderTab({ members: [], roles: [qaRole], canAssignRoles: false });
+
+        await user.click(screen.getByText('Member'));
+
+        expect(screen.queryByText('QA')).not.toBeInTheDocument();
     });
 
     test('invitations are disabled when email is not configured', () => {
@@ -204,11 +251,77 @@ describe('WorkspaceSettingsMembersTab', () => {
         );
     });
 
+    test('hides the custom roles section when the project has no custom roles', async () => {
+        const user = userEvent.setup();
+        renderTab({ canAssignRoles: true });
+
+        const triggers = screen.getAllByText('Member');
+        await user.click(triggers[0]);
+
+        expect(screen.queryByText('Custom roles')).not.toBeInTheDocument();
+    });
+
+    test('a user allowed to assign roles can grant a custom role to a member', async () => {
+        const user = userEvent.setup();
+        renderTab({
+            members: [member],
+            roles: [qaRole],
+            canAssignRoles: true,
+        });
+
+        const triggers = screen.getAllByText('Member');
+        await user.click(triggers[0]);
+        await user.click(screen.getByText('QA'));
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects/1/members/2/roles',
+            { roles: [10] },
+            expect.any(Object),
+        );
+    });
+
+    test('a user without roles.assign sees disabled custom role options', async () => {
+        const user = userEvent.setup();
+        renderTab({ roles: [qaRole], canAssignRoles: false });
+
+        const triggers = screen.getAllByText('Member');
+        await user.click(triggers[0]);
+
+        expect(screen.getByText('QA').closest('button')).toBeDisabled();
+    });
+
     test('non-admins see a static role badge instead of a dropdown', () => {
         renderTab({ viewerRole: 'member' });
 
         expect(screen.getAllByText('Admin')).toHaveLength(1);
         expect(screen.getAllByText('Member')).toHaveLength(1);
+    });
+
+    test('a non-owner does not see the transfer ownership panel', () => {
+        renderTab({ viewerRole: 'admin' });
+
+        expect(screen.queryByText('Ownership')).not.toBeInTheDocument();
+    });
+
+    test('an owner can transfer ownership to another member', async () => {
+        const user = userEvent.setup();
+        renderTab({ viewerRole: 'owner' });
+
+        await user.click(
+            screen.getByRole('button', { name: 'Transfer ownership' }),
+        );
+        const candidateNames = screen.getAllByText('Mark Member');
+        await user.click(candidateNames[candidateNames.length - 1]);
+        const transferButtons = screen.getAllByRole('button', {
+            name: 'Transfer ownership',
+        });
+        await user.click(transferButtons[transferButtons.length - 1]);
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects/1/transfer-ownership',
+            { user_id: 2 },
+            expect.any(Object),
+        );
     });
 
     test('switching the active project navigates to its members', async () => {
@@ -241,6 +354,7 @@ describe('WorkspaceSettingsMembersTab', () => {
             id: 5,
             email: 'invitee@example.com',
             role: 'member',
+            roleIds: [],
             invitedByName: 'Ada Admin',
             expiresAt: new Date().toISOString(),
         };
@@ -348,6 +462,7 @@ describe('WorkspaceSettingsMembersTab', () => {
             id: 5,
             email: 'invitee@example.com',
             role: 'member',
+            roleIds: [],
             invitedByName: 'Ada Admin',
             expiresAt: new Date().toISOString(),
         };

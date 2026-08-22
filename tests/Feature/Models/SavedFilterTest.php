@@ -10,9 +10,9 @@ uses(RefreshDatabase::class);
 test('a factory-created saved filter persists with the expected attributes', function () {
     $filter = SavedFilter::factory()->create(['project_id' => Project::factory()]);
 
-    expect($filter->exists)->toBeTrue();
-    expect($filter->name)->toBeString();
-    expect($filter->query_params)->toBeArray();
+    expect($filter->exists)->toBeTrue()
+        ->and($filter->name)->toBeString()
+        ->and($filter->query_params)->toBeArray();
 });
 
 test('mass assignment via fillable creates a saved filter', function () {
@@ -40,17 +40,17 @@ test('query_params is cast to an array', function () {
 
     $fresh = $filter->fresh();
 
-    expect($fresh->query_params)->toBeArray();
-    expect($fresh->query_params['status'])->toBe('open');
-    expect($fresh->query_params['priority'])->toBe('high');
+    expect($fresh->query_params)->toBeArray()
+        ->and($fresh->query_params['status'])->toBe('open')
+        ->and($fresh->query_params['priority'])->toBe('high');
 });
 
 test('project() belongs to the project referenced by project_id', function () {
     $project = Project::factory()->create();
     $filter = SavedFilter::factory()->create(['project_id' => $project->id]);
 
-    expect($filter->project())->toBeInstanceOf(BelongsTo::class);
-    expect($filter->project->id)->toBe($project->id);
+    expect($filter->project())->toBeInstanceOf(BelongsTo::class)
+        ->and($filter->project->id)->toBe($project->id);
 });
 
 test('deleting the project cascades to delete its saved filters', function () {

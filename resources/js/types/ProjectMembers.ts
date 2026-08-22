@@ -1,6 +1,8 @@
 import { ProjectColors } from '@/types/Projects';
 
-export type ProjectMemberRole = 'admin' | 'member';
+export type ProjectMemberRole = 'owner' | 'admin' | 'member' | 'viewer';
+
+export type AssignableProjectMemberRole = Exclude<ProjectMemberRole, 'owner'>;
 
 export interface ProjectMember {
     id: number;
@@ -9,12 +11,14 @@ export interface ProjectMember {
     avatar: string | null;
     role: ProjectMemberRole;
     joinedAt: string;
+    roleIds: number[];
 }
 
 export interface PendingProjectInvitation {
     id: number;
     email: string;
     role: ProjectMemberRole;
+    roleIds: number[];
     invitedByName: string | null;
     expiresAt: string;
 }
@@ -22,5 +26,11 @@ export interface PendingProjectInvitation {
 export interface MemberProjectSummary {
     id: number;
     name: string;
+    color: ProjectColors;
+}
+
+export interface ProjectDetails {
+    name: string;
+    description: string | null;
     color: ProjectColors;
 }

@@ -32,6 +32,6 @@ test('it can get recent account-level activity logs for a user', function () {
 
     $logs = $this->repository->getRecentForUser($user->id, 10);
 
-    expect($logs)->toHaveCount(10);
-    expect($logs->every(fn ($log) => $log->user_id === $user->id))->toBeTrue();
+    expect($logs)->toHaveCount(10)
+        ->and($logs->every(fn($log) => $log->user_id === $user->id))->toBeTrue();
 });

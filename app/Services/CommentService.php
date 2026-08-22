@@ -49,6 +49,21 @@ class CommentService
         return $comment;
     }
 
+    public function updateComment(Comment $comment, array $data): Comment
+    {
+        $issue = $comment->issue;
+        $actorName = auth()->user()?->name ?? 'Someone';
+
+        $comment = $this->commentRepository->update($comment, $data);
+
+        $this->activityLogService->log(
+            $issue->project_id,
+            "$actorName edited a comment on issue #$issue->id \"$issue->title\""
+        );
+
+        return $comment;
+    }
+
     public function deleteComment(Comment $comment): void
     {
         $issue = $comment->issue;

@@ -14,6 +14,11 @@ class ProjectInvitationRepository
         return ProjectInvitation::query()->create($data);
     }
 
+    public function syncRoles(ProjectInvitation $invitation, array $roleIds): void
+    {
+        $invitation->roles()->sync($roleIds);
+    }
+
     public function findByToken(string $token): ?ProjectInvitation
     {
         return ProjectInvitation::query()->where('token', $token)->first();
@@ -34,7 +39,7 @@ class ProjectInvitationRepository
             ->where('project_id', $project->id)
             ->whereNull('accepted_at')
             ->where('expires_at', '>', Carbon::now())
-            ->with('invitedBy')
+            ->with(['invitedBy', 'roles'])
             ->latest()
             ->get();
     }

@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(PermissionSeeder::class);
+
         $users = User::factory()->count(10)->create();
         $projects = Project::factory()->count(3)->create();
 

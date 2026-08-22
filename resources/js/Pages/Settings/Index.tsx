@@ -9,9 +9,11 @@ import { NotificationSettings } from '@/types/Notification';
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
+    ProjectDetails,
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
+import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import {
     SETTINGS_DEFAULT_TAB,
     SETTINGS_TABS,
@@ -32,6 +34,16 @@ interface SettingsIndexProps {
     viewerRole?: ProjectMemberRole | null;
     members?: ProjectMember[];
     pendingInvitations?: PendingProjectInvitation[];
+    roles?: WorkspaceRole[];
+    permissions?: PermissionDefinition[];
+    canCreateRoles?: boolean;
+    canUpdateRoles?: boolean;
+    canDeleteRoles?: boolean;
+    canAssignRoles?: boolean;
+    hasSettingsAccess?: boolean;
+    selectedProjectDetails?: ProjectDetails | null;
+    canUpdateProjectDetails?: boolean;
+    canDeleteProject?: boolean;
 }
 
 export default function SettingsIndex({
@@ -42,6 +54,16 @@ export default function SettingsIndex({
     viewerRole = null,
     members = [],
     pendingInvitations = [],
+    roles = [],
+    permissions = [],
+    canCreateRoles = false,
+    canUpdateRoles = false,
+    canDeleteRoles = false,
+    canAssignRoles = false,
+    hasSettingsAccess = false,
+    selectedProjectDetails = null,
+    canUpdateProjectDetails = false,
+    canDeleteProject = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -122,6 +144,18 @@ export default function SettingsIndex({
                                 viewerRole={viewerRole}
                                 members={members}
                                 pendingInvitations={pendingInvitations}
+                                roles={roles}
+                                permissions={permissions}
+                                canCreateRoles={canCreateRoles}
+                                canUpdateRoles={canUpdateRoles}
+                                canDeleteRoles={canDeleteRoles}
+                                canAssignRoles={canAssignRoles}
+                                hasSettingsAccess={hasSettingsAccess}
+                                selectedProjectDetails={selectedProjectDetails}
+                                canUpdateProjectDetails={
+                                    canUpdateProjectDetails
+                                }
+                                canDeleteProject={canDeleteProject}
                             />
                         ) : (
                             <SettingsPanel

@@ -17,6 +17,11 @@ class CommentRepository
     public function store(array $data): Comment {
         return Comment::query()->create($data);
     }
+    public function update(Comment $comment, array $data): Comment {
+        $comment->update($data);
+
+        return $comment;
+    }
     public function delete(Comment $comment): void {
         $comment->delete();
     }

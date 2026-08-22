@@ -128,7 +128,7 @@ test('updateIssue logs activity and notifies only the actor when there is no ass
             $actor->id,
             NotificationType::IssueStatusChanged,
             'info',
-            "Issue #{$issue->id} status changed",
+            "Issue #$issue->id status changed",
             Mockery::on(fn ($message) => str_contains($message, 'status changed from "open" to "closed"')),
             Mockery::any()
         );
@@ -169,7 +169,7 @@ test('updateIssue also notifies the current assignee when they are not the actor
             $assignee->id,
             NotificationType::IssueStatusChanged,
             'info',
-            "Issue #{$issue->id} status changed",
+            "Issue #$issue->id status changed",
             Mockery::on(fn ($message) => str_contains($message, 'Bob updated') && str_contains($message, 'assigned to you')),
             Mockery::any()
         );
@@ -278,7 +278,7 @@ test('updateIssue notifies with IssuePriorityChanged when only the priority chan
             $actor->id,
             NotificationType::IssuePriorityChanged,
             'info',
-            "Issue #{$issue->id} priority changed",
+            "Issue #$issue->id priority changed",
             Mockery::on(fn ($message) => str_contains($message, 'priority changed from "low" to "high"')),
             Mockery::any()
         );
@@ -310,7 +310,7 @@ test('updateIssue notifies with IssueLabelsChanged when only labels change', fun
             $actor->id,
             NotificationType::IssueLabelsChanged,
             'info',
-            "Issue #{$issue->id} labels updated",
+            "Issue #$issue->id labels updated",
             Mockery::any(),
             Mockery::any()
         );
@@ -347,7 +347,7 @@ test('updateIssue notifies with IssueDatesChanged, grouping start and end date t
             $actor->id,
             NotificationType::IssueDatesChanged,
             'info',
-            "Issue #{$issue->id} schedule updated",
+            "Issue #$issue->id schedule updated",
             Mockery::on(fn ($message) => str_contains($message, 'start date changed to none')
                 && str_contains($message, 'end date changed to none')),
             Mockery::any()

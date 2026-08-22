@@ -443,6 +443,8 @@ describe('Issues/Show Page', () => {
             body: 'My own comment',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
+            can_edit: true,
+            can_delete: true,
             user: { id: 1, name: 'Jane Cooper' },
         };
         render(
@@ -464,6 +466,42 @@ describe('Issues/Show Page', () => {
         });
     });
 
+    test('editing an editable comment calls comments.update with the new body', async () => {
+        const comment: Comment = {
+            id: 9,
+            issue_id: 42,
+            user_id: 1,
+            body: 'Original body',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            can_edit: true,
+            can_delete: true,
+            user: { id: 1, name: 'Jane Cooper' },
+        };
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue({ comments: [comment] })}
+                users={users}
+            />,
+        );
+
+        const user = userEvent.setup();
+        await user.click(screen.getByText('Original body'));
+        const textarea = screen.getByDisplayValue('Original body');
+        await user.clear(textarea);
+        await user.type(textarea, 'Edited body');
+        await user.tab();
+
+        expect(mockRoute).toHaveBeenCalledWith('comments.update', comment.id);
+        expect(mockPatch).toHaveBeenCalledWith(
+            '/comments.update/9',
+            { body: 'Edited body' },
+            { preserveScroll: true },
+        );
+    });
+
     test('does not show a delete button for a comment owned by someone else', () => {
         const comment: Comment = {
             id: 8,
@@ -472,6 +510,8 @@ describe('Issues/Show Page', () => {
             body: "Someone else's comment",
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
+            can_edit: false,
+            can_delete: false,
             user: { id: 2, name: 'Marcus Lee' },
         };
         render(

@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class ProjectInvitation extends Model
 {
@@ -21,7 +22,7 @@ class ProjectInvitation extends Model
     protected function casts(): array
     {
         return [
-            'role' => ProjectRole::class,
+            'role' => RoleType::class,
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
         ];
@@ -35,6 +36,11 @@ class ProjectInvitation extends Model
     public function invitedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by');
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'project_invitation_role');
     }
 
     public function isExpired(): bool

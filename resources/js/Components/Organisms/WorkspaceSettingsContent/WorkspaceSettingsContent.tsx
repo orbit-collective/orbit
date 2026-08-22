@@ -1,9 +1,11 @@
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
+    ProjectDetails,
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
+import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import { WorkspaceSettingsTabId } from '@/types/Settings';
 import WorkspaceSettingsDocumentsTab from './WorkspaceSettingsDocumentsTab';
 import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
@@ -20,6 +22,16 @@ interface WorkspaceSettingsContentProps {
     viewerRole?: ProjectMemberRole | null;
     members?: ProjectMember[];
     pendingInvitations?: PendingProjectInvitation[];
+    roles?: WorkspaceRole[];
+    permissions?: PermissionDefinition[];
+    canCreateRoles?: boolean;
+    canUpdateRoles?: boolean;
+    canDeleteRoles?: boolean;
+    canAssignRoles?: boolean;
+    hasSettingsAccess?: boolean;
+    selectedProjectDetails?: ProjectDetails | null;
+    canUpdateProjectDetails?: boolean;
+    canDeleteProject?: boolean;
 }
 
 export default function WorkspaceSettingsContent({
@@ -29,6 +41,16 @@ export default function WorkspaceSettingsContent({
     viewerRole = null,
     members = [],
     pendingInvitations = [],
+    roles = [],
+    permissions = [],
+    canCreateRoles = false,
+    canUpdateRoles = false,
+    canDeleteRoles = false,
+    canAssignRoles = false,
+    hasSettingsAccess = false,
+    selectedProjectDetails = null,
+    canUpdateProjectDetails = false,
+    canDeleteProject = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return <WorkspaceSettingsLabelsTab />;
@@ -58,9 +80,25 @@ export default function WorkspaceSettingsContent({
                 viewerRole={viewerRole}
                 members={members}
                 pendingInvitations={pendingInvitations}
+                roles={roles}
+                canAssignRoles={canAssignRoles}
+                selectedProjectDetails={selectedProjectDetails}
+                canUpdateProjectDetails={canUpdateProjectDetails}
+                canDeleteProject={canDeleteProject}
             />
         );
     }
 
-    return <WorkspaceSettingsRolesTab />;
+    return (
+        <WorkspaceSettingsRolesTab
+            memberProjects={memberProjects}
+            selectedProjectId={selectedProjectId}
+            roles={roles}
+            permissions={permissions}
+            canCreateRoles={canCreateRoles}
+            canUpdateRoles={canUpdateRoles}
+            canDeleteRoles={canDeleteRoles}
+            hasSettingsAccess={hasSettingsAccess}
+        />
+    );
 }

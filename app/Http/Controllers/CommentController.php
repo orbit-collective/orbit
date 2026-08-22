@@ -16,7 +16,7 @@ class CommentController extends Controller
 
     public function store(Request $request, Issue $issue): RedirectResponse
     {
-        $this->authorize('view', $issue);
+        $this->authorize('create', [Comment::class, $issue]);
 
         $data = $request->validate([
             'body' => 'required|string',
@@ -29,9 +29,26 @@ class CommentController extends Controller
             ->with('action_url', route('issues.show', [$issue->project_id, $issue->id]));
     }
 
+    public function update(Request $request, Comment $comment): RedirectResponse
+    {
+        $this->authorize('update', $comment);
+
+        $data = $request->validate([
+            'body' => 'required|string',
+        ]);
+
+        $this->commentService->updateComment($comment, $data);
+
+        $issue = $comment->issue;
+
+        return redirect()->back()
+            ->with('success', 'Comment updated.')
+            ->with('action_url', route('issues.show', [$issue->project_id, $issue->id]));
+    }
+
     public function destroy(Comment $comment): RedirectResponse
     {
-        abort_if($comment->user_id !== auth()->id(), 403);
+        $this->authorize('delete', $comment);
 
         $issue = $comment->issue;
 

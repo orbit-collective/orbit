@@ -28,7 +28,7 @@ test('a user can update their own notification', function () {
     $user = User::factory()->create();
     $notification = Notification::factory()->create(['user_id' => $user->id, 'read' => false]);
 
-    $response = $this->actingAs($user)->post("/notifications/{$notification->id}", [
+    $response = $this->actingAs($user)->post("/notifications/$notification->id", [
         'type' => 'info',
         'title' => 'Updated title',
         'message' => 'Updated message',
@@ -46,7 +46,7 @@ test('a user can update their own notification', function () {
 test('a user cannot update someone else\'s notification', function () {
     $notification = Notification::factory()->create();
 
-    $response = $this->actingAs(User::factory()->create())->post("/notifications/{$notification->id}", [
+    $response = $this->actingAs(User::factory()->create())->post("/notifications/$notification->id", [
         'type' => 'info',
         'title' => 'Hijacked',
         'message' => 'Hijacked message',
@@ -60,7 +60,7 @@ test('updating a notification requires type, title and message', function () {
     $user = User::factory()->create();
     $notification = Notification::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->actingAs($user)->post("/notifications/{$notification->id}", []);
+    $response = $this->actingAs($user)->post("/notifications/$notification->id", []);
 
     $response->assertSessionHasErrors(['type', 'title', 'message']);
 });
@@ -69,7 +69,7 @@ test('updating a notification rejects a type outside the allowed list', function
     $user = User::factory()->create();
     $notification = Notification::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->actingAs($user)->post("/notifications/{$notification->id}", [
+    $response = $this->actingAs($user)->post("/notifications/$notification->id", [
         'type' => 'not-a-real-type',
         'title' => 'Title',
         'message' => 'Message',
@@ -81,7 +81,7 @@ test('updating a notification rejects a type outside the allowed list', function
 test('guests cannot update a notification', function () {
     $notification = Notification::factory()->create();
 
-    $response = $this->post("/notifications/{$notification->id}", []);
+    $response = $this->post("/notifications/$notification->id", []);
 
     $response->assertRedirect(route('login'));
 });
@@ -90,7 +90,7 @@ test('a user can delete their own notification', function () {
     $user = User::factory()->create();
     $notification = Notification::factory()->create(['user_id' => $user->id]);
 
-    $response = $this->actingAs($user)->delete("/notifications/{$notification->id}");
+    $response = $this->actingAs($user)->delete("/notifications/$notification->id");
 
     $response->assertOk();
     $this->assertDatabaseMissing('notifications', ['id' => $notification->id]);
@@ -99,7 +99,7 @@ test('a user can delete their own notification', function () {
 test('a user cannot delete someone else\'s notification', function () {
     $notification = Notification::factory()->create();
 
-    $response = $this->actingAs(User::factory()->create())->delete("/notifications/{$notification->id}");
+    $response = $this->actingAs(User::factory()->create())->delete("/notifications/$notification->id");
 
     $response->assertForbidden();
     $this->assertDatabaseHas('notifications', ['id' => $notification->id]);
@@ -108,7 +108,7 @@ test('a user cannot delete someone else\'s notification', function () {
 test('guests cannot delete a notification', function () {
     $notification = Notification::factory()->create();
 
-    $response = $this->delete("/notifications/{$notification->id}");
+    $response = $this->delete("/notifications/$notification->id");
 
     $response->assertRedirect(route('login'));
 });

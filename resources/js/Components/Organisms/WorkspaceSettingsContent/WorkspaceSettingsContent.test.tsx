@@ -72,7 +72,7 @@ describe('WorkspaceSettingsContent', () => {
         expect(
             screen.getByText('People with access to "Orbit".'),
         ).toBeInTheDocument();
-        expect(screen.getByText('Invite a teammate')).toBeInTheDocument();
+        expect(screen.getByText('Invite by email')).toBeInTheDocument();
     });
 
     test('renders an empty state when the user has no project', () => {
@@ -87,10 +87,16 @@ describe('WorkspaceSettingsContent', () => {
         ).toBeInTheDocument();
     });
 
-    test('renders roles and management content', () => {
-        render(<WorkspaceSettingsContent tabId="roles-management" />);
+    test('renders an empty state for roles and permissions when the user has no project', () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsContent tabId="roles-management" />
+            </AlertProvider>,
+        );
 
         expect(screen.getByText('Roles and permissions')).toBeInTheDocument();
-        expect(screen.getByText('Administration')).toBeInTheDocument();
+        expect(
+            screen.getByText("You're not part of any project yet"),
+        ).toBeInTheDocument();
     });
 });

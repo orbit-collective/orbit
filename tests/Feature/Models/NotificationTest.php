@@ -11,8 +11,8 @@ uses(RefreshDatabase::class);
 test('a factory-created notification persists with the expected attributes', function () {
     $notification = Notification::factory()->create();
 
-    expect($notification->exists)->toBeTrue();
-    expect($notification->type)->toBeIn(['success', 'info', 'warning', 'error']);
+    expect($notification->exists)->toBeTrue()
+        ->and($notification->type)->toBeIn(['success', 'info', 'warning', 'error']);
 });
 
 test('mass assignment via fillable creates a notification', function () {
@@ -38,16 +38,16 @@ test('user() belongs to the user referenced by user_id', function () {
     $user = User::factory()->create();
     $notification = Notification::factory()->create(['user_id' => $user->id]);
 
-    expect($notification->user())->toBeInstanceOf(BelongsTo::class);
-    expect($notification->user->id)->toBe($user->id);
+    expect($notification->user())->toBeInstanceOf(BelongsTo::class)
+        ->and($notification->user->id)->toBe($user->id);
 });
 
 test('the read flag reflects the value it was created with', function () {
     $unread = Notification::factory()->create(['read' => false]);
     $read = Notification::factory()->create(['read' => true]);
 
-    expect((bool) $unread->fresh()->read)->toBeFalse();
-    expect((bool) $read->fresh()->read)->toBeTrue();
+    expect((bool)$unread->fresh()->read)->toBeFalse()
+        ->and((bool)$read->fresh()->read)->toBeTrue();
 });
 
 test('user_id is required and cannot be null', function () {

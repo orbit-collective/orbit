@@ -1,9 +1,10 @@
 <?php
 
-use App\Enums\ProjectRole;
+use App\Enums\Permissions\RoleType;
 use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
+use App\Models\ProjectUser;
 use App\Models\User;
 use App\Notifications\NotificationMail;
 use App\Notifications\ProjectInvitationMail;
@@ -26,10 +27,10 @@ test('it sends an invitation email and creates a pending invitation', function (
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    $invitation = $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
-    expect($invitation->email)->toBe('invitee@example.com');
-    expect($invitation->isAccepted())->toBeFalse();
+    expect($invitation->email)->toBe('invitee@example.com')
+        ->and($invitation->isAccepted())->toBeFalse();
     $this->assertDatabaseHas('project_invitations', [
         'project_id' => $project->id,
         'email' => 'invitee@example.com',
@@ -45,7 +46,7 @@ test('inviting an email with no existing account always sends the dedicated invi
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    $this->service->invite($project, 'stranger@example.com', ProjectRole::MEMBER, $admin);
+    $this->service->invite($project, 'stranger@example.com', RoleType::MEMBER, $admin);
 
     Notification::assertSentOnDemand(ProjectInvitationMail::class);
     Notification::assertNothingSentTo(User::all());
@@ -65,7 +66,7 @@ test('inviting an existing user sends the normal notification instead of the on-
         'enabled' => true,
     ]);
 
-    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     Notification::assertSentTo($invitee, NotificationMail::class);
     Notification::assertSentOnDemandTimes(ProjectInvitationMail::class, 0);
@@ -85,7 +86,7 @@ test('inviting an existing user who disabled email invitations does not email th
         'enabled' => false,
     ]);
 
-    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     Notification::assertNotSentTo($invitee, NotificationMail::class);
     Notification::assertSentOnDemandTimes(ProjectInvitationMail::class, 0);
@@ -105,7 +106,7 @@ test('inviting an existing user who enabled email invitations does email them', 
         'enabled' => true,
     ]);
 
-    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     Notification::assertSentTo($invitee, NotificationMail::class);
 });
@@ -118,7 +119,7 @@ test('inviting an existing user still creates an in-app notification by default'
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $this->assertDatabaseHas('notifications', [
         'user_id' => $invitee->id,
@@ -134,7 +135,7 @@ test('it refuses to invite when email is not configured', function () {
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 })->throws(ValidationException::class);
 
 test('it refuses to invite someone who is already a member', function () {
@@ -146,7 +147,7 @@ test('it refuses to invite someone who is already a member', function () {
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $project->users()->attach($existingMember->id, ['role' => 'member']);
 
-    $this->service->invite($project, 'already@example.com', ProjectRole::MEMBER, $admin);
+    $this->service->invite($project, 'already@example.com', RoleType::MEMBER, $admin);
 })->throws(ValidationException::class);
 
 test('inviting the same email again replaces the previous pending invitation', function () {
@@ -156,11 +157,11 @@ test('inviting the same email again replaces the previous pending invitation', f
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    $first = $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
-    $second = $this->service->invite($project, 'invitee@example.com', ProjectRole::ADMIN, $admin);
+    $first = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
+    $second = $this->service->invite($project, 'invitee@example.com', RoleType::ADMIN, $admin);
 
-    expect(ProjectInvitation::find($first->id))->toBeNull();
-    expect(ProjectInvitation::find($second->id))->not->toBeNull();
+    expect(ProjectInvitation::find($first->id))->toBeNull()
+        ->and(ProjectInvitation::find($second->id))->not->toBeNull();
 });
 
 test('a valid token can be accepted and attaches the user with the invited role', function () {
@@ -171,13 +172,45 @@ test('a valid token can be accepted and attaches the user with the invited role'
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
 
-    $invitation = $this->service->invite($project, 'invitee@example.com', ProjectRole::ADMIN, $admin);
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::ADMIN, $admin);
 
     $result = $this->service->acceptByToken($invitation->token, $invitee);
 
-    expect($result->id)->toBe($project->id);
-    expect($project->users()->where('users.id', $invitee->id)->first()->pivot->role)->toBe('admin');
-    expect($invitation->fresh()->isAccepted())->toBeTrue();
+    expect($result->id)->toBe($project->id)
+        ->and($project->users()->where('users.id', $invitee->id)->first()->pivot->role)->toBe('admin')
+        ->and($invitation->fresh()->isAccepted())->toBeTrue();
+
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $invitee->id)->first();
+    expect($projectUser->roles()->pluck('slug')->all())->toBe(['admin']);
+});
+
+test('invite() attaches the given custom roles to the invitation', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin, [$customRole->id]);
+
+    expect($invitation->roles()->pluck('roles.id')->all())->toBe([$customRole->id]);
+});
+
+test('accepting an invitation with custom roles grants them to the new member', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin, [$customRole->id]);
+    $this->service->acceptByToken($invitation->token, $invitee);
+
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $invitee->id)->first();
+    expect($projectUser->roles()->pluck('slug')->sort()->values()->all())->toBe(['member', 'qa']);
 });
 
 test('accepting a token twice fails the second time', function () {
@@ -188,7 +221,7 @@ test('accepting a token twice fails the second time', function () {
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
 
-    $invitation = $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
     $this->service->acceptByToken($invitation->token, $invitee);
 
     $this->service->acceptByToken($invitation->token, $invitee);
@@ -202,7 +235,7 @@ test('accepting with an email that does not match the invitation fails', functio
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $wrongUser = User::factory()->create(['email' => 'someone-else@example.com']);
 
-    $invitation = $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $this->service->acceptByToken($invitation->token, $wrongUser);
 })->throws(ValidationException::class);
@@ -215,7 +248,7 @@ test('an expired invitation cannot be accepted', function () {
     $project->users()->attach($admin->id, ['role' => 'admin']);
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
 
-    $invitation = $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
     $invitation->update(['expires_at' => now()->subDay()]);
 
     $this->service->acceptByToken($invitation->token, $invitee);
@@ -234,7 +267,7 @@ test('revoking an invitation deletes it', function () {
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    $invitation = $this->service->invite($project, 'invitee@example.com', ProjectRole::MEMBER, $admin);
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $this->service->revoke($invitation);
 
@@ -248,8 +281,8 @@ test('it lists only pending, unexpired invitations for a project', function () {
     $admin = User::factory()->create();
     $project->users()->attach($admin->id, ['role' => 'admin']);
 
-    $pending = $this->service->invite($project, 'pending@example.com', ProjectRole::MEMBER, $admin);
-    $expired = $this->service->invite($project, 'expired@example.com', ProjectRole::MEMBER, $admin);
+    $pending = $this->service->invite($project, 'pending@example.com', RoleType::MEMBER, $admin);
+    $expired = $this->service->invite($project, 'expired@example.com', RoleType::MEMBER, $admin);
     $expired->update(['expires_at' => now()->subDay()]);
 
     $results = $this->service->getPending($project);

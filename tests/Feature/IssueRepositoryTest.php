@@ -35,14 +35,14 @@ test('it can find an issue with its relations', function () {
 
     $found = $this->repository->findWithRelations($issue->id);
 
-    expect($found->id)->toBe($issue->id);
-    expect($found->relationLoaded('creator'))->toBeTrue();
-    expect($found->relationLoaded('assignee'))->toBeTrue();
-    expect($found->relationLoaded('project'))->toBeTrue();
-    expect($found->relationLoaded('comments'))->toBeTrue();
-    expect($found->creator->id)->toBe($creator->id);
-    expect($found->assignee->id)->toBe($assignee->id);
-    expect($found->project->id)->toBe($project->id);
+    expect($found->id)->toBe($issue->id)
+        ->and($found->relationLoaded('creator'))->toBeTrue()
+        ->and($found->relationLoaded('assignee'))->toBeTrue()
+        ->and($found->relationLoaded('project'))->toBeTrue()
+        ->and($found->relationLoaded('comments'))->toBeTrue()
+        ->and($found->creator->id)->toBe($creator->id)
+        ->and($found->assignee->id)->toBe($assignee->id)
+        ->and($found->project->id)->toBe($project->id);
 });
 
 test('it can store a new issue', function () {
@@ -80,9 +80,9 @@ test('it returns issues ordered by priority', function () {
 
     $issues = $this->repository->getForProject($project->id);
 
-    expect($issues[0]->priority)->toBe('high');
-    expect($issues[1]->priority)->toBe('medium');
-    expect($issues[2]->priority)->toBe('low');
+    expect($issues[0]->priority)->toBe('high')
+        ->and($issues[1]->priority)->toBe('medium')
+        ->and($issues[2]->priority)->toBe('low');
 });
 
 test('it can search issues by title', function () {
@@ -92,8 +92,8 @@ test('it can search issues by title', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, [], ['search' => 'Searchable']);
 
-    expect($results->items())->toHaveCount(1);
-    expect($results->items()[0]->title)->toBe('Searchable Title');
+    expect($results->items())->toHaveCount(1)
+        ->and($results->items()[0]->title)->toBe('Searchable Title');
 });
 
 test('it can search issues by description', function () {
@@ -103,8 +103,8 @@ test('it can search issues by description', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, [], ['search' => 'Target']);
 
-    expect($results->items())->toHaveCount(1);
-    expect($results->items()[0]->description)->toBe('Target description');
+    expect($results->items())->toHaveCount(1)
+        ->and($results->items()[0]->description)->toBe('Target description');
 });
 
 test('it can search issues by ID', function () {
@@ -114,8 +114,8 @@ test('it can search issues by ID', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, [], ['search' => '999']);
 
-    expect($results->items())->toHaveCount(1);
-    expect($results->items()[0]->id)->toBe(999);
+    expect($results->items())->toHaveCount(1)
+        ->and($results->items()[0]->id)->toBe(999);
 });
 
 test('it can filter issues by a single assignee', function () {
@@ -126,8 +126,8 @@ test('it can filter issues by a single assignee', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, [], [], ['assignee' => (string) $assignee->id]);
 
-    expect($results->items())->toHaveCount(1);
-    expect($results->items()[0]->assignee_id)->toBe($assignee->id);
+    expect($results->items())->toHaveCount(1)
+        ->and($results->items()[0]->assignee_id)->toBe($assignee->id);
 });
 
 test('it can filter issues by multiple assignees', function () {
@@ -139,7 +139,7 @@ test('it can filter issues by multiple assignees', function () {
     Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => $second->id]);
     Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => $third->id]);
 
-    $results = $this->repository->getAllPaginated($project->id, 10, [], [], ['assignee' => "{$first->id},{$second->id}"]);
+    $results = $this->repository->getAllPaginated($project->id, 10, [], [], ['assignee' => "$first->id,$second->id"]);
 
     expect($results->items())->toHaveCount(2);
 });
@@ -151,7 +151,7 @@ test('it can filter issues by assignee combined with unassigned', function () {
     Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
     Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => User::factory()->create()->id]);
 
-    $results = $this->repository->getAllPaginated($project->id, 10, [], [], ['assignee' => "{$assignee->id},unassigned"]);
+    $results = $this->repository->getAllPaginated($project->id, 10, [], [], ['assignee' => "$assignee->id,unassigned"]);
 
     expect($results->items())->toHaveCount(2);
 });
@@ -163,8 +163,8 @@ test('it can still filter unassigned issues only', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, [], [], ['assignee' => 'unassigned']);
 
-    expect($results->items())->toHaveCount(1);
-    expect($results->items()[0]->assignee_id)->toBeNull();
+    expect($results->items())->toHaveCount(1)
+        ->and($results->items()[0]->assignee_id)->toBeNull();
 });
 
 test('it can search issues by labels', function () {
@@ -190,8 +190,8 @@ test('it can search issues by a specific field key instead of the generic search
 
     $results = $this->repository->getAllPaginated($project->id, 10, [], ['status' => 'closed']);
 
-    expect($results->items())->toHaveCount(1);
-    expect($results->items()[0]->status)->toBe('closed');
+    expect($results->items())->toHaveCount(1)
+        ->and($results->items()[0]->status)->toBe('closed');
 });
 
 test('it can sort issues by title ascending', function () {
@@ -201,8 +201,8 @@ test('it can sort issues by title ascending', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, ['sort' => 'title', 'direction' => 'AZ']);
 
-    expect($results->items()[0]->title)->toBe('Apple');
-    expect($results->items()[1]->title)->toBe('Banana');
+    expect($results->items()[0]->title)->toBe('Apple')
+        ->and($results->items()[1]->title)->toBe('Banana');
 });
 
 test('it can sort issues by priority ascending', function () {
@@ -212,8 +212,8 @@ test('it can sort issues by priority ascending', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, ['sort' => 'priority', 'direction' => 'AZ']);
 
-    expect($results->items()[0]->title)->toBe('High');
-    expect($results->items()[1]->title)->toBe('Low');
+    expect($results->items()[0]->title)->toBe('High')
+        ->and($results->items()[1]->title)->toBe('Low');
 });
 
 test('it can sort issues by priority descending', function () {
@@ -223,8 +223,8 @@ test('it can sort issues by priority descending', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, ['sort' => 'priority', 'direction' => 'ZA']);
 
-    expect($results->items()[0]->title)->toBe('Low');
-    expect($results->items()[1]->title)->toBe('High');
+    expect($results->items()[0]->title)->toBe('Low')
+        ->and($results->items()[1]->title)->toBe('High');
 });
 
 test('it can sort issues by assignee name', function () {
@@ -236,8 +236,8 @@ test('it can sort issues by assignee name', function () {
 
     $results = $this->repository->getAllPaginated($project->id, 10, ['sort' => 'assignee', 'direction' => 'AZ']);
 
-    expect($results->items()[0]->title)->toBe('Alice issue');
-    expect($results->items()[1]->title)->toBe('Bob issue');
+    expect($results->items()[0]->title)->toBe('Alice issue')
+        ->and($results->items()[1]->title)->toBe('Bob issue');
 });
 
 test('it can sort issues by start_date, end_date and updated', function () {
@@ -249,9 +249,9 @@ test('it can sort issues by start_date, end_date and updated', function () {
     $byEnd = $this->repository->getAllPaginated($project->id, 10, ['sort' => 'end_date', 'direction' => 'AZ']);
     $byUpdated = $this->repository->getAllPaginated($project->id, 10, ['sort' => 'updated', 'direction' => 'AZ']);
 
-    expect($byStart->items())->toHaveCount(2);
-    expect($byEnd->items())->toHaveCount(2);
-    expect($byUpdated->items())->toHaveCount(2);
+    expect($byStart->items())->toHaveCount(2)
+        ->and($byEnd->items())->toHaveCount(2)
+        ->and($byUpdated->items())->toHaveCount(2);
 });
 
 test('it can delete an issue', function () {

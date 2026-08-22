@@ -13,10 +13,10 @@ uses(RefreshDatabase::class);
 test('a factory-created issue persists with the expected attribute types', function () {
     $issue = Issue::factory()->create();
 
-    expect($issue->exists)->toBeTrue();
-    expect($issue->title)->toBeString();
-    expect($issue->status)->toBeIn(['open', 'closed']);
-    expect($issue->priority)->toBeIn(['low', 'medium', 'high']);
+    expect($issue->exists)->toBeTrue()
+        ->and($issue->title)->toBeString()
+        ->and($issue->status)->toBeIn(['open', 'closed'])
+        ->and($issue->priority)->toBeIn(['low', 'medium', 'high']);
 });
 
 test('mass assignment via fillable creates an issue', function () {
@@ -45,16 +45,16 @@ test('creator() belongs to the user referenced by user_id', function () {
     $creator = User::factory()->create();
     $issue = Issue::factory()->create(['user_id' => $creator->id]);
 
-    expect($issue->creator())->toBeInstanceOf(BelongsTo::class);
-    expect($issue->creator->id)->toBe($creator->id);
+    expect($issue->creator())->toBeInstanceOf(BelongsTo::class)
+        ->and($issue->creator->id)->toBe($creator->id);
 });
 
 test('assignee() belongs to the user referenced by assignee_id', function () {
     $assignee = User::factory()->create();
     $issue = Issue::factory()->create(['assignee_id' => $assignee->id]);
 
-    expect($issue->assignee())->toBeInstanceOf(BelongsTo::class);
-    expect($issue->assignee->id)->toBe($assignee->id);
+    expect($issue->assignee())->toBeInstanceOf(BelongsTo::class)
+        ->and($issue->assignee->id)->toBe($assignee->id);
 });
 
 test('assignee is null when assignee_id is not set', function () {
@@ -67,17 +67,17 @@ test('project() belongs to the project referenced by project_id', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
 
-    expect($issue->project())->toBeInstanceOf(BelongsTo::class);
-    expect($issue->project->id)->toBe($project->id);
+    expect($issue->project())->toBeInstanceOf(BelongsTo::class)
+        ->and($issue->project->id)->toBe($project->id);
 });
 
 test('labels are cast to an array of IssueLabel enum instances', function () {
     $issue = Issue::factory()->create(['labels' => [IssueLabel::BUG, IssueLabel::DESIGN]]);
     $fresh = $issue->fresh();
 
-    expect($fresh->labels[0])->toBeInstanceOf(IssueLabel::class);
-    expect($fresh->labels[0]->value)->toBe('bug');
-    expect($fresh->labels[1]->value)->toBe('design');
+    expect($fresh->labels[0])->toBeInstanceOf(IssueLabel::class)
+        ->and($fresh->labels[0]->value)->toBe('bug')
+        ->and($fresh->labels[1]->value)->toBe('design');
 });
 
 test('labels persist as an empty set when none are given', function () {

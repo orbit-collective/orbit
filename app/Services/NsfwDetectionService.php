@@ -18,10 +18,9 @@ class NsfwDetectionService
             return [];
         }
 
-        $response = Http::withBody(
-            file_get_contents($file->getRealPath()),
-            'application/octet-stream'
-        )
+        $response = $file->getRealPath()
+            |> file_get_contents(...)
+            |> (fn($x) => Http::withBody($x, 'application/octet-stream'))
             ->timeout(5)
             ->retry(2, 100)
             ->post(config('services.nsfw.url') . '/classify');
@@ -61,6 +60,9 @@ class NsfwDetectionService
         return false;
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function validate(UploadedFile $file): bool
     {
         if (! config('services.nsfw.enabled')) {
