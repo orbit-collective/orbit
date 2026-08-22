@@ -6,6 +6,7 @@ use App\Services\ActivityLogService;
 use App\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -222,7 +223,7 @@ test('it maps user sessions to their display shape', function () {
             'userAgent' => 'Agent A',
         ])
         ->and($result->first()['lastActiveAt'])->toBe(
-            \Illuminate\Support\Carbon::createFromTimestamp(1700000000)->toIso8601String(),
+            Carbon::createFromTimestamp(1700000000)->toIso8601String(),
         );
 });
 

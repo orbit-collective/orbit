@@ -83,7 +83,7 @@ test('a saved filter can be deleted', function () {
     $filter = SavedFilter::factory()->create(['project_id' => Project::factory()]);
     $filter->project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->delete("/saved-filters/{$filter->id}");
+    $response = $this->actingAs($user)->delete("/saved-filters/$filter->id");
 
     $response->assertRedirect();
     $response->assertSessionHas('success', 'Saved filters has been deleted successfully.');
@@ -93,7 +93,7 @@ test('a saved filter can be deleted', function () {
 test('a non-member cannot delete a saved filter belonging to another project', function () {
     $filter = SavedFilter::factory()->create(['project_id' => Project::factory()]);
 
-    $response = $this->actingAs(User::factory()->create())->delete("/saved-filters/{$filter->id}");
+    $response = $this->actingAs(User::factory()->create())->delete("/saved-filters/$filter->id");
 
     $response->assertForbidden();
 });
@@ -107,7 +107,7 @@ test('deleting a non-existent saved filter returns a 404', function () {
 test('guests cannot delete a saved filter', function () {
     $filter = SavedFilter::factory()->create(['project_id' => Project::factory()]);
 
-    $response = $this->delete("/saved-filters/{$filter->id}");
+    $response = $this->delete("/saved-filters/$filter->id");
 
     $response->assertRedirect(route('login'));
 });

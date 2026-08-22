@@ -21,9 +21,9 @@ test('it can get comments for an issue, oldest first', function () {
 
     $comments = $this->repository->getForIssue($issue->id);
 
-    expect($comments)->toHaveCount(2);
-    expect($comments->first()->id)->toBe($first->id);
-    expect($comments->last()->id)->toBe($second->id);
+    expect($comments)->toHaveCount(2)
+        ->and($comments->first()->id)->toBe($first->id)
+        ->and($comments->last()->id)->toBe($second->id);
 });
 
 test('it can store a new comment', function () {

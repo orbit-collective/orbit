@@ -166,9 +166,9 @@ test('settings page exposes roles and permissions data to a member', function ()
 
     $response = $this->actingAs($user)->get('/settings?tab=roles-management');
 
-    $response->assertInertia(fn (Assert $page) => $page
-        ->where('hasSettingsAccess', true)
-        ->has('permissions', count(PermissionEnum::cases()))
+    $response->assertInertia(fn (Assert $page) => PermissionEnum::cases()
+            |> count(...)
+            |> (fn($x) => $page->where('hasSettingsAccess', true)->has('permissions', $x))
     );
 });
 
@@ -192,7 +192,7 @@ test('settings page respects the project query parameter', function () {
     $projectA->users()->attach($user->id, ['role' => 'admin']);
     $projectB->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->get("/settings?project={$projectB->id}");
+    $response = $this->actingAs($user)->get("/settings?project=$projectB->id");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('selectedProjectId', $projectB->id)

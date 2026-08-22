@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
@@ -61,7 +62,7 @@ test('a successful request refreshes the idle activity timestamp', function () {
 
     expect(session('last_activity_at'))
         ->not->toBeNull()
-        ->and(\Illuminate\Support\Carbon::parse(session('last_activity_at'))->diffInSeconds(now()))
+        ->and(Carbon::parse(session('last_activity_at'))->diffInSeconds(now()))
         ->toBeLessThan(5);
 });
 

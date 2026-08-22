@@ -115,7 +115,7 @@ test('it can sync a member\'s custom roles and logs the change', function () {
 
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
-    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => "Updated {$member->name}'s custom roles"]);
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => "Updated $member->name's custom roles"]);
 });
 
 test('it throws when syncing roles for someone who is not a member', function () {
@@ -135,11 +135,11 @@ test('it can transfer ownership to another member and demotes the previous owner
 
     $this->service->transferOwnership($project, $owner, $member);
 
-    expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('owner');
-    expect($project->users()->where('users.id', $owner->id)->first()->pivot->role)->toBe('admin');
+    expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('owner')
+        ->and($project->users()->where('users.id', $owner->id)->first()->pivot->role)->toBe('admin');
     $this->assertDatabaseHas('activity_logs', [
         'project_id' => $project->id,
-        'body' => "Transferred project ownership from {$owner->name} to {$member->name}",
+        'body' => "Transferred project ownership from $owner->name to $member->name",
     ]);
 });
 
@@ -154,8 +154,8 @@ test('transferring ownership swaps system roles for both parties', function () {
 
     $newOwnerPivot = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     $formerOwnerPivot = ProjectUser::where('project_id', $project->id)->where('user_id', $owner->id)->first();
-    expect($newOwnerPivot->roles()->pluck('slug')->all())->toBe(['owner']);
-    expect($formerOwnerPivot->roles()->pluck('slug')->all())->toBe(['admin']);
+    expect($newOwnerPivot->roles()->pluck('slug')->all())->toBe(['owner'])
+        ->and($formerOwnerPivot->roles()->pluck('slug')->all())->toBe(['admin']);
 });
 
 test('only the current owner can transfer ownership', function () {

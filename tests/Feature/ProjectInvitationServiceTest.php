@@ -29,8 +29,8 @@ test('it sends an invitation email and creates a pending invitation', function (
 
     $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
-    expect($invitation->email)->toBe('invitee@example.com');
-    expect($invitation->isAccepted())->toBeFalse();
+    expect($invitation->email)->toBe('invitee@example.com')
+        ->and($invitation->isAccepted())->toBeFalse();
     $this->assertDatabaseHas('project_invitations', [
         'project_id' => $project->id,
         'email' => 'invitee@example.com',
@@ -160,8 +160,8 @@ test('inviting the same email again replaces the previous pending invitation', f
     $first = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
     $second = $this->service->invite($project, 'invitee@example.com', RoleType::ADMIN, $admin);
 
-    expect(ProjectInvitation::find($first->id))->toBeNull();
-    expect(ProjectInvitation::find($second->id))->not->toBeNull();
+    expect(ProjectInvitation::find($first->id))->toBeNull()
+        ->and(ProjectInvitation::find($second->id))->not->toBeNull();
 });
 
 test('a valid token can be accepted and attaches the user with the invited role', function () {
@@ -176,9 +176,9 @@ test('a valid token can be accepted and attaches the user with the invited role'
 
     $result = $this->service->acceptByToken($invitation->token, $invitee);
 
-    expect($result->id)->toBe($project->id);
-    expect($project->users()->where('users.id', $invitee->id)->first()->pivot->role)->toBe('admin');
-    expect($invitation->fresh()->isAccepted())->toBeTrue();
+    expect($result->id)->toBe($project->id)
+        ->and($project->users()->where('users.id', $invitee->id)->first()->pivot->role)->toBe('admin')
+        ->and($invitation->fresh()->isAccepted())->toBeTrue();
 
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $invitee->id)->first();
     expect($projectUser->roles()->pluck('slug')->all())->toBe(['admin']);

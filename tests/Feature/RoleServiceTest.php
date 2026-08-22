@@ -40,8 +40,8 @@ test('it allows renaming a non-owner system role but keeps its slug fixed', func
 
     $updated = $this->service->updateRole($project, $role, ['name' => 'Renamed', 'slug' => 'not-admin']);
 
-    expect($updated->name)->toBe('Renamed');
-    expect($updated->slug)->toBe('admin');
+    expect($updated->name)->toBe('Renamed')
+        ->and($updated->slug)->toBe('admin');
 });
 
 test('it prevents updating the owner role', function () {
@@ -102,17 +102,17 @@ test('it creates the owner, admin, member and viewer system roles with their def
 
     $systemRoles = $this->service->ensureSystemRoles($project);
 
-    expect($systemRoles->keys()->all())->toBe(['owner', 'admin', 'member', 'viewer']);
-    expect($systemRoles['owner']->is_system)->toBeTrue();
-    expect($systemRoles['owner']->permissions()->count())->toBe(Permission::count());
-    expect($systemRoles['admin']->is_system)->toBeTrue();
-    expect($systemRoles['admin']->permissions()->count())->toBe(Permission::count());
-    expect($systemRoles['member']->is_system)->toBeTrue();
-    expect($systemRoles['member']->permissions()->count())->toBeGreaterThan(0);
-    expect($systemRoles['member']->permissions()->count())->toBeLessThan(Permission::count());
-    expect($systemRoles['viewer']->is_system)->toBeTrue();
-    expect($systemRoles['viewer']->permissions()->count())->toBeGreaterThan(0);
-    expect($systemRoles['viewer']->permissions()->count())->toBeLessThan($systemRoles['member']->permissions()->count());
+    expect($systemRoles->keys()->all())->toBe(['owner', 'admin', 'member', 'viewer'])
+        ->and($systemRoles['owner']->is_system)->toBeTrue()
+        ->and($systemRoles['owner']->permissions()->count())->toBe(Permission::count())
+        ->and($systemRoles['admin']->is_system)->toBeTrue()
+        ->and($systemRoles['admin']->permissions()->count())->toBe(Permission::count())
+        ->and($systemRoles['member']->is_system)->toBeTrue()
+        ->and($systemRoles['member']->permissions()->count())->toBeGreaterThan(0)
+        ->and($systemRoles['member']->permissions()->count())->toBeLessThan(Permission::count())
+        ->and($systemRoles['viewer']->is_system)->toBeTrue()
+        ->and($systemRoles['viewer']->permissions()->count())->toBeGreaterThan(0)
+        ->and($systemRoles['viewer']->permissions()->count())->toBeLessThan($systemRoles['member']->permissions()->count());
 });
 
 test('it is idempotent and does not duplicate system roles', function () {

@@ -28,8 +28,8 @@ test('the password is stored hashed, never in plain text', function () {
         'password' => 'plain-text-password',
     ]);
 
-    expect($user->password)->not->toBe('plain-text-password');
-    expect(Hash::check('plain-text-password', $user->password))->toBeTrue();
+    expect($user->password)->not->toBe('plain-text-password')
+        ->and(Hash::check('plain-text-password', $user->password))->toBeTrue();
 });
 
 test('the password and remember_token are hidden from array/JSON serialization', function () {
@@ -37,8 +37,8 @@ test('the password and remember_token are hidden from array/JSON serialization',
 
     $array = $user->toArray();
 
-    expect($array)->not->toHaveKey('password');
-    expect($array)->not->toHaveKey('remember_token');
+    expect($array)->not->toHaveKey('password')
+        ->and($array)->not->toHaveKey('remember_token');
 });
 
 test('the email column must be unique', function () {
