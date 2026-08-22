@@ -106,6 +106,7 @@ export default function WorkspaceSettingsRolesTab({
                     value={localRoles.length}
                     icon="Shield"
                     color="accent"
+                    variant="vivid"
                     description={`Defined for "${selectedProject.name}"`}
                 />
                 <StatCard
@@ -113,6 +114,7 @@ export default function WorkspaceSettingsRolesTab({
                     value={permissions.length}
                     icon="KeyRound"
                     color="info"
+                    variant="vivid"
                     description="Granular capabilities available"
                 />
                 <StatCard
@@ -120,6 +122,7 @@ export default function WorkspaceSettingsRolesTab({
                     value={totalMembersGoverned}
                     icon="Users"
                     color={totalMembersGoverned > 0 ? 'success' : 'warning'}
+                    variant="vivid"
                     description="Assignments across all custom roles"
                 />
             </div>

@@ -76,16 +76,24 @@ export default function RoleListItem({
                     </p>
                 </div>
 
-                <div className="relative shrink-0">
-                    <ProgressRing
-                        radius={16}
-                        stroke={3}
-                        progress={ratio}
-                        colorClass={theme.ring}
-                        bgColorClass="stroke-[var(--bg-light-color)]"
-                    />
-                    <span className="absolute inset-0 flex items-center justify-center text-[8px] font-semibold text-[var(--text-color)]">
-                        {ratio}
+                <div
+                    className="flex shrink-0 flex-col items-center gap-1"
+                    title={`${ratio}% of permissions granted`}
+                >
+                    <div className="relative">
+                        <ProgressRing
+                            radius={18}
+                            stroke={3}
+                            progress={ratio}
+                            colorClass={theme.ring}
+                            bgColorClass="stroke-[var(--bg-light-color)]"
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--text-color)]">
+                            {ratio}
+                        </span>
+                    </div>
+                    <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--text-gray-color)]">
+                        % perms
                     </span>
                 </div>
             </div>
