@@ -6,6 +6,7 @@ use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\Role;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class RoleRepository
@@ -15,7 +16,7 @@ class RoleRepository
         return $project->roles()->with('permissions')->get();
     }
 
-    public function firstOrCreateSystemRole(Project $project, RoleType $role): Role
+    public function firstOrCreateSystemRole(Project $project, RoleType $role): Model
     {
         return $project->roles()->firstOrCreate(
             ['slug' => $role->value],

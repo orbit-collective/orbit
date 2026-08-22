@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property mixed $pivot
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */

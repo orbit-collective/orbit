@@ -76,7 +76,7 @@ class ProjectInvitationController extends Controller
         }
 
         return redirect()->route('projects.show', $project->id)
-            ->with('success', "You've joined \"{$project->name}\".");
+            ->with('success', "You've joined \"$project->name\".");
     }
 
     public function acceptManual(Request $request): RedirectResponse
@@ -88,7 +88,7 @@ class ProjectInvitationController extends Controller
         $project = $this->projectInvitationService->acceptByToken($validated['token'], $request->user());
 
         return redirect()->route('projects.show', $project->id)
-            ->with('success', "You've joined \"{$project->name}\".");
+            ->with('success', "You've joined \"$project->name\".");
     }
 
     private function firstErrorMessage(ValidationException $exception): string

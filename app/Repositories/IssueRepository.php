@@ -126,7 +126,9 @@ class IssueRepository
                     ? implode(',', $filters['assignee'])
                     : $filters['assignee'];
 
-                $values = array_filter(array_map('trim', explode(',', $assigneeParam)), fn ($value) => $value !== '');
+                $values = explode(',', $assigneeParam)
+                        |> (fn($x) => array_map('trim', $x))
+                        |> (fn($x) => array_filter($x, fn($value) => $value !== ''));
 
                 $includeUnassigned = collect($values)->contains(fn ($value) => in_array(strtolower($value), ['unassigned', 'null', 'none']));
                 $assigneeIds = array_values(array_filter($values, 'is_numeric'));

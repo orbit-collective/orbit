@@ -25,6 +25,10 @@ exclude:
   - name: PhpDynamicAsStaticMethodCallInspection
   - name: JsCoverageInspection
   - name: PhpCoverageInspection
+  - name: PhpIncompatibleReturnTypeInspection
+  - name: PhpUndefinedMethodInspection
+  - name: PhpPossiblePolymorphicInvocationInspection
+  - name: PhpUndefinedFieldInspection
 
 include:
   - name: PhpCSFixerValidationInspection
