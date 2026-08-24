@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\Notifications\NotificationType;
+use App\Events\CommentAdded;
 use App\Models\Comment;
 use App\Models\Issue;
 use App\Repositories\CommentRepository;
@@ -13,7 +13,6 @@ class CommentService
     public function __construct(
         protected CommentRepository $commentRepository,
         protected ActivityLogService $activityLogService,
-        protected NotificationService $notificationService
     ) {}
 
     public function getForIssue(int $issueId): Collection
@@ -36,14 +35,7 @@ class CommentService
         );
 
         if ($issue->assignee_id && $issue->assignee_id !== $actorId) {
-            $this->notificationService->notify(
-                $issue->assignee_id,
-                NotificationType::IssueCommented,
-                'info',
-                'New comment on your issue',
-                "$actorName commented on \"$issue->title\" (#$issue->id).",
-                route('issues.show', [$issue->project_id, $issue->id])
-            );
+            event(new CommentAdded($comment, $issue, auth()->user()));
         }
 
         return $comment;
