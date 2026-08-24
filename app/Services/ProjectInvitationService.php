@@ -2,17 +2,15 @@
 
 namespace App\Services;
 
-use App\Enums\Notifications\NotificationType;
 use App\Enums\Permissions\RoleType;
+use App\Events\ProjectInvited;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
-use App\Notifications\ProjectInvitationMail;
 use App\Repositories\ProjectInvitationRepository;
 use App\Repositories\ProjectMemberRepository;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -26,7 +24,6 @@ class ProjectInvitationService
         protected MailConfigurationService $mailConfigurationService,
         protected ActivityLogService $activityLogService,
         protected UserService $userService,
-        protected NotificationService $notificationService,
         protected RoleService $roleService
     ) {}
 
@@ -134,32 +131,14 @@ class ProjectInvitationService
     }
 
     /**
-     * An invited address with no existing account has no notification preferences to
-     * respect, so it always gets the dedicated invitation email — it's the only way
-     * for them to find out about the invitation at all. An address that already
-     * belongs to a user instead goes through the normal notification pipeline, so
-     * their own "Project invitations" in-app/email preferences are honored exactly
-     * like every other notification type.
+     * Reports the fact that an invitation was sent. Whether the invited
+     * address already has an account (and therefore has notification
+     * preferences to respect) is decided by the listener, not here.
      */
     private function sendInvitationNotification(ProjectInvitation $invitation, Project $project, string $email, User $invitedBy): void
     {
         $existingUser = $this->userService->getUserByEmail($email);
-        $acceptUrl = $this->buildAcceptUrl($invitation);
 
-        if (! $existingUser) {
-            Notification::route('mail', $email)
-                ->notify(new ProjectInvitationMail($project, $invitedBy, $acceptUrl));
-
-            return;
-        }
-
-        $this->notificationService->notify(
-            $existingUser->id,
-            NotificationType::ProjectInvited,
-            'info',
-            'You were invited to a project',
-            "$invitedBy->name invited you to join \"$project->name\".",
-            $acceptUrl
-        );
+        event(new ProjectInvited($invitation, $project, $invitedBy, $existingUser, $this->buildAcceptUrl($invitation)));
     }
 }

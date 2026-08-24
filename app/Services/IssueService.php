@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
-use App\Enums\Notifications\NotificationType;
+use App\Events\IssueAssigned;
+use App\Events\IssueUnassigned;
+use App\Events\IssueUpdated;
 use App\Models\Issue;
 use App\Models\User;
 use App\Repositories\IssueRepository;
@@ -26,34 +28,9 @@ class IssueService
         'end_date' => 'end date',
     ];
 
-    /**
-     * Maps a tracked field to the notification type that gates it, so each kind of change can be
-     * enabled/disabled independently. Fields with no entry here (e.g. title, description) fall
-     * back to the generic NotificationType::IssueUpdated.
-     */
-    private const array FIELD_NOTIFICATION_TYPES = [
-        'status' => NotificationType::IssueStatusChanged,
-        'priority' => NotificationType::IssuePriorityChanged,
-        'labels' => NotificationType::IssueLabelsChanged,
-        'start_date' => NotificationType::IssueDatesChanged,
-        'end_date' => NotificationType::IssueDatesChanged,
-    ];
-
-    /**
-     * Subject line per notification type, used for both the in-app title and the email subject.
-     */
-    private const array UPDATE_SUBJECTS = [
-        'issue_status_changed' => 'status changed',
-        'issue_priority_changed' => 'priority changed',
-        'issue_labels_changed' => 'labels updated',
-        'issue_dates_changed' => 'schedule updated',
-        'issue_updated' => 'updated',
-    ];
-
     public function __construct(
         protected IssueRepository $issueRepository,
         protected ActivityLogService $activityLogService,
-        protected NotificationService $notificationService
     ) {}
 
     public function createIssue(array $data): Issue
@@ -64,14 +41,7 @@ class IssueService
         $this->activityLogService->log($issue->project_id, "Added new task: #$issue->id");
 
         if ($issue->assignee_id && $issue->assignee_id !== auth()->id()) {
-            $this->notificationService->notify(
-                $issue->assignee_id,
-                NotificationType::IssueAssigned,
-                'info',
-                'You were assigned to an issue',
-                auth()->user()?->name." assigned you to \"$issue->title\" (#$issue->id).",
-                $this->buildActionUrl($issue)
-            );
+            event(new IssueAssigned($issue, $issue->assignee, auth()->user()));
         }
 
         return $issue;
@@ -209,120 +179,41 @@ class IssueService
         return implode('; ', array_map(fn ($change) => $change['text'], $changes));
     }
 
-    private function buildActionUrl(Issue $issue): string
-    {
-        return route('projects.show', $issue->project_id).'?issue='.$issue->id;
-    }
-
     /**
-     * Notify the actor and any affected assignee(s) about an issue update.
-     *
-     * The acting user always gets a confirmation of their own change. If the issue is (or was)
-     * assigned to someone else, that person is notified too, since the change affects their work.
-     *
-     * Changes are grouped by notification type (status, priority, labels, dates, or the generic
-     * catch-all) so each kind of change can be toggled on/off independently, and so the subject
-     * and message describe exactly what changed instead of a single generic "issue updated".
+     * Fires the events that describe an issue update: IssueUpdated always
+     * (if there's an actor), and IssueAssigned/IssueUnassigned when the
+     * assignee changed. The listener decides who gets notified about what —
+     * this method just reports the facts.
      */
     private function notifyIssueUpdate(Issue $issue, ?User $actor, array $changes): void
     {
-        $actorId = $actor?->id;
-        $actorName = $actor?->name ?? 'Someone';
-        $actionUrl = $this->buildActionUrl($issue);
-
-        if ($actorId) {
-            foreach ($this->groupChangesByNotificationType($changes) as [$type, $groupChanges]) {
-                $this->notificationService->notify(
-                    $actorId,
-                    $type,
-                    'info',
-                    $this->updateSubject($issue, $type),
-                    "You updated \"$issue->title\" (#$issue->id): {$this->summarize($groupChanges)}.",
-                    $actionUrl
-                );
-            }
+        if ($actor) {
+            event(new IssueUpdated($issue, $actor, $changes));
         }
 
         $assigneeChange = $changes['assignee_id'] ?? null;
-        $otherChanges = $changes;
-        unset($otherChanges['assignee_id']);
-        $otherSummary = $this->summarize($otherChanges);
 
-        if ($assigneeChange) {
-            $oldAssigneeId = $assigneeChange['old'];
-            $newAssigneeId = $assigneeChange['new'];
-
-            if ($oldAssigneeId && $oldAssigneeId !== $newAssigneeId && $oldAssigneeId !== $actorId) {
-                $this->notificationService->notify(
-                    $oldAssigneeId,
-                    NotificationType::IssueAssigned,
-                    'info',
-                    'You were unassigned from an issue',
-                    "$actorName unassigned you from \"$issue->title\" (#$issue->id).",
-                    $actionUrl
-                );
-            }
-
-            if ($newAssigneeId && $newAssigneeId !== $actorId) {
-                $message = "$actorName assigned you to \"$issue->title\" (#$issue->id).";
-                if ($otherSummary) {
-                    $message .= " Also: $otherSummary.";
-                }
-
-                $this->notificationService->notify(
-                    $newAssigneeId,
-                    NotificationType::IssueAssigned,
-                    'info',
-                    'You were assigned to an issue',
-                    $message,
-                    $actionUrl
-                );
-            }
-
+        if (! $assigneeChange) {
             return;
         }
 
-        if ($otherChanges && $issue->assignee_id && $issue->assignee_id !== $actorId) {
-            foreach ($this->groupChangesByNotificationType($otherChanges) as [$type, $groupChanges]) {
-                $this->notificationService->notify(
-                    $issue->assignee_id,
-                    $type,
-                    'info',
-                    $this->updateSubject($issue, $type),
-                    "$actorName updated \"$issue->title\" (#$issue->id), which is assigned to you: {$this->summarize($groupChanges)}.",
-                    $actionUrl
-                );
+        $actorId = $actor?->id;
+        $oldAssigneeId = $assigneeChange['old'];
+        $newAssigneeId = $assigneeChange['new'];
+        $otherChanges = $changes;
+        unset($otherChanges['assignee_id']);
+
+        if ($oldAssigneeId && $oldAssigneeId !== $newAssigneeId && $oldAssigneeId !== $actorId) {
+            $previousAssignee = User::find($oldAssigneeId);
+
+            if ($previousAssignee) {
+                event(new IssueUnassigned($issue, $previousAssignee, $actor));
             }
         }
-    }
 
-    /**
-     * Splits a change set into one bucket per notification type, preserving each field's change
-     * data so every bucket can produce its own precise summary sentence.
-     *
-     * @return list<array{0: NotificationType, 1: array<string, array>}>
-     */
-    private function groupChangesByNotificationType(array $changes): array
-    {
-        $groupedByValue = [];
-
-        foreach ($changes as $field => $change) {
-            $type = self::FIELD_NOTIFICATION_TYPES[$field] ?? NotificationType::IssueUpdated;
-            $groupedByValue[$type->value] ??= ['type' => $type, 'changes' => []];
-            $groupedByValue[$type->value]['changes'][$field] = $change;
+        if ($newAssigneeId && $newAssigneeId !== $actorId && $issue->assignee) {
+            event(new IssueAssigned($issue, $issue->assignee, $actor, $otherChanges));
         }
-
-        return array_map(
-            fn ($group) => [$group['type'], $group['changes']],
-            array_values($groupedByValue)
-        );
-    }
-
-    private function updateSubject(Issue $issue, NotificationType $type): string
-    {
-        $suffix = self::UPDATE_SUBJECTS[$type->value] ?? 'updated';
-
-        return "Issue #$issue->id $suffix";
     }
 
     public function deleteIssue(Issue $issue): void
