@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.0](https://github.com/orbit-collective/orbit/compare/v0.4.0...v0.5.0) (2026-08-24)
+
+
+### Features
+
+* **emails:** refactor notification and invitation emails ([81a017e](https://github.com/orbit-collective/orbit/commit/81a017e086c89aa011416cc7334c749a9642540a))
+* **events:** add event classes for comment and issue management ([3fbce57](https://github.com/orbit-collective/orbit/commit/3fbce57ddabd0097d919ba7e3832fac2af00abf8))
+* **issue:** integrate UserService for assignee management ([e1c671b](https://github.com/orbit-collective/orbit/commit/e1c671b08bb9c5d2c60b43746ca4bc5ea92237fe))
+* **notifications:** implement centralized notification listener for events ([0c2ee45](https://github.com/orbit-collective/orbit/commit/0c2ee455f5d052e1a746fcf6c89a90af3657353d))
+* **notifications:** replace notification service with events for issue and comment updates ([dd3c074](https://github.com/orbit-collective/orbit/commit/dd3c07431c019b6e721801dc54683f796c268b3c))
+
 ## [0.4.0](https://github.com/orbit-collective/orbit/compare/v0.3.0...v0.4.0) (2026-08-22)
 
 
