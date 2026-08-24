@@ -31,6 +31,7 @@ class IssueService
     public function __construct(
         protected IssueRepository $issueRepository,
         protected ActivityLogService $activityLogService,
+        protected UserService $userService,
     ) {}
 
     public function createIssue(array $data): Issue
@@ -204,7 +205,7 @@ class IssueService
         unset($otherChanges['assignee_id']);
 
         if ($oldAssigneeId && $oldAssigneeId !== $newAssigneeId && $oldAssigneeId !== $actorId) {
-            $previousAssignee = User::find($oldAssigneeId);
+            $previousAssignee = $this->userService->getUserById($oldAssigneeId);
 
             if ($previousAssignee) {
                 event(new IssueUnassigned($issue, $previousAssignee, $actor));

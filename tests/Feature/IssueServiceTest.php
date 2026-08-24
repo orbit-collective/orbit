@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Repositories\IssueRepository;
 use App\Services\ActivityLogService;
 use App\Services\IssueService;
+use App\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 
@@ -18,7 +19,9 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->issueRepository = Mockery::mock(IssueRepository::class);
     $this->activityLogService = Mockery::mock(ActivityLogService::class);
-    $this->service = new IssueService($this->issueRepository, $this->activityLogService);
+    $this->userService = Mockery::mock(UserService::class);
+    $this->userService->shouldReceive('getUserById')->andReturnUsing(fn ($id) => User::find($id));
+    $this->service = new IssueService($this->issueRepository, $this->activityLogService, $this->userService);
     Event::fake();
 });
 
