@@ -14,6 +14,5 @@ final class IssueAssigned
         public readonly Issue $issue,
         public readonly User $assignee,
         public readonly ?User $actor,
-        public readonly array $otherChanges = [],
     ) {}
 }
