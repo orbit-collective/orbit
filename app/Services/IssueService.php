@@ -31,6 +31,7 @@ class IssueService
     public function __construct(
         protected IssueRepository $issueRepository,
         protected ActivityLogService $activityLogService,
+        protected UserService $userService,
     ) {}
 
     public function createIssue(array $data): Issue
@@ -155,8 +156,8 @@ class IssueService
 
     private function describeAssigneeChange(?int $oldId, ?int $newId): string
     {
-        $oldName = $oldId ? (User::find($oldId)?->name ?? 'someone') : 'Unassigned';
-        $newName = $newId ? (User::find($newId)?->name ?? 'someone') : 'Unassigned';
+        $oldName = $oldId ? ($this->userService->getUserById($oldId)?->name ?? 'someone') : 'Unassigned';
+        $newName = $newId ? ($this->userService->getUserById($newId)?->name ?? 'someone') : 'Unassigned';
 
         return "assignee changed from $oldName to $newName";
     }
@@ -204,7 +205,7 @@ class IssueService
         unset($otherChanges['assignee_id']);
 
         if ($oldAssigneeId && $oldAssigneeId !== $newAssigneeId && $oldAssigneeId !== $actorId) {
-            $previousAssignee = User::find($oldAssigneeId);
+            $previousAssignee = $this->userService->getUserById($oldAssigneeId);
 
             if ($previousAssignee) {
                 event(new IssueUnassigned($issue, $previousAssignee, $actor));
