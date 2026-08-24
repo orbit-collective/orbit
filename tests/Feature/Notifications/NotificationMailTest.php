@@ -13,16 +13,22 @@ test('it sends only via mail', function () {
     expect($notification->via(new User))->toBe(['mail']);
 });
 
-test('it builds a mail message with the greeting, subject and body', function () {
+test('it builds a mail message with the subject and renders the greeting and body via the notification view', function () {
     $user = User::factory()->make(['name' => 'Ada Lovelace']);
     $notification = new NotificationMail('You were assigned', 'Details about the issue.');
 
     $mail = $notification->toMail($user);
 
     expect($mail->subject)->toBe('You were assigned')
-        ->and($mail->greeting)->toBe('Hello Ada Lovelace!')
-        ->and($mail->introLines)->toContain('Details about the issue.')
-        ->and($mail->actionText)->toBeNull();
+        ->and($mail->view)->toBe('emails.notification')
+        ->and($mail->viewData['notifiable'])->toBe($user)
+        ->and($mail->viewData['body'])->toBe('Details about the issue.')
+        ->and($mail->viewData['actionUrl'])->toBeNull();
+
+    $rendered = $mail->render();
+
+    expect($rendered)->toContain('Hello Ada Lovelace!')
+        ->and($rendered)->toContain('Details about the issue.');
 });
 
 test('it includes an action button when an action URL is given', function () {
@@ -31,8 +37,12 @@ test('it includes an action button when an action URL is given', function () {
 
     $mail = $notification->toMail($user);
 
-    expect($mail->actionText)->toBe('View in Orbit')
-        ->and($mail->actionUrl)->toBe('/issues/1');
+    expect($mail->viewData['actionUrl'])->toBe('/issues/1');
+
+    $rendered = $mail->render();
+
+    expect($rendered)->toContain('View in Orbit')
+        ->and($rendered)->toContain('/issues/1');
 });
 
 test('it rate-limits the mail channel so a burst of notifications does not exceed the provider limit', function () {
