@@ -1,23 +1,23 @@
 <?php
 
-use App\Enums\Notifications\NotificationType;
+use App\Events\CommentAdded;
 use App\Models\Comment;
 use App\Models\Issue;
 use App\Models\User;
 use App\Repositories\CommentRepository;
 use App\Services\ActivityLogService;
 use App\Services\CommentService;
-use App\Services\NotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->commentRepository = Mockery::mock(CommentRepository::class);
     $this->activityLogService = Mockery::mock(ActivityLogService::class);
-    $this->notificationService = Mockery::mock(NotificationService::class);
-    $this->service = new CommentService($this->commentRepository, $this->activityLogService, $this->notificationService);
+    $this->service = new CommentService($this->commentRepository, $this->activityLogService);
+    Event::fake();
 });
 
 test('getForIssue delegates to the repository', function () {
@@ -67,18 +67,14 @@ test('addComment notifies the assignee when someone else comments', function () 
     $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->notificationService->shouldReceive('notify')
-        ->once()
-        ->with(
-            $assignee->id,
-            NotificationType::IssueCommented,
-            'info',
-            'New comment on your issue',
-            'Jane Cooper commented on "Fix login crash" (#4).',
-            route('issues.show', [$issue->project_id, $issue->id])
-        );
-
     $this->service->addComment($issue, ['body' => 'Looks good']);
+
+    Event::assertDispatched(
+        CommentAdded::class,
+        fn ($event) => $event->comment->is($comment)
+            && $event->issue->is($issue)
+            && $event->actor->is($author)
+    );
 });
 
 test('addComment does not notify the assignee when they comment on their own issue', function () {
@@ -91,9 +87,9 @@ test('addComment does not notify the assignee when they comment on their own iss
     $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->notificationService->shouldNotReceive('notify');
-
     $this->service->addComment($issue, ['body' => 'Looks good']);
+
+    Event::assertNotDispatched(CommentAdded::class);
 });
 
 test('addComment does not notify when the issue has no assignee', function () {
@@ -106,9 +102,9 @@ test('addComment does not notify when the issue has no assignee', function () {
     $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->notificationService->shouldNotReceive('notify');
-
     $this->service->addComment($issue, ['body' => 'Looks good']);
+
+    Event::assertNotDispatched(CommentAdded::class);
 });
 
 test('deleteComment removes the comment and logs activity', function () {
