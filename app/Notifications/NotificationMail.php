@@ -54,17 +54,13 @@ class NotificationMail extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = (new MailMessage)
+        return (new MailMessage)
             ->subject($this->title)
-            ->greeting("Hello $notifiable->name!")
-            ->line($this->body)
-            ->line('')
-            ->line("You're receiving this because of activity on Orbit. You can fine-tune which notifications reach your inbox at any time from your account settings.");
-
-        if ($this->actionUrl) {
-            $mail->action('View in Orbit', $this->actionUrl);
-        }
-
-        return $mail->salutation('— The Orbit Team');
+            ->view('emails.notification', [
+                'notifiable' => $notifiable,
+                'title' => $this->title,
+                'body' => $this->body,
+                'actionUrl' => $this->actionUrl,
+            ]);
     }
 }

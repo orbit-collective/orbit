@@ -44,10 +44,10 @@ class ProjectInvitationMail extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->subject("You've been invited to join \"{$this->project->name}\" on Orbit")
-            ->greeting('Hello!')
-            ->line("{$this->invitedBy->name} invited you to join the \"{$this->project->name}\" project on Orbit.")
-            ->action('Accept invitation', $this->acceptUrl)
-            ->line('This invitation link can only be used once and expires in 7 days.')
-            ->salutation('— The Orbit Team');
+            ->view('emails.project-invitation', [
+                'project' => $this->project,
+                'invitedBy' => $this->invitedBy,
+                'acceptUrl' => $this->acceptUrl,
+            ]);
     }
 }
