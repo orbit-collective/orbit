@@ -8,6 +8,22 @@ const names: BrandIconName[] = [
     'github',
     'google-drive',
     'google-calendar',
+    'microsoft-teams',
+    'zoom',
+    'telegram',
+    'gitlab',
+    'bitbucket',
+    'jira',
+    'sentry',
+    'circleci',
+    'dropbox',
+    'microsoft-onedrive',
+    'box',
+    'notion',
+    'trello',
+    'asana',
+    'linear',
+    'figma',
 ];
 
 describe('BrandIcon', () => {
