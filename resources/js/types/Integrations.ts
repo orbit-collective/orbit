@@ -9,6 +9,11 @@ export interface IntegrationSubOption {
     description: string;
 }
 
+export interface IntegrationPreviewSample {
+    title: string;
+    time: string;
+}
+
 export interface IntegrationDefinition {
     id: IntegrationId;
     name: string;
@@ -18,6 +23,8 @@ export interface IntegrationDefinition {
     accentClassName: string;
     description: string;
     overview: string;
+    /** Sample activity shown in the detail modal's preview, standing in for a screenshot. */
+    previewSamples: IntegrationPreviewSample[];
     subOptions: IntegrationSubOption[];
     /** Only Discord is wired up for now — the rest are shown but locked. */
     comingSoon: boolean;
@@ -35,6 +42,10 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
             'Post issue and project activity straight into your Discord server.',
         overview:
             'Connect a Discord server to mirror activity from Orbit — new issues, status changes, and comments — into the channels your team already watches, so nobody has to context-switch to stay in the loop.',
+        previewSamples: [
+            { title: 'Issue #128 assigned to Jane Cooper', time: 'Just now' },
+            { title: 'New comment on "Fix login crash"', time: '2m ago' },
+        ],
         subOptions: [
             {
                 id: 'issue-activity',
@@ -62,6 +73,10 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
             'Send notifications and updates directly to your team channels.',
         overview:
             'Connect Slack to route Orbit notifications into the right channels, so teams can react to project activity without leaving their existing workflow.',
+        previewSamples: [
+            { title: 'Issue #128 assigned to Jane Cooper', time: 'Just now' },
+            { title: 'New comment on "Fix login crash"', time: '2m ago' },
+        ],
         subOptions: [
             {
                 id: 'issue-activity',
@@ -89,6 +104,13 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
             'Sync pull requests, commits, and linked issue activity automatically.',
         overview:
             'Connect a GitHub repository to link commits and pull requests to Orbit issues, and automatically transition issue status based on merge activity.',
+        previewSamples: [
+            {
+                title: 'PR #42 merged — issue #12 marked as done',
+                time: 'Just now',
+            },
+            { title: 'Commit a1b2c3d references issue #87', time: '5m ago' },
+        ],
         subOptions: [
             {
                 id: 'link-commits',
@@ -113,6 +135,16 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
         description: 'Attach and preview Drive files directly on your issues.',
         overview:
             'Connect Google Drive to attach documents, sheets, and slides to issues and projects, with live previews and permission-aware access for your team.',
+        previewSamples: [
+            {
+                title: 'Attached "Q3-Roadmap.docx" to issue #56',
+                time: 'Just now',
+            },
+            {
+                title: 'View access granted to 3 project members',
+                time: '1h ago',
+            },
+        ],
         subOptions: [
             {
                 id: 'file-previews',
@@ -138,6 +170,13 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
         description: 'Sync issue due dates and milestones to your calendar.',
         overview:
             'Connect Google Calendar to automatically create events for issue due dates and project milestones, keeping deadlines visible outside of Orbit.',
+        previewSamples: [
+            {
+                title: 'Event created: "Sprint review" — Fri 14:00',
+                time: 'Just now',
+            },
+            { title: 'Due date synced for issue #91', time: '3h ago' },
+        ],
         subOptions: [
             {
                 id: 'due-dates',

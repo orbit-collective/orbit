@@ -38,6 +38,9 @@ describe('AccountSettingsIntegrationDetailModal', () => {
         ).toBeInTheDocument();
         expect(screen.getByText(discord.overview)).toBeInTheDocument();
         expect(
+            screen.getByText(discord.previewSamples[0].title),
+        ).toBeInTheDocument();
+        expect(
             screen.getByText(discord.subOptions[0].title),
         ).toBeInTheDocument();
     });
