@@ -37,6 +37,7 @@ class RoleService
         Permission::MEMBERS_VIEW,
         Permission::ROLES_VIEW,
         Permission::SETTINGS_VIEW,
+        Permission::INTEGRATIONS_VIEW,
         Permission::ISSUES_VIEW,
         Permission::ISSUES_CREATE,
         Permission::ISSUES_UPDATE,
@@ -59,6 +60,7 @@ class RoleService
         Permission::PROJECT_VIEW,
         Permission::MEMBERS_VIEW,
         Permission::ROLES_VIEW,
+        Permission::INTEGRATIONS_VIEW,
         Permission::ISSUES_VIEW,
     ];
 
