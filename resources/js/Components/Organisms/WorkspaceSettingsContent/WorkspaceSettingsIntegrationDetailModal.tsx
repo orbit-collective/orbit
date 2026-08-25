@@ -1,18 +1,24 @@
 import Badge from '@/Components/Atoms/Badge/Badge';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import Input from '@/Components/Atoms/Input/Input';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import { IntegrationDefinition } from '@/types/Integrations';
+import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
 import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
+import { useEffect, useState } from 'react';
 import WorkspaceSettingsIntegrationPreview from './WorkspaceSettingsIntegrationPreview';
 
 interface WorkspaceSettingsIntegrationDetailModalProps {
     integration: IntegrationDefinition | null;
     enabled: boolean;
     canUpdate: boolean;
+    settings: ProjectIntegrationSettings | null;
     onToggle: (enabled: boolean) => void;
+    onSaveWebhookUrl: (webhookUrl: string) => void;
+    onToggleOption: (optionId: string, checked: boolean) => void;
     onClose: () => void;
 }
 
@@ -20,10 +26,25 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     integration,
     enabled,
     canUpdate,
+    settings,
     onToggle,
+    onSaveWebhookUrl,
+    onToggleOption,
     onClose,
 }: WorkspaceSettingsIntegrationDetailModalProps) {
+    const [webhookUrlDraft, setWebhookUrlDraft] = useState(
+        settings?.webhookUrl ?? '',
+    );
+
+    useEffect(() => {
+        setWebhookUrlDraft(settings?.webhookUrl ?? '');
+    }, [integration?.id, settings?.webhookUrl]);
+
     if (!integration) return null;
+
+    const showConfiguration = !integration.comingSoon;
+    const webhookUrlUnchanged =
+        webhookUrlDraft === (settings?.webhookUrl ?? '');
 
     return (
         <Modal isOpen={!!integration} onClose={onClose} size="md">
@@ -125,6 +146,54 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                     />
                 </section>
 
+                {showConfiguration && (
+                    <section className="mt-6">
+                        <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                            Webhook URL
+                        </h3>
+                        {canUpdate ? (
+                            <>
+                                <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                                    Activity is posted to this webhook. You can
+                                    create one from your {integration.name}{' '}
+                                    server's integration settings.
+                                </p>
+                                <div className="mt-3 flex items-center gap-2">
+                                    <Input
+                                        id="integration-webhook-url"
+                                        variant="modal"
+                                        type="password"
+                                        value={webhookUrlDraft}
+                                        onChange={(event) =>
+                                            setWebhookUrlDraft(
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="https://discord.com/api/webhooks/…"
+                                        className="flex-1"
+                                    />
+                                    <button
+                                        type="button"
+                                        disabled={webhookUrlUnchanged}
+                                        onClick={() =>
+                                            onSaveWebhookUrl(webhookUrlDraft)
+                                        }
+                                        className="shrink-0 rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        Save
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                                {settings?.hasWebhookUrl
+                                    ? 'A webhook URL is configured.'
+                                    : 'No webhook URL has been configured yet.'}
+                            </p>
+                        )}
+                    </section>
+                )}
+
                 <section className="mt-6">
                     <h3 className="text-sm font-semibold text-[var(--text-color)]">
                         Options
@@ -144,12 +213,14 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                     </p>
                                 </div>
                                 <ToggleSwitch
-                                    checked={enabled && !integration.comingSoon}
-                                    onChange={() => {}}
+                                    checked={
+                                        settings?.options[option.id] ?? false
+                                    }
+                                    onChange={(checked) =>
+                                        onToggleOption(option.id, checked)
+                                    }
                                     disabled={
-                                        integration.comingSoon ||
-                                        !enabled ||
-                                        !canUpdate
+                                        integration.comingSoon || !canUpdate
                                     }
                                 />
                             </div>

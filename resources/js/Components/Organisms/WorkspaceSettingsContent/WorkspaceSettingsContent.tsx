@@ -1,3 +1,4 @@
+import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
@@ -34,6 +35,7 @@ interface WorkspaceSettingsContentProps {
     canUpdateProjectDetails?: boolean;
     canDeleteProject?: boolean;
     integrationStatuses?: Record<string, boolean>;
+    integrationSettings?: Record<string, ProjectIntegrationSettings>;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -56,6 +58,7 @@ export default function WorkspaceSettingsContent({
     canUpdateProjectDetails = false,
     canDeleteProject = false,
     integrationStatuses = {},
+    integrationSettings = {},
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsContentProps) {
@@ -102,6 +105,7 @@ export default function WorkspaceSettingsContent({
                 memberProjects={memberProjects}
                 selectedProjectId={selectedProjectId}
                 integrationStatuses={integrationStatuses}
+                integrationSettings={integrationSettings}
                 hasIntegrationsAccess={hasIntegrationsAccess}
                 canUpdateIntegrations={canUpdateIntegrations}
             />
