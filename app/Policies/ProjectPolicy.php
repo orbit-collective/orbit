@@ -51,4 +51,14 @@ class ProjectPolicy
             ->wherePivot('role', RoleType::OWNER->value)
             ->exists();
     }
+
+    public function viewIntegrations(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]);
+    }
+
+    public function updateIntegrations(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
 }
