@@ -11,10 +11,19 @@ class ProjectIntegration extends Model
         'project_id',
         'integration',
         'enabled',
+        'webhook_url',
+        'options',
     ];
 
+    /**
+     * webhook_url is encrypted at rest (Laravel's `encrypted` cast) since it's a
+     * bearer-token-like secret — anyone holding it can post to the channel it
+     * points at.
+     */
     protected $casts = [
         'enabled' => 'boolean',
+        'webhook_url' => 'encrypted',
+        'options' => 'array',
     ];
 
     public function project(): BelongsTo

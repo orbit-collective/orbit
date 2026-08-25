@@ -13,11 +13,21 @@ class ProjectIntegrationRepository
         return $project->integrations()->get();
     }
 
-    public function updateOrCreate(Project $project, string $integration, bool $enabled): ProjectIntegration
+    public function getEnabledForProject(Project $project): Collection
+    {
+        return $project->integrations()->where('enabled', true)->get();
+    }
+
+    public function findForProject(Project $project, string $integration): ?ProjectIntegration
+    {
+        return $project->integrations()->where('integration', $integration)->first();
+    }
+
+    public function updateOrCreate(Project $project, string $integration, array $attributes): ProjectIntegration
     {
         return $project->integrations()->updateOrCreate(
             ['integration' => $integration],
-            ['enabled' => $enabled],
+            $attributes,
         );
     }
 }
