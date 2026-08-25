@@ -3,6 +3,7 @@ import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
+import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import { IntegrationDefinition } from '@/types/Integrations';
 import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
 import AccountSettingsIntegrationPreview from './AccountSettingsIntegrationPreview';
@@ -104,9 +105,12 @@ export default function AccountSettingsIntegrationDetailModal({
                     <h3 className="text-sm font-semibold text-[var(--text-color)]">
                         Overview
                     </h3>
-                    <p className="mt-2 text-sm leading-6 text-[var(--text-gray-color)]">
-                        {integration.overview}
-                    </p>
+                    <EditableMarkdown
+                        value={integration.overview}
+                        onSave={() => {}}
+                        disabled
+                        className="mt-2"
+                    />
                 </section>
 
                 <section className="mt-6">
