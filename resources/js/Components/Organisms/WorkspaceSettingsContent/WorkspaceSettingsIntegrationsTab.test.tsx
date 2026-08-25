@@ -146,6 +146,46 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         );
     });
 
+    test('shows an error alert when the PATCH request fails', async () => {
+        mockRouterPatch.mockImplementationOnce(
+            (_url: string, _data?: unknown, opts?: VisitOptions) => {
+                opts?.onError?.({ enabled: 'Something went wrong.' });
+            },
+        );
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+        });
+
+        const toggles = screen.getAllByRole('button', { name: '' });
+        await userEvent.click(toggles[0]);
+
+        expect(
+            await screen.findByText('Failed to update the integration.'),
+        ).toBeInTheDocument();
+    });
+
+    test('toggling from inside the detail modal patches the same integration', async () => {
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+            integrationStatuses: { discord: false },
+        });
+
+        await userEvent.click(screen.getByRole('heading', { name: 'Discord' }));
+        await userEvent.click(screen.getByText('Connect'));
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects.integrations.update/1/discord',
+            { enabled: true },
+            expect.objectContaining({ preserveScroll: true }),
+        );
+    });
+
     test('opens and closes the detail modal', async () => {
         renderTab({
             memberProjects: [projectA],

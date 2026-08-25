@@ -69,6 +69,37 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
         expect(onToggle).toHaveBeenCalledWith(true);
     });
 
+    test('shows a "Connected" action and enables the option toggles once the integration is on', () => {
+        render(
+            <WorkspaceSettingsIntegrationDetailModal
+                integration={discord}
+                enabled
+                canUpdate
+                onToggle={() => {}}
+                onClose={() => {}}
+            />,
+        );
+
+        expect(screen.getByText('Connected')).toBeInTheDocument();
+        const optionToggles = screen.getAllByRole('button', { name: '' });
+        expect(optionToggles[0]).not.toBeDisabled();
+    });
+
+    test('shows a read-only "Connected" status when the integration is on but the viewer cannot update it', () => {
+        render(
+            <WorkspaceSettingsIntegrationDetailModal
+                integration={discord}
+                enabled
+                canUpdate={false}
+                onToggle={() => {}}
+                onClose={() => {}}
+            />,
+        );
+
+        expect(screen.getByText('Connected')).toBeInTheDocument();
+        expect(screen.queryByText('Connect')).not.toBeInTheDocument();
+    });
+
     test('shows "Coming soon" instead of a connect action for a locked integration', () => {
         render(
             <WorkspaceSettingsIntegrationDetailModal
