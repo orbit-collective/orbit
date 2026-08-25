@@ -105,8 +105,9 @@ describe('AccountSettingsContent', () => {
     test('renders integrations content', () => {
         render(<AccountSettingsContent tabId="integrations" />);
 
-        expect(screen.getByText('Connected services')).toBeInTheDocument();
-        expect(screen.getByText('Developer access')).toBeInTheDocument();
+        expect(screen.getByText('Your integrations')).toBeInTheDocument();
+        expect(screen.getByText('Discord')).toBeInTheDocument();
+        expect(screen.getByText('Google Calendar')).toBeInTheDocument();
     });
 
     test('renders export content', () => {

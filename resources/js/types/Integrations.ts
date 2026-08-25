@@ -1,11 +1,7 @@
 import { BrandIconName } from '@/Components/Atoms/BrandIcon/BrandIcon';
 
 export type IntegrationId =
-    | 'discord'
-    | 'slack'
-    | 'github'
-    | 'google-drive'
-    | 'google-calendar';
+    'discord' | 'slack' | 'github' | 'google-drive' | 'google-calendar';
 
 export interface IntegrationSubOption {
     id: string;
@@ -49,7 +45,8 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
             {
                 id: 'comment-activity',
                 title: 'Comment activity',
-                description: 'Post a message whenever someone leaves a comment.',
+                description:
+                    'Post a message whenever someone leaves a comment.',
             },
         ],
         comingSoon: false,
@@ -75,7 +72,8 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
             {
                 id: 'comment-activity',
                 title: 'Comment activity',
-                description: 'Post a message whenever someone leaves a comment.',
+                description:
+                    'Post a message whenever someone leaves a comment.',
             },
         ],
         comingSoon: true,

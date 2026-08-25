@@ -32,7 +32,10 @@ export default function AccountSettingsIntegrationDetailModal({
                     <span
                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${integration.accentClassName}`}
                     >
-                        <BrandIcon name={integration.brand} className="h-6 w-6" />
+                        <BrandIcon
+                            name={integration.brand}
+                            className="h-6 w-6"
+                        />
                     </span>
                     <div>
                         <h2 className="text-base font-semibold text-[var(--text-color)]">

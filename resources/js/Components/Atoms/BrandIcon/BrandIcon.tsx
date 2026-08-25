@@ -1,9 +1,5 @@
 export type BrandIconName =
-    | 'discord'
-    | 'slack'
-    | 'github'
-    | 'google-drive'
-    | 'google-calendar';
+    'discord' | 'slack' | 'github' | 'google-drive' | 'google-calendar';
 
 interface BrandIconProps {
     name: BrandIconName;
@@ -58,9 +54,18 @@ function BrandIcon({ name, className = 'h-5 w-5' }: BrandIconProps) {
         case 'google-drive':
             return (
                 <svg viewBox="0 0 24 24" className={className}>
-                    <polygon fill="#00AC47" points="8.6,3 1.4,15.4 4.9,21.4 12.1,9" />
-                    <polygon fill="#FFC107" points="4.9,21.4 19.1,21.4 22.6,15.4 8.4,15.4" />
-                    <polygon fill="#EA4335" points="15.4,3 8.6,3 22.6,15.4 19.1,15.4" />
+                    <polygon
+                        fill="#00AC47"
+                        points="8.6,3 1.4,15.4 4.9,21.4 12.1,9"
+                    />
+                    <polygon
+                        fill="#FFC107"
+                        points="4.9,21.4 19.1,21.4 22.6,15.4 8.4,15.4"
+                    />
+                    <polygon
+                        fill="#EA4335"
+                        points="15.4,3 8.6,3 22.6,15.4 19.1,15.4"
+                    />
                 </svg>
             );
         case 'google-calendar':
