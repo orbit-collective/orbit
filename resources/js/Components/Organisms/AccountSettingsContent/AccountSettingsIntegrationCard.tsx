@@ -29,17 +29,17 @@ export default function AccountSettingsIntegrationCard({
                     onOpen();
                 }
             }}
-            className="group flex cursor-pointer flex-col gap-5 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-6 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--border-color-strong)] hover:shadow-lg"
+            className="group flex cursor-pointer flex-col gap-4 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--border-color-strong)] hover:shadow-lg"
         >
             <div className="flex items-start justify-between gap-3">
                 <span
-                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${integration.accentClassName}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${integration.accentClassName}`}
                 >
-                    <BrandIcon name={integration.brand} className="h-7 w-7" />
+                    <BrandIcon name={integration.brand} className="h-5 w-5" />
                 </span>
                 <div
                     onClick={(event) => event.stopPropagation()}
-                    className="pt-1.5"
+                    className="pt-0.5"
                 >
                     <ToggleSwitch
                         checked={enabled}
@@ -51,7 +51,7 @@ export default function AccountSettingsIntegrationCard({
 
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-[var(--text-color)]">
+                    <h3 className="text-sm font-semibold text-[var(--text-color)]">
                         {integration.name}
                     </h3>
                     {integration.comingSoon ? (
@@ -68,12 +68,12 @@ export default function AccountSettingsIntegrationCard({
                 <p className="mt-0.5 text-sm text-[var(--text-muted-color)]">
                     {integration.vendor}
                 </p>
-                <p className="mt-3 text-sm leading-6 text-[var(--text-gray-color)]">
+                <p className="mt-2 text-sm leading-6 text-[var(--text-gray-color)]">
                     {integration.description}
                 </p>
             </div>
 
-            <div className="flex items-center justify-between border-t border-[var(--border-color)] pt-4">
+            <div className="flex items-center justify-between border-t border-[var(--border-color)] pt-3">
                 <Badge
                     variant="outline"
                     className={getCategoryBadgeClassName(integration.category)}

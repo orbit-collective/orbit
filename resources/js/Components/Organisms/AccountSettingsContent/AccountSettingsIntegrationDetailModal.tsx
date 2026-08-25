@@ -28,16 +28,16 @@ export default function AccountSettingsIntegrationDetailModal({
             <header className="flex items-start justify-between gap-4 border-b border-[var(--bg-light-color)] px-6 py-5">
                 <div className="flex items-center gap-3">
                     <span
-                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${integration.accentClassName}`}
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${integration.accentClassName}`}
                     >
                         <BrandIcon
                             name={integration.brand}
-                            className="h-6 w-6"
+                            className="h-5 w-5"
                         />
                     </span>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h2 className="text-base font-semibold text-[var(--text-color)]">
+                            <h2 className="text-sm font-semibold text-[var(--text-color)]">
                                 {integration.name}
                             </h2>
                             <Badge
