@@ -73,7 +73,7 @@ describe('Settings Index Page', () => {
     });
 
     test('falls back to the default tab when the requested tab is disabled', () => {
-        pageState.url = '/settings?tab=integrations';
+        pageState.url = '/settings?tab=export';
         renderSettingsIndex();
 
         expect(
@@ -103,7 +103,7 @@ describe('Settings Index Page', () => {
     test('renders disabled tabs without a link and with a "Soon" badge', () => {
         renderSettingsIndex();
 
-        expect(screen.getByText('Integrations').closest('a')).toBeNull();
+        expect(screen.getByText('Export').closest('a')).toBeNull();
         expect(screen.getAllByText('Soon').length).toBeGreaterThan(0);
     });
 });
