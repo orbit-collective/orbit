@@ -4,13 +4,12 @@ import AccountSettingsIntegrationCard from './AccountSettingsIntegrationCard';
 import AccountSettingsIntegrationDetailModal from './AccountSettingsIntegrationDetailModal';
 
 export default function AccountSettingsIntegrationsTab() {
-    const [enabled, setEnabled] = useState<Record<IntegrationId, boolean>>({
-        discord: false,
-        slack: false,
-        github: false,
-        'google-drive': false,
-        'google-calendar': false,
-    });
+    const [enabled, setEnabled] = useState<Record<IntegrationId, boolean>>(
+        () =>
+            Object.fromEntries(
+                INTEGRATIONS.map((integration) => [integration.id, false]),
+            ) as Record<IntegrationId, boolean>,
+    );
     const [openIntegrationId, setOpenIntegrationId] =
         useState<IntegrationId | null>(null);
 
