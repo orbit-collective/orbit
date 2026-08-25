@@ -1,7 +1,7 @@
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import { IntegrationDefinition } from '@/types/Integrations';
 
-interface AccountSettingsIntegrationPreviewProps {
+interface WorkspaceSettingsIntegrationPreviewProps {
     integration: IntegrationDefinition;
 }
 
@@ -10,9 +10,9 @@ interface AccountSettingsIntegrationPreviewProps {
  * post/sync — a stand-in for a real screenshot until the integration ships,
  * and more honest than a generic decorative image.
  */
-export default function AccountSettingsIntegrationPreview({
+export default function WorkspaceSettingsIntegrationPreview({
     integration,
-}: AccountSettingsIntegrationPreviewProps) {
+}: WorkspaceSettingsIntegrationPreviewProps) {
     return (
         <div className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)]">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--surface-color)] px-4 py-2.5">

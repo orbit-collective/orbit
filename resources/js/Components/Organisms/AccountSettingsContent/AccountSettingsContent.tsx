@@ -2,7 +2,6 @@ import { NotificationSettings } from '@/types/Notification';
 import { AccountSettingsTabId } from '@/types/Settings';
 import { Session } from '@/types/Users';
 import AccountSettingsExportTab from './AccountSettingsExportTab';
-import AccountSettingsIntegrationsTab from './AccountSettingsIntegrationsTab';
 import AccountSettingsNotificationsTab from './AccountSettingsNotificationsTab';
 import AccountSettingsPreferencesTab from './AccountSettingsPreferencesTab';
 import AccountSettingsProfileTab from './AccountSettingsProfileTab';
@@ -46,10 +45,6 @@ export default function AccountSettingsContent({
 
     if (tabId === 'security-access') {
         return <AccountSettingsSecurityTab sessions={sessions} />;
-    }
-
-    if (tabId === 'integrations') {
-        return <AccountSettingsIntegrationsTab />;
     }
 
     return <AccountSettingsExportTab />;

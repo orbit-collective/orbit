@@ -102,18 +102,6 @@ describe('AccountSettingsContent', () => {
         expect(screen.getAllByText('Delete account').length).toBeGreaterThan(0);
     });
 
-    test('renders integrations content', () => {
-        render(<AccountSettingsContent tabId="integrations" />);
-
-        expect(screen.getByText('Your integrations')).toBeInTheDocument();
-        expect(
-            screen.getByRole('heading', { name: 'Discord' }),
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole('heading', { name: 'Google Calendar' }),
-        ).toBeInTheDocument();
-    });
-
     test('renders export content', () => {
         render(<AccountSettingsContent tabId="export" />);
 

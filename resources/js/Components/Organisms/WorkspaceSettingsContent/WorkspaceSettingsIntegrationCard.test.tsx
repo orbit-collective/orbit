@@ -2,19 +2,20 @@ import { INTEGRATIONS } from '@/types/Integrations';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import AccountSettingsIntegrationCard from './AccountSettingsIntegrationCard';
+import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
 
 const discord = INTEGRATIONS.find(
     (integration) => integration.id === 'discord',
 )!;
 const slack = INTEGRATIONS.find((integration) => integration.id === 'slack')!;
 
-describe('AccountSettingsIntegrationCard', () => {
+describe('WorkspaceSettingsIntegrationCard', () => {
     test('renders the integration name, vendor, and description', () => {
         render(
-            <AccountSettingsIntegrationCard
+            <WorkspaceSettingsIntegrationCard
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onOpen={() => {}}
             />,
@@ -30,9 +31,10 @@ describe('AccountSettingsIntegrationCard', () => {
 
     test('shows a "New" badge and an enabled toggle for an available integration', () => {
         render(
-            <AccountSettingsIntegrationCard
+            <WorkspaceSettingsIntegrationCard
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onOpen={() => {}}
             />,
@@ -44,9 +46,10 @@ describe('AccountSettingsIntegrationCard', () => {
 
     test('shows a "Soon" badge and a disabled toggle for a locked integration', () => {
         render(
-            <AccountSettingsIntegrationCard
+            <WorkspaceSettingsIntegrationCard
                 integration={slack}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onOpen={() => {}}
             />,
@@ -59,9 +62,10 @@ describe('AccountSettingsIntegrationCard', () => {
     test('clicking the card calls onOpen', async () => {
         const onOpen = vi.fn();
         render(
-            <AccountSettingsIntegrationCard
+            <WorkspaceSettingsIntegrationCard
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onOpen={onOpen}
             />,
@@ -76,9 +80,10 @@ describe('AccountSettingsIntegrationCard', () => {
         const onOpen = vi.fn();
         const onToggle = vi.fn();
         render(
-            <AccountSettingsIntegrationCard
+            <WorkspaceSettingsIntegrationCard
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={onToggle}
                 onOpen={onOpen}
             />,
@@ -93,9 +98,10 @@ describe('AccountSettingsIntegrationCard', () => {
     test('pressing Enter or Space on the focused card calls onOpen', async () => {
         const onOpen = vi.fn();
         render(
-            <AccountSettingsIntegrationCard
+            <WorkspaceSettingsIntegrationCard
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onOpen={onOpen}
             />,
@@ -110,12 +116,27 @@ describe('AccountSettingsIntegrationCard', () => {
         expect(onOpen).toHaveBeenCalledTimes(2);
     });
 
+    test('disables the toggle for an available integration when the viewer cannot update integrations', () => {
+        render(
+            <WorkspaceSettingsIntegrationCard
+                integration={discord}
+                enabled={false}
+                canUpdate={false}
+                onToggle={() => {}}
+                onOpen={() => {}}
+            />,
+        );
+
+        expect(screen.getByRole('button', { name: '' })).toBeDisabled();
+    });
+
     test('pressing an unrelated key on the card does not call onOpen', async () => {
         const onOpen = vi.fn();
         render(
-            <AccountSettingsIntegrationCard
+            <WorkspaceSettingsIntegrationCard
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onOpen={onOpen}
             />,
