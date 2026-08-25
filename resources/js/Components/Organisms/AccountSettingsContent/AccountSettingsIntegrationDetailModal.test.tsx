@@ -76,6 +76,25 @@ describe('AccountSettingsIntegrationDetailModal', () => {
         expect(screen.queryByText('Connect')).not.toBeInTheDocument();
     });
 
+    test('links to the official website in a new tab', () => {
+        render(
+            <AccountSettingsIntegrationDetailModal
+                integration={discord}
+                enabled={false}
+                onToggle={() => {}}
+                onClose={() => {}}
+            />,
+        );
+
+        const link = screen.getByRole('link', {
+            name: 'Visit the Discord website',
+        });
+
+        expect(link).toHaveAttribute('href', discord.websiteUrl);
+        expect(link).toHaveAttribute('target', '_blank');
+        expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    });
+
     test('the close button calls onClose', async () => {
         const onClose = vi.fn();
         render(

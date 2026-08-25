@@ -54,6 +54,16 @@ export default function AccountSettingsIntegrationDetailModal({
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <a
+                        href={integration.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Visit the ${integration.name} website`}
+                        title={`Visit the ${integration.name} website`}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                    >
+                        <Icon name="ExternalLink" size={16} />
+                    </a>
                     {integration.comingSoon ? (
                         <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--bg-light-color)] px-3 py-1.5 text-sm text-[var(--text-gray-color)]">
                             <Icon name="Lock" size={14} />
