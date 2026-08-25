@@ -7,6 +7,7 @@ use App\Events\IssueAssigned;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Events\ProjectInvited;
+use App\Listeners\NotifyProjectIntegrationsListener;
 use App\Listeners\SendNotificationListener;
 use App\Repositories\EloquentNotificationSettingRepository;
 use App\Repositories\NotificationSettingRepository;
@@ -51,5 +52,16 @@ class AppServiceProvider extends ServiceProvider
             CommentAdded::class,
             ProjectInvited::class,
         ], SendNotificationListener::class);
+
+        // Same event set (minus ProjectInvited, which no integration's
+        // sub-options cover yet) also fans out to any project integration
+        // that opted into that kind of activity — see
+        // NotifyProjectIntegrationsListener for the per-integration dispatch.
+        Event::listen([
+            IssueAssigned::class,
+            IssueUnassigned::class,
+            IssueUpdated::class,
+            CommentAdded::class,
+        ], NotifyProjectIntegrationsListener::class);
     }
 }
