@@ -20,7 +20,9 @@ describe('AccountSettingsIntegrationCard', () => {
             />,
         );
 
-        expect(screen.getByText('Discord')).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Discord' }),
+        ).toBeInTheDocument();
         expect(screen.getByText(discord.vendor)).toBeInTheDocument();
         expect(screen.getByText(discord.description)).toBeInTheDocument();
     });
@@ -64,7 +66,7 @@ describe('AccountSettingsIntegrationCard', () => {
             />,
         );
 
-        await userEvent.click(screen.getByText('Discord'));
+        await userEvent.click(screen.getByRole('heading', { name: 'Discord' }));
 
         expect(onOpen).toHaveBeenCalledTimes(1);
     });

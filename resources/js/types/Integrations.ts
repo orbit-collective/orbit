@@ -57,7 +57,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
         vendor: 'By Slack Technologies',
         category: 'Communication',
         brand: 'slack',
-        accentClassName: 'bg-[#36C5F0]/15',
+        accentClassName: 'bg-[#4A154B]/15',
         description:
             'Send notifications and updates directly to your team channels.',
         overview:
@@ -109,7 +109,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
         vendor: 'By Google LLC',
         category: 'Storage',
         brand: 'google-drive',
-        accentClassName: 'bg-white/10',
+        accentClassName: 'bg-[#4285F4]/15',
         description: 'Attach and preview Drive files directly on your issues.',
         overview:
             'Connect Google Drive to attach documents, sheets, and slides to issues and projects, with live previews and permission-aware access for your team.',
@@ -134,7 +134,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
         vendor: 'By Google LLC',
         category: 'Productivity',
         brand: 'google-calendar',
-        accentClassName: 'bg-white/10',
+        accentClassName: 'bg-[#4285F4]/15',
         description: 'Sync issue due dates and milestones to your calendar.',
         overview:
             'Connect Google Calendar to automatically create events for issue due dates and project milestones, keeping deadlines visible outside of Orbit.',
