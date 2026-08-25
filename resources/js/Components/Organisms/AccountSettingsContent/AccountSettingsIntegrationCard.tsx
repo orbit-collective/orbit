@@ -1,7 +1,9 @@
+import Badge from '@/Components/Atoms/Badge/Badge';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import { IntegrationDefinition } from '@/types/Integrations';
+import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
 
 interface AccountSettingsIntegrationCardProps {
     integration: IntegrationDefinition;
@@ -72,9 +74,12 @@ export default function AccountSettingsIntegrationCard({
             </div>
 
             <div className="flex items-center justify-between border-t border-[var(--border-color)] pt-4">
-                <span className="text-xs font-medium text-[var(--text-muted-color)]">
+                <Badge
+                    variant="outline"
+                    className={getCategoryBadgeClassName(integration.category)}
+                >
                     {integration.category}
-                </span>
+                </Badge>
                 <span className="flex items-center gap-1 text-sm font-medium text-[var(--text-gray-color)] transition-colors group-hover:text-[var(--accent-color)]">
                     View details
                     <Icon name="ChevronRight" size={14} />

@@ -36,6 +36,7 @@ describe('AccountSettingsIntegrationDetailModal', () => {
         expect(
             screen.getByRole('heading', { name: 'Discord' }),
         ).toBeInTheDocument();
+        expect(screen.getByText(discord.category)).toBeInTheDocument();
         expect(container.textContent).toContain('mirror activity from Orbit');
         expect(
             screen.getByText(discord.previewSamples[0].title),

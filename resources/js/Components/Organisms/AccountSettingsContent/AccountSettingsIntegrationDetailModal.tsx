@@ -1,8 +1,10 @@
+import Badge from '@/Components/Atoms/Badge/Badge';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import { IntegrationDefinition } from '@/types/Integrations';
+import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
 import AccountSettingsIntegrationPreview from './AccountSettingsIntegrationPreview';
 
 interface AccountSettingsIntegrationDetailModalProps {
@@ -33,9 +35,19 @@ export default function AccountSettingsIntegrationDetailModal({
                         />
                     </span>
                     <div>
-                        <h2 className="text-base font-semibold text-[var(--text-color)]">
-                            {integration.name}
-                        </h2>
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-base font-semibold text-[var(--text-color)]">
+                                {integration.name}
+                            </h2>
+                            <Badge
+                                variant="outline"
+                                className={getCategoryBadgeClassName(
+                                    integration.category,
+                                )}
+                            >
+                                {integration.category}
+                            </Badge>
+                        </div>
                         <p className="text-sm text-[var(--text-gray-color)]">
                             {integration.vendor}
                         </p>

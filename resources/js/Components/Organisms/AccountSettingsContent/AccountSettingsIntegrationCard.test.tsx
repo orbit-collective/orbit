@@ -25,6 +25,7 @@ describe('AccountSettingsIntegrationCard', () => {
         ).toBeInTheDocument();
         expect(screen.getByText(discord.vendor)).toBeInTheDocument();
         expect(screen.getByText(discord.description)).toBeInTheDocument();
+        expect(screen.getByText(discord.category)).toBeInTheDocument();
     });
 
     test('shows a "New" badge and an enabled toggle for an available integration', () => {
