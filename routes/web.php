@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/{project}/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('projects.roles.permissions.update');
     Route::delete('/projects/{project}/roles/{role}', [RoleController::class, 'destroy'])->name('projects.roles.destroy');
     Route::patch('/projects/{project}/integrations/{integration}', [ProjectIntegrationController::class, 'update'])->name('projects.integrations.update');
+    Route::patch('/projects/{project}/integrations/{integration}/settings', [ProjectIntegrationController::class, 'updateSettings'])->name('projects.integrations.settings.update');
     Route::post('/projects/{project}/invitations', [ProjectInvitationController::class, 'store'])->name('projects.invitations.store');
     Route::delete('/projects/{project}/invitations/{invitation}', [ProjectInvitationController::class, 'destroy'])->name('projects.invitations.destroy');
     Route::post('/invitations/accept', [ProjectInvitationController::class, 'acceptManual'])->name('invitations.accept-manual');

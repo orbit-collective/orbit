@@ -43,6 +43,8 @@ class SettingsController extends Controller
         $hasSettingsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::SETTINGS_VIEW, $viewTiers) ?? false;
         $hasRolesAccess = $hasSettingsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::ROLES_VIEW, $viewTiers);
         $hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, $viewTiers) ?? false;
+        $canUpdateIntegrations = $hasIntegrationsAccess
+            && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
 
         return Inertia::render('Settings/Index', [
             'sessions' => $this->userService->getUserSessions($user),
@@ -84,9 +86,14 @@ class SettingsController extends Controller
             'integrationStatuses' => $hasIntegrationsAccess
                 ? $this->projectIntegrationService->getStatuses($selectedProject)
                 : [],
+            'integrationSettings' => $hasIntegrationsAccess
+                ? $this->mapIntegrationSettings(
+                    $this->projectIntegrationService->getSettings($selectedProject),
+                    $canUpdateIntegrations,
+                )
+                : [],
             'hasIntegrationsAccess' => $hasIntegrationsAccess,
-            'canUpdateIntegrations' => $hasIntegrationsAccess
-                && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]),
+            'canUpdateIntegrations' => $canUpdateIntegrations,
             'canDeleteProject' => $selectedProject
                 ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
                 : false,
@@ -147,5 +154,20 @@ class SettingsController extends Controller
             'key' => $permission->key,
             'group' => $permission->group,
         ])->values()->all();
+    }
+
+    /**
+     * The webhook URL is a bearer secret — only expose the decrypted value to
+     * someone who can actually change it. Everyone else just learns whether
+     * one is configured, which is enough to render the settings UI.
+     */
+    private function mapIntegrationSettings(array $settings, bool $canUpdateIntegrations): array
+    {
+        return array_map(fn (array $integration) => [
+            'enabled' => $integration['enabled'],
+            'hasWebhookUrl' => $integration['webhookUrl'] !== null,
+            'webhookUrl' => $canUpdateIntegrations ? $integration['webhookUrl'] : null,
+            'options' => $integration['options'],
+        ], $settings);
     }
 }

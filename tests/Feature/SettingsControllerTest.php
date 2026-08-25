@@ -241,6 +241,41 @@ test('settings page reflects an enabled integration for the selected project', f
     );
 });
 
+test('settings page exposes the webhook url to an admin who can update integrations', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'admin']);
+    app(ProjectIntegrationService::class)->updateSettings($project, 'discord', [
+        'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
+    ]);
+
+    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('integrationSettings.discord.hasWebhookUrl', true)
+        ->where(
+            'integrationSettings.discord.webhookUrl',
+            'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
+        )
+    );
+});
+
+test('settings page masks the webhook url from a member who cannot update integrations', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+    app(ProjectIntegrationService::class)->updateSettings($project, 'discord', [
+        'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
+    ]);
+
+    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('integrationSettings.discord.hasWebhookUrl', true)
+        ->where('integrationSettings.discord.webhookUrl', null)
+    );
+});
+
 test('settings page respects the project query parameter', function () {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();

@@ -27,4 +27,19 @@ class ProjectIntegrationController extends Controller
 
         return redirect()->back()->with('success', "The \"$integration\" integration has been $action.");
     }
+
+    public function updateSettings(Request $request, Project $project, string $integration): RedirectResponse
+    {
+        $this->authorize('updateIntegrations', $project);
+
+        $validated = $request->validate([
+            'webhook_url' => ['sometimes', 'nullable', 'string', 'max:2048'],
+            'options' => ['sometimes', 'array'],
+            'options.*' => ['boolean'],
+        ]);
+
+        $this->projectIntegrationService->updateSettings($project, $integration, $validated);
+
+        return redirect()->back()->with('success', "Settings for the \"$integration\" integration have been updated.");
+    }
 }
