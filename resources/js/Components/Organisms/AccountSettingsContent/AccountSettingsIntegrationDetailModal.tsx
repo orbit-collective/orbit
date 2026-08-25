@@ -3,6 +3,7 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import { IntegrationDefinition } from '@/types/Integrations';
+import AccountSettingsIntegrationPreview from './AccountSettingsIntegrationPreview';
 
 interface AccountSettingsIntegrationDetailModalProps {
     integration: IntegrationDefinition | null;
@@ -10,12 +11,6 @@ interface AccountSettingsIntegrationDetailModalProps {
     onToggle: (enabled: boolean) => void;
     onClose: () => void;
 }
-
-const GALLERY_GRADIENTS = [
-    'from-fuchsia-500/40 via-purple-500/30 to-indigo-500/40',
-    'from-sky-500/40 via-cyan-500/30 to-emerald-500/40',
-    'from-amber-500/40 via-orange-500/30 to-rose-500/40',
-];
 
 export default function AccountSettingsIntegrationDetailModal({
     integration,
@@ -81,14 +76,7 @@ export default function AccountSettingsIntegrationDetailModal({
             </header>
 
             <div className="overflow-y-auto px-6 py-5">
-                <div className="grid grid-cols-3 gap-3">
-                    {GALLERY_GRADIENTS.map((gradient, index) => (
-                        <div
-                            key={gradient}
-                            className={`aspect-video rounded-xl bg-gradient-to-br ${gradient} ${index === 0 ? 'col-span-3 sm:col-span-1' : ''}`}
-                        />
-                    ))}
-                </div>
+                <AccountSettingsIntegrationPreview integration={integration} />
 
                 <section className="mt-6">
                     <h3 className="text-sm font-semibold text-[var(--text-color)]">
