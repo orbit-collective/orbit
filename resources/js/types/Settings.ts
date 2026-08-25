@@ -66,14 +66,6 @@ export const SETTINGS_TABS: SettingsTab[] = [
         enabled: true,
     },
     {
-        id: 'integrations',
-        label: 'Integrations',
-        icon: 'Plug',
-        section: 'account',
-        description: 'Connect third-party tools and external workflows.',
-        enabled: true,
-    },
-    {
         id: 'export',
         label: 'Export',
         icon: 'Download',
@@ -137,6 +129,14 @@ export const SETTINGS_TABS: SettingsTab[] = [
         description: 'Define roles, permissions, and administrative policies.',
         enabled: true,
     },
+    {
+        id: 'integrations',
+        label: 'Integrations',
+        icon: 'Plug',
+        section: 'workspace',
+        description: 'Connect third-party tools and external workflows.',
+        enabled: true,
+    },
 ];
 
 export const SETTINGS_DEFAULT_TAB: SettingsTabId = 'preferences';
@@ -154,7 +154,6 @@ export const ACCOUNT_SETTINGS_TAB_IDS = [
     'profile',
     'notifications',
     'security-access',
-    'integrations',
     'export',
 ] as const;
 
@@ -174,6 +173,7 @@ export const WORKSPACE_SETTINGS_TAB_IDS = [
     'documents',
     'members',
     'roles-management',
+    'integrations',
 ] as const;
 
 export type WorkspaceSettingsTabId =

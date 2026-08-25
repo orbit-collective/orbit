@@ -5,19 +5,21 @@ import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import { IntegrationDefinition } from '@/types/Integrations';
 import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
 
-interface AccountSettingsIntegrationCardProps {
+interface WorkspaceSettingsIntegrationCardProps {
     integration: IntegrationDefinition;
     enabled: boolean;
+    canUpdate: boolean;
     onToggle: (enabled: boolean) => void;
     onOpen: () => void;
 }
 
-export default function AccountSettingsIntegrationCard({
+export default function WorkspaceSettingsIntegrationCard({
     integration,
     enabled,
+    canUpdate,
     onToggle,
     onOpen,
-}: AccountSettingsIntegrationCardProps) {
+}: WorkspaceSettingsIntegrationCardProps) {
     return (
         <div
             role="button"
@@ -44,7 +46,7 @@ export default function AccountSettingsIntegrationCard({
                     <ToggleSwitch
                         checked={enabled}
                         onChange={onToggle}
-                        disabled={integration.comingSoon}
+                        disabled={integration.comingSoon || !canUpdate}
                     />
                 </div>
             </div>

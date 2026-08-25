@@ -6,21 +6,23 @@ import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import { IntegrationDefinition } from '@/types/Integrations';
 import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
-import AccountSettingsIntegrationPreview from './AccountSettingsIntegrationPreview';
+import WorkspaceSettingsIntegrationPreview from './WorkspaceSettingsIntegrationPreview';
 
-interface AccountSettingsIntegrationDetailModalProps {
+interface WorkspaceSettingsIntegrationDetailModalProps {
     integration: IntegrationDefinition | null;
     enabled: boolean;
+    canUpdate: boolean;
     onToggle: (enabled: boolean) => void;
     onClose: () => void;
 }
 
-export default function AccountSettingsIntegrationDetailModal({
+export default function WorkspaceSettingsIntegrationDetailModal({
     integration,
     enabled,
+    canUpdate,
     onToggle,
     onClose,
-}: AccountSettingsIntegrationDetailModalProps) {
+}: WorkspaceSettingsIntegrationDetailModalProps) {
     if (!integration) return null;
 
     return (
@@ -70,7 +72,7 @@ export default function AccountSettingsIntegrationDetailModal({
                             <Icon name="Lock" size={14} />
                             Coming soon
                         </span>
-                    ) : (
+                    ) : canUpdate ? (
                         <button
                             type="button"
                             onClick={() => onToggle(!enabled)}
@@ -86,6 +88,14 @@ export default function AccountSettingsIntegrationDetailModal({
                             />
                             {enabled ? 'Connected' : 'Connect'}
                         </button>
+                    ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--bg-light-color)] px-3 py-1.5 text-sm text-[var(--text-gray-color)]">
+                            <Icon
+                                name={enabled ? 'CircleCheck' : 'Circle'}
+                                size={14}
+                            />
+                            {enabled ? 'Connected' : 'Not connected'}
+                        </span>
                     )}
                     <button
                         type="button"
@@ -99,7 +109,9 @@ export default function AccountSettingsIntegrationDetailModal({
             </header>
 
             <div className="overflow-y-auto px-6 py-5">
-                <AccountSettingsIntegrationPreview integration={integration} />
+                <WorkspaceSettingsIntegrationPreview
+                    integration={integration}
+                />
 
                 <section className="mt-6">
                     <h3 className="text-sm font-semibold text-[var(--text-color)]">
@@ -135,7 +147,9 @@ export default function AccountSettingsIntegrationDetailModal({
                                     checked={enabled && !integration.comingSoon}
                                     onChange={() => {}}
                                     disabled={
-                                        integration.comingSoon || !enabled
+                                        integration.comingSoon ||
+                                        !enabled ||
+                                        !canUpdate
                                     }
                                 />
                             </div>

@@ -44,6 +44,9 @@ interface SettingsIndexProps {
     selectedProjectDetails?: ProjectDetails | null;
     canUpdateProjectDetails?: boolean;
     canDeleteProject?: boolean;
+    integrationStatuses?: Record<string, boolean>;
+    hasIntegrationsAccess?: boolean;
+    canUpdateIntegrations?: boolean;
 }
 
 export default function SettingsIndex({
@@ -64,6 +67,9 @@ export default function SettingsIndex({
     selectedProjectDetails = null,
     canUpdateProjectDetails = false,
     canDeleteProject = false,
+    integrationStatuses = {},
+    hasIntegrationsAccess = false,
+    canUpdateIntegrations = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -156,6 +162,9 @@ export default function SettingsIndex({
                                     canUpdateProjectDetails
                                 }
                                 canDeleteProject={canDeleteProject}
+                                integrationStatuses={integrationStatuses}
+                                hasIntegrationsAccess={hasIntegrationsAccess}
+                                canUpdateIntegrations={canUpdateIntegrations}
                             />
                         ) : (
                             <SettingsPanel

@@ -2,19 +2,20 @@ import { INTEGRATIONS } from '@/types/Integrations';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import AccountSettingsIntegrationDetailModal from './AccountSettingsIntegrationDetailModal';
+import WorkspaceSettingsIntegrationDetailModal from './WorkspaceSettingsIntegrationDetailModal';
 
 const discord = INTEGRATIONS.find(
     (integration) => integration.id === 'discord',
 )!;
 const slack = INTEGRATIONS.find((integration) => integration.id === 'slack')!;
 
-describe('AccountSettingsIntegrationDetailModal', () => {
+describe('WorkspaceSettingsIntegrationDetailModal', () => {
     test('renders nothing when there is no integration', () => {
         const { container } = render(
-            <AccountSettingsIntegrationDetailModal
+            <WorkspaceSettingsIntegrationDetailModal
                 integration={null}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onClose={() => {}}
             />,
@@ -25,9 +26,10 @@ describe('AccountSettingsIntegrationDetailModal', () => {
 
     test('renders the integration overview and options', () => {
         const { container } = render(
-            <AccountSettingsIntegrationDetailModal
+            <WorkspaceSettingsIntegrationDetailModal
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onClose={() => {}}
             />,
@@ -53,9 +55,10 @@ describe('AccountSettingsIntegrationDetailModal', () => {
     test('shows a "Connect" action for an available integration and calls onToggle', async () => {
         const onToggle = vi.fn();
         render(
-            <AccountSettingsIntegrationDetailModal
+            <WorkspaceSettingsIntegrationDetailModal
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={onToggle}
                 onClose={() => {}}
             />,
@@ -68,9 +71,10 @@ describe('AccountSettingsIntegrationDetailModal', () => {
 
     test('shows "Coming soon" instead of a connect action for a locked integration', () => {
         render(
-            <AccountSettingsIntegrationDetailModal
+            <WorkspaceSettingsIntegrationDetailModal
                 integration={slack}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onClose={() => {}}
             />,
@@ -82,9 +86,10 @@ describe('AccountSettingsIntegrationDetailModal', () => {
 
     test('links to the official website in a new tab', () => {
         render(
-            <AccountSettingsIntegrationDetailModal
+            <WorkspaceSettingsIntegrationDetailModal
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onClose={() => {}}
             />,
@@ -99,12 +104,28 @@ describe('AccountSettingsIntegrationDetailModal', () => {
         expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
 
+    test('shows a read-only status instead of a connect action when the viewer cannot update integrations', () => {
+        render(
+            <WorkspaceSettingsIntegrationDetailModal
+                integration={discord}
+                enabled={false}
+                canUpdate={false}
+                onToggle={() => {}}
+                onClose={() => {}}
+            />,
+        );
+
+        expect(screen.getByText('Not connected')).toBeInTheDocument();
+        expect(screen.queryByText('Connect')).not.toBeInTheDocument();
+    });
+
     test('the close button calls onClose', async () => {
         const onClose = vi.fn();
         render(
-            <AccountSettingsIntegrationDetailModal
+            <WorkspaceSettingsIntegrationDetailModal
                 integration={discord}
                 enabled={false}
+                canUpdate
                 onToggle={() => {}}
                 onClose={onClose}
             />,

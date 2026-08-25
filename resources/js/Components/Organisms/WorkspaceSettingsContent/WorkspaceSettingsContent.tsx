@@ -8,6 +8,7 @@ import {
 import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import { WorkspaceSettingsTabId } from '@/types/Settings';
 import WorkspaceSettingsDocumentsTab from './WorkspaceSettingsDocumentsTab';
+import WorkspaceSettingsIntegrationsTab from './WorkspaceSettingsIntegrationsTab';
 import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
 import WorkspaceSettingsMembersTab from './WorkspaceSettingsMembersTab';
 import WorkspaceSettingsPrioritiesTab from './WorkspaceSettingsPrioritiesTab';
@@ -32,6 +33,9 @@ interface WorkspaceSettingsContentProps {
     selectedProjectDetails?: ProjectDetails | null;
     canUpdateProjectDetails?: boolean;
     canDeleteProject?: boolean;
+    integrationStatuses?: Record<string, boolean>;
+    hasIntegrationsAccess?: boolean;
+    canUpdateIntegrations?: boolean;
 }
 
 export default function WorkspaceSettingsContent({
@@ -51,6 +55,9 @@ export default function WorkspaceSettingsContent({
     selectedProjectDetails = null,
     canUpdateProjectDetails = false,
     canDeleteProject = false,
+    integrationStatuses = {},
+    hasIntegrationsAccess = false,
+    canUpdateIntegrations = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return <WorkspaceSettingsLabelsTab />;
@@ -85,6 +92,18 @@ export default function WorkspaceSettingsContent({
                 selectedProjectDetails={selectedProjectDetails}
                 canUpdateProjectDetails={canUpdateProjectDetails}
                 canDeleteProject={canDeleteProject}
+            />
+        );
+    }
+
+    if (tabId === 'integrations') {
+        return (
+            <WorkspaceSettingsIntegrationsTab
+                memberProjects={memberProjects}
+                selectedProjectId={selectedProjectId}
+                integrationStatuses={integrationStatuses}
+                hasIntegrationsAccess={hasIntegrationsAccess}
+                canUpdateIntegrations={canUpdateIntegrations}
             />
         );
     }
