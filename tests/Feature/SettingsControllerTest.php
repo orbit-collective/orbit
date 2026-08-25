@@ -5,6 +5,7 @@ use App\Enums\Permissions\RoleType;
 use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\ProjectIntegrationService;
 use App\Services\ProjectInvitationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -182,6 +183,61 @@ test('settings page grants an owner control over project details', function () {
     $response->assertInertia(fn (Assert $page) => $page
         ->where('canUpdateProjectDetails', true)
         ->where('canDeleteProject', true)
+    );
+});
+
+test('settings page grants an admin access to view and update integrations', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'admin']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasIntegrationsAccess', true)
+        ->where('canUpdateIntegrations', true)
+        ->where('integrationStatuses.discord', false)
+    );
+});
+
+test('settings page grants a plain member view-only access to integrations', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasIntegrationsAccess', true)
+        ->where('canUpdateIntegrations', false)
+        ->where('integrationStatuses.discord', false)
+    );
+});
+
+test('settings page hides integrations data from a viewer with no view tier match', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasIntegrationsAccess', false)
+        ->where('canUpdateIntegrations', false)
+        ->where('integrationStatuses', [])
+    );
+});
+
+test('settings page reflects an enabled integration for the selected project', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'owner']);
+    app(ProjectIntegrationService::class)->setEnabled($project, 'discord', true);
+
+    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('integrationStatuses.discord', true)
     );
 });
 
