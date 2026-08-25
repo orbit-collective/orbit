@@ -53,4 +53,45 @@ describe('AccountSettingsIntegrationsTab', () => {
 
         expect(screen.getByText('Connected')).toBeInTheDocument();
     });
+
+    test('filters the grid down to the selected category', async () => {
+        render(<AccountSettingsIntegrationsTab />);
+
+        expect(
+            screen.getByRole('heading', { name: 'Google Drive' }),
+        ).toBeInTheDocument();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: /^Communication/ }),
+        );
+
+        expect(
+            screen.getByRole('heading', { name: 'Discord' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('heading', { name: 'Google Drive' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('the "All" filter is selected by default and shows every integration', () => {
+        render(<AccountSettingsIntegrationsTab />);
+
+        expect(screen.getByRole('button', { name: /^All/ })).toHaveClass(
+            'bg-[var(--accent-color)]',
+        );
+    });
+
+    test('switching back to "All" restores every integration', async () => {
+        render(<AccountSettingsIntegrationsTab />);
+
+        await userEvent.click(screen.getByRole('button', { name: /^Storage/ }));
+        await userEvent.click(screen.getByRole('button', { name: /^All/ }));
+
+        expect(
+            screen.getByRole('heading', { name: 'Discord' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Google Drive' }),
+        ).toBeInTheDocument();
+    });
 });
