@@ -71,7 +71,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Plug',
         section: 'account',
         description: 'Connect third-party tools and external workflows.',
-        enabled: false,
+        enabled: true,
     },
     {
         id: 'export',
