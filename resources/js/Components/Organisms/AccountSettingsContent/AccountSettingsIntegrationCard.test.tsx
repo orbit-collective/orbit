@@ -89,4 +89,43 @@ describe('AccountSettingsIntegrationCard', () => {
         expect(onToggle).toHaveBeenCalledWith(true);
         expect(onOpen).not.toHaveBeenCalled();
     });
+
+    test('pressing Enter or Space on the focused card calls onOpen', async () => {
+        const onOpen = vi.fn();
+        render(
+            <AccountSettingsIntegrationCard
+                integration={discord}
+                enabled={false}
+                onToggle={() => {}}
+                onOpen={onOpen}
+            />,
+        );
+
+        const card = screen.getByRole('button', { name: /Discord/ });
+        card.focus();
+
+        await userEvent.keyboard('{Enter}');
+        await userEvent.keyboard(' ');
+
+        expect(onOpen).toHaveBeenCalledTimes(2);
+    });
+
+    test('pressing an unrelated key on the card does not call onOpen', async () => {
+        const onOpen = vi.fn();
+        render(
+            <AccountSettingsIntegrationCard
+                integration={discord}
+                enabled={false}
+                onToggle={() => {}}
+                onOpen={onOpen}
+            />,
+        );
+
+        const card = screen.getByRole('button', { name: /Discord/ });
+        card.focus();
+
+        await userEvent.keyboard('{Tab}');
+
+        expect(onOpen).not.toHaveBeenCalled();
+    });
 });
