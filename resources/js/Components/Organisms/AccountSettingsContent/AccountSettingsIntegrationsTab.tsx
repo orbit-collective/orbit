@@ -22,7 +22,7 @@ export default function AccountSettingsIntegrationsTab() {
     return (
         <div className="space-y-5">
             <div>
-                <h2 className="text-base font-semibold text-[var(--text-color)]">
+                <h2 className="text-xl font-semibold text-[var(--text-color)]">
                     Your integrations
                 </h2>
                 <p className="mt-1 text-sm text-[var(--text-gray-color)]">
@@ -31,7 +31,7 @@ export default function AccountSettingsIntegrationsTab() {
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {INTEGRATIONS.map((integration) => (
                     <AccountSettingsIntegrationCard
                         key={integration.id}
