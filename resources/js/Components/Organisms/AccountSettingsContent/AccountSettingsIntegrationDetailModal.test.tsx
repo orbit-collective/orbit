@@ -33,7 +33,9 @@ describe('AccountSettingsIntegrationDetailModal', () => {
             />,
         );
 
-        expect(screen.getByText('Discord')).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Discord' }),
+        ).toBeInTheDocument();
         expect(screen.getByText(discord.overview)).toBeInTheDocument();
         expect(
             screen.getByText(discord.subOptions[0].title),
