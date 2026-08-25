@@ -17,10 +17,17 @@ export default function AccountSettingsIntegrationCard({
     onOpen,
 }: AccountSettingsIntegrationCardProps) {
     return (
-        <button
-            type="button"
+        <div
+            role="button"
+            tabIndex={0}
             onClick={onOpen}
-            className="group flex flex-col gap-4 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--border-color-strong)] hover:shadow-lg"
+            onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onOpen();
+                }
+            }}
+            className="group flex cursor-pointer flex-col gap-4 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--border-color-strong)] hover:shadow-lg"
         >
             <div className="flex items-start justify-between gap-3">
                 <span
@@ -73,6 +80,6 @@ export default function AccountSettingsIntegrationCard({
                     <Icon name="ChevronRight" size={13} />
                 </span>
             </div>
-        </button>
+        </div>
     );
 }
