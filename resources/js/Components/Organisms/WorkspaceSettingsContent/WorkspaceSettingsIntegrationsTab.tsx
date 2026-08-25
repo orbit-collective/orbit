@@ -8,6 +8,7 @@ import {
     IntegrationId,
     INTEGRATIONS,
 } from '@/types/Integrations';
+import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
 import { router } from '@inertiajs/react';
@@ -23,6 +24,7 @@ interface WorkspaceSettingsIntegrationsTabProps {
     memberProjects?: MemberProjectSummary[];
     selectedProjectId?: number | null;
     integrationStatuses?: Record<string, boolean>;
+    integrationSettings?: Record<string, ProjectIntegrationSettings>;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -31,6 +33,7 @@ export default function WorkspaceSettingsIntegrationsTab({
     memberProjects = [],
     selectedProjectId = null,
     integrationStatuses = {},
+    integrationSettings = {},
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsIntegrationsTabProps) {
@@ -89,6 +92,34 @@ export default function WorkspaceSettingsIntegrationsTab({
                 },
                 onError: () => {
                     addAlert('Failed to update the integration.', 'error');
+                },
+            },
+        );
+    };
+
+    const saveIntegrationSettings = (
+        integrationId: IntegrationId,
+        data: { webhook_url?: string; options?: Record<string, boolean> },
+    ) => {
+        if (!selectedProject) return;
+
+        router.patch(
+            route('projects.integrations.settings.update', [
+                selectedProject.id,
+                integrationId,
+            ]),
+            data,
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    addAlert('Integration settings updated.', 'success');
+                },
+                onError: () => {
+                    addAlert(
+                        'Failed to update the integration settings.',
+                        'error',
+                    );
                 },
             },
         );
@@ -211,10 +242,29 @@ export default function WorkspaceSettingsIntegrationsTab({
                         : false
                 }
                 canUpdate={canUpdateIntegrations}
+                settings={
+                    openIntegration
+                        ? (integrationSettings[openIntegration.id] ?? null)
+                        : null
+                }
                 onToggle={(checked) => {
                     if (!openIntegration) return;
 
                     toggleIntegration(openIntegration.id, checked);
+                }}
+                onSaveWebhookUrl={(webhookUrl) => {
+                    if (!openIntegration) return;
+
+                    saveIntegrationSettings(openIntegration.id, {
+                        webhook_url: webhookUrl,
+                    });
+                }}
+                onToggleOption={(optionId, checked) => {
+                    if (!openIntegration) return;
+
+                    saveIntegrationSettings(openIntegration.id, {
+                        options: { [optionId]: checked },
+                    });
                 }}
                 onClose={() => setOpenIntegrationId(null)}
             />

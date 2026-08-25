@@ -1,6 +1,6 @@
 import { AlertProvider } from '@/context/AlertContext';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsIntegrationsTab from './WorkspaceSettingsIntegrationsTab';
@@ -182,6 +182,68 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         expect(mockRouterPatch).toHaveBeenCalledWith(
             '/projects.integrations.update/1/discord',
             { enabled: true },
+            expect.objectContaining({ preserveScroll: true }),
+        );
+    });
+
+    test('saving a webhook url from the modal sends a PATCH to the settings endpoint', async () => {
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+            integrationStatuses: { discord: false },
+            integrationSettings: {
+                discord: {
+                    enabled: false,
+                    hasWebhookUrl: false,
+                    webhookUrl: null,
+                    options: {},
+                },
+            },
+        });
+
+        await userEvent.click(screen.getByRole('heading', { name: 'Discord' }));
+        await userEvent.type(
+            screen.getByPlaceholderText('https://discord.com/api/webhooks/…'),
+            'https://discord.com/api/webhooks/1/abc',
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects.integrations.settings.update/1/discord',
+            { webhook_url: 'https://discord.com/api/webhooks/1/abc' },
+            expect.objectContaining({ preserveScroll: true }),
+        );
+    });
+
+    test('toggling a sub-option from the modal sends a PATCH to the settings endpoint', async () => {
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+            integrationStatuses: { discord: true },
+            integrationSettings: {
+                discord: {
+                    enabled: true,
+                    hasWebhookUrl: true,
+                    webhookUrl: 'https://discord.com/api/webhooks/1/abc',
+                    options: { 'issue-activity': false },
+                },
+            },
+        });
+
+        await userEvent.click(screen.getByRole('heading', { name: 'Discord' }));
+        const optionsSection = screen.getByText('Options').closest('section')!;
+        const optionToggles = within(optionsSection).getAllByRole('button', {
+            name: '',
+        });
+        await userEvent.click(optionToggles[0]);
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects.integrations.settings.update/1/discord',
+            { options: { 'issue-activity': true } },
             expect.objectContaining({ preserveScroll: true }),
         );
     });
