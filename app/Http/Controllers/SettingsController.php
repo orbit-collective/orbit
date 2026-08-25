@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\Role;
 use App\Services\NotificationSettingService;
 use App\Services\PermissionService;
+use App\Services\ProjectIntegrationService;
 use App\Services\ProjectInvitationService;
 use App\Services\ProjectMemberService;
 use App\Services\ProjectService;
@@ -29,6 +30,7 @@ class SettingsController extends Controller
         protected ProjectInvitationService $projectInvitationService,
         protected RoleService $roleService,
         protected PermissionService $permissionService,
+        protected ProjectIntegrationService $projectIntegrationService,
     ) {}
 
     public function index(Request $request): Response
@@ -40,6 +42,7 @@ class SettingsController extends Controller
         $viewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
         $hasSettingsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::SETTINGS_VIEW, $viewTiers) ?? false;
         $hasRolesAccess = $hasSettingsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::ROLES_VIEW, $viewTiers);
+        $hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, $viewTiers) ?? false;
 
         return Inertia::render('Settings/Index', [
             'sessions' => $this->userService->getUserSessions($user),
@@ -78,6 +81,12 @@ class SettingsController extends Controller
             'canUpdateProjectDetails' => $selectedProject
                 ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_UPDATE, [RoleType::OWNER, RoleType::ADMIN])
                 : false,
+            'integrationStatuses' => $hasIntegrationsAccess
+                ? $this->projectIntegrationService->getStatuses($selectedProject)
+                : [],
+            'hasIntegrationsAccess' => $hasIntegrationsAccess,
+            'canUpdateIntegrations' => $hasIntegrationsAccess
+                && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]),
             'canDeleteProject' => $selectedProject
                 ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
                 : false,
