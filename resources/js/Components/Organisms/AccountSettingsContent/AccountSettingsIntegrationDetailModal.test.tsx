@@ -38,6 +38,10 @@ describe('AccountSettingsIntegrationDetailModal', () => {
         ).toBeInTheDocument();
         expect(screen.getByText(discord.category)).toBeInTheDocument();
         expect(container.textContent).toContain('mirror activity from Orbit');
+        expect(container.querySelector('strong')?.textContent).toBe(
+            'What you get:',
+        );
+        expect(container.querySelectorAll('li').length).toBeGreaterThan(0);
         expect(
             screen.getByText(discord.previewSamples[0].title),
         ).toBeInTheDocument();
