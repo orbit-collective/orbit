@@ -24,6 +24,9 @@ enum Permission: string
     case SETTINGS_VIEW = 'projects.settings.view';
     case SETTINGS_UPDATE = 'projects.settings.update';
 
+    case INTEGRATIONS_VIEW = 'projects.integrations.view';
+    case INTEGRATIONS_UPDATE = 'projects.integrations.update';
+
     // ISSUES PERMISSIONS
     case ISSUES_VIEW = 'issues.view';
     case ISSUES_CREATE = 'issues.create';
