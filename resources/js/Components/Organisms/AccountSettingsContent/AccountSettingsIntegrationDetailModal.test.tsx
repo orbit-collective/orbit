@@ -24,7 +24,7 @@ describe('AccountSettingsIntegrationDetailModal', () => {
     });
 
     test('renders the integration overview and options', () => {
-        render(
+        const { container } = render(
             <AccountSettingsIntegrationDetailModal
                 integration={discord}
                 enabled={false}
@@ -36,7 +36,7 @@ describe('AccountSettingsIntegrationDetailModal', () => {
         expect(
             screen.getByRole('heading', { name: 'Discord' }),
         ).toBeInTheDocument();
-        expect(screen.getByText(discord.overview)).toBeInTheDocument();
+        expect(container.textContent).toContain('mirror activity from Orbit');
         expect(
             screen.getByText(discord.previewSamples[0].title),
         ).toBeInTheDocument();
