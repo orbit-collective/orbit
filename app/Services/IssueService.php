@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\IssueAssigned;
+use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Models\Issue;
@@ -40,6 +41,8 @@ class IssueService
 
         $issue = $this->issueRepository->store($data);
         $this->activityLogService->log($issue->project_id, "Added new task: #$issue->id");
+
+        event(new IssueCreated($issue, auth()->user()));
 
         if ($issue->assignee_id && $issue->assignee_id !== auth()->id()) {
             event(new IssueAssigned($issue, $issue->assignee, auth()->user()));
