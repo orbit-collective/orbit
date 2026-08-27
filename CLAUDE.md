@@ -72,9 +72,9 @@ When adding a feature, add tests alongside it rather than relying on the gate to
 
 ## Documentation
 
-`documentation/` holds step-by-step, copy-pasteable "how do I extend X" guides — see `documentation/README.md` for the format and `documentation/integrations/` for a fully worked example (adding an integration, a permission, integration settings, and a brand-new event type).
+`documentation/` holds step-by-step, copy-pasteable "how do I extend X" guides, split into two language folders, `documentation/en/` and `documentation/pl/`, mirroring the same structure and file names — see `documentation/README.md` for the language index and the en/pl sync rule, and `documentation/en/integrations/` (+ its `documentation/pl/integrations/` translation) for a fully worked example (adding an integration, a permission, integration settings, and a brand-new event type).
 
-**Whenever you build something genuinely new** — a new subsystem, a new extensibility point ("plug a new X in here"), a new category of permission, a new event-driven flow, or anything else future work would otherwise have to reverse-engineer from a diff — add a guide under `documentation/<category>/` (create the category folder + its own `README.md` index if one doesn't exist yet) before considering the feature done. Small changes to existing, already-documented extension points don't need a new guide.
+**Whenever you build something genuinely new** — a new subsystem, a new extensibility point ("plug a new X in here"), a new category of permission, a new event-driven flow, or anything else future work would otherwise have to reverse-engineer from a diff — add a guide under `documentation/en/<category>/` (create the category folder + its own `README.md` index if one doesn't exist yet) **and** its Polish translation at the matching path under `documentation/pl/<category>/` before considering the feature done — code blocks/paths stay verbatim in English in both. Small changes to existing, already-documented extension points don't need a new guide.
 
 ## Troubleshooting
 

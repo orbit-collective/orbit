@@ -1,0 +1,41 @@
+# Dokumentacja deweloperska Orbit (Polski)
+
+Ten folder zawiera przewodniki krok po kroku, gotowe do skopiowania, dotyczące rozszerzania podsystemów w tym repozytorium. Odpowiada na pytania typu "jak dodać X" — to nie jest przegląd architektury (ten należy do `CLAUDE.md`) ani dokumentacja API (od tego jest czytanie kodu).
+
+Angielska wersja każdego z tych przewodników znajduje się w [`../en/`](../en/README.md), zachowując dokładnie tę samą strukturę plik-po-pliku. Zobacz `../README.md`, jak obie wersje są utrzymywane w synchronizacji.
+
+## Struktura
+
+Jeden podfolder na podsystem/obszar funkcjonalny. Każdy podfolder ma własny `README.md` indeksujący znajdujące się w nim przewodniki.
+
+```
+documentation/
+  README.md                  <- indeks językowy (English/Polski)
+  en/
+    README.md                <- angielska wersja tego pliku
+    integrations/            <- angielskie tłumaczenie każdego przewodnika poniżej
+  pl/
+    README.md                <- ten plik
+    integrations/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-integration.md
+      02-add-a-new-permission.md
+      03-add-integration-settings.md
+      04-add-a-new-event-type.md
+      05-frontend-backend-wiring-overview.md
+```
+
+## Kiedy dodać lub zaktualizować przewodnik
+
+Zawsze, gdy budujesz coś **naprawdę nowego** — nowy podsystem, nowy rodzaj rzeczy rozszerzalnej ("podłącz tu nowe X"), nową kategorię uprawnień, nowy przepływ oparty na eventach — dodaj przewodnik (albo nowy numerowany krok w istniejącej kategorii), który pokazuje, na prawdziwym kodzie z tego repozytorium, dokładnie jak rozszerzyć to następnym razem. Zrób to **zanim** uznasz funkcję za skończoną.
+
+Małe, jednorazowe zmiany w istniejącym kodzie nie wymagają nowego przewodnika — dokumentuj tylko faktycznie nowy punkt rozszerzenia, gdy już istnieje, żeby następna osoba (albo kolejna sesja) nie musiała odtwarzać go z diffa.
+
+Przewodniki muszą:
+- Być plikami `.md`.
+- Być faktycznie krok po kroku (numerowane kroki, w kolejności, w jakiej naprawdę byś je wykonywał).
+- Zawierać pełny, działający kod — nie fragmenty z lukami `// ...` — skopiowany z (lub napisany dokładnie w stylu) prawdziwych plików w tym repo, z ich prawdziwymi ścieżkami.
+- Wskazywać na konkretne pliki testów do zaktualizowania/dodania, nie tylko na kod produkcyjny.
+- Istnieć w **obu** folderach, `en/` i `pl/`, pod tą samą względną ścieżką. Napisz najpierw wersję angielską, potem dodaj/zaktualizuj jej polski odpowiednik w tym samym commicie — zobacz `../README.md` po zasadę tłumaczenia (bloki kodu zostają dosłownie po angielsku; tłumaczona jest tylko proza).
+
+Zobacz `integrations/README.md` po przykład tego formatu w praktyce.
