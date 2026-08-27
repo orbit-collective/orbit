@@ -149,6 +149,11 @@ class SendNotificationListener
     private function handleCommentAdded(CommentAdded $event): void
     {
         $issue = $event->issue;
+
+        if (! $issue->assignee_id || $issue->assignee_id === $event->actor?->id) {
+            return;
+        }
+
         $actorName = $event->actor?->name ?? 'Someone';
 
         $this->notificationService->notify(

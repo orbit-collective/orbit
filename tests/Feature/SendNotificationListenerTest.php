@@ -247,6 +247,28 @@ test('CommentAdded notifies the issue assignee', function () {
     $this->listener->handle(new CommentAdded($comment, $issue, $actor));
 });
 
+test('CommentAdded does not notify when the commenter is the assignee', function () {
+    $assignee = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => $assignee->id]);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $assignee->id]);
+
+    $this->notificationService->shouldNotReceive('notify');
+
+    $this->listener->handle(new CommentAdded($comment, $issue, $assignee));
+});
+
+test('CommentAdded does not notify when the issue has no assignee', function () {
+    $actor = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $actor->id]);
+
+    $this->notificationService->shouldNotReceive('notify');
+
+    $this->listener->handle(new CommentAdded($comment, $issue, $actor));
+});
+
 test('ProjectInvited notifies an existing user through the normal notification pipeline', function () {
     $invitedBy = User::factory()->create(['name' => 'Bob']);
     $existingUser = User::factory()->create();
