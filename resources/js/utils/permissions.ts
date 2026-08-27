@@ -66,6 +66,15 @@ const PERMISSION_META: Record<string, PermissionMeta> = {
         label: 'Edit settings',
         description: 'Change project-level configuration.',
     },
+    'projects.integrations.view': {
+        label: 'View integrations',
+        description: 'See which integrations are connected to the project.',
+    },
+    'projects.integrations.update': {
+        label: 'Manage integrations',
+        description:
+            'Connect, configure, or disconnect third-party integrations.',
+    },
     'issues.view': {
         label: 'View issues',
         description: 'See issues within the project.',
