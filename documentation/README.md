@@ -1,49 +1,28 @@
 # Orbit developer documentation
 
-This folder holds step-by-step, copy-pasteable guides for extending
-subsystems in this codebase. It's aimed at "how do I add X" questions —
-not architecture overviews (those belong in `CLAUDE.md`) and not API
-reference (read the code for that).
+Step-by-step, copy-pasteable guides for extending subsystems in this
+codebase, available in two languages:
 
-## Structure
+- **[English →](./en/README.md)**
+- **[Polski →](./pl/README.md)**
 
-One subfolder per subsystem/feature area. Each subfolder has its own
-`README.md` indexing the guides inside it.
+Both folders mirror the same structure and file names, one subfolder
+per subsystem/feature area (see `en/README.md`/`pl/README.md` for the
+full layout).
 
-```
-documentation/
-  README.md                  <- this file
-  integrations/
-    README.md                <- index for this category
-    01-add-a-new-integration.md
-    02-add-a-new-permission.md
-    03-add-integration-settings.md
-    04-add-a-new-event-type.md
-    05-frontend-backend-wiring-overview.md
-```
+## Keeping both languages in sync
 
-## When to add or update a guide here
+Every guide must exist in both `en/` and `pl/`, at the same relative
+path. When adding or updating a guide:
 
-Whenever you build something **genuinely new** — a new subsystem, a new
-kind of extensible thing (a new "plug a new X in here" point), a new
-category of permission, a new event-driven flow — add a guide (or a new
-numbered step in an existing category) that shows, with real code from
-this repo, exactly how to extend it next time. Do this **before**
-considering the feature done.
+1. Write/update the English version in `en/`.
+2. Translate the **prose** into Polish for the matching file in `pl/`.
+3. Leave every code block **verbatim** — file paths, PHP/TypeScript
+   code, JSON, shell commands, and inline code comments stay in
+   English exactly as written, since they must match (or be directly
+   copy-pasteable into) real files in this repo. Only translate the
+   surrounding explanatory text, headings, and prose.
 
-Small, one-off changes to existing code don't need a new guide — only
-document a genuinely new extension point once it exists, so the next
-person (or the next session) doesn't have to reverse-engineer it from
-the diff.
-
-Guides must:
-- Be `.md` files.
-- Be actually step-by-step (numbered steps, in the order you'd really
-  do them).
-- Include full, working code — not fragments with `// ...` gaps —
-  copied from (or written in the exact style of) the real files in this
-  repo, with their real paths.
-- Point at the actual test files to update/add, not just the
-  production code.
-
-See `integrations/README.md` for a worked example of this format.
+This is also the rule to follow for `CLAUDE.md`'s "add a guide for
+anything genuinely new" instruction — a new guide isn't done until
+both language versions exist.
