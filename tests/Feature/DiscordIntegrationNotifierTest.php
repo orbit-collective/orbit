@@ -2,6 +2,7 @@
 
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
+use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Jobs\SendWebhookNotificationJob;
@@ -39,6 +40,24 @@ test('it does nothing when the integration has no webhook url configured', funct
     ]));
 
     Queue::assertNothingPushed();
+});
+
+test('it queues an embed for a new issue', function () {
+    $project = Project::factory()->create();
+    $integration = ($this->makeIntegration)($project);
+    $issue = Issue::factory()->create(['id' => 15, 'project_id' => $project->id, 'title' => 'New feature']);
+    $actor = User::factory()->create(['name' => 'Erin']);
+
+    $this->notifier->handle($integration, new IssueCreated($issue, $actor));
+
+    Queue::assertPushed(SendWebhookNotificationJob::class, function (SendWebhookNotificationJob $job) {
+        $embed = $job->payload['embeds'][0];
+
+        return $embed['color'] === 0x61FB2B
+            && str_contains($embed['title'], '#15 created')
+            && str_contains($embed['description'], 'Erin')
+            && str_contains($embed['description'], 'New feature');
+    });
 });
 
 test('it queues a green embed for an issue assignment', function () {

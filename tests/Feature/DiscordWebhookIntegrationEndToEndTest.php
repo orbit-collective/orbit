@@ -35,6 +35,28 @@ test('assigning an issue queues a discord webhook end to end when the integratio
     Queue::assertPushed(SendWebhookNotificationJob::class, fn (SendWebhookNotificationJob $job) => str_contains($job->payload['embeds'][0]['description'], 'Alice'));
 });
 
+test('creating an issue queues a discord webhook end to end for the creation itself', function () {
+    Queue::fake();
+    $project = Project::factory()->create();
+    ProjectIntegration::create([
+        'project_id' => $project->id,
+        'integration' => 'discord',
+        'enabled' => true,
+        'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF',
+        'options' => ['issue-activity' => true],
+    ]);
+    $creator = User::factory()->create(['name' => 'Dave']);
+    $this->actingAs($creator);
+
+    app(IssueService::class)->createIssue([
+        'project_id' => $project->id,
+        'title' => 'Improve onboarding',
+    ]);
+
+    Queue::assertPushed(SendWebhookNotificationJob::class, fn (SendWebhookNotificationJob $job) => str_contains($job->payload['embeds'][0]['title'], 'created')
+        && str_contains($job->payload['embeds'][0]['description'], 'Dave'));
+});
+
 test('commenting on an issue queues a discord webhook end to end when comment-activity is enabled', function () {
     Queue::fake();
     $project = Project::factory()->create();

@@ -2,6 +2,7 @@
 
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
+use App\Events\IssueCreated;
 use App\Events\IssueUpdated;
 use App\Jobs\SendWebhookNotificationJob;
 use App\Listeners\NotifyProjectIntegrationsListener;
@@ -34,6 +35,23 @@ test('it notifies an enabled discord integration opted into issue activity', fun
     $assignee = User::factory()->create();
 
     $this->listener->handle(new IssueAssigned($issue, $assignee, $actor));
+
+    Queue::assertPushed(SendWebhookNotificationJob::class);
+});
+
+test('it routes issue creation to the issue-activity sub-option', function () {
+    $project = Project::factory()->create();
+    ProjectIntegration::create([
+        'project_id' => $project->id,
+        'integration' => 'discord',
+        'enabled' => true,
+        'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF',
+        'options' => ['issue-activity' => true],
+    ]);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $actor = User::factory()->create();
+
+    $this->listener->handle(new IssueCreated($issue, $actor));
 
     Queue::assertPushed(SendWebhookNotificationJob::class);
 });

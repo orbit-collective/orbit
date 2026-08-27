@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
+use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Models\Project;
@@ -53,7 +54,8 @@ class NotifyProjectIntegrationsListener
         return match (true) {
             $event instanceof IssueAssigned,
             $event instanceof IssueUnassigned,
-            $event instanceof IssueUpdated => [$event->issue->project, 'issue-activity'],
+            $event instanceof IssueUpdated,
+            $event instanceof IssueCreated => [$event->issue->project, 'issue-activity'],
             $event instanceof CommentAdded => [$event->issue->project, 'comment-activity'],
             default => [null, null],
         };

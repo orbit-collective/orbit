@@ -5,6 +5,7 @@ namespace App\Services\Integrations;
 use App\Contracts\IntegrationNotifier;
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
+use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Jobs\SendWebhookNotificationJob;
@@ -26,6 +27,8 @@ class DiscordIntegrationNotifier implements IntegrationNotifier
 
     private const int COLOR_UPDATED = 0x5865F2;
 
+    private const int COLOR_CREATED = 0x61FB2B;
+
     private const int COLOR_COMMENT = 0xEB459E;
 
     public function handle(ProjectIntegration $projectIntegration, object $event): void
@@ -35,6 +38,7 @@ class DiscordIntegrationNotifier implements IntegrationNotifier
         }
 
         $embed = match (true) {
+            $event instanceof IssueCreated => $this->issueCreatedEmbed($event),
             $event instanceof IssueAssigned => $this->issueAssignedEmbed($event),
             $event instanceof IssueUnassigned => $this->issueUnassignedEmbed($event),
             $event instanceof IssueUpdated => $this->issueUpdatedEmbed($event),
@@ -94,6 +98,19 @@ class DiscordIntegrationNotifier implements IntegrationNotifier
             "📝 Issue #$issue->id updated",
             "**{$event->actor->name}** updated **\"$issue->title\"**:\n$summary",
             self::COLOR_UPDATED,
+            $issue,
+        );
+    }
+
+    private function issueCreatedEmbed(IssueCreated $event): array
+    {
+        $issue = $event->issue;
+        $actorName = $event->actor?->name ?? 'Someone';
+
+        return $this->baseEmbed(
+            "🆕 New issue #$issue->id created",
+            "**$actorName** created a new issue: **\"$issue->title\"**",
+            self::COLOR_CREATED,
             $issue,
         );
     }

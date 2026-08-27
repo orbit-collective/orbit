@@ -2,6 +2,7 @@
 
 use App\Enums\IssueLabel;
 use App\Events\IssueAssigned;
+use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Models\Issue;
@@ -60,6 +61,41 @@ test('it can create an issue and log activity', function () {
 
     expect($result)->toBe($issue);
     Event::assertNotDispatched(IssueAssigned::class);
+});
+
+test('createIssue fires IssueCreated for every new issue', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    $data = ['project_id' => 1, 'title' => 'New Issue'];
+    $issue = new Issue(['id' => 42, 'project_id' => 1, 'title' => 'New Issue']);
+
+    $this->issueRepository->shouldReceive('store')->once()->andReturn($issue);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->createIssue($data);
+
+    Event::assertDispatched(
+        IssueCreated::class,
+        fn ($event) => $event->issue->is($issue) && $event->actor->is($user)
+    );
+});
+
+test('createIssue fires IssueCreated even when the issue is also assigned', function () {
+    $creator = User::factory()->create();
+    $assignee = User::factory()->create(['name' => 'Alice']);
+    $this->actingAs($creator);
+
+    $data = ['project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $assignee->id];
+    $issue = new Issue(['id' => 42, 'project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $assignee->id]);
+
+    $this->issueRepository->shouldReceive('store')->once()->andReturn($issue);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->createIssue($data);
+
+    Event::assertDispatched(IssueCreated::class, fn ($event) => $event->issue->is($issue));
+    Event::assertDispatched(IssueAssigned::class, fn ($event) => $event->issue->is($issue));
 });
 
 test('it notifies the assignee when creating an issue assigned to someone else', function () {
