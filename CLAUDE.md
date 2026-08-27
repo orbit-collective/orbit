@@ -70,6 +70,12 @@ When adding a feature, add tests alongside it rather than relying on the gate to
 - `Issue.labels` is cast to an enum array (`App\Enums\IssueLabel` via `AsEnumArrayObject`) and stored as JSON.
 - Prettier is configured with single quotes and auto-organizes imports + Tailwind class ordering; run lint/format before committing.
 
+## Documentation
+
+`documentation/` holds step-by-step, copy-pasteable "how do I extend X" guides — see `documentation/README.md` for the format and `documentation/integrations/` for a fully worked example (adding an integration, a permission, integration settings, and a brand-new event type).
+
+**Whenever you build something genuinely new** — a new subsystem, a new extensibility point ("plug a new X in here"), a new category of permission, a new event-driven flow, or anything else future work would otherwise have to reverse-engineer from a diff — add a guide under `documentation/<category>/` (create the category folder + its own `README.md` index if one doesn't exist yet) before considering the feature done. Small changes to existing, already-documented extension points don't need a new guide.
+
 ## Troubleshooting
 
 ### Vite HMR not working in Docker
