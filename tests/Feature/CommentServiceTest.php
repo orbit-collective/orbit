@@ -77,7 +77,11 @@ test('addComment notifies the assignee when someone else comments', function () 
     );
 });
 
-test('addComment does not notify the assignee when they comment on their own issue', function () {
+test('addComment fires CommentAdded even when the commenter is the assignee', function () {
+    // The "don't notify someone about their own comment" rule is a
+    // notification concern, not a fact about whether a comment was added —
+    // it now lives in SendNotificationListener so other consumers of this
+    // event (e.g. integration webhooks) still see every comment.
     $assignee = User::factory()->create();
     $issue = Issue::factory()->create(['assignee_id' => $assignee->id]);
     $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $assignee->id]);
@@ -89,10 +93,10 @@ test('addComment does not notify the assignee when they comment on their own iss
 
     $this->service->addComment($issue, ['body' => 'Looks good']);
 
-    Event::assertNotDispatched(CommentAdded::class);
+    Event::assertDispatched(CommentAdded::class);
 });
 
-test('addComment does not notify when the issue has no assignee', function () {
+test('addComment fires CommentAdded even when the issue has no assignee', function () {
     $user = User::factory()->create();
     $issue = Issue::factory()->create(['assignee_id' => null]);
     $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $user->id]);
@@ -104,7 +108,7 @@ test('addComment does not notify when the issue has no assignee', function () {
 
     $this->service->addComment($issue, ['body' => 'Looks good']);
 
-    Event::assertNotDispatched(CommentAdded::class);
+    Event::assertDispatched(CommentAdded::class);
 });
 
 test('deleteComment removes the comment and logs activity', function () {

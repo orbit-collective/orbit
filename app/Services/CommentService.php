@@ -27,16 +27,13 @@ class CommentService
 
         $comment = $this->commentRepository->store($data);
 
-        $actorId = auth()->id();
         $actorName = auth()->user()?->name ?? 'Someone';
         $this->activityLogService->log(
             $issue->project_id,
             "$actorName commented on issue #$issue->id \"$issue->title\""
         );
 
-        if ($issue->assignee_id && $issue->assignee_id !== $actorId) {
-            event(new CommentAdded($comment, $issue, auth()->user()));
-        }
+        event(new CommentAdded($comment, $issue, auth()->user()));
 
         return $comment;
     }
