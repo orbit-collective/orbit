@@ -68,6 +68,10 @@ documentation/
       README.md              <- index for this category
       01-register-a-component-scoped-shortcut.md
       02-register-a-global-shortcut.md
+    content-moderation/
+      README.md              <- index for this category
+      01-add-moderation-to-a-new-upload-point.md
+      02-configure-and-tune-moderation.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -79,6 +83,7 @@ documentation/
     accent-colors/           <- Polish translation of every guide above
     settings-tabs/           <- Polish translation of every guide above
     shortcuts/               <- Polish translation of every guide above
+    content-moderation/      <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here
