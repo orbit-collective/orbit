@@ -20,6 +20,7 @@ documentation/
     theme-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
     accent-colors/           <- angielskie tłumaczenie każdego przewodnika poniżej
     architecture/            <- angielskie tłumaczenie każdego przewodnika poniżej
+    settings-tabs/           <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -63,6 +64,10 @@ documentation/
       03-frontend-architecture-and-atomic-design.md
       04-docker-doppler-and-deployment.md
       05-scope-and-non-goals.md
+    settings-tabs/
+      README.md              <- indeks tej kategorii
+      01-flip-a-placeholder-tab-live.md
+      02-add-a-brand-new-settings-tab.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik

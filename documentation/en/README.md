@@ -60,6 +60,10 @@ documentation/
       03-frontend-architecture-and-atomic-design.md
       04-docker-doppler-and-deployment.md
       05-scope-and-non-goals.md
+    settings-tabs/
+      README.md              <- index for this category
+      01-flip-a-placeholder-tab-live.md
+      02-add-a-brand-new-settings-tab.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -69,6 +73,7 @@ documentation/
     architecture/            <- Polish translation of every guide above
     theme-colors/            <- Polish translation of every guide above
     accent-colors/           <- Polish translation of every guide above
+    settings-tabs/           <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here
