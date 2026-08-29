@@ -29,6 +29,7 @@ documentation/
     label-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-views/             <- angielskie tłumaczenie każdego przewodnika poniżej
     rich-text-editor/        <- angielskie tłumaczenie każdego przewodnika poniżej
+    project-onboarding/      <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -104,6 +105,9 @@ documentation/
     rich-text-editor/
       README.md              <- indeks tej kategorii
       01-add-a-new-tiptap-extension.md
+    project-onboarding/
+      README.md              <- indeks tej kategorii
+      01-add-a-welcome-tour-slide.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
