@@ -32,6 +32,8 @@ documentation/
     notifications/
       README.md              <- indeks tej kategorii
       01-add-a-new-notification-type.md
+      02-send-a-notification-from-your-code.md
+      03-frontend-backend-wiring-overview.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
