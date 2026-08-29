@@ -79,6 +79,10 @@ documentation/
       README.md              <- index for this category
       01-log-a-new-kind-of-activity.md
       02-surface-the-activity-log-in-the-ui.md
+    saved-filters/
+      README.md              <- index for this category
+      01-extract-the-service-layer.md
+      02-make-context-scope-which-filters-show.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -93,6 +97,7 @@ documentation/
     content-moderation/      <- Polish translation of every guide above
     project-invitations/     <- Polish translation of every guide above
     activity-log/            <- Polish translation of every guide above
+    saved-filters/           <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here

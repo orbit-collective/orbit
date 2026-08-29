@@ -25,6 +25,7 @@ documentation/
     content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
+    saved-filters/           <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -87,6 +88,10 @@ documentation/
       README.md              <- indeks tej kategorii
       01-log-a-new-kind-of-activity.md
       02-surface-the-activity-log-in-the-ui.md
+    saved-filters/
+      README.md              <- indeks tej kategorii
+      01-extract-the-service-layer.md
+      02-make-context-scope-which-filters-show.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
