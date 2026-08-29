@@ -27,6 +27,7 @@ documentation/
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
     saved-filters/           <- angielskie tłumaczenie każdego przewodnika poniżej
     label-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
+    issue-views/             <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -96,6 +97,9 @@ documentation/
     label-colors/
       README.md              <- indeks tej kategorii
       01-add-a-new-label.md
+    issue-views/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-issue-view.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
