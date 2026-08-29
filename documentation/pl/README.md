@@ -14,6 +14,7 @@ documentation/
   en/
     README.md                <- angielska wersja tego pliku
     integrations/            <- angielskie tłumaczenie każdego przewodnika poniżej
+    permissions/             <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -23,6 +24,10 @@ documentation/
       03-add-integration-settings.md
       04-add-a-new-event-type.md
       05-frontend-backend-wiring-overview.md
+    permissions/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-role-tier.md
+      02-grant-a-custom-role-in-bulk.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
