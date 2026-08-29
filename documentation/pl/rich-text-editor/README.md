@@ -1,0 +1,11 @@
+# Edytor rich text
+
+Opisy issues (i, w trybie tylko-do-odczytu/wyłączonym, treść `overview` katalogu integracji) są edytowane/renderowane przez [Tiptap](https://tiptap.dev/), skonfigurowany raz w `EditableMarkdown.tsx` i zapisywany jako zwykły tekst markdown na backendzie — nie ma żadnej osobnej kolumny na bogatą treść ani formatu dokumentu JSON, tylko kolumna `TEXT` trzymająca cokolwiek markdown zserializuje rozszerzenie `tiptap-markdown` Tiptapa.
+
+## Przewodniki, w kolejności, w jakiej faktycznie będziesz ich potrzebować
+
+1. **[Dodaj nowe rozszerzenie Tiptap](./01-add-a-new-tiptap-extension.md)** — przećwiczony przykład dodania podświetlania tekstu (`@tiptap/extension-highlight`, dziś niezainstalowanego) do listy rozszerzeń edytora.
+
+## Architektura w jednym akapicie
+
+`EditableMarkdown` (`resources/js/Components/Molecules/EditableMarkdown/EditableMarkdown.tsx`) owija pojedyncze wywołanie `useEditor()` z `@tiptap/react`, zawsze zamontowane, ale przełączające `editable: false`/`true` przy kliknięciu zamiast warunkowo renderować osobny komponent odczytu/edycji — kliknięcie wyrenderowanej treści wywołuje `startEditing()` (ustawia `editable: true`, fokusuje na koniec), a utrata fokusu (`onBlur`) albo naciśnięcie `Escape` kończy edycję, wywołując `onSave(markdown)` tylko wtedy, gdy treść faktycznie się zmieniła (porównywane przez `editor.storage.markdown.getMarkdown()` z `tiptap-markdown` względem ostatnio zapisanego propa `value`). Lista rozszerzeń — `StarterKit` (bold/italic/listy/nagłówki/kod/itd., z `link` skonfigurowanym, żeby nie otwierał się przy kliknięciu podczas edycji), `Markdown` (sam serializer, `html: false`, więc wklejony/wpisany HTML nigdy nie przecieka do zapisanego markdownu), `Placeholder`, `TaskList`/`TaskItem`, `TableKit` i `Image` — to jedyne miejsce, które decyduje, jakie formatowanie jest możliwe; nic innego w aplikacji nie ma własnej, osobnej konfiguracji Tiptapa. **Osobna** ścieżka renderowania, `react-markdown`/`remark-gfm` (zobacz [`../architecture/01-tech-stack-and-project-structure.md`](../architecture/01-tech-stack-and-project-structure.md)), obsługuje markdown, który nigdy nie jest edytowalny (statyczne pole `overview` katalogu integracji) — nie sięgaj po Tiptapa do wyświetlania markdownu tylko do odczytu; to cięższe narzędzie do zadania, które `react-markdown` już wykonuje.
