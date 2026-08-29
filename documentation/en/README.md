@@ -92,6 +92,9 @@ documentation/
     rich-text-editor/
       README.md              <- index for this category
       01-add-a-new-tiptap-extension.md
+    project-onboarding/
+      README.md              <- index for this category
+      01-add-a-welcome-tour-slide.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -110,6 +113,7 @@ documentation/
     label-colors/            <- Polish translation of every guide above
     issue-views/             <- Polish translation of every guide above
     rich-text-editor/        <- Polish translation of every guide above
+    project-onboarding/      <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here
