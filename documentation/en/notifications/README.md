@@ -15,14 +15,24 @@ that's easy to forget when adding a new kind of notification.
    handling the event, and — the step that's easy to skip — the
    frontend settings row that makes the new type visible and
    toggleable at all.
+2. **[Send a notification from your code](./02-send-a-notification-from-your-code.md)**
+   — the full `NotificationService::notify()` contract (recipient,
+   type, severity, message, action URL, what each channel actually
+   does), for when you want to send an existing notification type
+   directly, without introducing a new domain event.
+3. **[Frontend ↔ backend wiring overview](./03-frontend-backend-wiring-overview.md)**
+   — how a notification actually reaches the browser (it's a shared
+   Inertia prop, not a fetch), how mark-as-read/mark-all-as-read/delete
+   round-trip, and how the settings tab persists a toggle — useful as
+   a map before diving into either guide above.
 
 Wiring a domain event into the notification pipeline is itself
 documented as part of
 [`../integrations/03-add-a-new-event-type.md`](../integrations/03-add-a-new-event-type.md)
-(using `IssueCreated` as its worked example) — this category's guide
-doesn't repeat that mechanic, it covers everything specific to
-*notification types* on top of it: the settings row, channel
-defaults, and the frontend/backend split that guide doesn't touch.
+(using `IssueCreated` as its worked example) — guide 1 doesn't repeat
+that mechanic, it covers everything specific to *notification types*
+on top of it: the settings row, channel defaults, and the
+frontend/backend split that guide doesn't touch.
 
 ## The architecture in one paragraph
 

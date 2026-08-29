@@ -33,6 +33,8 @@ documentation/
     notifications/
       README.md              <- index for this category
       01-add-a-new-notification-type.md
+      02-send-a-notification-from-your-code.md
+      03-frontend-backend-wiring-overview.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above

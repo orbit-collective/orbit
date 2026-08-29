@@ -6,10 +6,14 @@ Orbit informuje użytkowników o aktywności na dwa sposoby: powiadomieniem w ap
 
 1. **[Dodaj nowy typ powiadomienia](./01-add-a-new-notification-type.md)**
    — przećwiczony przykład dodania `MemberRoleChanged` (powiadamianie członka, gdy zmieni się jego rola w projekcie) od początku do końca: przypadek enuma, wystrzelenie i obsłużenie eventu oraz — krok, o którym łatwo zapomnieć — wiersz w ustawieniach na froncie, który w ogóle sprawia, że nowy typ jest widoczny i przełączalny.
+2. **[Wyślij powiadomienie z własnego kodu](./02-send-a-notification-from-your-code.md)**
+   — pełny kontrakt `NotificationService::notify()` (odbiorca, typ, ważność wizualna, wiadomość, URL akcji, co dokładnie robi każdy kanał), na wypadek gdy chcesz wysłać istniejący typ powiadomienia bezpośrednio, bez wprowadzania nowego eventu domenowego.
+3. **[Przegląd połączenia frontend ↔ backend](./03-frontend-backend-wiring-overview.md)**
+   — jak powiadomienie faktycznie dociera do przeglądarki (to współdzielony prop Inertii, nie fetch), jak przebiega mark-as-read/mark-all-as-read/usuwanie oraz jak zakładka ustawień zapisuje przełącznik — przydatne jako mapa przed zagłębieniem się w którykolwiek z powyższych przewodników.
 
 Podłączenie eventu domenowego do pipeline'u powiadomień jest samo w sobie udokumentowane w ramach
 [`../integrations/03-add-a-new-event-type.md`](../integrations/03-add-a-new-event-type.md)
-(na przykładzie `IssueCreated`) — przewodnik z tej kategorii nie powtarza tego mechanizmu, tylko pokrywa wszystko, co jest specyficzne dla *typów powiadomień* ponad nim: wiersz w ustawieniach, domyślne wartości kanałów oraz podział frontend/backend, którego tamten przewodnik nie dotyka.
+(na przykładzie `IssueCreated`) — przewodnik 1 nie powtarza tego mechanizmu, tylko pokrywa wszystko, co jest specyficzne dla *typów powiadomień* ponad nim: wiersz w ustawieniach, domyślne wartości kanałów oraz podział frontend/backend, którego tamten przewodnik nie dotyka.
 
 ## Architektura w jednym akapicie
 
