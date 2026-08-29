@@ -17,6 +17,8 @@ documentation/
     permissions/             <- angielskie tłumaczenie każdego przewodnika poniżej
     notifications/           <- angielskie tłumaczenie każdego przewodnika poniżej
     alerts/                  <- angielskie tłumaczenie każdego przewodnika poniżej
+    theme-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
+    accent-colors/           <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -40,6 +42,19 @@ documentation/
       README.md              <- indeks tej kategorii
       01-trigger-an-alert-from-the-backend.md
       02-trigger-an-alert-from-the-frontend.md
+      03-add-a-new-alert-type.md
+      04-customize-alert-behavior.md
+      05-testing-components-that-use-alerts.md
+    theme-colors/
+      README.md              <- indeks tej kategorii
+      01-how-theme-switching-works.md
+      02-add-a-new-theme-color-token.md
+      03-use-a-theme-color-in-a-component.md
+      04-theme-colors-in-emails.md
+    accent-colors/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-accent-color.md
+      02-use-the-accent-color-in-a-component.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
