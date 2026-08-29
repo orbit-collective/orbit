@@ -26,6 +26,12 @@ roli i nowe miejsce w aplikacji, które przyznaje rolę.
    niestandardową członkom (akcja "przyznaj wszystkim obecnym
    członkom"), obejmujący kluczową różnicę między `syncRoles`
    (zastępuje) a `attachRoles` (dodaje).
+4. **[Dodaj autoryzację własne-vs-cudze do nowego zasobu](./04-add-own-vs-any-authorization-to-a-new-resource.md)**
+   — wzorzec `CommentPolicy` (dwa uprawnienia, `*_own` i `*_any`,
+   sprawdzane po porównaniu własności) zastosowany do zasobu, który
+   jeszcze go nie ma (`SavedFilter`), plus kiedy wyeksponować wynikowy
+   boolean jako atrybut dołączony do modelu zamiast propa obliczonego
+   przez Controller.
 
 ## Architektura w jednym akapicie
 

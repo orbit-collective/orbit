@@ -24,6 +24,12 @@ new place in the app that grants a role.
    — worked example adding a new place that assigns a custom role to
    members (a "grant to all current members" action), covering the
    critical `syncRoles` (replace) vs. `attachRoles` (additive) distinction.
+4. **[Add own-vs-any authorization to a new resource](./04-add-own-vs-any-authorization-to-a-new-resource.md)**
+   — the `CommentPolicy` pattern (two permissions, `*_own` and
+   `*_any`, checked after an ownership comparison) applied to a
+   resource that doesn't have it yet (`SavedFilter`), plus when to
+   expose the resulting boolean as a model-appended attribute instead
+   of a Controller-computed prop.
 
 ## The architecture in one paragraph
 
