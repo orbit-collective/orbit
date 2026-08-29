@@ -86,6 +86,9 @@ documentation/
     label-colors/
       README.md              <- index for this category
       01-add-a-new-label.md
+    issue-views/
+      README.md              <- index for this category
+      01-add-a-new-issue-view.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -102,6 +105,7 @@ documentation/
     activity-log/            <- Polish translation of every guide above
     saved-filters/           <- Polish translation of every guide above
     label-colors/            <- Polish translation of every guide above
+    issue-views/             <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here
