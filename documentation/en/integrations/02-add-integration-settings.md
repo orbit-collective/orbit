@@ -19,7 +19,7 @@ webhook-based at all).
 
 Worked example: adding a `"milestone-activity"` sub-option to Discord
 (posting when a project milestone is hit — a fact your event system
-doesn't have yet; see guide 4 for creating the event itself first).
+doesn't have yet; see guide 3 for creating the event itself first).
 Once the event exists, wiring the toggle is four small edits.
 
 ### A1 — add the sub-option to the frontend catalog
@@ -81,7 +81,7 @@ private function resolveContext(object $event): array
 }
 ```
 
-(`MilestoneReached` doesn't exist yet in this codebase — see guide 4
+(`MilestoneReached` doesn't exist yet in this codebase — see guide 3
 for creating a new event class and firing it from the right service.)
 Also add the event's class to the `Event::listen([...],
 NotifyProjectIntegrationsListener::class)` array in
@@ -91,7 +91,7 @@ it at all.
 ### A4 — handle the new event in the notifier
 
 File: `app/Services/Integrations/DiscordIntegrationNotifier.php` — add
-a `match` branch and an embed-builder method (see guide 4, step 5, for
+a `match` branch and an embed-builder method (see guide 3, step 5, for
 the full worked example using `IssueCreated`).
 
 ### A5 — tests

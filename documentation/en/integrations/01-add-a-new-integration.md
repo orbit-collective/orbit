@@ -93,11 +93,11 @@ File: `resources/js/types/Integrations.ts`
 
 Notes on each field:
 - `overview` is rendered as **markdown** (via `EditableMarkdown` in
-  disabled mode — see guide 5) — use `\n\n` for paragraph breaks and
+  disabled mode — see guide 4) — use `\n\n` for paragraph breaks and
   `**bold**`/`- list` markdown syntax, not HTML.
 - `subOptions[].id` **must exactly match** the string keys you'll use
   on the backend (`issue-activity`, `comment-activity`, or new ones —
-  see guide 3). These ids flow, unmodified, from the frontend UI all
+  see guide 2). These ids flow, unmodified, from the frontend UI all
   the way to `ProjectIntegration.options` in the database and to
   `NotifyProjectIntegrationsListener`'s category matching. Get the
   spelling right in both places or a toggle will silently do nothing.
@@ -246,7 +246,7 @@ Guidelines for writing any new notifier:
 - Match on `instanceof` for every event kind you care about; return
   early (`null`/no dispatch) for the rest — a notifier only needs to
   handle the events relevant to the sub-options it's paired with (see
-  `NotifyProjectIntegrationsListener`'s category mapping in guide 4).
+  `NotifyProjectIntegrationsListener`'s category mapping in guide 3).
 - `IssueUpdated::actor` is nullable in the type system even though in
   practice `IssueService` only ever fires it with an actor — guard on
   it anyway (see `DiscordIntegrationNotifier::issueUpdatedEmbed`) so a

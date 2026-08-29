@@ -68,8 +68,8 @@ Plik: `resources/js/types/Integrations.ts`
 ```
 
 Uwagi do poszczególnych pól:
-- `overview` jest renderowane jako **markdown** (przez `EditableMarkdown` w trybie disabled — zobacz przewodnik 5) — używaj `\n\n` na odstępy między akapitami oraz składni markdown `**pogrubienie**`/`- lista`, nie HTML.
-- `subOptions[].id` **musi dokładnie pasować** do kluczy tekstowych, których użyjesz na backendzie (`issue-activity`, `comment-activity` albo nowych — zobacz przewodnik 3). Te id płyną, niezmienione, od interfejsu na froncie aż po `ProjectIntegration.options` w bazie danych oraz dopasowanie kategorii w `NotifyProjectIntegrationsListener`. Popraw pisownię w obu miejscach, inaczej przełącznik po cichu nic nie zrobi.
+- `overview` jest renderowane jako **markdown** (przez `EditableMarkdown` w trybie disabled — zobacz przewodnik 4) — używaj `\n\n` na odstępy między akapitami oraz składni markdown `**pogrubienie**`/`- lista`, nie HTML.
+- `subOptions[].id` **musi dokładnie pasować** do kluczy tekstowych, których użyjesz na backendzie (`issue-activity`, `comment-activity` albo nowych — zobacz przewodnik 2). Te id płyną, niezmienione, od interfejsu na froncie aż po `ProjectIntegration.options` w bazie danych oraz dopasowanie kategorii w `NotifyProjectIntegrationsListener`. Popraw pisownię w obu miejscach, inaczej przełącznik po cichu nic nie zrobi.
 - `previewSamples` to dwie fikcyjne linijki aktywności pokazywane w bloku podglądu w modalu (`WorkspaceSettingsIntegrationPreview`) — czysto kosmetyczne, nieczytane przez żaden kod backendu.
 
 ## Krok 3 — (tylko dla zupełnie nowej integracji) dodaj test dymny Pest/Vitest dla danych katalogu
@@ -196,7 +196,7 @@ class SlackIntegrationNotifier implements IntegrationNotifier
 
 Wskazówki do pisania każdego nowego notifiera:
 - Zawsze zabezpiecz się warunkiem na `$projectIntegration->webhook_url` — wiersz może istnieć (`enabled = true`) bez jeszcze skonfigurowanego URL-a webhooka, jeśli użytkownik włączył przełącznik, zanim go skonfigurował.
-- Dopasowuj przez `instanceof` do każdego rodzaju eventu, który Cię interesuje; dla reszty wracaj wcześnie (`null`/brak wysyłki) — notifier musi obsługiwać tylko eventy istotne dla pod-opcji, z którymi jest sparowany (zobacz mapowanie kategorii `NotifyProjectIntegrationsListener` w przewodniku 4).
+- Dopasowuj przez `instanceof` do każdego rodzaju eventu, który Cię interesuje; dla reszty wracaj wcześnie (`null`/brak wysyłki) — notifier musi obsługiwać tylko eventy istotne dla pod-opcji, z którymi jest sparowany (zobacz mapowanie kategorii `NotifyProjectIntegrationsListener` w przewodniku 3).
 - `IssueUpdated::actor` jest nullable w systemie typów, mimo że w praktyce `IssueService` zawsze odpala go z aktorem — i tak się na to zabezpiecz (zobacz `DiscordIntegrationNotifier::issueUpdatedEmbed`), żeby przyszły wywołujący nie mógł wywołać NPE w tej klasie.
 - Właściwe wywołanie HTTP rób z poziomu `SendWebhookNotificationJob`, nigdy bezpośrednio w notifierze — dzięki temu dostarczanie każdej integracji jest kolejkowane/ponawiane w ten sam sposób, za darmo.
 

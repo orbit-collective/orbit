@@ -15,7 +15,8 @@ SettingsController::index()
   - resolves $selectedProject from ?project= (or the user's first project)
   - computes $hasIntegrationsAccess / $canUpdateIntegrations directly off
     Project::hasPermissionOrTier() (NOT via a Policy — Policies here are
-    only for authorizing mutating requests, see guide 2 step 4)
+    only for authorizing mutating requests, see
+    ../permissions/01-add-a-new-permission.md step 4)
   - calls ProjectIntegrationService::getStatuses() / getSettings()
   - masks the decrypted webhookUrl out of the payload unless
     $canUpdateIntegrations (SettingsController::mapIntegrationSettings())
@@ -100,7 +101,7 @@ copy for a new mutating action.
 
 ## 3. Activity happening: how a comment/issue update reaches Discord
 
-This is the part that's easy to get wrong (see guide 4's callout about
+This is the part that's easy to get wrong (see guide 3's callout about
 the `CommentAdded` bug) — walk through it once end to end:
 
 ```
@@ -189,7 +190,8 @@ register it for the same event classes in `AppServiceProvider::boot()`.
 ## Local testing checklist
 
 1. Run the migration + `php artisan db:seed --class=PermissionSeeder`
-   if you added a permission (see guide 2 step 6 — this is the #1
+   if you added a permission (see
+   ../permissions/01-add-a-new-permission.md step 6 — this is the #1
    "why isn't my new thing showing up" cause).
 2. Make sure a queue worker is actually running —
    `php artisan queue:work` (or it's part of `composer dev` already) —

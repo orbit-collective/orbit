@@ -12,19 +12,22 @@ landed in Discord".
 1. **[Add a new integration](./01-add-a-new-integration.md)** — turn a
    "coming soon" catalog entry (or a brand new one) into a real,
    working integration end to end.
-2. **[Add a new permission](./02-add-a-new-permission.md)** — the
-   general pattern for adding a `projects.*` permission and getting it
-   to show up correctly in Settings → Roles & management.
-3. **[Add integration settings](./03-add-integration-settings.md)** —
+2. **[Add integration settings](./02-add-integration-settings.md)** —
    give an integration its own config shape beyond "enabled" and a
    webhook URL (e.g. a channel name, an API key, a numeric option).
-4. **[Add a new event type](./04-add-a-new-event-type.md)** — wire up
+3. **[Add a new event type](./03-add-a-new-event-type.md)** — wire up
    an entirely new kind of activity (using `IssueCreated` as the
    worked example) so both user notifications and integrations can
    react to it.
-5. **[Frontend ↔ backend wiring overview](./05-frontend-backend-wiring-overview.md)**
+4. **[Frontend ↔ backend wiring overview](./04-frontend-backend-wiring-overview.md)**
    — the full request/response shape for the whole feature, useful as
    a map before diving into any of the guides above.
+
+Need to gate a new integration ability behind its own permission? See
+[`../permissions/01-add-a-new-permission.md`](../permissions/01-add-a-new-permission.md)
+in the [roles & permissions](../permissions/README.md) category — that
+guide isn't repeated here since it applies to any `projects.*`/
+`issues.*`/`comments.*` permission, not just integration ones.
 
 ## The architecture in one paragraph
 

@@ -1,6 +1,6 @@
 # Dodaj nowe uprawnienie
 
-Przećwiczony przykład: dwa uprawnienia, których integracje faktycznie dziś używają, `projects.integrations.view` i `projects.integrations.update`. Ten wzorzec dotyczy **każdego** nowego uprawnienia `projects.*`/`issues.*`/`comments.*`, nie tylko tych związanych z integracjami.
+Ogólny, krok-po-kroku wzorzec dodawania **dowolnego** nowego uprawnienia `projects.*`/`issues.*`/`comments.*` i sprawienia, żeby poprawnie pojawiło się w Settings → Roles & management — decydowanie, kto może co robić w projekcie, niezależnie od tego, do jakiego obszaru funkcjonalnego uprawnienie należy. Przećwiczony przykład: dwa uprawnienia, których system integracji faktycznie dziś używa, `projects.integrations.view` i `projects.integrations.update` — ale każdy krok poniżej stosuje się dosłownie do uprawnienia dla dowolnej innej funkcji.
 
 ## Krok 1 — Dodaj przypadek enuma
 
@@ -101,7 +101,7 @@ $canUpdateIntegrations = $hasIntegrationsAccess
     && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
 ```
 
-potem dodaj obie wartości do tablicy props `Inertia::render(...)` i przeprowadź je przez `Settings/Index.tsx` → `WorkspaceSettingsContent.tsx` → Twój komponent zakładki dokładnie tak, jak robi to już `canUpdateIntegrations` (zobacz przewodnik 5 po pełną listę przekazywania propsów).
+potem dodaj obie wartości do tablicy props `Inertia::render(...)` i przeprowadź je przez `Settings/Index.tsx` → `WorkspaceSettingsContent.tsx` → Twój komponent zakładki dokładnie tak, jak robi to już `canUpdateIntegrations` (zobacz [`../integrations/04-frontend-backend-wiring-overview.md`](../integrations/04-frontend-backend-wiring-overview.md) po pełną listę przekazywania propsów).
 
 ## Krok 5 — Spraw, żeby dobrze się renderowało w Settings → Roles & management
 

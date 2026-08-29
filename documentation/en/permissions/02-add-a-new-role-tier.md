@@ -10,7 +10,7 @@ moment the enum knows about it.
 Tiers are intentionally hardcoded in a handful of places rather than
 driven by an ordered table, so this touches more files than adding a
 plain permission does (see
-[`../integrations/02-add-a-new-permission.md`](../integrations/02-add-a-new-permission.md)
+[`./01-add-a-new-permission.md`](./01-add-a-new-permission.md)
 for that, much shorter, guide). Do every step below — skipping one
 doesn't crash anything, it just leaves Contributor unable to do
 something Member-adjacent that it should be able to do.
@@ -180,7 +180,7 @@ contributor: {
 
 The `permissions` table needs no changes for a new tier (it's already
 fully seeded via `PermissionSeeder`, see
-[`../integrations/02-add-a-new-permission.md`](../integrations/02-add-a-new-permission.md)
+[`./01-add-a-new-permission.md`](./01-add-a-new-permission.md)
 step 6) — Contributor's row gets created and its defaults synced
 automatically, the first time `ensureSystemRoles()` runs for any
 project (on project creation, or the next time any member's role

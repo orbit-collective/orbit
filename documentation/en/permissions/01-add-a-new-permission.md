@@ -1,9 +1,13 @@
 # Add a new permission
 
-Worked example: the two permissions integrations actually use today,
-`projects.integrations.view` and `projects.integrations.update`. This
-pattern applies to **any** new `projects.*`/`issues.*`/`comments.*`
-permission, not just integration ones.
+The general, step-by-step pattern for adding **any** new
+`projects.*`/`issues.*`/`comments.*` permission and getting it to show
+up correctly in Settings → Roles & management — deciding who can do
+what in a project, independent of which feature area the permission
+belongs to. Worked example: the two permissions the integrations
+system actually uses today, `projects.integrations.view` and
+`projects.integrations.update` — but every step below applies
+verbatim to a permission for any other feature.
 
 ## Step 1 — Add the enum case
 
@@ -142,7 +146,8 @@ $canUpdateIntegrations = $hasIntegrationsAccess
 then add both to the `Inertia::render(...)` props array, and thread
 them through `Settings/Index.tsx` → `WorkspaceSettingsContent.tsx` →
 your tab component exactly the way `canUpdateIntegrations` already is
-(see guide 5 for the full prop-threading list).
+(see [`../integrations/04-frontend-backend-wiring-overview.md`](../integrations/04-frontend-backend-wiring-overview.md)
+for the full prop-threading list).
 
 ## Step 5 — Make it render well in Settings → Roles & management
 

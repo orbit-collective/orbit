@@ -108,7 +108,7 @@ const handleGrantToAll = (role: WorkspaceRole) => {
 Gate the button itself on the same permission the backend checks —
 this project computes UI-facing booleans directly off the `Project`
 model rather than through the Policy layer (see
-[`../integrations/02-add-a-new-permission.md`](../integrations/02-add-a-new-permission.md)
+[`./01-add-a-new-permission.md`](./01-add-a-new-permission.md)
 step 4), so thread a `canAssignRoles` prop down from
 `RoleController`'s Inertia parent page the same way `canUpdateIntegrations`
 already flows into this tab.
