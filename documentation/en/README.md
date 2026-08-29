@@ -75,6 +75,10 @@ documentation/
     project-invitations/
       README.md              <- index for this category
       01-invite-multiple-emails-at-once.md
+    activity-log/
+      README.md              <- index for this category
+      01-log-a-new-kind-of-activity.md
+      02-surface-the-activity-log-in-the-ui.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -88,6 +92,7 @@ documentation/
     shortcuts/               <- Polish translation of every guide above
     content-moderation/      <- Polish translation of every guide above
     project-invitations/     <- Polish translation of every guide above
+    activity-log/            <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here
