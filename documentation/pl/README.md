@@ -26,6 +26,7 @@ documentation/
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
     saved-filters/           <- angielskie tłumaczenie każdego przewodnika poniżej
+    label-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -92,6 +93,9 @@ documentation/
       README.md              <- indeks tej kategorii
       01-extract-the-service-layer.md
       02-make-context-scope-which-filters-show.md
+    label-colors/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-label.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
