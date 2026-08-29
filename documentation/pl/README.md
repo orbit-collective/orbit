@@ -22,6 +22,7 @@ documentation/
     architecture/            <- angielskie tłumaczenie każdego przewodnika poniżej
     settings-tabs/           <- angielskie tłumaczenie każdego przewodnika poniżej
     shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
+    content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -73,6 +74,10 @@ documentation/
       README.md              <- indeks tej kategorii
       01-register-a-component-scoped-shortcut.md
       02-register-a-global-shortcut.md
+    content-moderation/
+      README.md              <- indeks tej kategorii
+      01-add-moderation-to-a-new-upload-point.md
+      02-configure-and-tune-moderation.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
