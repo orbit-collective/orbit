@@ -28,6 +28,7 @@ documentation/
     saved-filters/           <- angielskie tłumaczenie każdego przewodnika poniżej
     label-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-views/             <- angielskie tłumaczenie każdego przewodnika poniżej
+    rich-text-editor/        <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -100,6 +101,9 @@ documentation/
     issue-views/
       README.md              <- indeks tej kategorii
       01-add-a-new-issue-view.md
+    rich-text-editor/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-tiptap-extension.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
