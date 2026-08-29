@@ -38,10 +38,27 @@ class SendWebhookNotificationJob implements ShouldQueue
 
         if ($response->failed()) {
             Log::warning('Webhook notification failed', [
-                'url' => $this->webhookUrl,
+                'url' => $this->redactedWebhookUrl(),
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
+
+            $response->throw();
         }
+    }
+
+    /**
+     * Never log the raw webhook URL — it embeds a bearer secret (e.g. a
+     * Discord webhook token), so anyone with log access could otherwise
+     * post to the channel it targets.
+     */
+    private function redactedWebhookUrl(): string
+    {
+        $parts = parse_url($this->webhookUrl);
+
+        $scheme = $parts['scheme'] ?? 'https';
+        $host = $parts['host'] ?? 'unknown-host';
+
+        return "$scheme://$host/***";
     }
 }

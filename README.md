@@ -21,7 +21,7 @@ Calendar, whichever fits the moment. It's built as a single Laravel +
 Inertia.js + React monolith, so there's no separate API to stand up and no
 client/server version drift to manage.
 
-### Edited: 22.08.2026
+### Edited: 29.08.2026
 
 ## What's inside
 
@@ -50,10 +50,16 @@ client/server version drift to manage.
   it, and MEMBER of any project you're invited into. There's no global
   "admin" — the same person can own one project and be a plain member of
   another. Every project ships with four system role tiers (Owner, Admin,
-  Member, Viewer) backed by 28 fine-grained permissions, and admins can
+  Member, Viewer) backed by 30 fine-grained permissions, and admins can
   create their own custom roles or edit the non-Owner system tiers' exact
   permission set. See [Project membership & invitations](#project-membership--invitations)
   below.
+- **Third-party integrations, per project** — a catalog of 21 integrations
+  (Discord live today, the rest "coming soon"), toggled and configured from
+  the Workspace settings area and gated behind their own permissions. Discord
+  sends a formatted embed to a project's webhook whenever issue or comment
+  activity happens, via a queued job so delivery never blocks the request.
+  See [Integrations](#integrations) below.
 - **Email invitations**, gated on whether outgoing email is actually
   configured — see [Project membership & invitations](#project-membership--invitations).
 - **A full account settings area** (`/settings`) covering profile, security,
@@ -70,10 +76,10 @@ client/server version drift to manage.
 
 Every user gets a settings area at `/settings`, organized into an Account
 section (Preferences, Profile, Notifications, Security & access — plus
-Integrations and Export, present in the nav but disabled pending future
-work) and a Workspace section (Members and Roles & management are fully
-functional; Labels, Statuses, Priorities, Templates, and Documents are still
-"coming soon" placeholders). Enabled tabs:
+Export, present in the nav but disabled pending future work) and a Workspace
+section (Members, Roles & management, and Integrations are fully functional;
+Labels, Statuses, Priorities, Templates, and Documents are still "coming
+soon" placeholders). Enabled tabs:
 
 - **Profile** — change your display name and upload/reset a profile photo
   (JPEG/PNG/GIF, 5 MB max), with a live preview of both.
@@ -101,6 +107,11 @@ functional; Labels, Statuses, Priorities, Templates, and Documents are still
   edited) or create/rename/delete custom roles entirely; toggle individual
   permissions or a whole permission group at once, with a search box to
   jump straight to one.
+- **Integrations** (Workspace section) — pick which of your projects to
+  configure with the same project switcher as Members, browse a card grid of
+  every available integration with category filters, and open a detail modal
+  to connect one, paste its webhook URL, and toggle which kinds of activity
+  it should post. See [Integrations](#integrations) for the full picture.
 
 Uploaded avatars are screened server-side for inappropriate content before
 being accepted — see [Content moderation](#content-moderation).
@@ -135,6 +146,44 @@ in Docker (`php artisan queue:work --tries=3`) is what actually sends them,
 so email notifications won't go out unless that service (or a local
 `php artisan queue:work`) is running.
 
+## Integrations
+
+The Integrations catalog (`resources/js/types/Integrations.ts`) lists 21
+third-party tools Orbit could connect to — name, icon, category, description
+— entirely as static frontend data; the server never sends it. Only Discord
+is actually wired up today (`ProjectIntegrationService::AVAILABLE_INTEGRATIONS`),
+so every other card renders locked as "coming soon" with zero special-casing:
+the frontend just defaults to "disabled" for any catalog entry the server
+doesn't recognize.
+
+Per-project state — enabled/disabled, the webhook URL, and which activity
+categories (issue activity / comment activity) are turned on — lives in a
+single `project_integrations` table (`App\Models\ProjectIntegration`). The
+webhook URL is stored via Laravel's `encrypted` Eloquent cast and is only
+ever decrypted back to the owning project's admins/owner in the settings UI;
+everyone else just sees whether one is configured. Viewing and managing
+integrations are both gated by their own permissions
+(`projects.integrations.view` / `projects.integrations.update`), same as
+every other project feature.
+
+Delivery is event-driven and decoupled from notifications: the same domain
+events that already power in-app/email notifications (`IssueAssigned`,
+`IssueUnassigned`, `IssueUpdated`, `IssueCreated`, `CommentAdded`) are also
+consumed by an independent `NotifyProjectIntegrationsListener`, which maps
+each event to an activity category and hands it to whichever
+`App\Contracts\IntegrationNotifier` the enabled integration resolves to via
+`IntegrationNotifierRegistry`. `App\Services\Integrations\DiscordIntegrationNotifier`
+turns an event into a color-coded embed and queues it through a generic,
+integration-agnostic `SendWebhookNotificationJob` — reusable as-is for any
+future webhook-based integration, retried with backoff on a failed HTTP
+response, and careful to only ever log a redacted host (never the webhook
+URL itself, which carries a bearer secret).
+
+See `documentation/en/integrations/` (Polish translation at
+`documentation/pl/integrations/`) for a full, step-by-step guide to adding a
+new integration, permission, integration setting, or event type — the same
+docs this feature was itself extended from.
+
 ## Project membership & invitations
 
 Roles live entirely at the project level — there is no global `role` column
@@ -153,8 +202,9 @@ project-defined `App\Models\Role` records a member can additionally hold.
 - **Permissions are granular, not just four fixed tiers.** Every project
   lazily gets one `App\Models\Role` row per system tier (`RoleService::
   ensureSystemRoles`) carrying a specific set of `App\Enums\Permissions\
-  Permission` cases (~28 across projects, members, roles, settings, issues,
-  and comments). Admins can tweak the Admin/Member/Viewer tiers' exact
+  Permission` cases (30 across projects, members, roles, settings,
+  integrations, issues, and comments). Admins can tweak the Admin/Member/
+  Viewer tiers' exact
   permissions, or create entirely custom roles and grant them to any
   member on top of their base tier — all from the Roles & management
   settings tab. `App\Policies\RolePolicy` / `IssuePolicy` / `CommentPolicy`
@@ -476,24 +526,29 @@ production build on every push and pull request against `master`.
 app/
   Http/Controllers/   Thin HTTP layer — validate, delegate, redirect
   Services/           Business logic and side effects (activity logging, notification mail, NSFW detection, project membership, invitations, mail-config detection, etc.)
+  Services/Integrations/ Per-integration notifiers (DiscordIntegrationNotifier, ...) + IntegrationNotifierRegistry
   Repositories/       All Eloquent query logic
   Policies/           ProjectPolicy, IssuePolicy, CommentPolicy, RolePolicy — permission- and project-membership-based authorization
-  Models/             Issue, Project, User, ProjectInvitation, Role, Permission, Notification, NotificationSetting, SavedFilter, ActivityLog
+  Models/             Issue, Project, User, ProjectInvitation, Role, Permission, ProjectIntegration, Notification, NotificationSetting, SavedFilter, ActivityLog
   Enums/              IssueLabel
-  Enums/Permissions/  RoleType (owner/admin/member/viewer/custom), Permission (~28 granular cases)
+  Enums/Permissions/  RoleType (owner/admin/member/viewer/custom), Permission (30 granular cases)
   Enums/Notifications/ NotificationType, NotificationChannel
+  Events/             Domain facts (IssueAssigned, IssueUnassigned, IssueUpdated, IssueCreated, CommentAdded, ProjectInvited) — fired unconditionally, consumed independently by SendNotificationListener and NotifyProjectIntegrationsListener
+  Listeners/          SendNotificationListener (in-app/email), NotifyProjectIntegrationsListener (webhook delivery)
+  Jobs/               SendWebhookNotificationJob — generic, integration-agnostic queued webhook POST
+  Contracts/          IntegrationNotifier — the interface every integration's notifier implements
   Notifications/      NotificationMail (every in-app/activity notification type), ProjectInvitationMail (invite emails)
 
 resources/js/
   Pages/              Inertia pages, resolved by name (Dashboard, Projects/Show, Settings/Index, Auth/Login, ...)
   Components/
-    Atoms/            Smallest building blocks (Button, Badge, Input, ...)
-    Molecules/         Composed from atoms (BoardColumn, Breadcrumb, IssueRowDetail, ...)
-    Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, AccountSettingsContent, SettingsSidebar, ...)
+    Atoms/            Smallest building blocks (Button, Badge, Input, BrandIcon, ...)
+    Molecules/         Composed from atoms (BoardColumn, Breadcrumb, IssueRowDetail, ProjectPickerPanel, ...)
+    Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, AccountSettingsContent, WorkspaceSettingsContent, SettingsSidebar, ...)
   Layouts/            Page shells (sidebar, top nav, ...)
   context/            React context providers (alerts, theme, accent color, global modal, keyboard shortcuts)
   hooks/              Reusable hooks (saved filters, resizable table columns, floating-dropdown positioning, roles/members settings state, ...)
-  types/              Shared TypeScript types (Issues, Projects, Users, Settings, Roles, Theme, Accent, Notification, ...)
+  types/              Shared TypeScript types (Issues, Projects, Users, Settings, Roles, Integrations, ProjectIntegrations, Theme, Accent, Notification, ...)
   utils/              cn() (Tailwind class merging), colors, time, permission labels/grouping, role theming, password strength
 
 database/
@@ -504,6 +559,9 @@ database/
 routes/
   web.php             Authenticated application routes
   auth.php            Guest-only login/register + logout routes
+
+documentation/
+  en/, pl/            Step-by-step "how do I extend X" guides (bilingual, same structure/filenames in both) — see documentation/README.md
 ```
 
 ## Conventions worth knowing
@@ -532,6 +590,11 @@ routes/
 - Per-user flags like onboarding completion are columns on `users`, shared
   to every Inertia page via `HandleInertiaRequests` — the frontend reads
   them from `usePage().props.auth.user` rather than local/localStorage state.
+- Domain events (`App\Events\*`) fire unconditionally on the underlying
+  fact — never gated on "should someone be notified about this." Each
+  listener (`SendNotificationListener`, `NotifyProjectIntegrationsListener`)
+  independently decides who/what should react; filtering belongs there, not
+  at the point the event is dispatched.
 
 ## License
 
