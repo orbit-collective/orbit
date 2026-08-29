@@ -1,0 +1,13 @@
+# Zaproszenia do projektu
+
+Główny [`README.md`](../../../README.md#project-membership--invitations) już opisuje cały przepływ zaproszeń od początku do końca (token, wygaśnięcie 7 dni, ścieżki akceptacji zalogowany-vs-niezalogowany, dlaczego mail z zaproszeniem albo przechodzi przez normalny pipeline powiadomień, albo dedykowany jednorazowy `ProjectInvitationMail`, w zależności od tego, czy adres już ma konto). Ta kategoria tego nie powtarza — to towarzysz "jak to rozszerzyć", ponieważ sam przepływ jeszcze nigdzie takiego nie ma.
+
+## Przewodniki, w kolejności, w jakiej faktycznie będziesz ich potrzebować
+
+1. **[Zaproś wiele adresów naraz](./01-invite-multiple-emails-at-once.md)** — przećwiczony przykład zamiany formularza zapraszania pojedynczego adresu w masowy, śledzący zmianę przez hook, komponent, walidację i pętlę w Service.
+
+Dwa powiązane, już udokumentowane elementy warte poznania przed dalszym rozszerzaniem tego przepływu: [`../permissions/03-grant-a-custom-role-in-bulk.md`](../permissions/03-grant-a-custom-role-in-bulk.md) pokrywa stronę wstępnego przypisywania roli niestandardowej do zaproszenia, a [`../notifications/04-add-a-dedicated-transactional-email.md`](../notifications/04-add-a-dedicated-transactional-email.md) pokrywa własny wzorzec `ProjectInvitationMail` dla dedykowanego, niezależnego od preferencji maila.
+
+## Architektura w jednym akapicie
+
+`ProjectInvitationService::invite()` to jedyny punkt wejścia: najpierw sprawdza `MailConfigurationService::isEnabled()` (brak działającej poczty wychodzącej, brak zaproszeń — cała funkcja jest zabramkowana tym), usuwa dowolne istniejące oczekujące zaproszenie dla tej samej pary email/projekt (więc ponowne zaproszenie kogoś to po prostu ponowne wywołanie `invite()` — nie ma żadnej osobnej akcji ani endpointu "resend"), tworzy nowy wiersz `ProjectInvitation` z losowym 64-znakowym tokenem i `expires_at` na 7 dni, opcjonalnie dołącza wstępnie przypisane role niestandardowe przez pivot `project_invitation_role`, i wystrzeliwuje `ProjectInvited` (konsumowany przez `SendNotificationListener` — zobacz [`../notifications/README.md`](../notifications/README.md)). Zaakceptowanie go (`acceptByToken()`) dołącza użytkownika do projektu z bazowym `RoleType` zaproszenia, synchronizuje jego rolę systemową, dołącza wszelkie wstępnie przypisane role niestandardowe, i oznacza zaproszenie `accepted_at` — wywoływane albo automatycznie zaraz po zalogowaniu/rejestracji (jeśli obecny jest klucz sesji `pending_invitation_token` z kliknięcia linku mailowego przez niezalogowanego użytkownika), albo ręcznie przez wklejenie tokenu w `JoinWithCodePanel` w zakładce Members.

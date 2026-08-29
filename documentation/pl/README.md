@@ -23,6 +23,7 @@ documentation/
     settings-tabs/           <- angielskie tłumaczenie każdego przewodnika poniżej
     shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
     content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
+    project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -78,6 +79,9 @@ documentation/
       README.md              <- indeks tej kategorii
       01-add-moderation-to-a-new-upload-point.md
       02-configure-and-tune-moderation.md
+    project-invitations/
+      README.md              <- indeks tej kategorii
+      01-invite-multiple-emails-at-once.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
