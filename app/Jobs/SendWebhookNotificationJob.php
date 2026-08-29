@@ -6,10 +6,12 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 /**
  * Generic "POST this JSON payload to this webhook URL" job — deliberately
@@ -40,7 +42,18 @@ class SendWebhookNotificationJob implements ShouldBeEncrypted, ShouldQueue
 
     public function handle(): void
     {
-        $response = Http::timeout(5)->post($this->webhookUrl, $this->payload);
+        try {
+            $response = Http::timeout(5)->post($this->webhookUrl, $this->payload);
+        } catch (ConnectionException) {
+            // Guzzle's connection-level exception message embeds the full
+            // request URL (and therefore the webhook's bearer secret) — never
+            // let it propagate as-is into queue exception reporting/failed_jobs.
+            Log::warning('Webhook notification failed to connect', [
+                'url' => $this->redactedWebhookUrl(),
+            ]);
+
+            throw new RuntimeException("Webhook delivery failed to connect: {$this->redactedWebhookUrl()}");
+        }
 
         if ($response->failed()) {
             Log::warning('Webhook notification failed', [
