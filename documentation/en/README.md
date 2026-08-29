@@ -26,9 +26,14 @@ documentation/
       03-add-integration-settings.md
       04-add-a-new-event-type.md
       05-frontend-backend-wiring-overview.md
+    permissions/
+      README.md              <- index for this category
+      01-add-a-new-role-tier.md
+      02-grant-a-custom-role-in-bulk.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
+    permissions/             <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here
