@@ -5,10 +5,11 @@ Orbit pozwala projektowi połączyć się z zewnętrznymi narzędziami (dziś: D
 ## Przewodniki, w kolejności, w jakiej faktycznie będą potrzebne
 
 1. **[Dodaj nową integrację](./01-add-a-new-integration.md)** — zamień wpis w katalogu oznaczony jako "coming soon" (lub całkiem nowy) w realnie działającą integrację, od początku do końca.
-2. **[Dodaj nowe uprawnienie](./02-add-a-new-permission.md)** — ogólny wzorzec dodawania uprawnienia `projects.*` i sprawienia, żeby poprawnie pojawiło się w Settings → Roles & management.
-3. **[Dodaj ustawienia integracji](./03-add-integration-settings.md)** — nadaj integracji własny kształt konfiguracji wykraczający poza "enabled" i URL webhooka (np. nazwa kanału, klucz API, opcja liczbowa).
-4. **[Dodaj nowy typ eventu](./04-add-a-new-event-type.md)** — podepnij zupełnie nowy rodzaj aktywności (na przykładzie `IssueCreated`), tak żeby zarówno powiadomienia użytkownika, jak i integracje mogły na niego reagować.
-5. **[Przegląd połączenia frontend ↔ backend](./05-frontend-backend-wiring-overview.md)** — pełny kształt request/response dla całej funkcji, przydatny jako mapa przed zagłębieniem się w powyższe przewodniki.
+2. **[Dodaj ustawienia integracji](./02-add-integration-settings.md)** — nadaj integracji własny kształt konfiguracji wykraczający poza "enabled" i URL webhooka (np. nazwa kanału, klucz API, opcja liczbowa).
+3. **[Dodaj nowy typ eventu](./03-add-a-new-event-type.md)** — podepnij zupełnie nowy rodzaj aktywności (na przykładzie `IssueCreated`), tak żeby zarówno powiadomienia użytkownika, jak i integracje mogły na niego reagować.
+4. **[Przegląd połączenia frontend ↔ backend](./04-frontend-backend-wiring-overview.md)** — pełny kształt request/response dla całej funkcji, przydatny jako mapa przed zagłębieniem się w powyższe przewodniki.
+
+Potrzebujesz zabezpieczyć nową zdolność integracji własnym uprawnieniem? Zobacz [`../permissions/01-add-a-new-permission.md`](../permissions/01-add-a-new-permission.md) w kategorii [role i uprawnienia](../permissions/README.md) — ten przewodnik nie jest tu powtórzony, ponieważ dotyczy dowolnego uprawnienia `projects.*`/`issues.*`/`comments.*`, nie tylko tych związanych z integracjami.
 
 ## Architektura w jednym akapicie
 

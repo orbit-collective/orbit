@@ -11,7 +11,7 @@ nim wie.
 Poziomy są celowo zapisane na sztywno w kilku miejscach zamiast być
 sterowane uporządkowaną tabelą, więc ten przewodnik dotyka więcej
 plików niż dodanie zwykłego uprawnienia (zobacz
-[`../integrations/02-add-a-new-permission.md`](../integrations/02-add-a-new-permission.md)
+[`./01-add-a-new-permission.md`](./01-add-a-new-permission.md)
 po ten, znacznie krótszy, przewodnik). Wykonaj każdy krok poniżej —
 pominięcie jednego niczego nie wywala, po prostu zostawia Contributor
 bez możliwości zrobienia czegoś, co jest zbliżone do Membera, a
@@ -185,7 +185,7 @@ contributor: {
 
 Tabela `permissions` nie wymaga żadnych zmian dla nowego poziomu (jest
 już w pełni zasiana przez `PermissionSeeder`, zobacz
-[`../integrations/02-add-a-new-permission.md`](../integrations/02-add-a-new-permission.md)
+[`./01-add-a-new-permission.md`](./01-add-a-new-permission.md)
 krok 6) — wiersz Contributora zostaje utworzony, a jego domyślne
 uprawnienia zsynchronizowane automatycznie, przy pierwszym uruchomieniu
 `ensureSystemRoles()` dla dowolnego projektu (przy tworzeniu projektu

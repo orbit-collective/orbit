@@ -11,22 +11,21 @@ roli i nowe miejsce w aplikacji, które przyznaje rolę.
 
 ## Przewodniki, w kolejności, w jakiej faktycznie będą potrzebne
 
-1. **[Dodaj nowy poziom roli systemowej](./01-add-a-new-role-tier.md)**
+1. **[Dodaj nowe uprawnienie](./01-add-a-new-permission.md)** —
+   ogólny wzorzec dodawania zupełnie nowego przypadku `Permission`
+   `projects.*`/`issues.*`/`comments.*`: kto może co robić i jak to
+   się pojawia w Settings → Roles & management. Zacznij tutaj, jeśli
+   potrzebujesz zabezpieczyć nową akcję własnym uprawnieniem.
+2. **[Dodaj nowy poziom roli systemowej](./02-add-a-new-role-tier.md)**
    — przećwiczony przykład dodania piątego poziomu (`Contributor`,
    pomiędzy Member a Viewer) od początku do końca: enum, domyślne
    uprawnienia, każde sprawdzenie w Policy zależne od poziomu, typy na
    froncie oraz testy, które przypinają listę poziomów.
-2. **[Przyznaj rolę niestandardową masowo](./02-grant-a-custom-role-in-bulk.md)**
+3. **[Przyznaj rolę niestandardową masowo](./03-grant-a-custom-role-in-bulk.md)**
    — przećwiczony przykład dodania nowego miejsca przyznającego rolę
    niestandardową członkom (akcja "przyznaj wszystkim obecnym
    członkom"), obejmujący kluczową różnicę między `syncRoles`
    (zastępuje) a `attachRoles` (dodaje).
-
-Zobacz [`../integrations/02-add-a-new-permission.md`](../integrations/02-add-a-new-permission.md)
-po ogólny wzorzec dodawania zupełnie nowego przypadku enuma
-`Permission` (nie jest tu powtórzony, ponieważ dotyczy dowolnego
-uprawnienia `projects.*`/`issues.*`/`comments.*`, nie tylko tej
-kategorii).
 
 ## Architektura w jednym akapicie
 

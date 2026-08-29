@@ -12,7 +12,7 @@ Ten przewodnik pokrywa dwa sposoby, w jakie faktycznie będziesz to rozszerzać:
 
 ## Część A — dodaj nową pod-opcję boolean do istniejącej integracji
 
-Przećwiczony przykład: dodanie pod-opcji `"milestone-activity"` do Discorda (wysyłanie posta, gdy osiągnięto kamień milowy projektu — fakt, którego Twój system eventów jeszcze nie ma; zobacz przewodnik 4 po stworzenie samego eventu jako pierwszy krok). Gdy event już istnieje, podłączenie przełącznika to cztery drobne edycje.
+Przećwiczony przykład: dodanie pod-opcji `"milestone-activity"` do Discorda (wysyłanie posta, gdy osiągnięto kamień milowy projektu — fakt, którego Twój system eventów jeszcze nie ma; zobacz przewodnik 3 po stworzenie samego eventu jako pierwszy krok). Gdy event już istnieje, podłączenie przełącznika to cztery drobne edycje.
 
 ### A1 — dodaj pod-opcję do katalogu na froncie
 
@@ -62,11 +62,11 @@ private function resolveContext(object $event): array
 }
 ```
 
-(`MilestoneReached` jeszcze nie istnieje w tym repozytorium — zobacz przewodnik 4 po stworzenie nowej klasy eventu i odpalenie jej z właściwego serwisu.) Dodaj też klasę eventu do tablicy `Event::listen([...], NotifyProjectIntegrationsListener::class)` w `app/Providers/AppServiceProvider.php`, inaczej listener nigdy się dla niego nie uruchomi.
+(`MilestoneReached` jeszcze nie istnieje w tym repozytorium — zobacz przewodnik 3 po stworzenie nowej klasy eventu i odpalenie jej z właściwego serwisu.) Dodaj też klasę eventu do tablicy `Event::listen([...], NotifyProjectIntegrationsListener::class)` w `app/Providers/AppServiceProvider.php`, inaczej listener nigdy się dla niego nie uruchomi.
 
 ### A4 — obsłuż nowy event w notifierze
 
-Plik: `app/Services/Integrations/DiscordIntegrationNotifier.php` — dodaj gałąź `match` i metodę budującą embed (zobacz przewodnik 4, krok 5, po pełny przećwiczony przykład z użyciem `IssueCreated`).
+Plik: `app/Services/Integrations/DiscordIntegrationNotifier.php` — dodaj gałąź `match` i metodę budującą embed (zobacz przewodnik 3, krok 5, po pełny przećwiczony przykład z użyciem `IssueCreated`).
 
 ### A5 — testy
 

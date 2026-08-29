@@ -12,7 +12,8 @@ SettingsController::index()
   - resolves $selectedProject from ?project= (or the user's first project)
   - computes $hasIntegrationsAccess / $canUpdateIntegrations directly off
     Project::hasPermissionOrTier() (NOT via a Policy — Policies here are
-    only for authorizing mutating requests, see guide 2 step 4)
+    only for authorizing mutating requests, see
+    ../permissions/01-add-a-new-permission.md step 4)
   - calls ProjectIntegrationService::getStatuses() / getSettings()
   - masks the decrypted webhookUrl out of the payload unless
     $canUpdateIntegrations (SettingsController::mapIntegrationSettings())
@@ -84,7 +85,7 @@ Każde z tych żądań to `router.patch(...)` z `preserveScroll: true, preserveS
 
 ## 3. Dziejąca się aktywność: jak komentarz/aktualizacja issue dociera do Discorda
 
-To jest część, którą łatwo zepsuć (zobacz notatkę o błędzie z `CommentAdded` w przewodniku 4) — przejdźmy przez to raz, od początku do końca:
+To jest część, którą łatwo zepsuć (zobacz notatkę o błędzie z `CommentAdded` w przewodniku 3) — przejdźmy przez to raz, od początku do końca:
 
 ```
 CommentService::addComment() / IssueService::createIssue()/updateIssue()
@@ -168,8 +169,8 @@ Oba listenery konsumują **te same instancje eventów** — są niezależnymi, r
 ## Lokalna checklista testowania
 
 1. Uruchom migrację + `php artisan db:seed --class=PermissionSeeder`,
-   jeśli dodałeś uprawnienie (zobacz przewodnik 2, krok 6 — to jest
-   przyczyna numer jeden problemu "dlaczego moja nowa rzecz się nie pojawia").
+   jeśli dodałeś uprawnienie (zobacz ../permissions/01-add-a-new-permission.md,
+   krok 6 — to jest przyczyna numer jeden problemu "dlaczego moja nowa rzecz się nie pojawia").
 2. Upewnij się, że faktycznie działa worker kolejki —
    `php artisan queue:work` (albo jest już częścią `composer dev`) —
    inaczej `SendWebhookNotificationJob` będzie tkwić zakolejkowane

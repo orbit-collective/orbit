@@ -111,7 +111,7 @@ const handleGrantToAll = (role: WorkspaceRole) => {
 Zabezpiecz sam przycisk tym samym uprawnieniem, które sprawdza backend
 — ten projekt oblicza boolowskie flagi na potrzeby UI bezpośrednio na
 modelu `Project`, a nie przez warstwę Policy (zobacz
-[`../integrations/02-add-a-new-permission.md`](../integrations/02-add-a-new-permission.md)
+[`./01-add-a-new-permission.md`](./01-add-a-new-permission.md)
 krok 4), więc przeprowadź prop `canAssignRoles` w dół od nadrzędnej
 strony Inertia kontrolera `RoleController` dokładnie tak, jak
 `canUpdateIntegrations` już przepływa do tej zakładki.

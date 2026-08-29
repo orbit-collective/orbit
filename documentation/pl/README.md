@@ -20,14 +20,14 @@ documentation/
     integrations/
       README.md              <- indeks tej kategorii
       01-add-a-new-integration.md
-      02-add-a-new-permission.md
-      03-add-integration-settings.md
-      04-add-a-new-event-type.md
-      05-frontend-backend-wiring-overview.md
+      02-add-integration-settings.md
+      03-add-a-new-event-type.md
+      04-frontend-backend-wiring-overview.md
     permissions/
       README.md              <- indeks tej kategorii
-      01-add-a-new-role-tier.md
-      02-grant-a-custom-role-in-bulk.md
+      01-add-a-new-permission.md
+      02-add-a-new-role-tier.md
+      03-grant-a-custom-role-in-bulk.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik

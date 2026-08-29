@@ -10,20 +10,20 @@ new place in the app that grants a role.
 
 ## Guides, in the order you'd actually need them
 
-1. **[Add a new system role tier](./01-add-a-new-role-tier.md)** —
+1. **[Add a new permission](./01-add-a-new-permission.md)** — the
+   general pattern for adding a brand-new `projects.*`/`issues.*`/
+   `comments.*` `Permission` case: who can do what, and how it shows up
+   in Settings → Roles & management. Start here for "I need to gate a
+   new action behind its own permission."
+2. **[Add a new system role tier](./02-add-a-new-role-tier.md)** —
    worked example adding a fifth tier (`Contributor`, between Member
    and Viewer) end to end: the enum, default permissions, every
    tier-gated Policy check, the frontend types, and the tests that
    pin down the tier list.
-2. **[Grant a custom role in bulk](./02-grant-a-custom-role-in-bulk.md)**
+3. **[Grant a custom role in bulk](./03-grant-a-custom-role-in-bulk.md)**
    — worked example adding a new place that assigns a custom role to
    members (a "grant to all current members" action), covering the
    critical `syncRoles` (replace) vs. `attachRoles` (additive) distinction.
-
-See [`../integrations/02-add-a-new-permission.md`](../integrations/02-add-a-new-permission.md)
-for the general pattern of adding a brand-new `Permission` enum case
-(it isn't repeated here since it applies to any `projects.*`/`issues.*`/
-`comments.*` permission, not just this category).
 
 ## The architecture in one paragraph
 
