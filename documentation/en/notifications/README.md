@@ -25,6 +25,11 @@ that's easy to forget when adding a new kind of notification.
    Inertia prop, not a fetch), how mark-as-read/mark-all-as-read/delete
    round-trip, and how the settings tab persists a toggle — useful as
    a map before diving into either guide above.
+4. **[Add a dedicated transactional email](./04-add-a-dedicated-transactional-email.md)**
+   — worked example (`OwnershipTransferredMail`) for the other shape of
+   email: one that must go out unconditionally with its own subject and
+   layout, bypassing `NotificationType`/`NotificationSetting`
+   entirely — the same pattern `ProjectInvitationMail` already uses.
 
 Wiring a domain event into the notification pipeline is itself
 documented as part of
