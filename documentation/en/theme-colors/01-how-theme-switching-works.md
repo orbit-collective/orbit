@@ -55,13 +55,45 @@ effects do the actual work:
    `dark`/`light` explicitly is unaffected by OS changes.
 3. Whenever `resolvedTheme` changes:
    `document.documentElement.setAttribute('data-theme', resolvedTheme)`
-   — this single line is the entire bridge between React state and
-   the CSS in `global.css`. Nothing else in the app ever sets
-   `data-theme`.
+   — this line is the bridge between React state and the CSS in
+   `global.css` for every render *after* the app has mounted.
 
 `setTheme(next)` updates the state and mirrors it to `localStorage` in
 the same call — there's no separate "save" step, every pick is
 persisted immediately.
+
+### The other place `data-theme` gets set: before React ever mounts
+
+File: `resources/views/app.blade.php`
+
+An inline `<script>` in `<head>` — plain JS, no bundle, no
+`localStorage`-reading React yet — re-implements a stripped-down
+version of `resolveTheme()` above and sets `data-theme` itself,
+purely so the very first paint already has the right theme instead of
+flashing dark (the default) for a `light`/`system`-resolved-to-`light`
+user before `ThemeProvider`'s effect gets a chance to run:
+
+```html
+<script>
+    (function () {
+        try {
+            var stored = localStorage.getItem('theme');
+            var mode = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'dark';
+            var resolved = mode === 'system'
+                ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+                : mode;
+            document.documentElement.setAttribute('data-theme', resolved);
+            // ... (accent color handling follows — see ../accent-colors/01-add-a-new-accent-color.md step 5)
+        } catch (e) {}
+    })();
+</script>
+```
+
+This is a duplicate of `resolveTheme()`'s logic, not a shared import —
+Blade can't import a TypeScript function. If `resolveTheme()`'s
+`system` resolution rule ever changes, update this script's copy in
+the same commit, or the very first paint and every paint after
+`ThemeProvider` mounts would briefly disagree.
 
 ## What actually changes when the theme flips
 

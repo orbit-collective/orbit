@@ -141,6 +141,56 @@ const accentLabels: Record<AccentColor, string> = {
 
 To trzeci, niezależny, ręcznie utrzymywany rekord kluczowany tymi samymi nazwami — `Record<AccentColor, string>` oznacza, że sam TypeScript odmówi kompilacji, gdy tylko krok 3/4 rozszerzy `AccentColor`, dopóki ta mapa też nie dostanie nowego klucza, co jest jedynym elementem w tym całym łańcuchu, który *ma* siatkę bezpieczeństwa kompilatora.
 
+## Krok 5 — Zaktualizuj skrypt sprzed pierwszego renderu (nie pomijaj tego)
+
+Plik: `resources/views/app.blade.php`
+
+Jest **czwarta, niezależna kopia** pary hex base/light, wewnątrz inline `<script>` w `<head>`, który stosuje zapisany motyw/akcent zanim React w ogóle się zamontuje (żeby uniknąć błysku złego koloru przy pierwszym renderze — zobacz [`../theme-colors/01-how-theme-switching-works.md`](../theme-colors/01-how-theme-switching-works.md) po tę samą troskę "przed pierwszym renderem" po stronie motywu). Ten skrypt nie może zaimportować z `accentColors.ts` — uruchamia się, zanim jakikolwiek bundle to zrobi — więc koduje na sztywno własną kopię w zwykłym JS:
+
+```html
+<script>
+    (function () {
+        try {
+            var stored = localStorage.getItem('theme');
+            var mode = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'dark';
+            var resolved = mode === 'system'
+                ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+                : mode;
+            document.documentElement.setAttribute('data-theme', resolved);
+
+            var accentHex = {
+                red: ['#ef4444', '#f87171'],
+                orange: ['#f97316', '#fb923c'],
+                yellow: ['#eab308', '#facc15'],
+                green: ['#22c55e', '#4ade80'],
+                lime: ['#84cc16', '#a3e635'],
+                blue: ['#3b82f6', '#60a5fa'],
+                sky: ['#0ea5e9', '#38bdf8'],
+                violet: ['#8b5cf6', '#a78bfa'],
+                purple: ['#a855f7', '#c084fc'],
+                pink: ['#ec4899', '#f472b6'],
+                teal: ['#14b8a6', '#2dd4bf']
+            };
+            var accent = localStorage.getItem('accentColor');
+            if (accent && accent !== 'default' && accentHex[accent]) {
+                var base = accentHex[accent][0];
+                var light = accentHex[accent][1];
+                var r = parseInt(base.slice(1, 3), 16);
+                var g = parseInt(base.slice(3, 5), 16);
+                var b = parseInt(base.slice(5, 7), 16);
+                var alpha = resolved === 'light' ? 0.12 : 0.2;
+                var root = document.documentElement.style;
+                root.setProperty('--accent-color', base);
+                root.setProperty('--accent-light-color', light);
+                root.setProperty('--accent-color-opacity', 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')');
+            }
+        } catch (e) {}
+    })();
+</script>
+```
+
+Pomiń ten krok, a `teal` wciąż działa poprawnie — ale dopiero *po* tym, jak efekt `AccentProvider` uruchomi się przy montowaniu. Do tego czasu sam pierwszy render renderuje się bez żadnego nadpisania akcentu (zwykła wartość `--accent-color`, jaką definiuje `global.css`), a chwilę później widocznie przeskakuje na teal — dokładnie ten błysk złego koloru, któremu ten skrypt ma zapobiegać dla każdego innego akcentu. Trzymaj tę parę hex w zgodzie z `PROJECT_ACCENT_HEX` z kroku 4 ręcznie — nic nie wymusza, żeby się zgadzały.
+
 ## Testy
 
 - `resources/js/utils/colors.test.ts` — jego `test.each(AVAILABLE_COLORS)('returns a complete, color-matched theme for "%s"', ...)` już iteruje po tablicy generycznie; gdy krok 1 doda `'teal'`, a krok 2 doda jego wpis, ten test pokryje to bez żadnych zmian, *o ile* klasy z kroku 2 są zgodne z dokładnym wzorcem nazewnictwa `` bg-${color}-500 ``, względem którego test asercuje.

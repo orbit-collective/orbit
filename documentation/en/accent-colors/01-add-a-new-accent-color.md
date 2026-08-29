@@ -177,6 +177,68 @@ refuse to compile once step 3/4 widen `AccentColor` until this map
 also gets the new key, which is the one piece of this whole chain
 that *does* have a compiler safety net.
 
+## Step 5 — Update the pre-paint script (don't skip this one)
+
+File: `resources/views/app.blade.php`
+
+There's a **fourth, independent copy** of the base/light hex pair, inside
+the inline `<script>` in `<head>` that applies the stored theme/accent
+before React ever mounts (to avoid a flash of the wrong color on first
+paint — see [`../theme-colors/01-how-theme-switching-works.md`](../theme-colors/01-how-theme-switching-works.md)
+for the same "before first paint" concern on the theme side). This
+script can't import from `accentColors.ts` — it runs before any bundle
+does — so it hardcodes its own copy in plain JS:
+
+```html
+<script>
+    (function () {
+        try {
+            var stored = localStorage.getItem('theme');
+            var mode = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'dark';
+            var resolved = mode === 'system'
+                ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+                : mode;
+            document.documentElement.setAttribute('data-theme', resolved);
+
+            var accentHex = {
+                red: ['#ef4444', '#f87171'],
+                orange: ['#f97316', '#fb923c'],
+                yellow: ['#eab308', '#facc15'],
+                green: ['#22c55e', '#4ade80'],
+                lime: ['#84cc16', '#a3e635'],
+                blue: ['#3b82f6', '#60a5fa'],
+                sky: ['#0ea5e9', '#38bdf8'],
+                violet: ['#8b5cf6', '#a78bfa'],
+                purple: ['#a855f7', '#c084fc'],
+                pink: ['#ec4899', '#f472b6'],
+                teal: ['#14b8a6', '#2dd4bf']
+            };
+            var accent = localStorage.getItem('accentColor');
+            if (accent && accent !== 'default' && accentHex[accent]) {
+                var base = accentHex[accent][0];
+                var light = accentHex[accent][1];
+                var r = parseInt(base.slice(1, 3), 16);
+                var g = parseInt(base.slice(3, 5), 16);
+                var b = parseInt(base.slice(5, 7), 16);
+                var alpha = resolved === 'light' ? 0.12 : 0.2;
+                var root = document.documentElement.style;
+                root.setProperty('--accent-color', base);
+                root.setProperty('--accent-light-color', light);
+                root.setProperty('--accent-color-opacity', 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')');
+            }
+        } catch (e) {}
+    })();
+</script>
+```
+
+Skip this step and `teal` still works correctly — but only *after*
+`AccentProvider`'s effect runs on mount. Until then, the very first
+paint renders with no accent override at all (the plain `--accent-color`
+`global.css` defines), then visibly snaps to teal a moment later — the
+exact flash-of-wrong-color this script exists to prevent for every
+other accent. Keep this hex pair in sync with
+`PROJECT_ACCENT_HEX` in step 4 by hand; nothing enforces the two match.
+
 ## Tests
 
 - `resources/js/utils/colors.test.ts` — its
