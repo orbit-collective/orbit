@@ -53,12 +53,20 @@ documentation/
       README.md              <- index for this category
       01-add-a-new-accent-color.md
       02-use-the-accent-color-in-a-component.md
+    architecture/
+      README.md              <- index for this category
+      01-tech-stack-and-project-structure.md
+      02-backend-layered-architecture.md
+      03-frontend-architecture-and-atomic-design.md
+      04-docker-doppler-and-deployment.md
+      05-scope-and-non-goals.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
     permissions/             <- Polish translation of every guide above
     notifications/           <- Polish translation of every guide above
     alerts/                  <- Polish translation of every guide above
+    architecture/            <- Polish translation of every guide above
     theme-colors/            <- Polish translation of every guide above
     accent-colors/           <- Polish translation of every guide above
 ```

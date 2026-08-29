@@ -19,6 +19,7 @@ documentation/
     alerts/                  <- angielskie tłumaczenie każdego przewodnika poniżej
     theme-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
     accent-colors/           <- angielskie tłumaczenie każdego przewodnika poniżej
+    architecture/            <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -55,6 +56,13 @@ documentation/
       README.md              <- indeks tej kategorii
       01-add-a-new-accent-color.md
       02-use-the-accent-color-in-a-component.md
+    architecture/
+      README.md              <- indeks tej kategorii
+      01-tech-stack-and-project-structure.md
+      02-backend-layered-architecture.md
+      03-frontend-architecture-and-atomic-design.md
+      04-docker-doppler-and-deployment.md
+      05-scope-and-non-goals.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
