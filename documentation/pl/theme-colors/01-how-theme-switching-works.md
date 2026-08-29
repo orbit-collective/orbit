@@ -38,9 +38,33 @@ Przy montowaniu, `theme` jest odczytywany z `localStorage` (`THEME_STORAGE_KEY =
 2. Tylko gdy `theme === 'system'`: zasubskrybuj się do eventu `change` media query i rozstrzygaj na żywo — to właśnie sprawia, że przełączenie wyglądu systemu operacyjnego natychmiast aktualizuje Orbit, bez przeładowania, wyłącznie dla użytkowników, którzy wybrali "System sync." Ktoś, kto wybrał jawnie `dark`/`light`, nie jest dotknięty zmianami systemowymi.
 3. Za każdym razem, gdy zmienia się `resolvedTheme`:
    `document.documentElement.setAttribute('data-theme', resolvedTheme)`
-   — ta pojedyncza linia to cały most między stanem Reacta a CSS w `global.css`. Nic innego w aplikacji nigdy nie ustawia `data-theme`.
+   — ta linia to most między stanem Reacta a CSS w `global.css` dla każdego renderu *po* zamontowaniu aplikacji.
 
 `setTheme(next)` aktualizuje stan i odzwierciedla go w `localStorage` w tym samym wywołaniu — nie ma osobnego kroku "zapisz", każdy wybór jest persystowany natychmiast.
+
+### Drugie miejsce, gdzie ustawiany jest `data-theme`: zanim React w ogóle się zamontuje
+
+Plik: `resources/views/app.blade.php`
+
+Inline `<script>` w `<head>` — zwykły JS, bez bundla, bez czytającego `localStorage` Reacta jeszcze — reimplementuje uproszczoną wersję powyższego `resolveTheme()` i sam ustawia `data-theme`, czysto po to, żeby sam pierwszy render miał już właściwy motyw zamiast błysnąć dark (wartością domyślną) dla użytkownika z `light`/`system` rozstrzygającym się do `light`, zanim efekt `ThemeProvider` zdąży się uruchomić:
+
+```html
+<script>
+    (function () {
+        try {
+            var stored = localStorage.getItem('theme');
+            var mode = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'dark';
+            var resolved = mode === 'system'
+                ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+                : mode;
+            document.documentElement.setAttribute('data-theme', resolved);
+            // ... (accent color handling follows — see ../accent-colors/01-add-a-new-accent-color.md step 5)
+        } catch (e) {}
+    })();
+</script>
+```
+
+To duplikat logiki `resolveTheme()`, nie współdzielony import — Blade nie może zaimportować funkcji TypeScript. Jeśli kiedykolwiek zmieni się reguła rozstrzygania `system` w `resolveTheme()`, zaktualizuj kopię w tym skrypcie w tym samym commicie, inaczej sam pierwszy render i każdy render po zamontowaniu `ThemeProvider` będą przez chwilę się różnić.
 
 ## Co faktycznie się zmienia, gdy motyw się przełącza
 

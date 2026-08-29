@@ -50,4 +50,8 @@ color renders from `getColorTheme()`
 (`resources/js/utils/colors.ts`) — but that second map is built from
 literal Tailwind utility classes (`bg-red-500`, …), not hex codes, so
 the two features never actually share code, only the list of valid
-names. That's the trap guide 1 walks through in full.
+names. There's a **third** independent copy of the hex map besides —
+a plain-JS duplicate inline in `resources/views/app.blade.php`'s
+pre-paint `<script>`, needed because that script runs before any JS
+bundle (and therefore `accentColors.ts`) is even loaded. That's the
+trap guide 1 walks through in full.
