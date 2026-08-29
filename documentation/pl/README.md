@@ -16,6 +16,7 @@ documentation/
     integrations/            <- angielskie tłumaczenie każdego przewodnika poniżej
     permissions/             <- angielskie tłumaczenie każdego przewodnika poniżej
     notifications/           <- angielskie tłumaczenie każdego przewodnika poniżej
+    alerts/                  <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -34,6 +35,11 @@ documentation/
       01-add-a-new-notification-type.md
       02-send-a-notification-from-your-code.md
       03-frontend-backend-wiring-overview.md
+      04-add-a-dedicated-transactional-email.md
+    alerts/
+      README.md              <- indeks tej kategorii
+      01-trigger-an-alert-from-the-backend.md
+      02-trigger-an-alert-from-the-frontend.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik

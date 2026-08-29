@@ -10,6 +10,8 @@ Orbit informuje użytkowników o aktywności na dwa sposoby: powiadomieniem w ap
    — pełny kontrakt `NotificationService::notify()` (odbiorca, typ, ważność wizualna, wiadomość, URL akcji, co dokładnie robi każdy kanał), na wypadek gdy chcesz wysłać istniejący typ powiadomienia bezpośrednio, bez wprowadzania nowego eventu domenowego.
 3. **[Przegląd połączenia frontend ↔ backend](./03-frontend-backend-wiring-overview.md)**
    — jak powiadomienie faktycznie dociera do przeglądarki (to współdzielony prop Inertii, nie fetch), jak przebiega mark-as-read/mark-all-as-read/usuwanie oraz jak zakładka ustawień zapisuje przełącznik — przydatne jako mapa przed zagłębieniem się w którykolwiek z powyższych przewodników.
+4. **[Dodaj dedykowany mail transakcyjny](./04-add-a-dedicated-transactional-email.md)**
+   — przećwiczony przykład (`OwnershipTransferredMail`) dla innego kształtu maila: takiego, który musi zostać wysłany bezwarunkowo, z własnym tematem i layoutem, całkowicie z pominięciem `NotificationType`/`NotificationSetting` — ten sam wzorzec, którego już używa `ProjectInvitationMail`.
 
 Podłączenie eventu domenowego do pipeline'u powiadomień jest samo w sobie udokumentowane w ramach
 [`../integrations/03-add-a-new-event-type.md`](../integrations/03-add-a-new-event-type.md)
