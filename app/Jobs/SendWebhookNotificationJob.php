@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -15,8 +16,13 @@ use Illuminate\Support\Facades\Log;
  * not Discord-specific, so any future webhook-based integration (Slack,
  * Teams, ...) can reuse it as-is; only the payload shape differs per
  * integration, and that's built by the integration's own IntegrationNotifier.
+ *
+ * Implements ShouldBeEncrypted because $webhookUrl carries a bearer secret —
+ * without it, the serialized job (including its terminal copy in
+ * failed_jobs once retries are exhausted) would retain the secret in plain
+ * text in the queue connection's storage.
  */
-class SendWebhookNotificationJob implements ShouldQueue
+class SendWebhookNotificationJob implements ShouldBeEncrypted, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
