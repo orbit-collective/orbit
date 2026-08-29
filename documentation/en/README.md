@@ -64,6 +64,10 @@ documentation/
       README.md              <- index for this category
       01-flip-a-placeholder-tab-live.md
       02-add-a-brand-new-settings-tab.md
+    shortcuts/
+      README.md              <- index for this category
+      01-register-a-component-scoped-shortcut.md
+      02-register-a-global-shortcut.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -74,6 +78,7 @@ documentation/
     theme-colors/            <- Polish translation of every guide above
     accent-colors/           <- Polish translation of every guide above
     settings-tabs/           <- Polish translation of every guide above
+    shortcuts/               <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here

@@ -21,6 +21,7 @@ documentation/
     accent-colors/           <- angielskie tłumaczenie każdego przewodnika poniżej
     architecture/            <- angielskie tłumaczenie każdego przewodnika poniżej
     settings-tabs/           <- angielskie tłumaczenie każdego przewodnika poniżej
+    shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -68,6 +69,10 @@ documentation/
       README.md              <- indeks tej kategorii
       01-flip-a-placeholder-tab-live.md
       02-add-a-brand-new-settings-tab.md
+    shortcuts/
+      README.md              <- indeks tej kategorii
+      01-register-a-component-scoped-shortcut.md
+      02-register-a-global-shortcut.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
