@@ -15,6 +15,7 @@ documentation/
     README.md                <- angielska wersja tego pliku
     integrations/            <- angielskie tłumaczenie każdego przewodnika poniżej
     permissions/             <- angielskie tłumaczenie każdego przewodnika poniżej
+    notifications/           <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -28,6 +29,9 @@ documentation/
       01-add-a-new-permission.md
       02-add-a-new-role-tier.md
       03-grant-a-custom-role-in-bulk.md
+    notifications/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-notification-type.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik

@@ -30,10 +30,14 @@ documentation/
       01-add-a-new-permission.md
       02-add-a-new-role-tier.md
       03-grant-a-custom-role-in-bulk.md
+    notifications/
+      README.md              <- index for this category
+      01-add-a-new-notification-type.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
     permissions/             <- Polish translation of every guide above
+    notifications/           <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here
