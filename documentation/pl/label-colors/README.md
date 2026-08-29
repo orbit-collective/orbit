@@ -1,0 +1,11 @@
+# Kolory etykiet
+
+Każda etykieta issue (`bug`, `feature`, `performance`, `design`, `ux`, `chore`) ma stały kolor kropki renderowanej obok niej (`LabelBadge`) — **trzeci** system kolorów w tym kodzie, całkowicie osobny od [kolorów motywu](../theme-colors/README.md) i [kolorów akcentu](../accent-colors/README.md): kolor etykiety jest częścią jej tożsamości, to samo rozumowanie, jakie [`../accent-colors/02-use-the-accent-color-in-a-component.md`](../accent-colors/02-use-the-accent-color-in-a-component.md) podaje na to, dlaczego kolor odznaki projektu też nie używa tokenu motywu. W przeciwieństwie do dwóch pozostałych systemów kolorów, nie ma tu w ogóle żadnego contextu/providera — tylko statyczna mapa i zamknięty zestaw sześciu przypadków enuma, dziś zduplikowany w pięciu miejscach.
+
+## Przewodniki, w kolejności, w jakiej faktycznie będziesz ich potrzebować
+
+1. **[Dodaj nową etykietę](./01-add-a-new-label.md)** — przećwiczony przykład dodania siódmej etykiety, `security`, w każdym z pięciu miejsc, które jej potrzebują.
+
+## Architektura w jednym akapicie
+
+`App\Enums\IssueLabel` (backend) i `IssueLabel` (frontend, `resources/js/types/Issues.ts`) to dwie niezależnie utrzymywane zamknięte unie tych samych sześciu wartości string — żaden codegen nie utrzymuje ich w zgodzie, ta sama konwencja, jakiej trzyma się każda inna para enum-backendu/typ-frontendu w tym kodzie (zobacz [`../architecture/03-frontend-architecture-and-atomic-design.md`](../architecture/03-frontend-architecture-and-atomic-design.md)). `LABEL_COLORS` w `resources/js/utils/labelColors.ts` mapuje każdą etykietę na pojedynczą wartość hex, odczytywaną bezpośrednio jako inline `style=` przez `LabelBadge` — bez wariantów motywu, ponieważ kolor etykiety ma wyglądać identycznie w trybie dark i light, dokładnie jak własny kolor odznaki projektu. Dwa kolejne miejsca trzymają własną, zakodowaną na sztywno kopię tej samej sześciowartościowej listy: prywatna stała `AVAILABLE_LABELS` w `EditableLabelList` (selektor etykiet pokazywany przy edycji issue) oraz `FILTER_CONFIG.labels.options` w `FilterDropdown` (filtr etykiet w pasku narzędzi listy issues) — żadna nie importuje z drugiej ani ze współdzielonej stałej, więc nowa etykieta potrzebuje własnej linii w obu.
