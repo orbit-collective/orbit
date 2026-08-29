@@ -24,6 +24,7 @@ documentation/
     shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
     content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
+    activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
   pl/
     README.md                <- ten plik
     integrations/
@@ -82,6 +83,10 @@ documentation/
     project-invitations/
       README.md              <- indeks tej kategorii
       01-invite-multiple-emails-at-once.md
+    activity-log/
+      README.md              <- indeks tej kategorii
+      01-log-a-new-kind-of-activity.md
+      02-surface-the-activity-log-in-the-ui.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
