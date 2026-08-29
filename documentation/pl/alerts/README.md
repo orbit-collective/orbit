@@ -8,6 +8,9 @@ Mały, przejściowy toast w prawym górnym rogu ekranu — jednolinijkowe potwie
    — sposób bez żadnego kodu na froncie: przekaż odpowiednią wartość flash w odpowiedzi przekierowania, a pojawi się jako toast automatycznie. Pokrywa jeden łatwy błąd: słownictwo kluczy flash tutaj *nie* jest tym samym, co słownictwo ważności modelu `Notification`.
 2. **[Wywołaj alert z frontendu](./02-trigger-an-alert-from-the-frontend.md)**
    — wywołanie `addAlert()` bezpośrednio dla akcji, które nigdy nie przechodzą przez przekierowanie (kopiowanie do schowka, optymistyczny przełącznik). Przećwiczony przykład: dodanie potwierdzającego toastu do przycisku "copy issue link" w `IssuePageHeader`, który dziś go nie ma.
+3. **[Dodaj nowy typ alertu](./03-add-a-new-alert-type.md)** — przećwiczony przykład dodania piątego `AlertType`, `neutral`, dla stonowanego toastu, który nie powinien konkurować wizualnie z success/error/warning/info.
+4. **[Dostosuj zachowanie alertów](./04-customize-alert-behavior.md)** — przećwiczony przykład ograniczenia widocznego stosu do 5 (i wariant deduplikacji po wiadomości), oraz gdzie powinna trafiać każda przyszła reguła stakowania/priorytetu.
+5. **[Testowanie komponentów, które używają alertów](./05-testing-components-that-use-alerts.md)** — dwa różne kształty testów, jakich używa to repozytorium: `renderHook` na `useAlert()` bezpośrednio z zamockowanym Inertia/`AlertContainer` (dla samego zachowania `AlertContext`), kontra prawdziwy `AlertProvider` owinięty wokół testowanego komponentu (dla wszystkiego, co go jedynie konsumuje).
 
 ## Architektura w jednym akapicie
 

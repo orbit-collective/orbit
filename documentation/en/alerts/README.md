@@ -20,6 +20,18 @@ it works and the two independent ways to trigger one.
    through a redirect (a clipboard copy, an optimistic toggle). Worked
    example: adding the confirmation toast that `IssuePageHeader`'s
    "copy issue link" button doesn't have today.
+3. **[Add a new alert type](./03-add-a-new-alert-type.md)** — worked
+   example adding a fifth `AlertType`, `neutral`, for a muted toast
+   that shouldn't compete visually with success/error/warning/info.
+4. **[Customize alert behavior](./04-customize-alert-behavior.md)** —
+   worked example capping the visible stack at 5 (and a dedup-by-message
+   variant), and where any future stacking/priority rule belongs.
+5. **[Testing components that use alerts](./05-testing-components-that-use-alerts.md)**
+   — the two different test shapes this codebase uses: `renderHook`
+   against `useAlert()` directly with Inertia/`AlertContainer` mocked
+   out (for `AlertContext` behavior itself), vs. a real `AlertProvider`
+   wrapped around the component under test (for anything that merely
+   consumes it).
 
 ## The architecture in one paragraph
 
