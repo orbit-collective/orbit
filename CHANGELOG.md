@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.6.0](https://github.com/orbit-collective/orbit/compare/v0.5.0...v0.6.0) (2026-08-29)
+
+
+### Features
+
+* **emails:** refactor notification and invitation emails ([08366b0](https://github.com/orbit-collective/orbit/commit/08366b00909cc8b469dc152a862a1e6af816ee73))
+* **events:** add event classes for comment and issue management ([dde540d](https://github.com/orbit-collective/orbit/commit/dde540da71128bbc449aa50125ba9dcd455548f6))
+* **integrations:** add encrypted webhook URL and per-integration options ([0478e0a](https://github.com/orbit-collective/orbit/commit/0478e0add49cca31e34551e64cad5b22fc487ca5))
+* **integrations:** add IssueCreated event and wire it to Discord ([5902aec](https://github.com/orbit-collective/orbit/commit/5902aec30a6d5b59d11c83caf54f84756debcb07))
+* **integrations:** add policy and service layer for project integrations ([f9718f5](https://github.com/orbit-collective/orbit/commit/f9718f5b49bf258932b2773082570487dde27ea4))
+* **integrations:** add project_integrations table and permissions ([602c66d](https://github.com/orbit-collective/orbit/commit/602c66de9a7156f35d8f6f638c8cb1f9e09cc52c))
+* **integrations:** add the controller and route for toggling integrations ([0ba923f](https://github.com/orbit-collective/orbit/commit/0ba923f125695b5631f85ff6fa44508f17f03bc0))
+* **integrations:** add the settings endpoint and expose it via Settings/Index ([9d6ab8d](https://github.com/orbit-collective/orbit/commit/9d6ab8de48e04d9a439e667ecdb03450312a8a89))
+* **integrations:** expose integration status and permissions from SettingsController ([e91ec32](https://github.com/orbit-collective/orbit/commit/e91ec3224eadfb0683d923da77421a08ee2f127b))
+* **integrations:** wire the existing event system to actually notify Discord ([b03da21](https://github.com/orbit-collective/orbit/commit/b03da21874774bc03f99328808c42cf3ee5fcc30))
+* **issue:** integrate UserService for assignee management ([9169e81](https://github.com/orbit-collective/orbit/commit/9169e8162e7f1f272a9f5b562f4d4d263792fce7))
+* **notifications:** replace notification service with events for issue and comment updates ([73e9a20](https://github.com/orbit-collective/orbit/commit/73e9a2026dcbe9c515bd81c2d7d0cd45fd0dd28c))
+* **settings:** add 16 more real brand icons for upcoming integrations ([b8b209d](https://github.com/orbit-collective/orbit/commit/b8b209d680f28d42402781cde877c97a057360a4))
+* **settings:** add category filter pills to the integrations tab ([39599e7](https://github.com/orbit-collective/orbit/commit/39599e72ebd0b1f62cd1d028b52ff89792ed6940))
+* **settings:** add integration card and detail modal components ([b533335](https://github.com/orbit-collective/orbit/commit/b5333354e7ac1539243a38e6a19d2494e7014525))
+* **settings:** editable webhook URL and sub-options in the integration modal ([7295b89](https://github.com/orbit-collective/orbit/commit/7295b8932fa1b6b845a9f9a47d385a0e46ada5f0))
+* **settings:** enable integrations tab and add brand icon data ([e130f42](https://github.com/orbit-collective/orbit/commit/e130f42fbe8c6e3383f611ecd449e42bd38b4a1f))
+* **settings:** grow the integrations catalog to 21 real tools ([8ce270d](https://github.com/orbit-collective/orbit/commit/8ce270d4d31630b144ab938b55dcc8a6448a1fce))
+* **settings:** link to the official integration website from the modal ([1ba7a02](https://github.com/orbit-collective/orbit/commit/1ba7a0278b66b4edf4b2407b66028470d677858b))
+* **settings:** move Integrations to Workspace section with real backend ([6dd0def](https://github.com/orbit-collective/orbit/commit/6dd0def2046bc6b9e383c42b53442a7a0161c1af))
+* **settings:** rebuild integrations tab as a card grid with detail modal ([cd0920a](https://github.com/orbit-collective/orbit/commit/cd0920a464e56f9fb42fbc8234713fe9775bc9e7))
+* **settings:** render the integration overview as markdown ([f6e089a](https://github.com/orbit-collective/orbit/commit/f6e089aebd1339de9f03b8d789e395290b37e66c))
+* **settings:** replace gradient placeholders with a real preview component ([9ffae60](https://github.com/orbit-collective/orbit/commit/9ffae604e1add7c36b20d4f135a1a1e66d92bf47))
+
+
+### Bug Fixes
+
+* **comments:** stop gating the CommentAdded event on assignee logic ([f16f5ec](https://github.com/orbit-collective/orbit/commit/f16f5ec79b3a47d67010c752c7348a3e257bcf58))
+* **integrations:** encrypt the queued webhook job payload ([d90a541](https://github.com/orbit-collective/orbit/commit/d90a541c06bf937c9400044d353caf49393c4920))
+* **integrations:** stop leaking webhook secrets to logs and retry failed deliveries ([9281862](https://github.com/orbit-collective/orbit/commit/92818623f31fbbebcf8e2b38f308995d0485679b))
+* **integrations:** stop transport failures from leaking the webhook url ([01db883](https://github.com/orbit-collective/orbit/commit/01db88366845639331368265c610f331c57d1de4))
+* **roles:** add friendly labels for the integrations permissions ([24ded0b](https://github.com/orbit-collective/orbit/commit/24ded0b2ae29026b68bc52f10c48e35aa9bda15e))
+* **settings:** use real brand SVGs instead of hand-drawn approximations ([6dba114](https://github.com/orbit-collective/orbit/commit/6dba1147680949029ad74affe8197892373e24f3))
+
 ## [0.5.0](https://github.com/orbit-collective/orbit/compare/v0.4.0...v0.5.0) (2026-08-24)
 
 
