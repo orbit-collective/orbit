@@ -52,8 +52,8 @@ describe('StatCard Component', () => {
         expect(screen.queryByText('+8%')).not.toBeInTheDocument();
     });
 
-    test('renders the description when there is no trend and no progress', () => {
-        render(
+    test('renders the description as a tooltip next to the title', () => {
+        const { container } = render(
             <StatCard
                 title="Info"
                 value={1}
@@ -63,9 +63,18 @@ describe('StatCard Component', () => {
         );
 
         expect(screen.getByText('A helpful note')).toBeInTheDocument();
+        expect(container.querySelector('.lucide-info')).toBeInTheDocument();
     });
 
-    test('hides the description when a trend is present', () => {
+    test('does not render the info tooltip when there is no description', () => {
+        const { container } = render(
+            <StatCard title="Info" value={1} icon="Inbox" />,
+        );
+
+        expect(container.querySelector('.lucide-info')).not.toBeInTheDocument();
+    });
+
+    test('renders the description tooltip alongside a trend', () => {
         render(
             <StatCard
                 title="Info"
@@ -76,17 +85,18 @@ describe('StatCard Component', () => {
             />,
         );
 
-        expect(screen.queryByText('A helpful note')).not.toBeInTheDocument();
+        expect(screen.getByText('A helpful note')).toBeInTheDocument();
+        expect(screen.getByText('up')).toBeInTheDocument();
     });
 
     test.each([
-        ['accent', 'bg-[var(--accent-color)]'],
-        ['success', 'bg-[var(--success-color)]'],
-        ['warning', 'bg-[var(--warning-color)]'],
-        ['error', 'bg-[var(--error-color)]'],
-        ['info', 'bg-[var(--info-color)]'],
+        ['accent', 'text-[var(--accent-color)]'],
+        ['success', 'text-[var(--success-color)]'],
+        ['warning', 'text-[var(--warning-color)]'],
+        ['error', 'text-[var(--error-color)]'],
+        ['info', 'text-[var(--info-color)]'],
     ] as const)(
-        'colors the progress bar for the %s color',
+        'colors the progress badge for the %s color',
         (color, expectedClass) => {
             const { container } = render(
                 <StatCard
@@ -98,10 +108,10 @@ describe('StatCard Component', () => {
                 />,
             );
 
-            const bar = container.querySelector(
+            const badge = container.querySelector(
                 `.${CSS.escape(expectedClass)}`,
             );
-            expect(bar).toBeInTheDocument();
+            expect(badge).toBeInTheDocument();
         },
     );
 
