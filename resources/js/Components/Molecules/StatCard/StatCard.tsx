@@ -2,16 +2,17 @@ import { StatCardProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { cva } from 'class-variance-authority';
 import React from 'react';
+import Badge from '../../Atoms/Badge/Badge';
 import Icon from '../../Atoms/Icon/Icon';
 import ProgressRing from '../../Atoms/ProgressRing/ProgressRing';
 
 export const statCardVariants = cva(
-    'relative flex flex-col p-5 rounded-lg border border-solid transition-all duration-300 hover:-translate-y-0.5 overflow-hidden',
+    'relative flex flex-col p-4 rounded-xl border border-solid transition-all duration-300 hover:-translate-y-0.5 overflow-hidden',
     {
         variants: {
             variant: {
                 default:
-                    'bg-[var(--bg-dark-color)] border-[var(--bg-light-color)] hover:border-[var(--border-color-strong)]',
+                    'bg-[var(--surface-color)] border-[var(--border-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
                 accent: 'bg-gradient-to-br from-[var(--bg-dark-color)] to-[var(--accent-color-opacity)] border-[var(--accent-color)] shadow-[0_0_15px_rgba(136,68,218,0.15)]',
                 glass: 'bg-[var(--surface-color)] backdrop-blur-md border-[var(--bg-light-color)] hover:bg-[var(--bg-light-color-hover)]',
                 vivid: 'flex-row items-center gap-3 rounded-2xl border-[var(--border-color)] bg-[var(--surface-color)] p-3.5 hover:border-[var(--border-color-strong)] hover:-translate-y-0',
@@ -55,13 +56,20 @@ const COLOR_BG_CLASSES = {
     info: 'bg-[#2196f3]/10',
 };
 
-const COLOR_FILL_CLASSES = {
-    accent: 'bg-[var(--accent-color)]',
-    success: 'bg-[var(--success-color)]',
-    warning: 'bg-[var(--warning-color)]',
-    error: 'bg-[var(--error-color)]',
-    info: 'bg-[var(--info-color)]',
-};
+const MiniBars: React.FC<{ className?: string }> = ({ className }) => (
+    <div
+        aria-hidden="true"
+        className={cn('flex shrink-0 items-end gap-0.5', className)}
+    >
+        {[5, 9, 6, 12, 8].map((height, index) => (
+            <span
+                key={index}
+                className="w-1 rounded-sm bg-[var(--bg-light-color)]"
+                style={{ height: `${height}px` }}
+            />
+        ))}
+    </div>
+);
 
 const StatCard: React.FC<StatCardProps> = ({
     title,
@@ -162,76 +170,81 @@ const StatCard: React.FC<StatCardProps> = ({
 
     return (
         <div className={cn(statCardVariants({ variant }), className)}>
-            <div className="flex items-start justify-between gap-3">
-                <span className="block min-w-0 truncate text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
-                    {title}
-                </span>
-                <div
-                    className={cn(
-                        'ml-4 shrink-0 rounded-md p-2',
-                        COLOR_BG_CLASSES[color],
-                    )}
-                >
+            <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-1.5">
                     <Icon
                         name={icon}
-                        size={18}
-                        className={COLOR_TEXT_CLASSES[color]}
+                        size={14}
+                        className={cn('shrink-0', COLOR_TEXT_CLASSES[color])}
                     />
+                    <span className="truncate text-xs font-medium text-[var(--text-gray-color)]">
+                        {title}
+                    </span>
+                    {description && (
+                        <Badge
+                            tooltip
+                            tooltipText={description}
+                            variant="ghost"
+                            className="shrink-0 !p-0"
+                        >
+                            <Icon
+                                name="Info"
+                                size={12}
+                                className="text-[var(--text-muted-color)]"
+                            />
+                        </Badge>
+                    )}
                 </div>
+                <MiniBars className="opacity-40" />
             </div>
 
-            <h4 className="mt-2 text-3xl font-bold leading-none tracking-tight text-[var(--text-color)]">
-                {value}
-            </h4>
+            <div className="mt-auto pt-3">
+                <div className="flex flex-wrap items-baseline gap-2">
+                    <h4 className="text-2xl font-bold leading-none tracking-tight text-[var(--text-color)]">
+                        {value}
+                    </h4>
 
-            {progress !== undefined && (
-                <div className="mt-5 flex items-center justify-between gap-4">
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
-                        <div
+                    {trend && (
+                        <span
                             className={cn(
-                                'h-full rounded-full transition-all duration-500',
-                                COLOR_FILL_CLASSES[color],
+                                'flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
+                                trend.isPositive
+                                    ? 'bg-[var(--success-color)]/10 text-[var(--success-color)]'
+                                    : 'bg-[var(--error-color)]/10 text-[var(--error-color)]',
                             )}
-                            style={{ width: `${progress}%` }}
-                        />
-                    </div>
-                    <span className="text-xs font-semibold text-[var(--text-color)]">
-                        {progress}%
-                    </span>
-                </div>
-            )}
+                        >
+                            <Icon
+                                name={
+                                    trend.isPositive
+                                        ? 'TrendingUp'
+                                        : 'TrendingDown'
+                                }
+                                size={10}
+                            />
+                            {trend.isPositive ? '+' : ''}
+                            {trend.value}%
+                        </span>
+                    )}
 
-            {trend && (
-                <div className="mt-5 flex items-center gap-1.5 text-xs">
-                    <span
-                        className={cn(
-                            'flex items-center gap-0.5 font-semibold',
-                            trend.isPositive
-                                ? 'text-[var(--success-color)]'
-                                : 'text-[var(--error-color)]',
-                        )}
-                    >
-                        <Icon
-                            name={
-                                trend.isPositive ? 'TrendingUp' : 'TrendingDown'
-                            }
-                            size={12}
-                            className="mr-0.5 inline"
-                        />
-                        {trend.isPositive ? '+' : ''}
-                        {trend.value}%
-                    </span>
-                    <span className="font-medium text-[var(--text-muted-color)]">
+                    {progress !== undefined && !trend && (
+                        <span
+                            className={cn(
+                                'rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
+                                COLOR_BG_CLASSES[color],
+                                COLOR_TEXT_CLASSES[color],
+                            )}
+                        >
+                            {progress}%
+                        </span>
+                    )}
+                </div>
+
+                {trend?.label && (
+                    <p className="mt-1 truncate text-[11px] font-medium text-[var(--text-muted-color)]">
                         {trend.label}
-                    </span>
-                </div>
-            )}
-
-            {description && !trend && progress === undefined && (
-                <p className="mt-4 text-xs font-medium leading-relaxed text-[var(--text-muted-color)]">
-                    {description}
-                </p>
-            )}
+                    </p>
+                )}
+            </div>
         </div>
     );
 };
