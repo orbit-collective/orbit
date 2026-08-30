@@ -94,7 +94,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     const goToToday = () => setCurrentDate(new Date());
 
     return (
-        <div className="flex h-full flex-col bg-[var(--bg-color)] p-6">
+        <div className="flex h-full flex-col p-6">
             <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <h2 className="text-2xl font-bold text-[var(--text-color)]">
