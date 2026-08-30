@@ -54,27 +54,30 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
     }, [issues]);
 
     return (
-        <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 lg:grid-cols-3">
-            <CompletionRatioCard
-                open={stats.open}
-                inProgress={stats.inProgress}
-                closed={stats.closed}
-                total={issues.length}
-                closedPct={stats.closedPct}
-            />
-
-            <PriorityBreakdownCard
-                high={stats.high}
-                medium={stats.medium}
-                low={stats.low}
-                highPct={stats.highPct}
-                mediumPct={stats.mediumPct}
-                lowPct={stats.lowPct}
-            />
+        <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-3">
             <ProductivityTrendCard
                 trendData={productivity_trend}
-                className="md:col-span-2 lg:col-span-1"
+                className="lg:col-span-2"
             />
+
+            <div className="flex flex-col gap-5">
+                <CompletionRatioCard
+                    open={stats.open}
+                    inProgress={stats.inProgress}
+                    closed={stats.closed}
+                    total={issues.length}
+                    closedPct={stats.closedPct}
+                />
+
+                <PriorityBreakdownCard
+                    high={stats.high}
+                    medium={stats.medium}
+                    low={stats.low}
+                    highPct={stats.highPct}
+                    mediumPct={stats.mediumPct}
+                    lowPct={stats.lowPct}
+                />
+            </div>
         </div>
     );
 };
