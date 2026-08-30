@@ -4,19 +4,12 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import PageHeader from './PageHeader';
 
-const { triggerShortcut, reload } = vi.hoisted(() => ({
-    triggerShortcut: vi.fn(),
+const { reload } = vi.hoisted(() => ({
     reload: vi.fn(),
 }));
 
 vi.mock('@/Components/Organisms/NotificationsPopup/NotificationsPopup', () => ({
     default: () => <div data-testid="notifications-popup" />,
-}));
-
-vi.mock('@/context/ShortcutContext', () => ({
-    useShortcuts: () => ({
-        triggerShortcut,
-    }),
 }));
 
 vi.mock('@inertiajs/react', () => ({
@@ -103,12 +96,30 @@ describe('PageHeader Component', () => {
         expect(reload).toHaveBeenCalled();
     });
 
-    test('triggers the "p" shortcut when New Project is clicked', async () => {
-        const user = userEvent.setup();
+    test('does not render a primary action button by default', () => {
         render(<PageHeader title="Dashboard" />);
+
+        expect(
+            screen.queryByRole('button', { name: /new project/i }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('renders and triggers the primary action when provided', async () => {
+        const user = userEvent.setup();
+        const onClick = vi.fn();
+        render(
+            <PageHeader
+                title="Dashboard"
+                primaryAction={{
+                    label: 'New Project',
+                    icon: 'Plus',
+                    onClick,
+                }}
+            />,
+        );
 
         await user.click(screen.getByRole('button', { name: /new project/i }));
 
-        expect(triggerShortcut).toHaveBeenCalledWith('p');
+        expect(onClick).toHaveBeenCalled();
     });
 });

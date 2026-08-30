@@ -1,7 +1,10 @@
-import { IssuePageLooks } from '@/types/Issues';
+import { ModalProvider } from '@/context/ModalContext';
+import { ShortcutProvider } from '@/context/ShortcutContext';
+import { PageHeaderProps } from '@/types/Components';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import MainLayout from './MainLayout';
 
@@ -11,21 +14,41 @@ vi.mock('@/Components/Organisms/Sidebar/Sidebar', () => ({
     ),
 }));
 
-vi.mock('@/Components/Organisms/TopNav/TopNav', () => ({
-    default: ({
-        selectedLook,
-        project,
-    }: {
-        selectedLook: IssuePageLooks;
-        project: Project;
-    }) => (
-        <div
-            data-testid="top-nav"
-            data-selected-look={selectedLook}
-            data-project-name={project.name}
-        />
+vi.mock('@/Components/Organisms/NewIssueModal/NewIssueModal', () => ({
+    default: ({ isOpen }: { isOpen: boolean }) => (
+        <div data-testid="new-issue-modal" data-open={isOpen} />
     ),
 }));
+
+vi.mock('@/Components/Organisms/PageHeader/PageHeader', () => ({
+    default: ({ title, primaryAction, tabs, children }: PageHeaderProps) => (
+        <div data-testid="page-header" data-title={title}>
+            {primaryAction && (
+                <button onClick={primaryAction.onClick}>
+                    {primaryAction.label}
+                </button>
+            )}
+            {tabs?.map((tab) => (
+                <button
+                    key={tab.id}
+                    data-testid={`tab-${tab.id}`}
+                    data-active={tab.isActive}
+                    onClick={tab.onClick}
+                >
+                    {tab.label}
+                </button>
+            ))}
+            {children}
+        </div>
+    ),
+}));
+
+const renderWithShortcuts = (ui: React.ReactElement) =>
+    render(
+        <ModalProvider>
+            <ShortcutProvider>{ui}</ShortcutProvider>
+        </ModalProvider>,
+    );
 
 const makeProject = (overrides: Partial<Project> = {}): Project => ({
     id: 1,
@@ -46,7 +69,7 @@ const makeUser = (overrides: Partial<AssignableUser> = {}): AssignableUser => ({
 
 describe('MainLayout Component', () => {
     test('renders the children inside the main content area', () => {
-        render(
+        renderWithShortcuts(
             <MainLayout
                 selectedLook="List"
                 setSelectedLook={vi.fn()}
@@ -61,13 +84,13 @@ describe('MainLayout Component', () => {
         expect(screen.getByText('Page content')).toBeInTheDocument();
     });
 
-    test('renders both the Sidebar and TopNav alongside the children', () => {
-        render(
+    test('renders the Sidebar and PageHeader with the project name as title', () => {
+        renderWithShortcuts(
             <MainLayout
                 selectedLook="Board"
                 setSelectedLook={vi.fn()}
                 projects={[makeProject()]}
-                project={makeProject()}
+                project={makeProject({ name: 'Roadmap' })}
                 users={[makeUser()]}
             >
                 <div>Page content</div>
@@ -75,8 +98,10 @@ describe('MainLayout Component', () => {
         );
 
         expect(screen.getByTestId('sidebar')).toBeInTheDocument();
-        expect(screen.getByTestId('top-nav')).toBeInTheDocument();
-        expect(screen.getByText('Page content')).toBeInTheDocument();
+        expect(screen.getByTestId('page-header')).toHaveAttribute(
+            'data-title',
+            'Roadmap',
+        );
     });
 
     test('forwards the projects list to Sidebar', () => {
@@ -86,7 +111,7 @@ describe('MainLayout Component', () => {
             makeProject({ id: 3 }),
         ];
 
-        render(
+        renderWithShortcuts(
             <MainLayout
                 selectedLook="List"
                 setSelectedLook={vi.fn()}
@@ -104,21 +129,115 @@ describe('MainLayout Component', () => {
         );
     });
 
-    test('forwards selectedLook and the active project to TopNav', () => {
-        render(
+    test('marks the active view tab based on selectedLook', () => {
+        renderWithShortcuts(
             <MainLayout
                 selectedLook="Calendar"
                 setSelectedLook={vi.fn()}
                 projects={[]}
-                project={makeProject({ name: 'Roadmap' })}
+                project={makeProject()}
                 users={[]}
             >
                 <div>Page content</div>
             </MainLayout>,
         );
 
-        const topNav = screen.getByTestId('top-nav');
-        expect(topNav).toHaveAttribute('data-selected-look', 'Calendar');
-        expect(topNav).toHaveAttribute('data-project-name', 'Roadmap');
+        expect(screen.getByTestId('tab-Calendar')).toHaveAttribute(
+            'data-active',
+            'true',
+        );
+        expect(screen.getByTestId('tab-List')).toHaveAttribute(
+            'data-active',
+            'false',
+        );
+    });
+
+    test('switches the view when a tab is clicked', () => {
+        const setSelectedLook = vi.fn();
+        renderWithShortcuts(
+            <MainLayout
+                selectedLook="List"
+                setSelectedLook={setSelectedLook}
+                projects={[]}
+                project={makeProject()}
+                users={[]}
+            >
+                <div>Page content</div>
+            </MainLayout>,
+        );
+
+        fireEvent.click(screen.getByTestId('tab-Board'));
+
+        expect(setSelectedLook).toHaveBeenCalledWith('Board');
+    });
+
+    test('switches the view with the "1"/"2"/"3" keyboard shortcuts', () => {
+        const setSelectedLook = vi.fn();
+        renderWithShortcuts(
+            <MainLayout
+                selectedLook="List"
+                setSelectedLook={setSelectedLook}
+                projects={[]}
+                project={makeProject()}
+                users={[]}
+            >
+                <div>Page content</div>
+            </MainLayout>,
+        );
+
+        fireEvent.keyDown(window, { key: '2' });
+        expect(setSelectedLook).toHaveBeenCalledWith('Board');
+
+        fireEvent.keyDown(window, { key: '3' });
+        expect(setSelectedLook).toHaveBeenCalledWith('Calendar');
+
+        fireEvent.keyDown(window, { key: '1' });
+        expect(setSelectedLook).toHaveBeenCalledWith('List');
+    });
+
+    test('opens the new issue modal when the "New issue" primary action is clicked', () => {
+        renderWithShortcuts(
+            <MainLayout
+                selectedLook="List"
+                setSelectedLook={vi.fn()}
+                projects={[]}
+                project={makeProject()}
+                users={[]}
+            >
+                <div>Page content</div>
+            </MainLayout>,
+        );
+
+        expect(screen.getByTestId('new-issue-modal')).toHaveAttribute(
+            'data-open',
+            'false',
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'New issue' }));
+
+        expect(screen.getByTestId('new-issue-modal')).toHaveAttribute(
+            'data-open',
+            'true',
+        );
+    });
+
+    test('opens the new issue modal with the "c" and "ctrl+i" shortcuts', () => {
+        renderWithShortcuts(
+            <MainLayout
+                selectedLook="List"
+                setSelectedLook={vi.fn()}
+                projects={[]}
+                project={makeProject()}
+                users={[]}
+            >
+                <div>Page content</div>
+            </MainLayout>,
+        );
+
+        fireEvent.keyDown(window, { key: 'c' });
+        expect(screen.getByTestId('new-issue-modal')).toHaveAttribute(
+            'data-open',
+            'true',
+        );
     });
 });

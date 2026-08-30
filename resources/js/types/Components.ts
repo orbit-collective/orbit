@@ -528,15 +528,24 @@ export interface ProjectOnboardingModalProps {
     userName: string;
     onSkip: () => void;
 }
-export interface TopNavProps {
-    selectedLook: IssuePageLooks;
-    setSelectedLook: (look: IssuePageLooks) => void;
-    project: Project;
-    users: AssignableUser[];
+export interface PageHeaderTab {
+    id: string;
+    label: string;
+    icon: keyof typeof icons;
+    isActive: boolean;
+    onClick: () => void;
 }
 export interface PageHeaderProps {
     title: string;
     icon?: keyof typeof icons;
+    showDate?: boolean;
+    showSettingsIcon?: boolean;
+    primaryAction?: {
+        label: string;
+        onClick: () => void;
+        icon?: keyof typeof icons;
+    };
+    tabs?: PageHeaderTab[];
     children?: ReactNode;
 }
 export interface AlertContainerProps {
