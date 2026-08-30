@@ -73,9 +73,9 @@ const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
 
 Pomiń to, a użytkownik, który wybrał Timeline jako swój domyślny widok (krok 5), zostanie po cichu odbity z powrotem do List przy następnym wczytaniu strony — guard odrzuca każdy string, którego jawnie nie rozpoznaje, włącznie z całkowicie poprawnym nowym.
 
-## Krok 3 — Dodaj przycisk nawigacji i jego skrót
+## Krok 3 — Dodaj zakładkę nawigacji i jej skrót
 
-Plik: `resources/js/Components/Organisms/TopNav/TopNav.tsx`
+Plik: `resources/js/Layouts/MainLayout.tsx` — nagłówek strony projektu (ikona, tytuł, zakładki widoków, akcja „New issue") to `PageHeader` konfigurowany z tego layoutu, a nie dedykowany komponent nawigacji, więc zarówno skrót, jak i przycisk zakładki żyją tutaj.
 
 ```tsx
 const shortcuts = useMemo(
@@ -110,7 +110,7 @@ const shortcuts = useMemo(
 );
 ```
 
-a potem pasujący `<button>` w bloku `<nav>`, kopiując dokładny kształt przycisków `List`/`Board`/`Calendar` (`buttonVariants({ isActive: selectedLook === 'Timeline' })`, `Icon`, etykieta) — zobacz [`../shortcuts/02-register-a-global-shortcut.md`](../shortcuts/02-register-a-global-shortcut.md) po ogólny kształt dodawania takiego skrótu, chociaż ten jest scope'owany do strony projektu, nie faktycznie globalny.
+a potem pasujący wpis w tablicy `tabs` przekazywanej do `<PageHeader>`, kopiując dokładny kształt wpisów `List`/`Board`/`Calendar` (`{ id: 'Timeline', label: 'Timeline', icon: ..., isActive: selectedLook === 'Timeline', onClick: () => setSelectedLook('Timeline') }`) — `PageHeader` renderuje każdy wpis z `tabs` jako przycisk nawigacji pod tytułem. Zobacz [`../shortcuts/02-register-a-global-shortcut.md`](../shortcuts/02-register-a-global-shortcut.md) po ogólny kształt dodawania takiego skrótu, chociaż ten jest scope'owany do strony projektu, nie faktycznie globalny.
 
 ## Krok 4 — Dodaj go jako opcję domyślnego widoku w Ustawieniach konta
 
@@ -191,7 +191,7 @@ Dodaj komponent `TimelinePreview` na wzór tego samego kształtu co `ListPreview
 ## Testy
 
 - `resources/js/Pages/Projects/Show.test.tsx` (albo gdziekolwiek pokryte jest renderowanie tej strony) — dodaj przypadek asercujący, że `selectedLook === 'Timeline'` renderuje `TimelineView`, oraz przypadek dla guarda `localStorage` akceptującego `'Timeline'`.
-- `resources/js/Components/Organisms/TopNav/TopNav.test.tsx` — dodaj przypadek dla nowego przycisku nawigacji i jego skrótu `'4'`, na wzór dokładnie istniejących przypadków testowych `List`/`Board`/`Calendar` (zobacz istniejące fixture'y testowe `selectedLook: 'Board'`/`'Calendar'` w pliku).
+- `resources/js/Layouts/MainLayout.test.tsx` — dodaj przypadek dla nowej zakładki widoku i jej skrótu `'4'`, na wzór dokładnie istniejących przypadków testowych `List`/`Board`/`Calendar` (zobacz istniejące fixture'y testowe `selectedLook: 'Board'`/`'Calendar'` w pliku).
 - `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsPreferencesTab.test.tsx` — dodaj przypadek wybierający kartę Timeline i asercujący, że `localStorage.setItem` zostało wywołane z `'Timeline'`.
 - `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsIssueViewCard.test.tsx` — dodaj przypadek asercujący, że `view="Timeline"` renderuje `TimelinePreview`.
 - `resources/js/Components/Organisms/TimelineView/TimelineView.test.tsx` (nowy plik) — jakiekolwiek pokrycie pasujące do faktycznego zachowania nowego komponentu, na wzór kształtu `CalendarView.test.tsx` jako najbliższej istniejącej referencji.

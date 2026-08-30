@@ -26,11 +26,13 @@ on mount and rendered via a flat ternary chain
 (`selectedLook === 'List' ? <IssueTable /> : selectedLook === 'Board'
 ? <IssueBoard /> : <CalendarView />`) — all three components receive
 the exact same `issues.data`, just presented differently.
-**Non-obviously, switching the view from `TopNav` only updates this
-page's React state — it never writes back to `localStorage`** — only
-Account settings → Preferences' issue-view picker
-(`AccountSettingsPreferencesTab`) does that, which is why switching
-views mid-session doesn't "stick" across a reload the way changing
-your default view in Settings does. `1`/`2`/`3` are registered as
-global [keyboard shortcuts](../shortcuts/README.md) for the three
-views directly inside `TopNav`, categorized `'View'`.
+**Non-obviously, switching the view from the project page's header
+only updates this page's React state — it never writes back to
+`localStorage`** — only Account settings → Preferences' issue-view
+picker (`AccountSettingsPreferencesTab`) does that, which is why
+switching views mid-session doesn't "stick" across a reload the way
+changing your default view in Settings does. `1`/`2`/`3` are
+registered as global [keyboard shortcuts](../shortcuts/README.md) for
+the three views directly inside `Layouts/MainLayout.tsx`, categorized
+`'View'`, which also builds the `tabs` array `PageHeader` renders for
+the List/Board/Calendar toggle.

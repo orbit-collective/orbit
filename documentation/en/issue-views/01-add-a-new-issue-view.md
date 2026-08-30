@@ -86,9 +86,12 @@ Skip this and a user who picked Timeline as their default view (step
 guard rejects any string it doesn't explicitly recognize, including a
 perfectly valid new one.
 
-## Step 3 — Add the nav button and its shortcut
+## Step 3 — Add the nav tab and its shortcut
 
-File: `resources/js/Components/Organisms/TopNav/TopNav.tsx`
+File: `resources/js/Layouts/MainLayout.tsx` — the project page's
+header (icon, title, view tabs, "New issue" action) is a `PageHeader`
+configured from this layout rather than a dedicated nav component, so
+both the shortcut and the tab button live here.
 
 ```tsx
 const shortcuts = useMemo(
@@ -123,9 +126,12 @@ const shortcuts = useMemo(
 );
 ```
 
-then a matching `<button>` in the `<nav>` block, copying the exact
-shape of the `List`/`Board`/`Calendar` buttons (`buttonVariants({
-isActive: selectedLook === 'Timeline' })`, an `Icon`, the label) — see
+then a matching entry in the `tabs` array passed to `<PageHeader>`,
+copying the exact shape of the `List`/`Board`/`Calendar` entries
+(`{ id: 'Timeline', label: 'Timeline', icon: ..., isActive: selectedLook
+=== 'Timeline', onClick: () => setSelectedLook('Timeline') }`) —
+`PageHeader` renders each `tabs` entry as a nav button beneath the
+title. See
 [`../shortcuts/02-register-a-global-shortcut.md`](../shortcuts/02-register-a-global-shortcut.md)
 for the general shape of adding a shortcut like this one, though this
 one is scoped to the project page rather than truly global.
@@ -223,10 +229,10 @@ would just silently show the List preview instead of its own.
   rendering is covered) — add a case asserting `selectedLook ===
   'Timeline'` renders `TimelineView`, and a case for the
   `localStorage` guard accepting `'Timeline'`.
-- `resources/js/Components/Organisms/TopNav/TopNav.test.tsx` — add a
-  case for the new nav button and its `'4'` shortcut, mirroring the
-  existing `List`/`Board`/`Calendar` test cases exactly (see the
-  file's existing `selectedLook: 'Board'`/`'Calendar'` test fixtures).
+- `resources/js/Layouts/MainLayout.test.tsx` — add a case for the new
+  view tab and its `'4'` shortcut, mirroring the existing
+  `List`/`Board`/`Calendar` test cases exactly (see the file's
+  existing `selectedLook: 'Board'`/`'Calendar'` test fixtures).
 - `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsPreferencesTab.test.tsx` —
   add a case selecting the Timeline card and asserting
   `localStorage.setItem` was called with `'Timeline'`.

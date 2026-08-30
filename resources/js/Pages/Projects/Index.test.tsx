@@ -40,12 +40,19 @@ vi.mock('@/Components/Organisms/Sidebar/Sidebar', () => ({
 vi.mock('@/Components/Organisms/PageHeader/PageHeader', () => ({
     default: ({
         title,
+        primaryAction,
         children,
     }: {
         title: string;
+        primaryAction?: { label: string; onClick: () => void };
         children?: React.ReactNode;
     }) => (
         <div data-testid="page-header" data-title={title}>
+            {primaryAction && (
+                <button onClick={primaryAction.onClick}>
+                    {primaryAction.label}
+                </button>
+            )}
             {children}
         </div>
     ),
@@ -81,7 +88,7 @@ describe('Projects Index Page', () => {
         const user = userEvent.setup();
         render(<Index projects={[]} />);
 
-        await user.click(screen.getByRole('button', { name: /New project/ }));
+        await user.click(screen.getByRole('button', { name: /New project/i }));
 
         expect(mockTriggerShortcut).toHaveBeenCalledWith('p');
     });

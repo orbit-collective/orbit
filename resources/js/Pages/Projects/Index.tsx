@@ -1,5 +1,3 @@
-import Button from '@/Components/Atoms/Button/Button';
-import Keybind from '@/Components/Atoms/Keybind/Keybind';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
 import ProjectCard, {
     ProjectNewCard,
@@ -15,17 +13,16 @@ function Index({ projects }: { projects: Project[] }) {
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
             <Sidebar projects={projects} />
-            <div className="flex min-w-0 flex-1 flex-col">
-                <PageHeader title={'Projects'}>
-                    <Button
-                        className={'gap-4 rounded-lg'}
-                        id={'new-project-button'}
-                        onClick={() => triggerShortcut('p')}
-                    >
-                        New project
-                        <Keybind tooltipText={'Press P'} keybind={'P'} />
-                    </Button>
-                </PageHeader>
+            <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
+                <PageHeader
+                    title={'Projects'}
+                    icon="FolderGit2"
+                    primaryAction={{
+                        label: 'New project',
+                        icon: 'Plus',
+                        onClick: () => triggerShortcut('p'),
+                    }}
+                />
                 <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
                     {projects.length > 0 ? (
                         <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

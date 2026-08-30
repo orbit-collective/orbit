@@ -5,6 +5,7 @@ import DashboardVisuals from '@/Components/Organisms/DashboardVisuals/DashboardV
 import IssueTable from '@/Components/Organisms/IssueTable/IssueTable';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
+import { useShortcuts } from '@/context/ShortcutContext';
 import { Issue, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import { Link } from '@inertiajs/react';
@@ -36,12 +37,21 @@ export default function Dashboard({
     }, [issues]);
 
     const hasProjects = projects && projects.length > 0;
+    const { triggerShortcut } = useShortcuts();
 
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
             <Sidebar projects={projects} />
             <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
-                <PageHeader title="Dashboard" icon="LayoutDashboard" />
+                <PageHeader
+                    title="Dashboard"
+                    icon="LayoutDashboard"
+                    primaryAction={{
+                        label: 'New Project',
+                        icon: 'Plus',
+                        onClick: () => triggerShortcut('p'),
+                    }}
+                />
                 <div className="relative flex flex-1 overflow-hidden">
                     <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
                         <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
