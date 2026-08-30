@@ -513,6 +513,7 @@ export interface IssueTableProps {
     queryParams?: { sort?: string; direction?: string; [key: string]: any };
     pagination?: ReactNode;
     project?: Project;
+    bare?: boolean;
 }
 export interface NewIssueModalProps {
     isOpen: boolean;

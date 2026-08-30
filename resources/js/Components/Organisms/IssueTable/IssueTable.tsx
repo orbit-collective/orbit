@@ -6,6 +6,7 @@ import { useAlert } from '@/context/AlertContext';
 import { useTableResizing } from '@/hooks/useTableResizing';
 import { HeaderConfig, IssueTableProps } from '@/types/Components';
 import { Issue, Sorting, SortingColumn } from '@/types/Issues';
+import { cn } from '@/utils/cn';
 import { router } from '@inertiajs/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -26,6 +27,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     queryParams,
     pagination,
     project,
+    bare = false,
 }) => {
     const { addAlert } = useAlert();
     const tableRef = useRef<HTMLTableElement>(null);
@@ -288,7 +290,13 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                 isDeleting={isDeleting}
             />
 
-            <div className="relative flex max-h-[calc(100vh-240px)] flex-col overflow-y-hidden rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] shadow-xl">
+            <div
+                className={cn(
+                    'relative flex max-h-[calc(100vh-240px)] flex-col overflow-y-hidden',
+                    !bare &&
+                        'rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] shadow-xl',
+                )}
+            >
                 <div className="flex-1 overflow-x-auto">
                     <table
                         ref={tableRef}
