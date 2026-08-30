@@ -7,6 +7,7 @@ import { statusDotVariants } from '@/Components/Atoms/StatusDot/StatusDot';
 import { textareaVariants } from '@/Components/Atoms/TextArea/TextArea';
 import { statCardVariants } from '@/Components/Molecules/StatCard/StatCard';
 import { SavedFilter } from '@/hooks/useSavedFilters';
+import { ActivityLogEntry } from '@/types/ActivityLog';
 import { AlertItem } from '@/types/Alert';
 import {
     Comment,
@@ -470,10 +471,17 @@ export interface ProjectOnboardingFormProps {
     onSubmit: (e: SyntheticEvent) => void;
     onSkip: () => void;
 }
+export interface ActivityLogItemProps {
+    log: ActivityLogEntry;
+    isLast?: boolean;
+}
 export interface ProjectOnboardingPreviewProps {
     data: ProjectOnboardingFormData;
 }
 // ORGANISMS COMPONENTS
+export interface ActivityLogsProps {
+    logs: ActivityLogEntry[];
+}
 export interface CalendarViewProps {
     issues: Issue[];
 }

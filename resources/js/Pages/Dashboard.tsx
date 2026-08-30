@@ -1,11 +1,12 @@
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
 import ProjectCard from '@/Components/Molecules/ProjectCard/ProjectCard';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
+import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
 import DashboardVisuals from '@/Components/Organisms/DashboardVisuals/DashboardVisuals';
-import IssueTable from '@/Components/Organisms/IssueTable/IssueTable';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useShortcuts } from '@/context/ShortcutContext';
+import { ActivityLogEntry } from '@/types/ActivityLog';
 import { Issue, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import { Link } from '@inertiajs/react';
@@ -15,10 +16,12 @@ export default function Dashboard({
     issues,
     projects,
     productivity_trend,
+    activityLogs,
 }: {
     issues: Issue[];
     projects: Project[];
     productivity_trend: ProductivityTrendProps[];
+    activityLogs: ActivityLogEntry[];
 }) {
     const stats = useMemo(() => {
         const total = issues.length;
@@ -97,15 +100,12 @@ export default function Dashboard({
                                         Recent Work Activity
                                     </h3>
                                     <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
-                                        Showing {issues.slice(0, 20).length}{' '}
-                                        latest issues
+                                        Showing {activityLogs.length} latest
+                                        events
                                     </span>
                                 </div>
                                 <div className="flex-1 overflow-y-auto">
-                                    <IssueTable
-                                        issues={issues.slice(0, 20)}
-                                        bare
-                                    />
+                                    <ActivityLogs logs={activityLogs} />
                                 </div>
                             </div>
 

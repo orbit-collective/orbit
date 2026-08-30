@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ActivityLogService;
 use App\Services\IssueService;
 use App\Services\ProjectService;
 use App\Services\UserService;
@@ -14,11 +15,13 @@ class DashboardController extends Controller
     protected IssueService $issueService;
     protected ProjectService $projectService;
     protected UserService $userService;
+    protected ActivityLogService $activityLogService;
 
-    public function __construct(IssueService $issueService, ProjectService $projectService, UserService $userService) {
+    public function __construct(IssueService $issueService, ProjectService $projectService, UserService $userService, ActivityLogService $activityLogService) {
         $this->issueService = $issueService;
         $this->projectService = $projectService;
         $this->userService = $userService;
+        $this->activityLogService = $activityLogService;
     }
 
     /**
@@ -37,6 +40,12 @@ class DashboardController extends Controller
             'projects' => $projects,
             'productivity_trend' => $productivity_trend,
             'users' => $this->userService->getAssignableUsersForUserProjects($userId),
+            'activityLogs' => $this->activityLogService->getRecentForUser($userId, 15)->map(fn ($entry) => [
+                'id' => $entry->id,
+                'body' => $entry->body,
+                'userName' => $entry->user?->name,
+                'createdAt' => $entry->created_at->diffForHumans(),
+            ]),
         ]);
     }
 }
