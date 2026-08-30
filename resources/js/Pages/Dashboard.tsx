@@ -91,7 +91,7 @@ export default function Dashboard({
                         />
 
                         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                            <div className="flex min-h-[400px] flex-col lg:col-span-2">
+                            <div className="flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
                                 <div className="mb-2 flex items-center justify-between">
                                     <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                                         Recent Work Activity
@@ -102,12 +102,15 @@ export default function Dashboard({
                                     </span>
                                 </div>
                                 <div className="flex-1 overflow-y-auto">
-                                    <IssueTable issues={issues.slice(0, 20)} />
+                                    <IssueTable
+                                        issues={issues.slice(0, 20)}
+                                        bare
+                                    />
                                 </div>
                             </div>
 
-                            <div className="flex flex-col gap-4">
-                                <div className="mb-2 flex items-center justify-between">
+                            <div className="flex flex-col gap-4 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
+                                <div className="flex items-center justify-between">
                                     <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                                         Projects Directory
                                     </h3>

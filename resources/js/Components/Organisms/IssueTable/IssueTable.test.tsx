@@ -260,6 +260,18 @@ describe('IssueTable Component', () => {
         expect(mockAddAlert).not.toHaveBeenCalled();
     });
 
+    test('renders its own card chrome by default', () => {
+        const { container } = render(<IssueTable issues={[]} />);
+
+        expect(container.querySelector('.shadow-xl')).toBeInTheDocument();
+    });
+
+    test('omits its own card chrome when bare is set', () => {
+        const { container } = render(<IssueTable issues={[]} bare />);
+
+        expect(container.querySelector('.shadow-xl')).not.toBeInTheDocument();
+    });
+
     test('renders table with proper structure', () => {
         const { container } = render(<IssueTable issues={[]} />);
 
