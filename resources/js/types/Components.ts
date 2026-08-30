@@ -536,6 +536,7 @@ export interface TopNavProps {
 }
 export interface PageHeaderProps {
     title: string;
+    icon?: keyof typeof icons;
     children?: ReactNode;
 }
 export interface AlertContainerProps {
