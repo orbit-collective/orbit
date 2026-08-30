@@ -68,7 +68,9 @@ export default function Show({
                         'relative flex flex-1 overflow-hidden border-t border-solid border-[var(--bg-light-color)]'
                     }
                 >
-                    <div className={'flex flex-1 flex-col overflow-hidden'}>
+                    <div
+                        className={'flex flex-1 flex-col overflow-hidden px-4'}
+                    >
                         {selectedLook === 'List' ? (
                             <IssueTable
                                 issues={issues.data}
