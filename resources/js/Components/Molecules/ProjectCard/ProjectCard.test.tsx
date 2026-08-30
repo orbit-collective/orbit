@@ -80,7 +80,7 @@ describe('ProjectCard Component', () => {
     test('shows 0% completion and 0/0 issues when there are no issues', () => {
         render(<ProjectCard project={makeProject()} issues={[]} />);
 
-        expect(screen.getByText('0% Completed')).toBeInTheDocument();
+        expect(screen.getByText('0%')).toBeInTheDocument();
         expect(screen.getByText('0/0 Issues')).toBeInTheDocument();
     });
 
@@ -94,10 +94,14 @@ describe('ProjectCard Component', () => {
         render(<ProjectCard project={makeProject()} issues={issues} />);
 
         // 2 of 4 closed => 50%.
-        expect(screen.getByText('50% Completed')).toBeInTheDocument();
+        expect(screen.getByText('50%')).toBeInTheDocument();
         expect(screen.getByText('2/4 Issues')).toBeInTheDocument();
-        expect(screen.getByText('2 Open')).toBeInTheDocument();
-        expect(screen.getByText('2 Closed')).toBeInTheDocument();
+
+        const openRow = screen.getByText('Open').closest('div');
+        expect(openRow).toHaveTextContent('2');
+
+        const closedRow = screen.getByText('Closed').closest('div');
+        expect(closedRow).toHaveTextContent('2');
     });
 
     test('only counts issues that belong to this project', () => {
@@ -111,7 +115,7 @@ describe('ProjectCard Component', () => {
         );
 
         // Only the single project-1 issue is counted (closed => 100%).
-        expect(screen.getByText('100% Completed')).toBeInTheDocument();
+        expect(screen.getByText('100%')).toBeInTheDocument();
         expect(screen.getByText('1/1 Issues')).toBeInTheDocument();
     });
 

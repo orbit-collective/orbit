@@ -32,6 +32,8 @@ describe('getColorTheme', () => {
                 gradient: `from-${color}-500/5 to-transparent`,
                 accent: `bg-${color}-500`,
                 textGroupHover: `group-hover:text-${color}-500`,
+                iconText: `text-${color}-400`,
+                ring: `stroke-${color}-500`,
             });
         },
     );
