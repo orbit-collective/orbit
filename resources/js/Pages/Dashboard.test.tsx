@@ -1,3 +1,4 @@
+import { ActivityLogEntry } from '@/types/ActivityLog';
 import { Issue, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import { render, screen } from '@testing-library/react';
@@ -63,9 +64,9 @@ vi.mock('@/Components/Organisms/DashboardVisuals/DashboardVisuals', () => ({
     ),
 }));
 
-vi.mock('@/Components/Organisms/IssueTable/IssueTable', () => ({
-    default: ({ issues }: { issues: Issue[] }) => (
-        <div data-testid="issue-table" data-issues-count={issues.length} />
+vi.mock('@/Components/Organisms/ActivityLogs/ActivityLogs', () => ({
+    default: ({ logs }: { logs: ActivityLogEntry[] }) => (
+        <div data-testid="activity-logs" data-logs-count={logs.length} />
     ),
 }));
 
@@ -99,6 +100,7 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={projects}
                 productivity_trend={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -124,6 +126,7 @@ describe('Dashboard Page', () => {
                 issues={issues}
                 projects={[makeProject()]}
                 productivity_trend={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -140,7 +143,14 @@ describe('Dashboard Page', () => {
     });
 
     test('shows 0% resolution rate when there are no issues', () => {
-        render(<Dashboard issues={[]} projects={[]} productivity_trend={[]} />);
+        render(
+            <Dashboard
+                issues={[]}
+                projects={[]}
+                productivity_trend={[]}
+                activityLogs={[]}
+            />,
+        );
 
         expect(screen.getAllByText('0%').length).toBeGreaterThan(0);
     });
@@ -153,6 +163,7 @@ describe('Dashboard Page', () => {
                 issues={issues}
                 projects={[]}
                 productivity_trend={trend}
+                activityLogs={[]}
             />,
         );
 
@@ -161,19 +172,29 @@ describe('Dashboard Page', () => {
         expect(visuals).toHaveAttribute('data-trend-count', '1');
     });
 
-    test('caps IssueTable to the first 20 issues', () => {
-        const issues = Array.from({ length: 25 }, () => makeIssue());
+    test('forwards activityLogs to ActivityLogs', () => {
+        const activityLogs: ActivityLogEntry[] = [
+            {
+                id: 1,
+                body: 'Created project: Orbit',
+                userName: 'Jane Doe',
+                createdAt: '2 hours ago',
+            },
+        ];
         render(
-            <Dashboard issues={issues} projects={[]} productivity_trend={[]} />,
+            <Dashboard
+                issues={[]}
+                projects={[]}
+                productivity_trend={[]}
+                activityLogs={activityLogs}
+            />,
         );
 
-        expect(screen.getByTestId('issue-table')).toHaveAttribute(
-            'data-issues-count',
-            '20',
+        expect(screen.getByTestId('activity-logs')).toHaveAttribute(
+            'data-logs-count',
+            '1',
         );
-        expect(
-            screen.getByText('Showing 20 latest issues'),
-        ).toBeInTheDocument();
+        expect(screen.getByText('Showing 1 latest events')).toBeInTheDocument();
     });
 
     test('renders up to 3 projects and a "view all" link when there are more', () => {
@@ -188,6 +209,7 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={projects}
                 productivity_trend={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -206,6 +228,7 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={[makeProject({ id: 1 })]}
                 productivity_trend={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -213,7 +236,14 @@ describe('Dashboard Page', () => {
     });
 
     test('renders an empty state when there are no projects', () => {
-        render(<Dashboard issues={[]} projects={[]} productivity_trend={[]} />);
+        render(
+            <Dashboard
+                issues={[]}
+                projects={[]}
+                productivity_trend={[]}
+                activityLogs={[]}
+            />,
+        );
 
         expect(
             screen.getByText('Create your first project'),
