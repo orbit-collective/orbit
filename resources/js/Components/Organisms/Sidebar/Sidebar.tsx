@@ -44,6 +44,11 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
         setIsUserMenuOpen(false);
         router.visit(route('settings'));
     };
+    const handleOpenUrl = (url: string) => () => {
+        setIsUserMenuOpen(false);
+        const w = window.open(url, '_blank', 'noopener,noreferrer');
+        if (w) w.opener = null;
+    };
 
     const shortcuts = useMemo(
         (): ShortcutDefinition[] => [
@@ -213,6 +218,31 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
 
                     {isUserMenuOpen && (
                         <DropdownMenu direction="top">
+                            <DropdownItem
+                                label={
+                                    <>
+                                        <Icon name="BookOpen" size={14} />
+                                        Learn
+                                    </>
+                                }
+                                onClick={handleOpenUrl(
+                                    'https://orbit-dev.app/learn',
+                                )}
+                            />
+                            <DropdownItem
+                                label={
+                                    <>
+                                        <Icon
+                                            name="CircleQuestionMark"
+                                            size={14}
+                                        />
+                                        Documentation
+                                    </>
+                                }
+                                onClick={handleOpenUrl(
+                                    'https://docs.orbit-dev.app',
+                                )}
+                            />
                             <DropdownItem
                                 label={
                                     <>
