@@ -41,7 +41,7 @@ export default function Dashboard({
         <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
             <Sidebar projects={projects} />
             <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
-                <PageHeader title="Dashboard" />
+                <PageHeader title="Dashboard" icon="LayoutDashboard" />
                 <div className="relative flex flex-1 overflow-hidden">
                     <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
                         <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">

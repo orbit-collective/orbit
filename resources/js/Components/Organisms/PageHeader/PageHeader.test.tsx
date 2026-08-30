@@ -4,8 +4,25 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import PageHeader from './PageHeader';
 
+const { triggerShortcut, reload } = vi.hoisted(() => ({
+    triggerShortcut: vi.fn(),
+    reload: vi.fn(),
+}));
+
 vi.mock('@/Components/Organisms/NotificationsPopup/NotificationsPopup', () => ({
     default: () => <div data-testid="notifications-popup" />,
+}));
+
+vi.mock('@/context/ShortcutContext', () => ({
+    useShortcuts: () => ({
+        triggerShortcut,
+    }),
+}));
+
+vi.mock('@inertiajs/react', () => ({
+    router: {
+        reload: reload,
+    },
 }));
 
 describe('PageHeader Component', () => {
@@ -65,5 +82,33 @@ describe('PageHeader Component', () => {
         expect(
             screen.queryByTestId('notifications-popup'),
         ).not.toBeInTheDocument();
+    });
+
+    test('renders the title icon when provided', () => {
+        const { container } = render(
+            <PageHeader title="Dashboard" icon="LayoutDashboard" />,
+        );
+
+        expect(
+            container.querySelector('.lucide-layout-dashboard'),
+        ).toBeInTheDocument();
+    });
+
+    test('reloads the page when Refresh is clicked', async () => {
+        const user = userEvent.setup();
+        render(<PageHeader title="Dashboard" />);
+
+        await user.click(screen.getByRole('button', { name: /refresh/i }));
+
+        expect(reload).toHaveBeenCalled();
+    });
+
+    test('triggers the "p" shortcut when New Project is clicked', async () => {
+        const user = userEvent.setup();
+        render(<PageHeader title="Dashboard" />);
+
+        await user.click(screen.getByRole('button', { name: /new project/i }));
+
+        expect(triggerShortcut).toHaveBeenCalledWith('p');
     });
 });
