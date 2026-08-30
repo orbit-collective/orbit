@@ -23,7 +23,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
     return (
         <Link
             href={`/projects/${project.id}`}
-            className={`group flex flex-col justify-between rounded-lg border border-solid border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] bg-gradient-to-br p-4 sm:p-5 ${theme.gradient} transition-all duration-300 ${theme.border} hover:-translate-y-0.5 hover:shadow-lg`}
+            className={`group flex flex-col justify-between rounded-lg border border-solid border-[var(--bg-light-color)] bg-[var(--surface-color)] bg-gradient-to-br p-4 sm:p-5 ${theme.gradient} transition-all duration-300 ${theme.border} hover:-translate-y-0.5 hover:bg-[var(--bg-light-color-hover)] hover:shadow-lg`}
         >
             <div>
                 <div className="flex items-center justify-between gap-3">

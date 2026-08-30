@@ -7,7 +7,7 @@ export const VisualCard: FC<VisualCardProps> = ({
 }) => {
     return (
         <div
-            className={`flex flex-col justify-between rounded-lg border border-solid border-[var(--border-color)] bg-[var(--bg-dark-color)] p-5 transition-all hover:border-[var(--bg-light-color-hover)] ${className}`}
+            className={`flex flex-col justify-between rounded-lg border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-5 transition-all hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)] ${className}`}
         >
             {children}
         </div>
