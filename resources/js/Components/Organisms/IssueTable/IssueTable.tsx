@@ -281,7 +281,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         hasIssues && issues.every((issue) => selectedIds.includes(issue.id));
 
     return (
-        <div className="flex w-full flex-1 flex-col overflow-hidden bg-[var(--bg-color)] px-4 py-2">
+        <div className="flex w-full flex-1 flex-col overflow-hidden py-2">
             <BulkActionBar
                 selectedCount={selectedIds.length}
                 onBulkDelete={handleBulkDelete}

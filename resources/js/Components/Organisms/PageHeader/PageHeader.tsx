@@ -8,7 +8,7 @@ function PageHeader({ title, children }: PageHeaderProps) {
     const [showNotificationsPopup, setShowNotificationsPopup] = useState(false);
 
     return (
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-solid border-[var(--bg-light-color)] bg-[var(--bg-color)] px-6">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-solid border-[var(--bg-light-color)] bg-[var(--bg-color-hover)] px-6">
             <div className="flex flex-col">
                 <h1 className="text-sm font-semibold text-[var(--text-color)]">
                     {title}
