@@ -70,8 +70,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 <PageHeader
                     title={project.name}
                     icon="FolderGit2"
-                    showDate={false}
-                    showSettingsIcon={false}
+                    showDate={true}
+                    showSettingsIcon={true}
                     primaryAction={{
                         label: 'New issue',
                         onClick: () => setIsNewIssueModalOpen(true),
@@ -103,13 +103,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     <button className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]">
                         <Icon
                             name="Search"
-                            size={18}
-                            color="var(--text-gray-color)"
-                        />
-                    </button>
-                    <button className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]">
-                        <Icon
-                            name="CircleQuestionMark"
                             size={18}
                             color="var(--text-gray-color)"
                         />

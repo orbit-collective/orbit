@@ -90,6 +90,19 @@ function PageHeader({
 
                     {children}
 
+                    <a
+                        className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                        href={'https://docs.orbit-dev.app/reference/faq'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <Icon
+                            name="CircleQuestionMark"
+                            size={18}
+                            color="var(--text-gray-color)"
+                        />
+                    </a>
+
                     <button
                         className={
                             'flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]'

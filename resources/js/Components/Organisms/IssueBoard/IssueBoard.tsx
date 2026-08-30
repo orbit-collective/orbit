@@ -184,7 +184,7 @@ function IssueBoard({ issues }: IssueBoardProps) {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div className="flex h-full w-full flex-col bg-[var(--bg-color)]">
+            <div className="flex h-full w-full flex-col">
                 <div className="flex items-center px-4 pt-4 md:px-6 md:pt-6">
                     <div className="inline-flex items-center gap-1 rounded-lg border border-[var(--border-color)] bg-[var(--surface-color)] p-1">
                         {GROUP_BY_OPTIONS.map((option) => (
