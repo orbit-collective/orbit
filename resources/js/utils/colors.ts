@@ -8,6 +8,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-red-500/5 to-transparent',
             accent: 'bg-red-500',
             textGroupHover: 'group-hover:text-red-500',
+            iconText: 'text-red-400',
+            ring: 'stroke-red-500',
         },
         orange: {
             badgeBg: 'bg-orange-500/10 text-orange-400',
@@ -15,6 +17,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-orange-500/5 to-transparent',
             accent: 'bg-orange-500',
             textGroupHover: 'group-hover:text-orange-500',
+            iconText: 'text-orange-400',
+            ring: 'stroke-orange-500',
         },
         yellow: {
             badgeBg: 'bg-yellow-500/10 text-yellow-400',
@@ -22,6 +26,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-yellow-500/5 to-transparent',
             accent: 'bg-yellow-500',
             textGroupHover: 'group-hover:text-yellow-500',
+            iconText: 'text-yellow-400',
+            ring: 'stroke-yellow-500',
         },
         green: {
             badgeBg: 'bg-green-500/10 text-green-400',
@@ -29,6 +35,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-green-500/5 to-transparent',
             accent: 'bg-green-500',
             textGroupHover: 'group-hover:text-green-500',
+            iconText: 'text-green-400',
+            ring: 'stroke-green-500',
         },
         lime: {
             badgeBg: 'bg-lime-500/10 text-lime-400',
@@ -36,6 +44,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-lime-500/5 to-transparent',
             accent: 'bg-lime-500',
             textGroupHover: 'group-hover:text-lime-500',
+            iconText: 'text-lime-400',
+            ring: 'stroke-lime-500',
         },
         blue: {
             badgeBg: 'bg-blue-500/10 text-blue-400',
@@ -43,6 +53,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-blue-500/5 to-transparent',
             accent: 'bg-blue-500',
             textGroupHover: 'group-hover:text-blue-500',
+            iconText: 'text-blue-400',
+            ring: 'stroke-blue-500',
         },
         sky: {
             badgeBg: 'bg-sky-500/10 text-sky-400',
@@ -50,6 +62,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-sky-500/5 to-transparent',
             accent: 'bg-sky-500',
             textGroupHover: 'group-hover:text-sky-500',
+            iconText: 'text-sky-400',
+            ring: 'stroke-sky-500',
         },
         violet: {
             badgeBg: 'bg-violet-500/10 text-violet-400',
@@ -57,6 +71,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-violet-500/5 to-transparent',
             accent: 'bg-violet-500',
             textGroupHover: 'group-hover:text-violet-500',
+            iconText: 'text-violet-400',
+            ring: 'stroke-violet-500',
         },
         purple: {
             badgeBg: 'bg-purple-500/10 text-purple-400',
@@ -64,6 +80,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-purple-500/5 to-transparent',
             accent: 'bg-purple-500',
             textGroupHover: 'group-hover:text-purple-500',
+            iconText: 'text-purple-400',
+            ring: 'stroke-purple-500',
         },
         pink: {
             badgeBg: 'bg-pink-500/10 text-pink-400',
@@ -71,6 +89,8 @@ export const getColorTheme = (colorName: ProjectColors) => {
             gradient: 'from-pink-500/5 to-transparent',
             accent: 'bg-pink-500',
             textGroupHover: 'group-hover:text-pink-500',
+            iconText: 'text-pink-400',
+            ring: 'stroke-pink-500',
         },
     };
 
