@@ -67,7 +67,7 @@ resources/js/
   Components/Atoms/     Smallest building blocks — no business logic, take primitive props
   Components/Molecules/ Composed from Atoms — a small, reusable, still-generic unit
   Components/Organisms/ Composed from Molecules — feature-specific, often reads context/props directly
-  Layouts/               Page shells (sidebar + top nav, etc.)
+  Layouts/               Page shells (MainLayout composes the collapsible Sidebar + PageHeader, GuestLayout wraps auth pages)
   context/               React context providers, one per cross-cutting concern
   hooks/                 Reusable stateful logic not tied to one component
   types/                 Shared TypeScript types, usually mirroring a backend model/enum

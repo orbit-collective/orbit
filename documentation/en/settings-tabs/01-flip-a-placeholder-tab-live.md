@@ -30,11 +30,15 @@ This one flag does the entire "is it reachable" job —
 `Pages/Settings/Index.tsx`'s `isEnabledSettingsTabId()` check (see the
 [README](./README.md)'s architecture section) now lets `?tab=export`
 resolve instead of silently falling back to `preferences`, and the
-sidebar nav item (`SettingsSidebar`, which renders every tab in
-`SETTINGS_TABS` regardless of `enabled`) becomes clickable rather than
-visually disabled. No other frontend change is required for the tab
-to become *visitable* — steps 2–3 are about making it show something
-real once you're there.
+nav item becomes clickable rather than visually disabled. That nav
+item isn't a dedicated settings component — the main app `Sidebar`
+(`resources/js/Components/Organisms/Sidebar/Sidebar.tsx`) itself
+renders the Account/Workspace sections straight from `SETTINGS_TABS`
+whenever the current URL is under `/settings`, disabled tabs included
+(see [`../architecture/03-frontend-architecture-and-atomic-design.md`](../architecture/03-frontend-architecture-and-atomic-design.md)).
+No other frontend change is required for the tab to become
+*visitable* — steps 2–3 are about making it show something real once
+you're there.
 
 ## Step 2 — Thread real data to it (don't leave it static)
 

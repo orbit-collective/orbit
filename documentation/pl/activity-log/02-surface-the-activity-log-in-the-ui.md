@@ -1,139 +1,103 @@
 # Wyświetl log aktywności w UI
 
-`ActivityLogRepository::getRecentForProject()` już istnieje i już robi właściwe zapytanie (`latest()->limit(15)`, eager-loading `user`) — po prostu nigdy nie jest wywoływane. Ten przewodnik podłącza to aż do prawdziwego panelu "Recent activity" na stronie projektu.
+`ActivityLogService::getRecentForUser()` już zasila panel "Recent Work Activity" na Dashboardzie, a `getRecentForProject()` już zasila widok issues **Activity** projektu (zobacz [`../issue-views/README.md`](../issue-views/README.md)) — oba renderują tę samą parę komponentów `ActivityLogs`/`ActivityLogItem` na bazie tego samego kształtu `ActivityLogEntry`. Ten przewodnik dodaje trzecią powierzchnię: panel "Recent account activity" w zakładce Ustawień konta Security & access, ponownie wykorzystujący `getRecentForUser()` (dokładnie tę samą metodę odczytu, którą wywołuje już Dashboard), zamiast dodawać nową.
 
-## Krok 1 — Wyeksponuj metodę odczytu w Service
+## Krok 1 — Podłącz metodę odczytu do kontrolera Ustawień
 
-Plik: `app/Services/ActivityLogService.php`
+Plik: `app/Http/Controllers/SettingsController.php`
 
 ```php
-<?php
-
-namespace App\Services;
-
-use App\Models\ActivityLog;
-use App\Repositories\ActivityLogRepository;
-use Illuminate\Support\Collection;
-
-class ActivityLogService
+public function index(Request $request): Response
 {
-    public function __construct(
-        protected ActivityLogRepository $activityLogRepository
-    ) {}
+    $user = $request->user();
+    // ...existing $projects/$selectedProject/etc. setup...
 
-    public function log(?int $projectId, string $body, ?int $userId = null): ActivityLog
-    {
-        return ActivityLog::query()->create([
-            'project_id' => $projectId,
-            'user_id' => $userId ?? auth()->id(),
-            'body' => $body,
-        ]);
-    }
-
-    public function getRecentForProject(int $projectId): Collection
-    {
-        return $this->activityLogRepository->getRecentForProject($projectId);
-    }
+    return Inertia::render('Settings/Index', [
+        // ...existing keys...
+        'sessions' => $this->userService->getUserSessions($user),
+        'accountActivity' => $this->activityLogService
+            ->getRecentForUser($user->id, 15)
+            ->map(fn ($entry) => [
+                'id' => $entry->id,
+                'body' => $entry->body,
+                'userName' => $entry->user?->name,
+                'createdAt' => $entry->created_at->diffForHumans(),
+            ]),
+    ]);
 }
 ```
 
-`ActivityLogService::log()` dziś buduje model `ActivityLog` bezpośrednio, zamiast w ogóle przechodzić przez `ActivityLogRepository` — to istniejąca niespójność z zasadą [Controller → Service → Repository](../architecture/02-backend-layered-architecture.md) ("każde zapytanie Eloquent żyje w Repository"), poprzedzająca ten przewodnik; `getRecentForProject()` powyżej jest napisane we *właściwy* sposób (delegując do Repository), żeby nie pogłębiać dalej tej niespójności — nie kopiuj kształtu bezpośredniego dostępu do modelu z `log()` dla nowych metod.
+`ActivityLogService` jest już wstrzykiwany do tego Controllera dla innych funkcji ustawień, więc żadna zmiana konstruktora nie jest potrzebna — wystarczy wywołać metodę, którą już udostępnia. Zmapuj do tego samego kształtu `{ id, body, userName, createdAt }`, którego już używają `DashboardController` i `ProjectController` (`createdAt` sformatowane wcześniej po stronie serwera przez `diffForHumans()`), więc frontend nie potrzebuje drugiego kształtu ani formattera dla tego, co jest tym samym typem `ActivityLogEntry`.
 
-## Krok 2 — Przeprowadź to do strony projektu
+## Krok 2 — Przekaż to do zakładki
 
-Plik: `app/Http/Controllers/ProjectController.php`
-
-```php
-public function __construct(
-    ProjectService $projectService,
-    IssueService $issueService,
-    UserService $userService,
-    ActivityLogService $activityLogService
-) {
-    $this->projectService = $projectService;
-    $this->issueService = $issueService;
-    $this->userService = $userService;
-    $this->activityLogService = $activityLogService;
-}
-```
-
-```php
-return Inertia::render('Projects/Show', [
-    'project' => $project,
-    'projects' => $projects,
-    'issues' => $issues,
-    'queryParams' => request()->query() ?: null,
-    'filters' => $filters,
-    'savedFilters' => $project->savedFilters()->latest()->get(),
-    'users' => $this->userService->getAssignableUsersForProject($project->id),
-    'recentActivity' => $this->activityLogService->getRecentForProject($project->id)
-        ->map(fn ($entry) => [
-            'id' => $entry->id,
-            'body' => $entry->body,
-            'userName' => $entry->user?->name,
-            'createdAt' => $entry->created_at,
-        ]),
-]);
-```
-
-Zmapuj na zwykłą tablicę zamiast przepuszczać kolekcję Eloquent wprost — ta sama konwencja, jakiej trzyma się każda inna metoda mapująca propy w tym kodzie (zobacz `mapMembers()`/`mapInvitations()`/`mapRoles()` w `SettingsController` po ustalony kształt), więc frontend zależy tylko od stabilnego, celowego kształtu, nie od każdej kolumny, jaką akurat ma model.
-
-## Krok 3 — Wyrenderuj to
-
-Nowy typ, plik: `resources/js/types/ActivityLog.ts`
-
-```ts
-export interface ActivityLogEntry {
-    id: number;
-    body: string;
-    userName: string | null;
-    createdAt: string;
-}
-```
-
-Nowy komponent, plik: `resources/js/Components/Molecules/ActivityFeed/ActivityFeed.tsx`
+Plik: `resources/js/Pages/Settings/Index.tsx`
 
 ```tsx
-import { ActivityLogEntry } from '@/types/ActivityLog';
-import { formatTimeAgo } from '@/utils/time';
-
-interface ActivityFeedProps {
-    entries: ActivityLogEntry[];
+interface SettingsIndexProps {
+    // ...existing props...
+    accountActivity?: ActivityLogEntry[];
 }
 
-export default function ActivityFeed({ entries }: ActivityFeedProps) {
-    if (entries.length === 0) {
-        return (
-            <p className="py-6 text-center text-xs text-[var(--text-muted-color)]">
-                No activity yet.
-            </p>
-        );
-    }
+export default function SettingsIndex({
+    // ...existing props...
+    accountActivity = [],
+}: SettingsIndexProps) {
+    // ...
 
+    {isAccountSettingsTabId(activeTab) ? (
+        <AccountSettingsContent
+            tabId={activeTab}
+            // ...existing props...
+            accountActivity={accountActivity}
+        />
+    ) : ( /* ...unchanged... */ )}
+}
+```
+
+Następnie przekaż `accountActivity` o jeden poziom dalej, przez gałąź `tabId === 'security-access'` w `AccountSettingsContent`, do `AccountSettingsSecurityTab`, tak samo jak dziś przepływa `sessions`.
+
+## Krok 3 — Wyrenderuj to istniejącymi komponentami
+
+Plik: `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsSecurityTab.tsx`
+
+```tsx
+import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
+import { ActivityLogEntry } from '@/types/ActivityLog';
+
+interface AccountSettingsSecurityTabProps {
+    sessions?: Session[];
+    accountActivity?: ActivityLogEntry[];
+}
+
+export default function AccountSettingsSecurityTab({
+    sessions = [],
+    accountActivity = [],
+}: AccountSettingsSecurityTabProps) {
     return (
-        <div className="space-y-2">
-            {entries.map((entry) => (
-                <div key={entry.id} className="text-sm">
-                    <span className="text-[var(--text-color)]">
-                        {entry.userName ?? 'Someone'}
-                    </span>{' '}
-                    <span className="text-[var(--text-gray-color)]">
-                        {entry.body}
-                    </span>
-                    <p className="text-xs text-[var(--text-muted-color)]">
-                        {formatTimeAgo(entry.createdAt)} ago
-                    </p>
+        <div className="space-y-5">
+            {/* ...existing Password/Active sessions/Session expiry panels... */}
+
+            <SettingsPanel
+                title="Recent account activity"
+                description="The last actions taken on your account, across every project."
+                icon="Activity"
+            >
+                <div className="px-2 pb-2">
+                    <ActivityLogs logs={accountActivity} />
                 </div>
-            ))}
+            </SettingsPanel>
+
+            {/* ...existing Delete account panel... */}
         </div>
     );
 }
 ```
 
-Potem wyrenderuj `<ActivityFeed entries={recentActivity} />` gdziekolwiek ma to sens dodać w `Pages/Projects/Show.tsx` (panel boczny obok listy issues to naturalne miejsce, na wzór tego, jak [popup powiadomień](../notifications/03-frontend-backend-wiring-overview.md) jest samodzielnym komponentem typu lista-elementów).
+Żadnego nowego kodu listy/pustego-stanu/kolorowania ikon — `ActivityLogs` już obsługuje pustą tablicę (własny pusty stan), a `ActivityLogItem` już wyprowadza kolorową kropkę każdego wpisu z jego treści `body` przez `getActivityLogVisual()` (`resources/js/utils/activityLog.ts`). To jest zysk z tego, że Dashboard i widok Activity projektu już współdzielą jedną parę komponentów zamiast każdy pisze swój własny markup listy — trzecia powierzchnia to zmiana w przepływie danych, nie nowy UI.
 
 ## Testy
 
-- `tests/Feature/ActivityLogServiceTest.php` (nowy plik — żaden dziś nie istnieje) — test dla `getRecentForProject()` asercujący, że zwraca wpisy tylko dla właściwego projektu, uporządkowane od najnowszych, ograniczone do 15.
-- `tests/Feature/ProjectControllerTest.php` — dodaj test asercujący, że odpowiedź Inertii `show()` zawiera prop `recentActivity` w poprawnym kształcie.
-- `resources/js/Components/Molecules/ActivityFeed/ActivityFeed.test.tsx` (nowy plik) — wyrenderuj z wpisami, asercuj, że każdy się renderuje; wyrenderuj z pustą tablicą, asercuj pusty stan "No activity yet.".
+- `tests/Feature/SettingsControllerTest.php` — dodaj przypadek asercujący, że odpowiedź Inertia zawiera prop `accountActivity` w kształcie `{ id, body, userName, createdAt }`, na wzór tego, jak `DashboardControllerTest` (jeśli istnieje) asercuje już `activityLogs`.
+- `resources/js/Pages/Settings/Index.test.tsx` — dodaj przypadek asercujący, że `accountActivity` dociera do `AccountSettingsSecurityTab`, gdy `tab=security-access`.
+- `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsSecurityTab.test.tsx` — dodaj przypadek renderujący z kilkoma wpisami `accountActivity` i asercujący, że się pojawiają, plus przypadek z pustą tablicą asercujący, że renderuje się pusty stan `ActivityLogs`.

@@ -57,9 +57,10 @@ export const ACCOUNT_SETTINGS_TAB_IDS = [
 
 `section: 'account'` and adding the id to `ACCOUNT_SETTINGS_TAB_IDS`
 are both required, and independently — the first decides which
-sidebar group (`accountTabs`/`workspaceTabs` in
-`Pages/Settings/Index.tsx`) the nav item renders under; the second is
-what `isAccountSettingsTabId()` checks to decide whether
+sidebar group (`Sidebar.tsx` filters `SETTINGS_TABS` by `section` into
+its "Account"/"Workspace" nav sections whenever the URL is under
+`/settings`) the nav item renders under; the second is what
+`isAccountSettingsTabId()` checks to decide whether
 `AccountSettingsContent` or `WorkspaceSettingsContent` handles it (see
 the [README](./README.md)'s architecture section). Get the id into the
 array matching the wrong section (or neither) and the tab is

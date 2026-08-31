@@ -1,167 +1,135 @@
 # Surface the activity log in the UI
 
-`ActivityLogRepository::getRecentForProject()` already exists and
-already does the right query (`latest()->limit(15)`, eager-loading
-`user`) — it's just never called. This guide wires it all the way
-through to a real "Recent activity" panel on the project page.
+`ActivityLogService::getRecentForUser()` already powers the Dashboard's
+"Recent Work Activity" panel, and `getRecentForProject()` already
+powers a project's **Activity** issue view (see
+[`../issue-views/README.md`](../issue-views/README.md)) — both render
+the same `ActivityLogs`/`ActivityLogItem` component pair off the same
+`ActivityLogEntry` shape. This guide adds a third surface: a "Recent
+account activity" panel on the Account → Security & access settings
+tab, reusing `getRecentForUser()` (the exact same read method the
+Dashboard already calls) rather than adding a new one.
 
-## Step 1 — Expose the read method on the Service
+## Step 1 — Thread the read method into the Settings controller
 
-File: `app/Services/ActivityLogService.php`
+File: `app/Http/Controllers/SettingsController.php`
 
 ```php
-<?php
-
-namespace App\Services;
-
-use App\Models\ActivityLog;
-use App\Repositories\ActivityLogRepository;
-use Illuminate\Support\Collection;
-
-class ActivityLogService
+public function index(Request $request): Response
 {
-    public function __construct(
-        protected ActivityLogRepository $activityLogRepository
-    ) {}
+    $user = $request->user();
+    // ...existing $projects/$selectedProject/etc. setup...
 
-    public function log(?int $projectId, string $body, ?int $userId = null): ActivityLog
-    {
-        return ActivityLog::query()->create([
-            'project_id' => $projectId,
-            'user_id' => $userId ?? auth()->id(),
-            'body' => $body,
-        ]);
-    }
-
-    public function getRecentForProject(int $projectId): Collection
-    {
-        return $this->activityLogRepository->getRecentForProject($projectId);
-    }
+    return Inertia::render('Settings/Index', [
+        // ...existing keys...
+        'sessions' => $this->userService->getUserSessions($user),
+        'accountActivity' => $this->activityLogService
+            ->getRecentForUser($user->id, 15)
+            ->map(fn ($entry) => [
+                'id' => $entry->id,
+                'body' => $entry->body,
+                'userName' => $entry->user?->name,
+                'createdAt' => $entry->created_at->diffForHumans(),
+            ]),
+    ]);
 }
 ```
 
-`ActivityLogService::log()` currently builds the `ActivityLog` model
-directly rather than going through `ActivityLogRepository` at all —
-that's an existing inconsistency with the
-[Controller → Service → Repository](../architecture/02-backend-layered-architecture.md)
-rule ("every Eloquent query lives in the Repository"), pre-dating this
-guide; `getRecentForProject()` above is written the *correct* way
-(delegating to the Repository) so as not to compound the
-inconsistency further — don't copy `log()`'s direct-model-access shape
-for new methods.
+`ActivityLogService` is already injected into this Controller for
+other settings features, so no constructor change is needed — just
+call the method it already exposes. Map to the same
+`{ id, body, userName, createdAt }` shape `DashboardController` and
+`ProjectController` already use (`createdAt` pre-formatted server-side
+via `diffForHumans()`) so the frontend doesn't need a second shape or
+formatter for what's the same `ActivityLogEntry` type.
 
-## Step 2 — Thread it into the project page
+## Step 2 — Pass it down to the tab
 
-File: `app/Http/Controllers/ProjectController.php`
-
-```php
-public function __construct(
-    ProjectService $projectService,
-    IssueService $issueService,
-    UserService $userService,
-    ActivityLogService $activityLogService
-) {
-    $this->projectService = $projectService;
-    $this->issueService = $issueService;
-    $this->userService = $userService;
-    $this->activityLogService = $activityLogService;
-}
-```
-
-```php
-return Inertia::render('Projects/Show', [
-    'project' => $project,
-    'projects' => $projects,
-    'issues' => $issues,
-    'queryParams' => request()->query() ?: null,
-    'filters' => $filters,
-    'savedFilters' => $project->savedFilters()->latest()->get(),
-    'users' => $this->userService->getAssignableUsersForProject($project->id),
-    'recentActivity' => $this->activityLogService->getRecentForProject($project->id)
-        ->map(fn ($entry) => [
-            'id' => $entry->id,
-            'body' => $entry->body,
-            'userName' => $entry->user?->name,
-            'createdAt' => $entry->created_at,
-        ]),
-]);
-```
-
-Map to a plain array rather than passing the Eloquent collection
-straight through — the same convention every other prop-mapping
-method in this codebase follows (see `SettingsController`'s
-`mapMembers()`/`mapInvitations()`/`mapRoles()` for the established
-shape), so the frontend only ever depends on a stable, intentional
-shape rather than every column the model happens to have.
-
-## Step 3 — Render it
-
-New type, file: `resources/js/types/ActivityLog.ts`
-
-```ts
-export interface ActivityLogEntry {
-    id: number;
-    body: string;
-    userName: string | null;
-    createdAt: string;
-}
-```
-
-New component, file:
-`resources/js/Components/Molecules/ActivityFeed/ActivityFeed.tsx`
+File: `resources/js/Pages/Settings/Index.tsx`
 
 ```tsx
-import { ActivityLogEntry } from '@/types/ActivityLog';
-import { formatTimeAgo } from '@/utils/time';
-
-interface ActivityFeedProps {
-    entries: ActivityLogEntry[];
+interface SettingsIndexProps {
+    // ...existing props...
+    accountActivity?: ActivityLogEntry[];
 }
 
-export default function ActivityFeed({ entries }: ActivityFeedProps) {
-    if (entries.length === 0) {
-        return (
-            <p className="py-6 text-center text-xs text-[var(--text-muted-color)]">
-                No activity yet.
-            </p>
-        );
-    }
+export default function SettingsIndex({
+    // ...existing props...
+    accountActivity = [],
+}: SettingsIndexProps) {
+    // ...
 
+    {isAccountSettingsTabId(activeTab) ? (
+        <AccountSettingsContent
+            tabId={activeTab}
+            // ...existing props...
+            accountActivity={accountActivity}
+        />
+    ) : ( /* ...unchanged... */ )}
+}
+```
+
+Then thread `accountActivity` one level further through
+`AccountSettingsContent`'s `tabId === 'security-access'` branch into
+`AccountSettingsSecurityTab`, the same way `sessions` already flows
+today.
+
+## Step 3 — Render it with the existing components
+
+File: `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsSecurityTab.tsx`
+
+```tsx
+import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
+import { ActivityLogEntry } from '@/types/ActivityLog';
+
+interface AccountSettingsSecurityTabProps {
+    sessions?: Session[];
+    accountActivity?: ActivityLogEntry[];
+}
+
+export default function AccountSettingsSecurityTab({
+    sessions = [],
+    accountActivity = [],
+}: AccountSettingsSecurityTabProps) {
     return (
-        <div className="space-y-2">
-            {entries.map((entry) => (
-                <div key={entry.id} className="text-sm">
-                    <span className="text-[var(--text-color)]">
-                        {entry.userName ?? 'Someone'}
-                    </span>{' '}
-                    <span className="text-[var(--text-gray-color)]">
-                        {entry.body}
-                    </span>
-                    <p className="text-xs text-[var(--text-muted-color)]">
-                        {formatTimeAgo(entry.createdAt)} ago
-                    </p>
+        <div className="space-y-5">
+            {/* ...existing Password/Active sessions/Session expiry panels... */}
+
+            <SettingsPanel
+                title="Recent account activity"
+                description="The last actions taken on your account, across every project."
+                icon="Activity"
+            >
+                <div className="px-2 pb-2">
+                    <ActivityLogs logs={accountActivity} />
                 </div>
-            ))}
+            </SettingsPanel>
+
+            {/* ...existing Delete account panel... */}
         </div>
     );
 }
 ```
 
-Then render `<ActivityFeed entries={recentActivity} />` from wherever
-`Pages/Projects/Show.tsx` makes sense to add it (a sidebar panel next
-to the issue list is the natural spot, mirroring how
-[the notification bell popup](../notifications/03-frontend-backend-wiring-overview.md)
-is a self-contained list-of-items component of its own).
+No new list/empty-state/icon-coloring code — `ActivityLogs` already
+handles an empty array (its own empty state) and `ActivityLogItem`
+already derives each entry's colored dot from its body text via
+`getActivityLogVisual()` (`resources/js/utils/activityLog.ts`). This is
+the payoff of the Dashboard and project Activity view already sharing
+one component pair instead of each rolling its own list markup — a
+third surface is a data-plumbing change, not a new UI.
 
 ## Tests
 
-- `tests/Feature/ActivityLogServiceTest.php` (new file — none exists
-  today) — a test for `getRecentForProject()` asserting it returns
-  entries for the right project only, ordered newest-first, capped at
-  15.
-- `tests/Feature/ProjectControllerTest.php` — add a test asserting
-  `show()`'s Inertia response includes a `recentActivity` prop shaped
-  correctly.
-- `resources/js/Components/Molecules/ActivityFeed/ActivityFeed.test.tsx`
-  (new file) — render with entries, assert each renders; render with
-  an empty array, assert the "No activity yet." empty state.
+- `tests/Feature/SettingsControllerTest.php` — add a case asserting
+  the Inertia response includes an `accountActivity` prop shaped like
+  `{ id, body, userName, createdAt }`, mirroring however
+  `DashboardControllerTest` (if one exists) already asserts
+  `activityLogs`.
+- `resources/js/Pages/Settings/Index.test.tsx` — add a case asserting
+  `accountActivity` reaches `AccountSettingsSecurityTab` when
+  `tab=security-access`.
+- `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsSecurityTab.test.tsx` —
+  add a case rendering with a couple of `accountActivity` entries and
+  asserting they show up, plus a case with an empty array asserting
+  `ActivityLogs`'s empty state renders.

@@ -25,26 +25,39 @@ HandleInertiaRequests::share()
         │
         ▼
 PageHeader.tsx
-  - owns `showNotificationsPopup` (local state, toggled by the Bell icon button)
+  - reads `notifications` via usePage<PageProps>().props itself, just
+    to compute `unreadNotificationsCount` for the small red badge
+    rendered on the Bell icon (capped at "9+")
+  - owns `showNotificationsPopup` (local state, toggled by the Bell
+    icon button) and closes it on click-outside/Escape (both the
+    button and the popup sit inside one `ref`-tracked wrapper `div`)
         │
         ▼ (only rendered while open)
 NotificationsPopup.tsx
   - reads `notifications` via usePage<PageProps>().props (not its own fetch)
-  - owns `onlyUnread` (local filter state)
+  - owns `onlyUnread` (read/unread filter) and `activeFilter`
+    (`NotificationFilter` — `'all'` or one `NotificationTypes` value)
   - computes `unreadCount` = notifications.filter(n => !n.read).length
+  - `filteredNotifications` applies both `onlyUnread` and
+    `activeFilter` before handing the list down
         │
-        ├─▶ NotificationHeader.tsx   (unread badge, "Mark all as read" button, "Only show unread" toggle)
-        └─▶ NotificationsList.tsx    (maps to NotificationItem, or NotificationEmptyState if empty)
-                    │
-                    └─▶ NotificationItem.tsx (title, message, "View details" link to action_url, unread dot)
+        ├─▶ NotificationHeader.tsx      ("N unread" text, "Mark all as
+        │     read" icon button, "Only show unread" filter-icon toggle)
+        ├─▶ NotificationFilterTabs.tsx  (All/Success/Info/Warning/Error
+        │     pill tabs, one per `NotificationTypes` value)
+        └─▶ NotificationsList.tsx       (maps to NotificationItem, or
+                    │                     NotificationEmptyState if empty)
+                    └─▶ NotificationItem.tsx (type-colored dot + title,
+                          message, date, a "Read"/"Unread" status
+                          control — clicking "Unread" is what marks it
+                          read — and a "View details" link to
+                          action_url when present)
 ```
 
-Because the prop is refreshed on every Inertia visit, the badge/list
-update after any action that causes a redirect back (which is every
-mutating notification action below) — there's no polling, no
-WebSocket, no separate "unread count" endpoint. The Bell icon button
-itself carries no badge/dot of its own; the only unread indicator
-lives inside the popup once it's opened.
+Because the prop is refreshed on every Inertia visit, the bell badge
+and list update after any action that causes a redirect back (which is
+every mutating notification action below) — there's no polling, no
+WebSocket, no separate "unread count" endpoint.
 
 There *is* a `GET /notifications` route
 (`NotificationController::index()`, name `notifications.index`,
@@ -60,7 +73,7 @@ Three mutating actions, all Inertia requests that redirect back
 local component state directly:
 
 ```
-NotificationItem's unread dot clicked
+NotificationItem's "Unread" status control clicked
         │
         ▼
 NotificationsPopup::handleMarkAsRead(id)
@@ -166,6 +179,7 @@ wait for a fresh `notificationSettings` prop to confirm the new value.
   `AccountSettingsContent/AccountSettingsNotificationsTab.tsx`,
   `AccountSettingsContent/AccountSettingsNotificationTypeRow.tsx`
 - `resources/js/Components/Molecules/NotificationHeader/NotificationHeader.tsx`,
+  `NotificationFilterTabs/NotificationFilterTabs.tsx`,
   `NotificationItem/NotificationItem.tsx`,
   `NotificationEmptyState/NotificationEmptyState.tsx`
 
