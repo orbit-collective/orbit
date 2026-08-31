@@ -5,6 +5,7 @@ import NewProjectModal from '@/Components/Organisms/NewProjectModal/NewProjectMo
 import { useShortcuts } from '@/context/ShortcutContext';
 import { PageProps } from '@/types';
 import { Project } from '@/types/Projects';
+import { SETTINGS_TABS, getActiveSettingsTab } from '@/types/Settings';
 import { ShortcutDefinition } from '@/types/Shortcuts';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
@@ -16,6 +17,11 @@ import NavItem from '../../Molecules/NavItem/NavItem';
 import UserBadge from '../../Molecules/UserBadge/UserBadge';
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed';
+
+const SETTINGS_NAV_SECTIONS = [
+    { title: 'Account', section: 'account' as const },
+    { title: 'Workspace', section: 'workspace' as const },
+];
 
 const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -31,6 +37,9 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
         url,
         props: { auth },
     } = usePage<PageProps>();
+
+    const isSettingsPage = url.startsWith('/settings');
+    const activeSettingsTab = useMemo(() => getActiveSettingsTab(url), [url]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -187,81 +196,117 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                         />
                     </nav>
 
-                    <div className={'mt-5 flex min-h-0 flex-1 flex-col'}>
-                        {isCollapsed ? (
-                            <button
-                                onClick={() => setIsNewProjectModalOpen(true)}
-                                title="New project"
-                                aria-label="New project"
-                                className="mb-1.5 flex shrink-0 items-center justify-center rounded-md py-1.5 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
-                            >
-                                <Icon name="Plus" size={16} />
-                            </button>
-                        ) : (
-                            <Link
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    setIsNewProjectModalOpen(true);
-                                }}
-                                className={
-                                    'group mb-1.5 flex shrink-0 items-center justify-between rounded-md px-2.5 py-1'
-                                }
-                            >
-                                <h3
+                    {isSettingsPage ? (
+                        <div className="mt-5 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+                            {SETTINGS_NAV_SECTIONS.map(({ title, section }) => (
+                                <div key={section}>
+                                    {!isCollapsed && (
+                                        <h3 className="mb-1.5 px-2.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                                            {title}
+                                        </h3>
+                                    )}
+                                    <nav className="flex flex-col">
+                                        {SETTINGS_TABS.filter(
+                                            (tab) => tab.section === section,
+                                        ).map((tab) => (
+                                            <NavItem
+                                                key={tab.id}
+                                                icon={tab.icon}
+                                                label={tab.label}
+                                                link={`/settings?tab=${tab.id}`}
+                                                isActive={
+                                                    tab.id === activeSettingsTab
+                                                }
+                                                disabled={!tab.enabled}
+                                                collapsed={isCollapsed}
+                                            />
+                                        ))}
+                                    </nav>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className={'mt-5 flex min-h-0 flex-1 flex-col'}>
+                            {isCollapsed ? (
+                                <button
+                                    onClick={() =>
+                                        setIsNewProjectModalOpen(true)
+                                    }
+                                    title="New project"
+                                    aria-label="New project"
+                                    className="mb-1.5 flex shrink-0 items-center justify-center rounded-md py-1.5 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                >
+                                    <Icon name="Plus" size={16} />
+                                </button>
+                            ) : (
+                                <Link
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setIsNewProjectModalOpen(true);
+                                    }}
                                     className={
-                                        'text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
+                                        'group mb-1.5 flex shrink-0 items-center justify-between rounded-md px-2.5 py-1'
                                     }
                                 >
-                                    PROJECTS
-                                </h3>
-                                <div className="flex items-center gap-1.5 text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]">
-                                    {projects.length > 0 && (
-                                        <span className="text-xs font-medium">
-                                            {projects.length}
-                                        </span>
-                                    )}
-                                    <Icon name={'Plus'} size={14} />
-                                </div>
-                            </Link>
-                        )}
-                        <nav
-                            /* eslint-disable-next-line react/no-unknown-property */
-                            scroll-region={''}
-                            className={'flex min-h-0 flex-col overflow-y-auto'}
-                        >
-                            {projects.map((projectElement: Project) => {
-                                const projectLink = `/projects/${projectElement.id}`;
-
-                                const isActive =
-                                    url === projectLink ||
-                                    url.startsWith(`${projectLink}/`) ||
-                                    url.startsWith(`${projectLink}?`);
-
-                                return (
-                                    <NavItem
-                                        key={projectElement.id}
-                                        icon="FolderGit2"
-                                        iconClassName={`${
-                                            getColorTheme(projectElement.color)
-                                                .accent
-                                        } h-5 w-5 rounded-md p-1`}
-                                        label={
-                                            projectElement.name.length > 16
-                                                ? projectElement.name.substring(
-                                                      0,
-                                                      16,
-                                                  ) + '...'
-                                                : projectElement.name
+                                    <h3
+                                        className={
+                                            'text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
                                         }
-                                        link={projectLink}
-                                        isActive={isActive}
-                                        preserveScroll
-                                        collapsed={isCollapsed}
-                                    />
-                                );
-                            })}
-                        </nav>
-                    </div>
+                                    >
+                                        PROJECTS
+                                    </h3>
+                                    <div className="flex items-center gap-1.5 text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]">
+                                        {projects.length > 0 && (
+                                            <span className="text-xs font-medium">
+                                                {projects.length}
+                                            </span>
+                                        )}
+                                        <Icon name={'Plus'} size={14} />
+                                    </div>
+                                </Link>
+                            )}
+                            <nav
+                                /* eslint-disable-next-line react/no-unknown-property */
+                                scroll-region={''}
+                                className={
+                                    'flex min-h-0 flex-col overflow-y-auto'
+                                }
+                            >
+                                {projects.map((projectElement: Project) => {
+                                    const projectLink = `/projects/${projectElement.id}`;
+
+                                    const isActive =
+                                        url === projectLink ||
+                                        url.startsWith(`${projectLink}/`) ||
+                                        url.startsWith(`${projectLink}?`);
+
+                                    return (
+                                        <NavItem
+                                            key={projectElement.id}
+                                            icon="FolderGit2"
+                                            iconClassName={`${
+                                                getColorTheme(
+                                                    projectElement.color,
+                                                ).accent
+                                            } h-5 w-5 rounded-md p-1`}
+                                            label={
+                                                projectElement.name.length > 16
+                                                    ? projectElement.name.substring(
+                                                          0,
+                                                          16,
+                                                      ) + '...'
+                                                    : projectElement.name
+                                            }
+                                            link={projectLink}
+                                            isActive={isActive}
+                                            preserveScroll
+                                            collapsed={isCollapsed}
+                                        />
+                                    );
+                                })}
+                            </nav>
+                        </div>
+                    )}
                 </div>
 
                 <div

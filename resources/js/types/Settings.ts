@@ -149,6 +149,22 @@ export const isEnabledSettingsTabId = (value: SettingsTabId): boolean => {
     return SETTINGS_TABS.find((tab) => tab.id === value)?.enabled ?? false;
 };
 
+export const getActiveSettingsTab = (url: string): SettingsTabId => {
+    const [, queryString = ''] = url.split('?');
+    const params = new URLSearchParams(queryString);
+    const tabParam = params.get('tab');
+
+    if (
+        tabParam &&
+        isSettingsTabId(tabParam) &&
+        isEnabledSettingsTabId(tabParam)
+    ) {
+        return tabParam;
+    }
+
+    return SETTINGS_DEFAULT_TAB;
+};
+
 export const ACCOUNT_SETTINGS_TAB_IDS = [
     'preferences',
     'profile',

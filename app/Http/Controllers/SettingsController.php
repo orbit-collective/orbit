@@ -47,6 +47,7 @@ class SettingsController extends Controller
             && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
 
         return Inertia::render('Settings/Index', [
+            'projects' => $projects,
             'sessions' => $this->userService->getUserSessions($user),
             'notificationSettings' => $this->notificationSettingService->getAllSettings($user->id),
             'memberProjects' => $projects->map(fn (Project $project) => [

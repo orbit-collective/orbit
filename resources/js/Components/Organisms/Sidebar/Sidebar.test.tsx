@@ -366,4 +366,36 @@ describe('Sidebar Component', () => {
 
         expect(screen.getByTestId('new-project-modal')).toBeInTheDocument();
     });
+
+    test('renders settings tabs instead of projects when on the settings page', () => {
+        pageState.url = '/settings';
+        render(
+            <Sidebar
+                projects={[makeProject({ id: 1, name: 'Test Project' })]}
+            />,
+        );
+
+        expect(screen.getByText('Account')).toBeInTheDocument();
+        expect(screen.getByText('Workspace')).toBeInTheDocument();
+        expect(screen.getByText('Preferences')).toBeInTheDocument();
+        expect(screen.getByText('Members')).toBeInTheDocument();
+        expect(screen.queryByText('Test Project')).not.toBeInTheDocument();
+        expect(screen.queryByText('PROJECTS')).not.toBeInTheDocument();
+    });
+
+    test('marks the active settings tab based on the url', () => {
+        pageState.url = '/settings?tab=members';
+        render(<Sidebar projects={[]} />);
+
+        const membersLink = screen.getByText('Members').closest('a');
+        expect(membersLink).toHaveClass('text-[var(--text-color)]');
+    });
+
+    test('renders disabled settings tabs without a link', () => {
+        pageState.url = '/settings';
+        render(<Sidebar projects={[]} />);
+
+        expect(screen.getByText('Labels').closest('a')).toBeNull();
+        expect(screen.getAllByText('Soon').length).toBeGreaterThan(0);
+    });
 });
