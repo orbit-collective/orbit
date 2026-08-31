@@ -49,8 +49,12 @@ describe('ShortcutHelpModal Component', () => {
     test('renders every shortcut grouped by category', () => {
         render(<ShortcutHelpModal />);
 
-        expect(screen.getByText('Action')).toBeInTheDocument();
-        expect(screen.getByText('Navigation')).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Action' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Navigation' }),
+        ).toBeInTheDocument();
         expect(screen.getByText('Show keyboard shortcuts')).toBeInTheDocument();
         expect(screen.getByText('Go to Projects')).toBeInTheDocument();
         expect(screen.getByText('Go to issues')).toBeInTheDocument();
@@ -177,6 +181,65 @@ describe('ShortcutHelpModal Component', () => {
             'span.rounded-lg.bg-\\[var\\(--bg-light-color\\)\\]',
         );
         expect(avatars.length).toBe(shortcutsHolder.shortcuts.length);
+    });
+
+    test('renders an "All" tab plus one tab per category', () => {
+        render(<ShortcutHelpModal />);
+
+        expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute(
+            'aria-pressed',
+            'true',
+        );
+        expect(
+            screen.getByRole('button', { name: 'Action' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Navigation' }),
+        ).toBeInTheDocument();
+    });
+
+    test('filters to a single category when its tab is clicked', async () => {
+        const user = userEvent.setup();
+        render(<ShortcutHelpModal />);
+
+        await user.click(screen.getByRole('button', { name: 'Navigation' }));
+
+        expect(
+            screen.getByRole('button', { name: 'Navigation' }),
+        ).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByText('Go to Projects')).toBeInTheDocument();
+        expect(screen.getByText('Go to issues')).toBeInTheDocument();
+        expect(
+            screen.queryByText('Show keyboard shortcuts'),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('heading', { name: 'Action' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('clicking "All" clears the active category filter', async () => {
+        const user = userEvent.setup();
+        render(<ShortcutHelpModal />);
+
+        await user.click(screen.getByRole('button', { name: 'Navigation' }));
+        await user.click(screen.getByRole('button', { name: 'All' }));
+
+        expect(screen.getByText('Show keyboard shortcuts')).toBeInTheDocument();
+        expect(screen.getByText('Go to Projects')).toBeInTheDocument();
+    });
+
+    test('combines the category filter with the search query', async () => {
+        const user = userEvent.setup();
+        render(<ShortcutHelpModal />);
+
+        await user.click(screen.getByRole('button', { name: 'Navigation' }));
+        await user.type(
+            screen.getByPlaceholderText('Search shortcuts...'),
+            'issues',
+        );
+
+        expect(screen.getByText('Go to issues')).toBeInTheDocument();
+        expect(screen.queryByText('Go to Projects')).not.toBeInTheDocument();
     });
 
     test('does not render a border on the modal shell, header, or footer', () => {
