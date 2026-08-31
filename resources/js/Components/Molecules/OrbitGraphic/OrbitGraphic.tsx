@@ -10,7 +10,7 @@ export const OrbitGraphic = () => (
             <div className="border-[var(--bg-light-color)]/60 absolute h-full w-full rounded-full border border-dashed" />
 
             <div className="absolute h-16 w-16 rounded-full bg-[var(--accent-color)] opacity-30 blur-xl" />
-            <div className="absolute flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-transparent shadow-lg">
+            <div className="absolute flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-transparent shadow-lg">
                 <img
                     src={image}
                     alt={'Logo'}
