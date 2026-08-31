@@ -6,22 +6,40 @@ import { useShortcuts } from '@/context/ShortcutContext';
 import { PageProps } from '@/types';
 import { Project } from '@/types/Projects';
 import { ShortcutDefinition } from '@/types/Shortcuts';
+import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
+import logo from '@assets/1820.png';
 import { Link, router, usePage } from '@inertiajs/react';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 import NavItem from '../../Molecules/NavItem/NavItem';
 import UserBadge from '../../Molecules/UserBadge/UserBadge';
 
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed';
+
 const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(
+        () =>
+            typeof window !== 'undefined' &&
+            localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true',
+    );
     const userMenuRef = useRef<HTMLDivElement>(null);
     const {
         url,
         props: { auth },
     } = usePage<PageProps>();
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        localStorage.setItem(
+            SIDEBAR_COLLAPSED_STORAGE_KEY,
+            String(isCollapsed),
+        );
+    }, [isCollapsed]);
 
     useEffect(() => {
         if (!isUserMenuOpen) return;
@@ -80,18 +98,66 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
             )}
 
             <aside
-                className={`fixed inset-y-0 left-0 z-50 flex h-screen w-[240px] shrink-0 flex-col justify-between border-r border-solid border-r-[var(--bg-light-color)] bg-[var(--bg-dark-color)] p-3 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} `}
+                className={cn(
+                    'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col justify-between overflow-hidden bg-[var(--bg-color)] p-3 pr-1 transition-all duration-300 ease-in-out md:relative md:translate-x-0',
+                    isCollapsed ? 'w-[72px]' : 'w-[240px]',
+                    isOpen ? 'translate-x-0' : '-translate-x-full',
+                )}
             >
                 <div className="flex min-h-0 flex-1 flex-col">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                        <div className="flex flex-1 cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 hover:bg-[var(--bg-light-color)]">
-                            <UserBadge name="Acme Inc." size="sm" />
+                    <div
+                        className={cn(
+                            'mb-3 flex items-center gap-2',
+                            isCollapsed ? 'flex-col' : 'justify-between',
+                        )}
+                    >
+                        <Link
+                            href="/"
+                            className={cn(
+                                'flex min-w-0 items-center gap-2 overflow-hidden rounded-lg',
+                                !isCollapsed && 'flex-1',
+                            )}
+                        >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg">
+                                <img
+                                    src={logo}
+                                    alt="Orbit"
+                                    className="h-8 w-8 object-contain"
+                                    width={32}
+                                    height={32}
+                                />
+                            </div>
+                            {!isCollapsed && (
+                                <span className="truncate text-sm font-semibold text-[var(--text-color)]">
+                                    Orbit
+                                </span>
+                            )}
+                        </Link>
+
+                        <button
+                            onClick={() => setIsCollapsed((prev) => !prev)}
+                            aria-label={
+                                isCollapsed
+                                    ? 'Expand sidebar'
+                                    : 'Collapse sidebar'
+                            }
+                            title={
+                                isCollapsed
+                                    ? 'Expand sidebar'
+                                    : 'Collapse sidebar'
+                            }
+                            className="hidden shrink-0 rounded-md p-2 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] md:flex"
+                        >
                             <Icon
-                                name="ChevronDown"
-                                size={14}
-                                color="var(--text-gray-color)"
+                                name={
+                                    isCollapsed
+                                        ? 'PanelLeftOpen'
+                                        : 'PanelLeftClose'
+                                }
+                                size={16}
                             />
-                        </div>
+                        </button>
+
                         <button
                             onClick={() => setIsOpen(false)}
                             className="rounded-md p-2 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] md:hidden"
@@ -109,6 +175,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             badge="Alt B"
                             link={'/'}
                             isActive={url === '/'}
+                            collapsed={isCollapsed}
                         />
                         <NavItem
                             icon="LayoutList"
@@ -116,35 +183,47 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             badge={'Alt P'}
                             link={'/projects'}
                             isActive={url === '/projects'}
+                            collapsed={isCollapsed}
                         />
                     </nav>
 
                     <div className={'mt-5 flex min-h-0 flex-1 flex-col'}>
-                        <Link
-                            onClick={(e) => {
-                                e.preventDefault();
-                                setIsNewProjectModalOpen(true);
-                            }}
-                            className={
-                                'group mb-1.5 flex shrink-0 items-center justify-between rounded-md px-2.5 py-1'
-                            }
-                        >
-                            <h3
+                        {isCollapsed ? (
+                            <button
+                                onClick={() => setIsNewProjectModalOpen(true)}
+                                title="New project"
+                                aria-label="New project"
+                                className="mb-1.5 flex shrink-0 items-center justify-center rounded-md py-1.5 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                            >
+                                <Icon name="Plus" size={16} />
+                            </button>
+                        ) : (
+                            <Link
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setIsNewProjectModalOpen(true);
+                                }}
                                 className={
-                                    'text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
+                                    'group mb-1.5 flex shrink-0 items-center justify-between rounded-md px-2.5 py-1'
                                 }
                             >
-                                PROJECTS
-                            </h3>
-                            <div className="flex items-center gap-1.5 text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]">
-                                {projects.length > 0 && (
-                                    <span className="text-xs font-medium">
-                                        {projects.length}
-                                    </span>
-                                )}
-                                <Icon name={'Plus'} size={14} />
-                            </div>
-                        </Link>
+                                <h3
+                                    className={
+                                        'text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
+                                    }
+                                >
+                                    PROJECTS
+                                </h3>
+                                <div className="flex items-center gap-1.5 text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]">
+                                    {projects.length > 0 && (
+                                        <span className="text-xs font-medium">
+                                            {projects.length}
+                                        </span>
+                                    )}
+                                    <Icon name={'Plus'} size={14} />
+                                </div>
+                            </Link>
+                        )}
                         <nav
                             /* eslint-disable-next-line react/no-unknown-property */
                             scroll-region={''}
@@ -177,6 +256,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                         link={projectLink}
                                         isActive={isActive}
                                         preserveScroll
+                                        collapsed={isCollapsed}
                                     />
                                 );
                             })}
@@ -192,27 +272,31 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                 >
                     <div
                         onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                        className={
-                            'flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 hover:bg-[var(--bg-light-color)]'
-                        }
+                        className={cn(
+                            'flex cursor-pointer items-center rounded-lg px-2 py-1.5 hover:bg-[var(--bg-light-color)]',
+                            isCollapsed ? 'justify-center' : 'justify-between',
+                        )}
                     >
                         <UserBadge
                             name={auth.user.name}
                             email={auth.user.email}
                             avatarSrc={auth.user.avatar ?? undefined}
                             size="md"
-                            showDetails
+                            showDetails={!isCollapsed}
+                            showName={!isCollapsed}
                             showTooltip={false}
                         />
-                        <Icon
-                            name="ChevronDown"
-                            size={14}
-                            color="var(--text-gray-color)"
-                        />
+                        {!isCollapsed && (
+                            <Icon
+                                name="ChevronDown"
+                                size={14}
+                                color="var(--text-gray-color)"
+                            />
+                        )}
                     </div>
 
                     {isUserMenuOpen && (
-                        <DropdownMenu direction="top">
+                        <DropdownMenu direction="top" stretch={!isCollapsed}>
                             <DropdownItem
                                 label={
                                     <>
