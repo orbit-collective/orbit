@@ -42,22 +42,26 @@ const UserBadge: React.FC<UserBadgeProps> = ({
             tooltip={showTooltip}
         >
             <Avatar src={avatarSrc} initials={name.charAt(0)} size={size} />
-            <div className={'flex min-w-0 flex-col'}>
-                <span
-                    className={`overflow-hidden overflow-ellipsis whitespace-nowrap text-sm font-normal ${avatarSrc ? 'text-[var(--text-color)]' : 'text-[var(--text-gray-color)]'}`}
-                >
-                    {showName && name}
-                </span>
-                {showDetails && email && (
-                    <span
-                        className={
-                            'text-2xs overflow-hidden overflow-ellipsis whitespace-nowrap font-normal text-[var(--text-gray-color)]'
-                        }
-                    >
-                        {email}
-                    </span>
-                )}
-            </div>
+            {(showName || (showDetails && email)) && (
+                <div className={'flex min-w-0 flex-col'}>
+                    {showName && (
+                        <span
+                            className={`overflow-hidden overflow-ellipsis whitespace-nowrap text-sm font-normal ${avatarSrc ? 'text-[var(--text-color)]' : 'text-[var(--text-gray-color)]'}`}
+                        >
+                            {name}
+                        </span>
+                    )}
+                    {showDetails && email && (
+                        <span
+                            className={
+                                'text-2xs overflow-hidden overflow-ellipsis whitespace-nowrap font-normal text-[var(--text-gray-color)]'
+                            }
+                        >
+                            {email}
+                        </span>
+                    )}
+                </div>
+            )}
         </Badge>
     );
 };
