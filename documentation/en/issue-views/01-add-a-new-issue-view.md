@@ -1,16 +1,16 @@
 # Add a new issue view
 
-Worked example: adding a fourth view, **Timeline**. Six places need
-it — miss one and the new view either can't be reached, has no
-shortcut, isn't offered as a default, or renders a broken preview,
-depending on which.
+Worked example: adding a fifth view, **Timeline**, alongside the
+existing List/Board/Calendar/Activity four. Six places need it — miss
+one and the new view either can't be reached, has no shortcut, isn't
+offered as a default, or renders a broken preview, depending on which.
 
 ## Step 1 — Widen the type
 
 File: `resources/js/types/Issues.ts`
 
 ```ts
-export type IssuePageLooks = 'List' | 'Board' | 'Calendar' | 'Timeline';
+export type IssuePageLooks = 'List' | 'Board' | 'Calendar' | 'Activity' | 'Timeline';
 ```
 
 ## Step 2 — Render it
@@ -48,14 +48,20 @@ File: `resources/js/Pages/Projects/Show.tsx`
     </>
 ) : selectedLook === 'Calendar' ? (
     <CalendarView issues={issues.data} />
+) : selectedLook === 'Activity' ? (
+    <ActivityLogs logs={activityLogs} />
 ) : (
     <TimelineView issues={issues.data} />
 )}
 ```
 
-Every existing view takes the same `issues.data` array and presents it
-differently — a new view is a new component consuming that same prop,
-not a new data-fetching path. Add
+List, Board, and Calendar all take the same `issues.data` array and
+present it differently — Activity is the odd one out, reading a
+separate `activityLogs` prop instead (see
+[`../activity-log/README.md`](../activity-log/README.md) for where
+that comes from). A new view built on top of `issues.data`, like this
+Timeline example, is a new component consuming that same prop, not a
+new data-fetching path. Add
 `import TimelineView from '@/Components/Organisms/TimelineView/TimelineView';`
 to the file's imports and build `TimelineView` following whichever
 existing view's internal structure is closest (a horizontal axis by
@@ -72,6 +78,7 @@ const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
             saved === 'List' ||
             saved === 'Board' ||
             saved === 'Calendar' ||
+            saved === 'Activity' ||
             saved === 'Timeline'
         ) {
             return saved;
@@ -117,6 +124,12 @@ const shortcuts = useMemo(
         },
         {
             key: '4',
+            description: 'Activity view',
+            category: 'View',
+            action: () => setSelectedLook('Activity'),
+        },
+        {
+            key: '5',
             description: 'Timeline view',
             category: 'View',
             action: () => setSelectedLook('Timeline'),
@@ -127,11 +140,12 @@ const shortcuts = useMemo(
 ```
 
 then a matching entry in the `tabs` array passed to `<PageHeader>`,
-copying the exact shape of the `List`/`Board`/`Calendar` entries
-(`{ id: 'Timeline', label: 'Timeline', icon: ..., isActive: selectedLook
-=== 'Timeline', onClick: () => setSelectedLook('Timeline') }`) —
-`PageHeader` renders each `tabs` entry as a nav button beneath the
-title. See
+copying the exact shape of the `List`/`Board`/`Calendar`/`Activity`
+entries (`{ id: 'Timeline', label: 'Timeline', icon: ..., isActive:
+selectedLook === 'Timeline', onClick: () => setSelectedLook('Timeline')
+}`) — `PageHeader` renders each `tabs` entry as a nav button beneath
+the title, in a horizontally-scrollable row on narrow viewports so
+adding a fifth tab doesn't need any layout changes of its own. See
 [`../shortcuts/02-register-a-global-shortcut.md`](../shortcuts/02-register-a-global-shortcut.md)
 for the general shape of adding a shortcut like this one, though this
 one is scoped to the project page rather than truly global.
@@ -143,7 +157,7 @@ File: `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsP
 ```ts
 const issueViewOptions: Array<{
     id: IssuePageLooks;
-    icon: 'Rows3' | 'Columns3' | 'CalendarDays' | 'ChartGantt';
+    icon: 'Rows3' | 'Columns3' | 'CalendarDays' | 'Activity' | 'ChartGantt';
     description: string;
 }> = [
     {
@@ -160,6 +174,11 @@ const issueViewOptions: Array<{
         id: 'Calendar',
         icon: 'CalendarDays',
         description: 'Issues plotted against their due dates.',
+    },
+    {
+        id: 'Activity',
+        icon: 'Activity',
+        description: 'A chronological feed of all issue activity.',
     },
     {
         id: 'Timeline',
@@ -180,6 +199,7 @@ const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         saved === 'List' ||
         saved === 'Board' ||
         saved === 'Calendar' ||
+        saved === 'Activity' ||
         saved === 'Timeline'
     ) {
         return saved;
@@ -207,6 +227,10 @@ function IssueViewPreview({ view }: { view: IssuePageLooks }) {
         return <CalendarPreview />;
     }
 
+    if (view === 'Activity') {
+        return <ActivityPreview />;
+    }
+
     if (view === 'Timeline') {
         return <TimelinePreview />;
     }
@@ -216,28 +240,29 @@ function IssueViewPreview({ view }: { view: IssuePageLooks }) {
 ```
 
 Add a `TimelinePreview` component following the same shape as
-`ListPreview`/`BoardPreview`/`CalendarPreview` in this file (small,
-purely decorative fixed-content mockups — they don't read real issue
-data, just render a few placeholder bars/blocks to illustrate the
-layout). Skipping this step doesn't break anything — the `if` chain's
+`ListPreview`/`BoardPreview`/`CalendarPreview`/`ActivityPreview` in
+this file (small, purely decorative fixed-content mockups — they don't
+read real issue data, just render a few placeholder bars/blocks to
+illustrate the layout; `ActivityPreview`'s three dots connected by a
+timeline line is the closest existing reference for a non-tabular
+view). Skipping this step doesn't break anything — the `if` chain's
 final `return <ListPreview />` fallback means Timeline's settings card
 would just silently show the List preview instead of its own.
 
 ## Tests
 
-- `resources/js/Pages/Projects/Show.test.tsx` (or wherever this page's
-  rendering is covered) — add a case asserting `selectedLook ===
-  'Timeline'` renders `TimelineView`, and a case for the
-  `localStorage` guard accepting `'Timeline'`.
+- `resources/js/Pages/Projects/Show.test.tsx` — add a case asserting
+  `selectedLook === 'Timeline'` renders `TimelineView`, and a case for
+  the `localStorage` guard accepting `'Timeline'`.
 - `resources/js/Layouts/MainLayout.test.tsx` — add a case for the new
-  view tab and its `'4'` shortcut, mirroring the existing
-  `List`/`Board`/`Calendar` test cases exactly (see the file's
-  existing `selectedLook: 'Board'`/`'Calendar'` test fixtures).
+  view tab and its `'5'` shortcut, mirroring the existing
+  `List`/`Board`/`Calendar`/`Activity` test cases exactly.
 - `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsPreferencesTab.test.tsx` —
   add a case selecting the Timeline card and asserting
   `localStorage.setItem` was called with `'Timeline'`.
 - `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsIssueViewCard.test.tsx` —
-  add a case asserting `view="Timeline"` renders `TimelinePreview`.
+  add a case asserting `view="Timeline"` renders `TimelinePreview`,
+  mirroring the existing `Activity`/`ActivityPreview` case.
 - `resources/js/Components/Organisms/TimelineView/TimelineView.test.tsx`
   (new file) — whatever coverage matches the new component's actual
   behavior, following `CalendarView.test.tsx`'s shape as the closest

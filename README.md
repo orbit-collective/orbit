@@ -16,23 +16,23 @@
 # Orbit
 
 Orbit is an issue and project tracker: create projects, track issues through a
-workflow, and see progress on a dashboard — as a List, a Kanban Board, or a
-Calendar, whichever fits the moment. It's built as a single Laravel +
-Inertia.js + React monolith, so there's no separate API to stand up and no
-client/server version drift to manage.
+workflow, and see progress on a dashboard — as a List, a Kanban Board, a
+Calendar, or an Activity feed, whichever fits the moment. It's built as a
+single Laravel + Inertia.js + React monolith, so there's no separate API to
+stand up and no client/server version drift to manage.
 
-### Edited: 29.08.2026
+### Edited: 31.08.2026
 
 ## What's inside
 
 - **Projects** with a name, color, description, and a slug-based URL. Each
-  project has its own issue list, board, and calendar view.
+  project has its own issue list, board, calendar, and activity view.
 - **Issues** with title, description, status, priority (high / medium / low),
   labels (bug, feature, performance, design, ux, chore), an assignee, a
   creator, and optional start/end dates.
-- **Three ways to look at the same data**: a sortable, searchable, paginated
-  table; a status-grouped board; and a calendar laid out by issue dates. Your
-  last choice is remembered per browser.
+- **Four ways to look at the same data**: a sortable, searchable, paginated
+  table; a status-grouped board; a calendar laid out by issue dates; and a
+  chronological activity feed. Your last choice is remembered per browser.
 - **Configurable table columns** — toggle which issue fields show up in the
   list view, saved per project.
 - **Saved filters** — store a named combination of search/label/status/
@@ -544,8 +544,8 @@ resources/js/
   Components/
     Atoms/            Smallest building blocks (Button, Badge, Input, BrandIcon, ...)
     Molecules/         Composed from atoms (BoardColumn, Breadcrumb, IssueRowDetail, ProjectPickerPanel, ...)
-    Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, AccountSettingsContent, WorkspaceSettingsContent, SettingsSidebar, ...)
-  Layouts/            Page shells (sidebar, top nav, ...)
+    Organisms/         Composed from molecules (IssueBoard, IssueTable, CalendarView, ActivityLogs, AccountSettingsContent, WorkspaceSettingsContent, Sidebar, PageHeader, ...)
+  Layouts/            Page shells (MainLayout composes the collapsible Sidebar + PageHeader around a project's content, GuestLayout wraps auth pages)
   context/            React context providers (alerts, theme, accent color, global modal, keyboard shortcuts)
   hooks/              Reusable hooks (saved filters, resizable table columns, floating-dropdown positioning, roles/members settings state, ...)
   types/              Shared TypeScript types (Issues, Projects, Users, Settings, Roles, Integrations, ProjectIntegrations, Theme, Accent, Notification, ...)

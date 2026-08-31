@@ -57,8 +57,6 @@ export default function Show({
         return 'List';
     });
 
-    console.log(activityLogs);
-
     return (
         <MainLayout
             selectedLook={selectedLook}

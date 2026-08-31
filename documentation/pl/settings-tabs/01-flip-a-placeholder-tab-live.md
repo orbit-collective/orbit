@@ -17,7 +17,7 @@ Plik: `resources/js/types/Settings.ts`
 },
 ```
 
-Ta jedna flaga wykonuje całą pracę "czy jest osiągalna" — sprawdzenie `isEnabledSettingsTabId()` w `Pages/Settings/Index.tsx` (zobacz sekcję architektury w [README](./README.md)) teraz pozwala `?tab=export` się rozstrzygnąć zamiast po cichu spaść z powrotem do `preferences`, a element nawigacji bocznej (`SettingsSidebar`, który renderuje każdą zakładkę z `SETTINGS_TABS` niezależnie od `enabled`) staje się klikalny zamiast wizualnie wyłączony. Żadna inna zmiana na froncie nie jest wymagana, żeby zakładka stała się *odwiedzalna* — kroki 2–3 dotyczą tego, żeby pokazywała coś prawdziwego, gdy już tam jesteś.
+Ta jedna flaga wykonuje całą pracę "czy jest osiągalna" — sprawdzenie `isEnabledSettingsTabId()` w `Pages/Settings/Index.tsx` (zobacz sekcję architektury w [README](./README.md)) teraz pozwala `?tab=export` się rozstrzygnąć zamiast po cichu spaść z powrotem do `preferences`, a element nawigacji staje się klikalny zamiast wizualnie wyłączony. Ten element nawigacji nie jest osobnym komponentem ustawień — to główny `Sidebar` aplikacji (`resources/js/Components/Organisms/Sidebar/Sidebar.tsx`) sam renderuje sekcje Account/Workspace bezpośrednio z `SETTINGS_TABS`, gdy tylko aktualny URL znajduje się pod `/settings`, wliczając wyłączone zakładki (zobacz [`../architecture/03-frontend-architecture-and-atomic-design.md`](../architecture/03-frontend-architecture-and-atomic-design.md)). Żadna inna zmiana na froncie nie jest wymagana, żeby zakładka stała się *odwiedzalna* — kroki 2–3 dotyczą tego, żeby pokazywała coś prawdziwego, gdy już tam jesteś.
 
 ## Krok 2 — Przeprowadź do niej prawdziwe dane (nie zostawiaj jej statycznej)
 

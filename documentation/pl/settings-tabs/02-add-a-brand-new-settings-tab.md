@@ -52,7 +52,7 @@ export const ACCOUNT_SETTINGS_TAB_IDS = [
 ] as const;
 ```
 
-`section: 'account'` oraz dodanie id do `ACCOUNT_SETTINGS_TAB_IDS` są oba wymagane, i niezależnie od siebie — pierwsze decyduje, pod jaką grupą paska bocznego (`accountTabs`/`workspaceTabs` w `Pages/Settings/Index.tsx`) renderuje się element nawigacji; drugie to to, co sprawdza `isAccountSettingsTabId()`, żeby zdecydować, czy `AccountSettingsContent` czy `WorkspaceSettingsContent` ją obsługuje (zobacz sekcję architektury w [README](./README.md)). Umieść id w tablicy pasującej do złej sekcji (albo żadnej) i zakładka jest wybieralna w pasku bocznym, ale nie rozstrzyga się do łańcucha `if` żadnego z komponentów treści, więc nic się nie renderuje.
+`section: 'account'` oraz dodanie id do `ACCOUNT_SETTINGS_TAB_IDS` są oba wymagane, i niezależnie od siebie — pierwsze decyduje, pod jaką grupą paska bocznego (`Sidebar.tsx` filtruje `SETTINGS_TABS` po `section` na sekcje nawigacji "Account"/"Workspace", gdy tylko URL znajduje się pod `/settings`) renderuje się element nawigacji; drugie to to, co sprawdza `isAccountSettingsTabId()`, żeby zdecydować, czy `AccountSettingsContent` czy `WorkspaceSettingsContent` ją obsługuje (zobacz sekcję architektury w [README](./README.md)). Umieść id w tablicy pasującej do złej sekcji (albo żadnej) i zakładka jest wybieralna w pasku bocznym, ale nie rozstrzyga się do łańcucha `if` żadnego z komponentów treści, więc nic się nie renderuje.
 
 Wybierz `icon` z `lucide-react` (dowolna nazwa poprawna jako `keyof typeof icons`), która nie reprezentuje już innej zakładki.
 

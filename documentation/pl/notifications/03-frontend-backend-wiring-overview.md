@@ -20,21 +20,41 @@ HandleInertiaRequests::share()
         │
         ▼
 PageHeader.tsx
-  - owns `showNotificationsPopup` (local state, toggled by the Bell icon button)
+  - sam czyta `notifications` przez usePage<PageProps>().props, żeby
+    policzyć `unreadNotificationsCount` na potrzeby małej czerwonej
+    odznaki renderowanej na ikonie dzwonka (z limitem "9+")
+  - owns `showNotificationsPopup` (local state, toggled by the Bell
+    icon button) i zamyka go po kliknięciu poza / Escape (zarówno
+    przycisk, jak i popup siedzą w jednym `divie` śledzonym przez
+    `ref`)
         │
         ▼ (only rendered while open)
 NotificationsPopup.tsx
   - reads `notifications` via usePage<PageProps>().props (not its own fetch)
-  - owns `onlyUnread` (local filter state)
+  - posiada `onlyUnread` (filtr przeczytane/nieprzeczytane) oraz
+    `activeFilter` (`NotificationFilter` — `'all'` albo jedna wartość
+    `NotificationTypes`)
   - computes `unreadCount` = notifications.filter(n => !n.read).length
+  - `filteredNotifications` stosuje zarówno `onlyUnread`, jak i
+    `activeFilter`, zanim przekaże listę dalej
         │
-        ├─▶ NotificationHeader.tsx   (unread badge, "Mark all as read" button, "Only show unread" toggle)
-        └─▶ NotificationsList.tsx    (maps to NotificationItem, or NotificationEmptyState if empty)
-                    │
-                    └─▶ NotificationItem.tsx (title, message, "View details" link to action_url, unread dot)
+        ├─▶ NotificationHeader.tsx      (tekst "N unread", przycisk-ikona
+        │     "Mark all as read", przełącznik-ikona filtra "Only show
+        │     unread")
+        ├─▶ NotificationFilterTabs.tsx  (zakładki-pigułki All/Success/
+        │     Info/Warning/Error, po jednej na każdą wartość
+        │     `NotificationTypes`)
+        └─▶ NotificationsList.tsx       (maps to NotificationItem, or
+                    │                     NotificationEmptyState if empty)
+                    └─▶ NotificationItem.tsx (kolorowa kropka typu +
+                          tytuł, treść, data, kontrolka statusu
+                          "Read"/"Unread" — kliknięcie "Unread" to
+                          właśnie oznaczenie jako przeczytane — oraz
+                          link "View details" do action_url, gdy jest
+                          obecny)
 ```
 
-Ponieważ prop jest odświeżany przy każdej wizycie Inertii, odznaka/lista aktualizują się po każdej akcji, która powoduje przekierowanie z powrotem (czyli po każdej mutującej akcji powiadomień poniżej) — nie ma pollingu, nie ma WebSocketa, nie ma osobnego endpointu "liczba nieprzeczytanych". Sama ikona dzwonka nie niesie żadnej własnej odznaki/kropki — jedyny wskaźnik nieprzeczytanych żyje wewnątrz popupu, dopiero gdy zostanie otwarty.
+Ponieważ prop jest odświeżany przy każdej wizycie Inertii, odznaka na dzwonku i lista aktualizują się po każdej akcji, która powoduje przekierowanie z powrotem (czyli po każdej mutującej akcji powiadomień poniżej) — nie ma pollingu, nie ma WebSocketa, nie ma osobnego endpointu "liczba nieprzeczytanych".
 
 Istnieje trasa `GET /notifications` (`NotificationController::index()`, nazwa `notifications.index`, zwraca kolekcję jako JSON) — nic w obecnym froncie jej nie wywołuje. Jest nieużywana przez popup (który polega wyłącznie na współdzielonym propie powyżej); zostaw ją bez zmian, chyba że masz konkretny nowy powód, żeby pobierać powiadomienia poza normalnym wczytaniem strony.
 
@@ -43,7 +63,7 @@ Istnieje trasa `GET /notifications` (`NotificationController::index()`, nazwa `n
 Trzy mutujące akcje, wszystkie jako żądania Inertii przekierowujące z powrotem (wyzwalające odświeżenie współdzielonego propu z części 1) — żadna z nich nie dotyka lokalnego stanu komponentu bezpośrednio:
 
 ```
-NotificationItem's unread dot clicked
+NotificationItem's "Unread" status control clicked
         │
         ▼
 NotificationsPopup::handleMarkAsRead(id)
@@ -140,6 +160,7 @@ W przeciwieństwie do części 1–2, ta aktualizacja to **zwykły POST w stylu 
   `AccountSettingsContent/AccountSettingsNotificationsTab.tsx`,
   `AccountSettingsContent/AccountSettingsNotificationTypeRow.tsx`
 - `resources/js/Components/Molecules/NotificationHeader/NotificationHeader.tsx`,
+  `NotificationFilterTabs/NotificationFilterTabs.tsx`,
   `NotificationItem/NotificationItem.tsx`,
   `NotificationEmptyState/NotificationEmptyState.tsx`
 
