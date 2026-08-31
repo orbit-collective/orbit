@@ -98,6 +98,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                             isActive: selectedLook === 'Calendar',
                             onClick: () => setSelectedLook('Calendar'),
                         },
+                        {
+                            id: 'Activity',
+                            label: 'Activity Logs',
+                            icon: 'Activity',
+                            isActive: selectedLook === 'Activity',
+                            onClick: () => setSelectedLook('Activity'),
+                        },
                     ]}
                 >
                     <button className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]">
