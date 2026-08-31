@@ -6,11 +6,11 @@ import React from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const classVariants = cva(
-    'flex items-center justify-between py-2 px-3 rounded-full cursor-pointer transition-all duration-100 ease-in-out mb-[2px] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+    'flex items-center justify-between py-1.5 px-2.5 rounded-md cursor-pointer transition-colors duration-100 ease-in-out mb-[2px] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
     {
         variants: {
             isActive: {
-                true: 'bg-[var(--accent-color-opacity)] text-[var(--text-color)]',
+                true: 'bg-[var(--bg-light-color)] text-[var(--text-color)]',
                 false: 'text-[var(--text-gray-color)]',
             },
         },
@@ -37,8 +37,8 @@ const NavItem: React.FC<NavItemProps> = ({
             href={link}
             preserveScroll={preserveScroll}
         >
-            <div className={'flex items-center gap-3'}>
-                <Icon name={icon} size={18} className={iconClassName} />
+            <div className={'flex items-center gap-2.5'}>
+                <Icon name={icon} size={16} className={iconClassName} />
                 <span className={'text-sm font-normal'}>{label}</span>
             </div>
             {badge !== undefined && (
