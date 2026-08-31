@@ -2,6 +2,7 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import NotificationsPopup from '@/Components/Organisms/NotificationsPopup/NotificationsPopup';
 import { PageProps } from '@/types';
 import { PageHeaderProps } from '@/types/Components';
+import { cn } from '@/utils/cn';
 import { formattedDate } from '@/utils/time';
 import { router, usePage } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
@@ -62,9 +63,9 @@ function PageHeader({
     }, [showNotificationsPopup]);
 
     return (
-        <header className="flex shrink-0 flex-col gap-3 border-b border-solid border-[var(--bg-light-color)] bg-[var(--bg-color-hover)] px-6 py-3">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+        <header className="flex shrink-0 flex-col gap-3 border-b border-solid border-[var(--bg-light-color)] bg-[var(--bg-color-hover)] py-3 pl-16 pr-4 md:px-6">
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-3">
                     {icon && (
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)]">
                             <Icon
@@ -74,50 +75,54 @@ function PageHeader({
                             />
                         </span>
                     )}
-                    <div className="flex flex-col">
-                        <h1 className="text-base font-semibold text-[var(--text-color)]">
+                    <div className="flex min-w-0 flex-col">
+                        <h1 className="truncate text-base font-semibold text-[var(--text-color)]">
                             {title}
                         </h1>
                         {showDate && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+                            <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
                                 {formattedDate()}
                             </span>
                         )}
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="scrollbar-hide flex shrink-0 items-center gap-2 overflow-x-auto">
                     <button
                         onClick={handleRefresh}
-                        className="flex cursor-pointer items-center gap-1.5 rounded-md border border-solid border-[var(--bg-light-color)] bg-transparent px-3 py-1.5 text-xs font-semibold text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                        title="Refresh"
+                        className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-solid border-[var(--bg-light-color)] bg-transparent px-2.5 py-1.5 text-xs font-semibold text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] sm:px-3"
                     >
                         <Icon
                             name="RefreshCw"
                             size={13}
                             className={isRefreshing ? 'animate-spin' : ''}
                         />
-                        Refresh
+                        <span className="hidden sm:inline">Refresh</span>
                     </button>
                     {primaryAction && (
                         <button
                             onClick={primaryAction.onClick}
-                            className="flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-[var(--accent-color)] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--accent-light-color)]"
+                            title={primaryAction.label}
+                            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-[var(--accent-color)] px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--accent-light-color)] sm:px-3"
                         >
                             {primaryAction.icon && (
                                 <Icon name={primaryAction.icon} size={13} />
                             )}
-                            {primaryAction.label}
+                            <span className="hidden sm:inline">
+                                {primaryAction.label}
+                            </span>
                         </button>
                     )}
 
                     {(primaryAction || children) && (
-                        <div className="mx-1 h-6 w-px bg-[var(--bg-light-color)]" />
+                        <div className="mx-1 h-6 w-px shrink-0 bg-[var(--bg-light-color)]" />
                     )}
 
                     {children}
 
                     <a
-                        className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                        className="hidden shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)] sm:flex"
                         href={'https://docs.orbit-dev.app/reference/faq'}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -129,7 +134,7 @@ function PageHeader({
                         />
                     </a>
 
-                    <div className="relative" ref={notificationsRef}>
+                    <div className="relative shrink-0" ref={notificationsRef}>
                         <button
                             className={
                                 'relative flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]'
@@ -157,7 +162,7 @@ function PageHeader({
                     </div>
                     {showSettingsIcon && (
                         <button
-                            className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
                             onClick={() => router.visit(route('settings'))}
                         >
                             <Icon
@@ -171,13 +176,16 @@ function PageHeader({
             </div>
 
             {tabs && (
-                <nav className="flex gap-6">
+                <nav className="scrollbar-hide flex gap-6 overflow-x-auto">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
-                            className={tabVariants({
-                                isActive: tab.isActive,
-                            })}
+                            className={cn(
+                                tabVariants({
+                                    isActive: tab.isActive,
+                                }),
+                                'shrink-0 whitespace-nowrap',
+                            )}
                             onClick={tab.onClick}
                         >
                             <Icon

@@ -154,6 +154,22 @@ describe('PageHeader Component', () => {
         expect(screen.getByText('9+')).toBeInTheDocument();
     });
 
+    test('reserves left space for the mobile sidebar toggle', () => {
+        const { container } = render(<PageHeader title="Dashboard" />);
+
+        expect(container.querySelector('header')).toHaveClass('pl-16');
+    });
+
+    test('truncates a long title instead of pushing actions off-screen', () => {
+        render(<PageHeader title="A very long dashboard title" />);
+
+        expect(
+            screen.getByRole('heading', {
+                name: 'A very long dashboard title',
+            }),
+        ).toHaveClass('truncate');
+    });
+
     test('renders the title icon when provided', () => {
         const { container } = render(
             <PageHeader title="Dashboard" icon="LayoutDashboard" />,
