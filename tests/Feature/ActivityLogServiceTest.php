@@ -2,13 +2,14 @@
 
 use App\Models\Project;
 use App\Models\User;
+use App\Repositories\ActivityLogRepository;
 use App\Services\ActivityLogService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->service = new ActivityLogService();
+    $this->service = new ActivityLogService(new ActivityLogRepository());
 });
 
 test('it can log activity', function () {
