@@ -1,11 +1,15 @@
+import { Notification } from '@/types/Notification';
 import { formattedDate } from '@/utils/time';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import PageHeader from './PageHeader';
 
 const { reload } = vi.hoisted(() => ({
     reload: vi.fn(),
+}));
+const pageState = vi.hoisted(() => ({
+    notifications: [] as Notification[],
 }));
 
 vi.mock('@/Components/Organisms/NotificationsPopup/NotificationsPopup', () => ({
@@ -16,9 +20,16 @@ vi.mock('@inertiajs/react', () => ({
     router: {
         reload: reload,
     },
+    usePage: () => ({
+        props: { notifications: pageState.notifications },
+    }),
 }));
 
 describe('PageHeader Component', () => {
+    beforeEach(() => {
+        pageState.notifications = [];
+    });
+
     test('renders the provided title', () => {
         render(<PageHeader title="Dashboard" />);
 
@@ -75,6 +86,72 @@ describe('PageHeader Component', () => {
         expect(
             screen.queryByTestId('notifications-popup'),
         ).not.toBeInTheDocument();
+    });
+
+    test('closes the notifications popup when Escape is pressed', async () => {
+        const user = userEvent.setup();
+        const { container } = render(<PageHeader title="Dashboard" />);
+
+        const bellButton = container
+            .querySelector('.lucide-bell')
+            ?.closest('button') as HTMLElement;
+        await user.click(bellButton);
+        expect(screen.getByTestId('notifications-popup')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+
+        expect(
+            screen.queryByTestId('notifications-popup'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('closes the notifications popup when clicking outside of it', async () => {
+        const user = userEvent.setup();
+        const { container } = render(<PageHeader title="Dashboard" />);
+
+        const bellButton = container
+            .querySelector('.lucide-bell')
+            ?.closest('button') as HTMLElement;
+        await user.click(bellButton);
+        expect(screen.getByTestId('notifications-popup')).toBeInTheDocument();
+
+        await user.click(document.body);
+
+        expect(
+            screen.queryByTestId('notifications-popup'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('does not show an unread badge when there are no unread notifications', () => {
+        pageState.notifications = [{ id: 1, read: true } as Notification];
+        const { container } = render(<PageHeader title="Dashboard" />);
+
+        const bellButton = container
+            .querySelector('.lucide-bell')
+            ?.closest('button') as HTMLElement;
+
+        expect(bellButton.querySelector('span')).not.toBeInTheDocument();
+    });
+
+    test('shows the unread notifications count as a badge on the bell icon', () => {
+        pageState.notifications = [
+            { id: 1, read: false } as Notification,
+            { id: 2, read: false } as Notification,
+            { id: 3, read: true } as Notification,
+        ];
+        render(<PageHeader title="Dashboard" />);
+
+        expect(screen.getByText('2')).toBeInTheDocument();
+    });
+
+    test('caps the unread badge at "9+"', () => {
+        pageState.notifications = Array.from({ length: 12 }, (_, i) => ({
+            id: i,
+            read: false,
+        })) as Notification[];
+        render(<PageHeader title="Dashboard" />);
+
+        expect(screen.getByText('9+')).toBeInTheDocument();
     });
 
     test('renders the title icon when provided', () => {
