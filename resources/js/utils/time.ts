@@ -25,6 +25,17 @@ export function formatTimeAgo(dateString: string | number | undefined): string {
         return `${seconds}s`;
     }
 }
+export function formatShortDate(
+    dateString: string | number | undefined,
+): string {
+    const date = new Date(dateString || Date.now());
+    const options: Intl.DateTimeFormatOptions = {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    };
+    return date.toLocaleDateString('en-US', options);
+}
 export const formattedDate = () => {
     const options: Intl.DateTimeFormatOptions = {
         weekday: 'long',

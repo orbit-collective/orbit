@@ -33,6 +33,7 @@ const makeNotification = (
     message: 'Notification message',
     read: false,
     action_url: '',
+    created_at: '2026-04-14T10:00:00.000Z',
     ...overrides,
 });
 
@@ -49,10 +50,10 @@ describe('NotificationsPopup Component', () => {
         expect(
             screen.getByText('No notifications to display'),
         ).toBeInTheDocument();
-        expect(screen.queryByText('Mark all as read')).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Mark all as read')).toBeDisabled();
     });
 
-    test('renders all notifications and the unread count badge', () => {
+    test('renders all notifications and the unread count', () => {
         pageState.notifications = [
             makeNotification({ id: 1, title: 'First', read: false }),
             makeNotification({ id: 2, title: 'Second', read: true }),
@@ -63,7 +64,7 @@ describe('NotificationsPopup Component', () => {
         expect(screen.getByText('First')).toBeInTheDocument();
         expect(screen.getByText('Second')).toBeInTheDocument();
         expect(screen.getByText('Third')).toBeInTheDocument();
-        expect(screen.getByText('2')).toBeInTheDocument();
+        expect(screen.getByText('2 unread')).toBeInTheDocument();
     });
 
     test('filters to only unread notifications when the toggle is switched on', async () => {
@@ -77,13 +78,27 @@ describe('NotificationsPopup Component', () => {
         expect(screen.getByText('Read one')).toBeInTheDocument();
         expect(screen.getByText('Unread one')).toBeInTheDocument();
 
-        const toggle = screen
-            .getByText('Only show unread')
-            .parentElement?.querySelector('button') as HTMLElement;
-        await user.click(toggle);
+        await user.click(screen.getByLabelText('Only show unread'));
 
         expect(screen.queryByText('Read one')).not.toBeInTheDocument();
         expect(screen.getByText('Unread one')).toBeInTheDocument();
+    });
+
+    test('filters by notification type when a filter tab is clicked', async () => {
+        const user = userEvent.setup();
+        pageState.notifications = [
+            makeNotification({ id: 1, title: 'Info one', type: 'info' }),
+            makeNotification({ id: 2, title: 'Error one', type: 'error' }),
+        ];
+        render(<NotificationsPopup />);
+
+        expect(screen.getByText('Info one')).toBeInTheDocument();
+        expect(screen.getByText('Error one')).toBeInTheDocument();
+
+        await user.click(screen.getByText('Error'));
+
+        expect(screen.queryByText('Info one')).not.toBeInTheDocument();
+        expect(screen.getByText('Error one')).toBeInTheDocument();
     });
 
     test('posts to mark-all-read when "Mark all as read" is clicked', async () => {
@@ -93,14 +108,14 @@ describe('NotificationsPopup Component', () => {
         ];
         render(<NotificationsPopup />);
 
-        await user.click(screen.getByText('Mark all as read'));
+        await user.click(screen.getByLabelText('Mark all as read'));
 
         expect(mockPost).toHaveBeenCalledWith('/notifications/mark-all-read', {
             preserveScroll: true,
         });
     });
 
-    test('marks a single notification as read via the item indicator', async () => {
+    test('marks a single notification as read via the "Unread" status control', async () => {
         const user = userEvent.setup();
         pageState.notifications = [
             makeNotification({
@@ -109,12 +124,9 @@ describe('NotificationsPopup Component', () => {
                 read: false,
             }),
         ];
-        const { container } = render(<NotificationsPopup />);
+        render(<NotificationsPopup />);
 
-        const indicator = container.querySelector(
-            '.group\\/btn',
-        ) as HTMLElement;
-        await user.click(indicator);
+        await user.click(screen.getByText('Unread'));
 
         expect(mockTransform).toHaveBeenCalledTimes(1);
         expect(mockPost).toHaveBeenCalledWith('/notifications/9', {

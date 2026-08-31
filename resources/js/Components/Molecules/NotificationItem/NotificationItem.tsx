@@ -1,36 +1,65 @@
-import Badge from '@/Components/Atoms/Badge/Badge';
-import { Notification } from '@/types/Notification';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import { Notification, NotificationTypes } from '@/types/Notification';
+import { formatShortDate } from '@/utils/time';
 
 interface NotificationItemProps {
     notification: Notification;
     onMarkAsRead: (id: number) => void;
 }
 
+const DOT_COLOR_CLASSES: Record<NotificationTypes, string> = {
+    success: 'bg-[var(--success-color)]',
+    info: 'bg-[var(--info-color)]',
+    warning: 'bg-[var(--warning-color)]',
+    error: 'bg-[var(--error-color)]',
+};
+
 function NotificationItem({
     notification,
     onMarkAsRead,
 }: NotificationItemProps) {
     return (
-        <div
-            className={`group relative flex items-start justify-between rounded-xl p-3 transition-all duration-150 ${
-                notification.read
-                    ? 'hover:bg-[var(--bg-light-color)]'
-                    : 'bg-[var(--bg-light-color)] hover:bg-[var(--bg-light-color-hover)]'
-            }`}
-        >
-            <div className="min-w-0 flex-1 pr-2">
-                <h2 className="break-words text-sm font-semibold tracking-tight text-[var(--text-color)] transition-colors group-hover:text-[var(--accent-color)]">
+        <div className="group px-1 py-3">
+            <div className="flex items-center gap-2">
+                <span
+                    className={`h-1.5 w-1.5 shrink-0 rounded-[3px] ${DOT_COLOR_CLASSES[notification.type]}`}
+                />
+                <h2 className="truncate text-sm text-[var(--text-gray-color)]">
                     {notification.title}
                 </h2>
+            </div>
 
+            <div className="pl-3.5">
                 {notification.message && (
-                    <p className="mt-1 break-words text-xs leading-relaxed text-[var(--text-gray-color)]">
+                    <p className="mt-1.5 break-words text-sm font-medium leading-relaxed text-[var(--text-color)]">
                         {notification.message}
                     </p>
                 )}
 
+                <div className="mt-2 flex items-center gap-1.5 text-xs text-[var(--text-muted-color)]">
+                    <Icon name="Calendar" size={12} />
+                    <span>{formatShortDate(notification.created_at)}</span>
+                    <span>&bull;</span>
+                    {notification.read ? (
+                        <span className="flex items-center gap-1 font-medium text-[var(--success-color)]">
+                            <Icon name="CircleCheck" size={12} />
+                            Read
+                        </span>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => onMarkAsRead(notification.id)}
+                            title="Mark as read"
+                            className="flex cursor-pointer items-center gap-1 font-medium text-[var(--info-color)] hover:underline"
+                        >
+                            <Icon name="Clock" size={12} />
+                            Unread
+                        </button>
+                    )}
+                </div>
+
                 {notification.action_url && (
-                    <div className="mt-2.5 flex items-center gap-3">
+                    <div className="mt-2.5">
                         <a
                             href={notification.action_url}
                             className="text-xs font-medium text-[var(--accent-color)] hover:underline"
@@ -40,20 +69,6 @@ function NotificationItem({
                     </div>
                 )}
             </div>
-
-            {!notification.read && (
-                <div className="shrink-0 pl-1">
-                    <Badge
-                        onClick={() => onMarkAsRead(notification.id)}
-                        variant={'ghost'}
-                        tooltip={true}
-                        tooltipText={'Mark as read'}
-                        className="group/btn cursor-pointer justify-center rounded-full p-2 transition-all hover:bg-[var(--bg-light-color-hover)]"
-                    >
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent-color)] shadow-[0_0_8px_var(--accent-color)] transition-transform group-hover/btn:scale-125" />
-                    </Badge>
-                </div>
-            )}
         </div>
     );
 }

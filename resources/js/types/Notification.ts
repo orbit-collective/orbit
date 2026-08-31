@@ -8,7 +8,10 @@ export interface Notification {
     message: string;
     read: boolean;
     action_url: string;
+    created_at: string;
 }
+
+export type NotificationFilter = 'all' | NotificationTypes;
 
 export interface NotificationSettings {
     [key: string]: {
