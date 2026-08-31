@@ -49,6 +49,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 category: 'View',
                 action: () => setSelectedLook('Calendar'),
             },
+            {
+                key: '4',
+                description: 'Activity view',
+                category: 'View',
+                action: () => setSelectedLook('Activity'),
+            },
         ],
         [setSelectedLook],
     );

@@ -169,4 +169,28 @@ describe('ShortcutHelpModal Component', () => {
 
         expect(screen.getByText('then')).toBeInTheDocument();
     });
+
+    test('renders a category icon avatar for each shortcut row', () => {
+        const { container } = render(<ShortcutHelpModal />);
+
+        const avatars = container.querySelectorAll(
+            'span.rounded-lg.bg-\\[var\\(--bg-light-color\\)\\]',
+        );
+        expect(avatars.length).toBe(shortcutsHolder.shortcuts.length);
+    });
+
+    test('does not render a border on the modal shell, header, or footer', () => {
+        const { container } = render(<ShortcutHelpModal />);
+
+        const shell = container.querySelector('.shortcut-modal-marker');
+        expect(shell?.className).not.toMatch(/border-\[var\(--border-color/);
+
+        container
+            .querySelectorAll(':scope > .shortcut-modal-marker > div')
+            .forEach((section) => {
+                expect(section.className).not.toMatch(
+                    /border-\[var\(--border-color/,
+                );
+            });
+    });
 });
