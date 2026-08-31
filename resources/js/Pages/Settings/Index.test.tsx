@@ -8,6 +8,12 @@ import SettingsIndex from './Index';
 
 const pageState = vi.hoisted(() => ({ url: '/settings' }));
 
+vi.mock('@/Components/Organisms/Sidebar/Sidebar', () => ({
+    default: ({ projects }: { projects: unknown[] }) => (
+        <div data-testid="sidebar" data-projects-count={projects.length} />
+    ),
+}));
+
 const renderSettingsIndex = () =>
     render(
         <ThemeProvider>
@@ -45,31 +51,18 @@ describe('Settings Index Page', () => {
         pageState.url = '/settings';
     });
 
-    test('renders account and workspace sections with tabs', () => {
-        renderSettingsIndex();
-
-        expect(screen.getByText('Account')).toBeInTheDocument();
-        expect(screen.getByText('Workspace')).toBeInTheDocument();
-        const preferencesLink = screen
-            .getAllByText('Preferences')
-            .find((node) => node.closest('a'));
-        expect(preferencesLink?.closest('a')).toHaveAttribute(
-            'href',
-            '/settings?tab=preferences',
-        );
-        expect(screen.getByText('Roles & management')).toBeInTheDocument();
-    });
-
-    test('renders heading and back link', () => {
+    test('renders heading for the default tab', () => {
         renderSettingsIndex();
 
         expect(
             screen.getByRole('heading', { name: 'Preferences' }),
         ).toBeInTheDocument();
-        expect(screen.getByText('Back to app').closest('a')).toHaveAttribute(
-            'href',
-            '/',
-        );
+    });
+
+    test('renders the Sidebar with the provided projects', () => {
+        renderSettingsIndex();
+
+        expect(screen.getByTestId('sidebar')).toBeInTheDocument();
     });
 
     test('falls back to the default tab when the requested tab is disabled', () => {
@@ -98,12 +91,5 @@ describe('Settings Index Page', () => {
         expect(
             screen.getByText("You're not part of any project yet"),
         ).toBeInTheDocument();
-    });
-
-    test('renders disabled tabs without a link and with a "Soon" badge', () => {
-        renderSettingsIndex();
-
-        expect(screen.getByText('Export').closest('a')).toBeNull();
-        expect(screen.getAllByText('Soon').length).toBeGreaterThan(0);
     });
 });

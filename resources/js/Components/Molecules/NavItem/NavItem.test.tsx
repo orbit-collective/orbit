@@ -76,6 +76,14 @@ describe('NavItem Component', () => {
         );
     });
 
+    test('renders a disabled item without a link and with a "Soon" badge', () => {
+        render(<NavItem icon="Inbox" label="Inbox" link="/inbox" disabled />);
+
+        expect(screen.queryByRole('link')).not.toBeInTheDocument();
+        expect(screen.getByText('Soon')).toBeInTheDocument();
+        expect(screen.getByText('Inbox')).toBeInTheDocument();
+    });
+
     test('calls onClick when clicked', async () => {
         const handleClick = vi.fn();
         render(

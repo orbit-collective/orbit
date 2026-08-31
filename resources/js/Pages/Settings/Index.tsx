@@ -2,7 +2,7 @@ import Breadcrumb from '@/Components/Molecules/Breadcrumb/Breadcrumb';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import AccountSettingsContent from '@/Components/Organisms/AccountSettingsContent/AccountSettingsContent';
-import SettingsSidebar from '@/Components/Organisms/SettingsSidebar/SettingsSidebar';
+import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import WorkspaceSettingsContent from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsContent';
 import { PageProps } from '@/types';
 import { NotificationSettings } from '@/types/Notification';
@@ -14,13 +14,12 @@ import {
     ProjectMember,
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
+import { Project } from '@/types/Projects';
 import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import {
-    SETTINGS_DEFAULT_TAB,
     SETTINGS_TABS,
+    getActiveSettingsTab,
     isAccountSettingsTabId,
-    isEnabledSettingsTabId,
-    isSettingsTabId,
     isWorkspaceSettingsTabId,
 } from '@/types/Settings';
 import { Session } from '@/types/Users';
@@ -28,6 +27,7 @@ import { usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
 
 interface SettingsIndexProps {
+    projects?: Project[];
     sessions?: Session[];
     notificationSettings?: NotificationSettings;
     memberProjects?: MemberProjectSummary[];
@@ -52,6 +52,7 @@ interface SettingsIndexProps {
 }
 
 export default function SettingsIndex({
+    projects = [],
     sessions = [],
     notificationSettings,
     memberProjects = [],
@@ -78,21 +79,7 @@ export default function SettingsIndex({
     const userName = props.auth?.user?.name ?? 'John Doe';
     const userAvatar = props.auth?.user?.avatar ?? null;
 
-    const activeTab = useMemo(() => {
-        const [, queryString = ''] = url.split('?');
-        const params = new URLSearchParams(queryString);
-        const tabParam = params.get('tab');
-
-        if (
-            tabParam &&
-            isSettingsTabId(tabParam) &&
-            isEnabledSettingsTabId(tabParam)
-        ) {
-            return tabParam;
-        }
-
-        return SETTINGS_DEFAULT_TAB;
-    }, [url]);
+    const activeTab = useMemo(() => getActiveSettingsTab(url), [url]);
 
     const activeTabConfig = useMemo(() => {
         return (
@@ -101,24 +88,13 @@ export default function SettingsIndex({
         );
     }, [activeTab]);
 
-    const accountTabs = SETTINGS_TABS.filter(
-        (tab) => tab.section === 'account',
-    );
-    const workspaceTabs = SETTINGS_TABS.filter(
-        (tab) => tab.section === 'workspace',
-    );
-
     return (
-        <div className="flex h-screen overflow-hidden bg-[var(--bg-color)]">
-            <SettingsSidebar
-                activeTab={activeTab}
-                accountTabs={accountTabs}
-                workspaceTabs={workspaceTabs}
-            />
+        <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
+            <Sidebar projects={projects} />
 
             <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
                 <main className="flex-1 overflow-y-auto">
-                    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 pb-16 pt-20 sm:px-6 lg:px-10 lg:pt-12">
+                    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 lg:px-10 lg:pt-10">
                         <header className="space-y-2">
                             <Breadcrumb
                                 items={[
