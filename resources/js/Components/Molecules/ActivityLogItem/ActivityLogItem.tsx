@@ -14,10 +14,10 @@ const COLOR_TEXT_CLASSES = {
 
 const COLOR_BG_CLASSES = {
     accent: 'bg-[var(--accent-color-opacity)]',
-    success: 'bg-[#4caf50]/10',
-    warning: 'bg-[#ff9800]/10',
-    error: 'bg-[#f44336]/10',
-    info: 'bg-[#2196f3]/10',
+    success: 'bg-[var(--success-color)]/10',
+    warning: 'bg-[var(--warning-color)]/10',
+    error: 'bg-[var(--error-color)]/10',
+    info: 'bg-[var(--info-color)]/10',
 };
 
 const ActivityLogItem: React.FC<ActivityLogItemProps> = ({ log, isLast }) => {
