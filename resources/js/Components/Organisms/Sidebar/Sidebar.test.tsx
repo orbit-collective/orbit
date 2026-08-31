@@ -203,6 +203,20 @@ describe('Sidebar Component', () => {
         expect(mockRouterPost).toHaveBeenCalledWith('/logout');
     });
 
+    test('opens the user menu when collapsed without clipping it', async () => {
+        const user = userEvent.setup();
+        const { container } = render(<Sidebar projects={[]} />);
+
+        await user.click(screen.getByLabelText('Collapse sidebar'));
+
+        const aside = container.querySelector('aside') as HTMLElement;
+        expect(aside).not.toHaveClass('overflow-hidden');
+
+        await user.click(screen.getByText('J'));
+
+        expect(screen.getByText('Log out')).toBeInTheDocument();
+    });
+
     test('opens settings from the user menu', async () => {
         const user = userEvent.setup();
         render(<Sidebar projects={[]} />);

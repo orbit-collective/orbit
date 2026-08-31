@@ -99,7 +99,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
 
             <aside
                 className={cn(
-                    'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col justify-between overflow-hidden bg-[var(--bg-color)] p-3 pr-1 transition-all duration-300 ease-in-out md:relative md:translate-x-0',
+                    'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col justify-between bg-[var(--bg-color)] p-3 pr-1 transition-all duration-300 ease-in-out md:relative md:translate-x-0',
                     isCollapsed ? 'w-[72px]' : 'w-[240px]',
                     isOpen ? 'translate-x-0' : '-translate-x-full',
                 )}
