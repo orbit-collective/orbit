@@ -1,4 +1,4 @@
-import Badge from '@/Components/Atoms/Badge/Badge';
+import Divider from '@/Components/Atoms/Divider/Divider';
 import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
 import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
 import NewProjectModal from '@/Components/Organisms/NewProjectModal/NewProjectModal';
@@ -83,13 +83,9 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                 className={`fixed inset-y-0 left-0 z-50 flex h-screen w-[240px] shrink-0 flex-col justify-between border-r border-solid border-r-[var(--bg-light-color)] bg-[var(--bg-dark-color)] p-3 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'} `}
             >
                 <div className="flex min-h-0 flex-1 flex-col">
-                    <div className="mb-4 flex items-center justify-between gap-2">
-                        <div className="flex flex-1 cursor-pointer items-center justify-between rounded-full px-3 py-2 hover:bg-[var(--bg-light-color)]">
-                            <UserBadge
-                                name="Acme Inc."
-                                avatarSrc="/path/to/avatar.png"
-                                size="sm"
-                            />
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                        <div className="flex flex-1 cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 hover:bg-[var(--bg-light-color)]">
+                            <UserBadge name="Acme Inc." size="sm" />
                             <Icon
                                 name="ChevronDown"
                                 size={14}
@@ -103,6 +99,8 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             <Icon name="X" size={18} />
                         </button>
                     </div>
+
+                    <Divider className="mb-3" />
 
                     <nav className={'flex shrink-0 flex-col'}>
                         <NavItem
@@ -121,34 +119,31 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                         />
                     </nav>
 
-                    <div className={'mt-6 flex min-h-0 flex-1 flex-col'}>
+                    <div className={'mt-5 flex min-h-0 flex-1 flex-col'}>
                         <Link
                             onClick={(e) => {
                                 e.preventDefault();
                                 setIsNewProjectModalOpen(true);
                             }}
                             className={
-                                'group mb-2 flex shrink-0 items-center justify-between px-3'
+                                'group mb-1.5 flex shrink-0 items-center justify-between rounded-md px-2.5 py-1'
                             }
                         >
-                            <div className="flex items-center gap-1.5">
-                                <h3
-                                    className={
-                                        'text-sm font-semibold text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
-                                    }
-                                >
-                                    PROJECTS
-                                </h3>
-                                <Icon
-                                    name={'PackagePlus'}
-                                    className={
-                                        'text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
-                                    }
-                                />
+                            <h3
+                                className={
+                                    'text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
+                                }
+                            >
+                                PROJECTS
+                            </h3>
+                            <div className="flex items-center gap-1.5 text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]">
+                                {projects.length > 0 && (
+                                    <span className="text-xs font-medium">
+                                        {projects.length}
+                                    </span>
+                                )}
+                                <Icon name={'Plus'} size={14} />
                             </div>
-                            <Badge className={'rounded-full'}>
-                                {projects.length}
-                            </Badge>
                         </Link>
                         <nav
                             /* eslint-disable-next-line react/no-unknown-property */
@@ -198,7 +193,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                     <div
                         onClick={() => setIsUserMenuOpen((prev) => !prev)}
                         className={
-                            'flex cursor-pointer items-center justify-between rounded-full px-3 py-2 hover:bg-[var(--bg-light-color)]'
+                            'flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 hover:bg-[var(--bg-light-color)]'
                         }
                     >
                         <UserBadge
