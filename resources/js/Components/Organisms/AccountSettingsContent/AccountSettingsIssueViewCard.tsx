@@ -136,6 +136,38 @@ function CalendarPreview() {
     );
 }
 
+const activityPreviewEntries: Array<{ dotClass: string; widthClass: string }> =
+    [
+        { dotClass: 'bg-[var(--info-color)]', widthClass: 'w-4/5' },
+        { dotClass: 'bg-[var(--success-color)]', widthClass: 'w-3/5' },
+        { dotClass: 'bg-[var(--warning-color)]', widthClass: 'w-2/3' },
+    ];
+
+function ActivityPreview() {
+    return (
+        <div className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--overlay-color)] p-2">
+            <div className="space-y-2.5">
+                {activityPreviewEntries.map((entry, index) => (
+                    <div
+                        key={index}
+                        className="relative flex items-start gap-1.5"
+                    >
+                        {index !== activityPreviewEntries.length - 1 && (
+                            <span className="absolute left-[3px] top-2.5 h-[calc(100%+2px)] w-px bg-[var(--border-color-strong)]" />
+                        )}
+                        <span
+                            className={`z-10 mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full ${entry.dotClass}`}
+                        />
+                        <div
+                            className={`h-1 rounded-full bg-[var(--border-color-strong)] ${entry.widthClass}`}
+                        />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 function IssueViewPreview({ view }: { view: IssuePageLooks }) {
     if (view === 'Board') {
         return <BoardPreview />;
@@ -143,6 +175,10 @@ function IssueViewPreview({ view }: { view: IssuePageLooks }) {
 
     if (view === 'Calendar') {
         return <CalendarPreview />;
+    }
+
+    if (view === 'Activity') {
+        return <ActivityPreview />;
     }
 
     return <ListPreview />;
