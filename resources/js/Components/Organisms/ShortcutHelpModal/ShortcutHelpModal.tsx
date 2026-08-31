@@ -28,24 +28,36 @@ export const ShortcutHelpModal: React.FC = () => {
     const { shortcuts } = useShortcuts();
     const { closeAllModals } = useModal();
     const [search, setSearch] = useState('');
+    const [activeCategory, setActiveCategory] = useState('All');
     const [selectedIndex, setSelectedIndex] = useState(0);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const selectedRef = useRef<HTMLDivElement>(null);
 
+    const availableCategories = useMemo(() => {
+        const seen = new Set<string>();
+        shortcuts.forEach((s) => seen.add(s.category || 'Other'));
+        return Array.from(seen);
+    }, [shortcuts]);
+
     const filteredShortcuts = useMemo(() => {
-        if (!search.trim()) return shortcuts;
-        const query = search.toLowerCase();
-        return shortcuts.filter(
-            (s) =>
+        const query = search.trim().toLowerCase();
+        return shortcuts.filter((s) => {
+            const category = s.category || 'Other';
+            if (activeCategory !== 'All' && category !== activeCategory) {
+                return false;
+            }
+            if (!query) return true;
+            return (
                 s.description.toLowerCase().includes(query) ||
                 s.key.toLowerCase().includes(query) ||
-                s.category?.toLowerCase().includes(query),
-        );
-    }, [shortcuts, search]);
+                category.toLowerCase().includes(query)
+            );
+        });
+    }, [shortcuts, search, activeCategory]);
 
     useEffect(() => {
         setSelectedIndex(0);
-    }, [search]);
+    }, [search, activeCategory]);
 
     useEffect(() => {
         if (selectedRef.current) {
@@ -89,21 +101,45 @@ export const ShortcutHelpModal: React.FC = () => {
 
     return (
         <div className="animate-in fade-in zoom-in shortcut-modal-marker flex w-full flex-col overflow-hidden rounded-2xl bg-[var(--bg-color)] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] duration-200">
-            <div className="flex items-center gap-3 bg-[var(--bg-dark-color)] px-4 py-4">
-                <Search size={18} className="text-[var(--text-muted-color)]" />
-                <input
-                    autoFocus
-                    type="text"
-                    placeholder="Search shortcuts..."
-                    className="flex-1 border-none bg-transparent text-[14px] text-[var(--text-color)] placeholder-[var(--text-muted-color)] outline-none focus:ring-0"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                />
-                <span className="hidden shrink-0 items-center gap-1 rounded-md bg-[var(--bg-light-color)] px-2 py-1 text-[10px] font-semibold text-[var(--text-muted-color)] sm:flex">
-                    <CornerDownLeft size={11} />
-                    RETURN
-                </span>
+            <div className="bg-[var(--bg-dark-color)]">
+                <div className="flex items-center gap-3 px-4 py-4">
+                    <Search
+                        size={18}
+                        className="text-[var(--text-muted-color)]"
+                    />
+                    <input
+                        autoFocus
+                        type="text"
+                        placeholder="Search shortcuts..."
+                        className="flex-1 border-none bg-transparent text-[14px] text-[var(--text-color)] placeholder-[var(--text-muted-color)] outline-none focus:ring-0"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                    />
+                    <span className="hidden shrink-0 items-center gap-1 rounded-md bg-[var(--bg-light-color)] px-2 py-1 text-[10px] font-semibold text-[var(--text-muted-color)] sm:flex">
+                        <CornerDownLeft size={11} />
+                        RETURN
+                    </span>
+                </div>
+
+                <div className="scrollbar-hide flex items-center gap-1.5 overflow-x-auto px-4 pb-3">
+                    {['All', ...availableCategories].map((category) => (
+                        <button
+                            key={category}
+                            type="button"
+                            onClick={() => setActiveCategory(category)}
+                            aria-pressed={activeCategory === category}
+                            className={cn(
+                                'shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+                                activeCategory === category
+                                    ? 'bg-[var(--text-color)] text-[var(--bg-dark-color)]'
+                                    : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
+                            )}
+                        >
+                            {category}
+                        </button>
+                    ))}
+                </div>
             </div>
             <div
                 ref={scrollContainerRef}
