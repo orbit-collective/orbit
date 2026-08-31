@@ -15,6 +15,7 @@ describe('NotificationItem Component', () => {
         message: 'Someone left a comment.',
         read: false,
         action_url: '',
+        created_at: '2026-04-14T10:00:00.000Z',
         ...overrides,
     });
 
@@ -43,6 +44,17 @@ describe('NotificationItem Component', () => {
         expect(container.querySelector('p')).not.toBeInTheDocument();
     });
 
+    test('renders the formatted created_at date', () => {
+        render(
+            <NotificationItem
+                notification={makeNotification()}
+                onMarkAsRead={() => {}}
+            />,
+        );
+
+        expect(screen.getByText('Apr 14, 2026')).toBeInTheDocument();
+    });
+
     test('renders a "View details" link when action_url is present', () => {
         render(
             <NotificationItem
@@ -69,44 +81,41 @@ describe('NotificationItem Component', () => {
         expect(screen.queryByText('View details')).not.toBeInTheDocument();
     });
 
-    test('shows the unread indicator when the notification is unread', () => {
-        const { container } = render(
+    test('shows an "Unread" status control when the notification is unread', () => {
+        render(
             <NotificationItem
                 notification={makeNotification({ read: false })}
                 onMarkAsRead={() => {}}
             />,
         );
 
-        expect(container.querySelector('.cursor-pointer')).toBeInTheDocument();
+        expect(screen.getByText('Unread')).toBeInTheDocument();
+        expect(screen.queryByText('Read')).not.toBeInTheDocument();
     });
 
-    test('hides the unread indicator when the notification is read', () => {
-        const { container } = render(
+    test('shows a "Read" status when the notification is read', () => {
+        render(
             <NotificationItem
                 notification={makeNotification({ read: true })}
                 onMarkAsRead={() => {}}
             />,
         );
 
-        expect(
-            container.querySelector('.cursor-pointer'),
-        ).not.toBeInTheDocument();
+        expect(screen.getByText('Read')).toBeInTheDocument();
+        expect(screen.queryByText('Unread')).not.toBeInTheDocument();
     });
 
-    test('calls onMarkAsRead with the notification id when the unread indicator is clicked', async () => {
+    test('calls onMarkAsRead with the notification id when the unread status is clicked', async () => {
         const user = userEvent.setup();
         const onMarkAsRead = vi.fn();
-        const { container } = render(
+        render(
             <NotificationItem
                 notification={makeNotification({ id: 7, read: false })}
                 onMarkAsRead={onMarkAsRead}
             />,
         );
 
-        const indicator = container.querySelector(
-            '.cursor-pointer',
-        ) as HTMLElement;
-        await user.click(indicator);
+        await user.click(screen.getByText('Unread'));
 
         expect(onMarkAsRead).toHaveBeenCalledWith(7);
     });

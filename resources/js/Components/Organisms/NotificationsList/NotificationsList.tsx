@@ -1,6 +1,7 @@
 import NotificationEmptyState from '@/Components/Molecules/NotificationEmptyState/NotificationEmptyState';
 import NotificationItem from '@/Components/Molecules/NotificationItem/NotificationItem';
 import { Notification } from '@/types/Notification';
+import { Fragment } from 'react';
 
 interface NotificationsListProps {
     notifications: Notification[];
@@ -16,13 +17,17 @@ function NotificationsList({
     }
 
     return (
-        <div className="no-scrollbar -mx-1 mt-2 max-h-[calc(85vh-140px)] space-y-1.5 overflow-y-auto px-3 py-2 sm:max-h-[440px]">
-            {notifications.map((item) => (
-                <NotificationItem
-                    key={item.id}
-                    notification={item}
-                    onMarkAsRead={onMarkAsRead}
-                />
+        <div className="no-scrollbar mt-2 max-h-[calc(85vh-200px)] overflow-y-auto sm:max-h-[400px]">
+            {notifications.map((item, index) => (
+                <Fragment key={item.id}>
+                    {index > 0 && (
+                        <span className="block h-px w-full bg-[var(--bg-light-color)]" />
+                    )}
+                    <NotificationItem
+                        notification={item}
+                        onMarkAsRead={onMarkAsRead}
+                    />
+                </Fragment>
             ))}
         </div>
     );

@@ -15,6 +15,7 @@ describe('NotificationsList Component', () => {
         message: 'Notification message',
         read: false,
         action_url: '',
+        created_at: '2026-04-14T10:00:00.000Z',
         ...overrides,
     });
 
@@ -56,16 +57,16 @@ describe('NotificationsList Component', () => {
             makeNotification({ id: 1, title: 'First', read: false }),
             makeNotification({ id: 2, title: 'Second', read: false }),
         ];
-        const { container } = render(
+        render(
             <NotificationsList
                 notifications={notifications}
                 onMarkAsRead={onMarkAsRead}
             />,
         );
 
-        const indicators = container.querySelectorAll('.cursor-pointer');
-        expect(indicators).toHaveLength(2);
-        await user.click(indicators[1] as HTMLElement);
+        const unreadControls = screen.getAllByText('Unread');
+        expect(unreadControls).toHaveLength(2);
+        await user.click(unreadControls[1]);
 
         expect(onMarkAsRead).toHaveBeenCalledWith(2);
     });

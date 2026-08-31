@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from 'vitest';
 import NotificationHeader from './NotificationHeader';
 
 describe('NotificationHeader Component', () => {
-    test('renders the title without an unread badge or mark-all button when unreadCount is 0', () => {
+    test('renders the title without an unread count or disables mark-all when unreadCount is 0', () => {
         render(
             <NotificationHeader
                 unreadCount={0}
@@ -15,11 +15,11 @@ describe('NotificationHeader Component', () => {
         );
 
         expect(screen.getByText('Notifications')).toBeInTheDocument();
-        expect(screen.queryByText('0')).not.toBeInTheDocument();
-        expect(screen.queryByText('Mark all as read')).not.toBeInTheDocument();
+        expect(screen.queryByText(/unread/)).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Mark all as read')).toBeDisabled();
     });
 
-    test('shows the unread count badge and mark-all button when there are unread notifications', () => {
+    test('shows the unread count and enables mark-all when there are unread notifications', () => {
         render(
             <NotificationHeader
                 unreadCount={5}
@@ -29,8 +29,8 @@ describe('NotificationHeader Component', () => {
             />,
         );
 
-        expect(screen.getByText('5')).toBeInTheDocument();
-        expect(screen.getByText('Mark all as read')).toBeInTheDocument();
+        expect(screen.getByText('5 unread')).toBeInTheDocument();
+        expect(screen.getByLabelText('Mark all as read')).toBeEnabled();
     });
 
     test('calls onMarkAllAsRead when the mark all as read button is clicked', async () => {
@@ -45,7 +45,7 @@ describe('NotificationHeader Component', () => {
             />,
         );
 
-        await user.click(screen.getByText('Mark all as read'));
+        await user.click(screen.getByLabelText('Mark all as read'));
 
         expect(onMarkAllAsRead).toHaveBeenCalledTimes(1);
     });
@@ -62,13 +62,13 @@ describe('NotificationHeader Component', () => {
             />,
         );
 
-        await user.click(screen.getByRole('button'));
+        await user.click(screen.getByLabelText('Only show unread'));
 
         expect(onToggleOnlyUnread).toHaveBeenCalledWith(true);
     });
 
-    test('reflects the onlyUnread state on the toggle switch', () => {
-        const { rerender, container } = render(
+    test('reflects the onlyUnread state on the filter toggle', () => {
+        const { rerender } = render(
             <NotificationHeader
                 unreadCount={0}
                 onlyUnread={false}
@@ -77,8 +77,8 @@ describe('NotificationHeader Component', () => {
             />,
         );
 
-        const toggle = container.querySelector('button') as HTMLElement;
-        expect(toggle).not.toHaveClass('bg-[var(--accent-color)]');
+        const toggle = screen.getByLabelText('Only show unread');
+        expect(toggle).toHaveAttribute('aria-pressed', 'false');
 
         rerender(
             <NotificationHeader
@@ -89,6 +89,6 @@ describe('NotificationHeader Component', () => {
             />,
         );
 
-        expect(toggle).toHaveClass('bg-[var(--accent-color)]');
+        expect(toggle).toHaveAttribute('aria-pressed', 'true');
     });
 });
