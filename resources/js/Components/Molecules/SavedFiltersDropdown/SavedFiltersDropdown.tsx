@@ -182,9 +182,9 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                             zIndex: 9999,
                             width: PANEL_WIDTH,
                         }}
-                        className="animate-in fade-in zoom-in-95 flex max-h-[26rem] flex-col overflow-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] shadow-2xl backdrop-blur-md duration-100"
+                        className="animate-in fade-in zoom-in-95 flex max-h-[26rem] flex-col overflow-hidden rounded-2xl bg-[var(--bg-dark-color)] shadow-2xl backdrop-blur-md duration-100"
                     >
-                        <div className="flex items-center justify-between px-3 py-2.5">
+                        <div className="flex items-center justify-between px-3 pt-3">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                                 Filters
                             </p>
@@ -199,7 +199,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                             )}
                         </div>
 
-                        <div className="border-[var(--border-color-strong)]/80 border-t px-3 py-2.5">
+                        <div className="px-3 py-2.5">
                             {activeFilterCount > 0 ? (
                                 <div className="flex flex-col gap-2">
                                     <p className="truncate text-[11px] text-[var(--text-muted-color)]">
@@ -216,15 +216,15 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                                     handleSave();
                                             }}
                                             placeholder="Name this view…"
-                                            className="w-full rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] px-2.5 py-1.5 text-xs text-[var(--text-color)] placeholder-[var(--text-muted-color)] outline-none transition-colors focus:border-[var(--accent-color)]"
+                                            className="w-full rounded-lg bg-[var(--bg-light-color)] px-2.5 py-1.5 text-xs text-[var(--text-color)] outline-none transition-colors placeholder:text-[var(--text-muted-color)]"
                                         />
                                         <button
                                             type="button"
                                             onClick={handleSave}
                                             disabled={!name.trim()}
                                             className={cn(
-                                                'border-[var(--accent-color)]/30 bg-[var(--accent-color)]/10 hover:bg-[var(--accent-color)]/20 flex shrink-0 cursor-pointer items-center gap-1 rounded-md border px-2 py-1.5 text-xs font-medium text-[var(--accent-color)] transition-colors',
-                                                'disabled:cursor-not-allowed disabled:border-[var(--border-color-strong)] disabled:bg-transparent disabled:text-[var(--text-muted-color)]',
+                                                'bg-[var(--accent-color)]/10 hover:bg-[var(--accent-color)]/20 flex shrink-0 cursor-pointer items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-[var(--accent-color)] transition-colors',
+                                                'disabled:cursor-not-allowed disabled:bg-[var(--bg-light-color)] disabled:text-[var(--text-muted-color)]',
                                             )}
                                         >
                                             <Icon
@@ -242,7 +242,9 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                             )}
                         </div>
 
-                        <div className="border-[var(--border-color-strong)]/80 flex items-center justify-between border-t px-3 pb-1.5 pt-2.5">
+                        <span className="mx-3 block h-px shrink-0 bg-[var(--bg-light-color)]" />
+
+                        <div className="flex items-center justify-between px-3 pb-1.5 pt-2.5">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                                 Saved Views
                             </p>
@@ -254,12 +256,14 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                         </div>
 
                         {savedFilters.length === 0 ? (
-                            <div className="flex flex-col items-center gap-1.5 px-3 pb-4 pt-2 text-center">
-                                <Icon
-                                    name="BookmarkX"
-                                    size={20}
-                                    color="var(--text-gray-color)"
-                                />
+                            <div className="flex flex-col items-center gap-2 px-3 pb-4 pt-2 text-center">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-light-color)]">
+                                    <Icon
+                                        name="BookmarkX"
+                                        size={16}
+                                        className="text-[var(--text-muted-color)]"
+                                    />
+                                </span>
                                 <p className="text-xs font-medium text-[var(--text-muted-color)]">
                                     No saved views yet
                                 </p>

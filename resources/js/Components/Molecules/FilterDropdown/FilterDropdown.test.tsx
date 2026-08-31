@@ -247,4 +247,93 @@ describe('FilterDropdown Component', () => {
 
         expect(onOpenChange).toHaveBeenCalledWith(false);
     });
+
+    test('shows the results count for the option list', async () => {
+        render(<FilterDropdown type="status" isOpen onOpenChange={vi.fn()} />);
+
+        expect(await screen.findByText('3 results')).toBeInTheDocument();
+    });
+
+    test('does not show a search input for short option lists', async () => {
+        render(<FilterDropdown type="status" isOpen onOpenChange={vi.fn()} />);
+
+        await screen.findByText('Filter by Status');
+        expect(
+            screen.queryByPlaceholderText('Search status…'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('shows a search input and filters options for long lists', async () => {
+        const user = userEvent.setup();
+        const manyUsers: AssignableUser[] = Array.from(
+            { length: 8 },
+            (_, i) => ({
+                id: i + 1,
+                name: `User ${i + 1}`,
+                avatar: null,
+            }),
+        );
+        render(
+            <FilterDropdown
+                type="assignee"
+                users={manyUsers}
+                isOpen
+                onOpenChange={vi.fn()}
+            />,
+        );
+
+        const search = await screen.findByPlaceholderText('Search assignee…');
+        await user.type(search, 'User 3');
+
+        expect(screen.getByText('1 result')).toBeInTheDocument();
+        expect(screen.getByText('User 3')).toBeInTheDocument();
+        expect(screen.queryByText('User 4')).not.toBeInTheDocument();
+    });
+
+    test('shows an empty state when the search has no matches', async () => {
+        const user = userEvent.setup();
+        const manyUsers: AssignableUser[] = Array.from(
+            { length: 8 },
+            (_, i) => ({
+                id: i + 1,
+                name: `User ${i + 1}`,
+                avatar: null,
+            }),
+        );
+        render(
+            <FilterDropdown
+                type="assignee"
+                users={manyUsers}
+                isOpen
+                onOpenChange={vi.fn()}
+            />,
+        );
+
+        const search = await screen.findByPlaceholderText('Search assignee…');
+        await user.type(search, 'nobody-matches-this');
+
+        expect(screen.getByText('No matches found')).toBeInTheDocument();
+    });
+
+    test('selects and deselects all options via the "Select all" control', async () => {
+        const user = userEvent.setup();
+        render(
+            <FilterDropdown type="priority" isOpen onOpenChange={vi.fn()} />,
+        );
+
+        await user.click(await screen.findByText('Select all'));
+
+        expect(mockRouterGet).toHaveBeenCalledWith(
+            '/',
+            expect.objectContaining({ priority: 'high,medium,low' }),
+            { preserveState: true, replace: true },
+        );
+    });
+
+    test('does not render "Select all" for single-select filters', async () => {
+        render(<FilterDropdown type="status" isOpen onOpenChange={vi.fn()} />);
+
+        await screen.findByText('Filter by Status');
+        expect(screen.queryByText('Select all')).not.toBeInTheDocument();
+    });
 });

@@ -154,4 +154,57 @@ describe('EditableLabelList Component', () => {
             screen.queryByPlaceholderText('Change or add labels...'),
         ).not.toBeInTheDocument();
     });
+
+    test('shows the results count for the label list', async () => {
+        render(<EditableLabelList labels={[]} onSave={() => {}} />);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Edit labels' }),
+        );
+
+        expect(screen.getByText('6 results')).toBeInTheDocument();
+    });
+
+    test('selects every label via "Select all"', async () => {
+        const handleSave = vi.fn();
+        render(<EditableLabelList labels={[]} onSave={handleSave} />);
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Edit labels' }),
+        );
+        await userEvent.click(screen.getByText('Select all'));
+
+        expect(handleSave).toHaveBeenCalledWith([
+            'bug',
+            'feature',
+            'performance',
+            'design',
+            'ux',
+            'chore',
+        ]);
+    });
+
+    test('deselects every label via "Select all" when all are already selected', async () => {
+        const handleSave = vi.fn();
+        render(
+            <EditableLabelList
+                labels={[
+                    'bug',
+                    'feature',
+                    'performance',
+                    'design',
+                    'ux',
+                    'chore',
+                ]}
+                onSave={handleSave}
+            />,
+        );
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Edit labels' }),
+        );
+        await userEvent.click(screen.getByText('Select all'));
+
+        expect(handleSave).toHaveBeenCalledWith([]);
+    });
 });

@@ -93,6 +93,7 @@ export default function Show({
     const assigneeOptions = [
         {
             value: '',
+            searchLabel: 'Unassigned',
             label: (
                 <span className="flex items-center gap-2 text-[var(--text-gray-color)]">
                     <Icon name="UserX" size={14} />
@@ -102,6 +103,7 @@ export default function Show({
         },
         ...users.map((user) => ({
             value: String(user.id),
+            searchLabel: user.name,
             label: (
                 <UserBadge
                     avatarSrc={user.avatar ?? undefined}

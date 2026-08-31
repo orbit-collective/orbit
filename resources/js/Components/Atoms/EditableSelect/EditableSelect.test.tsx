@@ -161,4 +161,60 @@ describe('EditableSelect Component', () => {
         await userEvent.click(screen.getByRole('button'));
         expect(screen.queryByText('In Progress')).not.toBeInTheDocument();
     });
+
+    test('does not show a search input for short option lists', async () => {
+        render(
+            <EditableSelect value="open" options={OPTIONS} onSave={() => {}} />,
+        );
+
+        await userEvent.click(screen.getByRole('button'));
+
+        expect(
+            screen.queryByPlaceholderText('Search…'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('shows a search input and filters options for long lists', async () => {
+        const manyOptions = Array.from({ length: 8 }, (_, i) => ({
+            value: `user-${i}`,
+            label: `User ${i}`,
+            searchLabel: `User ${i}`,
+        }));
+        render(
+            <EditableSelect
+                value="user-0"
+                options={manyOptions}
+                onSave={() => {}}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole('button', { name: 'User 0' }));
+        await userEvent.type(screen.getByPlaceholderText('Search…'), 'User 3');
+
+        expect(screen.getByText('User 3')).toBeInTheDocument();
+        expect(screen.queryByText('User 4')).not.toBeInTheDocument();
+    });
+
+    test('shows an empty state when the search has no matches', async () => {
+        const manyOptions = Array.from({ length: 8 }, (_, i) => ({
+            value: `user-${i}`,
+            label: `User ${i}`,
+            searchLabel: `User ${i}`,
+        }));
+        render(
+            <EditableSelect
+                value="user-0"
+                options={manyOptions}
+                onSave={() => {}}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole('button', { name: 'User 0' }));
+        await userEvent.type(
+            screen.getByPlaceholderText('Search…'),
+            'nobody-matches-this',
+        );
+
+        expect(screen.getByText('No matches found')).toBeInTheDocument();
+    });
 });

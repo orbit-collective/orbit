@@ -176,6 +176,7 @@ export interface LabelBadgeProps {
 export interface EditableSelectOption {
     value: string;
     label: ReactNode;
+    searchLabel?: string;
 }
 export interface EditableSelectProps {
     value: string;
