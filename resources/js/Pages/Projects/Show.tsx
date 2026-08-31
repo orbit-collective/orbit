@@ -1,10 +1,12 @@
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
+import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
 import CalendarView from '@/Components/Organisms/CalendarView/CalendarView';
 import FilterBar from '@/Components/Organisms/FilterBar/FilterBar';
 import IssueBoard from '@/Components/Organisms/IssueBoard/IssueBoard';
 import IssueTable from '@/Components/Organisms/IssueTable/IssueTable';
 import { SavedFilter } from '@/hooks/useSavedFilters';
 import MainLayout from '@/Layouts/MainLayout';
+import { ActivityLogEntry } from '@/types/ActivityLog';
 import {
     Issue,
     IssuePageLooks,
@@ -30,6 +32,7 @@ export default function Show({
     queryParams = {},
     savedFilters,
     users,
+    activityLogs,
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
@@ -37,16 +40,24 @@ export default function Show({
     queryParams?: QueryParams;
     savedFilters: SavedFilter[];
     users: AssignableUser[];
+    activityLogs: ActivityLogEntry[];
 }) {
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('selectedLook');
-            if (saved === 'List' || saved === 'Board' || saved === 'Calendar') {
+            if (
+                saved === 'List' ||
+                saved === 'Board' ||
+                saved === 'Calendar' ||
+                saved === 'Activity'
+            ) {
                 return saved;
             }
         }
         return 'List';
     });
+
+    console.log(activityLogs);
 
     return (
         <MainLayout
@@ -103,8 +114,23 @@ export default function Show({
                                     queryParams={queryParams}
                                 />
                             </>
-                        ) : (
+                        ) : selectedLook === 'Calendar' ? (
                             <CalendarView issues={issues.data} />
+                        ) : (
+                            <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
+                                <div className="mb-2 flex items-center justify-between">
+                                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                                        Recent Work Activity
+                                    </h3>
+                                    <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
+                                        Showing {activityLogs.length} latest
+                                        events
+                                    </span>
+                                </div>
+                                <div className="flex-1 overflow-y-auto">
+                                    <ActivityLogs logs={activityLogs} />
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>

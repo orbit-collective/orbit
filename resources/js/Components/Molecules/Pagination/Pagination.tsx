@@ -71,7 +71,7 @@ const Pagination = ({
     };
 
     return (
-        <div className="mt-auto flex flex-col items-center justify-between gap-4 border-t border-solid border-t-[var(--bg-light-color)] bg-[var(--bg-color)] px-6 py-4 sm:flex-row sm:gap-0">
+        <div className="mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 sm:flex-row sm:gap-0">
             <div className="text-sm text-[var(--text-gray-color)]">
                 Showing{' '}
                 <span className="font-semibold text-[var(--text-color)]">

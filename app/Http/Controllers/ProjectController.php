@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Services\ActivityLogService;
 use App\Services\IssueService;
 use App\Services\ProjectService;
 use App\Services\UserService;
@@ -20,11 +21,13 @@ class ProjectController extends Controller
     protected ProjectService $projectService;
     protected IssueService $issueService;
     protected UserService $userService;
+    protected ActivityLogService $activityLogService;
 
-    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService) {
+    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService) {
         $this->projectService = $projectService;
         $this->issueService = $issueService;
         $this->userService = $userService;
+        $this->activityLogService = $activityLogService;
     }
 
     /**
@@ -60,6 +63,12 @@ class ProjectController extends Controller
             'filters' => $filters,
             'savedFilters' => $project->savedFilters()->latest()->get(),
             'users' => $this->userService->getAssignableUsersForProject($project->id),
+            'activityLogs' => $this->activityLogService->getRecentForProject($project->id, 50)->map(fn ($entry) => [
+                'id' => $entry->id,
+                'body' => $entry->body,
+                'userName' => $entry->user?->name,
+                'createdAt' => $entry->created_at->diffForHumans(),
+            ]),
         ]);
     }
 
