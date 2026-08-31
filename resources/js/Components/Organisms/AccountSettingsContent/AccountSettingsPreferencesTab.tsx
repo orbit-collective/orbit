@@ -11,7 +11,7 @@ import { useState } from 'react';
 
 const issueViewOptions: Array<{
     id: IssuePageLooks;
-    icon: 'Rows3' | 'Columns3' | 'CalendarDays';
+    icon: 'Rows3' | 'Columns3' | 'CalendarDays' | 'Activity';
     description: string;
 }> = [
     {
@@ -28,6 +28,11 @@ const issueViewOptions: Array<{
         id: 'Calendar',
         icon: 'CalendarDays',
         description: 'Issues plotted against their due dates.',
+    },
+    {
+        id: 'Activity',
+        icon: 'Activity',
+        description: 'A chronological feed of all issue activity.',
     },
 ];
 
@@ -62,7 +67,12 @@ export default function AccountSettingsPreferencesTab() {
 
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         const saved = localStorage.getItem('selectedLook');
-        if (saved === 'List' || saved === 'Board' || saved === 'Calendar') {
+        if (
+            saved === 'List' ||
+            saved === 'Board' ||
+            saved === 'Calendar' ||
+            saved === 'Activity'
+        ) {
             return saved;
         }
         return 'List';

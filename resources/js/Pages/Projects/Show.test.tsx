@@ -183,6 +183,7 @@ describe('Projects Show Page', () => {
                 projects={[project]}
                 savedFilters={savedFilters}
                 users={[makeUser()]}
+                activityLogs={[]}
             />,
         );
 
@@ -206,6 +207,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -234,6 +236,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -253,6 +256,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -272,6 +276,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -297,6 +302,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
+                activityLogs={[]}
             />,
         );
 
@@ -324,6 +330,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
+                activityLogs={[]}
                 queryParams={queryParams}
             />,
         );
