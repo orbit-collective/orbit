@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.7.0](https://github.com/orbit-collective/orbit/compare/v0.6.0...v0.7.0) (2026-08-31)
+
+
+### Features
+
+* **activity-log:** add ActivityLog components and service ([1a22e26](https://github.com/orbit-collective/orbit/commit/1a22e26e2dd25814d6dba4d67026180745d5fa44))
+* **ui:** add 'bare' prop to IssueTable for card chrome control ([2632fa2](https://github.com/orbit-collective/orbit/commit/2632fa2578f54b6d2876a218b2726409b988825e))
+* **ui:** add Activity view and corresponding tests ([c9b5d09](https://github.com/orbit-collective/orbit/commit/c9b5d09b5619aabded61e0fa7424ccf38ecaf4e4))
+* **ui:** add Activity view and integrate activity logs ([abd3aa0](https://github.com/orbit-collective/orbit/commit/abd3aa017623d15155873e2b785e1d2fce9d0785))
+* **ui:** add Activity view and update documentation ([afb355b](https://github.com/orbit-collective/orbit/commit/afb355bbdf38cf588f1b7cf6d2d5757947d8a33b))
+* **ui:** add Activity view option to MainLayout ([a06a593](https://github.com/orbit-collective/orbit/commit/a06a593c250bed62f0c6d1f4cbd4bf06c631309f))
+* **ui:** add category filtering and search functionality to ShortcutHelpModal ([a13a064](https://github.com/orbit-collective/orbit/commit/a13a064019ff8a75df02d892501e15685f618fbf))
+* **ui:** add disabled state to NavItem and Sidebar ([cba2407](https://github.com/orbit-collective/orbit/commit/cba240772c4204e8e89eb8da3310478a6ce2182f))
+* **ui:** add help links to sidebar menu ([c5dba67](https://github.com/orbit-collective/orbit/commit/c5dba677ebbc2bc6cdb51e033c8225bd5e99f4c3))
+* **ui:** add icon support to PageHeader component ([4a8e26a](https://github.com/orbit-collective/orbit/commit/4a8e26a120200fef5b1ad8fd163d5ef451225e8f))
+* **ui:** add icon text and ring color support to colors ([375dd55](https://github.com/orbit-collective/orbit/commit/375dd55c3ea081d33ca252788cac4a25c3a421af))
+* **ui:** add mobile sidebar toggle space and title truncation in PageHeader ([8a7f4aa](https://github.com/orbit-collective/orbit/commit/8a7f4aa6f74663c7fcfa5d3e763125541fe4c1a9))
+* **ui:** add navigation tabs and shortcuts to PageHeader ([90f9ba7](https://github.com/orbit-collective/orbit/commit/90f9ba7977185a0d25d98f46b524b905de940b0f))
+* **ui:** add notification filter tabs and improve UI elements ([fe5dbe9](https://github.com/orbit-collective/orbit/commit/fe5dbe90c93d9b17b64faec6009529325e21d5c1))
+* **ui:** add search functionality and select all option in EditableSelect and FilterDropdown ([330d0c3](https://github.com/orbit-collective/orbit/commit/330d0c34bb214597dbb0971006cc5da880879001))
+* **ui:** add sidebar collapse functionality and update NavItem ([4a704ae](https://github.com/orbit-collective/orbit/commit/4a704ae83f5c0093f7960c6d144c80a37588561e))
+* **ui:** implement notifications popup with close functionality ([c0b0cf9](https://github.com/orbit-collective/orbit/commit/c0b0cf912f51bddea03e6f125174073416c2fb10))
+* **ui:** update layout components and add help link ([356c6c5](https://github.com/orbit-collective/orbit/commit/356c6c59c59b33dc198e28736e51e73862232c34))
+
 ## [0.6.0](https://github.com/orbit-collective/orbit/compare/v0.5.0...v0.6.0) (2026-08-29)
 
 
