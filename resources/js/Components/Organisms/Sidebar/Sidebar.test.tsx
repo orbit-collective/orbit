@@ -112,7 +112,7 @@ describe('Sidebar Component', () => {
         render(
             <Sidebar
                 projects={[
-                    makeProject({ id: 5, name: 'Orbit' }),
+                    makeProject({ id: 5, name: 'Short Name' }),
                     makeProject({
                         id: 6,
                         name: 'A Very Long Project Name Here',
@@ -121,7 +121,7 @@ describe('Sidebar Component', () => {
             />,
         );
 
-        expect(screen.getByText('Orbit')).toBeInTheDocument();
+        expect(screen.getByText('Short Name')).toBeInTheDocument();
         expect(screen.getByText('A Very Long Proj...')).toBeInTheDocument();
     });
 
@@ -224,10 +224,38 @@ describe('Sidebar Component', () => {
         expect(screen.queryByText('Log out')).not.toBeInTheDocument();
     });
 
-    test('renders organization badge at the top', () => {
+    test('renders the Orbit brand at the top', () => {
         render(<Sidebar projects={[]} />);
 
-        expect(screen.getAllByText('Acme Inc.')).toHaveLength(2);
+        expect(screen.getByText('Orbit')).toBeInTheDocument();
+    });
+
+    test('collapses the sidebar when the collapse toggle is clicked', async () => {
+        const user = userEvent.setup();
+        const { container } = render(<Sidebar projects={[]} />);
+
+        const aside = container.querySelector('aside') as HTMLElement;
+        expect(aside).toHaveClass('w-[240px]');
+        expect(screen.getByText('Dashboard')).toBeInTheDocument();
+
+        await user.click(screen.getByLabelText('Collapse sidebar'));
+
+        expect(aside).toHaveClass('w-[72px]');
+        expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
+        expect(screen.queryByText('Orbit')).not.toBeInTheDocument();
+    });
+
+    test('persists the collapsed state across renders', async () => {
+        const user = userEvent.setup();
+        const { unmount } = render(<Sidebar projects={[]} />);
+
+        await user.click(screen.getByLabelText('Collapse sidebar'));
+        unmount();
+
+        const { container } = render(<Sidebar projects={[]} />);
+        const aside = container.querySelector('aside') as HTMLElement;
+
+        expect(aside).toHaveClass('w-[72px]');
     });
 
     test('renders all projects when provided', () => {
@@ -275,9 +303,13 @@ describe('Sidebar Component', () => {
     });
 
     test('renders project links with correct href', () => {
-        render(<Sidebar projects={[makeProject({ id: 5, name: 'Orbit' })]} />);
+        render(
+            <Sidebar
+                projects={[makeProject({ id: 5, name: 'Test Project' })]}
+            />,
+        );
 
-        const projectLink = screen.getByText('Orbit').closest('a');
+        const projectLink = screen.getByText('Test Project').closest('a');
         expect(projectLink).toHaveAttribute('href', '/projects/5');
     });
 

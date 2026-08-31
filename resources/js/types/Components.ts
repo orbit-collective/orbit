@@ -294,6 +294,7 @@ export interface NavItemProps {
     iconClassName?: string;
     link?: string;
     preserveScroll?: boolean;
+    collapsed?: boolean;
 }
 export interface PaginationProps {
     links: Array<{ url: string | null; label: string; active: boolean }>;
