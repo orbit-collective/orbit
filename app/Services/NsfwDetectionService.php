@@ -20,10 +20,10 @@ class NsfwDetectionService
 
         $response = $file->getRealPath()
             |> file_get_contents(...)
-            |> (fn($x) => Http::withBody($x, 'application/octet-stream'))
-            ->timeout(5)
-            ->retry(2, 100)
-            ->post(config('services.nsfw.url') . '/classify');
+            |> (fn ($body) => Http::withBody($body, 'application/octet-stream')
+                ->timeout(5)
+                ->retry(2, 100)
+                ->post(config('services.nsfw.url').'/classify'));
 
         if ($response->failed()) {
             throw new RuntimeException(
