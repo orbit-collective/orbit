@@ -211,7 +211,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     }, [viewMode, month, year, weekViewDays]);
 
     return (
-        <div className="flex min-h-[600px] min-w-0 flex-1 flex-col p-6 lg:h-full lg:min-h-0">
+        <div className="flex min-h-[600px] min-w-0 flex-1 flex-col p-6 xl:h-full xl:min-h-0">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
                     <h2 className="text-2xl font-bold text-[var(--text-color)]">
@@ -341,7 +341,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                         </span>
                                     </div>
                                     {dayIssues.length > 0 && (
-                                        <span className="text-[10px] font-bold text-[var(--text-muted-color)]">
+                                        <span className="hidden text-[10px] font-bold text-[var(--text-muted-color)] 2xl:block">
                                             {dayIssues.length}{' '}
                                             {dayIssues.length === 1
                                                 ? 'item'

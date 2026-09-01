@@ -116,7 +116,7 @@ export default function Show({
                                 />
                             </>
                         ) : selectedLook === 'Calendar' ? (
-                            <div className="flex flex-1 flex-col gap-4 overflow-y-auto lg:flex-row lg:overflow-hidden">
+                            <div className="flex flex-1 flex-col gap-4 overflow-y-auto xl:flex-row xl:overflow-hidden">
                                 <CalendarView issues={calendarIssues} />
                                 <UpcomingDeadlinesPanel
                                     issues={calendarIssues}
