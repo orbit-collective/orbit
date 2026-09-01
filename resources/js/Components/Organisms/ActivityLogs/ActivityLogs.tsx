@@ -24,12 +24,8 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs }) => {
 
     return (
         <div className="flex flex-col">
-            {groups.map((group, index) => (
-                <ActivityLogItem
-                    key={group.key}
-                    group={group}
-                    isLast={index === groups.length - 1}
-                />
+            {groups.map((group) => (
+                <ActivityLogItem key={group.key} group={group} />
             ))}
         </div>
     );
