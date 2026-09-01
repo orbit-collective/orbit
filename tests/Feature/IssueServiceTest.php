@@ -358,6 +358,33 @@ test('updateIssue describes a description-only change', function () {
     );
 });
 
+test('updateIssue quotes assignee names in the logged body, escaping any embedded quotes', function () {
+    $actor = User::factory()->create();
+    $this->actingAs($actor);
+    $newAssignee = User::factory()->create(['name' => 'Bob "The Builder" Smith']);
+
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
+
+    $this->issueRepository->shouldReceive('update')
+        ->once()
+        ->andReturnUsing(function ($issue, $data) {
+            $issue->fill($data);
+            $issue->syncOriginal();
+
+            return $issue;
+        });
+
+    $this->activityLogService->shouldReceive('log')
+        ->once()
+        ->with($project->id, Mockery::on(fn ($body) => str_contains(
+            $body,
+            'assignee changed from "Unassigned" to "Bob \\"The Builder\\" Smith"'
+        )));
+
+    $this->service->updateIssue($issue, ['assignee_id' => $newAssignee->id]);
+});
+
 test('updateIssue reports a priority change in the IssueUpdated payload', function () {
     $actor = User::factory()->create();
     $this->actingAs($actor);

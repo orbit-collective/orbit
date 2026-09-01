@@ -174,7 +174,18 @@ class IssueService
 
         // Quoted (like the status/priority values above) so a name containing
         // " to " or "; " can't be mistaken for the sentence's own delimiters.
-        return "assignee changed from \"$oldName\" to \"$newName\"";
+        // Backslash-escaped in case the name itself contains a double quote -
+        // the frontend parser unescapes it back when rendering.
+        return sprintf(
+            'assignee changed from "%s" to "%s"',
+            $this->escapeForQuotedSegment($oldName),
+            $this->escapeForQuotedSegment($newName),
+        );
+    }
+
+    private function escapeForQuotedSegment(string $value): string
+    {
+        return str_replace(['\\', '"'], ['\\\\', '\\"'], $value);
     }
 
     private function formatLabels(mixed $labels, string $glue = ', '): string
