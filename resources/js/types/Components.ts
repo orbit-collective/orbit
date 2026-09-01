@@ -476,6 +476,7 @@ export interface ProjectOnboardingFormProps {
 }
 export interface ActivityLogItemProps {
     group: ActivityLogGroup;
+    users?: AssignableUser[];
 }
 export interface ProjectOnboardingPreviewProps {
     data: ProjectOnboardingFormData;
@@ -483,6 +484,7 @@ export interface ProjectOnboardingPreviewProps {
 // ORGANISMS COMPONENTS
 export interface ActivityLogsProps {
     logs: ActivityLogEntry[];
+    users?: AssignableUser[];
 }
 export interface CalendarViewProps {
     issues: Issue[];

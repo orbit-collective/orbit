@@ -15,7 +15,10 @@ const COLOR_TEXT_CLASSES = {
     info: 'text-[var(--info-color)]',
 };
 
-const ActivityLogItem: React.FC<ActivityLogItemProps> = ({ group }) => {
+const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
+    group,
+    users = [],
+}) => {
     return (
         <div>
             <div className="mb-3 mt-4 flex items-center gap-2 first:mt-0">
@@ -64,7 +67,10 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({ group }) => {
                                         )}
                                     />
                                     <span className="min-w-0 break-words">
-                                        {renderActivityLogBody(entry.body)}
+                                        {renderActivityLogBody(
+                                            entry.body,
+                                            users,
+                                        )}
                                     </span>
                                 </div>
                             );

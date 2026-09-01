@@ -36,7 +36,10 @@ describe('ActivityLogs Component', () => {
         render(<ActivityLogs logs={logs} />);
 
         expect(screen.getByText('Created project: Orbit')).toBeInTheDocument();
-        expect(screen.getByText('Deleted issue #4 "Bug"')).toBeInTheDocument();
+        // "#4" is rendered as its own Badge, so the rest of the sentence
+        // is a separate text node around it.
+        expect(screen.getByText('#4')).toBeInTheDocument();
+        expect(screen.getByText(/Deleted issue/)).toBeInTheDocument();
     });
 
     test('groups consecutive entries from the same person in the same minute', () => {

@@ -9,6 +9,7 @@ import { useShortcuts } from '@/context/ShortcutContext';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import { Issue, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
+import { AssignableUser } from '@/types/Users';
 import { Link } from '@inertiajs/react';
 import { useMemo } from 'react';
 
@@ -17,11 +18,13 @@ export default function Dashboard({
     projects,
     productivity_trend,
     activityLogs,
+    users = [],
 }: {
     issues: Issue[];
     projects: Project[];
     productivity_trend: ProductivityTrendProps[];
     activityLogs: ActivityLogEntry[];
+    users?: AssignableUser[];
 }) {
     const stats = useMemo(() => {
         const total = issues.length;
@@ -105,7 +108,10 @@ export default function Dashboard({
                                     </span>
                                 </div>
                                 <div className="flex-1 overflow-y-auto">
-                                    <ActivityLogs logs={activityLogs} />
+                                    <ActivityLogs
+                                        logs={activityLogs}
+                                        users={users}
+                                    />
                                 </div>
                             </div>
 
