@@ -5,24 +5,8 @@ import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { AssignableUser } from '@/types/Users';
 import { ReactNode } from 'react';
 
-// The assignee alternative is tried twice: quoted names first (the current
-// backend format, unambiguous even if a name contains " to " or "; "), then
-// a legacy unquoted fallback so activity logs written before names were
-// quoted still render correctly. The quoted capture allows backslash-escaped
-// quotes (`\"`) since a real name can itself contain a double quote - see
-// `unescapeQuoted` below.
-//
-// The "#123" issue reference is only genuine when it's both preceded by
-// "issue "/"task: " AND immediately followed by ` "` (the title's opening
-// quote, as in every backend template) or the end of the body - a quoted
-// issue title that itself contains e.g. "Reproduce issue #99" is followed by
-// more title text or a bare closing quote (no leading space), not ` "`, so
-// it's correctly left alone. The preceding-word check alone isn't anchored
-// to the start of the body, so comment activity ("Jane commented on issue
-// #16 ...") still matches even though the reference isn't at position 0.
 const CHANGE_PATTERN =
-    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])|(?:assignee changed from "((?:[^"\\]|\\.)*)" to "((?:[^"\\]|\\.)*)")|(?:assignee changed from (.+?) to (.+?)(?=; |$))|(?:(?<=\b(?:[Ii]ssue|task:)\s)#(\d+)(?=\s"|$))/g;
-
+    /(status|priority) changed from "([a-z_]+)" to "([a-z_]+)"|labels changed to \[([a-z_, ]*)]|assignee changed from "((?:[^"\\]|\\.)*)" to "((?:[^"\\]|\\.)*)"|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|task:)\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)/g;
 const unescapeQuoted = (value: string) => value.replace(/\\(.)/g, '$1');
 
 const StatusOrPriorityValue = ({
@@ -85,17 +69,6 @@ const AssigneeValue = ({
     </span>
 );
 
-/**
- * Renders an activity log body as plain text, except for the parts that
- * already have a real visual elsewhere in the app - status/priority/labels
- * changes get the same StatusDot/Badge FilterBar uses, an assignee change
- * gets a bold name with an avatar (or the "unassigned" icon) in front of
- * it, and an "#123" issue reference becomes a Badge - instead of raw text.
- *
- * The log body only ever carries the assignee's name as plain text, not
- * their avatar, so `users` (the same assignable-users list FilterDropdown
- * uses) is used to look one up by name when available.
- */
 export function renderActivityLogBody(
     body: string,
     users: AssignableUser[] = [],
@@ -117,7 +90,12 @@ export function renderActivityLogBody(
             assigneeOldLegacy,
             assigneeNewLegacy,
             issueNumber,
+            authorBy,
+            authorStart,
         ] = match;
+
+        const authorName = authorBy ?? authorStart;
+
         const assigneeOld =
             assigneeOldQuoted !== undefined
                 ? unescapeQuoted(assigneeOldQuoted)
@@ -126,6 +104,7 @@ export function renderActivityLogBody(
             assigneeNewQuoted !== undefined
                 ? unescapeQuoted(assigneeNewQuoted)
                 : assigneeNewLegacy;
+
         const start = match.index ?? 0;
 
         if (start > lastIndex) {
@@ -175,6 +154,14 @@ export function renderActivityLogBody(
         } else if (issueNumber !== undefined) {
             nodes.push(
                 <Badge key={`issue-${matchCount}`}>#{issueNumber}</Badge>,
+            );
+        } else if (authorName !== undefined) {
+            nodes.push(
+                <AssigneeValue
+                    key={`author-${matchCount}`}
+                    name={authorName}
+                    avatar={avatarByName.get(authorName)}
+                />,
             );
         }
 
