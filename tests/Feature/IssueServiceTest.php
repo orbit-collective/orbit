@@ -44,10 +44,25 @@ test('getAllForProject delegates to the repository', function () {
 
     $this->issueRepository->shouldReceive('getForProject')
         ->once()
-        ->with(7)
+        ->with(7, [], [])
         ->andReturn($issues);
 
     $result = $this->service->getAllForProject(7);
+
+    expect($result)->toBe($issues);
+});
+
+test('getAllForProject passes search and filters through to the repository', function () {
+    $issues = Issue::factory()->count(1)->make(['project_id' => 7]);
+    $searchParams = ['search' => 'bug'];
+    $filters = ['status' => ['open']];
+
+    $this->issueRepository->shouldReceive('getForProject')
+        ->once()
+        ->with(7, $searchParams, $filters)
+        ->andReturn($issues);
+
+    $result = $this->service->getAllForProject(7, $searchParams, $filters);
 
     expect($result)->toBe($issues);
 });

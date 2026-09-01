@@ -53,7 +53,7 @@ class ProjectController extends Controller
         ];
 
         $issues = $this->issueService->getAllByProjectID($project->id, $sortParams, $perPage, $searchParams, $filters);
-        $calendarIssues = $this->issueService->getAllForProject($project->id);
+        $calendarIssues = $this->issueService->getAllForProject($project->id, $searchParams, $filters);
 
         return Inertia::render('Projects/Show', [
             'project' => $project,
