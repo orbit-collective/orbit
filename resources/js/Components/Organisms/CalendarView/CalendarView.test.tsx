@@ -166,6 +166,42 @@ describe('CalendarView Component', () => {
         expect(mockRouterVisit).toHaveBeenCalledWith('/issues.show/1/42');
     });
 
+    test('shows an issue preview card on hover', async () => {
+        const user = userEvent.setup();
+        const issue = makeIssue({
+            id: '10',
+            title: 'Hoverable issue',
+            status: 'in_progress',
+            start_date: '2026-07-15',
+        });
+        render(<CalendarView issues={[issue]} />);
+
+        expect(screen.queryByText('In Progress')).not.toBeInTheDocument();
+
+        await user.hover(screen.getByText('Hoverable issue'));
+
+        expect(screen.getByText('In Progress')).toBeInTheDocument();
+    });
+
+    test('hides the issue preview card once the mouse leaves', async () => {
+        const user = userEvent.setup();
+        const issue = makeIssue({
+            id: '10',
+            title: 'Hoverable issue',
+            status: 'in_progress',
+            start_date: '2026-07-15',
+        });
+        render(<CalendarView issues={[issue]} />);
+        const chip = screen.getByText('Hoverable issue');
+
+        await user.hover(chip);
+        expect(screen.getByText('In Progress')).toBeInTheDocument();
+
+        await user.unhover(chip);
+
+        expect(screen.queryByText('In Progress')).not.toBeInTheDocument();
+    });
+
     test('highlights today with the accent-colored day number', () => {
         render(<CalendarView issues={[]} />);
 

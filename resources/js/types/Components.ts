@@ -489,6 +489,10 @@ export interface ActivityLogsProps {
 export interface CalendarViewProps {
     issues: Issue[];
 }
+export interface IssuePreviewCardProps {
+    issue: Issue;
+    anchorRect: DOMRect;
+}
 export interface UpcomingDeadlinesPanelProps {
     issues: Issue[];
 }

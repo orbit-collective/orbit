@@ -1,4 +1,5 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
+import IssuePreviewCard from '@/Components/Molecules/IssuePreviewCard/IssuePreviewCard';
 import { CalendarViewProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
@@ -6,6 +7,7 @@ import { parseDateKey } from '@/utils/time';
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import React, { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 type ViewMode = 'month' | 'week';
 
@@ -49,6 +51,10 @@ const startOfWeek = (date: Date) => {
 const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState<ViewMode>('month');
+    const [preview, setPreview] = useState<{
+        issue: Issue;
+        rect: DOMRect;
+    } | null>(null);
 
     const daysInMonth = (year: number, month: number) =>
         new Date(year, month + 1, 0).getDate();
@@ -359,6 +365,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                                     ]),
                                                 )
                                             }
+                                            onMouseEnter={(e) =>
+                                                setPreview({
+                                                    issue,
+                                                    rect: e.currentTarget.getBoundingClientRect(),
+                                                })
+                                            }
+                                            onMouseLeave={() =>
+                                                setPreview(null)
+                                            }
                                             className={cn(
                                                 'flex items-center rounded-r-md border-l-2 px-2 py-1.5 text-left transition-all sm:py-1',
                                                 PRIORITY_CHIP_CLASSES[
@@ -382,6 +397,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                     })}
                 </div>
             </div>
+
+            {preview &&
+                createPortal(
+                    <IssuePreviewCard
+                        issue={preview.issue}
+                        anchorRect={preview.rect}
+                    />,
+                    document.body,
+                )}
         </div>
     );
 };
