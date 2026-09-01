@@ -5,8 +5,12 @@ import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { AssignableUser } from '@/types/Users';
 import { ReactNode } from 'react';
 
+// The assignee alternative is tried twice: quoted names first (the current
+// backend format, unambiguous even if a name contains " to " or "; "), then
+// a legacy unquoted fallback so activity logs written before names were
+// quoted still render correctly.
 const CHANGE_PATTERN =
-    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])|(?:assignee changed from (.+?) to (.+?)(?=; |$))|(?:#(\d+))/g;
+    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])|(?:assignee changed from "([^"]*)" to "([^"]*)")|(?:assignee changed from (.+?) to (.+?)(?=; |$))|(?:(?<=\b(?:[Ii]ssue|task:)\s)#(\d+))/g;
 
 const StatusOrPriorityValue = ({
     value,
@@ -95,10 +99,14 @@ export function renderActivityLogBody(
             oldValue,
             newValue,
             labelsCsv,
-            assigneeOld,
-            assigneeNew,
+            assigneeOldQuoted,
+            assigneeNewQuoted,
+            assigneeOldLegacy,
+            assigneeNewLegacy,
             issueNumber,
         ] = match;
+        const assigneeOld = assigneeOldQuoted ?? assigneeOldLegacy;
+        const assigneeNew = assigneeNewQuoted ?? assigneeNewLegacy;
         const start = match.index ?? 0;
 
         if (start > lastIndex) {

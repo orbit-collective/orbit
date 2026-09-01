@@ -172,7 +172,9 @@ class IssueService
         $oldName = $oldId ? ($this->userService->getUserById($oldId)?->name ?? 'someone') : 'Unassigned';
         $newName = $newId ? ($this->userService->getUserById($newId)?->name ?? 'someone') : 'Unassigned';
 
-        return "assignee changed from $oldName to $newName";
+        // Quoted (like the status/priority values above) so a name containing
+        // " to " or "; " can't be mistaken for the sentence's own delimiters.
+        return "assignee changed from \"$oldName\" to \"$newName\"";
     }
 
     private function formatLabels(mixed $labels, string $glue = ', '): string
