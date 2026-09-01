@@ -43,8 +43,10 @@ class DashboardController extends Controller
             'activityLogs' => $this->activityLogService->getRecentForUser($userId, 15)->map(fn ($entry) => [
                 'id' => $entry->id,
                 'body' => $entry->body,
+                'userId' => $entry->user_id,
                 'userName' => $entry->user?->name,
-                'createdAt' => $entry->created_at->diffForHumans(),
+                'userAvatar' => $entry->user?->avatar,
+                'createdAt' => $entry->created_at->toJSON(),
             ]),
         ]);
     }
