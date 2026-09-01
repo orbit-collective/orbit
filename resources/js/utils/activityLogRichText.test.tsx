@@ -130,7 +130,8 @@ describe('renderActivityLogBody', () => {
             screen.getByText(
                 (_, element) =>
                     element?.tagName === 'P' &&
-                    (element.textContent?.includes('Reproduce issue') ?? false) &&
+                    (element.textContent?.includes('Reproduce issue') ??
+                        false) &&
                     (element.textContent?.includes('#99') ?? false),
             ),
         ).toBeInTheDocument();
