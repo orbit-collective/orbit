@@ -83,11 +83,16 @@ if this directory is linked to it — see
 Common commands (see the `Makefile` for the full list):
 
 ```bash
-make up / make down    # start (foreground) / stop the stack
-make shell / make tinker
-make migrate / make fresh   # run migrations / rebuild with seed data
-make test / make test-js    # PHP / frontend test suites
-make lint / make type-check
+make up               # start the stack in the foreground
+make down             # stop the stack
+make shell
+make tinker
+make migrate          # run migrations
+make fresh            # rebuild with seed data
+make test             # run the PHP test suite
+make test-js          # run the frontend test suite
+make lint
+make type-check
 ```
 
 ### Native (PHP + Node directly)
@@ -101,6 +106,17 @@ composer setup   # installs deps, copies .env, migrates, builds assets
 php artisan migrate:fresh --seed   # optional: seed demo data
 composer dev      # runs the server, queue listener, log tail, and Vite together
 ```
+
+## Environment configuration
+
+Only applies to the Docker setup — the native setup uses a plain local
+`.env` copied from `.env.example`. In Docker, `${KEY}` values come either
+from a `.env` file at the repo root (the default, generated automatically
+on first `make setup`) or, for the core team, from
+[Doppler](https://www.doppler.com/) if this directory is linked to it — the
+`Makefile` detects which mode applies, no manual choice needed. See
+[`documentation/en/architecture/04-docker-doppler-and-deployment.md`](documentation/en/architecture/04-docker-doppler-and-deployment.md)
+for the full mechanics and troubleshooting.
 
 ## Testing
 
