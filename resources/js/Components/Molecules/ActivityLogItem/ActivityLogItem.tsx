@@ -1,7 +1,9 @@
+import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { ActivityLogItemProps } from '@/types/Components';
 import { getActivityLogVisual } from '@/utils/activityLog';
 import { cn } from '@/utils/cn';
+import { formatTimeAgo } from '@/utils/time';
 import React from 'react';
 
 const COLOR_TEXT_CLASSES = {
@@ -20,44 +22,83 @@ const COLOR_BG_CLASSES = {
     info: 'bg-[var(--info-color)]/10',
 };
 
-const ActivityLogItem: React.FC<ActivityLogItemProps> = ({ log, isLast }) => {
-    const { icon, color } = getActivityLogVisual(log.body);
+const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
+    group,
+    isLast,
+}) => {
+    const { icon: badgeIcon, color: badgeColor } = getActivityLogVisual(
+        group.entries[0].body,
+    );
 
     return (
         <div className="group relative flex gap-3 pb-5">
             {!isLast && (
                 <span
                     aria-hidden="true"
-                    className="absolute left-4 top-9 h-[calc(100%-20px)] w-px bg-[var(--border-color)]"
+                    className="absolute top-11 left-4 h-[calc(100%-24px)] w-px bg-[var(--border-color)]"
                 />
             )}
 
-            <span
-                className={cn(
-                    'z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-solid border-[var(--border-color)]',
-                    COLOR_BG_CLASSES[color],
-                )}
-            >
-                <Icon
-                    name={icon}
-                    size={14}
-                    className={COLOR_TEXT_CLASSES[color]}
+            <div className="relative z-10 shrink-0">
+                <Avatar
+                    src={group.userAvatar ?? undefined}
+                    alt={group.userName ?? undefined}
+                    initials={group.userName?.charAt(0) ?? '?'}
+                    size="lg"
                 />
-            </span>
-
-            <div className="flex min-w-0 flex-1 items-start justify-between gap-3 pt-1">
-                <p className="min-w-0 break-words text-xs leading-relaxed text-[var(--text-gray-color)]">
-                    {log.userName && (
-                        <span className="mr-1 font-semibold text-[var(--text-color)]">
-                            {log.userName}
-                        </span>
+                <span
+                    className={cn(
+                        'absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-solid border-[var(--surface-color)]',
+                        COLOR_BG_CLASSES[badgeColor],
                     )}
-                    {log.body}
-                </p>
-
-                <span className="shrink-0 whitespace-nowrap text-[10px] font-medium text-[var(--text-muted-color)]">
-                    {log.createdAt}
+                >
+                    <Icon
+                        name={badgeIcon}
+                        size={9}
+                        className={COLOR_TEXT_CLASSES[badgeColor]}
+                    />
                 </span>
+            </div>
+
+            <div className="min-w-0 flex-1 pt-0.5">
+                <div className="flex items-baseline justify-between gap-3">
+                    <span className="truncate text-sm font-semibold text-[var(--text-color)]">
+                        {group.userName ?? 'Someone'}
+                    </span>
+                    <span
+                        title={new Date(group.createdAt).toLocaleString()}
+                        className="shrink-0 cursor-default whitespace-nowrap text-[10px] font-medium text-[var(--text-muted-color)]"
+                    >
+                        {formatTimeAgo(group.createdAt)} ago
+                    </span>
+                </div>
+
+                <div className="mt-1.5 flex flex-col gap-1.5">
+                    {group.entries.map((entry) => {
+                        const { icon, color } = getActivityLogVisual(
+                            entry.body,
+                        );
+
+                        return (
+                            <div
+                                key={entry.id}
+                                className="flex items-start gap-1.5 text-xs leading-relaxed text-[var(--text-gray-color)]"
+                            >
+                                <Icon
+                                    name={icon}
+                                    size={12}
+                                    className={cn(
+                                        'mt-0.5 shrink-0',
+                                        COLOR_TEXT_CLASSES[color],
+                                    )}
+                                />
+                                <span className="min-w-0 break-words">
+                                    {entry.body}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
