@@ -1,0 +1,138 @@
+# ==========================================
+php:
+  - changed-files:
+      - any-glob-to-any-file: '**/*.php'
+
+javascript:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.js'
+          - '**/*.jsx'
+          - '**/*.ts'
+          - '**/*.tsx'
+
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'Dockerfile'
+          - 'docker-compose*.yml'
+
+github-actions:
+  - changed-files:
+      - any-glob-to-any-file: '.github/workflows/**'
+
+ci/cd:
+  - changed-files:
+      - any-glob-to-any-file: '.github/workflows/**'
+
+# ==========================================
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'documentation/**'
+          - '**/*.md'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'package.json'
+          - 'package-lock.json'
+          - 'composer.json'
+          - 'composer.lock'
+
+database:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'database/**'
+          - '**/*.sql'
+
+api:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'routes/api.php'
+          - '**/openapi.yaml'
+
+auth:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/Auth/**'
+
+backend:
+  - changed-files:
+      - any-glob-to-any-file: 'app/**'
+
+frontend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'resources/js/**'
+          - 'resources/views/**'
+          - '**/*.css'
+
+ui/ux:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/Components/**'
+          - 'resources/css/**'
+
+configuration:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'config/**'
+          - '.env.example'
+          - 'tsconfig.json'
+          - 'vite.config.js'
+          - 'eslint.config.js'
+          - '.prettierrc'
+          - 'phpunit.xml'
+
+integrations:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/Integrations/**'
+          - '**/integrations/**'
+
+notifications:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/Notifications/**'
+          - '**/notifications/**'
+          - '**/*NotificationSetting*'
+
+permissions:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/Permissions/**'
+          - '**/Policies/**'
+          - '**/permissions/**'
+
+settings:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'resources/js/Pages/Settings/**'
+          - '**/Settings/**'
+          - 'routes/account.php'
+
+# ==========================================
+bug:
+  - head-branch: ['^fix/', '^bugfix/']
+
+fixes:
+  - head-branch: ['^fix/', '^bugfix/']
+
+chore:
+  - head-branch: ['^chore/', '^ci/']
+
+refactor:
+  - head-branch: ['^refactor/']
+
+security:
+  - head-branch: ['^security/']
+
+performance:
+  - head-branch: ['^perf/', '^performance/']
+
+functionality:
+  - head-branch: ['^feat/', '^feature/']
+
+breaking change:
+  - head-branch: ['^breaking/', '.*breaking.*']
