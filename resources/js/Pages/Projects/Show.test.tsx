@@ -318,6 +318,30 @@ describe('Projects Show Page', () => {
         expect(screen.queryByTestId('pagination')).not.toBeInTheDocument();
     });
 
+    test('gives the calendar the full unpaginated project issue set, not the current table page', async () => {
+        const user = userEvent.setup();
+        render(
+            <Show
+                project={makeProject()}
+                issues={makePaginated([makeIssue(), makeIssue()])}
+                calendarIssues={[makeIssue(), makeIssue(), makeIssue()]}
+                projects={[]}
+                savedFilters={[]}
+                users={[]}
+                activityLogs={[]}
+            />,
+        );
+
+        await user.click(
+            screen.getByRole('button', { name: 'Switch to Calendar' }),
+        );
+
+        expect(screen.getByTestId('calendar-view')).toHaveAttribute(
+            'data-issues-count',
+            '3',
+        );
+    });
+
     test('forwards queryParams to FilterBar and IssueTable', () => {
         const queryParams = {
             sort: 'title' as const,
