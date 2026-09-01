@@ -7,7 +7,7 @@ import { statusDotVariants } from '@/Components/Atoms/StatusDot/StatusDot';
 import { textareaVariants } from '@/Components/Atoms/TextArea/TextArea';
 import { statCardVariants } from '@/Components/Molecules/StatCard/StatCard';
 import { SavedFilter } from '@/hooks/useSavedFilters';
-import { ActivityLogEntry } from '@/types/ActivityLog';
+import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 import { AlertItem } from '@/types/Alert';
 import {
     Comment,
@@ -475,7 +475,7 @@ export interface ProjectOnboardingFormProps {
     onSkip: () => void;
 }
 export interface ActivityLogItemProps {
-    log: ActivityLogEntry;
+    group: ActivityLogGroup;
     isLast?: boolean;
 }
 export interface ProjectOnboardingPreviewProps {
