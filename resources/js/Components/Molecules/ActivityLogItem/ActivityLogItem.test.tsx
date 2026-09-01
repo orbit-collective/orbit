@@ -103,4 +103,31 @@ describe('ActivityLogItem Component', () => {
             screen.queryByText('status changed from "open" to "closed"'),
         ).not.toBeInTheDocument();
     });
+
+    test('passes the users list through so an assignee change shows their real avatar', () => {
+        const group = makeGroup({
+            entries: [
+                makeEntry({
+                    id: 1,
+                    body: 'assignee changed from Unassigned to Kacper Bieliński',
+                }),
+            ],
+        });
+        const { container } = render(
+            <ActivityLogItem
+                group={group}
+                users={[
+                    {
+                        id: 1,
+                        name: 'Kacper Bieliński',
+                        avatar: '/storage/avatars/kacper.jpg',
+                    },
+                ]}
+            />,
+        );
+
+        expect(
+            container.querySelector('img[src="/storage/avatars/kacper.jpg"]'),
+        ).not.toBeNull();
+    });
 });

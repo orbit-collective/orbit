@@ -4,7 +4,7 @@ import { ActivityLogsProps } from '@/types/Components';
 import { groupActivityLogs } from '@/utils/activityLog';
 import React, { useMemo } from 'react';
 
-const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs }) => {
+const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs, users = [] }) => {
     const groups = useMemo(() => groupActivityLogs(logs), [logs]);
 
     if (groups.length === 0) {
@@ -25,7 +25,7 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs }) => {
     return (
         <div className="flex flex-col">
             {groups.map((group) => (
-                <ActivityLogItem key={group.key} group={group} />
+                <ActivityLogItem key={group.key} group={group} users={users} />
             ))}
         </div>
     );

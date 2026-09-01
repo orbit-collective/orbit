@@ -1,9 +1,12 @@
+import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
+import Icon from '@/Components/Atoms/Icon/Icon';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
+import { AssignableUser } from '@/types/Users';
 import { ReactNode } from 'react';
 
 const CHANGE_PATTERN =
-    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])/g;
+    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])|(?:assignee changed from (.+?) to (.+?)(?=; |$))|(?:#(\d+))/g;
 
 const StatusOrPriorityValue = ({
     value,
@@ -39,19 +42,63 @@ const LabelsValue = ({ labelsCsv }: { labelsCsv: string }) => {
     );
 };
 
+const AssigneeValue = ({
+    name,
+    avatar,
+}: {
+    name: string;
+    avatar?: string | null;
+}) => (
+    <span className="mx-0.5 inline-flex items-center gap-1 align-middle">
+        {name === 'Unassigned' ? (
+            <Icon
+                name="UserX"
+                size={12}
+                className="text-[var(--text-gray-color)]"
+            />
+        ) : (
+            <Avatar
+                src={avatar ?? undefined}
+                alt={name}
+                initials={name.charAt(0)}
+                size="sm"
+            />
+        )}
+        <span className="font-semibold text-[var(--text-color)]">{name}</span>
+    </span>
+);
+
 /**
- * Renders an activity log body as plain text, except for status/priority/
- * labels changes ("status changed from "open" to "closed"", "labels
- * changed to [bug, ux]") — those get replaced with the same StatusDot/Badge
- * visuals FilterBar uses for the same values, instead of raw quoted text.
+ * Renders an activity log body as plain text, except for the parts that
+ * already have a real visual elsewhere in the app - status/priority/labels
+ * changes get the same StatusDot/Badge FilterBar uses, an assignee change
+ * gets a bold name with an avatar (or the "unassigned" icon) in front of
+ * it, and an "#123" issue reference becomes a Badge - instead of raw text.
+ *
+ * The log body only ever carries the assignee's name as plain text, not
+ * their avatar, so `users` (the same assignable-users list FilterDropdown
+ * uses) is used to look one up by name when available.
  */
-export function renderActivityLogBody(body: string): ReactNode[] {
+export function renderActivityLogBody(
+    body: string,
+    users: AssignableUser[] = [],
+): ReactNode[] {
+    const avatarByName = new Map(users.map((user) => [user.name, user.avatar]));
     const nodes: ReactNode[] = [];
     let lastIndex = 0;
     let matchCount = 0;
 
     for (const match of body.matchAll(CHANGE_PATTERN)) {
-        const [full, field, oldValue, newValue, labelsCsv] = match;
+        const [
+            full,
+            field,
+            oldValue,
+            newValue,
+            labelsCsv,
+            assigneeOld,
+            assigneeNew,
+            issueNumber,
+        ] = match;
         const start = match.index ?? 0;
 
         if (start > lastIndex) {
@@ -73,13 +120,34 @@ export function renderActivityLogBody(body: string): ReactNode[] {
                     value={newValue as never}
                 />,
             );
-        } else {
+        } else if (labelsCsv !== undefined) {
             nodes.push('labels changed to ');
             nodes.push(
                 <LabelsValue
                     key={`labels-${matchCount}`}
-                    labelsCsv={labelsCsv ?? ''}
+                    labelsCsv={labelsCsv}
                 />,
+            );
+        } else if (assigneeOld !== undefined) {
+            nodes.push('assignee changed from ');
+            nodes.push(
+                <AssigneeValue
+                    key={`old-${matchCount}`}
+                    name={assigneeOld}
+                    avatar={avatarByName.get(assigneeOld)}
+                />,
+            );
+            nodes.push(' to ');
+            nodes.push(
+                <AssigneeValue
+                    key={`new-${matchCount}`}
+                    name={assigneeNew}
+                    avatar={avatarByName.get(assigneeNew)}
+                />,
+            );
+        } else if (issueNumber !== undefined) {
+            nodes.push(
+                <Badge key={`issue-${matchCount}`}>#{issueNumber}</Badge>,
             );
         }
 

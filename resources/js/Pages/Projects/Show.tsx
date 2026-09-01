@@ -126,7 +126,10 @@ export default function Show({
                                     </span>
                                 </div>
                                 <div className="flex-1 overflow-y-auto">
-                                    <ActivityLogs logs={activityLogs} />
+                                    <ActivityLogs
+                                        logs={activityLogs}
+                                        users={users}
+                                    />
                                 </div>
                             </div>
                         )}

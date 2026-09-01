@@ -57,13 +57,13 @@ describe('renderActivityLogBody', () => {
         render(
             <p>
                 {renderActivityLogBody(
-                    'Issue #5 "Fix login bug" updated by Jane: status changed from "open" to "closed"',
+                    'Issue "Fix login bug" updated by Jane: status changed from "open" to "closed"',
                 )}
             </p>,
         );
 
         expect(
-            screen.getByText(/Issue #5 "Fix login bug" updated by Jane:/),
+            screen.getByText(/Issue "Fix login bug" updated by Jane:/),
         ).toBeInTheDocument();
     });
 
@@ -80,9 +80,92 @@ describe('renderActivityLogBody', () => {
         expect(screen.getByText('high')).toBeInTheDocument();
     });
 
-    test('leaves unrelated bodies as plain text', () => {
-        render(<p>{renderActivityLogBody('Added new task: #12')}</p>);
+    test('renders "#123" issue references as a Badge', () => {
+        const { container } = render(
+            <p>{renderActivityLogBody('Added new task: #12')}</p>,
+        );
 
-        expect(screen.getByText('Added new task: #12')).toBeInTheDocument();
+        expect(screen.getByText('#12')).toBeInTheDocument();
+        expect(screen.getByText('Added new task:')).toBeInTheDocument();
+        expect(container.querySelector('.rounded-lg')).not.toBeNull();
+    });
+
+    test('renders each side of an assignee change as a bold name with an avatar', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'assignee changed from Adam Nowak to Ewa Kowalska',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('Adam Nowak')).toBeInTheDocument();
+        expect(screen.getByText('Ewa Kowalska')).toBeInTheDocument();
+    });
+
+    test('renders "Unassigned" with the unassigned icon instead of an avatar', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'assignee changed from Adam Nowak to Unassigned',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('Unassigned')).toBeInTheDocument();
+        // Adam Nowak gets an avatar (initials "A"); Unassigned gets the
+        // UserX icon instead - only one rounded-full avatar should exist.
+        expect(screen.getByText('A')).toBeInTheDocument();
+        expect(container.querySelectorAll('.rounded-full')).toHaveLength(1);
+    });
+
+    test('renders an assignee change alongside a status change in one body', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'Issue #7 "Fix login bug" updated by Jane: assignee changed from Adam Nowak to Unassigned; status changed from "open" to "closed"',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('#7')).toBeInTheDocument();
+        expect(screen.getByText('Adam Nowak')).toBeInTheDocument();
+        expect(screen.getByText('Unassigned')).toBeInTheDocument();
+        expect(screen.getByText('closed')).toBeInTheDocument();
+    });
+
+    test('uses the real avatar photo for an assignee found in the users list', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'assignee changed from Unassigned to Kacper Bieliński',
+                    [
+                        {
+                            id: 1,
+                            name: 'Kacper Bieliński',
+                            avatar: '/storage/avatars/kacper.jpg',
+                        },
+                    ],
+                )}
+            </p>,
+        );
+
+        const avatarImg = container.querySelector('img');
+        expect(avatarImg).not.toBeNull();
+        expect(avatarImg).toHaveAttribute('src', '/storage/avatars/kacper.jpg');
+    });
+
+    test('falls back to initials when the assignee is not in the users list', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'assignee changed from Unassigned to Kacper Bieliński',
+                    [],
+                )}
+            </p>,
+        );
+
+        expect(container.querySelector('img')).toBeNull();
+        expect(screen.getByText('K')).toBeInTheDocument();
     });
 });
