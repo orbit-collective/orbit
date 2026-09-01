@@ -53,7 +53,7 @@ describe('renderActivityLogBody', () => {
         expect(screen.getByText('none')).toBeInTheDocument();
     });
 
-    test('keeps surrounding plain text untouched', () => {
+    test('keeps surrounding plain text fragments around richer values', () => {
         render(
             <p>
                 {renderActivityLogBody(
@@ -63,7 +63,16 @@ describe('renderActivityLogBody', () => {
         );
 
         expect(
-            screen.getByText(/Issue "Fix login bug" updated by Jane:/),
+            screen.getByText(/Issue "Fix login bug" updated by/),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Jane')).toBeInTheDocument();
+        expect(
+            screen.getByText(
+                (_, element) =>
+                    element?.tagName === 'P' &&
+                    (element.textContent?.includes('status changed from') ??
+                        false),
+            ),
         ).toBeInTheDocument();
     });
 
@@ -106,7 +115,7 @@ describe('renderActivityLogBody', () => {
         expect(screen.getByText(/Fix bug #42 in tracker/)).toBeInTheDocument();
     });
 
-    test('does not turn "#99" into a Badge when a title itself contains "issue #99" or "task: #99"', () => {
+    test('renders the issue reference inside a quoted title as an additional Badge', () => {
         render(
             <p>
                 {renderActivityLogBody(
@@ -115,18 +124,19 @@ describe('renderActivityLogBody', () => {
             </p>,
         );
 
-        // Only the real issue reference (#16) becomes a Badge - a title that
-        // happens to contain "issue #99" followed by more words isn't
-        // immediately followed by `"title"`'s opening quote, so it's left
-        // alone even though "issue " precedes it too.
         expect(screen.getByText('#16')).toBeInTheDocument();
-        expect(screen.queryByText('#99')).not.toBeInTheDocument();
+        expect(screen.getByText('#99')).toBeInTheDocument();
         expect(
-            screen.getByText(/Reproduce issue #99 crash/),
+            screen.getByText(
+                (_, element) =>
+                    element?.tagName === 'P' &&
+                    (element.textContent?.includes('Reproduce issue') ?? false) &&
+                    (element.textContent?.includes('#99') ?? false),
+            ),
         ).toBeInTheDocument();
     });
 
-    test('does not turn "#99" into a Badge when a title ends exactly on its own number', () => {
+    test('renders a trailing issue number in a quoted title as a Badge too', () => {
         render(
             <p>
                 {renderActivityLogBody(
@@ -136,7 +146,7 @@ describe('renderActivityLogBody', () => {
         );
 
         expect(screen.getByText('#16')).toBeInTheDocument();
-        expect(screen.queryByText('#99')).not.toBeInTheDocument();
+        expect(screen.getByText('#99')).toBeInTheDocument();
     });
 
     test('still badges the issue reference in a comment activity entry, where it is not at the start of the body', () => {
@@ -187,7 +197,7 @@ describe('renderActivityLogBody', () => {
 
         expect(screen.getByText('#15')).toBeInTheDocument();
         expect(screen.getByText('Unassigned')).toBeInTheDocument();
-        expect(screen.getByText('Kacper Bieliński')).toBeInTheDocument();
+        expect(screen.getAllByText('Kacper Bieliński')).toHaveLength(2);
     });
 
     test('renders each side of an assignee change as a bold name with an avatar', () => {
