@@ -318,6 +318,26 @@ describe('Projects Show Page', () => {
         expect(screen.queryByTestId('pagination')).not.toBeInTheDocument();
     });
 
+    test('renders the upcoming deadlines panel alongside the calendar', async () => {
+        const user = userEvent.setup();
+        render(
+            <Show
+                project={makeProject()}
+                issues={makePaginated([makeIssue()])}
+                projects={[]}
+                savedFilters={[]}
+                users={[]}
+                activityLogs={[]}
+            />,
+        );
+
+        await user.click(
+            screen.getByRole('button', { name: 'Switch to Calendar' }),
+        );
+
+        expect(screen.getByText('Upcoming Deadlines')).toBeInTheDocument();
+    });
+
     test('gives the calendar the full unpaginated project issue set, not the current table page', async () => {
         const user = userEvent.setup();
         render(

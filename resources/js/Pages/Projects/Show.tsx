@@ -4,6 +4,7 @@ import CalendarView from '@/Components/Organisms/CalendarView/CalendarView';
 import FilterBar from '@/Components/Organisms/FilterBar/FilterBar';
 import IssueBoard from '@/Components/Organisms/IssueBoard/IssueBoard';
 import IssueTable from '@/Components/Organisms/IssueTable/IssueTable';
+import UpcomingDeadlinesPanel from '@/Components/Organisms/UpcomingDeadlinesPanel/UpcomingDeadlinesPanel';
 import { SavedFilter } from '@/hooks/useSavedFilters';
 import MainLayout from '@/Layouts/MainLayout';
 import { ActivityLogEntry } from '@/types/ActivityLog';
@@ -115,7 +116,12 @@ export default function Show({
                                 />
                             </>
                         ) : selectedLook === 'Calendar' ? (
-                            <CalendarView issues={calendarIssues} />
+                            <div className="flex flex-1 gap-4 overflow-hidden">
+                                <CalendarView issues={calendarIssues} />
+                                <UpcomingDeadlinesPanel
+                                    issues={calendarIssues}
+                                />
+                            </div>
                         ) : (
                             <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
                                 <div className="mb-2 flex items-center justify-between">

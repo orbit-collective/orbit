@@ -489,6 +489,9 @@ export interface ActivityLogsProps {
 export interface CalendarViewProps {
     issues: Issue[];
 }
+export interface UpcomingDeadlinesPanelProps {
+    issues: Issue[];
+}
 export interface DashboardVisualsProps {
     issues: Issue[];
     productivity_trend: ProductivityTrendProps[];
