@@ -61,7 +61,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                     )}
                 </div>
 
-                <div className="mt-6 flex items-center gap-8">
+                <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-5">
                     <div className="flex flex-col">
                         <span className="text-6xl font-bold tabular-nums leading-none tracking-tight text-[var(--text-color)]">
                             {closedPct}%
@@ -74,7 +74,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                         </span>
                     </div>
 
-                    <div className="flex h-32 items-end gap-5 border-l border-solid border-[var(--border-color-strong)] pl-8">
+                    <div className="flex h-32 items-end gap-4 border-l border-solid border-[var(--border-color-strong)] pl-6">
                         {bars.map((bar) => (
                             <div
                                 key={bar.label}
@@ -83,9 +83,9 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                 <span className="text-xs font-semibold tabular-nums text-[var(--text-color)]">
                                     {bar.value}
                                 </span>
-                                <div className="flex h-20 w-7 items-end rounded-md bg-[var(--bg-light-color)]">
+                                <div className="flex h-20 w-6 items-end rounded-md bg-[var(--bg-light-color)]">
                                     <div
-                                        className={`w-full rounded-t-md transition-all duration-500 ease-out ${bar.colorClass}`}
+                                        className={`w-full rounded-md transition-all duration-500 ease-out ${bar.colorClass}`}
                                         style={{
                                             height: `${(bar.value / maxValue) * 100}%`,
                                         }}
