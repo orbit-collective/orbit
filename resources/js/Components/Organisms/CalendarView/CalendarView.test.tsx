@@ -86,6 +86,62 @@ describe('CalendarView Component', () => {
         expect(screen.getByText('2 items')).toBeInTheDocument();
     });
 
+    test('renders a multi-day issue on every day between start_date and end_date', () => {
+        const issue = makeIssue({
+            id: '20',
+            title: 'Multi-day task',
+            start_date: '2026-07-15',
+            end_date: '2026-07-17',
+        });
+        render(<CalendarView issues={[issue]} />);
+
+        expect(screen.getAllByText('Multi-day task')).toHaveLength(3);
+    });
+
+    test('renders a single-day chip when end_date matches start_date', () => {
+        const issue = makeIssue({
+            id: '21',
+            title: 'Single-day task',
+            start_date: '2026-07-15',
+            end_date: '2026-07-15',
+        });
+        render(<CalendarView issues={[issue]} />);
+
+        expect(screen.getAllByText('Single-day task')).toHaveLength(1);
+    });
+
+    test('colors an issue chip by its priority', () => {
+        const issue = makeIssue({
+            id: '22',
+            title: 'High priority task',
+            priority: 'high',
+            start_date: '2026-07-15',
+        });
+        render(<CalendarView issues={[issue]} />);
+
+        const chip = screen
+            .getByText('High priority task')
+            .closest('button') as HTMLElement;
+        expect(chip).toHaveClass('border-l-[var(--error-color)]');
+    });
+
+    test('shows a "+N more" indicator when a day has more issues than fit', () => {
+        const issues = [1, 2, 3, 4, 5].map((n) =>
+            makeIssue({
+                id: String(n),
+                title: `Task ${n}`,
+                start_date: '2026-07-15',
+            }),
+        );
+        render(<CalendarView issues={issues} />);
+
+        expect(screen.getByText('Task 1')).toBeInTheDocument();
+        expect(screen.getByText('Task 3')).toBeInTheDocument();
+        expect(screen.queryByText('Task 4')).not.toBeInTheDocument();
+        expect(screen.getByText('+2 more')).toBeInTheDocument();
+        expect(screen.getByText('5 items')).toBeInTheDocument();
+    });
+
     test('does not render issues without a start_date', () => {
         const issue = makeIssue({
             title: 'No date issue',

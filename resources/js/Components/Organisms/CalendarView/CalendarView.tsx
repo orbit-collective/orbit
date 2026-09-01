@@ -1,11 +1,30 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
-import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { CalendarViewProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import React, { useMemo, useState } from 'react';
+
+const MAX_VISIBLE_ISSUES_PER_DAY = 3;
+
+const PRIORITY_CHIP_CLASSES: Record<Issue['priority'], string> = {
+    high: 'border-l-[var(--error-color)] bg-[var(--error-color)]/10 hover:bg-[var(--error-color)]/15',
+    medium: 'border-l-[var(--warning-color)] bg-[var(--warning-color)]/10 hover:bg-[var(--warning-color)]/15',
+    low: 'border-l-[var(--success-color)] bg-[var(--success-color)]/10 hover:bg-[var(--success-color)]/15',
+};
+
+const pad = (value: number) => String(value).padStart(2, '0');
+
+const toDateKey = (date: Date) =>
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+/** Parses a "YYYY-MM-DD" string as local-time date components, avoiding the
+ * UTC-midnight-shifts-a-day-back pitfall of `new Date("YYYY-MM-DD")`. */
+const parseDateKey = (dateString: string) => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+};
 
 const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -77,13 +96,30 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
 
     const issuesByDate = useMemo(() => {
         const map: Record<string, Issue[]> = {};
+        const MAX_SPAN_DAYS = 366;
+
         issues.forEach((issue) => {
-            if (issue.start_date) {
-                const date = issue.start_date;
-                if (!map[date]) map[date] = [];
-                map[date].push(issue);
+            if (!issue.start_date) return;
+
+            const start = parseDateKey(issue.start_date);
+            const end = issue.end_date ? parseDateKey(issue.end_date) : start;
+
+            if (end < start) {
+                const key = toDateKey(start);
+                (map[key] ??= []).push(issue);
+                return;
+            }
+
+            const cursor = new Date(start);
+            let guard = 0;
+            while (cursor <= end && guard < MAX_SPAN_DAYS) {
+                const key = toDateKey(cursor);
+                (map[key] ??= []).push(issue);
+                cursor.setDate(cursor.getDate() + 1);
+                guard += 1;
             }
         });
+
         return map;
     }, [issues]);
 
@@ -124,9 +160,24 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                         </button>
                     </div>
                 </div>
+
+                <div className="flex items-center gap-3 text-[11px] font-medium text-[var(--text-muted-color)]">
+                    <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-[var(--error-color)]" />
+                        High
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-[var(--warning-color)]" />
+                        Medium
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-[var(--success-color)]" />
+                        Low
+                    </span>
+                </div>
             </div>
 
-            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] backdrop-blur-sm">
+            <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)]">
                 <div className="grid grid-cols-1 border-b border-[var(--border-color)] bg-[var(--bg-light-color)] sm:grid-cols-7">
                     {weekDays.map((day) => (
                         <div
@@ -144,6 +195,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                 <div className="grid flex-1 grid-cols-1 overflow-y-auto sm:grid-cols-7 sm:overflow-hidden">
                     {calendarDays.map((dayObj, i) => {
                         const dayIssues = issuesByDate[dayObj.dateKey] || [];
+                        const visibleIssues = dayIssues.slice(
+                            0,
+                            MAX_VISIBLE_ISSUES_PER_DAY,
+                        );
+                        const hiddenCount =
+                            dayIssues.length - visibleIssues.length;
                         const isToday =
                             new Date().toDateString() ===
                             new Date(
@@ -156,7 +213,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                             <div
                                 key={i}
                                 className={cn(
-                                    'relative flex flex-col gap-1 border-b border-[var(--border-color)] p-2 transition-colors hover:bg-[var(--bg-light-color)] sm:border-r',
+                                    'relative flex min-h-[132px] flex-col gap-1.5 border-b border-[var(--border-color)] p-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:border-r',
+                                    isToday &&
+                                        'bg-[var(--accent-color)]/[0.04]',
                                     !dayObj.isCurrentMonth &&
                                         'hidden bg-[var(--overlay-color)] opacity-40 sm:flex',
                                     i % 7 === 6 && 'sm:border-r-0',
@@ -189,8 +248,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                     )}
                                 </div>
 
-                                <div className="no-scrollbar flex flex-col gap-1 overflow-y-auto sm:max-h-[100px]">
-                                    {dayIssues.map((issue) => (
+                                <div className="no-scrollbar flex flex-col gap-1 overflow-y-auto">
+                                    {visibleIssues.map((issue) => (
                                         <motion.button
                                             key={issue.id}
                                             initial={{ opacity: 0, y: 5 }}
@@ -204,19 +263,22 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                                 )
                                             }
                                             className={cn(
-                                                'hover:border-[var(--accent-color)]/50 group flex items-center gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-light-color)] p-1.5 text-left transition-all hover:bg-[var(--bg-light-color-hover)] sm:p-1.5',
-                                                'px-3 py-2.5 sm:px-1.5 sm:py-1.5', // Larger on mobile
+                                                'flex items-center rounded-r-md border-l-2 px-2 py-1.5 text-left transition-all sm:py-1',
+                                                PRIORITY_CHIP_CLASSES[
+                                                    issue.priority
+                                                ],
                                             )}
                                         >
-                                            <StatusDot
-                                                status={issue.priority}
-                                                size="xs"
-                                            />
-                                            <span className="truncate text-xs font-medium text-[var(--text-color)] group-hover:text-[var(--text-color)] sm:text-[11px]">
+                                            <span className="truncate text-xs font-medium text-[var(--text-color)] sm:text-[11px]">
                                                 {issue.title}
                                             </span>
                                         </motion.button>
                                     ))}
+                                    {hiddenCount > 0 && (
+                                        <span className="px-2 text-[10px] font-semibold text-[var(--text-muted-color)]">
+                                            +{hiddenCount} more
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         );
