@@ -2,6 +2,7 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import { CalendarViewProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
+import { parseDateKey } from '@/utils/time';
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import React, { useMemo, useState } from 'react';
@@ -38,13 +39,6 @@ const pad = (value: number) => String(value).padStart(2, '0');
 
 const toDateKey = (date: Date) =>
     `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-/** Parses a "YYYY-MM-DD" string as local-time date components, avoiding the
- * UTC-midnight-shifts-a-day-back pitfall of `new Date("YYYY-MM-DD")`. */
-const parseDateKey = (dateString: string) => {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-};
 
 const startOfWeek = (date: Date) => {
     const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -211,7 +205,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     }, [viewMode, month, year, weekViewDays]);
 
     return (
-        <div className="flex h-full flex-col p-6">
+        <div className="flex h-full min-w-0 flex-1 flex-col p-6">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
                     <h2 className="text-2xl font-bold text-[var(--text-color)]">

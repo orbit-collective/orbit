@@ -36,6 +36,12 @@ export function formatShortDate(
     };
     return date.toLocaleDateString('en-US', options);
 }
+/** Parses a "YYYY-MM-DD" string as local-time date components, avoiding the
+ * UTC-midnight-shifts-a-day-back pitfall of `new Date("YYYY-MM-DD")`. */
+export function parseDateKey(dateString: string): Date {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
 export const formattedDate = () => {
     const options: Intl.DateTimeFormatOptions = {
         weekday: 'long',

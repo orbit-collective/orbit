@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { formatDate, formatTimeAgo, formattedDate } from './time';
+import { formatDate, formatTimeAgo, formattedDate, parseDateKey } from './time';
 
 const NOW = new Date('2026-07-08T12:00:00.000Z').getTime();
 const SECOND = 1000;
@@ -77,5 +77,22 @@ describe('formattedDate', () => {
         const result = formattedDate();
         expect(result).toContain('2027');
         expect(result).toContain('March');
+    });
+});
+
+describe('parseDateKey', () => {
+    test('parses a "YYYY-MM-DD" string into the matching local date', () => {
+        const date = parseDateKey('2026-08-15');
+
+        expect(date.getFullYear()).toBe(2026);
+        expect(date.getMonth()).toBe(7); // August is month index 7
+        expect(date.getDate()).toBe(15);
+    });
+
+    test('does not shift the date backward the way new Date("YYYY-MM-DD") can in western timezones', () => {
+        const date = parseDateKey('2026-01-01');
+
+        expect(date.getDate()).toBe(1);
+        expect(date.getMonth()).toBe(0);
     });
 });
