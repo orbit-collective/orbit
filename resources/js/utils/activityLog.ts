@@ -1,3 +1,4 @@
+import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 import { icons } from 'lucide-react';
 
 export type ActivityLogColor =
@@ -43,4 +44,44 @@ export function getActivityLogVisual(body: string): ActivityLogVisual {
     const rule = RULES.find(({ pattern }) => pattern.test(body));
 
     return rule ? rule.visual : DEFAULT_VISUAL;
+}
+
+const minuteKey = (dateString: string): string => {
+    const date = new Date(dateString);
+
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}`;
+};
+
+/**
+ * Merges consecutive entries from the same person that happened within the
+ * same minute (seconds excluded) into a single group, so a burst of quick
+ * changes reads as one moment in time instead of a repeated header.
+ */
+export function groupActivityLogs(
+    logs: ActivityLogEntry[],
+): ActivityLogGroup[] {
+    const groups: ActivityLogGroup[] = [];
+    let previousGroupingKey: string | null = null;
+
+    for (const log of logs) {
+        const groupingKey = `${log.userId ?? 'unknown'}-${minuteKey(log.createdAt)}`;
+        const previousGroup = groups[groups.length - 1];
+
+        if (previousGroup && groupingKey === previousGroupingKey) {
+            previousGroup.entries.push(log);
+            continue;
+        }
+
+        groups.push({
+            key: `${groupingKey}-${log.id}`,
+            userId: log.userId,
+            userName: log.userName,
+            userAvatar: log.userAvatar,
+            createdAt: log.createdAt,
+            entries: [log],
+        });
+        previousGroupingKey = groupingKey;
+    }
+
+    return groups;
 }

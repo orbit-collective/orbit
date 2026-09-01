@@ -12,6 +12,6 @@ class ActivityLogRepository
     }
 
     public function getRecentForUser(int $userId, int $limit = 15): Collection {
-        return ActivityLog::query()->where('user_id', $userId)->latest()->limit($limit)->get();
+        return ActivityLog::query()->where('user_id', $userId)->with('user')->latest()->limit($limit)->get();
     }
 }
