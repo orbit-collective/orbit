@@ -109,7 +109,7 @@ describe('ActivityLogItem Component', () => {
             entries: [
                 makeEntry({
                     id: 1,
-                    body: 'assignee changed from Unassigned to Kacper Bieliński',
+                    body: 'assignee changed from "Unassigned" to "Kacper Bieliński"',
                 }),
             ],
         });

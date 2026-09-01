@@ -90,11 +90,54 @@ describe('renderActivityLogBody', () => {
         expect(container.querySelector('.rounded-lg')).not.toBeNull();
     });
 
+    test('does not turn a "#42" inside a quoted issue title into a Badge', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'Deleted issue #16 "Fix bug #42 in tracker"',
+                )}
+            </p>,
+        );
+
+        // Only the real issue reference (#16) becomes a Badge; the "#42"
+        // that happens to appear inside the title stays plain text.
+        expect(screen.getByText('#16')).toBeInTheDocument();
+        expect(screen.queryByText('#42')).not.toBeInTheDocument();
+        expect(screen.getByText(/Fix bug #42 in tracker/)).toBeInTheDocument();
+    });
+
+    test('preserves an assignee name containing " to " or "; "', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'assignee changed from "Otto; Toya" to "A to B"',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('Otto; Toya')).toBeInTheDocument();
+        expect(screen.getByText('A to B')).toBeInTheDocument();
+    });
+
+    test('still renders legacy, pre-quoting assignee changes written without quotes', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'Issue #15 "32131312" updated by Kacper Bieliński: assignee changed from Unassigned to Kacper Bieliński',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('#15')).toBeInTheDocument();
+        expect(screen.getByText('Unassigned')).toBeInTheDocument();
+        expect(screen.getByText('Kacper Bieliński')).toBeInTheDocument();
+    });
+
     test('renders each side of an assignee change as a bold name with an avatar', () => {
         render(
             <p>
                 {renderActivityLogBody(
-                    'assignee changed from Adam Nowak to Ewa Kowalska',
+                    'assignee changed from "Adam Nowak" to "Ewa Kowalska"',
                 )}
             </p>,
         );
@@ -107,7 +150,7 @@ describe('renderActivityLogBody', () => {
         const { container } = render(
             <p>
                 {renderActivityLogBody(
-                    'assignee changed from Adam Nowak to Unassigned',
+                    'assignee changed from "Adam Nowak" to "Unassigned"',
                 )}
             </p>,
         );
@@ -123,7 +166,7 @@ describe('renderActivityLogBody', () => {
         render(
             <p>
                 {renderActivityLogBody(
-                    'Issue #7 "Fix login bug" updated by Jane: assignee changed from Adam Nowak to Unassigned; status changed from "open" to "closed"',
+                    'Issue #7 "Fix login bug" updated by Jane: assignee changed from "Adam Nowak" to "Unassigned"; status changed from "open" to "closed"',
                 )}
             </p>,
         );
@@ -138,7 +181,7 @@ describe('renderActivityLogBody', () => {
         const { container } = render(
             <p>
                 {renderActivityLogBody(
-                    'assignee changed from Unassigned to Kacper Bieliński',
+                    'assignee changed from "Unassigned" to "Kacper Bieliński"',
                     [
                         {
                             id: 1,
@@ -159,7 +202,7 @@ describe('renderActivityLogBody', () => {
         const { container } = render(
             <p>
                 {renderActivityLogBody(
-                    'assignee changed from Unassigned to Kacper Bieliński',
+                    'assignee changed from "Unassigned" to "Kacper Bieliński"',
                     [],
                 )}
             </p>,
