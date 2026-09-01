@@ -177,8 +177,10 @@ describe('Dashboard Page', () => {
             {
                 id: 1,
                 body: 'Created project: Orbit',
+                userId: 1,
                 userName: 'Jane Doe',
-                createdAt: '2 hours ago',
+                userAvatar: null,
+                createdAt: '2026-01-01T10:00:00Z',
             },
         ];
         render(

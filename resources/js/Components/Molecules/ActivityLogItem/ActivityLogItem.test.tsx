@@ -1,38 +1,88 @@
-import { ActivityLogEntry } from '@/types/ActivityLog';
+import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import ActivityLogItem from './ActivityLogItem';
 
 describe('ActivityLogItem Component', () => {
-    const makeLog = (
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T12:00:00Z'));
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    const makeEntry = (
         overrides: Partial<ActivityLogEntry> = {},
     ): ActivityLogEntry => ({
         id: 1,
         body: 'Created project: Orbit',
+        userId: 7,
         userName: 'Jane Doe',
-        createdAt: '2 hours ago',
+        userAvatar: null,
+        createdAt: '2026-01-01T10:00:00Z',
         ...overrides,
     });
 
-    test('renders the user name, body and timestamp', () => {
-        render(<ActivityLogItem log={makeLog()} />);
+    const makeGroup = (
+        overrides: Partial<ActivityLogGroup> = {},
+    ): ActivityLogGroup => ({
+        key: 'group-1',
+        userId: 7,
+        userName: 'Jane Doe',
+        userAvatar: null,
+        createdAt: '2026-01-01T10:00:00Z',
+        entries: [makeEntry()],
+        ...overrides,
+    });
+
+    test('renders the user name, entry body and a relative timestamp', () => {
+        render(<ActivityLogItem group={makeGroup()} />);
 
         expect(screen.getByText('Jane Doe')).toBeInTheDocument();
         expect(screen.getByText('Created project: Orbit')).toBeInTheDocument();
-        expect(screen.getByText('2 hours ago')).toBeInTheDocument();
+        expect(screen.getByText('2h ago')).toBeInTheDocument();
     });
 
-    test('renders without a user name when it is null', () => {
-        render(<ActivityLogItem log={makeLog({ userName: null })} />);
+    test('falls back to "Someone" when the user name is null', () => {
+        render(<ActivityLogItem group={makeGroup({ userName: null })} />);
 
-        expect(screen.getByText('Created project: Orbit')).toBeInTheDocument();
+        expect(screen.getByText('Someone')).toBeInTheDocument();
+    });
+
+    test('renders a line for every entry in the group', () => {
+        const group = makeGroup({
+            entries: [
+                makeEntry({ id: 1, body: 'Changed status to Closed' }),
+                makeEntry({ id: 2, body: 'Changed priority to High' }),
+            ],
+        });
+        render(<ActivityLogItem group={group} />);
+
+        expect(
+            screen.getByText('Changed status to Closed'),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByText('Changed priority to High'),
+        ).toBeInTheDocument();
+        // Only one header (name + time) for the whole burst of activity.
+        expect(screen.getAllByText('Jane Doe')).toHaveLength(1);
     });
 
     test('does not render the timeline connector for the last item', () => {
         const { container } = render(
-            <ActivityLogItem log={makeLog()} isLast />,
+            <ActivityLogItem group={makeGroup()} isLast />,
         );
 
         expect(container.querySelector('span[aria-hidden="true"]')).toBeNull();
+    });
+
+    test('renders the timeline connector when not the last item', () => {
+        const { container } = render(<ActivityLogItem group={makeGroup()} />);
+
+        expect(
+            container.querySelector('span[aria-hidden="true"]'),
+        ).not.toBeNull();
     });
 });
