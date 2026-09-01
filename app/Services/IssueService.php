@@ -90,6 +90,15 @@ class IssueService
         return $this->issueRepository->getAllPaginated($projectID, $perPage, $sortParams, $searchParams, $filters);
     }
 
+    /**
+     * The full, unpaginated set of a project's issues - used by views (calendar,
+     * upcoming-deadlines) that need every dated issue rather than one table page.
+     */
+    public function getAllForProject(int $projectId): Collection
+    {
+        return $this->issueRepository->getForProject($projectId);
+    }
+
     public function getProductivityTrendForUser(int $userId): array
     {
         return $this->issueRepository->getProductivityTrendForUser($userId);

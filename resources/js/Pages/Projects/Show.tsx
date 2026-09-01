@@ -28,6 +28,7 @@ interface QueryParams {
 export default function Show({
     project,
     issues,
+    calendarIssues = [],
     projects,
     queryParams = {},
     savedFilters,
@@ -36,6 +37,7 @@ export default function Show({
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
+    calendarIssues?: Issue[];
     projects: Project[];
     queryParams?: QueryParams;
     savedFilters: SavedFilter[];
@@ -113,7 +115,7 @@ export default function Show({
                                 />
                             </>
                         ) : selectedLook === 'Calendar' ? (
-                            <CalendarView issues={issues.data} />
+                            <CalendarView issues={calendarIssues} />
                         ) : (
                             <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
                                 <div className="mb-2 flex items-center justify-between">

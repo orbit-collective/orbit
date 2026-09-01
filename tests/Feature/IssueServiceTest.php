@@ -39,6 +39,19 @@ test('getIssueWithRelations delegates to the repository', function () {
     expect($result)->toBe($issue);
 });
 
+test('getAllForProject delegates to the repository', function () {
+    $issues = Issue::factory()->count(3)->make(['project_id' => 7]);
+
+    $this->issueRepository->shouldReceive('getForProject')
+        ->once()
+        ->with(7)
+        ->andReturn($issues);
+
+    $result = $this->service->getAllForProject(7);
+
+    expect($result)->toBe($issues);
+});
+
 test('it can create an issue and log activity', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
