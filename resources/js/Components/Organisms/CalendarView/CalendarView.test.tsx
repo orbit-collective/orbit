@@ -218,4 +218,79 @@ describe('CalendarView Component', () => {
 
         expect(screen.getByText('July')).toBeInTheDocument();
     });
+
+    test('switches to week view showing the range containing today', async () => {
+        const user = userEvent.setup();
+        const { container } = render(<CalendarView issues={[]} />);
+
+        await user.click(screen.getByRole('button', { name: 'week' }));
+
+        // "Today" (2026-07-25) is a Saturday, so its week is Jul 19 - 25.
+        expect(container.querySelector('h2')).toHaveTextContent('Jul 19 – 25');
+    });
+
+    test('only shows issues that fall within the visible week', async () => {
+        const user = userEvent.setup();
+        const issues = [
+            makeIssue({
+                id: '1',
+                title: 'Inside the week',
+                start_date: '2026-07-20',
+            }),
+            makeIssue({
+                id: '2',
+                title: 'Outside the week',
+                start_date: '2026-08-05',
+            }),
+        ];
+        render(<CalendarView issues={issues} />);
+
+        await user.click(screen.getByRole('button', { name: 'week' }));
+
+        expect(screen.getByText('Inside the week')).toBeInTheDocument();
+        expect(screen.queryByText('Outside the week')).not.toBeInTheDocument();
+    });
+
+    test('navigates by one week at a time in week view', async () => {
+        const user = userEvent.setup();
+        render(<CalendarView issues={[]} />);
+
+        await user.click(screen.getByRole('button', { name: 'week' }));
+        expect(screen.getByText(/Jul 19/)).toBeInTheDocument();
+
+        const nextButton = document
+            .querySelector('.lucide-chevron-right')
+            ?.closest('button') as HTMLElement;
+        await user.click(nextButton);
+
+        expect(screen.getByText(/Jul 26/)).toBeInTheDocument();
+        expect(screen.queryByText(/Jul 19/)).not.toBeInTheDocument();
+    });
+
+    test('returns to the current week when "Today" is clicked in week view', async () => {
+        const user = userEvent.setup();
+        render(<CalendarView issues={[]} />);
+
+        await user.click(screen.getByRole('button', { name: 'week' }));
+
+        const nextButton = document
+            .querySelector('.lucide-chevron-right')
+            ?.closest('button') as HTMLElement;
+        await user.click(nextButton);
+        expect(screen.getByText(/Jul 26/)).toBeInTheDocument();
+
+        await user.click(screen.getByText('Today'));
+
+        expect(screen.getByText(/Jul 19/)).toBeInTheDocument();
+    });
+
+    test('stays in week view after navigating, defaulting to month view initially', () => {
+        render(<CalendarView issues={[]} />);
+
+        const monthButton = screen.getByRole('button', { name: 'month' });
+        const weekButton = screen.getByRole('button', { name: 'week' });
+
+        expect(monthButton).toHaveClass('bg-[var(--accent-color)]');
+        expect(weekButton).not.toHaveClass('bg-[var(--accent-color)]');
+    });
 });
