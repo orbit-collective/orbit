@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.7.1](https://github.com/orbit-collective/orbit/compare/v0.7.0...v0.7.1) (2026-09-01)
+
+
+### Features
+
+* **activity log:** enhance author name handling in logs ([aafd377](https://github.com/orbit-collective/orbit/commit/aafd377d04174e7ad761f3b1c6507975ac0ecdee))
+* **nsfw:** implement NSFW detection service and tests ([3d78339](https://github.com/orbit-collective/orbit/commit/3d783394ec5d7141f1e7707f7cfc7135fc47518b))
+* **qodana:** add additional inspections for PHP quality checks ([daae53a](https://github.com/orbit-collective/orbit/commit/daae53a175806eed269ed35566106341bd458e30))
+* **repository:** add search and filter support to getForProject ([00182cf](https://github.com/orbit-collective/orbit/commit/00182cf3fc8bf9cbaa8d65562746683f347d0a51))
+* **ui:** add issue preview card on hover in Calendar view ([1e89bb0](https://github.com/orbit-collective/orbit/commit/1e89bb0ce3377330ca7717357eab72c7db2928d2))
+* **ui:** add unpaginated issue retrieval for calendar view ([701c1e0](https://github.com/orbit-collective/orbit/commit/701c1e038633b39c5c2ad6f8a44e2ae5cb440d9f))
+* **ui:** add Upcoming Deadlines panel to Calendar view ([1aa0c45](https://github.com/orbit-collective/orbit/commit/1aa0c452d10364742a05c0d20425d0c40233caf3))
+* **ui:** add user avatars for assignee changes in activity log ([54d86ae](https://github.com/orbit-collective/orbit/commit/54d86ae6293752c653da7dfb594c2705868310ec))
+* **ui:** add userId and userAvatar to activity logs ([f50e156](https://github.com/orbit-collective/orbit/commit/f50e156d41483e81668249a5d747afa12ac8a07e))
+* **ui:** enhance activity log structure with user details ([8d4d69a](https://github.com/orbit-collective/orbit/commit/8d4d69a1e89c08b89dc1a43a08d7da8b1e20923c))
+* **ui:** enhance CalendarView with multi-day issue rendering and priority chips ([067440e](https://github.com/orbit-collective/orbit/commit/067440ecea6b780975813aa27544e5882b5ed011))
+* **ui:** implement rich text rendering for activity log changes ([8432d27](https://github.com/orbit-collective/orbit/commit/8432d27a5bc01064d4d1cd94eb78f7797e251d28))
+* **ui:** implement week view navigation and issue filtering ([83b2fb1](https://github.com/orbit-collective/orbit/commit/83b2fb17fa3e65639fad101c56a184703a35cb5c))
+* **ui:** refactor ActivityLogItem to support grouped entries ([22b3061](https://github.com/orbit-collective/orbit/commit/22b30613b1af0b7e48184b5f564464e47572ef1a))
+
+
+### Bug Fixes
+
+* **activity log:** escape quotes in assignee names ([aa8f3ce](https://github.com/orbit-collective/orbit/commit/aa8f3ce4202a818d792aab3f56e2749abd5d8aec))
+* **activity log:** quote assignee names in logs for clarity ([4449c2e](https://github.com/orbit-collective/orbit/commit/4449c2e4cfa46ef492a17bc8a9eaf84b32ce14d3))
+
+
+### Miscellaneous Chores
+
+* release 0.7.1 ([020e33b](https://github.com/orbit-collective/orbit/commit/020e33bba3442148beb01193ddfed87c607ee754))
+
 ## [0.7.0](https://github.com/orbit-collective/orbit/compare/v0.6.0...v0.7.0) (2026-08-31)
 
 
