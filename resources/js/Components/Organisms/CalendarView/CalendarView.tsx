@@ -6,13 +6,33 @@ import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import React, { useMemo, useState } from 'react';
 
-const MAX_VISIBLE_ISSUES_PER_DAY = 3;
+type ViewMode = 'month' | 'week';
+
+const MAX_VISIBLE_ISSUES_PER_DAY: Record<ViewMode, number> = {
+    month: 3,
+    week: 6,
+};
 
 const PRIORITY_CHIP_CLASSES: Record<Issue['priority'], string> = {
     high: 'border-l-[var(--error-color)] bg-[var(--error-color)]/10 hover:bg-[var(--error-color)]/15',
     medium: 'border-l-[var(--warning-color)] bg-[var(--warning-color)]/10 hover:bg-[var(--warning-color)]/15',
     low: 'border-l-[var(--success-color)] bg-[var(--success-color)]/10 hover:bg-[var(--success-color)]/15',
 };
+
+const MONTH_NAMES = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+];
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
@@ -26,23 +46,15 @@ const parseDateKey = (dateString: string) => {
     return new Date(year, month - 1, day);
 };
 
+const startOfWeek = (date: Date) => {
+    const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    start.setDate(start.getDate() - start.getDay());
+    return start;
+};
+
 const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
-
-    const monthNames = [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
-    ];
+    const [viewMode, setViewMode] = useState<ViewMode>('month');
 
     const daysInMonth = (year: number, month: number) =>
         new Date(year, month + 1, 0).getDate();
@@ -52,7 +64,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
 
-    const calendarDays = useMemo(() => {
+    const monthDays = useMemo(() => {
         const days = [];
         const prevMonthDays = daysInMonth(year, month - 1);
         const firstDay = firstDayOfMonth(year, month);
@@ -94,6 +106,23 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
         return days;
     }, [year, month]);
 
+    const weekViewDays = useMemo(() => {
+        const start = startOfWeek(currentDate);
+        return Array.from({ length: 7 }, (_, i) => {
+            const date = new Date(start);
+            date.setDate(start.getDate() + i);
+            return {
+                day: date.getDate(),
+                month: date.getMonth(),
+                year: date.getFullYear(),
+                isCurrentMonth: true,
+                dateKey: toDateKey(date),
+            };
+        });
+    }, [currentDate]);
+
+    const visibleDays = viewMode === 'month' ? monthDays : weekViewDays;
+
     const issuesByDate = useMemo(() => {
         const map: Record<string, Issue[]> = {};
         const MAX_SPAN_DAYS = 366;
@@ -123,25 +152,74 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
         return map;
     }, [issues]);
 
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-    const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-    const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+    const goNext = () => {
+        if (viewMode === 'month') {
+            setCurrentDate(new Date(year, month + 1, 1));
+        } else {
+            setCurrentDate((prev) => {
+                const next = new Date(prev);
+                next.setDate(next.getDate() + 7);
+                return next;
+            });
+        }
+    };
+
+    const goPrev = () => {
+        if (viewMode === 'month') {
+            setCurrentDate(new Date(year, month - 1, 1));
+        } else {
+            setCurrentDate((prev) => {
+                const next = new Date(prev);
+                next.setDate(next.getDate() - 7);
+                return next;
+            });
+        }
+    };
+
     const goToToday = () => setCurrentDate(new Date());
+
+    const headerLabel = useMemo(() => {
+        if (viewMode === 'month') {
+            return (
+                <>
+                    {MONTH_NAMES[month]}{' '}
+                    <span className="font-medium text-[var(--text-muted-color)]">
+                        {year}
+                    </span>
+                </>
+            );
+        }
+
+        const start = weekViewDays[0];
+        const end = weekViewDays[6];
+        const startLabel = `${MONTH_NAMES[start.month].slice(0, 3)} ${start.day}`;
+        const endLabel =
+            start.month === end.month
+                ? `${end.day}`
+                : `${MONTH_NAMES[end.month].slice(0, 3)} ${end.day}`;
+
+        return (
+            <>
+                {startLabel} – {endLabel}{' '}
+                <span className="font-medium text-[var(--text-muted-color)]">
+                    {end.year}
+                </span>
+            </>
+        );
+    }, [viewMode, month, year, weekViewDays]);
 
     return (
         <div className="flex h-full flex-col p-6">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
                     <h2 className="text-2xl font-bold text-[var(--text-color)]">
-                        {monthNames[month]}{' '}
-                        <span className="font-medium text-[var(--text-muted-color)]">
-                            {year}
-                        </span>
+                        {headerLabel}
                     </h2>
                     <div className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-light-color)] p-1">
                         <button
-                            onClick={prevMonth}
+                            onClick={goPrev}
                             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-all hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]"
                         >
                             <Icon name="ChevronLeft" size={18} />
@@ -153,7 +231,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                             Today
                         </button>
                         <button
-                            onClick={nextMonth}
+                            onClick={goNext}
                             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-all hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]"
                         >
                             <Icon name="ChevronRight" size={18} />
@@ -161,25 +239,44 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-[11px] font-medium text-[var(--text-muted-color)]">
-                    <span className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-[var(--error-color)]" />
-                        High
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-[var(--warning-color)]" />
-                        Medium
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-[var(--success-color)]" />
-                        Low
-                    </span>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 text-[11px] font-medium text-[var(--text-muted-color)]">
+                        <span className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-[var(--error-color)]" />
+                            High
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-[var(--warning-color)]" />
+                            Medium
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-[var(--success-color)]" />
+                            Low
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-light-color)] p-1">
+                        {(['month', 'week'] as ViewMode[]).map((mode) => (
+                            <button
+                                key={mode}
+                                onClick={() => setViewMode(mode)}
+                                className={cn(
+                                    'rounded-lg px-3 py-1 text-xs font-semibold capitalize transition-all',
+                                    viewMode === mode
+                                        ? 'bg-[var(--accent-color)] text-white'
+                                        : 'text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
+                                )}
+                            >
+                                {mode}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
             <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)]">
                 <div className="grid grid-cols-1 border-b border-[var(--border-color)] bg-[var(--bg-light-color)] sm:grid-cols-7">
-                    {weekDays.map((day) => (
+                    {weekDayLabels.map((day) => (
                         <div
                             key={day}
                             className="hidden py-3 text-center text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted-color)] sm:block"
@@ -193,12 +290,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                 </div>
 
                 <div className="grid flex-1 grid-cols-1 overflow-y-auto sm:grid-cols-7 sm:overflow-hidden">
-                    {calendarDays.map((dayObj, i) => {
+                    {visibleDays.map((dayObj, i) => {
                         const dayIssues = issuesByDate[dayObj.dateKey] || [];
-                        const visibleIssues = dayIssues.slice(
-                            0,
-                            MAX_VISIBLE_ISSUES_PER_DAY,
-                        );
+                        const maxVisible = MAX_VISIBLE_ISSUES_PER_DAY[viewMode];
+                        const visibleIssues = dayIssues.slice(0, maxVisible);
                         const hiddenCount =
                             dayIssues.length - visibleIssues.length;
                         const isToday =
@@ -213,7 +308,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                             <div
                                 key={i}
                                 className={cn(
-                                    'relative flex min-h-[132px] flex-col gap-1.5 border-b border-[var(--border-color)] p-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:border-r',
+                                    'relative flex flex-col gap-1.5 border-b border-[var(--border-color)] p-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:border-r',
+                                    viewMode === 'month'
+                                        ? 'min-h-[132px]'
+                                        : 'min-h-[260px]',
                                     isToday &&
                                         'bg-[var(--accent-color)]/[0.04]',
                                     !dayObj.isCurrentMonth &&
@@ -235,7 +333,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                             {dayObj.day}
                                         </span>
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted-color)] sm:hidden">
-                                            {weekDays[i % 7]}
+                                            {weekDayLabels[i % 7]}
                                         </span>
                                     </div>
                                     {dayIssues.length > 0 && (
