@@ -22,10 +22,7 @@ const COLOR_BG_CLASSES = {
     info: 'bg-[var(--info-color)]/10',
 };
 
-const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
-    group,
-    isLast,
-}) => {
+const ActivityLogItem: React.FC<ActivityLogItemProps> = ({ group, isLast }) => {
     const { icon: badgeIcon, color: badgeColor } = getActivityLogVisual(
         group.entries[0].body,
     );
@@ -35,7 +32,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
             {!isLast && (
                 <span
                     aria-hidden="true"
-                    className="absolute top-11 left-4 h-[calc(100%-24px)] w-px bg-[var(--border-color)]"
+                    className="absolute left-4 top-11 h-[calc(100%-24px)] w-px bg-[var(--border-color)]"
                 />
             )}
 
@@ -48,7 +45,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                 />
                 <span
                     className={cn(
-                        'absolute -right-1 -bottom-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-solid border-[var(--surface-color)]',
+                        'absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-solid border-[var(--surface-color)]',
                         COLOR_BG_CLASSES[badgeColor],
                     )}
                 >

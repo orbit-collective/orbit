@@ -1,10 +1,13 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ActivityLogItem from '@/Components/Molecules/ActivityLogItem/ActivityLogItem';
 import { ActivityLogsProps } from '@/types/Components';
-import React from 'react';
+import { groupActivityLogs } from '@/utils/activityLog';
+import React, { useMemo } from 'react';
 
 const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs }) => {
-    if (logs.length === 0) {
+    const groups = useMemo(() => groupActivityLogs(logs), [logs]);
+
+    if (groups.length === 0) {
         return (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center">
                 <Icon
@@ -21,11 +24,11 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({ logs }) => {
 
     return (
         <div className="flex flex-col">
-            {logs.map((log, index) => (
+            {groups.map((group, index) => (
                 <ActivityLogItem
-                    key={log.id}
-                    log={log}
-                    isLast={index === logs.length - 1}
+                    key={group.key}
+                    group={group}
+                    isLast={index === groups.length - 1}
                 />
             ))}
         </div>
