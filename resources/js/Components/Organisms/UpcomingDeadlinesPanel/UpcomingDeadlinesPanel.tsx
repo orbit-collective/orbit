@@ -76,7 +76,7 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
     }, [issues]);
 
     return (
-        <div className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
+        <div className="flex max-h-[420px] w-full flex-col overflow-hidden rounded-2xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:max-h-none lg:w-80 lg:shrink-0">
             <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                     Upcoming Deadlines

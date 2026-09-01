@@ -205,7 +205,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     }, [viewMode, month, year, weekViewDays]);
 
     return (
-        <div className="flex h-full min-w-0 flex-1 flex-col p-6">
+        <div className="flex min-h-[600px] min-w-0 flex-1 flex-col p-6 lg:h-full lg:min-h-0">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
                     <h2 className="text-2xl font-bold text-[var(--text-color)]">
@@ -213,18 +213,21 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                     </h2>
                     <div className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-light-color)] p-1">
                         <button
+                            type="button"
                             onClick={goPrev}
                             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-all hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]"
                         >
                             <Icon name="ChevronLeft" size={18} />
                         </button>
                         <button
+                            type="button"
                             onClick={goToToday}
                             className="px-3 py-1 text-xs font-semibold text-[var(--text-gray-color)] transition-all hover:text-[var(--text-color)]"
                         >
                             Today
                         </button>
                         <button
+                            type="button"
                             onClick={goNext}
                             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-all hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]"
                         >
@@ -253,6 +256,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                         {(['month', 'week'] as ViewMode[]).map((mode) => (
                             <button
                                 key={mode}
+                                type="button"
                                 onClick={() => setViewMode(mode)}
                                 className={cn(
                                     'rounded-lg px-3 py-1 text-xs font-semibold capitalize transition-all',
@@ -344,6 +348,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
                                     {visibleIssues.map((issue) => (
                                         <motion.button
                                             key={issue.id}
+                                            type="button"
                                             initial={{ opacity: 0, y: 5 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             onClick={() =>
