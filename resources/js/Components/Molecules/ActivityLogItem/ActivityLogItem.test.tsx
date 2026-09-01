@@ -85,4 +85,22 @@ describe('ActivityLogItem Component', () => {
         // no colored circular badge overlapping the avatar.
         expect(container.querySelector('[class*="border-2"]')).toBeNull();
     });
+
+    test('renders status/priority/labels changes as real components, not raw text', () => {
+        const group = makeGroup({
+            entries: [
+                makeEntry({
+                    id: 1,
+                    body: 'status changed from "open" to "closed"',
+                }),
+            ],
+        });
+        render(<ActivityLogItem group={group} />);
+
+        expect(screen.getByText('open')).toBeInTheDocument();
+        expect(screen.getByText('closed')).toBeInTheDocument();
+        expect(
+            screen.queryByText('status changed from "open" to "closed"'),
+        ).not.toBeInTheDocument();
+    });
 });
