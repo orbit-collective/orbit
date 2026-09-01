@@ -476,7 +476,6 @@ export interface ProjectOnboardingFormProps {
 }
 export interface ActivityLogItemProps {
     group: ActivityLogGroup;
-    isLast?: boolean;
 }
 export interface ProjectOnboardingPreviewProps {
     data: ProjectOnboardingFormData;

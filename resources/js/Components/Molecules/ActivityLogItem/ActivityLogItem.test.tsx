@@ -70,19 +70,19 @@ describe('ActivityLogItem Component', () => {
         expect(screen.getAllByText('Jane Doe')).toHaveLength(1);
     });
 
-    test('does not render the timeline connector for the last item', () => {
-        const { container } = render(
-            <ActivityLogItem group={makeGroup()} isLast />,
-        );
-
-        expect(container.querySelector('span[aria-hidden="true"]')).toBeNull();
-    });
-
-    test('renders the timeline connector when not the last item', () => {
+    test('renders a full-width divider carrying the group time', () => {
         const { container } = render(<ActivityLogItem group={makeGroup()} />);
 
-        expect(
-            container.querySelector('span[aria-hidden="true"]'),
-        ).not.toBeNull();
+        const divider = container.querySelector('span[aria-hidden="true"]');
+        expect(divider).not.toBeNull();
+        expect(divider).toHaveClass('flex-1');
+    });
+
+    test('does not render a duplicate icon-with-background badge on the avatar', () => {
+        const { container } = render(<ActivityLogItem group={makeGroup()} />);
+
+        // The action icon appears once, plain and inline next to its entry -
+        // no colored circular badge overlapping the avatar.
+        expect(container.querySelector('[class*="border-2"]')).toBeNull();
     });
 });
