@@ -106,6 +106,25 @@ describe('renderActivityLogBody', () => {
         expect(screen.getByText(/Fix bug #42 in tracker/)).toBeInTheDocument();
     });
 
+    test('does not turn "#99" into a Badge when a title itself contains "issue #99" or "task: #99"', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'Deleted issue #16 "Reproduce issue #99 crash"',
+                )}
+            </p>,
+        );
+
+        // Only the real issue reference (#16), anchored to the start of the
+        // body, becomes a Badge - a title that happens to contain the exact
+        // "issue "/"task: " prefix in front of its own number is left alone.
+        expect(screen.getByText('#16')).toBeInTheDocument();
+        expect(screen.queryByText('#99')).not.toBeInTheDocument();
+        expect(
+            screen.getByText(/Reproduce issue #99 crash/),
+        ).toBeInTheDocument();
+    });
+
     test('preserves an assignee name containing " to " or "; "', () => {
         render(
             <p>

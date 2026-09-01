@@ -9,8 +9,14 @@ import { ReactNode } from 'react';
 // backend format, unambiguous even if a name contains " to " or "; "), then
 // a legacy unquoted fallback so activity logs written before names were
 // quoted still render correctly.
+//
+// The "#123" issue reference is only ever generated at the very start of the
+// body (see IssueService::createIssue/deleteIssue/updateIssue), so it's
+// anchored to `^` rather than matched anywhere a "issue "/"task: " prefix
+// happens to appear - otherwise a quoted issue title that itself contains
+// e.g. "Reproduce issue #99" would have its own number badge-ified too.
 const CHANGE_PATTERN =
-    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])|(?:assignee changed from "([^"]*)" to "([^"]*)")|(?:assignee changed from (.+?) to (.+?)(?=; |$))|(?:(?<=\b(?:[Ii]ssue|task:)\s)#(\d+))/g;
+    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])|(?:assignee changed from "([^"]*)" to "([^"]*)")|(?:assignee changed from (.+?) to (.+?)(?=; |$))|(?:(?<=^(?:Added new task: |Deleted issue |Issue ))#(\d+))/g;
 
 const StatusOrPriorityValue = ({
     value,
