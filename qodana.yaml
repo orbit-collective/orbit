@@ -29,6 +29,10 @@ exclude:
   - name: PhpUndefinedMethodInspection
   - name: PhpPossiblePolymorphicInvocationInspection
   - name: PhpUndefinedFieldInspection
+  - name: PhpDisabledQualityToolComposerInspection
+  - name: PhpParamsInspection
+  - name: RegExpRedundantEscape
+  - name: RegExpUnnecessaryNonCapturingGroup
 
 include:
   - name: PhpCSFixerValidationInspection
