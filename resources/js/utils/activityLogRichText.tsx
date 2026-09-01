@@ -8,15 +8,22 @@ import { ReactNode } from 'react';
 // The assignee alternative is tried twice: quoted names first (the current
 // backend format, unambiguous even if a name contains " to " or "; "), then
 // a legacy unquoted fallback so activity logs written before names were
-// quoted still render correctly.
+// quoted still render correctly. The quoted capture allows backslash-escaped
+// quotes (`\"`) since a real name can itself contain a double quote - see
+// `unescapeQuoted` below.
 //
-// The "#123" issue reference is only ever generated at the very start of the
-// body (see IssueService::createIssue/deleteIssue/updateIssue), so it's
-// anchored to `^` rather than matched anywhere a "issue "/"task: " prefix
-// happens to appear - otherwise a quoted issue title that itself contains
-// e.g. "Reproduce issue #99" would have its own number badge-ified too.
+// The "#123" issue reference is only genuine when it's both preceded by
+// "issue "/"task: " AND immediately followed by ` "` (the title's opening
+// quote, as in every backend template) or the end of the body - a quoted
+// issue title that itself contains e.g. "Reproduce issue #99" is followed by
+// more title text or a bare closing quote (no leading space), not ` "`, so
+// it's correctly left alone. The preceding-word check alone isn't anchored
+// to the start of the body, so comment activity ("Jane commented on issue
+// #16 ...") still matches even though the reference isn't at position 0.
 const CHANGE_PATTERN =
-    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])|(?:assignee changed from "([^"]*)" to "([^"]*)")|(?:assignee changed from (.+?) to (.+?)(?=; |$))|(?:(?<=^(?:Added new task: |Deleted issue |Issue ))#(\d+))/g;
+    /(?:(status|priority) changed from "([a-z_]+)" to "([a-z_]+)")|(?:labels changed to \[([a-z_, ]*)\])|(?:assignee changed from "((?:[^"\\]|\\.)*)" to "((?:[^"\\]|\\.)*)")|(?:assignee changed from (.+?) to (.+?)(?=; |$))|(?:(?<=\b(?:[Ii]ssue|task:)\s)#(\d+)(?=\s"|$))/g;
+
+const unescapeQuoted = (value: string) => value.replace(/\\(.)/g, '$1');
 
 const StatusOrPriorityValue = ({
     value,
@@ -111,8 +118,14 @@ export function renderActivityLogBody(
             assigneeNewLegacy,
             issueNumber,
         ] = match;
-        const assigneeOld = assigneeOldQuoted ?? assigneeOldLegacy;
-        const assigneeNew = assigneeNewQuoted ?? assigneeNewLegacy;
+        const assigneeOld =
+            assigneeOldQuoted !== undefined
+                ? unescapeQuoted(assigneeOldQuoted)
+                : assigneeOldLegacy;
+        const assigneeNew =
+            assigneeNewQuoted !== undefined
+                ? unescapeQuoted(assigneeNewQuoted)
+                : assigneeNewLegacy;
         const start = match.index ?? 0;
 
         if (start > lastIndex) {

@@ -115,14 +115,52 @@ describe('renderActivityLogBody', () => {
             </p>,
         );
 
-        // Only the real issue reference (#16), anchored to the start of the
-        // body, becomes a Badge - a title that happens to contain the exact
-        // "issue "/"task: " prefix in front of its own number is left alone.
+        // Only the real issue reference (#16) becomes a Badge - a title that
+        // happens to contain "issue #99" followed by more words isn't
+        // immediately followed by `"title"`'s opening quote, so it's left
+        // alone even though "issue " precedes it too.
         expect(screen.getByText('#16')).toBeInTheDocument();
         expect(screen.queryByText('#99')).not.toBeInTheDocument();
         expect(
             screen.getByText(/Reproduce issue #99 crash/),
         ).toBeInTheDocument();
+    });
+
+    test('does not turn "#99" into a Badge when a title ends exactly on its own number', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'Deleted issue #16 "Reproduce issue #99"',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('#16')).toBeInTheDocument();
+        expect(screen.queryByText('#99')).not.toBeInTheDocument();
+    });
+
+    test('still badges the issue reference in a comment activity entry, where it is not at the start of the body', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'Jane Doe commented on issue #16 "Fix login bug"',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('#16')).toBeInTheDocument();
+    });
+
+    test('unescapes a backslash-escaped double quote inside an assignee name', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'assignee changed from "Unassigned" to "Bob \\"The Builder\\" Smith"',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('Bob "The Builder" Smith')).toBeInTheDocument();
     });
 
     test('preserves an assignee name containing " to " or "; "', () => {
