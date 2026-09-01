@@ -91,12 +91,13 @@ class IssueService
     }
 
     /**
-     * The full, unpaginated set of a project's issues - used by views (calendar,
-     * upcoming-deadlines) that need every dated issue rather than one table page.
+     * The full, unpaginated set of a project's issues matching the given search
+     * box/filter chips - used by views (calendar, upcoming-deadlines) that need
+     * every matching issue rather than one table page.
      */
-    public function getAllForProject(int $projectId): Collection
+    public function getAllForProject(int $projectId, array $searchParams = [], array $filters = []): Collection
     {
-        return $this->issueRepository->getForProject($projectId);
+        return $this->issueRepository->getForProject($projectId, $searchParams, $filters);
     }
 
     public function getProductivityTrendForUser(int $userId): array

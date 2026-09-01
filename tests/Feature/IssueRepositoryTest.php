@@ -23,6 +23,55 @@ test('it can get issues for a project', function () {
     expect($issues)->toHaveCount(3);
 });
 
+test('getForProject respects the search box', function () {
+    $project = Project::factory()->create();
+    Issue::factory()->create(['project_id' => $project->id, 'title' => 'Searchable Title']);
+    Issue::factory()->create(['project_id' => $project->id, 'title' => 'Another Issue']);
+
+    $issues = $this->repository->getForProject($project->id, ['search' => 'Searchable']);
+
+    expect($issues)->toHaveCount(1)
+        ->and($issues->first()->title)->toBe('Searchable Title');
+});
+
+test('getForProject respects the status filter', function () {
+    $project = Project::factory()->create();
+    Issue::factory()->create(['project_id' => $project->id, 'status' => 'open']);
+    Issue::factory()->create(['project_id' => $project->id, 'status' => 'closed']);
+
+    $issues = $this->repository->getForProject($project->id, [], ['status' => ['open']]);
+
+    expect($issues)->toHaveCount(1)
+        ->and($issues->first()->status)->toBe('open');
+});
+
+test('getForProject respects the priority filter', function () {
+    $project = Project::factory()->create();
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high']);
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low']);
+
+    $issues = $this->repository->getForProject($project->id, [], ['priority' => ['high']]);
+
+    expect($issues)->toHaveCount(1)
+        ->and($issues->first()->priority)->toBe('high');
+});
+
+test('getForProject respects the assignee filter, including unassigned', function () {
+    $project = Project::factory()->create();
+    $assignee = User::factory()->create();
+    $assigned = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => $assignee->id]);
+    $unassigned = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
+    Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => User::factory()->create()->id]);
+
+    $issues = $this->repository->getForProject($project->id, [], [
+        'assignee' => [(string) $assignee->id, 'unassigned'],
+    ]);
+
+    expect($issues->pluck('id'))->toContain($assigned->id)
+        ->and($issues->pluck('id'))->toContain($unassigned->id)
+        ->and($issues)->toHaveCount(2);
+});
+
 test('it can find an issue with its relations', function () {
     $project = Project::factory()->create();
     $creator = User::factory()->create();
