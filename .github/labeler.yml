@@ -56,6 +56,8 @@ auth:
   - changed-files:
       - any-glob-to-any-file:
           - '**/Auth/**'
+          - 'routes/auth.php'
+          - 'config/auth.php'
 
 backend:
   - changed-files:
