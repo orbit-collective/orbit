@@ -1,4 +1,5 @@
 import Input from '@/Components/Atoms/Input/Input';
+import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import {
     IntegrationDefinition,
     IntegrationFieldMappingType,
@@ -235,16 +236,23 @@ export default function WorkspaceSettingsImportPanel({
                                                 <span className="text-sm text-[var(--text-color)]">
                                                     {option.label}
                                                 </span>
-                                                <select
+                                                <InlineSelectDropdown
+                                                    label={`Map to Orbit ${MAPPING_TYPE_LABELS[mappingType].toLowerCase()}`}
+                                                    placeholder="Default"
+                                                    options={
+                                                        ORBIT_VALUE_OPTIONS[
+                                                            mappingType
+                                                        ]
+                                                    }
                                                     value={
                                                         mappingDrafts[
                                                             mappingKey(
                                                                 mappingType,
                                                                 option.value,
                                                             )
-                                                        ] ?? ''
+                                                        ] ?? null
                                                     }
-                                                    onChange={(event) =>
+                                                    onChange={(nextValue) =>
                                                         setMappingDrafts(
                                                             (prev) => ({
                                                                 ...prev,
@@ -252,32 +260,13 @@ export default function WorkspaceSettingsImportPanel({
                                                                     mappingType,
                                                                     option.value,
                                                                 )]:
-                                                                    event.target
-                                                                        .value,
+                                                                    nextValue ??
+                                                                    '',
                                                             }),
                                                         )
                                                     }
                                                     disabled={!canUpdate}
-                                                    className="rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] px-2 py-1 text-sm text-[var(--text-color)]"
-                                                >
-                                                    <option value="">
-                                                        Default
-                                                    </option>
-                                                    {ORBIT_VALUE_OPTIONS[
-                                                        mappingType
-                                                    ].map((orbitOption) => (
-                                                        <option
-                                                            key={
-                                                                orbitOption.value
-                                                            }
-                                                            value={
-                                                                orbitOption.value
-                                                            }
-                                                        >
-                                                            {orbitOption.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                />
                                             </div>
                                         ))}
                                     </div>
