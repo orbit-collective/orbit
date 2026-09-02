@@ -10,11 +10,15 @@ use Illuminate\Validation\ValidationException;
 class ProjectIntegrationService
 {
     /**
-     * The only integration actually wired up so far. Every other catalog entry
+     * The integrations actually wired up so far. Every other catalog entry
      * shown on the frontend is locked as "coming soon" — enforced here too, so
-     * the restriction doesn't rely on the frontend alone.
+     * the restriction doesn't rely on the frontend alone. 'jira' is an
+     * import-type integration: it still goes through setEnabled()/enabled
+     * toggling here, but its own credentials/mappings/import routes live in
+     * JiraIntegrationController, not updateSettings() below (which only
+     * understands the webhook_url/options shape notify integrations use).
      */
-    public const array AVAILABLE_INTEGRATIONS = ['discord'];
+    public const array AVAILABLE_INTEGRATIONS = ['discord', 'jira'];
 
     /**
      * The sub-options each available integration actually understands. Keys

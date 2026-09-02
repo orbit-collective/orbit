@@ -14,7 +14,7 @@ beforeEach(function () {
 test('it defaults every available integration to disabled when nothing is stored', function () {
     $project = Project::factory()->create();
 
-    expect($this->service->getStatuses($project))->toBe(['discord' => false]);
+    expect($this->service->getStatuses($project))->toBe(['discord' => false, 'jira' => false]);
 });
 
 test('it can enable an available integration and logs the change', function () {
@@ -31,7 +31,7 @@ test('it can enable an available integration and logs the change', function () {
         'project_id' => $project->id,
         'body' => 'Enabled the "discord" integration',
     ]);
-    expect($this->service->getStatuses($project))->toBe(['discord' => true]);
+    expect($this->service->getStatuses($project))->toBe(['discord' => true, 'jira' => false]);
 });
 
 test('it can disable an integration and logs the change', function () {
@@ -62,8 +62,8 @@ test('statuses for one project do not leak into another', function () {
     $projectB = Project::factory()->create();
     $this->service->setEnabled($projectA, 'discord', true);
 
-    expect($this->service->getStatuses($projectA))->toBe(['discord' => true])
-        ->and($this->service->getStatuses($projectB))->toBe(['discord' => false]);
+    expect($this->service->getStatuses($projectA))->toBe(['discord' => true, 'jira' => false])
+        ->and($this->service->getStatuses($projectB))->toBe(['discord' => false, 'jira' => false]);
 });
 
 test('it defaults every discord option to false and no webhook url when nothing is stored', function () {
@@ -74,6 +74,11 @@ test('it defaults every discord option to false and no webhook url when nothing 
             'enabled' => false,
             'webhookUrl' => null,
             'options' => ['issue-activity' => false, 'comment-activity' => false],
+        ],
+        'jira' => [
+            'enabled' => false,
+            'webhookUrl' => null,
+            'options' => [],
         ],
     ]);
 });

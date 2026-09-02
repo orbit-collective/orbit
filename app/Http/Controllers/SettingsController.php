@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\Role;
 use App\Services\NotificationSettingService;
 use App\Services\PermissionService;
+use App\Services\Integrations\Jira\JiraIntegrationService;
 use App\Services\ProjectIntegrationService;
 use App\Services\ProjectInvitationService;
 use App\Services\ProjectMemberService;
@@ -31,6 +32,7 @@ class SettingsController extends Controller
         protected RoleService $roleService,
         protected PermissionService $permissionService,
         protected ProjectIntegrationService $projectIntegrationService,
+        protected JiraIntegrationService $jiraIntegrationService,
     ) {}
 
     public function index(Request $request): Response
@@ -95,6 +97,9 @@ class SettingsController extends Controller
                 : [],
             'hasIntegrationsAccess' => $hasIntegrationsAccess,
             'canUpdateIntegrations' => $canUpdateIntegrations,
+            'jiraSettings' => $canUpdateIntegrations
+                ? $this->jiraIntegrationService->getSettingsExtras($selectedProject)
+                : null,
             'canDeleteProject' => $selectedProject
                 ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
                 : false,
