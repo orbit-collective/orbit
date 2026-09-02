@@ -37,6 +37,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -54,6 +58,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -86,6 +94,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={onToggle}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -105,6 +117,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -122,6 +138,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -141,6 +161,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={onToggleOption}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -163,6 +187,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -182,6 +210,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={onSaveWebhookUrl}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -214,6 +246,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -236,6 +272,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -253,6 +293,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -271,6 +315,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -294,6 +342,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={noop}
             />,
         );
@@ -313,6 +365,10 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onToggle={noop}
                 onSaveWebhookUrl={noop}
                 onToggleOption={noop}
+                importSettings={null}
+                onConnectImport={noop}
+                onSaveImportMappings={noop}
+                onTriggerImport={noop}
                 onClose={onClose}
             />,
         );

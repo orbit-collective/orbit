@@ -25,6 +25,19 @@ export interface IntegrationFieldMapping {
     orbitValue: string;
 }
 
+/**
+ * The payload shape the backend's mappings-update endpoint expects
+ * (snake_case, matching the request validation). The index signature lets
+ * an array of these be sent as Inertia's router.put() body directly.
+ */
+export interface IntegrationFieldMappingDraft {
+    [key: string]: string | null;
+    mapping_type: IntegrationFieldMappingType;
+    external_value: string;
+    external_label: string | null;
+    orbit_value: string;
+}
+
 export interface IntegrationLastImportResult {
     imported: number;
     skipped: number;

@@ -6,7 +6,10 @@ import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import WorkspaceSettingsContent from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsContent';
 import { PageProps } from '@/types';
 import { NotificationSettings } from '@/types/Notification';
-import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
+import {
+    ImportIntegrationSettings,
+    ProjectIntegrationSettings,
+} from '@/types/ProjectIntegrations';
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
@@ -47,6 +50,7 @@ interface SettingsIndexProps {
     canDeleteProject?: boolean;
     integrationStatuses?: Record<string, boolean>;
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
+    jiraSettings?: ImportIntegrationSettings | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -72,6 +76,7 @@ export default function SettingsIndex({
     canDeleteProject = false,
     integrationStatuses = {},
     integrationSettings = {},
+    jiraSettings = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: SettingsIndexProps) {
@@ -143,6 +148,7 @@ export default function SettingsIndex({
                                 canDeleteProject={canDeleteProject}
                                 integrationStatuses={integrationStatuses}
                                 integrationSettings={integrationSettings}
+                                jiraSettings={jiraSettings}
                                 hasIntegrationsAccess={hasIntegrationsAccess}
                                 canUpdateIntegrations={canUpdateIntegrations}
                             />
