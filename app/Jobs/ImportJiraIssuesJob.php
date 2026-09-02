@@ -49,7 +49,6 @@ class ImportJiraIssuesJob implements ShouldQueue
         IntegrationImporterRegistry $integrationImporterRegistry,
         ImportOrchestratorService $importOrchestratorService,
         ProjectIntegrationRepository $projectIntegrationRepository,
-        NotificationService $notificationService,
     ): void {
         $importer = $integrationImporterRegistry->resolve($this->projectIntegration->integration);
 
@@ -88,14 +87,12 @@ class ImportJiraIssuesJob implements ShouldQueue
 
         $projectIntegrationRepository->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
 
-        $notificationService->notify(
-            $this->importedByUserId,
-            NotificationType::IntegrationActivity,
-            $result->failed > 0 ? 'warning' : 'success',
-            'Jira import finished',
-            "Imported {$result->imported}, skipped {$result->skipped}, failed {$result->failed} issue(s) from Jira into \"{$this->project->name}\".",
-            route('settings', ['tab' => 'integrations', 'project' => $this->project->id]),
-        );
+        // Telling the importing user how it went is handled by
+        // SendNotificationListener reacting to the IssuesImported event
+        // ImportOrchestratorService::import() just fired above - not here,
+        // so any future consumer of that event (e.g. a Discord notifier
+        // posting an import summary) gets it independently, without this
+        // job needing to know or care who else is listening.
     }
 
     /**

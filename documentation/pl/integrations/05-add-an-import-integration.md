@@ -500,6 +500,25 @@ wynikowy `ImportResultDTO` w `project_integrations.options['last_import']`
 (`imported`/`skipped`/`failed`/`errors`/`ran_at`) przez
 `ProjectIntegrationRepository::updateOrCreate()`.
 
+Poinformowanie importującego użytkownika, jak poszło, **nie** jest zadaniem tego joba.
+Sam `ImportOrchestratorService::import()` wysyła event `App\Events\IssuesImported`
+(project, importedBy, `ImportResultDTO`) raz, bezwarunkowo, na końcu
+każdego przebiegu — ta sama zasada "wyślij fakt, niech listener
+zdecyduje, kogo to obchodzi", której trzyma się każdy inny event w tej
+aplikacji (zobacz [`03-add-a-new-event-type.md`](./03-add-a-new-event-type.md)).
+`SendNotificationListener::handleIssuesImported()` jest na niego
+zarejestrowany w `AppServiceProvider::boot()` i wywołuje
+`NotificationService::notify()` z `NotificationType::IntegrationActivity`
+— dlatego import Lineara dostaje powiadomienie in-app + email "Twój
+import się zakończył" za darmo, bez żadnego nowego kodu w samym
+`ImportLinearIssuesJob`: event pochodzi ze współdzielonego
+orchestratora, nie z joba. Jedyna rzecz, którą hook `failed()` na
+poziomie joba (wywoływany, gdy wyczerpią się wszystkie próby) wciąż
+musi zrobić bezpośrednio — przez `app(NotificationService::class)->notify(...)`,
+nie przez kolejny event — to poinformowanie użytkownika, że jego import
+w ogóle się nie zakończył, ponieważ `ImportOrchestratorService::import()`
+nigdy nie zdążył się uruchomić, więc `IssuesImported` nigdy nie zostało wysłane.
+
 Jednej rzeczy **nie** kopiuj odruchowo: `ImportJiraIssuesJob` **nie**
 implementuje `ShouldBeEncrypted`, w przeciwieństwie do
 `SendWebhookNotificationJob`. To dlatego, że jego konstruktor przyjmuje
@@ -582,7 +601,16 @@ ten kod już używa gdzie indziej:
 - `tests/Feature/Services/Integrations/ImportOrchestratorServiceTest.php` —
   algorytm dwuprzebiegowy: dziecko pojawiające się przed rodzicem i tak
   dostaje właściwy `parent_id`; ponowne uruchomienie importu na tych
-  samych wierszach `ExternalIssueLink` pomija, zamiast duplikować.
+  samych wierszach `ExternalIssueLink` pomija, zamiast duplikować; oraz
+  — łatwe do przeoczenia, bo to nie jedna z powyższych asercji DTO/hierarchii
+  — `Event::fake()` + `Event::assertDispatched(IssuesImported::class, fn ($event) => ...)`,
+  żeby potwierdzić, że `import()` faktycznie go wysyła z właściwym
+  wynikiem, dla każdego źródła, nie tylko dla Jiry.
+- `tests/Feature/Listeners/SendNotificationListenerTest.php` — odzwierciedl
+  istniejący przypadek Mockery dla `ProjectInvited`: `IssuesImported`
+  z `failed > 0` powiadamia z ciężkością `'warning'`, `failed === 0`
+  powiadamia z `'success'`, a wiadomość/action URL są poprawnie
+  zbudowane z `project`/`result` eventu.
 - `tests/Feature/Jobs/ImportJiraIssuesJobTest.php` /
   `ImportLinearIssuesJobTest.php` — sprawdza, że job rozwiązuje
   właściwego importera, wywołuje orchestrator i zapisuje `last_import`.

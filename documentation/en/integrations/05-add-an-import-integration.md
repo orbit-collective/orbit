@@ -491,6 +491,24 @@ via `IntegrationImporterRegistry`, streams `fetchIssues()` into
 (`imported`/`skipped`/`failed`/`errors`/`ran_at`) via
 `ProjectIntegrationRepository::updateOrCreate()`.
 
+Telling the importing user how it went is **not** this job's job.
+`ImportOrchestratorService::import()` itself fires `App\Events\IssuesImported`
+(project, importedBy, `ImportResultDTO`) once, unconditionally, at the
+end of every run — the same "fire the fact, let the listener decide
+who cares" rule every other event in this app follows (see
+[`03-add-a-new-event-type.md`](./03-add-a-new-event-type.md)).
+`SendNotificationListener::handleIssuesImported()` is registered for it
+in `AppServiceProvider::boot()` and calls `NotificationService::notify()`
+with `NotificationType::IntegrationActivity` — which is why Linear's
+import gets an in-app + email "your import finished" notification for
+free, with zero new code in `ImportLinearIssuesJob` itself: the event
+comes from the shared orchestrator, not from the job. The one thing a
+job-level `failed()` hook (called once every retry is exhausted) still
+needs to do directly — via `app(NotificationService::class)->notify(...)`,
+not another event — is tell the user their import never completed at
+all, since `ImportOrchestratorService::import()` never got to run and
+therefore never fired `IssuesImported`.
+
 One thing **not** to copy reflexively: `ImportJiraIssuesJob` does
 **not** implement `ShouldBeEncrypted`, unlike `SendWebhookNotificationJob`.
 That's because its constructor takes `ProjectIntegration`/`Project`
@@ -568,7 +586,16 @@ per-layer conventions this codebase already uses elsewhere:
 - `tests/Feature/Services/Integrations/ImportOrchestratorServiceTest.php` —
   the two-pass algorithm: a child arriving before its parent still gets
   the right `parent_id`; re-running an import against the same
-  `ExternalIssueLink` rows skips rather than duplicates.
+  `ExternalIssueLink` rows skips rather than duplicates; and — easy to
+  forget since it's not one of the DTO/hierarchy assertions above —
+  `Event::fake()` + `Event::assertDispatched(IssuesImported::class, fn ($event) => ...)`
+  to confirm `import()` actually fires it with the right result, for
+  every source, not just Jira.
+- `tests/Feature/Listeners/SendNotificationListenerTest.php` — mirror
+  the existing `ProjectInvited`-style Mockery case: `IssuesImported`
+  with `failed > 0` notifies with `'warning'` severity, `failed === 0`
+  notifies with `'success'`, and the message/action URL are built from
+  the event's `project`/`result` correctly.
 - `tests/Feature/Jobs/ImportJiraIssuesJobTest.php` /
   `ImportLinearIssuesJobTest.php` — asserts the job resolves the right
   importer, calls the orchestrator, and persists `last_import`.
