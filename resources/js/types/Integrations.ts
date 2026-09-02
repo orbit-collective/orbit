@@ -44,6 +44,34 @@ export interface IntegrationPreviewSample {
     time: string;
 }
 
+/**
+ * 'notify' integrations (Discord, ...) push Orbit activity out via a
+ * webhook, configured with a webhook URL + boolean subOptions.
+ * 'import' integrations (Jira, ...) pull issues in from the remote system
+ * instead, configured with credentials + field mappings — a structurally
+ * different settings panel (see WorkspaceSettingsImportPanel).
+ */
+export type IntegrationKind = 'notify' | 'import';
+
+export interface IntegrationImportCredentialField {
+    id: string;
+    label: string;
+    type: 'text' | 'email' | 'password' | 'url';
+    placeholder?: string;
+}
+
+export type IntegrationFieldMappingType = 'status' | 'priority' | 'label';
+
+/**
+ * Parameterizes the shared import panel per integration: which credential
+ * fields to collect on connect, and which of Orbit's fixed fields need a
+ * mapping UI against the remote system's configurable values.
+ */
+export interface IntegrationImportConfig {
+    credentialFields: IntegrationImportCredentialField[];
+    mappingTypes: IntegrationFieldMappingType[];
+}
+
 export interface IntegrationDefinition {
     id: IntegrationId;
     name: string;
@@ -60,7 +88,11 @@ export interface IntegrationDefinition {
     /** Sample activity shown in the detail modal's preview, standing in for a screenshot. */
     previewSamples: IntegrationPreviewSample[];
     subOptions?: IntegrationSubOption[];
-    /** Only Discord is wired up for now — the rest are shown but locked. */
+    /** Which detail-modal panel this integration renders — see IntegrationKind. */
+    kind: IntegrationKind;
+    /** Only present (and used) for kind: 'import' integrations. */
+    importConfig?: IntegrationImportConfig;
+    /** Only Discord and Jira are wired up so far — the rest are shown but locked. */
     comingSoon: boolean;
 }
 
@@ -96,6 +128,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Post a message whenever someone leaves a comment.',
             },
         ],
+        kind: 'notify',
         comingSoon: false,
     },
     {
@@ -128,6 +161,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Post a message whenever someone leaves a comment.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -159,6 +193,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Post a message whenever someone leaves a comment.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -192,6 +227,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Sync recording links back to the issue after a call ends.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -223,6 +259,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Send a message whenever someone leaves a comment.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
 
@@ -258,6 +295,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                 description: 'Mark issues as done when their linked PR merges.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -292,6 +330,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Show the latest pipeline result on linked issues.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -325,6 +364,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                 description: 'Mark issues as done when their linked PR merges.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -336,15 +376,38 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
         accentClassName: 'bg-[#0052CC]/15',
         websiteUrl: 'https://www.atlassian.com/software/jira',
         description:
-            'Import issues and keep status, assignee, and priority in sync.',
+            'Import epics, tasks, and subtasks from a Jira project into Orbit.',
         overview:
-            "Connect Jira to keep a linked Jira issue's status, assignee, and priority in sync with its Orbit counterpart, for teams migrating gradually or working across both tools.\n\n**What you get:**\n- Two-way status sync between Orbit and Jira\n- Field mapping for priority and assignee\n- A link back to the Jira issue from Orbit",
+            "Connect Jira to pull a project's epics, tasks, and subtasks into Orbit as issues, converting Jira's statuses, priorities, and hierarchy into Orbit's own via a mapping you control.\n\n**What you get:**\n- One-click import of epics, tasks, and subtasks, with hierarchy preserved\n- Configurable status/priority/label mapping to Orbit's fixed set\n- Re-running the import skips issues already imported",
         previewSamples: [
             {
                 title: '496 issues imported from Jira project "Orbit"',
                 time: 'Just now',
             },
         ],
+        kind: 'import',
+        importConfig: {
+            credentialFields: [
+                {
+                    id: 'instance_url',
+                    label: 'Jira instance URL',
+                    type: 'url',
+                    placeholder: 'https://your-domain.atlassian.net',
+                },
+                {
+                    id: 'email',
+                    label: 'Account email',
+                    type: 'email',
+                    placeholder: 'you@example.com',
+                },
+                {
+                    id: 'api_token',
+                    label: 'API token',
+                    type: 'password',
+                },
+            ],
+            mappingTypes: ['status', 'priority', 'label'],
+        },
         comingSoon: false,
     },
     {
@@ -382,6 +445,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Mark the Sentry issue resolved when the linked issue closes.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -415,6 +479,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                 description: 'Notify the assignee when a linked build fails.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
 
@@ -453,6 +518,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Automatically grant view access to project members.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -487,6 +553,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Keep attached file links pointing at the latest version.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -522,6 +589,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Automatically grant view access to project members.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -558,6 +626,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Show the Box version history on the attached file.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
 
@@ -592,6 +661,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                 description: 'Create calendar events for project milestones.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -626,6 +696,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Create a database row automatically for new issues.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
     {
@@ -659,6 +730,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                 description: 'Map Trello lists to Orbit statuses.',
             },
         ],
+        kind: 'import',
         comingSoon: true,
     },
     {
@@ -694,6 +766,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                 description: 'Keep due dates in sync in both directions.',
             },
         ],
+        kind: 'import',
         comingSoon: true,
     },
     {
@@ -729,6 +802,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                 description: 'Keep issue status in sync in both directions.',
             },
         ],
+        kind: 'import',
         comingSoon: true,
     },
     {
@@ -763,6 +837,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     'Refresh the preview automatically when the design updates.',
             },
         ],
+        kind: 'notify',
         comingSoon: true,
     },
 ];

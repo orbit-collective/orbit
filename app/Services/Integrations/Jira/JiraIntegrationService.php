@@ -120,7 +120,27 @@ class JiraIntegrationService
                     'externalLabel' => $mapping->external_label,
                     'orbitValue' => $mapping->orbit_value,
                 ])->values()->all(),
-            'lastImport' => $projectIntegration->options['last_import'] ?? null,
+            'lastImport' => $this->mapLastImport($projectIntegration->options['last_import'] ?? null),
+        ];
+    }
+
+    /**
+     * ImportJiraIssuesJob persists this as a plain snake_case array (it's
+     * just a JSON blob it writes for itself) — reshaped to camelCase here so
+     * every settings-page prop follows the same convention.
+     */
+    private function mapLastImport(?array $lastImport): ?array
+    {
+        if (! $lastImport) {
+            return null;
+        }
+
+        return [
+            'imported' => $lastImport['imported'],
+            'skipped' => $lastImport['skipped'],
+            'failed' => $lastImport['failed'],
+            'errors' => $lastImport['errors'],
+            'ranAt' => $lastImport['ran_at'],
         ];
     }
 
