@@ -43,17 +43,28 @@ class JiraApiClient
     }
 
     /**
-     * One page of a JQL search. Expands each issue's parent link so the
-     * caller (JiraIntegrationImporter) can resolve epic/subtask hierarchy.
+     * One page of a JQL search via /rest/api/3/search/jql — the endpoint
+     * that replaced the deprecated GET/POST /rest/api/3/search (which now
+     * returns HTTP 410 Gone on every Jira Cloud site). That old endpoint's
+     * offset pagination (startAt/total) is gone too: this one is cursor-based
+     * — pass back whatever "nextPageToken" the previous page returned, and
+     * there is no next page once the response omits that key entirely.
+     * Expands each issue's parent link so the caller (JiraIntegrationImporter)
+     * can resolve epic/subtask hierarchy.
      */
-    public function searchIssues(ProjectIntegration $projectIntegration, string $jql, int $startAt = 0, int $maxResults = 50): array
+    public function searchIssues(ProjectIntegration $projectIntegration, string $jql, ?string $nextPageToken = null, int $maxResults = 50): array
     {
-        return $this->getJson($projectIntegration, '/rest/api/3/search', [
+        $query = [
             'jql' => $jql,
-            'startAt' => $startAt,
             'maxResults' => $maxResults,
             'fields' => 'summary,description,status,priority,issuetype,parent,labels,components,assignee,duedate',
-        ]);
+        ];
+
+        if ($nextPageToken !== null) {
+            $query['nextPageToken'] = $nextPageToken;
+        }
+
+        return $this->getJson($projectIntegration, '/rest/api/3/search/jql', $query);
     }
 
     private function getJson(ProjectIntegration $projectIntegration, string $path, array $query = []): array

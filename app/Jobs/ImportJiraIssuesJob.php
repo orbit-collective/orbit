@@ -2,12 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Enums\Notifications\NotificationType;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
 use App\Repositories\ProjectIntegrationRepository;
 use App\Services\Integrations\ImportOrchestratorService;
 use App\Services\Integrations\IntegrationImporterRegistry;
+use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -47,6 +49,7 @@ class ImportJiraIssuesJob implements ShouldQueue
         IntegrationImporterRegistry $integrationImporterRegistry,
         ImportOrchestratorService $importOrchestratorService,
         ProjectIntegrationRepository $projectIntegrationRepository,
+        NotificationService $notificationService,
     ): void {
         $importer = $integrationImporterRegistry->resolve($this->projectIntegration->integration);
 
@@ -84,5 +87,31 @@ class ImportJiraIssuesJob implements ShouldQueue
         ];
 
         $projectIntegrationRepository->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
+
+        $notificationService->notify(
+            $this->importedByUserId,
+            NotificationType::IntegrationActivity,
+            $result->failed > 0 ? 'warning' : 'success',
+            'Jira import finished',
+            "Imported {$result->imported}, skipped {$result->skipped}, failed {$result->failed} issue(s) from Jira into \"{$this->project->name}\".",
+            route('settings', ['tab' => 'integrations', 'project' => $this->project->id]),
+        );
+    }
+
+    /**
+     * Called by the queue after every retry is exhausted - the only place
+     * left to tell the importing user their import never completed at all
+     * (handle()'s own try/catch only logs, then rethrows to trigger a retry).
+     */
+    public function failed(Throwable $exception): void
+    {
+        app(NotificationService::class)->notify(
+            $this->importedByUserId,
+            NotificationType::IntegrationActivity,
+            'error',
+            'Jira import failed',
+            "The Jira import for \"{$this->project->name}\" failed: {$exception->getMessage()}",
+            route('settings', ['tab' => 'integrations', 'project' => $this->project->id]),
+        );
     }
 }

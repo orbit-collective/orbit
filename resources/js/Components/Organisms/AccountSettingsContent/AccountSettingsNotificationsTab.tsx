@@ -91,6 +91,15 @@ const defaultNotificationTypes: NotificationTypeState[] = [
         inApp: true,
         email: false,
     },
+    {
+        id: 'integration_activity',
+        icon: 'Plug',
+        title: 'Integration activity',
+        description:
+            'When an import you started (e.g. from Jira) finishes or fails.',
+        inApp: true,
+        email: false,
+    },
 ];
 
 function mergeNotificationSettings(

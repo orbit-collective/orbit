@@ -43,19 +43,18 @@ class JiraIntegrationImporter implements IntegrationImporter
     {
         $jql = $options['jql'] ?? 'project = "'.($options['project_key'] ?? '').'" ORDER BY key ASC';
 
-        $startAt = 0;
+        $nextPageToken = null;
 
         do {
-            $page = $this->jiraApiClient->searchIssues($projectIntegration, $jql, $startAt, self::PAGE_SIZE);
+            $page = $this->jiraApiClient->searchIssues($projectIntegration, $jql, $nextPageToken, self::PAGE_SIZE);
             $issues = $page['issues'] ?? [];
 
             foreach ($issues as $issue) {
                 yield $this->mapIssue($projectIntegration, $issue);
             }
 
-            $startAt += count($issues);
-            $total = $page['total'] ?? 0;
-        } while ($issues !== [] && $startAt < $total);
+            $nextPageToken = $page['nextPageToken'] ?? null;
+        } while ($issues !== [] && $nextPageToken !== null);
     }
 
     private function mapIssue(ProjectIntegration $projectIntegration, array $issue): ExternalIssueDTO

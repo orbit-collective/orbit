@@ -14,4 +14,5 @@ enum NotificationType: string
     case IssueUpdated = 'issue_updated';
 
     case ProjectInvited = 'project_invited';
+    case IntegrationActivity = 'integration_activity';
 }
