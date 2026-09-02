@@ -43,4 +43,9 @@ class ProjectIntegration extends Model
     {
         return $this->hasMany(ExternalIssueLink::class);
     }
+
+    public function fieldMappings(): HasMany
+    {
+        return $this->hasMany(IntegrationFieldMapping::class);
+    }
 }
