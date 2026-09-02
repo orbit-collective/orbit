@@ -256,6 +256,20 @@ export interface FilterDropdownProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
 }
+export interface InlineSelectDropdownOption {
+    value: string;
+    label: string;
+}
+export interface InlineSelectDropdownProps {
+    /** Header text shown at the top of the floating panel, e.g. "Map to". */
+    label: string;
+    /** Shown on the trigger button when nothing is selected. */
+    placeholder: string;
+    options: InlineSelectDropdownOption[];
+    value: string | null;
+    onChange: (value: string | null) => void;
+    disabled?: boolean;
+}
 export interface SavedFiltersDropdownProps {
     savedFilters?: SavedFilter[];
     queryParams?: Record<string, any>;
