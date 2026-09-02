@@ -6,9 +6,14 @@ import Modal from '@/Components/Atoms/Modal/Modal';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import { IntegrationDefinition } from '@/types/Integrations';
-import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
+import {
+    ImportIntegrationSettings,
+    IntegrationFieldMappingDraft,
+    ProjectIntegrationSettings,
+} from '@/types/ProjectIntegrations';
 import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
 import { useEffect, useState } from 'react';
+import WorkspaceSettingsImportPanel from './WorkspaceSettingsImportPanel';
 import WorkspaceSettingsIntegrationPreview from './WorkspaceSettingsIntegrationPreview';
 
 interface WorkspaceSettingsIntegrationDetailModalProps {
@@ -16,9 +21,13 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     enabled: boolean;
     canUpdate: boolean;
     settings: ProjectIntegrationSettings | null;
+    importSettings: ImportIntegrationSettings | null;
     onToggle: (enabled: boolean) => void;
     onSaveWebhookUrl: (webhookUrl: string) => void;
     onToggleOption: (optionId: string, checked: boolean) => void;
+    onConnectImport: (credentials: Record<string, string>) => void;
+    onSaveImportMappings: (mappings: IntegrationFieldMappingDraft[]) => void;
+    onTriggerImport: (projectKey: string) => void;
     onClose: () => void;
 }
 
@@ -27,9 +36,13 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     enabled,
     canUpdate,
     settings,
+    importSettings,
     onToggle,
     onSaveWebhookUrl,
     onToggleOption,
+    onConnectImport,
+    onSaveImportMappings,
+    onTriggerImport,
     onClose,
 }: WorkspaceSettingsIntegrationDetailModalProps) {
     const [webhookUrlDraft, setWebhookUrlDraft] = useState(
@@ -45,6 +58,16 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     const showConfiguration = !integration.comingSoon;
     const webhookUrlUnchanged =
         webhookUrlDraft === (settings?.webhookUrl ?? '');
+    // Import integrations use "active" for the enabled toggle - "Connect"
+    // there refers to the panel's own credentials form below, not this toggle.
+    const enabledToggleLabel =
+        integration.kind === 'import'
+            ? enabled
+                ? 'Active'
+                : 'Activate'
+            : enabled
+              ? 'Connected'
+              : 'Connect';
 
     return (
         <Modal isOpen={!!integration} onClose={onClose} size="md">
@@ -107,7 +130,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                 name={enabled ? 'CircleCheck' : 'Plug'}
                                 size={14}
                             />
-                            {enabled ? 'Connected' : 'Connect'}
+                            {enabledToggleLabel}
                         </button>
                     ) : (
                         <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--bg-light-color)] px-3 py-1.5 text-sm text-[var(--text-gray-color)]">
@@ -115,7 +138,13 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                 name={enabled ? 'CircleCheck' : 'Circle'}
                                 size={14}
                             />
-                            {enabled ? 'Connected' : 'Not connected'}
+                            {integration.kind === 'import'
+                                ? enabled
+                                    ? 'Active'
+                                    : 'Not active'
+                                : enabled
+                                  ? 'Connected'
+                                  : 'Not connected'}
                         </span>
                     )}
                     <button
@@ -146,7 +175,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                     />
                 </section>
 
-                {showConfiguration && (
+                {showConfiguration && integration.kind === 'notify' && (
                     <section className="mt-6">
                         <h3 className="text-sm font-semibold text-[var(--text-color)]">
                             Webhook URL
@@ -194,7 +223,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                     </section>
                 )}
 
-                {integration.subOptions && (
+                {integration.kind === 'notify' && integration.subOptions && (
                     <section className="mt-6">
                         <h3 className="text-sm font-semibold text-[var(--text-color)]">
                             Options
@@ -215,7 +244,8 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                     </div>
                                     <ToggleSwitch
                                         checked={
-                                            settings?.options[option.id] ?? false
+                                            settings?.options[option.id] ??
+                                            false
                                         }
                                         onChange={(checked) =>
                                             onToggleOption(option.id, checked)
@@ -228,6 +258,17 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                             ))}
                         </div>
                     </section>
+                )}
+
+                {showConfiguration && integration.kind === 'import' && (
+                    <WorkspaceSettingsImportPanel
+                        integration={integration}
+                        canUpdate={canUpdate}
+                        settings={importSettings}
+                        onConnect={onConnectImport}
+                        onSaveMappings={onSaveImportMappings}
+                        onImport={onTriggerImport}
+                    />
                 )}
             </div>
         </Modal>

@@ -8,7 +8,11 @@ import {
     IntegrationId,
     INTEGRATIONS,
 } from '@/types/Integrations';
-import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
+import {
+    ImportIntegrationSettings,
+    IntegrationFieldMappingDraft,
+    ProjectIntegrationSettings,
+} from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
 import { router } from '@inertiajs/react';
@@ -25,15 +29,28 @@ interface WorkspaceSettingsIntegrationsTabProps {
     selectedProjectId?: number | null;
     integrationStatuses?: Record<string, boolean>;
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
+    jiraSettings?: ImportIntegrationSettings | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
+
+/** integration id -> its import-flow route names, for import-kind integrations that are actually wired up. */
+const IMPORT_ROUTE_NAMES: Partial<
+    Record<IntegrationId, { connect: string; mappings: string; import: string }>
+> = {
+    jira: {
+        connect: 'projects.integrations.jira.connect',
+        mappings: 'projects.integrations.jira.mappings.update',
+        import: 'projects.integrations.jira.import',
+    },
+};
 
 export default function WorkspaceSettingsIntegrationsTab({
     memberProjects = [],
     selectedProjectId = null,
     integrationStatuses = {},
     integrationSettings = {},
+    jiraSettings = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsIntegrationsTabProps) {
@@ -120,6 +137,81 @@ export default function WorkspaceSettingsIntegrationsTab({
                         'Failed to update the integration settings.',
                         'error',
                     );
+                },
+            },
+        );
+    };
+
+    const connectImportIntegration = (
+        integrationId: IntegrationId,
+        credentials: Record<string, string>,
+    ) => {
+        const routeNames = IMPORT_ROUTE_NAMES[integrationId];
+
+        if (!selectedProject || !routeNames) return;
+
+        router.post(
+            route(routeNames.connect, [selectedProject.id]),
+            credentials,
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    addAlert(`Connected to ${integrationId}.`, 'success');
+                },
+                onError: () => {
+                    addAlert(`Failed to connect to ${integrationId}.`, 'error');
+                },
+            },
+        );
+    };
+
+    const saveImportMappings = (
+        integrationId: IntegrationId,
+        mappings: IntegrationFieldMappingDraft[],
+    ) => {
+        const routeNames = IMPORT_ROUTE_NAMES[integrationId];
+
+        if (!selectedProject || !routeNames) return;
+
+        router.put(
+            route(routeNames.mappings, [selectedProject.id]),
+            { mappings },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    addAlert('Field mappings updated.', 'success');
+                },
+                onError: () => {
+                    addAlert('Failed to update field mappings.', 'error');
+                },
+            },
+        );
+    };
+
+    const triggerImport = (
+        integrationId: IntegrationId,
+        projectKey: string,
+    ) => {
+        const routeNames = IMPORT_ROUTE_NAMES[integrationId];
+
+        if (!selectedProject || !routeNames) return;
+
+        router.post(
+            route(routeNames.import, [selectedProject.id]),
+            { project_key: projectKey },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    addAlert(
+                        'Import started — this can take a few minutes.',
+                        'success',
+                    );
+                },
+                onError: () => {
+                    addAlert('Failed to start the import.', 'error');
                 },
             },
         );
@@ -247,6 +339,9 @@ export default function WorkspaceSettingsIntegrationsTab({
                         ? (integrationSettings[openIntegration.id] ?? null)
                         : null
                 }
+                importSettings={
+                    openIntegration?.id === 'jira' ? jiraSettings : null
+                }
                 onToggle={(checked) => {
                     if (!openIntegration) return;
 
@@ -265,6 +360,21 @@ export default function WorkspaceSettingsIntegrationsTab({
                     saveIntegrationSettings(openIntegration.id, {
                         options: { [optionId]: checked },
                     });
+                }}
+                onConnectImport={(credentials) => {
+                    if (!openIntegration) return;
+
+                    connectImportIntegration(openIntegration.id, credentials);
+                }}
+                onSaveImportMappings={(mappings) => {
+                    if (!openIntegration) return;
+
+                    saveImportMappings(openIntegration.id, mappings);
+                }}
+                onTriggerImport={(projectKey) => {
+                    if (!openIntegration) return;
+
+                    triggerImport(openIntegration.id, projectKey);
                 }}
                 onClose={() => setOpenIntegrationId(null)}
             />

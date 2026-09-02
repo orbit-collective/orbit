@@ -1,4 +1,7 @@
-import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
+import {
+    ImportIntegrationSettings,
+    ProjectIntegrationSettings,
+} from '@/types/ProjectIntegrations';
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
@@ -36,6 +39,7 @@ interface WorkspaceSettingsContentProps {
     canDeleteProject?: boolean;
     integrationStatuses?: Record<string, boolean>;
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
+    jiraSettings?: ImportIntegrationSettings | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -59,6 +63,7 @@ export default function WorkspaceSettingsContent({
     canDeleteProject = false,
     integrationStatuses = {},
     integrationSettings = {},
+    jiraSettings = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsContentProps) {
@@ -106,6 +111,7 @@ export default function WorkspaceSettingsContent({
                 selectedProjectId={selectedProjectId}
                 integrationStatuses={integrationStatuses}
                 integrationSettings={integrationSettings}
+                jiraSettings={jiraSettings}
                 hasIntegrationsAccess={hasIntegrationsAccess}
                 canUpdateIntegrations={canUpdateIntegrations}
             />
