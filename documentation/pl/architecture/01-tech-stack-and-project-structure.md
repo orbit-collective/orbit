@@ -52,8 +52,9 @@ app/
   Enums/Notifications/  NotificationType, NotificationChannel
   Events/               Immutable domain facts, fired unconditionally
   Listeners/            Independent consumers of the same events
-  Jobs/                 Queued work (webhook delivery, ...)
-  Contracts/            Interfaces implemented by multiple concrete classes (IntegrationNotifier)
+  Jobs/                 Queued work (webhook delivery, imports, ...)
+  Contracts/            Interfaces implemented by multiple concrete classes (IntegrationNotifier, IntegrationImporter)
+  DataTransferObjects/  Source-agnostic data shapes passed between layers (ExternalIssueDTO, ImportResultDTO — see documentation/en/integrations/05-add-an-import-integration.md)
   Notifications/        Laravel Notification classes (mail-sending)
   Providers/             AppServiceProvider — event registration, rate limiters, container bindings
 
