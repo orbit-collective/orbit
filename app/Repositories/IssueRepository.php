@@ -40,6 +40,18 @@ class IssueRepository
         return Issue::query()->create($data);
     }
 
+    /**
+     * Bulk-create primitive: loops the existing store() per row rather than a
+     * raw insert(), so Eloquent casts/model events still run per issue (e.g.
+     * the labels enum-array cast) - correctness over a single fast query.
+     *
+     * @return Collection<array-key, Issue>
+     */
+    public function createMany(array $rows): Collection
+    {
+        return collect($rows)->map(fn (array $row) => $this->store($row));
+    }
+
     public function update(Issue $issue, array $data): Issue
     {
         $issue->update($data);
