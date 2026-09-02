@@ -3,6 +3,7 @@
 namespace App\Services\Integrations;
 
 use App\Contracts\IntegrationImporter;
+use App\Services\Integrations\Jira\JiraIntegrationImporter;
 use Illuminate\Contracts\Container\Container;
 
 /**
@@ -14,7 +15,7 @@ use Illuminate\Contracts\Container\Container;
 class IntegrationImporterRegistry
 {
     private const array MAP = [
-        //
+        'jira' => JiraIntegrationImporter::class,
     ];
 
     public function __construct(protected Container $container) {}
