@@ -5,6 +5,7 @@ namespace App\Services\Integrations;
 use App\DataTransferObjects\ExternalIssueDTO;
 use App\DataTransferObjects\ImportResultDTO;
 use App\Enums\IntegrationFieldMappingType;
+use App\Events\IssuesImported;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
@@ -80,7 +81,11 @@ class ImportOrchestratorService
         // parent (e.g. a subtask before its epic).
         $this->resolveParents($projectIntegration, $importedItems);
 
-        return new ImportResultDTO($imported, $skipped, $failed, $errors);
+        $result = new ImportResultDTO($imported, $skipped, $failed, $errors);
+
+        event(new IssuesImported($project, $importedBy, $result));
+
+        return $result;
     }
 
     private function mapIssueData(ProjectIntegration $projectIntegration, Project $project, ExternalIssueDTO $externalIssue): array

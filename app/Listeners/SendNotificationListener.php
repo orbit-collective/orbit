@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Enums\Notifications\NotificationType;
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
+use App\Events\IssuesImported;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Events\ProjectInvited;
@@ -56,6 +57,7 @@ class SendNotificationListener
             $event instanceof IssueUpdated => $this->handleIssueUpdated($event),
             $event instanceof CommentAdded => $this->handleCommentAdded($event),
             $event instanceof ProjectInvited => $this->handleProjectInvited($event),
+            $event instanceof IssuesImported => $this->handleIssuesImported($event),
             default => null,
         };
     }
@@ -188,6 +190,20 @@ class SendNotificationListener
             'You were invited to a project',
             "{$event->invitedBy->name} invited you to join \"{$event->project->name}\".",
             $event->acceptUrl
+        );
+    }
+
+    private function handleIssuesImported(IssuesImported $event): void
+    {
+        $result = $event->result;
+
+        $this->notificationService->notify(
+            $event->importedBy->id,
+            NotificationType::IntegrationActivity,
+            $result->failed > 0 ? 'warning' : 'success',
+            'Import finished',
+            "Imported {$result->imported}, skipped {$result->skipped}, failed {$result->failed} issue(s) into \"{$event->project->name}\".",
+            route('settings', ['tab' => 'integrations', 'project' => $event->project->id])
         );
     }
 
