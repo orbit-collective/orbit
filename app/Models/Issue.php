@@ -21,6 +21,7 @@ class Issue extends Model
         'status',
         'priority',
         'project_id',
+        'parent_id',
         'user_id',
         'assignee_id',
         'labels',
@@ -49,5 +50,13 @@ class Issue extends Model
 
     public function comments(): HasMany {
         return $this->hasMany(Comment::class);
+    }
+
+    public function parent(): BelongsTo {
+        return $this->belongsTo(Issue::class, 'parent_id');
+    }
+
+    public function children(): HasMany {
+        return $this->hasMany(Issue::class, 'parent_id');
     }
 }
