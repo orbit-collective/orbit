@@ -16,6 +16,11 @@ class IntegrationFieldMappingRepository
             ->get();
     }
 
+    public function getAllForProjectIntegration(ProjectIntegration $projectIntegration): Collection
+    {
+        return $projectIntegration->fieldMappings()->get();
+    }
+
     public function findFor(ProjectIntegration $projectIntegration, IntegrationFieldMappingType $mappingType, string $externalValue): ?IntegrationFieldMapping
     {
         return $projectIntegration->fieldMappings()

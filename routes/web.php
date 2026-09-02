@@ -3,6 +3,7 @@
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IssueController;
+use App\Http\Controllers\JiraIntegrationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectIntegrationController;
@@ -40,6 +41,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/projects/{project}/roles/{role}', [RoleController::class, 'destroy'])->name('projects.roles.destroy');
     Route::patch('/projects/{project}/integrations/{integration}', [ProjectIntegrationController::class, 'update'])->name('projects.integrations.update');
     Route::patch('/projects/{project}/integrations/{integration}/settings', [ProjectIntegrationController::class, 'updateSettings'])->name('projects.integrations.settings.update');
+    Route::post('/projects/{project}/integrations/jira/connect', [JiraIntegrationController::class, 'connect'])->name('projects.integrations.jira.connect');
+    Route::put('/projects/{project}/integrations/jira/mappings', [JiraIntegrationController::class, 'updateMappings'])->name('projects.integrations.jira.mappings.update');
+    Route::post('/projects/{project}/integrations/jira/import', [JiraIntegrationController::class, 'import'])->name('projects.integrations.jira.import');
     Route::post('/projects/{project}/invitations', [ProjectInvitationController::class, 'store'])->name('projects.invitations.store');
     Route::delete('/projects/{project}/invitations/{invitation}', [ProjectInvitationController::class, 'destroy'])->name('projects.invitations.destroy');
     Route::post('/invitations/accept', [ProjectInvitationController::class, 'acceptManual'])->name('invitations.accept-manual');
