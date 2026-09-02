@@ -59,4 +59,8 @@ class Issue extends Model
     public function children(): HasMany {
         return $this->hasMany(Issue::class, 'parent_id');
     }
+
+    public function externalLinks(): HasMany {
+        return $this->hasMany(ExternalIssueLink::class);
+    }
 }
