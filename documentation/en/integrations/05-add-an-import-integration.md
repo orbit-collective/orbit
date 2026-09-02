@@ -182,17 +182,28 @@ class JiraApiClient
     }
 
     /**
-     * One page of a JQL search. Expands each issue's parent link so the
-     * caller (JiraIntegrationImporter) can resolve epic/subtask hierarchy.
+     * One page of a JQL search via /rest/api/3/search/jql — the endpoint
+     * that replaced the deprecated GET/POST /rest/api/3/search (which now
+     * returns HTTP 410 Gone on every Jira Cloud site). That old endpoint's
+     * offset pagination (startAt/total) is gone too: this one is cursor-based
+     * — pass back whatever "nextPageToken" the previous page returned, and
+     * there is no next page once the response omits that key entirely.
+     * Expands each issue's parent link so the caller (JiraIntegrationImporter)
+     * can resolve epic/subtask hierarchy.
      */
-    public function searchIssues(ProjectIntegration $projectIntegration, string $jql, int $startAt = 0, int $maxResults = 50): array
+    public function searchIssues(ProjectIntegration $projectIntegration, string $jql, ?string $nextPageToken = null, int $maxResults = 50): array
     {
-        return $this->getJson($projectIntegration, '/rest/api/3/search', [
+        $query = [
             'jql' => $jql,
-            'startAt' => $startAt,
             'maxResults' => $maxResults,
             'fields' => 'summary,description,status,priority,issuetype,parent,labels,components,assignee,duedate',
-        ]);
+        ];
+
+        if ($nextPageToken !== null) {
+            $query['nextPageToken'] = $nextPageToken;
+        }
+
+        return $this->getJson($projectIntegration, '/rest/api/3/search/jql', $query);
     }
 
     private function getJson(ProjectIntegration $projectIntegration, string $path, array $query = []): array
@@ -295,19 +306,18 @@ class JiraIntegrationImporter implements IntegrationImporter
     {
         $jql = $options['jql'] ?? 'project = "'.($options['project_key'] ?? '').'" ORDER BY key ASC';
 
-        $startAt = 0;
+        $nextPageToken = null;
 
         do {
-            $page = $this->jiraApiClient->searchIssues($projectIntegration, $jql, $startAt, self::PAGE_SIZE);
+            $page = $this->jiraApiClient->searchIssues($projectIntegration, $jql, $nextPageToken, self::PAGE_SIZE);
             $issues = $page['issues'] ?? [];
 
             foreach ($issues as $issue) {
                 yield $this->mapIssue($projectIntegration, $issue);
             }
 
-            $startAt += count($issues);
-            $total = $page['total'] ?? 0;
-        } while ($issues !== [] && $startAt < $total);
+            $nextPageToken = $page['nextPageToken'] ?? null;
+        } while ($issues !== [] && $nextPageToken !== null);
     }
 
     private function mapIssue(ProjectIntegration $projectIntegration, array $issue): ExternalIssueDTO
@@ -381,10 +391,10 @@ class JiraIntegrationImporter implements IntegrationImporter
 `fetchIssues()` being a PHP generator matters: `ImportOrchestratorService::import()`
 (see the architecture note below) consumes it lazily, one issue at a
 time, so a project with thousands of issues doesn't load them all into
-memory before the first one gets created. Linear's GraphQL API is
-cursor-paginated rather than `startAt`/`maxResults`-paginated, but the
-shape is the same: loop, `yield` each mapped DTO, stop when the API
-says there's no next page.
+memory before the first one gets created. Linear's GraphQL API uses its
+own cursor convention rather than Jira's `nextPageToken`, but the shape
+is the same: loop, `yield` each mapped DTO, stop when the API says
+there's no next page.
 
 `fetchIssues()`'s `parentExternalId` is what lets
 `ImportOrchestratorService` reconstruct hierarchy generically — map it
