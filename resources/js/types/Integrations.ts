@@ -59,7 +59,7 @@ export interface IntegrationDefinition {
     overview: string;
     /** Sample activity shown in the detail modal's preview, standing in for a screenshot. */
     previewSamples: IntegrationPreviewSample[];
-    subOptions: IntegrationSubOption[];
+    subOptions?: IntegrationSubOption[];
     /** Only Discord is wired up for now — the rest are shown but locked. */
     comingSoon: boolean;
 }
@@ -335,30 +335,17 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
         brand: 'jira',
         accentClassName: 'bg-[#0052CC]/15',
         websiteUrl: 'https://www.atlassian.com/software/jira',
-        description: 'Two-way sync issue status and fields with Jira.',
+        description:
+            'Import issues and keep status, assignee, and priority in sync.',
         overview:
             "Connect Jira to keep a linked Jira issue's status, assignee, and priority in sync with its Orbit counterpart, for teams migrating gradually or working across both tools.\n\n**What you get:**\n- Two-way status sync between Orbit and Jira\n- Field mapping for priority and assignee\n- A link back to the Jira issue from Orbit",
         previewSamples: [
             {
-                title: 'Issue #77 status synced from Jira: "In Review"',
+                title: '496 issues imported from Jira project "Orbit"',
                 time: 'Just now',
             },
-            { title: 'Priority updated to "High" from Jira', time: '15m ago' },
         ],
-        subOptions: [
-            {
-                id: 'status-sync',
-                title: 'Status sync',
-                description: 'Keep issue status in sync in both directions.',
-            },
-            {
-                id: 'field-mapping',
-                title: 'Field mapping',
-                description:
-                    'Map priority and assignee fields between the two tools.',
-            },
-        ],
-        comingSoon: true,
+        comingSoon: false,
     },
     {
         id: 'sentry',
