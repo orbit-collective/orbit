@@ -25,6 +25,7 @@ documentation/
       02-add-integration-settings.md
       03-add-a-new-event-type.md
       04-frontend-backend-wiring-overview.md
+      05-add-an-import-integration.md
     permissions/
       README.md              <- index for this category
       01-add-a-new-permission.md
