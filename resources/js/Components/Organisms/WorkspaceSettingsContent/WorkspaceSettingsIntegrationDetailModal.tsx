@@ -194,39 +194,41 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                     </section>
                 )}
 
-                <section className="mt-6">
-                    <h3 className="text-sm font-semibold text-[var(--text-color)]">
-                        Options
-                    </h3>
-                    <div className="mt-3 divide-y divide-[var(--border-color)] rounded-xl border border-[var(--border-color)]">
-                        {integration.subOptions.map((option) => (
-                            <div
-                                key={option.id}
-                                className="flex items-center justify-between gap-4 px-4 py-3"
-                            >
-                                <div className="min-w-0">
-                                    <p className="text-sm font-medium text-[var(--text-color)]">
-                                        {option.title}
-                                    </p>
-                                    <p className="mt-0.5 text-sm text-[var(--text-gray-color)]">
-                                        {option.description}
-                                    </p>
+                {integration.subOptions && (
+                    <section className="mt-6">
+                        <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                            Options
+                        </h3>
+                        <div className="mt-3 divide-y divide-[var(--border-color)] rounded-xl border border-[var(--border-color)]">
+                            {integration.subOptions?.map((option) => (
+                                <div
+                                    key={option.id}
+                                    className="flex items-center justify-between gap-4 px-4 py-3"
+                                >
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-[var(--text-color)]">
+                                            {option.title}
+                                        </p>
+                                        <p className="mt-0.5 text-sm text-[var(--text-gray-color)]">
+                                            {option.description}
+                                        </p>
+                                    </div>
+                                    <ToggleSwitch
+                                        checked={
+                                            settings?.options[option.id] ?? false
+                                        }
+                                        onChange={(checked) =>
+                                            onToggleOption(option.id, checked)
+                                        }
+                                        disabled={
+                                            integration.comingSoon || !canUpdate
+                                        }
+                                    />
                                 </div>
-                                <ToggleSwitch
-                                    checked={
-                                        settings?.options[option.id] ?? false
-                                    }
-                                    onChange={(checked) =>
-                                        onToggleOption(option.id, checked)
-                                    }
-                                    disabled={
-                                        integration.comingSoon || !canUpdate
-                                    }
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </section>
+                            ))}
+                        </div>
+                    </section>
+                )}
             </div>
         </Modal>
     );
