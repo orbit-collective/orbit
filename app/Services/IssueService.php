@@ -51,6 +51,26 @@ class IssueService
         return $issue;
     }
 
+    /**
+     * Same as createIssue(), but for issues created by an import job running
+     * without a request/auth context: the importing user is passed
+     * explicitly, and IssueCreated/IssueAssigned are deliberately NOT fired
+     * per issue (would spam every project member's notifications and hammer
+     * Discord's webhook during a bulk import) - the import orchestrator
+     * fires a single summary event once the whole run completes instead.
+     * An ActivityLog entry is still written per issue so its detail view's
+     * history looks normal to anyone browsing it afterwards.
+     */
+    public function importIssue(array $data, User $importedBy): Issue
+    {
+        $data['user_id'] = $importedBy->id;
+
+        $issue = $this->issueRepository->store($data);
+        $this->activityLogService->log($issue->project_id, "Imported task: #$issue->id", $importedBy->id);
+
+        return $issue;
+    }
+
     public function getAllForUser(int $userId): Collection
     {
         return $this->issueRepository->getAllForUser($userId);
