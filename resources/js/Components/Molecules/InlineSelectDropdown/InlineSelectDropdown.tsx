@@ -104,7 +104,7 @@ export default function InlineSelectDropdown({
                 className={cn(
                     'flex min-w-[9rem] cursor-pointer items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm transition-all duration-100 ease-in-out disabled:cursor-not-allowed disabled:opacity-50',
                     selectedOption
-                        ? 'border-solid border-purple-500/30 bg-[var(--bg-color)] text-[var(--accent-color)]'
+                        ? 'border-[var(--accent-color)]/30 border-solid bg-[var(--bg-color)] text-[var(--accent-color)]'
                         : 'border-dashed border-[var(--bg-light-color)] bg-transparent text-[var(--text-gray-color)] hover:border-solid hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
                 )}
             >
@@ -121,7 +121,11 @@ export default function InlineSelectDropdown({
                 <Icon
                     name="ChevronDown"
                     size={12}
-                    color={selectedOption ? 'var(--accent-color)' : '#999'}
+                    color={
+                        selectedOption
+                            ? 'var(--accent-color)'
+                            : 'var(--text-gray-color)'
+                    }
                 />
             </button>
 

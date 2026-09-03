@@ -46,6 +46,10 @@ class ImportJiraIssuesJob implements ShouldQueue
         return [5, 15, 30];
     }
 
+    /**
+     * @throws Throwable re-thrown after logging, so the queue worker retries
+     *                    the job per $tries/backoff() - see the catch block.
+     */
     public function handle(
         IntegrationImporterRegistry $integrationImporterRegistry,
         ImportOrchestratorService $importOrchestratorService,

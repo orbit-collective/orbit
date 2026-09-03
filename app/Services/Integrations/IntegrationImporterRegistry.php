@@ -20,6 +20,9 @@ class IntegrationImporterRegistry
 
     public function __construct(protected Container $container) {}
 
+    /**
+     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     */
     public function resolve(string $integration): ?IntegrationImporter
     {
         $class = self::MAP[$integration] ?? null;

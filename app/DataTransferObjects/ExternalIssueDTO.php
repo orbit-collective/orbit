@@ -9,22 +9,22 @@ namespace App\DataTransferObjects;
  * ImportOrchestratorService consumes these regardless of which integration
  * produced them.
  */
-final class ExternalIssueDTO
+final readonly class ExternalIssueDTO
 {
     public function __construct(
-        public readonly string $externalId,
-        public readonly ?string $externalKey,
-        public readonly string $title,
-        public readonly ?string $description,
-        public readonly ?string $externalStatus,
-        public readonly ?string $externalPriority,
-        public readonly array $externalLabels = [],
-        public readonly ?string $type = null,
-        public readonly ?string $parentExternalId = null,
-        public readonly ?string $assigneeExternalId = null,
-        public readonly ?string $assigneeEmail = null,
-        public readonly ?string $startDate = null,
-        public readonly ?string $endDate = null,
-        public readonly ?string $url = null,
+        public string $externalId,
+        public ?string $externalKey,
+        public string $title,
+        public ?string $description,
+        public ?string $externalStatus,
+        public ?string $externalPriority,
+        public array $externalLabels = [],
+        public ?string $type = null,
+        public ?string $parentExternalId = null,
+        public ?string $assigneeExternalId = null,
+        public ?string $assigneeEmail = null,
+        public ?string $startDate = null,
+        public ?string $endDate = null,
+        public ?string $url = null,
     ) {}
 }

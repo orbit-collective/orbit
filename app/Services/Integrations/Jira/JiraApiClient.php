@@ -67,6 +67,10 @@ class JiraApiClient
         return $this->getJson($projectIntegration, '/rest/api/3/search/jql', $query);
     }
 
+    /**
+     * @throws RuntimeException on a connection failure
+     * @throws \Illuminate\Http\Client\RequestException on a non-2xx response
+     */
     private function getJson(ProjectIntegration $projectIntegration, string $path, array $query = []): array
     {
         try {

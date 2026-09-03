@@ -2,6 +2,7 @@
 
 namespace App\Contracts;
 
+use App\DataTransferObjects\ExternalIssueDTO;
 use App\Models\ProjectIntegration;
 
 /**
@@ -36,7 +37,7 @@ interface IntegrationImporter
     /**
      * Streams the remote issues (and their epics/subtasks) to import.
      *
-     * @return iterable<\App\DataTransferObjects\ExternalIssueDTO>
+     * @return iterable<ExternalIssueDTO>
      */
     public function fetchIssues(ProjectIntegration $projectIntegration, array $options = []): iterable;
 }

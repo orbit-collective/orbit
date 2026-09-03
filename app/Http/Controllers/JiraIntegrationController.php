@@ -23,7 +23,13 @@ class JiraIntegrationController extends Controller
         $this->authorize('updateIntegrations', $project);
 
         $validated = $request->validate([
-            'instance_url' => ['required', 'string', 'url', 'max:255'],
+            // Restricted to Jira Cloud's own domain (rather than any
+            // attacker/internally-controlled URL) since Basic Auth with an
+            // API token - the only auth this importer supports - is a Jira
+            // Cloud-specific auth flow to begin with; this also closes off
+            // using this field to make the server issue arbitrary outbound
+            // requests (SSRF).
+            'instance_url' => ['required', 'string', 'url', 'max:255', 'regex:/^https:\/\/[a-z0-9-]+\.atlassian\.net\/?$/i'],
             'email' => ['required', 'string', 'email', 'max:255'],
             'api_token' => ['required', 'string', 'max:255'],
         ]);
@@ -57,7 +63,12 @@ class JiraIntegrationController extends Controller
         $this->authorize('updateIntegrations', $project);
 
         $validated = $request->validate([
-            'project_key' => ['required', 'string', 'max:255'],
+            // Jira project keys are a fixed alphanumeric shape; enforcing it
+            // here also prevents a value like `FE" OR project = "OTHER`
+            // from widening the JQL query built in JiraIntegrationImporter
+            // and pulling in issues from projects the account can see but
+            // this Orbit project should not.
+            'project_key' => ['required', 'string', 'max:255', 'regex:/^[A-Z][A-Z0-9]{1,9}$/i'],
             'sync_existing' => ['sometimes', 'boolean'],
         ]);
 
