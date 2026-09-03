@@ -314,7 +314,9 @@ export default function WorkspaceSettingsIntegrationsTab({
                         // props - and this reload's own 'success' router
                         // event (see AlertContext.tsx) would then re-show
                         // that same stale toast on every single poll tick.
-                        router.reload({ only: ['jiraImportProgress', 'flash'] });
+                        router.reload({
+                            only: ['jiraImportProgress', 'flash'],
+                        });
                     }, IMPORT_POLL_INTERVAL_MS);
                 },
                 onError: () => {
