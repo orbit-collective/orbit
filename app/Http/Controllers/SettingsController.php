@@ -100,6 +100,13 @@ class SettingsController extends Controller
             'jiraSettings' => $canUpdateIntegrations
                 ? $this->jiraIntegrationService->getSettingsExtras($selectedProject)
                 : null,
+            // Deliberately separate from jiraSettings above: the frontend
+            // polls just this prop while an import is running (see
+            // JiraIntegrationService::getImportProgress()'s docblock for
+            // why it must not also re-fetch Jira's live mapping metadata).
+            'jiraImportProgress' => $canUpdateIntegrations
+                ? $this->jiraIntegrationService->getImportProgress($selectedProject)
+                : null,
             'canDeleteProject' => $selectedProject
                 ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
                 : false,
