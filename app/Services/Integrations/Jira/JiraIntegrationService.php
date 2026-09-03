@@ -125,6 +125,33 @@ class JiraIntegrationService
     }
 
     /**
+     * The live "N imported so far" readout for the settings UI to poll
+     * while an import is running. Deliberately separate from
+     * getSettingsExtras() below: that method also calls out to Jira's live
+     * API for mapping metadata, which would mean hitting Jira on every
+     * single poll tick (every ~1.5s while an import is in progress) if
+     * this were folded into it - this reads only the local DB row.
+     */
+    public function getImportProgress(Project $project): ?array
+    {
+        $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
+
+        $progress = $projectIntegration?->options['import_progress'] ?? null;
+
+        if (! $progress) {
+            return null;
+        }
+
+        return [
+            'status' => $progress['status'],
+            'imported' => $progress['imported'],
+            'updated' => $progress['updated'],
+            'skipped' => $progress['skipped'],
+            'failed' => $progress['failed'],
+        ];
+    }
+
+    /**
      * ImportJiraIssuesJob persists this as a plain snake_case array (it's
      * just a JSON blob it writes for itself) — reshaped to camelCase here so
      * every settings-page prop follows the same convention.
