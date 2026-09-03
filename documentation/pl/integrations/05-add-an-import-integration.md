@@ -497,8 +497,28 @@ ponawiania, jakiego używa `SendWebhookNotificationJob`. Jego `handle()`
 rozwiązuje importera przez `IntegrationImporterRegistry`, przesyła
 `fetchIssues()` do `ImportOrchestratorService::import()` i zapisuje
 wynikowy `ImportResultDTO` w `project_integrations.options['last_import']`
-(`imported`/`skipped`/`failed`/`errors`/`ran_at`) przez
+(`imported`/`updated`/`skipped`/`failed`/`errors`/`ran_at`) przez
 `ProjectIntegrationRepository::updateOrCreate()`.
+
+`import()` przyjmuje flagę `bool $syncExisting` (czytaną z
+`$this->importOptions['sync_existing'] ?? false` — tej samej generycznej
+"torby" opcji, z której `fetchIssues()` już czyta `project_key`/`jql`,
+więc `ImportLinearIssuesJob` nie potrzebuje nowej właściwości
+konstruktora dla niej). `false` (domyślnie) to oryginalne zachowanie:
+issue już śledzone w `ExternalIssueLink` jest zostawiane w spokoju i
+liczone jako `skipped`. `true` zamiast tego je nadpisuje, przez
+`IssueService::syncImportedIssue()` — **zewnętrzny system zawsze
+wygrywa przy konflikcie**, bez łączenia z tym, co użytkownik zmienił
+lokalnie w Orbicie od ostatniej synchronizacji. To nadpisanie używa
+dokładnie tej samej logiki `mapIssueData()`/mapowania pól/hierarchii,
+która tworzy zupełnie nowe issue, więc zachowanie synchronizacji dla
+Lineara jest automatycznie poprawne, nie jest czymś, co
+`ImportLinearIssuesJob` musi implementować. `syncImportedIssue()` pisze
+jeden wpis `ActivityLog` na zmienione issue (żeby jego historia
+zostawała czytelna, tak jak przy zwykłej edycji), ale celowo **nie**
+odpala `IssueUpdated` ani nikogo nie powiadamia — to samo uzasadnienie
+operacji masowej, dla którego `importIssue()` nie odpala `IssueCreated`:
+re-sync może dotknąć setek issues w jednym przebiegu.
 
 Poinformowanie importującego użytkownika, jak poszło, **nie** jest zadaniem tego joba.
 Sam `ImportOrchestratorService::import()` wysyła event `App\Events\IssuesImported`
@@ -565,7 +585,11 @@ connect/mapping/import — `WorkspaceSettingsImportPanel.tsx` już
 renderuje wszystko, co opisuje `importConfig` (Krok 1), a
 `WorkspaceSettingsIntegrationDetailModal.tsx` już kieruje każdą
 integrację `kind: 'import'` do tego panelu. Żaden z tych dwóch plików
-nie jest specyficzny dla Jiry.
+nie jest specyficzny dla Jiry — dotyczy to też przełącznika "Update
+already-imported issues" obok przycisku Import, który wysyła
+`sync_existing` do trasy, jaką rozwiąże `IMPORT_ROUTE_NAMES`. Linear
+dostaje go za darmo w momencie, gdy istnieje powyższy wpis — nie ma nic
+specyficznego dla importera do dodania dla niego na froncie.
 
 To, czego wciąż musisz dotknąć, zgodnie z uwagą architektoniczną z
 Kroku 6: prop `jiraSettings`, przekazywany przez `SettingsController` →
@@ -601,9 +625,14 @@ ten kod już używa gdzie indziej:
 - `tests/Feature/Services/Integrations/ImportOrchestratorServiceTest.php` —
   algorytm dwuprzebiegowy: dziecko pojawiające się przed rodzicem i tak
   dostaje właściwy `parent_id`; ponowne uruchomienie importu na tych
-  samych wierszach `ExternalIssueLink` pomija, zamiast duplikować; oraz
-  — łatwe do przeoczenia, bo to nie jedna z powyższych asercji DTO/hierarchii
-  — `Event::fake()` + `Event::assertDispatched(IssuesImported::class, fn ($event) => ...)`,
+  samych wierszach `ExternalIssueLink` pomija, zamiast duplikować, przy
+  `$syncExisting = false` (domyślnie); przy `$syncExisting = true`
+  już zalinkowane issue jest zamiast tego nadpisywane (dane ze
+  zdalnego systemu wygrywają nawet nad lokalnie zmienionym polem),
+  `updated` rośnie zamiast `skipped`, i zapisywany jest jeden wpis
+  `ActivityLog`; oraz — łatwe do przeoczenia, bo to nie jedna z
+  powyższych asercji DTO/hierarchii — `Event::fake()` +
+  `Event::assertDispatched(IssuesImported::class, fn ($event) => ...)`,
   żeby potwierdzić, że `import()` faktycznie go wysyła z właściwym
   wynikiem, dla każdego źródła, nie tylko dla Jiry.
 - `tests/Feature/Listeners/SendNotificationListenerTest.php` — odzwierciedl

@@ -27,7 +27,7 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     onToggleOption: (optionId: string, checked: boolean) => void;
     onConnectImport: (credentials: Record<string, string>) => void;
     onSaveImportMappings: (mappings: IntegrationFieldMappingDraft[]) => void;
-    onTriggerImport: (projectKey: string) => void;
+    onTriggerImport: (projectKey: string, syncExisting: boolean) => void;
     onClose: () => void;
 }
 

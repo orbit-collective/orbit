@@ -23,4 +23,11 @@ class ExternalIssueLinkRepository
     {
         return ExternalIssueLink::query()->create($attributes);
     }
+
+    public function touch(ExternalIssueLink $externalIssueLink, array $attributes): ExternalIssueLink
+    {
+        $externalIssueLink->update($attributes);
+
+        return $externalIssueLink;
+    }
 }

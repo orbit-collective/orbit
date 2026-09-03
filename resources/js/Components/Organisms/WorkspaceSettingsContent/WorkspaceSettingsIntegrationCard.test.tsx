@@ -29,7 +29,7 @@ describe('WorkspaceSettingsIntegrationCard', () => {
         expect(screen.getByText(discord.category)).toBeInTheDocument();
     });
 
-    test('shows a "New" badge and an enabled toggle for an available integration', () => {
+    test('shows a "Disabled" badge and an enabled toggle for an available integration', () => {
         render(
             <WorkspaceSettingsIntegrationCard
                 integration={discord}
@@ -40,7 +40,7 @@ describe('WorkspaceSettingsIntegrationCard', () => {
             />,
         );
 
-        expect(screen.getByText('New')).toBeInTheDocument();
+        expect(screen.getByText('Disabled')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: '' })).not.toBeDisabled();
     });
 

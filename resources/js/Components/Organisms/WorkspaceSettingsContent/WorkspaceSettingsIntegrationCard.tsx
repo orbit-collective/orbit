@@ -62,8 +62,10 @@ export default function WorkspaceSettingsIntegrationCard({
                             Soon
                         </span>
                     ) : (
-                        <span className="rounded-full bg-[var(--accent-color-opacity)] px-2 py-0.5 text-[11px] font-semibold text-[var(--accent-color)]">
-                            New
+                        <span
+                            className={`rounded-full ${enabled ? 'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]' : 'bg-[var(--bg-muted-color)] text-[var(--text-muted-color)]'} px-2 py-0.5 text-[11px] font-semibold`}
+                        >
+                            {enabled ? 'Enabled' : 'Disabled'}
                         </span>
                     )}
                 </div>

@@ -137,6 +137,9 @@ class JiraIntegrationService
 
         return [
             'imported' => $lastImport['imported'],
+            // ?? 0: a last_import blob written before the sync-existing
+            // feature existed won't have this key.
+            'updated' => $lastImport['updated'] ?? 0,
             'skipped' => $lastImport['skipped'],
             'failed' => $lastImport['failed'],
             'errors' => $lastImport['errors'],

@@ -71,6 +71,37 @@ class IssueService
         return $issue;
     }
 
+    /**
+     * Overwrites an already-imported issue with fresh data from its source
+     * of truth (e.g. Jira) - the remote system always wins on conflict, no
+     * merge with whatever a user may have changed locally in Orbit since
+     * the last sync. Writes one ActivityLog entry per changed issue (same
+     * as a normal edit, so its history stays legible) but deliberately does
+     * NOT fire IssueUpdated/notify assignees/actors, for the same
+     * bulk-operation reason importIssue() doesn't fire IssueCreated: a
+     * re-sync can touch hundreds of issues in one run.
+     */
+    public function syncImportedIssue(Issue $issue, array $data, User $syncedBy): Issue
+    {
+        $before = $this->snapshot($issue);
+
+        $this->issueRepository->update($issue, $data);
+
+        $changes = $this->diffChanges($before, $issue);
+
+        if (empty($changes)) {
+            return $issue;
+        }
+
+        $this->activityLogService->log(
+            $issue->project_id,
+            "Issue #$issue->id \"$issue->title\" synced from Jira: ".$this->summarize($changes),
+            $syncedBy->id,
+        );
+
+        return $issue;
+    }
+
     public function getAllForUser(int $userId): Collection
     {
         return $this->issueRepository->getAllForUser($userId);
