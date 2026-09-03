@@ -11,12 +11,13 @@ import {
 import {
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
+    IntegrationImportProgress,
     ProjectIntegrationSettings,
 } from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
 import { router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
 import WorkspaceSettingsIntegrationDetailModal from './WorkspaceSettingsIntegrationDetailModal';
 
@@ -30,6 +31,7 @@ interface WorkspaceSettingsIntegrationsTabProps {
     integrationStatuses?: Record<string, boolean>;
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
     jiraSettings?: ImportIntegrationSettings | null;
+    jiraImportProgress?: IntegrationImportProgress | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -45,19 +47,94 @@ const IMPORT_ROUTE_NAMES: Partial<
     },
 };
 
+/** How often the "Importing…" toast polls jiraImportProgress while a run is in flight. */
+const IMPORT_POLL_INTERVAL_MS = 1500;
+
+function describeImportCounts(progress: {
+    imported: number;
+    updated: number;
+    skipped: number;
+    failed: number;
+}): string {
+    const parts = [`${progress.imported} imported`];
+
+    if (progress.updated) parts.push(`${progress.updated} updated`);
+    if (progress.skipped) parts.push(`${progress.skipped} skipped`);
+    if (progress.failed) parts.push(`${progress.failed} failed`);
+
+    return parts.join(', ');
+}
+
 export default function WorkspaceSettingsIntegrationsTab({
     memberProjects = [],
     selectedProjectId = null,
     integrationStatuses = {},
     integrationSettings = {},
     jiraSettings = null,
+    jiraImportProgress = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsIntegrationsTabProps) {
-    const { addAlert } = useAlert();
+    const { addAlert, updateAlert, removeAlert } = useAlert();
     const [openIntegrationId, setOpenIntegrationId] =
         useState<IntegrationId | null>(null);
     const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
+
+    // Tracks the live "Importing…" toast across poll ticks: which alert to
+    // update, the interval driving the polling, and the runId the progress
+    // record had right before this import was triggered (so a poll that
+    // still sees the *previous* run's leftover 'done'/'failed' state - the
+    // job hasn't picked up the new one up yet - is correctly ignored
+    // instead of closing the toast prematurely).
+    const importAlertIdRef = useRef<string | null>(null);
+    const importPollTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+        null,
+    );
+    const importBaselineRunIdRef = useRef<string | null>(null);
+
+    const stopImportPolling = () => {
+        if (importPollTimerRef.current !== null) {
+            clearInterval(importPollTimerRef.current);
+            importPollTimerRef.current = null;
+        }
+    };
+
+    useEffect(() => stopImportPolling, []);
+
+    useEffect(() => {
+        const alertId = importAlertIdRef.current;
+
+        if (!alertId || !jiraImportProgress) return;
+        if (jiraImportProgress.runId === importBaselineRunIdRef.current) {
+            return;
+        }
+
+        if (jiraImportProgress.status === 'running') {
+            updateAlert(alertId, {
+                message: `Importing… ${describeImportCounts(jiraImportProgress)}`,
+            });
+
+            return;
+        }
+
+        stopImportPolling();
+        importAlertIdRef.current = null;
+        removeAlert(alertId);
+
+        if (jiraImportProgress.status === 'done') {
+            addAlert(
+                `Import done — ${describeImportCounts(jiraImportProgress)}.`,
+                jiraImportProgress.failed > 0 ? 'warning' : 'success',
+                6000,
+            );
+        } else {
+            addAlert(
+                'Import failed — check your notifications for details.',
+                'error',
+                6000,
+            );
+        }
+    }, [jiraImportProgress, addAlert, removeAlert, updateAlert]);
 
     const selectedProject =
         memberProjects.find((project) => project.id === selectedProjectId) ??
@@ -206,10 +283,31 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    addAlert(
-                        'Import started — this can take a few minutes.',
-                        'success',
+                    // Only Jira reports live progress today (jiraImportProgress
+                    // is a Jira-specific prop) - other import integrations
+                    // still get the plain "started" toast until they get
+                    // their own progress prop wired the same way.
+                    if (integrationId !== 'jira') {
+                        addAlert(
+                            'Import started — this can take a few minutes.',
+                            'success',
+                        );
+
+                        return;
+                    }
+
+                    stopImportPolling();
+                    importBaselineRunIdRef.current =
+                        jiraImportProgress?.runId ?? null;
+                    importAlertIdRef.current = addAlert(
+                        'Importing… 0 imported',
+                        'information',
+                        0,
                     );
+
+                    importPollTimerRef.current = setInterval(() => {
+                        router.reload({ only: ['jiraImportProgress'] });
+                    }, IMPORT_POLL_INTERVAL_MS);
                 },
                 onError: () => {
                     addAlert('Failed to start the import.', 'error');

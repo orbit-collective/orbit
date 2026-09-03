@@ -177,7 +177,9 @@ describe('useAlert', () => {
         });
 
         act(() => {
-            result.current.updateAlert(id, { message: 'Importing… 3 imported' });
+            result.current.updateAlert(id, {
+                message: 'Importing… 3 imported',
+            });
         });
 
         expect(result.current.alerts).toHaveLength(1);
