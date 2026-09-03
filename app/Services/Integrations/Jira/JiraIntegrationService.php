@@ -38,15 +38,22 @@ class JiraIntegrationService
      */
     public function connect(Project $project, array $credentials): ProjectIntegration
     {
-        $projectIntegration = $this->projectIntegrationRepository->updateOrCreate($project, self::INTEGRATION_KEY, [
-            'credentials' => $credentials,
-        ]);
+        // Tested against a transient, unpersisted model first: persisting
+        // before the test (and leaving it persisted on failure) would let a
+        // bad instance_url sit in the database and keep getting hit by every
+        // later settings-page load (getSettingsExtras()) even though it was
+        // never actually a valid, connected integration.
+        $probe = new ProjectIntegration(['credentials' => $credentials]);
 
-        if (! $this->importer()->testConnection($projectIntegration)) {
+        if (! $this->importer()->testConnection($probe)) {
             throw ValidationException::withMessages([
                 'instance_url' => 'Could not connect to Jira with these credentials.',
             ]);
         }
+
+        $projectIntegration = $this->projectIntegrationRepository->updateOrCreate($project, self::INTEGRATION_KEY, [
+            'credentials' => $credentials,
+        ]);
 
         $this->activityLogService->log($project->id, 'Connected the "jira" integration');
 

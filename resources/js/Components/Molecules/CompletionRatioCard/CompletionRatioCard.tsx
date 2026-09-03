@@ -83,7 +83,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                 <span className="text-xs font-semibold tabular-nums text-[var(--text-color)]">
                                     {bar.value}
                                 </span>
-                                <div className="flex h-20 w-6 items-end rounded-md bg-[var(--bg-light-color)] overflow-hidden">
+                                <div className="flex h-20 w-6 items-end overflow-hidden rounded-md bg-[var(--bg-light-color)]">
                                     <div
                                         className={`w-full rounded-md transition-all duration-500 ease-out ${bar.colorClass}`}
                                         style={{

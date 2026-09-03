@@ -173,6 +173,8 @@ class ImportOrchestratorService
             $parentExternalId = $item['parentExternalId'];
 
             if ($parentExternalId === null) {
+                $this->issueRepository->update($item['issue'], ['parent_id' => null]);
+
                 continue;
             }
 

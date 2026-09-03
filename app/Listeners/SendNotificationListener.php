@@ -202,7 +202,7 @@ class SendNotificationListener
             NotificationType::IntegrationActivity,
             $result->failed > 0 ? 'warning' : 'success',
             'Import finished',
-            "Imported {$result->imported}, updated {$result->updated}, skipped {$result->skipped}, failed {$result->failed} issue(s) into \"{$event->project->name}\".",
+            "Imported $result->imported, updated $result->updated, skipped $result->skipped, failed $result->failed issue(s) into \"{$event->project->name}\".",
             route('settings', ['tab' => 'integrations', 'project' => $event->project->id])
         );
     }

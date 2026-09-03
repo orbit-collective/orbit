@@ -79,7 +79,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
             screen.getByText(discord.previewSamples[0].title),
         ).toBeInTheDocument();
         expect(
-            screen.getByText(discord.subOptions[0].title),
+            screen.getByText(discord.subOptions![0].title),
         ).toBeInTheDocument();
     });
 
