@@ -143,6 +143,8 @@ class JiraIntegrationService
         }
 
         return [
+            // ?? null: a progress blob written before this field existed.
+            'runId' => $progress['run_id'] ?? null,
             'status' => $progress['status'],
             'imported' => $progress['imported'],
             'updated' => $progress['updated'],

@@ -59,3 +59,21 @@ export interface ImportIntegrationSettings {
     fieldMappings: IntegrationFieldMapping[];
     lastImport: IntegrationLastImportResult | null;
 }
+
+export type IntegrationImportRunStatus = 'running' | 'done' | 'failed';
+
+/**
+ * The live progress readout polled while an import is running — a separate,
+ * cheap prop from ImportIntegrationSettings above (see
+ * JiraIntegrationService::getImportProgress()'s docblock for why). `runId`
+ * changes every time a new import starts; a poller uses it to tell "this is
+ * this run's data" apart from stale data left over from a previous run.
+ */
+export interface IntegrationImportProgress {
+    runId: string | null;
+    status: IntegrationImportRunStatus;
+    imported: number;
+    updated: number;
+    skipped: number;
+    failed: number;
+}

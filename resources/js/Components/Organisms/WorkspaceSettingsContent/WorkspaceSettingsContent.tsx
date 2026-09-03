@@ -1,5 +1,6 @@
 import {
     ImportIntegrationSettings,
+    IntegrationImportProgress,
     ProjectIntegrationSettings,
 } from '@/types/ProjectIntegrations';
 import {
@@ -40,6 +41,7 @@ interface WorkspaceSettingsContentProps {
     integrationStatuses?: Record<string, boolean>;
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
     jiraSettings?: ImportIntegrationSettings | null;
+    jiraImportProgress?: IntegrationImportProgress | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -64,6 +66,7 @@ export default function WorkspaceSettingsContent({
     integrationStatuses = {},
     integrationSettings = {},
     jiraSettings = null,
+    jiraImportProgress = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsContentProps) {
@@ -112,6 +115,7 @@ export default function WorkspaceSettingsContent({
                 integrationStatuses={integrationStatuses}
                 integrationSettings={integrationSettings}
                 jiraSettings={jiraSettings}
+                jiraImportProgress={jiraImportProgress}
                 hasIntegrationsAccess={hasIntegrationsAccess}
                 canUpdateIntegrations={canUpdateIntegrations}
             />

@@ -8,6 +8,7 @@ import { PageProps } from '@/types';
 import { NotificationSettings } from '@/types/Notification';
 import {
     ImportIntegrationSettings,
+    IntegrationImportProgress,
     ProjectIntegrationSettings,
 } from '@/types/ProjectIntegrations';
 import {
@@ -51,6 +52,7 @@ interface SettingsIndexProps {
     integrationStatuses?: Record<string, boolean>;
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
     jiraSettings?: ImportIntegrationSettings | null;
+    jiraImportProgress?: IntegrationImportProgress | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -77,6 +79,7 @@ export default function SettingsIndex({
     integrationStatuses = {},
     integrationSettings = {},
     jiraSettings = null,
+    jiraImportProgress = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: SettingsIndexProps) {
@@ -149,6 +152,7 @@ export default function SettingsIndex({
                                 integrationStatuses={integrationStatuses}
                                 integrationSettings={integrationSettings}
                                 jiraSettings={jiraSettings}
+                                jiraImportProgress={jiraImportProgress}
                                 hasIntegrationsAccess={hasIntegrationsAccess}
                                 canUpdateIntegrations={canUpdateIntegrations}
                             />

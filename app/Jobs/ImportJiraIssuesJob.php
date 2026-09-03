@@ -16,6 +16,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -64,13 +65,20 @@ class ImportJiraIssuesJob implements ShouldQueue
 
         $syncExisting = (bool) ($this->importOptions['sync_existing'] ?? false);
 
+        // A fresh id per attempt, not a timestamp: the frontend polls this
+        // field to tell "this is a newer record than the one I saw right
+        // before triggering the import" from "this is stale data left over
+        // from the previous run" - a random id sidesteps any clock
+        // precision/timezone concerns a timestamp comparison would have.
+        $runId = (string) Str::uuid();
+
         // Kept as one local variable for the whole run (rather than
         // re-reading $this->projectIntegration->options later) since the
         // model's in-memory attributes never see the writes made through
         // $projectIntegrationRepository below - re-deriving from them at
         // the end would silently discard every progress update made here.
         $options = $this->projectIntegration->options ?? [];
-        $options['import_progress'] = $this->progressPayload('running', 0, 0, 0, 0);
+        $options['import_progress'] = $this->progressPayload($runId, 'running', 0, 0, 0, 0);
         $projectIntegrationRepository->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
 
         $lastPersistedProcessed = 0;
@@ -78,7 +86,7 @@ class ImportJiraIssuesJob implements ShouldQueue
         // Throttled to roughly every 3rd processed issue (but never misses
         // the very first one, so the UI shows movement quickly) rather than
         // writing to the database on every single issue.
-        $onProgress = function (int $imported, int $updated, int $skipped, int $failed) use (&$options, &$lastPersistedProcessed, $projectIntegrationRepository) {
+        $onProgress = function (int $imported, int $updated, int $skipped, int $failed) use (&$options, &$lastPersistedProcessed, $projectIntegrationRepository, $runId) {
             $processed = $imported + $updated + $skipped + $failed;
 
             if ($processed !== 1 && $processed - $lastPersistedProcessed < 3) {
@@ -86,7 +94,7 @@ class ImportJiraIssuesJob implements ShouldQueue
             }
 
             $lastPersistedProcessed = $processed;
-            $options['import_progress'] = $this->progressPayload('running', $imported, $updated, $skipped, $failed);
+            $options['import_progress'] = $this->progressPayload($runId, 'running', $imported, $updated, $skipped, $failed);
 
             $projectIntegrationRepository->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
         };
@@ -113,7 +121,7 @@ class ImportJiraIssuesJob implements ShouldQueue
             'errors' => $result->errors,
             'ran_at' => now()->toIso8601String(),
         ];
-        $options['import_progress'] = $this->progressPayload('done', $result->imported, $result->updated, $result->skipped, $result->failed);
+        $options['import_progress'] = $this->progressPayload($runId, 'done', $result->imported, $result->updated, $result->skipped, $result->failed);
 
         $projectIntegrationRepository->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
 
@@ -133,7 +141,7 @@ class ImportJiraIssuesJob implements ShouldQueue
     public function failed(Throwable $exception): void
     {
         $options = $this->projectIntegration->options ?? [];
-        $options['import_progress'] = $this->progressPayload('failed', 0, 0, 0, 0);
+        $options['import_progress'] = $this->progressPayload((string) Str::uuid(), 'failed', 0, 0, 0, 0);
 
         app(ProjectIntegrationRepository::class)->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
 
@@ -148,11 +156,12 @@ class ImportJiraIssuesJob implements ShouldQueue
     }
 
     /**
-     * @return array{status: string, imported: int, updated: int, skipped: int, failed: int}
+     * @return array{run_id: string, status: string, imported: int, updated: int, skipped: int, failed: int}
      */
-    private function progressPayload(string $status, int $imported, int $updated, int $skipped, int $failed): array
+    private function progressPayload(string $runId, string $status, int $imported, int $updated, int $skipped, int $failed): array
     {
         return [
+            'run_id' => $runId,
             'status' => $status,
             'imported' => $imported,
             'updated' => $updated,
