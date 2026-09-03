@@ -1,5 +1,45 @@
 # Changelog
 
+## [0.7.2](https://github.com/orbit-collective/orbit/compare/v0.7.1...v0.7.2) (2026-09-03)
+
+
+### Features
+
+* **alert:** add updateAlert method for modifying alerts ([bdb81e3](https://github.com/orbit-collective/orbit/commit/bdb81e37c99996ab1d1eef7ac2670c7bdab88998))
+* **data transfer objects:** add ExternalIssueDTO and ImportResultDTO ([f30c94f](https://github.com/orbit-collective/orbit/commit/f30c94f36158f4d7bbcf649a0d9eb956acdfe40c))
+* **external links:** add external issue links functionality ([f842ab7](https://github.com/orbit-collective/orbit/commit/f842ab76f292b6676d78c95ceb2ee7b07e84c5be))
+* **import:** implement bulk issue import functionality ([61f2130](https://github.com/orbit-collective/orbit/commit/61f2130d0769713f215bb685fb33d9c19d28303f))
+* **integration:** add credentials field to project integrations ([62b1bdf](https://github.com/orbit-collective/orbit/commit/62b1bdf6bf55c81bcb9277f607230fe30aa7025a))
+* **integration:** add field mappings for project integrations ([edc91f0](https://github.com/orbit-collective/orbit/commit/edc91f016970cbf8702a68b7d59cbe3deddd442c))
+* **integration:** add import progress reporting to settings UI ([0b1f3f2](https://github.com/orbit-collective/orbit/commit/0b1f3f286bd2ed978ac1288dda7d8513d5f25224))
+* **integration:** add import settings and mapping functionality ([039687f](https://github.com/orbit-collective/orbit/commit/039687f0e9ba10476db3d1be1020315804746a9e))
+* **integration:** add ImportJiraIssuesJob for Jira issue import ([f9a9224](https://github.com/orbit-collective/orbit/commit/f9a9224e84f54e65e1d061b73a79cc9ce7782625))
+* **integration:** add IssuesImported event and notification handling ([d535ede](https://github.com/orbit-collective/orbit/commit/d535edef314a5056f2c8d55703b82d18e641e5d0))
+* **integration:** add Jira integration controller and service ([3438211](https://github.com/orbit-collective/orbit/commit/343821149f2c9439c95ac707ebd006600a2a7a00))
+* **integration:** add JiraApiClient for Jira API interactions ([b9b6fcf](https://github.com/orbit-collective/orbit/commit/b9b6fcfed198776b5ed5f32bb8488f91b674cc18))
+* **integration:** add live import progress tracking for Jira ([939e773](https://github.com/orbit-collective/orbit/commit/939e77357bc5b9ca612172730bbbd8d843392df3))
+* **integration:** add live import progress tracking for Jira ([c1ddf82](https://github.com/orbit-collective/orbit/commit/c1ddf8219b9391f72cf2f847a133068a1736b387))
+* **integration:** add progress reporting for issue import ([f9b4897](https://github.com/orbit-collective/orbit/commit/f9b489733a51af4609945298373df2d27a64e803))
+* **integration:** add syncExisting option for issue import ([72a8127](https://github.com/orbit-collective/orbit/commit/72a8127fdb92aec29b073ffbdf2e9565a2763d4b))
+* **integration:** Dropdown display & API changes ([b472c6c](https://github.com/orbit-collective/orbit/commit/b472c6c4e6a2e125659570da778df4969df943f2))
+* **integration:** enhance import integration settings and mapping ([c86de95](https://github.com/orbit-collective/orbit/commit/c86de95cfb3d7b0c126530f90307781fe63c6e35))
+* **integration:** implement IntegrationImporter and registry ([4cc1ff4](https://github.com/orbit-collective/orbit/commit/4cc1ff4ecc1f5713cb27eb65bfbb4a1f10722bed))
+* **integration:** implement JiraIntegrationImporter for Jira issue handling ([6f0518c](https://github.com/orbit-collective/orbit/commit/6f0518c1a52819a6441f0b0348c51bd71acc8e28))
+* **integration:** update documentation for import integrations ([2a4dcc1](https://github.com/orbit-collective/orbit/commit/2a4dcc1f5e5e7790089f884ceccbf6eb55f39b0c))
+* **integration:** update Jira API search method for cursor pagination ([9fbe796](https://github.com/orbit-collective/orbit/commit/9fbe79631d4a4743701004a30ff67abefba7c596))
+* **issue:** add parent-child relationship to issues ([df49c22](https://github.com/orbit-collective/orbit/commit/df49c2257b94d2c5009ba858b82e6a5869dfc177))
+
+
+### Bug Fixes
+
+* **integration:** address CI gaps and Greptile review findings ([f43bfea](https://github.com/orbit-collective/orbit/commit/f43bfea4e6f730d7a67260cf01dc4e090553617e))
+* **integration:** remove redundant success flash message on import ([17317ff](https://github.com/orbit-collective/orbit/commit/17317ff3593df71d2326f4f74fd7ca1b46863a5c))
+
+
+### Miscellaneous Chores
+
+* release 0.7.2 ([6e6b3e3](https://github.com/orbit-collective/orbit/commit/6e6b3e31a2ce227fdd99361d6455ceac430e40d9))
+
 ## [0.7.1](https://github.com/orbit-collective/orbit/compare/v0.7.0...v0.7.1) (2026-09-01)
 
 
