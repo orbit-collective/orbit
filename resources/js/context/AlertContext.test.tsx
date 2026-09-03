@@ -151,6 +151,59 @@ describe('useAlert', () => {
         expect(result.current.alerts).toHaveLength(1);
     });
 
+    test('addAlert returns the new alert id', () => {
+        const { result } = renderHook(() => useAlert(), { wrapper });
+
+        let id = '';
+        act(() => {
+            id = result.current.addAlert('Importing…', 'information', 0);
+        });
+
+        expect(id).toBeTruthy();
+        expect(result.current.alerts[0].id).toBe(id);
+    });
+
+    test('updateAlert patches an existing alert in place, preserving untouched fields', () => {
+        const { result } = renderHook(() => useAlert(), { wrapper });
+
+        let id = '';
+        act(() => {
+            id = result.current.addAlert(
+                'Importing… 0 imported',
+                'information',
+                0,
+                '/settings',
+            );
+        });
+
+        act(() => {
+            result.current.updateAlert(id, { message: 'Importing… 3 imported' });
+        });
+
+        expect(result.current.alerts).toHaveLength(1);
+        expect(result.current.alerts[0]).toMatchObject({
+            id,
+            message: 'Importing… 3 imported',
+            type: 'information',
+            actionUrl: '/settings',
+        });
+    });
+
+    test('updateAlert does nothing for an id that no longer exists', () => {
+        const { result } = renderHook(() => useAlert(), { wrapper });
+
+        act(() => {
+            result.current.addAlert('Still here', 'success', 0);
+        });
+
+        act(() => {
+            result.current.updateAlert('not-a-real-id', { message: 'Ghost' });
+        });
+
+        expect(result.current.alerts).toHaveLength(1);
+        expect(result.current.alerts[0].message).toBe('Still here');
+    });
+
     test.each([
         ['success', 'success'],
         ['error', 'error'],

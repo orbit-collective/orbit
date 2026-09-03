@@ -37,6 +37,22 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
                     removeAlert(id);
                 }, duration);
             }
+
+            return id;
+        },
+        [],
+    );
+
+    const updateAlert = useCallback(
+        (
+            id: string,
+            patch: Partial<Pick<AlertItem, 'message' | 'type' | 'actionUrl'>>,
+        ) => {
+            setAlerts((prev) =>
+                prev.map((alert) =>
+                    alert.id === id ? { ...alert, ...patch } : alert,
+                ),
+            );
         },
         [],
     );
@@ -103,7 +119,9 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     }, [showFlashAlerts]);
 
     return (
-        <AlertContext.Provider value={{ addAlert, removeAlert, alerts }}>
+        <AlertContext.Provider
+            value={{ addAlert, updateAlert, removeAlert, alerts }}
+        >
             {children}
             <AlertContainer alerts={alerts} removeAlert={removeAlert} />
         </AlertContext.Provider>
