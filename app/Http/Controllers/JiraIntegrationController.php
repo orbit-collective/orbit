@@ -70,7 +70,15 @@ class JiraIntegrationController extends Controller
             ],
         );
 
-        return redirect()->back()->with('success', 'Jira import started — this can take a few minutes.');
+        // Deliberately no `with('success', ...)` flash here: the frontend
+        // already shows its own "Importing…"/"Import done" toast driven by
+        // jiraImportProgress (see WorkspaceSettingsIntegrationsTab.tsx). A
+        // flash on top would be redundant on the first click, and since
+        // shared props omitted from a partial reload never get re-evaluated
+        // client-side, the live-progress poller re-triggering Inertia's
+        // global success handler would keep re-showing this same stale
+        // message on every poll tick until it happened to age out.
+        return redirect()->back();
     }
 
     private function findConnectedIntegration(Project $project): ProjectIntegration

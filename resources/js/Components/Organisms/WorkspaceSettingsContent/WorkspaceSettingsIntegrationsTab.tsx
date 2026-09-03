@@ -306,7 +306,15 @@ export default function WorkspaceSettingsIntegrationsTab({
                     );
 
                     importPollTimerRef.current = setInterval(() => {
-                        router.reload({ only: ['jiraImportProgress'] });
+                        // 'flash' must always be included here too: shared
+                        // props left out of a partial reload are never
+                        // re-evaluated client-side, so omitting it would
+                        // leave the last real flash message (from this
+                        // action or any other) stuck in Inertia's local page
+                        // props - and this reload's own 'success' router
+                        // event (see AlertContext.tsx) would then re-show
+                        // that same stale toast on every single poll tick.
+                        router.reload({ only: ['jiraImportProgress', 'flash'] });
                     }, IMPORT_POLL_INTERVAL_MS);
                 },
                 onError: () => {
