@@ -37,8 +37,17 @@ class ImportOrchestratorService
      * (the default) leaves it untouched and counts it as skipped; true
      * overwrites it with the remote system's current data - which always
      * wins over whatever was changed locally in Orbit since the last sync.
+     *
+     * $onProgress, if given, is called after every processed issue with the
+     * running totals so far: fn(int $imported, int $updated, int $skipped,
+     * int $failed): void. This is the only progress-reporting hook the
+     * orchestrator exposes - whether/how often to actually persist that
+     * somewhere visible to a user (and how to throttle it) is entirely up
+     * to the caller, so every future importer's job gets live progress for
+     * free just by wiring this same callback, without the orchestrator
+     * needing to know anything about where progress is displayed.
      */
-    public function import(ProjectIntegration $projectIntegration, Project $project, User $importedBy, iterable $externalIssues, bool $syncExisting = false): ImportResultDTO
+    public function import(ProjectIntegration $projectIntegration, Project $project, User $importedBy, iterable $externalIssues, bool $syncExisting = false, ?callable $onProgress = null): ImportResultDTO
     {
         $imported = 0;
         $updated = 0;
@@ -95,6 +104,10 @@ class ImportOrchestratorService
             } catch (Throwable $e) {
                 $failed++;
                 $errors[] = ($externalIssue->externalKey ?? $externalIssue->externalId).': '.$e->getMessage();
+            }
+
+            if ($onProgress !== null) {
+                $onProgress($imported, $updated, $skipped, $failed);
             }
         }
 
