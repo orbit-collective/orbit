@@ -58,12 +58,16 @@ class JiraIntegrationController extends Controller
 
         $validated = $request->validate([
             'project_key' => ['required', 'string', 'max:255'],
+            'sync_existing' => ['sometimes', 'boolean'],
         ]);
 
         $projectIntegration = $this->findConnectedIntegration($project);
 
         $this->jiraIntegrationService->triggerImport(
-            $project, $projectIntegration, $request->user(), ['project_key' => $validated['project_key']],
+            $project, $projectIntegration, $request->user(), [
+                'project_key' => $validated['project_key'],
+                'sync_existing' => $validated['sync_existing'] ?? false,
+            ],
         );
 
         return redirect()->back()->with('success', 'Jira import started — this can take a few minutes.');

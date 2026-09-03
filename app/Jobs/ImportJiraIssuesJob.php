@@ -62,9 +62,11 @@ class ImportJiraIssuesJob implements ShouldQueue
 
         $importedBy = User::query()->findOrFail($this->importedByUserId);
 
+        $syncExisting = (bool) ($this->importOptions['sync_existing'] ?? false);
+
         try {
             $externalIssues = $importer->fetchIssues($this->projectIntegration, $this->importOptions);
-            $result = $importOrchestratorService->import($this->projectIntegration, $this->project, $importedBy, $externalIssues);
+            $result = $importOrchestratorService->import($this->projectIntegration, $this->project, $importedBy, $externalIssues, $syncExisting);
         } catch (Throwable $e) {
             // Never let instance_url/email/api_token leak into logs via the
             // integration model or exception context - message only.
@@ -79,6 +81,7 @@ class ImportJiraIssuesJob implements ShouldQueue
         $options = $this->projectIntegration->options ?? [];
         $options['last_import'] = [
             'imported' => $result->imported,
+            'updated' => $result->updated,
             'skipped' => $result->skipped,
             'failed' => $result->failed,
             'errors' => $result->errors,

@@ -1,4 +1,5 @@
 import Input from '@/Components/Atoms/Input/Input';
+import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import {
     IntegrationDefinition,
@@ -17,7 +18,7 @@ interface WorkspaceSettingsImportPanelProps {
     settings: ImportIntegrationSettings | null;
     onConnect: (credentials: Record<string, string>) => void;
     onSaveMappings: (mappings: IntegrationFieldMappingDraft[]) => void;
-    onImport: (projectKey: string) => void;
+    onImport: (projectKey: string, syncExisting: boolean) => void;
 }
 
 /**
@@ -80,6 +81,7 @@ export default function WorkspaceSettingsImportPanel({
         Record<string, string>
     >({});
     const [projectKey, setProjectKey] = useState('');
+    const [syncExisting, setSyncExisting] = useState(false);
     const [mappingDrafts, setMappingDrafts] = useState<Record<string, string>>(
         {},
     );
@@ -289,26 +291,47 @@ export default function WorkspaceSettingsImportPanel({
                             Import
                         </h3>
                         {canUpdate ? (
-                            <div className="mt-3 flex items-center gap-2">
-                                <Input
-                                    id="import-project-key"
-                                    variant="modal"
-                                    value={projectKey}
-                                    onChange={(event) =>
-                                        setProjectKey(event.target.value)
-                                    }
-                                    placeholder={`${integration.name} project key`}
-                                    className="flex-1"
-                                />
-                                <button
-                                    type="button"
-                                    disabled={!projectKey}
-                                    onClick={() => onImport(projectKey)}
-                                    className="shrink-0 rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                                >
-                                    Import
-                                </button>
-                            </div>
+                            <>
+                                <div className="mt-3 flex items-center gap-2">
+                                    <Input
+                                        id="import-project-key"
+                                        variant="modal"
+                                        value={projectKey}
+                                        onChange={(event) =>
+                                            setProjectKey(event.target.value)
+                                        }
+                                        placeholder={`${integration.name} project key`}
+                                        className="flex-1"
+                                    />
+                                    <button
+                                        type="button"
+                                        disabled={!projectKey}
+                                        onClick={() =>
+                                            onImport(projectKey, syncExisting)
+                                        }
+                                        className="shrink-0 rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        Import
+                                    </button>
+                                </div>
+                                <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-[var(--border-color)] px-4 py-2.5">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-[var(--text-color)]">
+                                            Update already-imported issues
+                                        </p>
+                                        <p className="mt-0.5 text-sm text-[var(--text-gray-color)]">
+                                            {integration.name} always wins on
+                                            conflict — any local changes to a
+                                            previously imported issue are
+                                            overwritten.
+                                        </p>
+                                    </div>
+                                    <ToggleSwitch
+                                        checked={syncExisting}
+                                        onChange={setSyncExisting}
+                                    />
+                                </div>
+                            </>
                         ) : (
                             <p className="mt-1 text-sm text-[var(--text-gray-color)]">
                                 Only a project admin can trigger an import.
@@ -321,6 +344,7 @@ export default function WorkspaceSettingsImportPanel({
                                     settings.lastImport.ranAt,
                                 ).toLocaleString()}
                                 ): {settings.lastImport.imported} imported,{' '}
+                                {settings.lastImport.updated} updated,{' '}
                                 {settings.lastImport.skipped} skipped,{' '}
                                 {settings.lastImport.failed} failed.
                             </p>

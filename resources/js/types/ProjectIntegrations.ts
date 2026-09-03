@@ -40,6 +40,7 @@ export interface IntegrationFieldMappingDraft {
 
 export interface IntegrationLastImportResult {
     imported: number;
+    updated: number;
     skipped: number;
     failed: number;
     errors: string[];

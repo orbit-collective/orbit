@@ -10,6 +10,7 @@ final class ImportResultDTO
 {
     public function __construct(
         public readonly int $imported = 0,
+        public readonly int $updated = 0,
         public readonly int $skipped = 0,
         public readonly int $failed = 0,
         public readonly array $errors = [],

@@ -488,8 +488,26 @@ Mirrors `app/Jobs/ImportJiraIssuesJob.php`: `ShouldQueue`, `tries = 3`,
 via `IntegrationImporterRegistry`, streams `fetchIssues()` into
 `ImportOrchestratorService::import()`, and persists the resulting
 `ImportResultDTO` into `project_integrations.options['last_import']`
-(`imported`/`skipped`/`failed`/`errors`/`ran_at`) via
+(`imported`/`updated`/`skipped`/`failed`/`errors`/`ran_at`) via
 `ProjectIntegrationRepository::updateOrCreate()`.
+
+`import()` takes a `bool $syncExisting` flag (read from
+`$this->importOptions['sync_existing'] ?? false` — the same generic
+options bag `fetchIssues()` already reads `project_key`/`jql` from, so
+`ImportLinearIssuesJob` needs no new constructor property for it).
+`false` (the default) is the original behavior: an issue already
+tracked in `ExternalIssueLink` is left alone and counted as `skipped`.
+`true` overwrites it instead, via `IssueService::syncImportedIssue()` —
+**the remote system always wins on conflict**, with no merge against
+whatever a user changed locally in Orbit since the last sync. That
+overwrite reuses the exact same `mapIssueData()`/field-mapping/hierarchy
+logic that creates a brand-new issue, so Linear's sync behavior is
+correct automatically, not something `ImportLinearIssuesJob` has to
+implement. `syncImportedIssue()` writes one `ActivityLog` entry per
+changed issue (so its history stays legible, same as a normal edit) but
+deliberately does **not** fire `IssueUpdated` or notify anyone — same
+bulk-operation reasoning as `importIssue()` not firing `IssueCreated`: a
+re-sync can touch hundreds of issues in one run.
 
 Telling the importing user how it went is **not** this job's job.
 `ImportOrchestratorService::import()` itself fires `App\Events\IssuesImported`
@@ -553,7 +571,11 @@ import flow itself — `WorkspaceSettingsImportPanel.tsx` already renders
 whatever `importConfig` (Step 1) describes, and
 `WorkspaceSettingsIntegrationDetailModal.tsx` already routes any
 `kind: 'import'` integration to that panel. Nothing about either file
-is Jira-specific.
+is Jira-specific — that includes the "Update already-imported issues"
+toggle next to the Import button, which posts `sync_existing` to
+whichever route `IMPORT_ROUTE_NAMES` resolves to. Linear gets it for
+free the moment the entry above exists; there's nothing importer-specific
+to add for it on the frontend.
 
 What you do still need to touch, per the Step 6 architecture note: the
 `jiraSettings` prop threaded through `SettingsController` →
@@ -586,8 +608,12 @@ per-layer conventions this codebase already uses elsewhere:
 - `tests/Feature/Services/Integrations/ImportOrchestratorServiceTest.php` —
   the two-pass algorithm: a child arriving before its parent still gets
   the right `parent_id`; re-running an import against the same
-  `ExternalIssueLink` rows skips rather than duplicates; and — easy to
-  forget since it's not one of the DTO/hierarchy assertions above —
+  `ExternalIssueLink` rows skips rather than duplicates with
+  `$syncExisting = false` (the default); with `$syncExisting = true` the
+  already-linked issue is overwritten instead (remote data wins even
+  over a locally-changed field), `updated` is incremented instead of
+  `skipped`, and one `ActivityLog` entry is written for it; and — easy
+  to forget since it's not one of the DTO/hierarchy assertions above —
   `Event::fake()` + `Event::assertDispatched(IssuesImported::class, fn ($event) => ...)`
   to confirm `import()` actually fires it with the right result, for
   every source, not just Jira.

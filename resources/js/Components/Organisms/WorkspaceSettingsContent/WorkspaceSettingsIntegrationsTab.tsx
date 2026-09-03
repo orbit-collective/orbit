@@ -193,6 +193,7 @@ export default function WorkspaceSettingsIntegrationsTab({
     const triggerImport = (
         integrationId: IntegrationId,
         projectKey: string,
+        syncExisting: boolean,
     ) => {
         const routeNames = IMPORT_ROUTE_NAMES[integrationId];
 
@@ -200,7 +201,7 @@ export default function WorkspaceSettingsIntegrationsTab({
 
         router.post(
             route(routeNames.import, [selectedProject.id]),
-            { project_key: projectKey },
+            { project_key: projectKey, sync_existing: syncExisting },
             {
                 preserveScroll: true,
                 preserveState: true,
@@ -371,10 +372,10 @@ export default function WorkspaceSettingsIntegrationsTab({
 
                     saveImportMappings(openIntegration.id, mappings);
                 }}
-                onTriggerImport={(projectKey) => {
+                onTriggerImport={(projectKey, syncExisting) => {
                     if (!openIntegration) return;
 
-                    triggerImport(openIntegration.id, projectKey);
+                    triggerImport(openIntegration.id, projectKey, syncExisting);
                 }}
                 onClose={() => setOpenIntegrationId(null)}
             />

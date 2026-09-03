@@ -31,9 +31,17 @@ class ImportOrchestratorService
         protected ExternalIssueLinkRepository $externalIssueLinkRepository,
     ) {}
 
-    public function import(ProjectIntegration $projectIntegration, Project $project, User $importedBy, iterable $externalIssues): ImportResultDTO
+    /**
+     * $syncExisting controls what happens to an issue that was already
+     * imported in a previous run (tracked via ExternalIssueLink): false
+     * (the default) leaves it untouched and counts it as skipped; true
+     * overwrites it with the remote system's current data - which always
+     * wins over whatever was changed locally in Orbit since the last sync.
+     */
+    public function import(ProjectIntegration $projectIntegration, Project $project, User $importedBy, iterable $externalIssues, bool $syncExisting = false): ImportResultDTO
     {
         $imported = 0;
+        $updated = 0;
         $skipped = 0;
         $failed = 0;
         $errors = [];
@@ -42,34 +50,48 @@ class ImportOrchestratorService
         $importedItems = [];
 
         foreach ($externalIssues as $externalIssue) {
-            if ($this->externalIssueLinkRepository->existsFor($projectIntegration, $externalIssue->externalId)) {
+            $existingLink = $this->externalIssueLinkRepository->findFor($projectIntegration, $externalIssue->externalId);
+
+            if ($existingLink && ! $syncExisting) {
                 $skipped++;
 
                 continue;
             }
 
             try {
-                $issue = $this->issueService->importIssue(
-                    $this->mapIssueData($projectIntegration, $project, $externalIssue),
-                    $importedBy,
-                );
+                $issueData = $this->mapIssueData($projectIntegration, $project, $externalIssue);
 
-                $this->externalIssueLinkRepository->create([
-                    'issue_id' => $issue->id,
-                    'project_integration_id' => $projectIntegration->id,
-                    'external_id' => $externalIssue->externalId,
-                    'external_key' => $externalIssue->externalKey,
-                    'external_url' => $externalIssue->url,
-                    'external_type' => $externalIssue->type,
-                    'last_synced_at' => now(),
-                ]);
+                if ($existingLink) {
+                    $issue = $this->issueService->syncImportedIssue($existingLink->issue, $issueData, $importedBy);
+
+                    $this->externalIssueLinkRepository->touch($existingLink, [
+                        'external_key' => $externalIssue->externalKey,
+                        'external_url' => $externalIssue->url,
+                        'external_type' => $externalIssue->type,
+                        'last_synced_at' => now(),
+                    ]);
+
+                    $updated++;
+                } else {
+                    $issue = $this->issueService->importIssue($issueData, $importedBy);
+
+                    $this->externalIssueLinkRepository->create([
+                        'issue_id' => $issue->id,
+                        'project_integration_id' => $projectIntegration->id,
+                        'external_id' => $externalIssue->externalId,
+                        'external_key' => $externalIssue->externalKey,
+                        'external_url' => $externalIssue->url,
+                        'external_type' => $externalIssue->type,
+                        'last_synced_at' => now(),
+                    ]);
+
+                    $imported++;
+                }
 
                 $importedItems[$externalIssue->externalId] = [
                     'issue' => $issue,
                     'parentExternalId' => $externalIssue->parentExternalId,
                 ];
-
-                $imported++;
             } catch (Throwable $e) {
                 $failed++;
                 $errors[] = ($externalIssue->externalKey ?? $externalIssue->externalId).': '.$e->getMessage();
@@ -78,10 +100,11 @@ class ImportOrchestratorService
 
         // Second pass: resolve parent_id now that every issue in this run
         // exists, since a paginated remote result can list a child before its
-        // parent (e.g. a subtask before its epic).
+        // parent (e.g. a subtask before its epic) - also re-resolves a
+        // synced issue's parent in case it was reparented in the source.
         $this->resolveParents($projectIntegration, $importedItems);
 
-        $result = new ImportResultDTO($imported, $skipped, $failed, $errors);
+        $result = new ImportResultDTO($imported, $updated, $skipped, $failed, $errors);
 
         event(new IssuesImported($project, $importedBy, $result));
 
