@@ -64,9 +64,36 @@ class ImportJiraIssuesJob implements ShouldQueue
 
         $syncExisting = (bool) ($this->importOptions['sync_existing'] ?? false);
 
+        // Kept as one local variable for the whole run (rather than
+        // re-reading $this->projectIntegration->options later) since the
+        // model's in-memory attributes never see the writes made through
+        // $projectIntegrationRepository below - re-deriving from them at
+        // the end would silently discard every progress update made here.
+        $options = $this->projectIntegration->options ?? [];
+        $options['import_progress'] = $this->progressPayload('running', 0, 0, 0, 0);
+        $projectIntegrationRepository->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
+
+        $lastPersistedProcessed = 0;
+
+        // Throttled to roughly every 3rd processed issue (but never misses
+        // the very first one, so the UI shows movement quickly) rather than
+        // writing to the database on every single issue.
+        $onProgress = function (int $imported, int $updated, int $skipped, int $failed) use (&$options, &$lastPersistedProcessed, $projectIntegrationRepository) {
+            $processed = $imported + $updated + $skipped + $failed;
+
+            if ($processed !== 1 && $processed - $lastPersistedProcessed < 3) {
+                return;
+            }
+
+            $lastPersistedProcessed = $processed;
+            $options['import_progress'] = $this->progressPayload('running', $imported, $updated, $skipped, $failed);
+
+            $projectIntegrationRepository->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
+        };
+
         try {
             $externalIssues = $importer->fetchIssues($this->projectIntegration, $this->importOptions);
-            $result = $importOrchestratorService->import($this->projectIntegration, $this->project, $importedBy, $externalIssues, $syncExisting);
+            $result = $importOrchestratorService->import($this->projectIntegration, $this->project, $importedBy, $externalIssues, $syncExisting, $onProgress);
         } catch (Throwable $e) {
             // Never let instance_url/email/api_token leak into logs via the
             // integration model or exception context - message only.
@@ -78,7 +105,6 @@ class ImportJiraIssuesJob implements ShouldQueue
             throw $e;
         }
 
-        $options = $this->projectIntegration->options ?? [];
         $options['last_import'] = [
             'imported' => $result->imported,
             'updated' => $result->updated,
@@ -87,6 +113,7 @@ class ImportJiraIssuesJob implements ShouldQueue
             'errors' => $result->errors,
             'ran_at' => now()->toIso8601String(),
         ];
+        $options['import_progress'] = $this->progressPayload('done', $result->imported, $result->updated, $result->skipped, $result->failed);
 
         $projectIntegrationRepository->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
 
@@ -105,6 +132,11 @@ class ImportJiraIssuesJob implements ShouldQueue
      */
     public function failed(Throwable $exception): void
     {
+        $options = $this->projectIntegration->options ?? [];
+        $options['import_progress'] = $this->progressPayload('failed', 0, 0, 0, 0);
+
+        app(ProjectIntegrationRepository::class)->updateOrCreate($this->project, $this->projectIntegration->integration, ['options' => $options]);
+
         app(NotificationService::class)->notify(
             $this->importedByUserId,
             NotificationType::IntegrationActivity,
@@ -113,5 +145,19 @@ class ImportJiraIssuesJob implements ShouldQueue
             "The Jira import for \"{$this->project->name}\" failed: {$exception->getMessage()}",
             route('settings', ['tab' => 'integrations', 'project' => $this->project->id]),
         );
+    }
+
+    /**
+     * @return array{status: string, imported: int, updated: int, skipped: int, failed: int}
+     */
+    private function progressPayload(string $status, int $imported, int $updated, int $skipped, int $failed): array
+    {
+        return [
+            'status' => $status,
+            'imported' => $imported,
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'failed' => $failed,
+        ];
     }
 }
