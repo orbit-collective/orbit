@@ -1,6 +1,6 @@
 import { AlertProvider } from '@/context/AlertContext';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsIntegrationsTab from './WorkspaceSettingsIntegrationsTab';
@@ -18,14 +18,21 @@ type VisitOptions = {
     onError?: (errors: Record<string, string>) => void;
 };
 
-const { mockRouterPatch, mockRouterGet } = vi.hoisted(() => ({
-    mockRouterPatch: vi.fn(
-        (_url: string, _data?: unknown, opts?: VisitOptions) => {
-            opts?.onSuccess?.();
-        },
-    ),
-    mockRouterGet: vi.fn(),
-}));
+const { mockRouterPatch, mockRouterGet, mockRouterPost, mockRouterReload } =
+    vi.hoisted(() => ({
+        mockRouterPatch: vi.fn(
+            (_url: string, _data?: unknown, opts?: VisitOptions) => {
+                opts?.onSuccess?.();
+            },
+        ),
+        mockRouterGet: vi.fn(),
+        mockRouterPost: vi.fn(
+            (_url: string, _data?: unknown, opts?: VisitOptions) => {
+                opts?.onSuccess?.();
+            },
+        ),
+        mockRouterReload: vi.fn(),
+    }));
 
 vi.mock('@inertiajs/react', async () => {
     const actual =
@@ -39,6 +46,8 @@ vi.mock('@inertiajs/react', async () => {
             ...actual.router,
             patch: mockRouterPatch,
             get: mockRouterGet,
+            post: mockRouterPost,
+            reload: mockRouterReload,
         },
     };
 });
@@ -279,5 +288,201 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         expect(
             screen.queryByRole('heading', { name: 'Discord' }),
         ).not.toBeInTheDocument();
+    });
+
+    describe('Jira import live progress toast', () => {
+        const jiraSettings = {
+            hasCredentials: true,
+            instanceUrl: 'https://example.atlassian.net',
+            mappingMetadata: { statuses: [], priorities: [], issueTypes: [] },
+            fieldMappings: [],
+            lastImport: null,
+        };
+
+        const baseProps = {
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+            integrationStatuses: { jira: true },
+            jiraSettings,
+        };
+
+        const triggerJiraImport = async () => {
+            await userEvent.click(
+                screen.getByRole('heading', { name: 'Jira' }),
+            );
+            await userEvent.type(
+                screen.getByPlaceholderText('Jira project key'),
+                'PR',
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Import' }),
+            );
+        };
+
+        test('shows a persistent toast, then polls only jiraImportProgress + flash', async () => {
+            renderTab({ ...baseProps, jiraImportProgress: null });
+
+            await triggerJiraImport();
+
+            expect(
+                screen.getByText('Importing… 0 imported'),
+            ).toBeInTheDocument();
+            expect(mockRouterPost).toHaveBeenCalledWith(
+                '/projects.integrations.jira.import/1',
+                { project_key: 'PR', sync_existing: false },
+                expect.objectContaining({ preserveScroll: true }),
+            );
+
+            // The poller only fires on its interval (1.5s), not immediately
+            // on trigger - use the real clock rather than fake timers, which
+            // don't play well with userEvent's own internal timing.
+            expect(mockRouterReload).not.toHaveBeenCalled();
+            await waitFor(
+                () =>
+                    expect(mockRouterReload).toHaveBeenCalledWith({
+                        only: ['jiraImportProgress', 'flash'],
+                    }),
+                { timeout: 2500, interval: 100 },
+            );
+        });
+
+        test('finishes with a success summary once the polled progress reports done', async () => {
+            const { rerender } = renderTab({
+                ...baseProps,
+                jiraImportProgress: null,
+            });
+
+            await triggerJiraImport();
+
+            rerender(
+                <AlertProvider>
+                    <WorkspaceSettingsIntegrationsTab
+                        {...baseProps}
+                        jiraImportProgress={{
+                            runId: 'run-1',
+                            status: 'running',
+                            imported: 2,
+                            updated: 0,
+                            skipped: 0,
+                            failed: 0,
+                        }}
+                    />
+                </AlertProvider>,
+            );
+
+            expect(
+                screen.getByText('Importing… 2 imported'),
+            ).toBeInTheDocument();
+
+            rerender(
+                <AlertProvider>
+                    <WorkspaceSettingsIntegrationsTab
+                        {...baseProps}
+                        jiraImportProgress={{
+                            runId: 'run-1',
+                            status: 'done',
+                            imported: 5,
+                            updated: 1,
+                            skipped: 0,
+                            failed: 0,
+                        }}
+                    />
+                </AlertProvider>,
+            );
+
+            // The removed toast stays in the DOM until framer-motion's exit
+            // transition finishes, so its disappearance has to be awaited
+            // rather than asserted synchronously.
+            await waitFor(() =>
+                expect(
+                    screen.queryByText(/Importing…/),
+                ).not.toBeInTheDocument(),
+            );
+            expect(
+                screen.getByText('Import done — 5 imported, 1 updated.'),
+            ).toBeInTheDocument();
+        });
+
+        test('ignores a leftover progress record from a previous run', async () => {
+            const { rerender } = renderTab({
+                ...baseProps,
+                jiraImportProgress: {
+                    runId: 'stale-run',
+                    status: 'done',
+                    imported: 99,
+                    updated: 0,
+                    skipped: 0,
+                    failed: 0,
+                },
+            });
+
+            await triggerJiraImport();
+
+            expect(
+                screen.getByText('Importing… 0 imported'),
+            ).toBeInTheDocument();
+
+            // A poll tick that still returns the stale run's 'done' record
+            // (the job hasn't picked up the new run yet) must not be
+            // mistaken for the new import finishing.
+            rerender(
+                <AlertProvider>
+                    <WorkspaceSettingsIntegrationsTab
+                        {...baseProps}
+                        jiraImportProgress={{
+                            runId: 'stale-run',
+                            status: 'done',
+                            imported: 99,
+                            updated: 0,
+                            skipped: 0,
+                            failed: 0,
+                        }}
+                    />
+                </AlertProvider>,
+            );
+
+            expect(
+                screen.getByText('Importing… 0 imported'),
+            ).toBeInTheDocument();
+            expect(screen.queryByText(/Import done/)).not.toBeInTheDocument();
+        });
+
+        test('shows a failure toast when the polled progress reports failed', async () => {
+            const { rerender } = renderTab({
+                ...baseProps,
+                jiraImportProgress: null,
+            });
+
+            await triggerJiraImport();
+
+            rerender(
+                <AlertProvider>
+                    <WorkspaceSettingsIntegrationsTab
+                        {...baseProps}
+                        jiraImportProgress={{
+                            runId: 'run-2',
+                            status: 'failed',
+                            imported: 0,
+                            updated: 0,
+                            skipped: 0,
+                            failed: 0,
+                        }}
+                    />
+                </AlertProvider>,
+            );
+
+            await waitFor(() =>
+                expect(
+                    screen.queryByText(/Importing…/),
+                ).not.toBeInTheDocument(),
+            );
+            expect(
+                screen.getByText(
+                    'Import failed — check your notifications for details.',
+                ),
+            ).toBeInTheDocument();
+        });
     });
 });

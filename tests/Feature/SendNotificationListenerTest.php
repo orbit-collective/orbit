@@ -1,8 +1,10 @@
 <?php
 
 use App\Enums\Notifications\NotificationType;
+use App\DataTransferObjects\ImportResultDTO;
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
+use App\Events\IssuesImported;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Events\ProjectInvited;
@@ -315,4 +317,35 @@ test('ProjectInvited sends the dedicated invitation email when there is no exist
     $this->listener->handle(new ProjectInvited($invitation, $project, $invitedBy, null, 'https://example.com/accept'));
 
     Notification::assertSentOnDemand(ProjectInvitationMail::class);
+});
+
+test('IssuesImported notifies the importing user with a success severity when nothing failed', function () {
+    $project = Project::factory()->create(['name' => 'Orbit']);
+    $importedBy = User::factory()->create();
+    $result = new ImportResultDTO(imported: 3, updated: 1, skipped: 2, failed: 0, errors: []);
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with(
+            $importedBy->id,
+            NotificationType::IntegrationActivity,
+            'success',
+            'Import finished',
+            'Imported 3, updated 1, skipped 2, failed 0 issue(s) into "Orbit".',
+            route('settings', ['tab' => 'integrations', 'project' => $project->id])
+        );
+
+    $this->listener->handle(new IssuesImported($project, $importedBy, $result));
+});
+
+test('IssuesImported notifies with a warning severity when some issues failed', function () {
+    $project = Project::factory()->create();
+    $importedBy = User::factory()->create();
+    $result = new ImportResultDTO(imported: 1, updated: 0, skipped: 0, failed: 2, errors: ['PR-1: boom']);
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with($importedBy->id, NotificationType::IntegrationActivity, 'warning', Mockery::any(), Mockery::any(), Mockery::any());
+
+    $this->listener->handle(new IssuesImported($project, $importedBy, $result));
 });

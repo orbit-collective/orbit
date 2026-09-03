@@ -527,6 +527,48 @@ not another event — is tell the user their import never completed at
 all, since `ImportOrchestratorService::import()` never got to run and
 therefore never fired `IssuesImported`.
 
+### Live progress, for a "N imported so far" toast
+
+`ImportOrchestratorService::import()` takes an optional `?callable
+$onProgress` parameter, called after every processed issue with the
+running totals (`imported`/`updated`/`skipped`/`failed`). The
+orchestrator itself doesn't persist or display anything — it's purely a
+callback hook, so a future importer's job wires it however it needs
+to. `ImportJiraIssuesJob` wires a closure that writes
+`project_integrations.options['import_progress']` (throttled to every
+~3rd processed issue, but never skipping the very first, so the UI
+shows movement quickly), tagged with a fresh `run_id` (a UUID, not a
+timestamp — sidesteps clock precision concerns) generated once per
+`handle()` attempt. `JiraIntegrationService::getImportProgress()`
+reads that back as a **separate, cheap** prop (`jiraImportProgress`,
+wired in `SettingsController::index()`) — deliberately not folded into
+`getSettingsExtras()`/`jiraSettings`, which also calls Jira's live API
+for mapping metadata; polling that every ~1.5s while an import runs
+would hammer Jira for no reason.
+
+`WorkspaceSettingsIntegrationsTab.tsx` is what actually turns this into
+a live toast: on triggering an import it opens a **persistent** alert
+(`AlertContext::addAlert(msg, type, 0)` — `duration: 0` means "don't
+auto-dismiss"), remembers the `runId` that was already in
+`jiraImportProgress` *before* the click (so a poll that still returns
+the *previous* run's stale `done`/`failed` record — the job hasn't
+picked up the new one yet — is correctly ignored instead of closing
+the toast prematurely), and polls `router.reload({ only:
+['jiraImportProgress', 'flash'] })` on an interval. `'flash'` has to
+be in that list too: a prop a partial reload doesn't request is never
+re-evaluated client-side, so leaving it out would freeze whatever flash
+message happened to be showing right before polling started, and
+`AlertContext`'s global `router.on('success', ...)` handler re-shows
+*whatever* is in `flash` on every completed visit (by design — see
+`AlertContext.tsx`'s own comment on why it can't dedupe by content) —
+including these background polls. `AlertContext::updateAlert(id,
+patch)` is what lets the same toast's text change in place as new
+progress comes in, and `App\Events\IssuesImported` (above) is what
+eventually tells the poller to stop and swap in a final summary toast.
+None of this frontend wiring is Jira-specific — Linear's import gets a
+live toast for free the moment its own job wires the same `onProgress`
+callback.
+
 One thing **not** to copy reflexively: `ImportJiraIssuesJob` does
 **not** implement `ShouldBeEncrypted`, unlike `SendWebhookNotificationJob`.
 That's because its constructor takes `ProjectIntegration`/`Project`
@@ -592,48 +634,64 @@ unlocks the toggle/Connect UI exactly as described in guide 1 Step 7.
 
 ## Tests
 
-No dedicated automated tests exist yet for the Jira import pipeline
-built in this session (frontend/backend implementation landed first;
-test coverage is tracked separately) — when you add Linear, add tests
-for **both** at once rather than compounding the gap, mirroring the
-per-layer conventions this codebase already uses elsewhere:
+Every Pest feature test in this codebase lives flat under `tests/Feature/`
+(named after the class under test, not nested by namespace — see any
+existing `*Test.php` there) — mirror that when you add Linear's, not
+the nested-by-namespace shape you might expect. What exists today for
+the shared pipeline, exercised entirely through Jira but equally valid
+for any future source:
 
-- `tests/Unit/DataTransferObjects/ExternalIssueDTOTest.php` — construction/shape.
-- `tests/Feature/Services/Integrations/FieldMappingResolverServiceTest.php` —
-  saved mapping wins, falls back to the per-type default
-  (`status`→`open`, `priority`→`medium`, `label`→omitted) when unmapped.
-- `tests/Feature/Services/Integrations/Jira/JiraApiClientTest.php` /
-  `LinearApiClientTest.php` — via `Http::fake()`, asserting on the
-  request shape and on credential redaction in thrown exceptions/logs.
-- `tests/Feature/Services/Integrations/ImportOrchestratorServiceTest.php` —
-  the two-pass algorithm: a child arriving before its parent still gets
-  the right `parent_id`; re-running an import against the same
-  `ExternalIssueLink` rows skips rather than duplicates with
-  `$syncExisting = false` (the default); with `$syncExisting = true` the
-  already-linked issue is overwritten instead (remote data wins even
-  over a locally-changed field), `updated` is incremented instead of
-  `skipped`, and one `ActivityLog` entry is written for it; and — easy
-  to forget since it's not one of the DTO/hierarchy assertions above —
-  `Event::fake()` + `Event::assertDispatched(IssuesImported::class, fn ($event) => ...)`
-  to confirm `import()` actually fires it with the right result, for
-  every source, not just Jira.
-- `tests/Feature/Listeners/SendNotificationListenerTest.php` — mirror
-  the existing `ProjectInvited`-style Mockery case: `IssuesImported`
-  with `failed > 0` notifies with `'warning'` severity, `failed === 0`
-  notifies with `'success'`, and the message/action URL are built from
-  the event's `project`/`result` correctly.
-- `tests/Feature/Jobs/ImportJiraIssuesJobTest.php` /
-  `ImportLinearIssuesJobTest.php` — asserts the job resolves the right
-  importer, calls the orchestrator, and persists `last_import`.
-- `tests/Feature/Http/Controllers/JiraIntegrationControllerTest.php` /
-  `LinearIntegrationControllerTest.php` — policy gating on every route,
-  mirroring the existing `ProjectIntegrationControllerTest.php`
-  pattern.
-- Vitest: `WorkspaceSettingsImportPanel.test.tsx` — renders the right
-  credential fields and mapping tables for a given `importConfig`, and
-  a regression test proving a `kind: 'notify'` integration (Discord)
-  still renders `WorkspaceSettingsIntegrationDetailModal`'s original
-  webhook/subOptions UI completely unchanged.
+- `tests/Feature/ImportOrchestratorServiceTest.php` — imports a new
+  issue and links it; skips an already-linked issue by default; with
+  `syncExisting: true` overwrites it instead (remote data wins even
+  over a locally-changed field); resolves `parent_id` both when a child
+  arrives before its parent in the same run *and* when the parent was
+  imported in a previous run; counts a per-issue failure (forced via
+  the issues table's date-order trigger) without aborting the rest of
+  the run; asserts `IssuesImported` fires exactly once with the final
+  result (`Event::fake()` + `Event::assertDispatchedTimes()`); and
+  asserts `onProgress` is called with the running totals after every
+  processed issue.
+- `tests/Feature/ImportJiraIssuesJobTest.php` — `handle()` imports
+  issues and leaves `import_progress` as `{status: 'done', ...}` with a
+  non-empty `run_id`; persists a matching `last_import` summary;
+  threads `sync_existing` through to the orchestrator (verified by a
+  second run actually overwriting an issue); no-ops with a log warning
+  when the integration has no registered importer; and `failed()`
+  records `{status: 'failed'}` and notifies the importing user. Uses
+  `Http::fake(['*/rest/api/3/search/jql*' => Http::sequence()->push(...)->push(...)])`
+  for the two-run sync test — a second, separate `Http::fake()` call in
+  the same test does **not** replace the first registration for an
+  overlapping URL pattern (the earliest-registered stub wins), so both
+  pages have to be queued up front in one call.
+- `tests/Feature/SendNotificationListenerTest.php` — two `IssuesImported`
+  cases alongside the existing `ProjectInvited`/`IssueAssigned`/etc.
+  ones: `'success'` severity when nothing failed, `'warning'` when
+  `failed > 0`.
+- Vitest: `WorkspaceSettingsIntegrationsTab.test.tsx`'s "Jira import
+  live progress toast" `describe` block — the persistent toast appears
+  immediately and only starts polling `jiraImportProgress` + `flash`
+  after the poll interval elapses (`await waitFor(...)`, not fake
+  timers — those don't play well with `userEvent`'s own internal
+  timing); a `running` update changes the toast's text in place; a
+  `done`/`failed` update replaces it with a final summary (asserted via
+  `waitFor`, since the outgoing toast stays in the DOM mid-`framer-motion`
+  exit transition — a synchronous `not.toBeInTheDocument()` check right
+  after the state change is a common false negative here); and a poll
+  that still returns the *previous* run's leftover `runId` is ignored
+  rather than closing the toast early.
+
+Still to add when you build Linear's importer (add both at once rather
+than compounding the gap):
+`tests/Unit/ExternalIssueDTOTest.php` (construction/shape),
+`tests/Feature/FieldMappingResolverServiceTest.php` (saved mapping
+wins, falls back to the per-type default when unmapped),
+`tests/Feature/JiraApiClientTest.php` / `LinearApiClientTest.php` (via
+`Http::fake()`, request shape + credential redaction in thrown
+exceptions/logs), and
+`tests/Feature/JiraIntegrationControllerTest.php` /
+`LinearIntegrationControllerTest.php` (policy gating on every route,
+mirroring `ProjectIntegrationControllerTest.php`).
 
 Run `php artisan test` and `npm test -- run` before committing — see
 the root `CLAUDE.md` for the exact commands.
