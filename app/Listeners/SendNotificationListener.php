@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Enums\Notifications\NotificationType;
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
+use App\Events\IssueMentioned;
 use App\Events\IssuesImported;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
@@ -56,6 +57,7 @@ class SendNotificationListener
             $event instanceof IssueUnassigned => $this->handleIssueUnassigned($event),
             $event instanceof IssueUpdated => $this->handleIssueUpdated($event),
             $event instanceof CommentAdded => $this->handleCommentAdded($event),
+            $event instanceof IssueMentioned => $this->handleIssueMentioned($event),
             $event instanceof ProjectInvited => $this->handleProjectInvited($event),
             $event instanceof IssuesImported => $this->handleIssuesImported($event),
             default => null,
@@ -164,6 +166,25 @@ class SendNotificationListener
             'info',
             'New comment on your issue',
             "$actorName commented on \"$issue->title\" (#$issue->id).",
+            route('issues.show', [$issue->project_id, $issue->id])
+        );
+    }
+
+    private function handleIssueMentioned(IssueMentioned $event): void
+    {
+        if ($event->actor && $event->actor->id === $event->mentionedUser->id) {
+            return;
+        }
+
+        $issue = $event->issue;
+        $actorName = $event->actor?->name ?? 'Someone';
+
+        $this->notificationService->notify(
+            $event->mentionedUser->id,
+            NotificationType::IssueMentioned,
+            'info',
+            'You were mentioned',
+            "$actorName mentioned you in a comment on \"$issue->title\" (#$issue->id).",
             route('issues.show', [$issue->project_id, $issue->id])
         );
     }
