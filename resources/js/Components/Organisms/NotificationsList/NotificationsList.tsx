@@ -6,11 +6,13 @@ import { Fragment } from 'react';
 interface NotificationsListProps {
     notifications: Notification[];
     onMarkAsRead: (id: number) => void;
+    onRemove: (id: number) => void;
 }
 
 function NotificationsList({
     notifications,
     onMarkAsRead,
+    onRemove,
 }: NotificationsListProps) {
     if (notifications.length === 0) {
         return <NotificationEmptyState />;
@@ -26,6 +28,7 @@ function NotificationsList({
                     <NotificationItem
                         notification={item}
                         onMarkAsRead={onMarkAsRead}
+                        onRemove={onRemove}
                     />
                 </Fragment>
             ))}

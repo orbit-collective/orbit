@@ -1,10 +1,12 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
+import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { Notification, NotificationTypes } from '@/types/Notification';
 import { formatShortDate } from '@/utils/time';
 
 interface NotificationItemProps {
     notification: Notification;
     onMarkAsRead: (id: number) => void;
+    onRemove: (id: number) => void;
 }
 
 const DOT_COLOR_CLASSES: Record<NotificationTypes, string> = {
@@ -17,16 +19,24 @@ const DOT_COLOR_CLASSES: Record<NotificationTypes, string> = {
 function NotificationItem({
     notification,
     onMarkAsRead,
+    onRemove,
 }: NotificationItemProps) {
     return (
         <div className="group px-1 py-3">
-            <div className="flex items-center gap-2">
-                <span
-                    className={`h-1.5 w-1.5 shrink-0 rounded-[3px] ${DOT_COLOR_CLASSES[notification.type]}`}
+            <div className="flex items-center justify-between gap-2">
+                <div className={'flex items-center gap-2'}>
+                    <span
+                        className={`h-1.5 w-1.5 shrink-0 rounded-[3px] ${DOT_COLOR_CLASSES[notification.type]}`}
+                    />
+                    <h2 className="truncate text-sm text-[var(--text-gray-color)]">
+                        {notification.title}
+                    </h2>
+                </div>
+                <IconButton
+                    iconName={'Trash2'}
+                    iconSize={12}
+                    onClick={() => onRemove(notification.id)}
                 />
-                <h2 className="truncate text-sm text-[var(--text-gray-color)]">
-                    {notification.title}
-                </h2>
             </div>
 
             <div className="pl-3.5">
