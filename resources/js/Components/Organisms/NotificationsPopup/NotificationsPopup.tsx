@@ -11,10 +11,13 @@ function NotificationsPopup() {
     const [onlyUnread, setOnlyUnread] = useState(false);
     const [activeFilter, setActiveFilter] = useState<NotificationFilter>('all');
 
-    const { post, transform } = useForm();
+    const { post, delete: deleteNotification, transform } = useForm();
 
     const handleMarkAllAsRead = () => {
         post('/notifications/mark-all-read', { preserveScroll: true });
+    };
+    const handleRemove = (id: number) => {
+        deleteNotification(`/notifications/${id}`, { preserveScroll: true });
     };
 
     const handleMarkAsRead = (id: number) => {
@@ -51,6 +54,7 @@ function NotificationsPopup() {
             <NotificationsList
                 notifications={filteredNotifications}
                 onMarkAsRead={handleMarkAsRead}
+                onRemove={handleRemove}
             />
         </div>
     );

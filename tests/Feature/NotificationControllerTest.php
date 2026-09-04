@@ -92,7 +92,7 @@ test('a user can delete their own notification', function () {
 
     $response = $this->actingAs($user)->delete("/notifications/$notification->id");
 
-    $response->assertOk();
+    $response->assertRedirect();
     $this->assertDatabaseMissing('notifications', ['id' => $notification->id]);
 });
 

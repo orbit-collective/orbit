@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use App\Services\NotificationService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -35,13 +34,13 @@ class NotificationController extends Controller
         return redirect()->back();
     }
 
-    public function destroy(Notification $notification): JsonResponse
+    public function destroy(Notification $notification): RedirectResponse
     {
         abort_if($notification->user_id !== auth()->id(), 403);
 
         $notification->delete();
 
-        return response()->json();
+        return redirect()->back();
     }
 
     public function markAllAsRead(): RedirectResponse
