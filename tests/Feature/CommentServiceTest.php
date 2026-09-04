@@ -1,8 +1,10 @@
 <?php
 
 use App\Events\CommentAdded;
+use App\Events\IssueMentioned;
 use App\Models\Comment;
 use App\Models\Issue;
+use App\Models\Project;
 use App\Models\User;
 use App\Repositories\CommentRepository;
 use App\Services\ActivityLogService;
@@ -109,6 +111,85 @@ test('addComment fires CommentAdded even when the issue has no assignee', functi
     $this->service->addComment($issue, ['body' => 'Looks good']);
 
     Event::assertDispatched(CommentAdded::class);
+});
+
+test('addComment fires IssueMentioned for each mentioned project member', function () {
+    $author = User::factory()->create();
+    $project = Project::factory()->create();
+    $mentioned = User::factory()->create();
+    $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
+    $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
+
+    $this->actingAs($author);
+
+    $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->addComment($issue, ['body' => 'Hi @there', 'mentioned_user_ids' => [$mentioned->id]]);
+
+    Event::assertDispatched(
+        IssueMentioned::class,
+        fn ($event) => $event->issue->is($issue)
+            && $event->mentionedUser->is($mentioned)
+            && $event->actor->is($author)
+    );
+});
+
+test('addComment ignores mentioned ids that are not project members', function () {
+    $author = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($author->id, ['role' => 'member']);
+    $outsider = User::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
+    $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
+
+    $this->actingAs($author);
+
+    $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->addComment($issue, ['body' => 'Hi @there', 'mentioned_user_ids' => [$outsider->id]]);
+
+    Event::assertNotDispatched(IssueMentioned::class);
+});
+
+test('addComment does not fire IssueMentioned for mentioning yourself', function () {
+    $author = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($author->id, ['role' => 'member']);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
+    $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
+
+    $this->actingAs($author);
+
+    $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->addComment($issue, ['body' => 'Hi @me', 'mentioned_user_ids' => [$author->id]]);
+
+    Event::assertNotDispatched(IssueMentioned::class);
+});
+
+test('updateComment fires IssueMentioned for newly mentioned project members', function () {
+    $author = User::factory()->create();
+    $project = Project::factory()->create();
+    $mentioned = User::factory()->create();
+    $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
+
+    $this->actingAs($author);
+
+    $this->commentRepository->shouldReceive('update')->once()->andReturn($comment);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->updateComment($comment, ['body' => 'Hi @there', 'mentioned_user_ids' => [$mentioned->id]]);
+
+    Event::assertDispatched(
+        IssueMentioned::class,
+        fn ($event) => $event->comment->is($comment) && $event->mentionedUser->is($mentioned)
+    );
 });
 
 test('deleteComment removes the comment and logs activity', function () {
