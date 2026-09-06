@@ -20,6 +20,14 @@ export default function MentionSuggestions({
 }: MentionSuggestionsProps) {
     if (users.length === 0) return null;
 
+    // Two project members can share a display name - without this, the list
+    // would show two identical-looking rows with no way to tell which is
+    // which before picking one.
+    const nameCounts = new Map<string, number>();
+    users.forEach((user) => {
+        nameCounts.set(user.name, (nameCounts.get(user.name) ?? 0) + 1);
+    });
+
     return createPortal(
         <DropdownMenu
             position="floating"
@@ -47,6 +55,11 @@ export default function MentionSuggestions({
                                 size="sm"
                             />
                             <span className="truncate">{user.name}</span>
+                            {(nameCounts.get(user.name) ?? 0) > 1 && (
+                                <span className="shrink-0 text-xs text-[var(--text-muted-color)]">
+                                    #{user.id}
+                                </span>
+                            )}
                         </>
                     }
                 />

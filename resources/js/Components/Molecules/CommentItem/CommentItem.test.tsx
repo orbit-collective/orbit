@@ -68,11 +68,13 @@ describe('CommentItem Component', () => {
         );
     });
 
-    test('highlights an @mention that matches a real project member', () => {
+    test('highlights a mention token and resolves it by id', () => {
         const users = [{ id: 2, name: 'Bob Smith' }];
         render(
             <CommentItem
-                comment={makeComment({ body: 'Hi @Bob Smith, thanks!' })}
+                comment={makeComment({
+                    body: 'Hi @[Bob Smith](2), thanks!',
+                })}
                 users={users}
             />,
         );
@@ -80,7 +82,27 @@ describe('CommentItem Component', () => {
         expect(screen.getByText('@Bob Smith')).toBeInTheDocument();
     });
 
-    test('does not highlight an @word that is not a real project member', () => {
+    test('disambiguates two same-named members by the id in the token', () => {
+        const users = [
+            { id: 2, name: 'Bob Smith', avatar: '/wrong.jpg' },
+            { id: 9, name: 'Bob Smith', avatar: '/right.jpg' },
+        ];
+        const { container } = render(
+            <CommentItem
+                comment={makeComment({ body: 'Hi @[Bob Smith](9)!' })}
+                users={users}
+            />,
+        );
+
+        const avatarImgs = container.querySelectorAll('img');
+        expect(
+            Array.from(avatarImgs).some(
+                (img) => img.getAttribute('src') === '/right.jpg',
+            ),
+        ).toBe(true);
+    });
+
+    test('leaves plain "@word" text (no mention token) unhighlighted', () => {
         const users = [{ id: 2, name: 'Bob Smith' }];
         render(
             <CommentItem

@@ -96,7 +96,54 @@ describe('CommentForm Component', () => {
             screen.getByRole('button', { name: 'Post comment' }),
         );
 
-        expect(handleSubmit).toHaveBeenCalledWith('Hi @Jane Cooper ', [1]);
+        expect(handleSubmit).toHaveBeenCalledWith('Hi @[Jane Cooper](1) ', [1]);
+    });
+
+    test('typing a duplicate name after selecting a mention does not corrupt it', async () => {
+        // Two members named "Jane Cooper" - picking one, then typing more
+        // text that also happens to say "Jane Cooper" elsewhere must not
+        // make the original mention resolve to the wrong id.
+        const duplicateNamed: AssignableUser[] = [
+            { id: 1, name: 'Jane Cooper' },
+            { id: 9, name: 'Jane Cooper' },
+        ];
+        const handleSubmit = vi.fn();
+        render(<CommentForm onSubmit={handleSubmit} users={duplicateNamed} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        await userEvent.type(textarea, 'Hi @jane');
+        await userEvent.click(screen.getAllByText('Jane Cooper')[0]);
+        await userEvent.type(textarea, 'thanks Jane Cooper');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith(
+            'Hi @[Jane Cooper](1) thanks Jane Cooper',
+            [1],
+        );
+    });
+
+    test('deleting a selected mention drops it from the submitted mentions', async () => {
+        const handleSubmit = vi.fn();
+        render(<CommentForm onSubmit={handleSubmit} users={users} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        await userEvent.type(textarea, 'Hi @jane');
+        await userEvent.click(screen.getByText('Jane Cooper'));
+        expect(textarea).toHaveValue('Hi @Jane Cooper ');
+
+        // Backspace into the middle of the inserted mention text.
+        textarea.focus();
+        (textarea as HTMLTextAreaElement).setSelectionRange(11, 11);
+        await userEvent.keyboard('{Backspace}{Backspace}');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith(expect.any(String), []);
     });
 
     test('selecting a mention with the keyboard works the same way', async () => {
@@ -113,7 +160,7 @@ describe('CommentForm Component', () => {
             screen.getByRole('button', { name: 'Post comment' }),
         );
 
-        expect(handleSubmit).toHaveBeenCalledWith('Hi @Bob Smith ', [2]);
+        expect(handleSubmit).toHaveBeenCalledWith('Hi @[Bob Smith](2) ', [2]);
     });
 
     test('closes the mention menu on Escape without inserting anything', async () => {
