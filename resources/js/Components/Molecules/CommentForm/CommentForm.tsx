@@ -4,7 +4,13 @@ import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/Mentio
 import { CommentFormProps } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
 import { getCaretCoordinates } from '@/utils/caretPosition';
-import { filterUsersByMention, findActiveMention } from '@/utils/mentions';
+import {
+    filterUsersByMention,
+    findActiveMention,
+    MentionRange,
+    reconcileMentionRanges,
+    tokenizeMentionRanges,
+} from '@/utils/mentions';
 import React, { SyntheticEvent, useEffect, useRef, useState } from 'react';
 
 interface MentionState {
@@ -20,9 +26,10 @@ const CommentForm: React.FC<CommentFormProps> = ({
     isSubmitting = false,
 }) => {
     const [body, setBody] = useState('');
-    const [mentionedUserIds, setMentionedUserIds] = useState<Set<number>>(
-        new Set(),
-    );
+    // Tracked by character range, not by name - see reconcileMentionRanges.
+    // This is what lets two project members sharing a display name still be
+    // told apart when the comment is submitted.
+    const [mentionRanges, setMentionRanges] = useState<MentionRange[]>([]);
     const [mention, setMention] = useState<MentionState | null>(null);
     const [pendingCaret, setPendingCaret] = useState<number | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -71,18 +78,31 @@ const CommentForm: React.FC<CommentFormProps> = ({
         if (!mention || !textareaRef.current) return;
 
         const cursor = textareaRef.current.selectionStart;
-        const inserted = `@${user.name} `;
+        const mentionText = `@${user.name}`;
         const newBody =
-            body.slice(0, mention.start) + inserted + body.slice(cursor);
+            body.slice(0, mention.start) +
+            mentionText +
+            ' ' +
+            body.slice(cursor);
 
         setBody(newBody);
-        setMentionedUserIds((prev) => new Set(prev).add(user.id));
+        setMentionRanges((prev) => [
+            ...prev,
+            {
+                start: mention.start,
+                length: mentionText.length,
+                userId: user.id,
+                name: user.name,
+            },
+        ]);
         setMention(null);
-        setPendingCaret(mention.start + inserted.length);
+        setPendingCaret(mention.start + mentionText.length + 1);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setBody(e.target.value);
+        const newBody = e.target.value;
+        setMentionRanges((prev) => reconcileMentionRanges(prev, body, newBody));
+        setBody(newBody);
         syncMentionState(e.target);
     };
 
@@ -122,17 +142,14 @@ const CommentForm: React.FC<CommentFormProps> = ({
         e.preventDefault();
         if (!body.trim()) return;
 
-        const finalMentionedIds = users
-            .filter(
-                (user) =>
-                    mentionedUserIds.has(user.id) &&
-                    body.includes(`@${user.name}`),
-            )
-            .map((user) => user.id);
+        const finalBody = tokenizeMentionRanges(body, mentionRanges);
+        const mentionedUserIds = [
+            ...new Set(mentionRanges.map((range) => range.userId)),
+        ];
 
-        onSubmit(body, finalMentionedIds);
+        onSubmit(finalBody, mentionedUserIds);
         setBody('');
-        setMentionedUserIds(new Set());
+        setMentionRanges([]);
         setMention(null);
     };
 

@@ -3,7 +3,10 @@ import { describe, expect, test } from 'vitest';
 import {
     filterUsersByMention,
     findActiveMention,
+    MentionRange,
+    reconcileMentionRanges,
     splitMentionText,
+    tokenizeMentionRanges,
 } from './mentions';
 
 const users: AssignableUser[] = [
@@ -65,38 +68,171 @@ describe('filterUsersByMention', () => {
     });
 });
 
+describe('reconcileMentionRanges', () => {
+    test('keeps a range untouched when the edit happens after it', () => {
+        // "@Bob " (0-4) then user keeps typing after it.
+        const ranges: MentionRange[] = [
+            { start: 0, length: 4, userId: 3, name: 'Bob' },
+        ];
+
+        const result = reconcileMentionRanges(ranges, '@Bob hi', '@Bob hi!');
+
+        expect(result).toEqual(ranges);
+    });
+
+    test('shifts a range forward when text is inserted before it', () => {
+        const oldText = 'Hi @Bob';
+        const newText = 'Hi there @Bob';
+        const ranges: MentionRange[] = [
+            {
+                start: oldText.indexOf('@Bob'),
+                length: 4,
+                userId: 3,
+                name: 'Bob',
+            },
+        ];
+
+        const result = reconcileMentionRanges(ranges, oldText, newText);
+
+        expect(result).toEqual([
+            {
+                start: newText.indexOf('@Bob'),
+                length: 4,
+                userId: 3,
+                name: 'Bob',
+            },
+        ]);
+    });
+
+    test('drops a range whose text was edited', () => {
+        const ranges: MentionRange[] = [
+            { start: 0, length: 4, userId: 3, name: 'Bob' },
+        ];
+
+        const result = reconcileMentionRanges(ranges, '@Bob hi', '@Bo hi');
+
+        expect(result).toEqual([]);
+    });
+
+    test('keeps one range and drops another edited elsewhere', () => {
+        // Edit happens between the two mentions, not touching either range.
+        const oldText = '@Bob said hi @Jane Cooper';
+        const newText = '@Bob said hello @Jane Cooper';
+
+        const ranges: MentionRange[] = [
+            {
+                start: oldText.indexOf('@Bob'),
+                length: 4,
+                userId: 3,
+                name: 'Bob',
+            },
+            {
+                start: oldText.indexOf('@Jane Cooper'),
+                length: 12,
+                userId: 1,
+                name: 'Jane Cooper',
+            },
+        ];
+
+        const result = reconcileMentionRanges(ranges, oldText, newText);
+
+        expect(result).toEqual([
+            {
+                start: newText.indexOf('@Bob'),
+                length: 4,
+                userId: 3,
+                name: 'Bob',
+            },
+            {
+                start: newText.indexOf('@Jane Cooper'),
+                length: 12,
+                userId: 1,
+                name: 'Jane Cooper',
+            },
+        ]);
+    });
+});
+
+describe('tokenizeMentionRanges', () => {
+    test('replaces a tracked range with an id-carrying token', () => {
+        const ranges: MentionRange[] = [
+            { start: 3, length: 12, userId: 42, name: 'Jane Cooper' },
+        ];
+
+        expect(tokenizeMentionRanges('Hi @Jane Cooper!', ranges)).toBe(
+            'Hi @[Jane Cooper](42)!',
+        );
+    });
+
+    test('handles multiple ranges without corrupting offsets', () => {
+        const ranges: MentionRange[] = [
+            { start: 0, length: 4, userId: 3, name: 'Bob' },
+            { start: 9, length: 12, userId: 42, name: 'Jane Cooper' },
+        ];
+
+        expect(tokenizeMentionRanges('@Bob and @Jane Cooper, hi', ranges)).toBe(
+            '@[Bob](3) and @[Jane Cooper](42), hi',
+        );
+    });
+
+    test('returns the body unchanged when there are no ranges', () => {
+        expect(tokenizeMentionRanges('Hello world', [])).toBe('Hello world');
+    });
+});
+
 describe('splitMentionText', () => {
-    test('returns the whole body as plain text when there are no mentions', () => {
+    test('returns the whole body as plain text when there are no mention tokens', () => {
         expect(splitMentionText('Hello world', users)).toEqual([
             { type: 'text', value: 'Hello world' },
         ]);
     });
 
-    test('splits out a mention that matches a real project member', () => {
-        expect(splitMentionText('Hi @Jane Cooper, thanks!', users)).toEqual([
+    test('splits out a mention token and resolves it by id', () => {
+        expect(
+            splitMentionText('Hi @[Jane Cooper](1), thanks!', users),
+        ).toEqual([
             { type: 'text', value: 'Hi ' },
-            { type: 'mention', value: '@Jane Cooper' },
+            {
+                type: 'mention',
+                value: '@Jane Cooper',
+                userId: 1,
+                name: 'Jane Cooper',
+                avatar: undefined,
+            },
             { type: 'text', value: ', thanks!' },
         ]);
     });
 
-    test('prefers the longer name so "@Jane Cooper" is not split as "@Jane"', () => {
-        const segments = splitMentionText('cc @Jane Cooper', users);
-        expect(segments).toContainEqual({
-            type: 'mention',
-            value: '@Jane Cooper',
-        });
+    test('disambiguates two users sharing a name by the id in the token', () => {
+        const duplicateNamed: AssignableUser[] = [
+            { id: 5, name: 'Jane Cooper', avatar: '/five.jpg' },
+            { id: 9, name: 'Jane Cooper', avatar: '/nine.jpg' },
+        ];
+
+        const segments = splitMentionText(
+            '@[Jane Cooper](9) hi',
+            duplicateNamed,
+        );
+
+        expect(segments[0]).toMatchObject({ userId: 9, avatar: '/nine.jpg' });
     });
 
-    test('leaves an "@" that does not match any project member as plain text', () => {
-        expect(splitMentionText('Reach me at @nobody', users)).toEqual([
-            { type: 'text', value: 'Reach me at @nobody' },
+    test('falls back to the name captured in the token when the user is unknown', () => {
+        expect(splitMentionText('Hi @[Old Member](999)', [])).toEqual([
+            { type: 'text', value: 'Hi ' },
+            {
+                type: 'mention',
+                value: '@Old Member',
+                userId: 999,
+                name: 'Old Member',
+                avatar: undefined,
+            },
         ]);
     });
 
-    test('returns the body unchanged when there are no users to match against', () => {
-        expect(splitMentionText('Hi @Jane Cooper', [])).toEqual([
-            { type: 'text', value: 'Hi @Jane Cooper' },
+    test('leaves plain "@Name" text (no token) unhighlighted', () => {
+        expect(splitMentionText('Reach me at @nobody', users)).toEqual([
+            { type: 'text', value: 'Reach me at @nobody' },
         ]);
     });
 });

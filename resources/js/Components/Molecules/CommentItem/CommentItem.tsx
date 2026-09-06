@@ -17,8 +17,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
             segment.type === 'mention' ? (
                 <span
                     key={index}
-                    className="bg-[var(--accent-color)]/10 rounded px-1 font-medium text-[var(--accent-color)]"
+                    className="bg-[var(--accent-color)]/10 mx-0.5 inline-flex items-center gap-1 rounded px-1 align-middle font-medium text-[var(--accent-color)]"
                 >
+                    <Avatar
+                        src={segment.avatar ?? undefined}
+                        initials={segment.name.charAt(0)}
+                        size="sm"
+                    />
                     {segment.value}
                 </span>
             ) : (

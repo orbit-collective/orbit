@@ -6,13 +6,13 @@ import { AssignableUser } from '@/types/Users';
 import { ReactNode } from 'react';
 
 const CHANGE_PATTERN =
-    /(status|priority) changed from "([a-z_]+)" to "([a-z_]+)"|labels changed to \[([a-z_, ]*)]|assignee changed from "((?:[^"\\]|\\.)*)" to "((?:[^"\\]|\\.)*)"|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|[Tt]ask|notification:?)\s|^|\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)/g;
+    /(status|priority) changed from "([a-z_]+)" to "([a-z_]+)"|labels changed to \[([a-z_, ]*)]|assignee changed from "((?:[^"\\]|\\.)*)"(?:#(\d+))? to "((?:[^"\\]|\\.)*)"(?:#(\d+))?|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|[Tt]ask|notification:?)\s|^|\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)/g;
 
 const unescapeQuoted = (value: string) => value.replace(/\\(.)/g, '$1');
 
 const StatusOrPriorityValue = ({
-                                   value,
-                               }: {
+    value,
+}: {
     value: 'open' | 'in_progress' | 'closed' | 'low' | 'medium' | 'high';
 }) => (
     <span className="mx-0.5 inline-flex items-center gap-1 align-middle">
@@ -45,9 +45,9 @@ const LabelsValue = ({ labelsCsv }: { labelsCsv: string }) => {
 };
 
 const AssigneeValue = ({
-                           name,
-                           avatar,
-                       }: {
+    name,
+    avatar,
+}: {
     name: string;
     avatar?: string | null;
 }) => (
@@ -73,11 +73,29 @@ const AssigneeValue = ({
 export function renderActivityLogBody(
     body: string,
     users: AssignableUser[] = [],
+    // The avatar of whoever performed the action this whole log entry
+    // describes (from the entry's own user_id, not parsed out of the text).
+    // Always the right person even when two project members share a name -
+    // pass this whenever the caller already knows the entry's actor.
+    actorAvatar?: string | null,
 ): ReactNode[] {
+    const avatarById = new Map(users.map((user) => [user.id, user.avatar]));
+    // Legacy fallback only: activity logs written before assignee names
+    // carried an id suffix have no way to be resolved unambiguously, so a
+    // name collision there still shows whichever matching user comes last.
     const avatarByName = new Map(users.map((user) => [user.name, user.avatar]));
     const nodes: ReactNode[] = [];
     let lastIndex = 0;
     let matchCount = 0;
+
+    const resolveAssigneeAvatar = (name: string, id?: string) => {
+        if (id) {
+            const avatar = avatarById.get(Number(id));
+            if (avatar !== undefined) return avatar;
+        }
+
+        return avatarByName.get(name);
+    };
 
     for (const match of body.matchAll(CHANGE_PATTERN)) {
         const [
@@ -87,7 +105,9 @@ export function renderActivityLogBody(
             newValue,
             labelsCsv,
             assigneeOldQuoted,
+            assigneeOldId,
             assigneeNewQuoted,
+            assigneeNewId,
             assigneeOldLegacy,
             assigneeNewLegacy,
             issueNumber,
@@ -141,7 +161,7 @@ export function renderActivityLogBody(
                 <AssigneeValue
                     key={`old-${matchCount}`}
                     name={assigneeOld}
-                    avatar={avatarByName.get(assigneeOld)}
+                    avatar={resolveAssigneeAvatar(assigneeOld, assigneeOldId)}
                 />,
             );
             nodes.push(' to ');
@@ -149,7 +169,7 @@ export function renderActivityLogBody(
                 <AssigneeValue
                     key={`new-${matchCount}`}
                     name={assigneeNew}
-                    avatar={avatarByName.get(assigneeNew)}
+                    avatar={resolveAssigneeAvatar(assigneeNew, assigneeNewId)}
                 />,
             );
         } else if (issueNumber !== undefined) {
@@ -161,7 +181,11 @@ export function renderActivityLogBody(
                 <AssigneeValue
                     key={`author-${matchCount}`}
                     name={authorName}
-                    avatar={avatarByName.get(authorName)}
+                    avatar={
+                        actorAvatar !== undefined
+                            ? actorAvatar
+                            : avatarByName.get(authorName)
+                    }
                 />,
             );
         }
