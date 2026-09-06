@@ -1,7 +1,13 @@
+import { AssignableUser } from '@/types/Users';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import CommentForm from './CommentForm';
+
+const users: AssignableUser[] = [
+    { id: 1, name: 'Jane Cooper' },
+    { id: 2, name: 'Bob Smith' },
+];
 
 describe('CommentForm Component', () => {
     test('renders a textarea and submit button', () => {
@@ -25,7 +31,7 @@ describe('CommentForm Component', () => {
             screen.getByRole('button', { name: 'Post comment' }),
         );
 
-        expect(handleSubmit).toHaveBeenCalledWith('Nice work');
+        expect(handleSubmit).toHaveBeenCalledWith('Nice work', []);
         expect(textarea).toHaveValue('');
     });
 
@@ -62,5 +68,76 @@ describe('CommentForm Component', () => {
         expect(
             screen.getByRole('button', { name: 'Post comment' }),
         ).toBeDisabled();
+    });
+
+    test('shows filtered mention suggestions when typing @', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            'Hi @jane',
+        );
+
+        expect(screen.getByText('Jane Cooper')).toBeInTheDocument();
+        expect(screen.queryByText('Bob Smith')).not.toBeInTheDocument();
+    });
+
+    test('selecting a mention inserts the name and includes it on submit', async () => {
+        const handleSubmit = vi.fn();
+        render(<CommentForm onSubmit={handleSubmit} users={users} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        await userEvent.type(textarea, 'Hi @jane');
+        await userEvent.click(screen.getByText('Jane Cooper'));
+
+        expect(textarea).toHaveValue('Hi @Jane Cooper ');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith('Hi @Jane Cooper ', [1]);
+    });
+
+    test('selecting a mention with the keyboard works the same way', async () => {
+        const handleSubmit = vi.fn();
+        render(<CommentForm onSubmit={handleSubmit} users={users} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        await userEvent.type(textarea, 'Hi @b');
+        await userEvent.keyboard('{Enter}');
+
+        expect(textarea).toHaveValue('Hi @Bob Smith ');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith('Hi @Bob Smith ', [2]);
+    });
+
+    test('closes the mention menu on Escape without inserting anything', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            'Hi @jane',
+        );
+        expect(screen.getByText('Jane Cooper')).toBeInTheDocument();
+
+        await userEvent.keyboard('{Escape}');
+
+        expect(screen.queryByText('Jane Cooper')).not.toBeInTheDocument();
+    });
+
+    test('does not treat a mid-word "@" (e.g. an email) as a mention', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            'foo@jane',
+        );
+
+        expect(screen.queryByText('Jane Cooper')).not.toBeInTheDocument();
     });
 });

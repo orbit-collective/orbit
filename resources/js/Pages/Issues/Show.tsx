@@ -48,10 +48,10 @@ export default function Show({
     const parseDate = (value?: string) =>
         value ? new Date(value.replace(/-/g, '/')) : undefined;
 
-    const addComment = (body: string) => {
+    const addComment = (body: string, mentionedUserIds: number[]) => {
         router.post(
             route('comments.store', issue.id),
-            { body },
+            { body, mentioned_user_ids: mentionedUserIds },
             { preserveScroll: true },
         );
     };
@@ -148,10 +148,14 @@ export default function Show({
                                 </span>
                                 <CommentList
                                     comments={issue.comments || []}
+                                    users={users}
                                     onEdit={editComment}
                                     onDelete={deleteComment}
                                 />
-                                <CommentForm onSubmit={addComment} />
+                                <CommentForm
+                                    onSubmit={addComment}
+                                    users={users}
+                                />
                             </div>
                         </div>
 

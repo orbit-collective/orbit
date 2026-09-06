@@ -68,6 +68,31 @@ describe('CommentItem Component', () => {
         );
     });
 
+    test('highlights an @mention that matches a real project member', () => {
+        const users = [{ id: 2, name: 'Bob Smith' }];
+        render(
+            <CommentItem
+                comment={makeComment({ body: 'Hi @Bob Smith, thanks!' })}
+                users={users}
+            />,
+        );
+
+        expect(screen.getByText('@Bob Smith')).toBeInTheDocument();
+    });
+
+    test('does not highlight an @word that is not a real project member', () => {
+        const users = [{ id: 2, name: 'Bob Smith' }];
+        render(
+            <CommentItem
+                comment={makeComment({ body: 'Reach me at @nobody' })}
+                users={users}
+            />,
+        );
+
+        expect(screen.queryByText('@nobody')).not.toBeInTheDocument();
+        expect(screen.getByText('Reach me at @nobody')).toBeInTheDocument();
+    });
+
     test('calls onEdit with the new body after editing', async () => {
         const handleEdit = vi.fn();
         const comment = makeComment({ can_edit: true });
