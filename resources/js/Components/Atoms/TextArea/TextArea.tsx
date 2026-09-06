@@ -28,6 +28,9 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             variant,
             className,
             onKeyDown,
+            onKeyUp,
+            onClick,
+            onSelect,
             onBlur,
         },
         ref,
@@ -45,6 +48,9 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
                 placeholder={placeholder}
                 disabled={isDisabled}
                 onKeyDown={onKeyDown}
+                onKeyUp={onKeyUp}
+                onClick={onClick}
+                onSelect={onSelect}
                 onBlur={onBlur}
                 ref={ref}
             ></textarea>

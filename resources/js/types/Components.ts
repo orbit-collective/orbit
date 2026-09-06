@@ -137,6 +137,9 @@ export interface TextAreaProps extends VariantProps<typeof textareaVariants> {
     isDisabled?: boolean;
     className?: string;
     onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+    onKeyUp?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+    onClick?: (e: React.MouseEvent<HTMLTextAreaElement>) => void;
+    onSelect?: (e: React.SyntheticEvent<HTMLTextAreaElement>) => void;
     onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
     ref?: React.Ref<HTMLTextAreaElement> | null;
 }
@@ -529,17 +532,27 @@ export interface IssuePageHeaderProps {
 }
 export interface CommentItemProps {
     comment: Comment;
+    users?: AssignableUser[];
     onEdit?: (comment: Comment, body: string) => void;
     onDelete?: (comment: Comment) => void;
 }
 export interface CommentListProps {
     comments: Comment[];
+    users?: AssignableUser[];
     onEdit?: (comment: Comment, body: string) => void;
     onDelete?: (comment: Comment) => void;
 }
 export interface CommentFormProps {
-    onSubmit: (body: string) => void;
+    onSubmit: (body: string, mentionedUserIds: number[]) => void;
+    users?: AssignableUser[];
     isSubmitting?: boolean;
+}
+export interface MentionSuggestionsProps {
+    users: AssignableUser[];
+    activeIndex: number;
+    position: { top: number; left: number };
+    onSelect: (user: AssignableUser) => void;
+    onHover: (index: number) => void;
 }
 export interface IssueTableProps {
     issues: Issue[];
