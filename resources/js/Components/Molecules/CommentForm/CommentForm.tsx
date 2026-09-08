@@ -39,10 +39,13 @@ const CommentForm: React.FC<CommentFormProps> = ({
     // instead can't be trusted here: it can misjudge the boundary whenever
     // the text at the edit point coincides with what's being inserted,
     // which is common for mentions (they all start with "@").
-    const editRangeRef = useRef<{ start: number; end: number }>({
-        start: 0,
-        end: 0,
-    });
+    //
+    // Consumed (reset to null) the moment it's used, so a change that
+    // arrives without one of those events right before it - IME composition,
+    // drag-and-drop, browser undo/redo, autocomplete - can be detected as
+    // "unaccounted for" rather than silently reusing a stale range from
+    // whatever edit came before it.
+    const editRangeRef = useRef<{ start: number; end: number } | null>(null);
 
     useEffect(() => {
         if (pendingCaret === null || !textareaRef.current) return;
@@ -129,16 +132,32 @@ const CommentForm: React.FC<CommentFormProps> = ({
         ]);
         setMention(null);
         setPendingCaret(mention.start + mentionText.length + 1);
+        // Invalidates any leftover captured range from an earlier keystroke -
+        // this edit was just applied precisely above, so there's nothing for
+        // the next handleChange to consume unless a fresh one is captured.
+        editRangeRef.current = null;
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newBody = e.target.value;
-        const { start, end } = editRangeRef.current;
-        const insertedLength = newBody.length - body.length + (end - start);
+        const captured = editRangeRef.current;
+        editRangeRef.current = null;
 
-        setMentionRanges((prev) =>
-            applyRangeEdit(prev, start, end, insertedLength),
-        );
+        if (captured) {
+            const { start, end } = captured;
+            const insertedLength = newBody.length - body.length + (end - start);
+
+            setMentionRanges((prev) =>
+                applyRangeEdit(prev, start, end, insertedLength),
+            );
+        } else {
+            // This change wasn't preceded by a captured keydown/paste/cut
+            // (IME composition, drag-and-drop, undo/redo, autocomplete, ...) -
+            // none of the tracked ranges' positions can be trusted anymore,
+            // so drop them rather than risk misattributing one.
+            setMentionRanges((prev) => (prev.length > 0 ? [] : prev));
+        }
+
         setBody(newBody);
         syncMentionState(e.target);
     };
