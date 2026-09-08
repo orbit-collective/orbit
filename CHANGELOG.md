@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.5](https://github.com/orbit-collective/orbit/compare/v0.7.4...v0.7.5) (2026-09-08)
+
+
+### Bug Fixes
+
+* **tests:** point jest-dom type augmentation at the vitest entry point ([159bb5c](https://github.com/orbit-collective/orbit/commit/159bb5ca54e3ee3d6b3546b9f7b8cecb0e3a67f1))
+
 ## [0.7.4](https://github.com/orbit-collective/orbit/compare/v0.7.3...v0.7.4) (2026-09-08)
 
 
