@@ -1,9 +1,10 @@
 <?php
 
-use App\Enums\Notifications\NotificationType;
 use App\DataTransferObjects\ImportResultDTO;
+use App\Enums\Notifications\NotificationType;
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
+use App\Events\IssueMentioned;
 use App\Events\IssuesImported;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
@@ -269,6 +270,38 @@ test('CommentAdded does not notify when the issue has no assignee', function () 
     $this->notificationService->shouldNotReceive('notify');
 
     $this->listener->handle(new CommentAdded($comment, $issue, $actor));
+});
+
+test('IssueMentioned notifies the mentioned user about the actor\'s comment', function () {
+    $actor = User::factory()->create(['name' => 'Jane Cooper']);
+    $mentioned = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['id' => 30, 'project_id' => $project->id, 'title' => 'Fix login crash']);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $actor->id]);
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with(
+            $mentioned->id,
+            NotificationType::IssueMentioned,
+            'info',
+            'You were mentioned',
+            'Jane Cooper mentioned you in a comment on "Fix login crash" (#30).',
+            route('issues.show', [$project->id, $issue->id])
+        );
+
+    $this->listener->handle(new IssueMentioned($issue, $comment, $mentioned, $actor));
+});
+
+test('IssueMentioned does not notify when the actor mentions themself', function () {
+    $actor = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $actor->id]);
+
+    $this->notificationService->shouldNotReceive('notify');
+
+    $this->listener->handle(new IssueMentioned($issue, $comment, $actor, $actor));
 });
 
 test('ProjectInvited notifies an existing user through the normal notification pipeline', function () {

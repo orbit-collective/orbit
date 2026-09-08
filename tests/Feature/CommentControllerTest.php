@@ -1,10 +1,12 @@
 <?php
 
+use App\Events\IssueMentioned;
 use App\Models\Comment;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
@@ -48,6 +50,57 @@ test('commenting on an issue requires a body', function () {
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments");
 
     $response->assertSessionHasErrors('body');
+});
+
+test('commenting with mentioned_user_ids fires IssueMentioned for that member', function () {
+    Event::fake();
+    $user = User::factory()->create();
+    $mentioned = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $project->users()->attach([$user->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+
+    $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
+        'body' => "Hi @[$mentioned->name]($mentioned->id)",
+        'mentioned_user_ids' => [$mentioned->id],
+    ]);
+
+    $response->assertRedirect();
+    Event::assertDispatched(
+        IssueMentioned::class,
+        fn ($event) => $event->mentionedUser->is($mentioned) && $event->actor->is($user),
+    );
+});
+
+test('commenting ignores a mentioned_user_ids entry with no matching mention token in the body', function () {
+    Event::fake();
+    $user = User::factory()->create();
+    $mentioned = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $project->users()->attach([$user->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+
+    $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
+        'body' => 'This body never actually mentions anyone',
+        'mentioned_user_ids' => [$mentioned->id],
+    ]);
+
+    $response->assertRedirect();
+    Event::assertNotDispatched(IssueMentioned::class);
+});
+
+test('commenting rejects a mentioned_user_ids entry that is not a real user', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
+        'body' => 'Hi @there',
+        'mentioned_user_ids' => [999999],
+    ]);
+
+    $response->assertSessionHasErrors('mentioned_user_ids.0');
 });
 
 test('a viewer cannot comment on an issue', function () {

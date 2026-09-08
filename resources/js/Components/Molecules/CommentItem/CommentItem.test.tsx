@@ -68,6 +68,53 @@ describe('CommentItem Component', () => {
         );
     });
 
+    test('highlights a mention token and resolves it by id', () => {
+        const users = [{ id: 2, name: 'Bob Smith' }];
+        render(
+            <CommentItem
+                comment={makeComment({
+                    body: 'Hi @[Bob Smith](2), thanks!',
+                })}
+                users={users}
+            />,
+        );
+
+        expect(screen.getByText('@Bob Smith')).toBeInTheDocument();
+    });
+
+    test('disambiguates two same-named members by the id in the token', () => {
+        const users = [
+            { id: 2, name: 'Bob Smith', avatar: '/wrong.jpg' },
+            { id: 9, name: 'Bob Smith', avatar: '/right.jpg' },
+        ];
+        const { container } = render(
+            <CommentItem
+                comment={makeComment({ body: 'Hi @[Bob Smith](9)!' })}
+                users={users}
+            />,
+        );
+
+        const avatarImgs = container.querySelectorAll('img');
+        expect(
+            Array.from(avatarImgs).some(
+                (img) => img.getAttribute('src') === '/right.jpg',
+            ),
+        ).toBe(true);
+    });
+
+    test('leaves plain "@word" text (no mention token) unhighlighted', () => {
+        const users = [{ id: 2, name: 'Bob Smith' }];
+        render(
+            <CommentItem
+                comment={makeComment({ body: 'Reach me at @nobody' })}
+                users={users}
+            />,
+        );
+
+        expect(screen.queryByText('@nobody')).not.toBeInTheDocument();
+        expect(screen.getByText('Reach me at @nobody')).toBeInTheDocument();
+    });
+
     test('calls onEdit with the new body after editing', async () => {
         const handleEdit = vi.fn();
         const comment = makeComment({ can_edit: true });

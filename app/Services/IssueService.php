@@ -220,18 +220,35 @@ class IssueService
 
     private function describeAssigneeChange(?int $oldId, ?int $newId): string
     {
-        $oldName = $oldId ? ($this->userService->getUserById($oldId)?->name ?? 'someone') : 'Unassigned';
-        $newName = $newId ? ($this->userService->getUserById($newId)?->name ?? 'someone') : 'Unassigned';
-
         // Quoted (like the status/priority values above) so a name containing
         // " to " or "; " can't be mistaken for the sentence's own delimiters.
         // Backslash-escaped in case the name itself contains a double quote -
-        // the frontend parser unescapes it back when rendering.
+        // the frontend parser unescapes it back when rendering. The trailing
+        // "#id" (only present for a real user, never for "Unassigned") lets
+        // the frontend resolve the exact user by id instead of by name, so
+        // two project members who happen to share a display name don't get
+        // each other's avatar.
         return sprintf(
-            'assignee changed from "%s" to "%s"',
-            $this->escapeForQuotedSegment($oldName),
-            $this->escapeForQuotedSegment($newName),
+            'assignee changed from "%s"%s to "%s"%s',
+            $this->escapeForQuotedSegment($this->assigneeName($oldId)),
+            $this->assigneeIdSuffix($oldId),
+            $this->escapeForQuotedSegment($this->assigneeName($newId)),
+            $this->assigneeIdSuffix($newId),
         );
+    }
+
+    private function assigneeName(?int $userId): string
+    {
+        if (! $userId) {
+            return 'Unassigned';
+        }
+
+        return $this->userService->getUserById($userId)?->name ?? 'someone';
+    }
+
+    private function assigneeIdSuffix(?int $userId): string
+    {
+        return $userId ? "#$userId" : '';
     }
 
     private function escapeForQuotedSegment(string $value): string

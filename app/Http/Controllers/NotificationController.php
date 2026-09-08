@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Services\ActivityLogService;
 use App\Services\NotificationService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -12,7 +12,8 @@ use Illuminate\Support\Collection;
 class NotificationController extends Controller
 {
     public function __construct(
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected ActivityLogService $activityLogService
     ) {}
     public function index(): Collection
     {
@@ -35,13 +36,15 @@ class NotificationController extends Controller
         return redirect()->back();
     }
 
-    public function destroy(Notification $notification): JsonResponse
+    public function destroy(Notification $notification): RedirectResponse
     {
         abort_if($notification->user_id !== auth()->id(), 403);
 
+        $this->activityLogService->log(null, "Notification #$notification->id deleted by " . auth()->user()?->name ?? 'Someone', auth()->id());
+
         $notification->delete();
 
-        return response()->json();
+        return redirect()->back();
     }
 
     public function markAllAsRead(): RedirectResponse

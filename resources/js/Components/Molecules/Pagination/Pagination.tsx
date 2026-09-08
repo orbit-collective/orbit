@@ -6,7 +6,7 @@ import { useAlert } from '@/context/AlertContext';
 import { PaginationProps } from '@/types/Components';
 import { Link, router } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
-import { useState } from 'react';
+import { Key, useState } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const paginationVariants = cva(
@@ -30,6 +30,45 @@ const paginationVariants = cva(
 );
 
 const rowsPerPageCounts: number[] = [10, 20, 50, 100];
+
+const range = (start: number, end: number): number[] =>
+    Array.from({ length: end - start + 1 }, (_, i) => start + i);
+
+// Keeps the visible page-number buttons to a fixed, small count (at most 7)
+// regardless of how many pages exist, instead of rendering Laravel's full
+// pagination window (which can show 10+ numeric buttons around the edges).
+const getCondensedPageNumbers = (
+    currentPage: number,
+    lastPage: number,
+): Array<number | 'ellipsis'> => {
+    if (lastPage <= 7) return range(1, lastPage);
+
+    if (currentPage <= 4) {
+        return [1, 2, 3, 4, 5, 'ellipsis', lastPage];
+    }
+
+    if (currentPage >= lastPage - 3) {
+        return [
+            1,
+            'ellipsis',
+            lastPage - 4,
+            lastPage - 3,
+            lastPage - 2,
+            lastPage - 1,
+            lastPage,
+        ];
+    }
+
+    return [
+        1,
+        'ellipsis',
+        currentPage - 1,
+        currentPage,
+        currentPage + 1,
+        'ellipsis',
+        lastPage,
+    ];
+};
 
 const Pagination = ({
     links,
@@ -70,9 +109,53 @@ const Pagination = ({
         setDropdownVisible(false);
     };
 
+    const prevLink = links[0];
+    const nextLink = links[links.length - 1];
+    const numericLinks = links
+        .slice(1, -1)
+        .filter((link) => !isNaN(Number(link.label)));
+    const activeLink = numericLinks.find((link) => link.active);
+    const currentPage = activeLink ? Number(activeLink.label) : 1;
+    const lastPage =
+        numericLinks.length > 0
+            ? Math.max(...numericLinks.map((link) => Number(link.label)))
+            : 1;
+    const pageLinkMap = new Map(
+        numericLinks.map((link) => [Number(link.label), link]),
+    );
+
+    const renderLink = (
+        link: { url: string | null; label: string; active: boolean },
+        key: Key,
+    ) => {
+        const isLinkDisabled = !link.url;
+
+        // Hide numeric page links on very small screens, except current page
+        const isNumeric = !isNaN(Number(link.label));
+        const shouldHideOnMobile = isNumeric && !link.active;
+        const className = `${paginationVariants({
+            active: link.active,
+            disabled: isLinkDisabled,
+        })} ${shouldHideOnMobile ? 'hidden sm:flex' : 'flex'}`;
+
+        if (isLinkDisabled) {
+            return (
+                <span key={key} className={className}>
+                    {renderLabel(link.label)}
+                </span>
+            );
+        }
+
+        return (
+            <Link key={key} href={link.url!} className={className}>
+                {renderLabel(link.label)}
+            </Link>
+        );
+    };
+
     return (
-        <div className="mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 sm:flex-row sm:gap-0">
-            <div className="text-sm text-[var(--text-gray-color)]">
+        <div className="mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 lg:flex-row lg:gap-0">
+            <div className="text-center text-sm text-[var(--text-gray-color)] lg:text-left">
                 Showing{' '}
                 <span className="font-semibold text-[var(--text-color)]">
                     {from || 0}
@@ -87,9 +170,9 @@ const Pagination = ({
                 </span>{' '}
                 results
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-4 sm:flex-nowrap sm:gap-6">
-                <div className="relative flex min-w-[140px] items-center gap-2">
-                    <span className="text-[var(--text-gray-color)]">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:flex-nowrap lg:gap-6">
+                <div className="relative flex shrink-0 items-center gap-2">
+                    <span className="whitespace-nowrap text-[var(--text-gray-color)]">
                         Rows per page:
                     </span>
                     <DropdownTrigger
@@ -125,43 +208,32 @@ const Pagination = ({
                         </DropdownMenu>
                     )}
                 </div>
-                {links && links.length > 3 && (
-                    <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
-                        {links.map((link, index) => {
-                            const isLinkDisabled = !link.url;
-
-                            // Hide numeric page links on very small screens, except current page
-                            const isNumeric = !isNaN(Number(link.label));
-                            const shouldHideOnMobile =
-                                isNumeric && !link.active;
-
-                            if (isLinkDisabled) {
-                                return (
+                {links && numericLinks.length > 1 && (
+                    <div className="scrollbar-hide flex flex-nowrap items-center justify-center gap-1 overflow-x-auto sm:gap-2">
+                        {renderLink(prevLink, 'prev')}
+                        {getCondensedPageNumbers(currentPage, lastPage).map(
+                            (page, index) =>
+                                page === 'ellipsis' ? (
                                     <span
-                                        key={index}
+                                        key={`ellipsis-${index}`}
                                         className={`${paginationVariants({
-                                            active: link.active,
                                             disabled: true,
-                                        })} ${shouldHideOnMobile ? 'hidden sm:flex' : 'flex'}`}
+                                        })} flex`}
                                     >
-                                        {renderLabel(link.label)}
+                                        ...
                                     </span>
-                                );
-                            }
-
-                            return (
-                                <Link
-                                    key={index}
-                                    href={link.url!}
-                                    className={`${paginationVariants({
-                                        active: link.active,
-                                        disabled: false,
-                                    })} ${shouldHideOnMobile ? 'hidden sm:flex' : 'flex'}`}
-                                >
-                                    {renderLabel(link.label)}
-                                </Link>
-                            );
-                        })}
+                                ) : (
+                                    renderLink(
+                                        pageLinkMap.get(page) ?? {
+                                            url: null,
+                                            label: String(page),
+                                            active: page === currentPage,
+                                        },
+                                        page,
+                                    )
+                                ),
+                        )}
+                        {renderLink(nextLink, 'next')}
                     </div>
                 )}
             </div>

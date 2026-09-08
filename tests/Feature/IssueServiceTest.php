@@ -385,6 +385,60 @@ test('updateIssue quotes assignee names in the logged body, escaping any embedde
     $this->service->updateIssue($issue, ['assignee_id' => $newAssignee->id]);
 });
 
+test('updateIssue embeds the new assignee\'s id in the logged body, so same-named members can be told apart', function () {
+    $actor = User::factory()->create();
+    $this->actingAs($actor);
+    $newAssignee = User::factory()->create(['id' => 55, 'name' => 'Jane Cooper']);
+
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
+
+    $this->issueRepository->shouldReceive('update')
+        ->once()
+        ->andReturnUsing(function ($issue, $data) {
+            $issue->fill($data);
+            $issue->syncOriginal();
+
+            return $issue;
+        });
+
+    $this->activityLogService->shouldReceive('log')
+        ->once()
+        ->with($project->id, Mockery::on(fn ($body) => str_contains(
+            $body,
+            'assignee changed from "Unassigned" to "Jane Cooper"#55'
+        )));
+
+    $this->service->updateIssue($issue, ['assignee_id' => $newAssignee->id]);
+});
+
+test('updateIssue does not append an id when the new assignee is Unassigned', function () {
+    $actor = User::factory()->create();
+    $this->actingAs($actor);
+    $oldAssignee = User::factory()->create(['id' => 7, 'name' => 'Jane Cooper']);
+
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => $oldAssignee->id]);
+
+    $this->issueRepository->shouldReceive('update')
+        ->once()
+        ->andReturnUsing(function ($issue, $data) {
+            $issue->fill($data);
+            $issue->syncOriginal();
+
+            return $issue;
+        });
+
+    $this->activityLogService->shouldReceive('log')
+        ->once()
+        ->with($project->id, Mockery::on(fn ($body) => str_contains(
+            $body,
+            'assignee changed from "Jane Cooper"#7 to "Unassigned"'
+        )));
+
+    $this->service->updateIssue($issue, ['assignee_id' => null]);
+});
+
 test('updateIssue reports a priority change in the IssueUpdated payload', function () {
     $actor = User::factory()->create();
     $this->actingAs($actor);

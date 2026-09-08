@@ -70,6 +70,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                                         {renderActivityLogBody(
                                             entry.body,
                                             users,
+                                            entry.userAvatar,
                                         )}
                                     </span>
                                 </div>

@@ -430,7 +430,7 @@ describe('Issues/Show Page', () => {
         expect(mockRoute).toHaveBeenCalledWith('comments.store', issue.id);
         expect(mockPost).toHaveBeenCalledWith(
             '/comments.store/42',
-            { body: 'Nice work' },
+            { body: 'Nice work', mentioned_user_ids: [] },
             { preserveScroll: true },
         );
     });

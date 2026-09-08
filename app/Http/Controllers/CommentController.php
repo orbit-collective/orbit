@@ -20,6 +20,8 @@ class CommentController extends Controller
 
         $data = $request->validate([
             'body' => 'required|string',
+            'mentioned_user_ids' => 'sometimes|array',
+            'mentioned_user_ids.*' => 'integer|exists:users,id',
         ]);
 
         $this->commentService->addComment($issue, $data);
@@ -35,6 +37,8 @@ class CommentController extends Controller
 
         $data = $request->validate([
             'body' => 'required|string',
+            'mentioned_user_ids' => 'sometimes|array',
+            'mentioned_user_ids.*' => 'integer|exists:users,id',
         ]);
 
         $this->commentService->updateComment($comment, $data);

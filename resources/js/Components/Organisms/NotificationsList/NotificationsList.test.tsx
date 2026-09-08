@@ -21,7 +21,11 @@ describe('NotificationsList Component', () => {
 
     test('renders the empty state when there are no notifications', () => {
         render(
-            <NotificationsList notifications={[]} onMarkAsRead={() => {}} />,
+            <NotificationsList
+                notifications={[]}
+                onMarkAsRead={() => {}}
+                onRemove={() => {}}
+            />,
         );
 
         expect(
@@ -39,6 +43,7 @@ describe('NotificationsList Component', () => {
             <NotificationsList
                 notifications={notifications}
                 onMarkAsRead={() => {}}
+                onRemove={() => {}}
             />,
         );
 
@@ -61,6 +66,7 @@ describe('NotificationsList Component', () => {
             <NotificationsList
                 notifications={notifications}
                 onMarkAsRead={onMarkAsRead}
+                onRemove={() => {}}
             />,
         );
 
@@ -69,5 +75,29 @@ describe('NotificationsList Component', () => {
         await user.click(unreadControls[1]);
 
         expect(onMarkAsRead).toHaveBeenCalledWith(2);
+    });
+
+    test('propagates onRemove with the correct id from a rendered item', async () => {
+        const user = userEvent.setup();
+        const onRemove = vi.fn();
+        const notifications = [
+            makeNotification({ id: 1, title: 'First' }),
+            makeNotification({ id: 2, title: 'Second' }),
+        ];
+        render(
+            <NotificationsList
+                notifications={notifications}
+                onMarkAsRead={() => {}}
+                onRemove={onRemove}
+            />,
+        );
+
+        const deleteButtons = screen.getAllByRole('button', {
+            name: 'Delete notification',
+        });
+        expect(deleteButtons).toHaveLength(2);
+        await user.click(deleteButtons[1]);
+
+        expect(onRemove).toHaveBeenCalledWith(2);
     });
 });

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
 use App\Events\IssueCreated;
+use App\Events\IssueMentioned;
 use App\Events\IssuesImported;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
@@ -52,6 +53,7 @@ class AppServiceProvider extends ServiceProvider
             IssueUnassigned::class,
             IssueUpdated::class,
             CommentAdded::class,
+            IssueMentioned::class,
             ProjectInvited::class,
             IssuesImported::class,
         ], SendNotificationListener::class);

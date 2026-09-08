@@ -77,3 +77,18 @@ test('it can attach a member with a role to a project', function () {
 
     expect($project->users()->first()->pivot->role)->toBe(RoleType::ADMIN->value);
 });
+
+test('it can get the member ids of a project', function () {
+    $project = Project::factory()->create();
+    $members = User::factory()->count(2)->create();
+
+    foreach ($members as $member) {
+        $project->users()->attach($member->id, ['role' => RoleType::MEMBER->value]);
+    }
+
+    User::factory()->create();
+
+    $ids = $this->repository->getMemberIds($project);
+
+    expect($ids)->toEqualCanonicalizing($members->pluck('id')->all());
+});

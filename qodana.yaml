@@ -33,6 +33,7 @@ exclude:
   - name: PhpParamsInspection
   - name: RegExpRedundantEscape
   - name: RegExpUnnecessaryNonCapturingGroup
+  - name: PhpUnhandledExceptionInspection
 
 include:
   - name: PhpCSFixerValidationInspection

@@ -115,6 +115,19 @@ describe('renderActivityLogBody', () => {
         expect(screen.getByText(/Fix bug #42 in tracker/)).toBeInTheDocument();
     });
 
+    test('renders a "Notification #123 deleted by ..." reference as a Badge', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'Notification #42 deleted by Jane Cooper',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('#42')).toBeInTheDocument();
+        expect(container.querySelector('.rounded-lg')).not.toBeNull();
+    });
+
     test('renders the issue reference inside a quoted title as an additional Badge', () => {
         render(
             <p>
@@ -278,5 +291,74 @@ describe('renderActivityLogBody', () => {
 
         expect(container.querySelector('img')).toBeNull();
         expect(screen.getByText('K')).toBeInTheDocument();
+    });
+
+    test('resolves the correct avatar by id when two users share the same name', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'assignee changed from "Unassigned" to "Jane Cooper"#7',
+                    [
+                        { id: 3, name: 'Jane Cooper', avatar: '/wrong.jpg' },
+                        { id: 7, name: 'Jane Cooper', avatar: '/right.jpg' },
+                    ],
+                )}
+            </p>,
+        );
+
+        const avatarImg = container.querySelector('img');
+        expect(avatarImg).toHaveAttribute('src', '/right.jpg');
+    });
+
+    test('falls back to name-based lookup for a legacy assignee change with no id suffix', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'assignee changed from "Unassigned" to "Kacper Bieliński"',
+                    [
+                        {
+                            id: 1,
+                            name: 'Kacper Bieliński',
+                            avatar: '/storage/avatars/kacper.jpg',
+                        },
+                    ],
+                )}
+            </p>,
+        );
+
+        const avatarImg = container.querySelector('img');
+        expect(avatarImg).toHaveAttribute('src', '/storage/avatars/kacper.jpg');
+    });
+
+    test('uses the passed-in actor avatar for the author name instead of a name lookup', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'Jane Cooper commented on issue #16 "Fix login bug"',
+                    [
+                        { id: 3, name: 'Jane Cooper', avatar: '/wrong.jpg' },
+                        { id: 9, name: 'Jane Cooper', avatar: '/right.jpg' },
+                    ],
+                    '/right.jpg',
+                )}
+            </p>,
+        );
+
+        const avatarImg = container.querySelector('img');
+        expect(avatarImg).toHaveAttribute('src', '/right.jpg');
+    });
+
+    test('shows no avatar for the author when actorAvatar is explicitly null', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'Jane Cooper commented on issue #16 "Fix login bug"',
+                    [{ id: 3, name: 'Jane Cooper', avatar: '/wrong.jpg' }],
+                    null,
+                )}
+            </p>,
+        );
+
+        expect(container.querySelector('img')).toBeNull();
     });
 });

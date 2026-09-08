@@ -24,6 +24,7 @@ describe('NotificationItem Component', () => {
             <NotificationItem
                 notification={makeNotification()}
                 onMarkAsRead={() => {}}
+                onRemove={() => {}}
             />,
         );
 
@@ -38,6 +39,7 @@ describe('NotificationItem Component', () => {
             <NotificationItem
                 notification={makeNotification({ message: '' })}
                 onMarkAsRead={() => {}}
+                onRemove={() => {}}
             />,
         );
 
@@ -49,6 +51,7 @@ describe('NotificationItem Component', () => {
             <NotificationItem
                 notification={makeNotification()}
                 onMarkAsRead={() => {}}
+                onRemove={() => {}}
             />,
         );
 
@@ -62,6 +65,7 @@ describe('NotificationItem Component', () => {
                     action_url: '/issues/42',
                 })}
                 onMarkAsRead={() => {}}
+                onRemove={() => {}}
             />,
         );
 
@@ -75,6 +79,7 @@ describe('NotificationItem Component', () => {
             <NotificationItem
                 notification={makeNotification({ action_url: '' })}
                 onMarkAsRead={() => {}}
+                onRemove={() => {}}
             />,
         );
 
@@ -86,6 +91,7 @@ describe('NotificationItem Component', () => {
             <NotificationItem
                 notification={makeNotification({ read: false })}
                 onMarkAsRead={() => {}}
+                onRemove={() => {}}
             />,
         );
 
@@ -98,6 +104,7 @@ describe('NotificationItem Component', () => {
             <NotificationItem
                 notification={makeNotification({ read: true })}
                 onMarkAsRead={() => {}}
+                onRemove={() => {}}
             />,
         );
 
@@ -112,11 +119,44 @@ describe('NotificationItem Component', () => {
             <NotificationItem
                 notification={makeNotification({ id: 7, read: false })}
                 onMarkAsRead={onMarkAsRead}
+                onRemove={() => {}}
             />,
         );
 
         await user.click(screen.getByText('Unread'));
 
         expect(onMarkAsRead).toHaveBeenCalledWith(7);
+    });
+
+    test('renders a delete button', () => {
+        render(
+            <NotificationItem
+                notification={makeNotification()}
+                onMarkAsRead={() => {}}
+                onRemove={() => {}}
+            />,
+        );
+
+        expect(
+            screen.getByRole('button', { name: 'Delete notification' }),
+        ).toBeInTheDocument();
+    });
+
+    test('calls onRemove with the notification id when the delete button is clicked', async () => {
+        const user = userEvent.setup();
+        const onRemove = vi.fn();
+        render(
+            <NotificationItem
+                notification={makeNotification({ id: 9 })}
+                onMarkAsRead={() => {}}
+                onRemove={onRemove}
+            />,
+        );
+
+        await user.click(
+            screen.getByRole('button', { name: 'Delete notification' }),
+        );
+
+        expect(onRemove).toHaveBeenCalledWith(9);
     });
 });
