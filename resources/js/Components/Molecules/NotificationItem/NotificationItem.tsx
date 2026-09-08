@@ -35,6 +35,7 @@ function NotificationItem({
                 <IconButton
                     iconName={'Trash2'}
                     iconSize={12}
+                    ariaLabel="Delete notification"
                     onClick={() => onRemove(notification.id)}
                 />
             </div>
