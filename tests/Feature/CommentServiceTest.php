@@ -234,6 +234,67 @@ test('updateComment fires IssueMentioned for newly mentioned project members', f
     );
 });
 
+test('updateComment does not re-fire IssueMentioned for a mention that was already present', function () {
+    // A no-op re-save (or an edit to unrelated text) must not re-notify a
+    // member who was already mentioned, and already notified, before this edit.
+    $author = User::factory()->create();
+    $project = Project::factory()->create();
+    $mentioned = User::factory()->create();
+    $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $comment = Comment::factory()->create([
+        'issue_id' => $issue->id,
+        'user_id' => $author->id,
+        'body' => "Hi @[$mentioned->name]($mentioned->id)",
+    ]);
+
+    $this->actingAs($author);
+
+    $this->commentRepository->shouldReceive('update')->once()->andReturn($comment);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->updateComment($comment, [
+        'body' => "Hi @[$mentioned->name]($mentioned->id), thanks!",
+        'mentioned_user_ids' => [$mentioned->id],
+    ]);
+
+    Event::assertNotDispatched(IssueMentioned::class);
+});
+
+test('updateComment fires IssueMentioned only for a newly added mention alongside an already-present one', function () {
+    $author = User::factory()->create();
+    $project = Project::factory()->create();
+    $alreadyMentioned = User::factory()->create();
+    $newlyMentioned = User::factory()->create();
+    $project->users()->attach([
+        $author->id => ['role' => 'member'],
+        $alreadyMentioned->id => ['role' => 'member'],
+        $newlyMentioned->id => ['role' => 'member'],
+    ]);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $comment = Comment::factory()->create([
+        'issue_id' => $issue->id,
+        'user_id' => $author->id,
+        'body' => "Hi @[$alreadyMentioned->name]($alreadyMentioned->id)",
+    ]);
+
+    $this->actingAs($author);
+
+    $this->commentRepository->shouldReceive('update')->once()->andReturn($comment);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->updateComment($comment, [
+        'body' => "Hi @[$alreadyMentioned->name]($alreadyMentioned->id) and @[$newlyMentioned->name]($newlyMentioned->id)",
+        'mentioned_user_ids' => [$alreadyMentioned->id, $newlyMentioned->id],
+    ]);
+
+    Event::assertDispatched(IssueMentioned::class, 1);
+    Event::assertDispatched(
+        IssueMentioned::class,
+        fn ($event) => $event->mentionedUser->is($newlyMentioned)
+    );
+});
+
 test('deleteComment removes the comment and logs activity', function () {
     $user = User::factory()->create(['name' => 'Jane Cooper']);
     $issue = Issue::factory()->create(['id' => 5, 'title' => 'Fix login crash']);
