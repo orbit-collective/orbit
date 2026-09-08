@@ -338,7 +338,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                                 }
                                                 className="shrink-0 cursor-pointer rounded p-1 text-[var(--text-muted-color)] opacity-0 transition-all duration-150 hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)] group-hover:opacity-100"
                                             >
-                                                <Icon name="Trash2" size={12} />
+                                                <Icon name="Trash" size={12} />
                                             </button>
                                         </div>
                                     );

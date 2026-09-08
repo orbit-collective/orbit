@@ -159,7 +159,7 @@ export default function AccountSettingsSecurityTab({
             <SettingsPanel
                 title="Delete account"
                 description="Permanently remove your Orbit account and associated data."
-                icon="Trash2"
+                icon="Trash"
             >
                 <SettingsPanelRow
                     title="Delete this account"

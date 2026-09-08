@@ -284,7 +284,7 @@ describe('SavedFiltersDropdown Component', () => {
 
         await screen.findByText('To delete');
         const deleteButton = document
-            .querySelector('.lucide-trash-2')
+            .querySelector('.lucide-trash')
             ?.closest('button') as HTMLElement;
         await user.click(deleteButton);
 

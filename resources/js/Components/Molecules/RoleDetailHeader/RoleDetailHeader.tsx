@@ -171,7 +171,7 @@ export default function RoleDetailHeader({
                                         onClick={onDeleteRequest}
                                         className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
                                     >
-                                        <Icon name="Trash2" size={14} />
+                                        <Icon name="Trash" size={14} />
                                     </button>
                                 )
                             )}
