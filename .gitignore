@@ -28,3 +28,5 @@ Homestead.yaml
 Thumbs.db
 /coverage
 /coverage-html
+/.agents
+/.claude
