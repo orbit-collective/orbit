@@ -59,47 +59,38 @@ export interface MentionRange {
 }
 
 /**
- * Re-anchors tracked mention ranges after the textarea's value changes.
- * Diffs the old and new text to find the single edited region (the common
- * prefix/suffix around it): a range entirely before or after that region is
- * kept (shifted by the length delta if it comes after), a range that
- * overlaps the edited region is dropped — its "@Name" text is no longer
- * guaranteed intact, so it can no longer be trusted to mean that user.
+ * Re-anchors tracked mention ranges against a known, exact edit: the region
+ * `[editStart, editEnd)` of the text was replaced by `insertedLength`
+ * characters. A range entirely before that region is kept as-is, one
+ * entirely after it is shifted by the resulting length delta, and one that
+ * overlaps it is dropped — its "@Name" text is no longer guaranteed intact,
+ * so it can no longer be trusted to mean that user.
+ *
+ * The edit's boundaries must be known exactly (from the selection right
+ * before the edit was applied — see CommentForm's editRangeRef), not
+ * inferred by diffing the before/after text: a naive common-prefix/suffix
+ * walk can misjudge the boundary whenever the text right at the edit point
+ * happens to coincide with the inserted text, which for mentions is
+ * common — every mention starts with "@", so inserting one right before
+ * another is exactly this case.
  */
-export function reconcileMentionRanges(
+export function applyRangeEdit(
     ranges: MentionRange[],
-    oldText: string,
-    newText: string,
+    editStart: number,
+    editEnd: number,
+    insertedLength: number,
 ): MentionRange[] {
     if (ranges.length === 0) return ranges;
 
-    let prefixLen = 0;
-    const maxPrefix = Math.min(oldText.length, newText.length);
-    while (prefixLen < maxPrefix && oldText[prefixLen] === newText[prefixLen]) {
-        prefixLen++;
-    }
-
-    let suffixLen = 0;
-    const maxSuffix = maxPrefix - prefixLen;
-    while (
-        suffixLen < maxSuffix &&
-        oldText[oldText.length - 1 - suffixLen] ===
-            newText[newText.length - 1 - suffixLen]
-    ) {
-        suffixLen++;
-    }
-
-    const oldChangedEnd = oldText.length - suffixLen;
-    const delta = newText.length - oldText.length;
-
+    const delta = insertedLength - (editEnd - editStart);
     const survivors: MentionRange[] = [];
 
     for (const range of ranges) {
         const end = range.start + range.length;
 
-        if (end <= prefixLen) {
+        if (end <= editStart) {
             survivors.push(range);
-        } else if (range.start >= oldChangedEnd) {
+        } else if (range.start >= editEnd) {
             survivors.push({ ...range, start: range.start + delta });
         }
         // else: the edit overlaps this range - drop it.
