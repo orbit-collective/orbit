@@ -1,10 +1,10 @@
 import { AssignableUser } from '@/types/Users';
 import { describe, expect, test } from 'vitest';
 import {
+    applyRangeEdit,
     filterUsersByMention,
     findActiveMention,
     MentionRange,
-    reconcileMentionRanges,
     splitMentionText,
     tokenizeMentionRanges,
 } from './mentions';
@@ -68,88 +68,65 @@ describe('filterUsersByMention', () => {
     });
 });
 
-describe('reconcileMentionRanges', () => {
-    test('keeps a range untouched when the edit happens after it', () => {
-        // "@Bob " (0-4) then user keeps typing after it.
+describe('applyRangeEdit', () => {
+    test('keeps a range untouched when the edit happens entirely after it', () => {
+        // "@Bob" (0-4), then the user appends "!" at the end (edit at 7-7).
         const ranges: MentionRange[] = [
             { start: 0, length: 4, userId: 3, name: 'Bob' },
         ];
 
-        const result = reconcileMentionRanges(ranges, '@Bob hi', '@Bob hi!');
-
-        expect(result).toEqual(ranges);
+        expect(applyRangeEdit(ranges, 7, 7, 1)).toEqual(ranges);
     });
 
     test('shifts a range forward when text is inserted before it', () => {
-        const oldText = 'Hi @Bob';
-        const newText = 'Hi there @Bob';
+        // "Hi " (0-3) grows to "Hi there " (0-9): a pure insertion at 3-3.
         const ranges: MentionRange[] = [
-            {
-                start: oldText.indexOf('@Bob'),
-                length: 4,
-                userId: 3,
-                name: 'Bob',
-            },
+            { start: 3, length: 4, userId: 3, name: 'Bob' },
         ];
 
-        const result = reconcileMentionRanges(ranges, oldText, newText);
+        expect(applyRangeEdit(ranges, 3, 3, 6)).toEqual([
+            { start: 9, length: 4, userId: 3, name: 'Bob' },
+        ]);
+    });
 
-        expect(result).toEqual([
-            {
-                start: newText.indexOf('@Bob'),
-                length: 4,
-                userId: 3,
-                name: 'Bob',
-            },
+    test('shifts a range forward when another mention is inserted immediately before it', () => {
+        // Regression case: the inserted text ("@Jane Cooper ") and the
+        // existing range ("@Bob") both start with "@" - a naive text diff
+        // can misjudge this boundary, but an exact edit can't.
+        const ranges: MentionRange[] = [
+            { start: 0, length: 4, userId: 3, name: 'Bob' },
+        ];
+
+        expect(applyRangeEdit(ranges, 0, 0, 13)).toEqual([
+            { start: 13, length: 4, userId: 3, name: 'Bob' },
         ]);
     });
 
     test('drops a range whose text was edited', () => {
+        // "@Bob" (0-4) had its middle replaced (1 char removed at 2-3).
         const ranges: MentionRange[] = [
             { start: 0, length: 4, userId: 3, name: 'Bob' },
         ];
 
-        const result = reconcileMentionRanges(ranges, '@Bob hi', '@Bo hi');
-
-        expect(result).toEqual([]);
+        expect(applyRangeEdit(ranges, 2, 3, 0)).toEqual([]);
     });
 
-    test('keeps one range and drops another edited elsewhere', () => {
-        // Edit happens between the two mentions, not touching either range.
-        const oldText = '@Bob said hi @Jane Cooper';
-        const newText = '@Bob said hello @Jane Cooper';
-
+    test('keeps one range and shifts another edited elsewhere', () => {
+        // "@Bob said hi @Jane Cooper" -> "@Bob said hello @Jane Cooper":
+        // "hi" (10-12) became "hello" (10-15), a net +3 insertion.
         const ranges: MentionRange[] = [
-            {
-                start: oldText.indexOf('@Bob'),
-                length: 4,
-                userId: 3,
-                name: 'Bob',
-            },
-            {
-                start: oldText.indexOf('@Jane Cooper'),
-                length: 12,
-                userId: 1,
-                name: 'Jane Cooper',
-            },
+            { start: 0, length: 4, userId: 3, name: 'Bob' },
+            { start: 13, length: 12, userId: 1, name: 'Jane Cooper' },
         ];
 
-        const result = reconcileMentionRanges(ranges, oldText, newText);
-
-        expect(result).toEqual([
-            {
-                start: newText.indexOf('@Bob'),
-                length: 4,
-                userId: 3,
-                name: 'Bob',
-            },
-            {
-                start: newText.indexOf('@Jane Cooper'),
-                length: 12,
-                userId: 1,
-                name: 'Jane Cooper',
-            },
+        expect(applyRangeEdit(ranges, 10, 12, 5)).toEqual([
+            { start: 0, length: 4, userId: 3, name: 'Bob' },
+            { start: 16, length: 12, userId: 1, name: 'Jane Cooper' },
         ]);
+    });
+
+    test('returns the ranges unchanged when there are none to adjust', () => {
+        expect(applyRangeEdit([], 0, 0, 5)).toEqual([]);
     });
 });
 

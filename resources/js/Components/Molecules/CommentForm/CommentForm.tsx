@@ -5,10 +5,10 @@ import { CommentFormProps } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
 import { getCaretCoordinates } from '@/utils/caretPosition';
 import {
+    applyRangeEdit,
     filterUsersByMention,
     findActiveMention,
     MentionRange,
-    reconcileMentionRanges,
     tokenizeMentionRanges,
 } from '@/utils/mentions';
 import React, { SyntheticEvent, useEffect, useRef, useState } from 'react';
@@ -26,13 +26,23 @@ const CommentForm: React.FC<CommentFormProps> = ({
     isSubmitting = false,
 }) => {
     const [body, setBody] = useState('');
-    // Tracked by character range, not by name - see reconcileMentionRanges.
-    // This is what lets two project members sharing a display name still be
-    // told apart when the comment is submitted.
+    // Tracked by character range, not by name - see applyRangeEdit. This is
+    // what lets two project members sharing a display name still be told
+    // apart when the comment is submitted.
     const [mentionRanges, setMentionRanges] = useState<MentionRange[]>([]);
     const [mention, setMention] = useState<MentionState | null>(null);
     const [pendingCaret, setPendingCaret] = useState<number | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    // The selection right before the current edit is applied - captured on
+    // keydown/paste/cut, since that's the only reliable way to know exactly
+    // which characters an edit replaced. Diffing the before/after text
+    // instead can't be trusted here: it can misjudge the boundary whenever
+    // the text at the edit point coincides with what's being inserted,
+    // which is common for mentions (they all start with "@").
+    const editRangeRef = useRef<{ start: number; end: number }>({
+        start: 0,
+        end: 0,
+    });
 
     useEffect(() => {
         if (pendingCaret === null || !textareaRef.current) return;
@@ -45,6 +55,20 @@ const CommentForm: React.FC<CommentFormProps> = ({
     const suggestions = mention
         ? filterUsersByMention(users, mention.query)
         : [];
+
+    const captureEditRange = (
+        el: HTMLTextAreaElement,
+        deleteDirection?: 'backward' | 'forward',
+    ) => {
+        let { selectionStart: start, selectionEnd: end } = el;
+
+        if (start === end) {
+            if (deleteDirection === 'backward' && start > 0) start -= 1;
+            else if (deleteDirection === 'forward') end += 1;
+        }
+
+        editRangeRef.current = { start, end };
+    };
 
     const syncMentionState = (textarea: HTMLTextAreaElement) => {
         const cursor = textarea.selectionStart;
@@ -87,7 +111,15 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
         setBody(newBody);
         setMentionRanges((prev) => [
-            ...prev,
+            // Reconciles existing ranges against this exact, known edit -
+            // inserting text at `mention.start` shifts any mention that
+            // comes after it.
+            ...applyRangeEdit(
+                prev,
+                mention.start,
+                cursor,
+                mentionText.length + 1,
+            ),
             {
                 start: mention.start,
                 length: mentionText.length,
@@ -101,35 +133,63 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newBody = e.target.value;
-        setMentionRanges((prev) => reconcileMentionRanges(prev, body, newBody));
+        const { start, end } = editRangeRef.current;
+        const insertedLength = newBody.length - body.length + (end - start);
+
+        setMentionRanges((prev) =>
+            applyRangeEdit(prev, start, end, insertedLength),
+        );
         setBody(newBody);
         syncMentionState(e.target);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (!mention || suggestions.length === 0) return;
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setMention({
-                ...mention,
-                activeIndex: (mention.activeIndex + 1) % suggestions.length,
-            });
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setMention({
-                ...mention,
-                activeIndex:
-                    (mention.activeIndex - 1 + suggestions.length) %
-                    suggestions.length,
-            });
-        } else if (e.key === 'Enter' || e.key === 'Tab') {
-            e.preventDefault();
-            selectMention(suggestions[mention.activeIndex]);
-        } else if (e.key === 'Escape') {
-            e.preventDefault();
-            setMention(null);
+        if (mention && suggestions.length > 0) {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setMention({
+                    ...mention,
+                    activeIndex: (mention.activeIndex + 1) % suggestions.length,
+                });
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setMention({
+                    ...mention,
+                    activeIndex:
+                        (mention.activeIndex - 1 + suggestions.length) %
+                        suggestions.length,
+                });
+                return;
+            }
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault();
+                selectMention(suggestions[mention.activeIndex]);
+                return;
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setMention(null);
+                return;
+            }
         }
+
+        if (e.key === 'Backspace') {
+            captureEditRange(e.currentTarget, 'backward');
+        } else if (e.key === 'Delete') {
+            captureEditRange(e.currentTarget, 'forward');
+        } else {
+            captureEditRange(e.currentTarget);
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        captureEditRange(e.currentTarget);
+    };
+
+    const handleCut = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        captureEditRange(e.currentTarget);
     };
 
     const handleSelectionChange = (
@@ -165,6 +225,8 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 onKeyDown={handleKeyDown}
                 onClick={handleSelectionChange}
                 onSelect={handleSelectionChange}
+                onPaste={handlePaste}
+                onCut={handleCut}
                 placeholder="Leave a comment..."
                 className="min-h-[60px] resize-none border-none bg-transparent p-0 text-sm focus:border-none"
                 isDisabled={isSubmitting}

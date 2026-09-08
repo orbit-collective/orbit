@@ -31,6 +31,8 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             onKeyUp,
             onClick,
             onSelect,
+            onPaste,
+            onCut,
             onBlur,
         },
         ref,
@@ -51,6 +53,8 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
                 onKeyUp={onKeyUp}
                 onClick={onClick}
                 onSelect={onSelect}
+                onPaste={onPaste}
+                onCut={onCut}
                 onBlur={onBlur}
                 ref={ref}
             ></textarea>

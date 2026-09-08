@@ -146,6 +146,39 @@ describe('CommentForm Component', () => {
         expect(handleSubmit).toHaveBeenCalledWith(expect.any(String), []);
     });
 
+    test('inserting a mention before an already-selected one keeps both intact', async () => {
+        // Regression test: selectMention must reconcile existing ranges
+        // against its own insertion, the same way handleChange does for
+        // ordinary typing - otherwise a mention inserted earlier in the
+        // text leaves every later mention's tracked offset stale.
+        const handleSubmit = vi.fn();
+        render(<CommentForm onSubmit={handleSubmit} users={users} />);
+
+        const textarea = screen.getByPlaceholderText(
+            'Leave a comment...',
+        ) as HTMLTextAreaElement;
+
+        await userEvent.type(textarea, '@b');
+        await userEvent.click(screen.getByText('Bob Smith'));
+        expect(textarea).toHaveValue('@Bob Smith ');
+
+        textarea.focus();
+        textarea.setSelectionRange(0, 0);
+        await userEvent.keyboard('@jane');
+        await userEvent.click(screen.getByText('Jane Cooper'));
+        expect(textarea).toHaveValue('@Jane Cooper @Bob Smith ');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith(
+            '@[Jane Cooper](1) @[Bob Smith](2) ',
+            expect.arrayContaining([1, 2]),
+        );
+        expect(handleSubmit.mock.calls[0][1]).toHaveLength(2);
+    });
+
     test('selecting a mention with the keyboard works the same way', async () => {
         const handleSubmit = vi.fn();
         render(<CommentForm onSubmit={handleSubmit} users={users} />);

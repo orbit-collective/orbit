@@ -140,6 +140,8 @@ export interface TextAreaProps extends VariantProps<typeof textareaVariants> {
     onKeyUp?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
     onClick?: (e: React.MouseEvent<HTMLTextAreaElement>) => void;
     onSelect?: (e: React.SyntheticEvent<HTMLTextAreaElement>) => void;
+    onPaste?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
+    onCut?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
     onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
     ref?: React.Ref<HTMLTextAreaElement> | null;
 }
