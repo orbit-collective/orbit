@@ -115,6 +115,19 @@ describe('renderActivityLogBody', () => {
         expect(screen.getByText(/Fix bug #42 in tracker/)).toBeInTheDocument();
     });
 
+    test('renders a "Notification #123 deleted by ..." reference as a Badge', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'Notification #42 deleted by Jane Cooper',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('#42')).toBeInTheDocument();
+        expect(container.querySelector('.rounded-lg')).not.toBeNull();
+    });
+
     test('renders the issue reference inside a quoted title as an additional Badge', () => {
         render(
             <p>
