@@ -30,6 +30,14 @@ that's easy to forget when adding a new kind of notification.
    email: one that must go out unconditionally with its own subject and
    layout, bypassing `NotificationType`/`NotificationSetting`
    entirely — the same pattern `ProjectInvitationMail` already uses.
+5. **[Add @mention support to a free-text field](./05-add-mention-support-to-a-free-text-field.md)**
+   — worked example: the comment `@mention` system (`IssueMentioned`), end
+   to end from typing `@` in a plain `<textarea>` to the recipient's
+   notification. Covers the reusable range-tracking technique
+   (`MentionRange`/`applyRangeEdit`) that tells two mentions apart by
+   character position instead of by name, and the backend check that stops
+   a client from claiming `mentioned_user_ids` for someone the comment
+   text never actually names.
 
 Wiring a domain event into the notification pipeline is itself
 documented as part of

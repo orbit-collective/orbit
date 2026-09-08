@@ -12,6 +12,8 @@ Orbit informuje użytkowników o aktywności na dwa sposoby: powiadomieniem w ap
    — jak powiadomienie faktycznie dociera do przeglądarki (to współdzielony prop Inertii, nie fetch), jak przebiega mark-as-read/mark-all-as-read/usuwanie oraz jak zakładka ustawień zapisuje przełącznik — przydatne jako mapa przed zagłębieniem się w którykolwiek z powyższych przewodników.
 4. **[Dodaj dedykowany mail transakcyjny](./04-add-a-dedicated-transactional-email.md)**
    — przećwiczony przykład (`OwnershipTransferredMail`) dla innego kształtu maila: takiego, który musi zostać wysłany bezwarunkowo, z własnym tematem i layoutem, całkowicie z pominięciem `NotificationType`/`NotificationSetting` — ten sam wzorzec, którego już używa `ProjectInvitationMail`.
+5. **[Dodaj obsługę @mention do pola tekstowego](./05-add-mention-support-to-a-free-text-field.md)**
+   — przećwiczony przykład: system `@mention` w komentarzach (`IssueMentioned`), od początku do końca, od wpisania `@` w zwykłym `<textarea>` aż po powiadomienie odbiorcy. Pokrywa wielokrotnego użytku technikę śledzenia zakresów (`MentionRange`/`applyRangeEdit`), która odróżnia dwie wzmianki po pozycji znaków zamiast po nazwie, oraz kontrolę po stronie backendu, która nie pozwala klientowi zgłosić `mentioned_user_ids` dla osoby, której treść komentarza nigdy faktycznie nie wymienia.
 
 Podłączenie eventu domenowego do pipeline'u powiadomień jest samo w sobie udokumentowane w ramach
 [`../integrations/03-add-a-new-event-type.md`](../integrations/03-add-a-new-event-type.md)
