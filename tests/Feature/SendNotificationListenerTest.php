@@ -1,7 +1,7 @@
 <?php
 
-use App\Enums\Notifications\NotificationType;
 use App\DataTransferObjects\ImportResultDTO;
+use App\Enums\Notifications\NotificationType;
 use App\Events\CommentAdded;
 use App\Events\IssueAssigned;
 use App\Events\IssueMentioned;

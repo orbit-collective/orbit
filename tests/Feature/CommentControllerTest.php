@@ -61,7 +61,7 @@ test('commenting with mentioned_user_ids fires IssueMentioned for that member', 
     $project->users()->attach([$user->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
 
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
-        'body' => 'Hi @there',
+        'body' => "Hi @[$mentioned->name]($mentioned->id)",
         'mentioned_user_ids' => [$mentioned->id],
     ]);
 
@@ -70,6 +70,23 @@ test('commenting with mentioned_user_ids fires IssueMentioned for that member', 
         IssueMentioned::class,
         fn ($event) => $event->mentionedUser->is($mentioned) && $event->actor->is($user),
     );
+});
+
+test('commenting ignores a mentioned_user_ids entry with no matching mention token in the body', function () {
+    Event::fake();
+    $user = User::factory()->create();
+    $mentioned = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $project->users()->attach([$user->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+
+    $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
+        'body' => 'This body never actually mentions anyone',
+        'mentioned_user_ids' => [$mentioned->id],
+    ]);
+
+    $response->assertRedirect();
+    Event::assertNotDispatched(IssueMentioned::class);
 });
 
 test('commenting rejects a mentioned_user_ids entry that is not a real user', function () {

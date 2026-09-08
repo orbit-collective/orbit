@@ -45,6 +45,14 @@ class ProjectRepository
         $project->users()->attach($userId, ['role' => $role->value]);
     }
 
+    /**
+     * @return list<int>
+     */
+    public function getMemberIds(Project $project): array
+    {
+        return $project->users()->pluck('users.id')->all();
+    }
+
     public function delete(Project $project): void
     {
         $project->delete();
