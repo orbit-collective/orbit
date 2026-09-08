@@ -6,7 +6,7 @@ import { useAlert } from '@/context/AlertContext';
 import { PaginationProps } from '@/types/Components';
 import { Link, router } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
-import { useState } from 'react';
+import { Key, useState } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const paginationVariants = cva(
@@ -126,7 +126,7 @@ const Pagination = ({
 
     const renderLink = (
         link: { url: string | null; label: string; active: boolean },
-        key: React.Key,
+        key: Key,
     ) => {
         const isLinkDisabled = !link.url;
 
