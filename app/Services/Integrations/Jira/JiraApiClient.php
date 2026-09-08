@@ -5,6 +5,7 @@ namespace App\Services\Integrations\Jira;
 use App\Models\ProjectIntegration;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -69,7 +70,7 @@ class JiraApiClient
 
     /**
      * @throws RuntimeException on a connection failure
-     * @throws \Illuminate\Http\Client\RequestException on a non-2xx response
+     * @throws RequestException on a non-2xx response
      */
     private function getJson(ProjectIntegration $projectIntegration, string $path, array $query = []): array
     {

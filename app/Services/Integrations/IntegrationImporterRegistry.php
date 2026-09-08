@@ -4,6 +4,7 @@ namespace App\Services\Integrations;
 
 use App\Contracts\IntegrationImporter;
 use App\Services\Integrations\Jira\JiraIntegrationImporter;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Contracts\Container\Container;
 
 /**
@@ -21,7 +22,7 @@ class IntegrationImporterRegistry
     public function __construct(protected Container $container) {}
 
     /**
-     * @throws \Illuminate\Contracts\Container\BindingResolutionException
+     * @throws BindingResolutionException
      */
     public function resolve(string $integration): ?IntegrationImporter
     {
