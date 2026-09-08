@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.7.3](https://github.com/orbit-collective/orbit/compare/v0.7.2...v0.7.3) (2026-09-08)
+
+
+### Features
+
+* **comments:** add support for mentioning users in comments ([20531b3](https://github.com/orbit-collective/orbit/commit/20531b38c71a6e7f5eb3a53260992de44144acf4))
+* **comments:** enhance mention functionality to support user IDs ([f6c9a64](https://github.com/orbit-collective/orbit/commit/f6c9a64819ae807223b897da9e8d0bf522f08d27))
+* **comments:** implement user mention functionality in comments ([f33d0f0](https://github.com/orbit-collective/orbit/commit/f33d0f02e32eb61c3a7719d087ff3c3c0249d89c))
+* **notifications:** add remove functionality for notifications ([9a1fef5](https://github.com/orbit-collective/orbit/commit/9a1fef5e112b7e5b45f3f4b22aac967019e3a9d0))
+* **notifications:** log notification deletion in activity log ([4836704](https://github.com/orbit-collective/orbit/commit/48367045fa05493d0a507869244c5dc8a3322960))
+
+
+### Bug Fixes
+
+* **activity-log:** stop badging numbers found inside quoted text ([e9c4ce4](https://github.com/orbit-collective/orbit/commit/e9c4ce422397d8a0922944398ca711d792b68fa2))
+* **comments:** drop tracked mentions on edits that bypass keydown/paste/cut ([6dbf383](https://github.com/orbit-collective/orbit/commit/6dbf383758450d1e19394b47f069e9b038f340d9))
+* **comments:** require a mention id to appear as a token in the body ([661135d](https://github.com/orbit-collective/orbit/commit/661135df1575abae5b86ab0601876edd046defd6))
+* **comments:** stop re-notifying already-mentioned members on every edit ([d760331](https://github.com/orbit-collective/orbit/commit/d7603316de49c5fbce273e653fd2c3b423b5ab10))
+* **comments:** track mention edits by exact range instead of diffing text ([76f23e3](https://github.com/orbit-collective/orbit/commit/76f23e3fdc0f135ac618f50ac5d50859a4fbf3ca))
+
+
+### Miscellaneous Chores
+
+* release 0.7.3 ([bab74b0](https://github.com/orbit-collective/orbit/commit/bab74b0ff915092b7c6022c92b16d95f9b2e0e61))
+
 ## [0.7.2](https://github.com/orbit-collective/orbit/compare/v0.7.1...v0.7.2) (2026-09-03)
 
 
