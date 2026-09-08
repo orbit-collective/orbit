@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.4](https://github.com/orbit-collective/orbit/compare/v0.7.3...v0.7.4) (2026-09-08)
+
+
+### Bug Fixes
+
+* **icons:** rename remaining Trash2 to Trash in NotificationItem ([712416a](https://github.com/orbit-collective/orbit/commit/712416a4206cad7f85be5765c72599078ad8a185))
+* **icons:** rename Trash2 to Trash for lucide-react 1.41.0 compatibility ([6869006](https://github.com/orbit-collective/orbit/commit/68690067e74e60995f66d8952255d712d926b1c8))
+
 ## [0.7.3](https://github.com/orbit-collective/orbit/compare/v0.7.2...v0.7.3) (2026-09-08)
 
 
