@@ -146,6 +146,38 @@ describe('CommentForm Component', () => {
         expect(handleSubmit).toHaveBeenCalledWith(expect.any(String), []);
     });
 
+    test('drops tracked mentions instead of misattributing them when a change bypasses keydown/paste/cut', async () => {
+        // Regression test: an edit that isn't preceded by a captured
+        // keydown/paste/cut (IME composition, drag-and-drop, browser
+        // undo/redo, autocomplete) must not reuse a stale edit range from an
+        // earlier keystroke - it should drop tracked mentions rather than
+        // risk shifting one to the wrong position.
+        const handleSubmit = vi.fn();
+        render(<CommentForm onSubmit={handleSubmit} users={users} />);
+
+        const textarea = screen.getByPlaceholderText(
+            'Leave a comment...',
+        ) as HTMLTextAreaElement;
+
+        await userEvent.type(textarea, 'Hi @jane');
+        await userEvent.click(screen.getByText('Jane Cooper'));
+        expect(textarea).toHaveValue('Hi @Jane Cooper ');
+
+        // Simulates a change with no preceding keydown/paste/cut capture.
+        fireEvent.change(textarea, {
+            target: { value: 'Hi @Jane Cooper thanks a lot' },
+        });
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith(
+            'Hi @Jane Cooper thanks a lot',
+            [],
+        );
+    });
+
     test('inserting a mention before an already-selected one keeps both intact', async () => {
         // Regression test: selectMention must reconcile existing ranges
         // against its own insertion, the same way handleChange does for
