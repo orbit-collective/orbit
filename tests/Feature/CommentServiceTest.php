@@ -7,6 +7,8 @@ use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\CommentRepository;
+use App\Repositories\ProjectRepository;
+use App\Repositories\UserRepository;
 use App\Services\ActivityLogService;
 use App\Services\CommentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +20,12 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->commentRepository = Mockery::mock(CommentRepository::class);
     $this->activityLogService = Mockery::mock(ActivityLogService::class);
-    $this->service = new CommentService($this->commentRepository, $this->activityLogService);
+    $this->service = new CommentService(
+        $this->commentRepository,
+        $this->activityLogService,
+        new ProjectRepository,
+        new UserRepository,
+    );
     Event::fake();
 });
 
@@ -126,7 +133,10 @@ test('addComment fires IssueMentioned for each mentioned project member', functi
     $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->service->addComment($issue, ['body' => 'Hi @there', 'mentioned_user_ids' => [$mentioned->id]]);
+    $this->service->addComment($issue, [
+        'body' => "Hi @[$mentioned->name]($mentioned->id)",
+        'mentioned_user_ids' => [$mentioned->id],
+    ]);
 
     Event::assertDispatched(
         IssueMentioned::class,
@@ -134,6 +144,29 @@ test('addComment fires IssueMentioned for each mentioned project member', functi
             && $event->mentionedUser->is($mentioned)
             && $event->actor->is($author)
     );
+});
+
+test('addComment ignores a mentioned id with no matching mention token in the body', function () {
+    // A client can't get someone notified as "mentioned" just by listing
+    // their id - the visible comment text has to actually name them.
+    $author = User::factory()->create();
+    $project = Project::factory()->create();
+    $mentioned = User::factory()->create();
+    $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
+    $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
+
+    $this->actingAs($author);
+
+    $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
+    $this->activityLogService->shouldReceive('log')->once();
+
+    $this->service->addComment($issue, [
+        'body' => 'Hi there, nothing mentioned here',
+        'mentioned_user_ids' => [$mentioned->id],
+    ]);
+
+    Event::assertNotDispatched(IssueMentioned::class);
 });
 
 test('addComment ignores mentioned ids that are not project members', function () {
@@ -149,7 +182,10 @@ test('addComment ignores mentioned ids that are not project members', function (
     $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->service->addComment($issue, ['body' => 'Hi @there', 'mentioned_user_ids' => [$outsider->id]]);
+    $this->service->addComment($issue, [
+        'body' => "Hi @[$outsider->name]($outsider->id)",
+        'mentioned_user_ids' => [$outsider->id],
+    ]);
 
     Event::assertNotDispatched(IssueMentioned::class);
 });
@@ -166,7 +202,10 @@ test('addComment does not fire IssueMentioned for mentioning yourself', function
     $this->commentRepository->shouldReceive('store')->once()->andReturn($comment);
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->service->addComment($issue, ['body' => 'Hi @me', 'mentioned_user_ids' => [$author->id]]);
+    $this->service->addComment($issue, [
+        'body' => "Hi @[$author->name]($author->id)",
+        'mentioned_user_ids' => [$author->id],
+    ]);
 
     Event::assertNotDispatched(IssueMentioned::class);
 });
@@ -184,7 +223,10 @@ test('updateComment fires IssueMentioned for newly mentioned project members', f
     $this->commentRepository->shouldReceive('update')->once()->andReturn($comment);
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->service->updateComment($comment, ['body' => 'Hi @there', 'mentioned_user_ids' => [$mentioned->id]]);
+    $this->service->updateComment($comment, [
+        'body' => "Hi @[$mentioned->name]($mentioned->id)",
+        'mentioned_user_ids' => [$mentioned->id],
+    ]);
 
     Event::assertDispatched(
         IssueMentioned::class,

@@ -6,8 +6,9 @@ use App\Events\CommentAdded;
 use App\Events\IssueMentioned;
 use App\Models\Comment;
 use App\Models\Issue;
-use App\Models\User;
 use App\Repositories\CommentRepository;
+use App\Repositories\ProjectRepository;
+use App\Repositories\UserRepository;
 use Illuminate\Support\Collection;
 
 class CommentService
@@ -15,6 +16,8 @@ class CommentService
     public function __construct(
         protected CommentRepository $commentRepository,
         protected ActivityLogService $activityLogService,
+        protected ProjectRepository $projectRepository,
+        protected UserRepository $userRepository,
     ) {}
 
     public function getForIssue(int $issueId): Collection
@@ -66,9 +69,11 @@ class CommentService
     }
 
     /**
-     * Keeps only the mentioned user ids that are actually members of the
-     * issue's project, so a client can never trigger a mention notification
-     * for someone unrelated to the project.
+     * Keeps only the mentioned user ids that are (a) actually members of the
+     * issue's project, and (b) actually referenced by an "@[Name](id)"
+     * mention token in the comment body — a client can't claim
+     * mentioned_user_ids for someone the visible comment text never
+     * actually mentions.
      *
      * @return list<int>
      */
@@ -81,9 +86,26 @@ class CommentService
             return [];
         }
 
-        $memberIds = $issue->project->users()->pluck('users.id')->all();
+        $tokenIds = $this->extractMentionTokenIds($data['body'] ?? '');
+        $requestedIds = array_intersect($requestedIds, $tokenIds);
+
+        if (empty($requestedIds)) {
+            return [];
+        }
+
+        $memberIds = $this->projectRepository->getMemberIds($issue->project);
 
         return array_values(array_intersect($requestedIds, $memberIds));
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function extractMentionTokenIds(string $body): array
+    {
+        preg_match_all('/@\[[^\]]+\]\((\d+)\)/', $body, $matches);
+
+        return array_map('intval', $matches[1] ?? []);
     }
 
     /**
@@ -92,7 +114,7 @@ class CommentService
     private function fireMentionEvents(Issue $issue, Comment $comment, array $mentionedUserIds): void
     {
         foreach ($mentionedUserIds as $userId) {
-            $mentionedUser = User::find($userId);
+            $mentionedUser = $this->userRepository->findById($userId);
 
             if (! $mentionedUser) {
                 continue;
