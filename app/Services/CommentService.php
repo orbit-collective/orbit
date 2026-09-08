@@ -53,7 +53,13 @@ class CommentService
         $issue = $comment->issue;
         $actorName = auth()->user()?->name ?? 'Someone';
 
+        // Diffed against the ids already mentioned in the comment's body
+        // before this edit, so re-saving a comment (even for an unrelated
+        // change) doesn't re-notify members who were already mentioned and
+        // already notified — only ids newly added by this edit fire.
+        $previouslyMentionedIds = $this->extractMentionTokenIds($comment->body);
         $mentionedUserIds = $this->resolveMentionedUserIds($issue, $data);
+        $newlyMentionedUserIds = array_values(array_diff($mentionedUserIds, $previouslyMentionedIds));
         unset($data['mentioned_user_ids']);
 
         $comment = $this->commentRepository->update($comment, $data);
@@ -63,7 +69,7 @@ class CommentService
             "$actorName edited a comment on issue #$issue->id \"$issue->title\""
         );
 
-        $this->fireMentionEvents($issue, $comment, $mentionedUserIds);
+        $this->fireMentionEvents($issue, $comment, $newlyMentionedUserIds);
 
         return $comment;
     }
