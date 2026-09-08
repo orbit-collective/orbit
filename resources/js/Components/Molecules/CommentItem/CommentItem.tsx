@@ -59,7 +59,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             <div className="flex items-start gap-1 opacity-0 group-hover:opacity-100">
                 {comment.can_delete && (
                     <IconButton
-                        iconName="Trash2"
+                        iconName="Trash"
                         iconSize={14}
                         ariaLabel="Delete comment"
                         onClick={() => onDelete?.(comment)}

@@ -9,7 +9,7 @@ describe('getActivityLogVisual', () => {
             color: 'success',
         });
         expect(getActivityLogVisual('Deleted issue #4')).toEqual({
-            icon: 'Trash2',
+            icon: 'Trash',
             color: 'error',
         });
     });

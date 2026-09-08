@@ -260,7 +260,7 @@ export const ListRow = ({
                                 <DropdownItem
                                     label={
                                         <div className="flex items-center gap-2 text-xs">
-                                            <Icon name="Trash2" size={13} />
+                                            <Icon name="Trash" size={13} />
                                             <span>Remove</span>
                                         </div>
                                     }

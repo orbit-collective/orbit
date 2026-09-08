@@ -16,7 +16,7 @@ const RULES: { pattern: RegExp; visual: ActivityLogVisual }[] = [
     },
     {
         pattern: /^(deleted|removed|revoked)/i,
-        visual: { icon: 'Trash2', color: 'error' },
+        visual: { icon: 'Trash', color: 'error' },
     },
     {
         pattern: /^(invited|joined)/i,
