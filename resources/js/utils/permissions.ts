@@ -75,6 +75,28 @@ const PERMISSION_META: Record<string, PermissionMeta> = {
         description:
             'Connect, configure, or disconnect third-party integrations.',
     },
+    'projects.issue_types.view': {
+        label: 'View issue types',
+        description: "See the project's issue type catalog.",
+    },
+    'projects.issue_types.create': {
+        label: 'Create issue types',
+        description: 'Define new custom issue types for the project.',
+    },
+    'projects.issue_types.update': {
+        label: 'Edit issue types',
+        description:
+            'Rename, recolor, or reconfigure issue types, including system ones.',
+    },
+    'projects.issue_types.delete': {
+        label: 'Delete issue types',
+        description: 'Remove custom issue types from the project.',
+    },
+    'projects.issue_types.workflow_update': {
+        label: 'Manage workflows',
+        description:
+            'Add, remove, or rearrange statuses and transitions for an issue type.',
+    },
     'issues.view': {
         label: 'View issues',
         description: 'See issues within the project.',
