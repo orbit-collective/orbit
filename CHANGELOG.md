@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.7.6](https://github.com/orbit-collective/orbit/compare/v0.7.5...v0.7.6) (2026-09-12)
+
+
+### Features
+
+* **activity log:** add role management messages and rendering ([2ecb86d](https://github.com/orbit-collective/orbit/commit/2ecb86d4daff99afc48235ec28d7501aacd2de25))
+* **labels:** add per-project label model and taxonomy service ([4236832](https://github.com/orbit-collective/orbit/commit/4236832d5a3d5198b6de4b73c9bf9d0c46dfc2b2))
+* **labels:** expose label CRUD routes and settings props ([6405a11](https://github.com/orbit-collective/orbit/commit/6405a119174a6c05d50d2ae388fe6b969228e810))
+* **labels:** wire real per-project labels through issues and settings ([2f0ddea](https://github.com/orbit-collective/orbit/commit/2f0ddead978cdbe236b47ce36ac224494d10bf7c))
+* **settings:** rebuild labels tab UI with inline editor ([88566b1](https://github.com/orbit-collective/orbit/commit/88566b121e7fb172a63d0325d92df082891c2abd))
+
+
+### Bug Fixes
+
+* **labels:** decouple label mutation flags from labels.view access ([57e7da1](https://github.com/orbit-collective/orbit/commit/57e7da1c3ca0cb16dc43bac2e94236cfb0363377))
+* **labels:** enforce per-action authorization and close import/seed gaps ([a7771fe](https://github.com/orbit-collective/orbit/commit/a7771fe836187e0e445ae94bad888c4de54c5ff9))
+* **labels:** split label UI capabilities and fix hardcoded hover color ([5611f54](https://github.com/orbit-collective/orbit/commit/5611f5416a314752b5d35343874022dce75e06dd))
+
+
+### Miscellaneous Chores
+
+* release 0.7.6 ([101bad2](https://github.com/orbit-collective/orbit/commit/101bad2baf3ac7c3c7c9610463acba05c9f30d5f))
+
 ## [0.7.5](https://github.com/orbit-collective/orbit/compare/v0.7.4...v0.7.5) (2026-09-08)
 
 
