@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Permissions\RoleType;
 use App\Models\IssueType;
 use App\Models\Project;
 use App\Services\IssueTypeService;
@@ -28,6 +29,8 @@ class IssueTypeController extends Controller
             'allows_children' => ['sometimes', 'boolean'],
             'required_fields' => ['sometimes', 'array'],
             'required_fields.*' => ['string', Rule::in(array_keys(IssueTypeService::REQUIRED_FIELD_TO_DATA_KEY))],
+            'restricted_role_types' => ['sometimes', 'array'],
+            'restricted_role_types.*' => ['string', Rule::in(array_map(fn (RoleType $role) => $role->value, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER]))],
         ]);
 
         // A custom type can otherwise be created before the project's
@@ -55,6 +58,8 @@ class IssueTypeController extends Controller
             'allows_children' => ['sometimes', 'boolean'],
             'required_fields' => ['sometimes', 'array'],
             'required_fields.*' => ['string', Rule::in(array_keys(IssueTypeService::REQUIRED_FIELD_TO_DATA_KEY))],
+            'restricted_role_types' => ['sometimes', 'array'],
+            'restricted_role_types.*' => ['string', Rule::in(array_map(fn (RoleType $role) => $role->value, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER]))],
         ]);
 
         $this->issueTypeService->updateIssueType($project, $issueType, $validated);

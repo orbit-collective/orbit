@@ -120,6 +120,43 @@ describe('WorkspaceSettingsIssueTypeInlineEditor', () => {
         expect(screen.getByLabelText('Description')).not.toBeChecked();
     });
 
+    test('toggling a role checkbox includes it in the saved values', () => {
+        const handleSave = vi.fn();
+        render(
+            <WorkspaceSettingsIssueTypeInlineEditor
+                issueType={null}
+                onSave={handleSave}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
+            target: { value: 'Custom' },
+        });
+        fireEvent.click(screen.getByLabelText('Owner'));
+        fireEvent.click(screen.getByLabelText('Admin'));
+        fireEvent.click(screen.getByText('Create issue type'));
+
+        expect(handleSave).toHaveBeenCalledWith(
+            expect.objectContaining({
+                restricted_role_types: ['owner', 'admin'],
+            }),
+        );
+    });
+
+    test('pre-checks the restricted role types already set on an existing issue type', () => {
+        render(
+            <WorkspaceSettingsIssueTypeInlineEditor
+                issueType={{ ...bugType, restrictedRoleTypes: ['owner'] }}
+                onSave={vi.fn()}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByLabelText('Owner')).toBeChecked();
+        expect(screen.getByLabelText('Admin')).not.toBeChecked();
+    });
+
     test('calls onCancel when Cancel is clicked', () => {
         const handleCancel = vi.fn();
         render(

@@ -163,7 +163,7 @@ class IssueTypeService
             'allows_children' => $data['allows_children'] ?? false,
             'is_system' => false,
             'required_fields' => $data['required_fields'] ?? [],
-            'restricted_role_types' => [],
+            'restricted_role_types' => $data['restricted_role_types'] ?? [],
         ]);
 
         $this->ensureDefaultWorkflow($issueType);

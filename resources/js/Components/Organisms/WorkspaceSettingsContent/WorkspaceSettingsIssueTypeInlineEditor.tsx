@@ -19,6 +19,13 @@ const REQUIRED_FIELD_OPTIONS: { value: string; label: string }[] = [
     { value: 'priority', label: 'Priority' },
 ];
 
+const ROLE_TYPE_OPTIONS: { value: string; label: string }[] = [
+    { value: 'owner', label: 'Owner' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'member', label: 'Member' },
+    { value: 'viewer', label: 'Viewer' },
+];
+
 interface WorkspaceSettingsIssueTypeInlineEditorProps {
     issueType: IssueType | null;
     onSave: (values: {
@@ -28,6 +35,7 @@ interface WorkspaceSettingsIssueTypeInlineEditorProps {
         description: string;
         allows_children: boolean;
         required_fields: string[];
+        restricted_role_types: string[];
     }) => void;
     onCancel: () => void;
 }
@@ -53,6 +61,9 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
     const [requiredFields, setRequiredFields] = useState<string[]>(
         issueType?.requiredFields ?? [],
     );
+    const [restrictedRoleTypes, setRestrictedRoleTypes] = useState<string[]>(
+        issueType?.restrictedRoleTypes ?? [],
+    );
 
     const isEditing = issueType !== null;
     const trimmedName = name.trim();
@@ -65,6 +76,14 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
         );
     };
 
+    const toggleRestrictedRoleType = (role: string) => {
+        setRestrictedRoleTypes((current) =>
+            current.includes(role)
+                ? current.filter((r) => r !== role)
+                : [...current, role],
+        );
+    };
+
     const handleSave = () => {
         if (!trimmedName) return;
         onSave({
@@ -74,6 +93,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
             description: description.trim(),
             allows_children: allowsChildren,
             required_fields: requiredFields,
+            restricted_role_types: restrictedRoleTypes,
         });
     };
 
@@ -119,6 +139,30 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                                     )}
                                     onChange={() =>
                                         toggleRequiredField(option.value)
+                                    }
+                                    label={option.label}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <span className="text-xs font-medium text-[var(--text-gray-color)]">
+                            Who can create this type
+                        </span>
+                        <p className="text-xs text-[var(--text-gray-color)]">
+                            Leave everything unchecked to allow anyone who can
+                            create issues.
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {ROLE_TYPE_OPTIONS.map((option) => (
+                                <Checkbox
+                                    key={option.value}
+                                    checked={restrictedRoleTypes.includes(
+                                        option.value,
+                                    )}
+                                    onChange={() =>
+                                        toggleRestrictedRoleType(option.value)
                                     }
                                     label={option.label}
                                 />

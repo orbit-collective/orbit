@@ -111,6 +111,7 @@ export default function WorkspaceSettingsIssueTypesTab({
         description: string;
         allows_children: boolean;
         required_fields: string[];
+        restricted_role_types: string[];
     }) => {
         const onSuccess = () => setEditorTarget(null);
         const onError = () =>
