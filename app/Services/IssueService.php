@@ -7,11 +7,13 @@ use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Models\Issue;
+use App\Models\Project;
 use App\Models\User;
 use App\Repositories\IssueRepository;
 use BackedEnum;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 class IssueService
 {
@@ -27,6 +29,7 @@ class IssueService
         'labels' => 'labels',
         'start_date' => 'start date',
         'end_date' => 'end date',
+        'parent_id' => 'parent',
     ];
 
     public function __construct(
@@ -41,6 +44,10 @@ class IssueService
 
         $issue = $this->issueRepository->store($data);
         $this->activityLogService->log($issue->project_id, "Added new task: #$issue->id");
+
+        if ($issue->parent_id) {
+            $this->activityLogService->log($issue->project_id, "Issue #$issue->id added as a sub-issue of #$issue->parent_id");
+        }
 
         event(new IssueCreated($issue, auth()->user()));
 
@@ -214,6 +221,7 @@ class IssueService
             'labels' => 'labels changed to ['.$this->formatLabels($new).']',
             'start_date' => 'start date changed to '.($new ?: 'none'),
             'end_date' => 'end date changed to '.($new ?: 'none'),
+            'parent_id' => $new ? "moved under issue #$new" : 'removed from its parent issue',
             default => "$field updated",
         };
     }
@@ -308,6 +316,57 @@ class IssueService
 
         if ($newAssigneeId && $newAssigneeId !== $actorId && $issue->assignee) {
             event(new IssueAssigned($issue, $issue->assignee, $actor, $otherChanges));
+        }
+    }
+
+    /**
+     * Guards issues.parent_id: the parent must exist in the same project,
+     * its issue type must allow children, an issue can't be its own parent,
+     * and (when updating an existing issue) the new parent can't be a
+     * descendant of that issue, which would create a cycle.
+     */
+    public function assertValidParent(Project $project, ?int $parentId, ?int $excludingIssueId = null): void
+    {
+        if ($parentId === null) {
+            return;
+        }
+
+        if ($parentId === $excludingIssueId) {
+            throw ValidationException::withMessages([
+                'parent_id' => 'An issue cannot be its own parent.',
+            ]);
+        }
+
+        $parent = Issue::query()->with('issueType')->find($parentId);
+
+        if (! $parent || $parent->project_id !== $project->id) {
+            throw ValidationException::withMessages([
+                'parent_id' => 'The selected parent issue does not exist in this project.',
+            ]);
+        }
+
+        if (! $parent->issueType?->allows_children) {
+            throw ValidationException::withMessages([
+                'parent_id' => "The \"{$parent->issueType?->name}\" issue type does not allow sub-issues.",
+            ]);
+        }
+
+        if ($excludingIssueId === null) {
+            return;
+        }
+
+        $ancestor = $parent;
+        $depth = 0;
+
+        while ($ancestor && $depth < 50) {
+            if ($ancestor->id === $excludingIssueId) {
+                throw ValidationException::withMessages([
+                    'parent_id' => 'This would create a circular hierarchy.',
+                ]);
+            }
+
+            $ancestor = $ancestor->parent_id ? Issue::query()->find($ancestor->parent_id) : null;
+            $depth++;
         }
     }
 
