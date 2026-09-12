@@ -71,7 +71,12 @@ export default function WorkspaceSettingsContent({
     canUpdateIntegrations = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
-        return <WorkspaceSettingsLabelsTab />;
+        return (
+            <WorkspaceSettingsLabelsTab
+                memberProjects={memberProjects}
+                selectedProjectId={selectedProjectId}
+            />
+        );
     }
 
     if (tabId === 'statuses') {
