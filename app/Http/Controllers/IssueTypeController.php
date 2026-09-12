@@ -67,6 +67,21 @@ class IssueTypeController extends Controller
         return redirect()->back()->with('success', "The \"{$validated['name']}\" issue type has been updated.");
     }
 
+    public function updateAllowedChildren(Request $request, Project $project, IssueType $issueType): RedirectResponse
+    {
+        $this->ensureIssueTypeBelongsToProject($project, $issueType);
+        $this->authorize('updateIssueTypes', $project);
+
+        $validated = $request->validate([
+            'child_issue_type_ids' => ['present', 'array'],
+            'child_issue_type_ids.*' => ['integer', Rule::exists('issue_types', 'id')->where('project_id', $project->id)],
+        ]);
+
+        $this->issueTypeService->syncAllowedChildTypes($project, $issueType, $validated['child_issue_type_ids']);
+
+        return redirect()->back()->with('success', "Updated which types can be sub-issues of \"{$issueType->name}\".");
+    }
+
     public function destroy(Project $project, IssueType $issueType): RedirectResponse
     {
         $this->ensureIssueTypeBelongsToProject($project, $issueType);

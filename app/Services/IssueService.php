@@ -321,11 +321,14 @@ class IssueService
 
     /**
      * Guards issues.parent_id: the parent must exist in the same project,
-     * its issue type must allow children, an issue can't be its own parent,
-     * and (when updating an existing issue) the new parent can't be a
-     * descendant of that issue, which would create a cycle.
+     * its issue type must allow children (and, if that type has specific
+     * allowed child types configured, $childIssueTypeId must be one of
+     * them - an empty configured set means "any type is allowed"), an
+     * issue can't be its own parent, and (when updating an existing issue)
+     * the new parent can't be a descendant of that issue, which would
+     * create a cycle.
      */
-    public function assertValidParent(Project $project, ?int $parentId, ?int $excludingIssueId = null): void
+    public function assertValidParent(Project $project, ?int $parentId, ?int $childIssueTypeId = null, ?int $excludingIssueId = null): void
     {
         if ($parentId === null) {
             return;
@@ -337,7 +340,7 @@ class IssueService
             ]);
         }
 
-        $parent = Issue::query()->with('issueType')->find($parentId);
+        $parent = Issue::query()->with('issueType.allowedChildTypes')->find($parentId);
 
         if (! $parent || $parent->project_id !== $project->id) {
             throw ValidationException::withMessages([
@@ -345,9 +348,23 @@ class IssueService
             ]);
         }
 
-        if (! $parent->issueType?->allows_children) {
+        $parentType = $parent->issueType;
+
+        if (! $parentType?->allows_children) {
             throw ValidationException::withMessages([
-                'parent_id' => "The \"{$parent->issueType?->name}\" issue type does not allow sub-issues.",
+                'parent_id' => "The \"{$parentType?->name}\" issue type does not allow sub-issues.",
+            ]);
+        }
+
+        $allowedChildTypeIds = $parentType->allowedChildTypes->pluck('id');
+
+        if (
+            $childIssueTypeId !== null &&
+            $allowedChildTypeIds->isNotEmpty() &&
+            ! $allowedChildTypeIds->contains($childIssueTypeId)
+        ) {
+            throw ValidationException::withMessages([
+                'parent_id' => "The \"{$parentType->name}\" issue type only accepts specific issue types as sub-issues.",
             ]);
         }
 

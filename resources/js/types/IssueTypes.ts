@@ -13,6 +13,7 @@ export interface IssueType {
     statuses?: WorkflowStatus[];
     transitions?: WorkflowTransition[];
     templates?: IssueTypeTemplate[];
+    allowedChildTypeIds?: number[];
 }
 
 export interface IssueTypeTemplate {

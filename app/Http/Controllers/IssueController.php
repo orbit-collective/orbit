@@ -143,7 +143,7 @@ class IssueController extends Controller
         }
 
         if (array_key_exists('parent_id', $data)) {
-            $this->issueService->assertValidParent($issue->project, $data['parent_id'], $issue->id);
+            $this->issueService->assertValidParent($issue->project, $data['parent_id'], $issueType?->id, $issue->id);
         }
 
         $before = $this->issueService->snapshot($issue);
@@ -205,7 +205,7 @@ class IssueController extends Controller
 
         $this->authorize('createOfType', [Issue::class, $project, $issueType]);
 
-        $this->issueService->assertValidParent($project, $data['parent_id'] ?? null);
+        $this->issueService->assertValidParent($project, $data['parent_id'] ?? null, $issueType->id);
 
         $data['issue_type_id'] = $issueType->id;
         $data['workflow_status_id'] = $this->issueTypeService

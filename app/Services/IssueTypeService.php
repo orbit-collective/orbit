@@ -208,6 +208,24 @@ class IssueTypeService
     }
 
     /**
+     * Replaces the exact set of types allowed as a sub-issue of this type.
+     * An empty array means "unrestricted" (any type, gated only by this
+     * type's allows_children flag) - see IssueService::assertValidParent().
+     */
+    public function syncAllowedChildTypes(Project $project, IssueType $issueType, array $childIssueTypeIds): void
+    {
+        $validIds = $project->issueTypes()
+            ->whereIn('id', $childIssueTypeIds)
+            ->where('id', '!=', $issueType->id)
+            ->pluck('id')
+            ->all();
+
+        $this->issueTypeRepository->syncAllowedChildTypes($issueType, $validIds);
+
+        $this->activityLogService->log($project->id, "Updated which issue types can be sub-issues of \"$issueType->name\"");
+    }
+
+    /**
      * Enforces the issue type's required_fields against issue create/update
      * data. On create every required field must be present and non-empty.
      * On update, a required field is only checked when the request actually

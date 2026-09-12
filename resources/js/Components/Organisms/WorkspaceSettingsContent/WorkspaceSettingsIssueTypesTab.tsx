@@ -11,6 +11,7 @@ import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
+import WorkspaceSettingsHierarchyModal from './WorkspaceSettingsHierarchyModal';
 import WorkspaceSettingsIssueTypeInlineEditor from './WorkspaceSettingsIssueTypeInlineEditor';
 import WorkspaceSettingsTemplatesModal from './WorkspaceSettingsTemplatesModal';
 import WorkspaceSettingsWorkflowModal from './WorkspaceSettingsWorkflowModal';
@@ -45,6 +46,8 @@ export default function WorkspaceSettingsIssueTypesTab({
     const [workflowIssueType, setWorkflowIssueType] =
         useState<IssueType | null>(null);
     const [templatesIssueType, setTemplatesIssueType] =
+        useState<IssueType | null>(null);
+    const [hierarchyIssueType, setHierarchyIssueType] =
         useState<IssueType | null>(null);
 
     const selectedProject =
@@ -252,7 +255,11 @@ export default function WorkspaceSettingsIssueTypesTab({
                                     )}
                                     {issueType.allowsChildren && (
                                         <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                            Allows sub-issues
+                                            {issueType.allowedChildTypeIds &&
+                                            issueType.allowedChildTypeIds
+                                                .length > 0
+                                                ? `Allows ${issueType.allowedChildTypeIds.length} sub-issue type${issueType.allowedChildTypeIds.length === 1 ? '' : 's'}`
+                                                : 'Allows sub-issues'}
                                         </span>
                                     )}
                                 </div>
@@ -277,6 +284,18 @@ export default function WorkspaceSettingsIssueTypesTab({
                                         className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
                                     >
                                         <Icon name="Workflow" size={14} />
+                                    </button>
+                                )}
+                                {canUpdateIssueTypes && (
+                                    <button
+                                        type="button"
+                                        title="Manage hierarchy"
+                                        onClick={() =>
+                                            setHierarchyIssueType(issueType)
+                                        }
+                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                    >
+                                        <Icon name="GitBranch" size={14} />
                                     </button>
                                 )}
                                 {canUpdateIssueTypes && (
@@ -363,6 +382,21 @@ export default function WorkspaceSettingsIssueTypesTab({
                         : null
                 }
                 canManageTemplates={canUpdateIssueTypes}
+            />
+
+            <WorkspaceSettingsHierarchyModal
+                isOpen={hierarchyIssueType !== null}
+                onClose={() => setHierarchyIssueType(null)}
+                projectId={selectedProject.id}
+                issueType={
+                    hierarchyIssueType
+                        ? (issueTypes.find(
+                              (type) => type.id === hierarchyIssueType.id,
+                          ) ?? hierarchyIssueType)
+                        : null
+                }
+                allIssueTypes={issueTypes}
+                canUpdateIssueTypes={canUpdateIssueTypes}
             />
         </div>
     );

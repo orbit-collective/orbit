@@ -251,6 +251,50 @@ test('an issue type from another project cannot be deleted through a mismatched 
     $this->assertDatabaseHas('issue_types', ['id' => $issueType->id]);
 });
 
+test('an admin can set which types are allowed as sub-issues of another type', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $epicType = $project->issueTypes()->create(['name' => 'Epic', 'icon' => 'Zap', 'color' => '#a855f7', 'allows_children' => true]);
+    $storyType = $project->issueTypes()->create(['name' => 'Story', 'icon' => 'BookOpen', 'color' => '#22c55e']);
+
+    $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$epicType->id/allowed-children", [
+        'child_issue_type_ids' => [$storyType->id],
+    ]);
+
+    $response->assertRedirect();
+    expect($epicType->allowedChildTypes()->pluck('issue_types.id')->all())->toBe([$storyType->id]);
+});
+
+test('setting allowed children rejects an issue type id from another project', function () {
+    $project = Project::factory()->create();
+    $otherProject = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $epicType = $project->issueTypes()->create(['name' => 'Epic', 'icon' => 'Zap', 'color' => '#a855f7', 'allows_children' => true]);
+    $foreignType = $otherProject->issueTypes()->create(['name' => 'Story', 'icon' => 'BookOpen', 'color' => '#22c55e']);
+
+    $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$epicType->id/allowed-children", [
+        'child_issue_type_ids' => [$foreignType->id],
+    ]);
+
+    $response->assertSessionHasErrors('child_issue_type_ids.0');
+});
+
+test('a member without the issue_types.update permission cannot set allowed children', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $epicType = $project->issueTypes()->create(['name' => 'Epic', 'icon' => 'Zap', 'color' => '#a855f7', 'allows_children' => true]);
+    $storyType = $project->issueTypes()->create(['name' => 'Story', 'icon' => 'BookOpen', 'color' => '#22c55e']);
+
+    $response = $this->actingAs($member)->patch("/projects/$project->id/issue-types/$epicType->id/allowed-children", [
+        'child_issue_type_ids' => [$storyType->id],
+    ]);
+
+    $response->assertForbidden();
+});
+
 test('guests cannot manage project issue types', function () {
     $project = Project::factory()->create();
     $issueType = $project->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#f44336']);

@@ -4,6 +4,7 @@ use App\Models\Issue;
 use App\Models\IssueType;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -50,6 +51,23 @@ test('statuses(), transitions(), templates() and issues() are has-many relations
         ->and($issueType->transitions())->toBeInstanceOf(HasMany::class)
         ->and($issueType->templates())->toBeInstanceOf(HasMany::class)
         ->and($issueType->issues())->toBeInstanceOf(HasMany::class);
+});
+
+test('allowedChildTypes() is a belongs-to-many relation and defaults to empty (unrestricted)', function () {
+    $issueType = IssueType::factory()->create();
+
+    expect($issueType->allowedChildTypes())->toBeInstanceOf(BelongsToMany::class)
+        ->and($issueType->allowedChildTypes)->toHaveCount(0);
+});
+
+test('allowedChildTypes() can be synced to a specific set of types', function () {
+    $project = Project::factory()->create();
+    $parentType = IssueType::factory()->create(['project_id' => $project->id]);
+    $childType = IssueType::factory()->create(['project_id' => $project->id]);
+
+    $parentType->allowedChildTypes()->sync([$childType->id]);
+
+    expect($parentType->allowedChildTypes()->pluck('issue_types.id')->all())->toBe([$childType->id]);
 });
 
 test('deleting a project cascades to delete its issue types', function () {

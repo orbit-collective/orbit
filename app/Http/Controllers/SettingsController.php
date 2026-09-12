@@ -231,6 +231,7 @@ class SettingsController extends Controller
             'allowsChildren' => $issueType->allows_children,
             'requiredFields' => $issueType->required_fields ?? [],
             'restrictedRoleTypes' => $issueType->restricted_role_types ?? [],
+            'allowedChildTypeIds' => $issueType->allowedChildTypes()->pluck('issue_types.id')->values()->all(),
             'statuses' => $issueType->statuses()->orderBy('sort_order')->get()->map(fn ($status) => [
                 'id' => $status->id,
                 'issueTypeId' => $status->issue_type_id,

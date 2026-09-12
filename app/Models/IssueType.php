@@ -6,6 +6,7 @@ use Database\Factories\IssueTypeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class IssueType extends Model
@@ -57,5 +58,22 @@ class IssueType extends Model
     public function issues(): HasMany
     {
         return $this->hasMany(Issue::class);
+    }
+
+    /**
+     * The specific set of types that may be created as a sub-issue of this
+     * one. An empty set means "unrestricted" - any type is allowed as a
+     * child, as long as this type's allows_children flag is on - see
+     * IssueService::assertValidParent(). Configuring at least one row here
+     * narrows that down to only the configured types.
+     */
+    public function allowedChildTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            IssueType::class,
+            'issue_type_children',
+            'issue_type_id',
+            'child_issue_type_id',
+        );
     }
 }
