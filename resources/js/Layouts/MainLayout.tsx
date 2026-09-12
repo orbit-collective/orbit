@@ -1,10 +1,10 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
-import NewIssueModal from '@/Components/Organisms/NewIssueModal/NewIssueModal';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { MainLayoutProps } from '@/types/Components';
 import { ShortcutDefinition } from '@/types/Shortcuts';
-import React, { useMemo, useState } from 'react';
+import { requestQuickAddIssue } from '@/utils/quickAddIssueEvent';
+import React, { useMemo } from 'react';
 import Sidebar from '../Components/Organisms/Sidebar/Sidebar';
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -13,23 +13,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     setSelectedLook,
     projects,
     project,
-    users,
 }) => {
-    const [isNewIssueModalOpen, setIsNewIssueModalOpen] = useState(false);
-
     const shortcuts = useMemo(
         (): ShortcutDefinition[] => [
             {
                 key: 'c',
                 description: 'Create issue',
                 category: 'Creation',
-                action: () => setIsNewIssueModalOpen(true),
+                action: requestQuickAddIssue,
             },
             {
                 key: 'ctrl+i',
                 description: 'Create issue',
                 category: 'Creation',
-                action: () => setIsNewIssueModalOpen(true),
+                action: requestQuickAddIssue,
             },
             {
                 key: '1',
@@ -80,7 +77,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     showSettingsIcon={true}
                     primaryAction={{
                         label: 'New issue',
-                        onClick: () => setIsNewIssueModalOpen(true),
+                        onClick: requestQuickAddIssue,
                     }}
                     tabs={[
                         {
@@ -125,12 +122,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     {children}
                 </main>
             </div>
-            <NewIssueModal
-                isOpen={isNewIssueModalOpen}
-                onClose={() => setIsNewIssueModalOpen(false)}
-                project={project}
-                users={users}
-            />
         </div>
     );
 };

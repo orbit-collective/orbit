@@ -3,6 +3,7 @@ import { ShortcutProvider } from '@/context/ShortcutContext';
 import { PageHeaderProps } from '@/types/Components';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
+import { QUICK_ADD_ISSUE_EVENT } from '@/utils/quickAddIssueEvent';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -11,12 +12,6 @@ import MainLayout from './MainLayout';
 vi.mock('@/Components/Organisms/Sidebar/Sidebar', () => ({
     default: ({ projects }: { projects: Project[] }) => (
         <div data-testid="sidebar" data-projects-count={projects.length} />
-    ),
-}));
-
-vi.mock('@/Components/Organisms/NewIssueModal/NewIssueModal', () => ({
-    default: ({ isOpen }: { isOpen: boolean }) => (
-        <div data-testid="new-issue-modal" data-open={isOpen} />
     ),
 }));
 
@@ -195,7 +190,10 @@ describe('MainLayout Component', () => {
         expect(setSelectedLook).toHaveBeenCalledWith('List');
     });
 
-    test('opens the new issue modal when the "New issue" primary action is clicked', () => {
+    test('dispatches the quick-add issue event when the "New issue" primary action is clicked', () => {
+        const handler = vi.fn();
+        window.addEventListener(QUICK_ADD_ISSUE_EVENT, handler);
+
         renderWithShortcuts(
             <MainLayout
                 selectedLook="List"
@@ -208,20 +206,16 @@ describe('MainLayout Component', () => {
             </MainLayout>,
         );
 
-        expect(screen.getByTestId('new-issue-modal')).toHaveAttribute(
-            'data-open',
-            'false',
-        );
-
         fireEvent.click(screen.getByRole('button', { name: 'New issue' }));
 
-        expect(screen.getByTestId('new-issue-modal')).toHaveAttribute(
-            'data-open',
-            'true',
-        );
+        expect(handler).toHaveBeenCalledTimes(1);
+        window.removeEventListener(QUICK_ADD_ISSUE_EVENT, handler);
     });
 
-    test('opens the new issue modal with the "c" and "ctrl+i" shortcuts', () => {
+    test('dispatches the quick-add issue event with the "c" and "ctrl+i" shortcuts', () => {
+        const handler = vi.fn();
+        window.addEventListener(QUICK_ADD_ISSUE_EVENT, handler);
+
         renderWithShortcuts(
             <MainLayout
                 selectedLook="List"
@@ -235,9 +229,7 @@ describe('MainLayout Component', () => {
         );
 
         fireEvent.keyDown(window, { key: 'c' });
-        expect(screen.getByTestId('new-issue-modal')).toHaveAttribute(
-            'data-open',
-            'true',
-        );
+        expect(handler).toHaveBeenCalledTimes(1);
+        window.removeEventListener(QUICK_ADD_ISSUE_EVENT, handler);
     });
 });

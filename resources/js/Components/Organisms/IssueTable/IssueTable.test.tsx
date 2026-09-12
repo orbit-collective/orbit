@@ -47,6 +47,20 @@ vi.mock('@inertiajs/react', () => {
             },
         ) => opts?.onSuccess?.(),
     );
+    const mockRouterPost = vi.fn(
+        (
+            _url: string,
+            _data?: unknown,
+            opts?: {
+                onSuccess?: () => void;
+                onError?: () => void;
+                onFinish?: () => void;
+            },
+        ) => {
+            opts?.onSuccess?.();
+            opts?.onFinish?.();
+        },
+    );
     const mockRouterVisit = vi.fn();
     return {
         Link: ({
@@ -66,6 +80,7 @@ vi.mock('@inertiajs/react', () => {
             get: mockRouterGet,
             patch: mockRouterPatch,
             delete: mockRouterDelete,
+            post: mockRouterPost,
             visit: mockRouterVisit,
         },
     };
@@ -177,6 +192,58 @@ describe('IssueTable Component', () => {
         render(<IssueTable issues={[makeIssue({ title: 'An issue' })]} />);
 
         expect(screen.queryByText('All done!')).not.toBeInTheDocument();
+    });
+
+    test('submitting the quick-add row posts a title-only issue for the project', async () => {
+        const { router } = await import('@inertiajs/react');
+        render(<IssueTable issues={[]} project={makeProject()} />);
+
+        fireEvent.click(screen.getByText('New issue'));
+        const input = screen.getByPlaceholderText(
+            'Issue title, press Enter to create',
+        );
+        fireEvent.change(input, { target: { value: 'Quick issue' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+
+        expect(router.post).toHaveBeenCalledWith(
+            expect.stringContaining('issues.store'),
+            expect.objectContaining({
+                title: 'Quick issue',
+                project_id: 1,
+                priority: 'medium',
+                status: 'open',
+            }),
+            expect.any(Object),
+        );
+    });
+
+    test('does not render the quick-add row when no project is given', () => {
+        render(<IssueTable issues={[]} />);
+
+        expect(screen.queryByText('New issue')).not.toBeInTheDocument();
+    });
+
+    test('an issue type that allows children shows an "Add sub-issue" quick-add row', () => {
+        const issues = [
+            makeIssue({
+                id: 'EPIC-1',
+                title: 'Epic issue',
+                issueType: {
+                    id: 1,
+                    name: 'Epic',
+                    icon: 'Zap',
+                    color: '#a855f7',
+                    description: null,
+                    isSystem: true,
+                    allowsChildren: true,
+                    requiredFields: [],
+                    restrictedRoleTypes: [],
+                },
+            }),
+        ];
+        render(<IssueTable issues={issues} project={makeProject()} />);
+
+        expect(screen.getByText('Add sub-issue')).toBeInTheDocument();
     });
 
     test('sorts by column on header click', async () => {

@@ -584,12 +584,6 @@ export interface IssueTableProps {
     project?: Project;
     bare?: boolean;
 }
-export interface NewIssueModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    project: Project;
-    users: AssignableUser[];
-}
 export interface NewProjectModalProps {
     isOpen: boolean;
     onClose: () => void;
