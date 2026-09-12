@@ -146,7 +146,7 @@ class ImportOrchestratorService
             );
         }
 
-        // Orbit's IssueLabel enum is a small, fixed set - an unmapped remote
+        // Each project defines its own label taxonomy - an unmapped remote
         // label/component is simply omitted rather than forcing a match.
         $labels = collect($externalIssue->externalLabels)
             ->map(fn (string $label) => $this->fieldMappingResolverService->resolve(
@@ -165,7 +165,7 @@ class ImportOrchestratorService
     }
 
     /**
-     * @param array<string, array{issue: Issue, parentExternalId: ?string}> $importedItems
+     * @param  array<string, array{issue: Issue, parentExternalId: ?string}>  $importedItems
      */
     private function resolveParents(ProjectIntegration $projectIntegration, array $importedItems): void
     {

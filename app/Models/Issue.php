@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\IssueLabel;
 use Database\Factories\IssueFactory;
-use Illuminate\Database\Eloquent\Casts\AsEnumArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +12,7 @@ class Issue extends Model
 {
     /** @use HasFactory<IssueFactory> */
     use HasFactory;
+
     protected $fillable = [
         'id',
         'title',
@@ -32,35 +31,43 @@ class Issue extends Model
     protected function casts(): array
     {
         return [
-            'labels' => AsEnumArrayObject::class . ':' . IssueLabel::class,
+            'labels' => 'array',
             'tags' => 'array',
         ];
     }
 
-    public function creator(): BelongsTo {
+    public function creator(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function assignee(): BelongsTo {
+    public function assignee(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'assignee_id');
     }
-    public function project(): BelongsTo {
+
+    public function project(): BelongsTo
+    {
         return $this->belongsTo(Project::class);
     }
 
-    public function comments(): HasMany {
+    public function comments(): HasMany
+    {
         return $this->hasMany(Comment::class);
     }
 
-    public function parent(): BelongsTo {
+    public function parent(): BelongsTo
+    {
         return $this->belongsTo(Issue::class, 'parent_id');
     }
 
-    public function children(): HasMany {
+    public function children(): HasMany
+    {
         return $this->hasMany(Issue::class, 'parent_id');
     }
 
-    public function externalLinks(): HasMany {
+    public function externalLinks(): HasMany
+    {
         return $this->hasMany(ExternalIssueLink::class);
     }
 }

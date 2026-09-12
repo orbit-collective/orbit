@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\IssueLabel;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
@@ -220,11 +219,11 @@ test('it can search issues by labels', function () {
     $project = Project::factory()->create();
     Issue::factory()->create([
         'project_id' => $project->id,
-        'labels' => [IssueLabel::BUG],
+        'labels' => ['bug'],
     ]);
     Issue::factory()->create([
         'project_id' => $project->id,
-        'labels' => [IssueLabel::FEATURE],
+        'labels' => ['feature'],
     ]);
 
     $results = $this->repository->getAllPaginated($project->id, 10, [], ['search' => 'bug']);
