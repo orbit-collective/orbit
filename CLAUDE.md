@@ -67,7 +67,7 @@ Both suites run with coverage in CI (`.github/workflows/ci.yml`) and fail the bu
 When adding a feature, add tests alongside it rather than relying on the gate to catch gaps after the fact — the gate is a regression floor, not a substitute for reviewing your own coverage.
 
 ## Conventions
-- `Issue.labels` is cast to an enum array (`App\Enums\IssueLabel` via `AsEnumArrayObject`) and stored as JSON.
+- `Issue.labels` is a plain array cast, stored as JSON. Label names are not a fixed backend enum — each project has its own `Label` records (see `App\Models\Label`/`App\Services\LabelService`), and a name is validated per request against that project's real `labels` table rows (`documentation/en/labels/`).
 - Prettier is configured with single quotes and auto-organizes imports + Tailwind class ordering; run lint/format before committing.
 
 ## Documentation

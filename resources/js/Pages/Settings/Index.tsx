@@ -58,7 +58,9 @@ interface SettingsIndexProps {
     canUpdateIntegrations?: boolean;
     labels?: ProjectLabel[];
     hasLabelsAccess?: boolean;
-    canManageLabels?: boolean;
+    canCreateLabels?: boolean;
+    canUpdateLabels?: boolean;
+    canDeleteLabels?: boolean;
 }
 
 export default function SettingsIndex({
@@ -88,7 +90,9 @@ export default function SettingsIndex({
     canUpdateIntegrations = false,
     labels = [],
     hasLabelsAccess = false,
-    canManageLabels = false,
+    canCreateLabels = false,
+    canUpdateLabels = false,
+    canDeleteLabels = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -164,7 +168,9 @@ export default function SettingsIndex({
                                 canUpdateIntegrations={canUpdateIntegrations}
                                 labels={labels}
                                 hasLabelsAccess={hasLabelsAccess}
-                                canManageLabels={canManageLabels}
+                                canCreateLabels={canCreateLabels}
+                                canUpdateLabels={canUpdateLabels}
+                                canDeleteLabels={canDeleteLabels}
                             />
                         ) : (
                             <SettingsPanel

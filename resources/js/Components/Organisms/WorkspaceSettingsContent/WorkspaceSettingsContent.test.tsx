@@ -41,7 +41,9 @@ describe('WorkspaceSettingsContent', () => {
                     memberProjects={[{ id: 1, name: 'Orbit', color: 'blue' }]}
                     selectedProjectId={1}
                     hasLabelsAccess
-                    canManageLabels
+                    canCreateLabels
+                    canUpdateLabels
+                    canDeleteLabels
                     labels={[
                         {
                             id: 1,
