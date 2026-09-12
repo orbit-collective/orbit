@@ -27,6 +27,7 @@ documentation/
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
     saved-filters/           <- angielskie tłumaczenie każdego przewodnika poniżej
     labels/                  <- angielskie tłumaczenie każdego przewodnika poniżej
+    issue-types/             <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-views/             <- angielskie tłumaczenie każdego przewodnika poniżej
     rich-text-editor/        <- angielskie tłumaczenie każdego przewodnika poniżej
     project-onboarding/      <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -101,6 +102,12 @@ documentation/
       README.md              <- indeks tej kategorii
       01-add-a-new-default-label.md
       02-expose-project-labels-to-a-new-page.md
+    issue-types/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-default-issue-type.md
+      02-add-a-workflow-status-category.md
+      03-extend-required-fields.md
+      04-add-a-new-list-column.md
     issue-views/
       README.md              <- indeks tej kategorii
       01-add-a-new-issue-view.md
