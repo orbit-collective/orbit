@@ -2,6 +2,7 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
+import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
@@ -26,7 +27,7 @@ export default function WorkspaceSettingsTemplatesModal({
     const { addAlert } = useAlert();
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [defaultPriority, setDefaultPriority] = useState('');
+    const [defaultPriority, setDefaultPriority] = useState<string | null>(null);
     const [defaultLabels, setDefaultLabels] = useState('');
 
     if (!issueType) return null;
@@ -36,7 +37,7 @@ export default function WorkspaceSettingsTemplatesModal({
     const resetForm = () => {
         setName('');
         setDescription('');
-        setDefaultPriority('');
+        setDefaultPriority(null);
         setDefaultLabels('');
     };
 
@@ -52,7 +53,7 @@ export default function WorkspaceSettingsTemplatesModal({
             {
                 name: trimmedName,
                 description: description.trim() || null,
-                default_priority: defaultPriority || null,
+                default_priority: defaultPriority,
                 default_labels: defaultLabels
                     .split(',')
                     .map((label) => label.trim())
@@ -151,18 +152,17 @@ export default function WorkspaceSettingsTemplatesModal({
                             className="min-h-[56px]"
                         />
                         <div className="flex flex-wrap gap-2">
-                            <select
+                            <InlineSelectDropdown
+                                label="Default priority"
+                                placeholder="Default priority"
+                                options={[
+                                    { value: 'low', label: 'Low' },
+                                    { value: 'medium', label: 'Medium' },
+                                    { value: 'high', label: 'High' },
+                                ]}
                                 value={defaultPriority}
-                                onChange={(e) =>
-                                    setDefaultPriority(e.target.value)
-                                }
-                                className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1.5 text-sm text-[var(--text-color)]"
-                            >
-                                <option value="">Default priority</option>
-                                <option value="low">Low</option>
-                                <option value="medium">Medium</option>
-                                <option value="high">High</option>
-                            </select>
+                                onChange={setDefaultPriority}
+                            />
                             <Input
                                 value={defaultLabels}
                                 onChange={(e) =>
