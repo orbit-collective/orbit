@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
+use App\Models\Label;
 use App\Models\Permission as PermissionModel;
 use App\Models\Project;
 use App\Models\Role;
+use App\Services\Integrations\Jira\JiraIntegrationService;
+use App\Services\LabelService;
 use App\Services\NotificationSettingService;
 use App\Services\PermissionService;
-use App\Services\Integrations\Jira\JiraIntegrationService;
 use App\Services\ProjectIntegrationService;
 use App\Services\ProjectInvitationService;
 use App\Services\ProjectMemberService;
@@ -33,6 +35,7 @@ class SettingsController extends Controller
         protected PermissionService $permissionService,
         protected ProjectIntegrationService $projectIntegrationService,
         protected JiraIntegrationService $jiraIntegrationService,
+        protected LabelService $labelService,
     ) {}
 
     public function index(Request $request): Response
@@ -47,6 +50,9 @@ class SettingsController extends Controller
         $hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, $viewTiers) ?? false;
         $canUpdateIntegrations = $hasIntegrationsAccess
             && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        $hasLabelsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_VIEW, $viewTiers) ?? false;
+        $canManageLabels = $hasLabelsAccess
+            && $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
 
         return Inertia::render('Settings/Index', [
             'projects' => $projects,
@@ -110,6 +116,11 @@ class SettingsController extends Controller
             'canDeleteProject' => $selectedProject
                 ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
                 : false,
+            'labels' => $hasLabelsAccess
+                ? $this->mapLabels($this->labelService->getLabels($selectedProject))
+                : [],
+            'hasLabelsAccess' => $hasLabelsAccess,
+            'canManageLabels' => $canManageLabels,
         ]);
     }
 
@@ -166,6 +177,17 @@ class SettingsController extends Controller
             'id' => $permission->id,
             'key' => $permission->key,
             'group' => $permission->group,
+        ])->values()->all();
+    }
+
+    private function mapLabels(Collection $labels): array
+    {
+        return $labels->map(fn (Label $label) => [
+            'id' => $label->id,
+            'name' => $label->name,
+            'color' => $label->color,
+            'description' => $label->description,
+            'isSystem' => $label->is_system,
         ])->values()->all();
     }
 
