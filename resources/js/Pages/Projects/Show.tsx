@@ -16,6 +16,7 @@ import {
     Sorting,
     SortingColumn,
 } from '@/types/Issues';
+import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { Project } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
@@ -40,6 +41,7 @@ export default function Show({
     activityLogs,
     labels = [],
     roles = [],
+    issueTypes = [],
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
@@ -51,6 +53,7 @@ export default function Show({
     activityLogs: ActivityLogEntry[];
     labels?: ProjectLabel[];
     roles?: RoleNameSummary[];
+    issueTypes?: IssueType[];
 }) {
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         if (typeof window !== 'undefined') {
@@ -98,6 +101,7 @@ export default function Show({
                                     issues={issues.data}
                                     queryParams={queryParams}
                                     project={project}
+                                    issueTypes={issueTypes}
                                     pagination={
                                         <Pagination
                                             links={issues.links}

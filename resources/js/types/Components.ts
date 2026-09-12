@@ -583,6 +583,7 @@ export interface IssueTableProps {
     pagination?: ReactNode;
     project?: Project;
     bare?: boolean;
+    issueTypes?: IssueType[];
 }
 export interface NewProjectModalProps {
     isOpen: boolean;
