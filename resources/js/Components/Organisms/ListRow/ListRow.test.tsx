@@ -84,6 +84,38 @@ describe('ListRow Component', () => {
         expect(screen.queryByText('open')).not.toBeInTheDocument();
     });
 
+    test('renders an expand/collapse chevron when hasChildren is true', () => {
+        renderRow({ hasChildren: true, isCollapsed: false });
+
+        expect(
+            screen.getByLabelText('Collapse sub-issues'),
+        ).toBeInTheDocument();
+    });
+
+    test('shows the collapsed chevron variant and calls onToggleCollapse when clicked', () => {
+        const handleToggle = vi.fn();
+        renderRow({
+            hasChildren: true,
+            isCollapsed: true,
+            onToggleCollapse: handleToggle,
+        });
+
+        fireEvent.click(screen.getByLabelText('Expand sub-issues'));
+
+        expect(handleToggle).toHaveBeenCalledTimes(1);
+    });
+
+    test('does not render a chevron for a leaf row', () => {
+        renderRow({ hasChildren: false });
+
+        expect(
+            screen.queryByLabelText('Expand sub-issues'),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByLabelText('Collapse sub-issues'),
+        ).not.toBeInTheDocument();
+    });
+
     test('does not render start_date/end_date columns by default', () => {
         renderRow({
             issue: makeIssue({

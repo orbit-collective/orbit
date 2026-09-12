@@ -10,6 +10,10 @@ export const IssueElement = ({
     handleSelectIssueCheckbox,
     enabledColumns,
     rowHeight,
+    depth,
+    hasChildren,
+    isCollapsed,
+    onToggleCollapse,
 }: IssueElementProps) => {
     const removeIssue = (issue: Issue) => {
         router.delete(route('issues.destroy', issue.id));
@@ -17,7 +21,9 @@ export const IssueElement = ({
 
     const props = {
         issue,
-        isClosed: issue.status === 'closed',
+        isClosed: issue.workflowStatus
+            ? issue.workflowStatus.category === 'done'
+            : issue.status === 'closed',
         onClick: () =>
             router.visit(route('issues.show', [issue.project_id, issue.id])),
         onRemove: () => removeIssue(issue),
@@ -31,6 +37,10 @@ export const IssueElement = ({
             handleSelectIssueCheckbox={handleSelectIssueCheckbox}
             enabledColumns={enabledColumns}
             rowHeight={rowHeight}
+            depth={depth}
+            hasChildren={hasChildren}
+            isCollapsed={isCollapsed}
+            onToggleCollapse={onToggleCollapse}
         />
     );
 };

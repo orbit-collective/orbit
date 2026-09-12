@@ -302,6 +302,10 @@ export interface IssueElementProps {
     handleSelectIssueCheckbox?: (issue: Issue | string) => void;
     enabledColumns?: Record<string, boolean>;
     rowHeight?: number;
+    depth?: number;
+    hasChildren?: boolean;
+    isCollapsed?: boolean;
+    onToggleCollapse?: () => void;
 }
 export interface IssuePropertyProps {
     label: string;
@@ -631,6 +635,10 @@ export interface ListRowProps {
     handleSelectIssueCheckbox?: (issue: Issue | string) => void;
     enabledColumns?: Record<string, boolean>;
     rowHeight?: number;
+    depth?: number;
+    hasChildren?: boolean;
+    isCollapsed?: boolean;
+    onToggleCollapse?: () => void;
 }
 
 export interface AuthShowcaseProps {

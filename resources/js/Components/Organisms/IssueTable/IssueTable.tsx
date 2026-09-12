@@ -3,6 +3,7 @@ import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard
 import { IssueElement } from '@/Components/Molecules/IssueElement/IssueElement';
 import IssueTableHead from '@/Components/Organisms/IssueTableHead/IssueTableHead';
 import { useAlert } from '@/context/AlertContext';
+import { useIssueHierarchy } from '@/hooks/useIssueHierarchy';
 import { useTableResizing } from '@/hooks/useTableResizing';
 import { HeaderConfig, IssueTableProps } from '@/types/Components';
 import { Issue, Sorting, SortingColumn } from '@/types/Issues';
@@ -249,6 +250,11 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         });
     };
 
+    const { rows: hierarchyRows, toggleCollapsed } = useIssueHierarchy(
+        issues,
+        project?.id,
+    );
+
     const headers: HeaderConfig[] = ISSUE_TABLE_COLUMNS.map(
         (column): HeaderConfig => ({
             label: column.label,
@@ -300,22 +306,37 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                         />
                         <tbody>
                             {hasIssues ? (
-                                issues.map((issue) => (
-                                    <IssueElement
-                                        key={issue.id}
-                                        issue={{
-                                            ...issue,
-                                            isChecked: selectedIds.includes(
-                                                issue.id,
-                                            ),
-                                        }}
-                                        handleSelectIssueCheckbox={
-                                            handleSelectIssueCheckbox
-                                        }
-                                        enabledColumns={enabledColumns}
-                                        rowHeight={rowHeight}
-                                    />
-                                ))
+                                hierarchyRows.map(
+                                    ({
+                                        issue,
+                                        depth,
+                                        hasChildren,
+                                        isCollapsed,
+                                    }) => (
+                                        <IssueElement
+                                            key={issue.id}
+                                            issue={{
+                                                ...issue,
+                                                isChecked: selectedIds.includes(
+                                                    issue.id,
+                                                ),
+                                            }}
+                                            handleSelectIssueCheckbox={
+                                                handleSelectIssueCheckbox
+                                            }
+                                            enabledColumns={enabledColumns}
+                                            rowHeight={rowHeight}
+                                            depth={depth}
+                                            hasChildren={hasChildren}
+                                            isCollapsed={isCollapsed}
+                                            onToggleCollapse={() =>
+                                                toggleCollapsed(
+                                                    String(issue.id),
+                                                )
+                                            }
+                                        />
+                                    ),
+                                )
                             ) : (
                                 <tr>
                                     <td
