@@ -1,3 +1,4 @@
+import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
@@ -10,6 +11,7 @@ import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
+import WorkspaceSettingsIssueTypeInlineEditor from './WorkspaceSettingsIssueTypeInlineEditor';
 
 interface WorkspaceSettingsIssueTypesTabProps {
     memberProjects?: MemberProjectSummary[];
@@ -21,14 +23,19 @@ interface WorkspaceSettingsIssueTypesTabProps {
     canDeleteIssueTypes?: boolean;
 }
 
+const NEW_ISSUE_TYPE_EDITOR_TARGET = '__new__';
+
 export default function WorkspaceSettingsIssueTypesTab({
     memberProjects = [],
     selectedProjectId = null,
     issueTypes = [],
     hasIssueTypesAccess = false,
+    canCreateIssueTypes = false,
+    canUpdateIssueTypes = false,
     canDeleteIssueTypes = false,
 }: WorkspaceSettingsIssueTypesTabProps) {
     const { addAlert } = useAlert();
+    const [editorTarget, setEditorTarget] = useState<string | null>(null);
     const [deletingIssueType, setDeletingIssueType] =
         useState<IssueType | null>(null);
 
@@ -37,6 +44,7 @@ export default function WorkspaceSettingsIssueTypesTab({
         null;
 
     const switchProject = (projectId: number) => {
+        setEditorTarget(null);
         router.get(
             `/settings?tab=issue-types&project=${projectId}`,
             {},
@@ -69,9 +77,64 @@ export default function WorkspaceSettingsIssueTypesTab({
 
     const customCount = issueTypes.filter((type) => !type.isSystem).length;
     const systemCount = issueTypes.length - customCount;
+    const editingIssueType =
+        editorTarget && editorTarget !== NEW_ISSUE_TYPE_EDITOR_TARGET
+            ? (issueTypes.find((type) => String(type.id) === editorTarget) ??
+              null)
+            : null;
+
+    const toggleCreateEditor = () => {
+        setEditorTarget((current) =>
+            current === NEW_ISSUE_TYPE_EDITOR_TARGET
+                ? null
+                : NEW_ISSUE_TYPE_EDITOR_TARGET,
+        );
+    };
+
+    const toggleEditEditor = (issueType: IssueType) => {
+        const target = String(issueType.id);
+        setEditorTarget((current) => (current === target ? null : target));
+    };
+
+    const handleSaveIssueType = (values: {
+        name: string;
+        icon: string;
+        color: string;
+        description: string;
+        allows_children: boolean;
+    }) => {
+        const onSuccess = () => setEditorTarget(null);
+        const onError = () =>
+            addAlert('Could not save this issue type.', 'error');
+
+        if (editingIssueType) {
+            router.patch(
+                route('projects.issue-types.update', [
+                    selectedProject.id,
+                    editingIssueType.id,
+                ]),
+                values,
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess,
+                    onError,
+                },
+            );
+            return;
+        }
+
+        router.post(
+            route('projects.issue-types.store', [selectedProject.id]),
+            values,
+            { preserveScroll: true, preserveState: true, onSuccess, onError },
+        );
+    };
 
     const handleConfirmDelete = () => {
         if (!deletingIssueType) return;
+
+        const target = String(deletingIssueType.id);
 
         router.delete(
             route('projects.issue-types.destroy', [
@@ -81,6 +144,9 @@ export default function WorkspaceSettingsIssueTypesTab({
             {
                 preserveScroll: true,
                 preserveState: true,
+                onSuccess: () => {
+                    if (editorTarget === target) setEditorTarget(null);
+                },
                 onError: () =>
                     addAlert(
                         'Could not delete this issue type. Make sure no issues use it.',
@@ -134,65 +200,114 @@ export default function WorkspaceSettingsIssueTypesTab({
                         {issueTypes.length === 1 ? 'issue type' : 'issue types'}{' '}
                         configured
                     </p>
+                    {canCreateIssueTypes && (
+                        <Button
+                            type="button"
+                            onClick={toggleCreateEditor}
+                            className="gap-1.5"
+                        >
+                            <Icon name="Plus" size={14} />
+                            New issue type
+                        </Button>
+                    )}
                 </div>
 
-                {issueTypes.map((issueType) => (
-                    <div
-                        key={issueType.id}
-                        className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
-                    >
-                        <div className="flex min-w-0 items-center gap-3">
-                            <span
-                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                                style={{
-                                    backgroundColor: `${issueType.color}1a`,
-                                    color: issueType.color,
-                                }}
-                            >
-                                <Icon
-                                    name={issueType.icon as keyof typeof icons}
-                                    size={15}
-                                />
-                            </span>
-                            <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <p className="truncate text-sm font-medium text-[var(--text-color)]">
-                                        {issueType.name}
-                                    </p>
-                                    {issueType.isSystem && (
-                                        <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                            System
-                                        </span>
-                                    )}
-                                    {issueType.allowsChildren && (
-                                        <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                            Allows sub-issues
-                                        </span>
+                {editorTarget === NEW_ISSUE_TYPE_EDITOR_TARGET && (
+                    <WorkspaceSettingsIssueTypeInlineEditor
+                        key={NEW_ISSUE_TYPE_EDITOR_TARGET}
+                        issueType={null}
+                        onSave={handleSaveIssueType}
+                        onCancel={() => setEditorTarget(null)}
+                    />
+                )}
+
+                {issueTypes.map((issueType) =>
+                    editorTarget === String(issueType.id) ? (
+                        <WorkspaceSettingsIssueTypeInlineEditor
+                            key={issueType.id}
+                            issueType={issueType}
+                            onSave={handleSaveIssueType}
+                            onCancel={() => setEditorTarget(null)}
+                        />
+                    ) : (
+                        <div
+                            key={issueType.id}
+                            className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                        >
+                            <div className="flex min-w-0 items-center gap-3">
+                                <span
+                                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                                    style={{
+                                        backgroundColor: `${issueType.color}1a`,
+                                        color: issueType.color,
+                                    }}
+                                >
+                                    <Icon
+                                        name={
+                                            issueType.icon as keyof typeof icons
+                                        }
+                                        size={15}
+                                    />
+                                </span>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                            {issueType.name}
+                                        </p>
+                                        {issueType.isSystem && (
+                                            <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                                System
+                                            </span>
+                                        )}
+                                        {issueType.allowsChildren && (
+                                            <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                                Allows sub-issues
+                                            </span>
+                                        )}
+                                    </div>
+                                    {issueType.description && (
+                                        <p className="truncate text-sm text-[var(--text-gray-color)]">
+                                            {issueType.description}
+                                        </p>
                                     )}
                                 </div>
-                                {issueType.description && (
-                                    <p className="truncate text-sm text-[var(--text-gray-color)]">
-                                        {issueType.description}
-                                    </p>
-                                )}
                             </div>
+                            {(canUpdateIssueTypes ||
+                                (canDeleteIssueTypes &&
+                                    !issueType.isSystem)) && (
+                                <div className="flex shrink-0 items-center gap-1">
+                                    {canUpdateIssueTypes && (
+                                        <button
+                                            type="button"
+                                            title="Edit issue type"
+                                            onClick={() =>
+                                                toggleEditEditor(issueType)
+                                            }
+                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                        >
+                                            <Icon name="Pencil" size={14} />
+                                        </button>
+                                    )}
+                                    {canDeleteIssueTypes &&
+                                        !issueType.isSystem && (
+                                            <button
+                                                type="button"
+                                                title="Delete issue type"
+                                                onClick={() =>
+                                                    setDeletingIssueType(
+                                                        issueType,
+                                                    )
+                                                }
+                                                className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                            >
+                                                <Icon name="Trash" size={14} />
+                                            </button>
+                                        )}
+                                </div>
+                            )}
                         </div>
-                        {canDeleteIssueTypes && !issueType.isSystem && (
-                            <div className="flex shrink-0 items-center gap-1">
-                                <button
-                                    type="button"
-                                    title="Delete issue type"
-                                    onClick={() =>
-                                        setDeletingIssueType(issueType)
-                                    }
-                                    className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
-                                >
-                                    <Icon name="Trash" size={14} />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                ))}
+                    ),
+                )}
             </SettingsPanel>
 
             <WorkspaceSettingsDeleteIssueTypeModal

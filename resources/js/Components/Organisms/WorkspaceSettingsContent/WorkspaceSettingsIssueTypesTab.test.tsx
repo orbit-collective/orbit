@@ -1,7 +1,7 @@
 import { AlertProvider } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsIssueTypesTab from './WorkspaceSettingsIssueTypesTab';
 
@@ -86,20 +86,6 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
         expect(screen.getByText('System')).toBeInTheDocument();
     });
 
-    test('without delete permission, no delete controls are shown', () => {
-        renderTab({});
-
-        expect(
-            screen.queryByTitle('Delete issue type'),
-        ).not.toBeInTheDocument();
-    });
-
-    test('with delete permission, only the custom type gets a delete control', () => {
-        renderTab({ canDeleteIssueTypes: true });
-
-        expect(screen.getAllByTitle('Delete issue type')).toHaveLength(1);
-    });
-
     test("shows a fallback message when the user has no access to this project's issue types", () => {
         renderTab({ hasIssueTypesAccess: false });
 
@@ -108,5 +94,63 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
                 "You don't have access to this project's issue types",
             ),
         ).toBeInTheDocument();
+    });
+
+    describe('permission gating', () => {
+        test('a user with no capabilities sees neither create nor edit/delete controls', () => {
+            renderTab({});
+
+            expect(
+                screen.queryByText('New issue type'),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByTitle('Edit issue type'),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByTitle('Delete issue type'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('a create-only user sees the "New issue type" button but no edit or delete controls', () => {
+            renderTab({ canCreateIssueTypes: true });
+
+            expect(screen.getByText('New issue type')).toBeInTheDocument();
+            expect(
+                screen.queryByTitle('Edit issue type'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('an update-only user sees edit controls on every type, including system ones', () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            expect(screen.getAllByTitle('Edit issue type')).toHaveLength(2);
+        });
+
+        test('a delete-only user sees a delete control only on the custom type', () => {
+            renderTab({ canDeleteIssueTypes: true });
+
+            expect(screen.getAllByTitle('Delete issue type')).toHaveLength(1);
+        });
+    });
+
+    describe('inline editor', () => {
+        test('clicking "New issue type" opens the create editor with a live preview', () => {
+            renderTab({ canCreateIssueTypes: true });
+
+            fireEvent.click(screen.getByText('New issue type'));
+
+            expect(
+                screen.getByPlaceholderText('Issue type name'),
+            ).toBeInTheDocument();
+            expect(screen.getByText('Preview')).toBeInTheDocument();
+        });
+
+        test('clicking edit on an issue type opens the editor pre-filled with its name', () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            fireEvent.click(screen.getAllByTitle('Edit issue type')[0]);
+
+            expect(screen.getByDisplayValue('Bug')).toBeInTheDocument();
+        });
     });
 });
