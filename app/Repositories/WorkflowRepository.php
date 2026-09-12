@@ -56,4 +56,9 @@ class WorkflowRepository
             ->where('to_status_id', $toStatusId)
             ->exists();
     }
+
+    public function nextStatusSortOrder(IssueType $issueType): int
+    {
+        return ((int) $issueType->statuses()->max('sort_order')) + 1;
+    }
 }
