@@ -12,6 +12,7 @@ import { icons } from 'lucide-react';
 import { useState } from 'react';
 import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
 import WorkspaceSettingsIssueTypeInlineEditor from './WorkspaceSettingsIssueTypeInlineEditor';
+import WorkspaceSettingsTemplatesModal from './WorkspaceSettingsTemplatesModal';
 import WorkspaceSettingsWorkflowModal from './WorkspaceSettingsWorkflowModal';
 
 interface WorkspaceSettingsIssueTypesTabProps {
@@ -42,6 +43,8 @@ export default function WorkspaceSettingsIssueTypesTab({
     const [deletingIssueType, setDeletingIssueType] =
         useState<IssueType | null>(null);
     const [workflowIssueType, setWorkflowIssueType] =
+        useState<IssueType | null>(null);
+    const [templatesIssueType, setTemplatesIssueType] =
         useState<IssueType | null>(null);
 
     const selectedProject =
@@ -107,6 +110,7 @@ export default function WorkspaceSettingsIssueTypesTab({
         color: string;
         description: string;
         allows_children: boolean;
+        required_fields: string[];
     }) => {
         const onSuccess = () => setEditorTarget(null);
         const onError = () =>
@@ -297,6 +301,18 @@ export default function WorkspaceSettingsIssueTypesTab({
                                     {canUpdateIssueTypes && (
                                         <button
                                             type="button"
+                                            title="Manage templates"
+                                            onClick={() =>
+                                                setTemplatesIssueType(issueType)
+                                            }
+                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                        >
+                                            <Icon name="FileText" size={14} />
+                                        </button>
+                                    )}
+                                    {canUpdateIssueTypes && (
+                                        <button
+                                            type="button"
                                             title="Edit issue type"
                                             onClick={() =>
                                                 toggleEditEditor(issueType)
@@ -347,6 +363,20 @@ export default function WorkspaceSettingsIssueTypesTab({
                         : null
                 }
                 canUpdateWorkflow={canUpdateWorkflow}
+            />
+
+            <WorkspaceSettingsTemplatesModal
+                isOpen={templatesIssueType !== null}
+                onClose={() => setTemplatesIssueType(null)}
+                projectId={selectedProject.id}
+                issueType={
+                    templatesIssueType
+                        ? (issueTypes.find(
+                              (type) => type.id === templatesIssueType.id,
+                          ) ?? templatesIssueType)
+                        : null
+                }
+                canManageTemplates={canUpdateIssueTypes}
             />
         </div>
     );

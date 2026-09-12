@@ -188,4 +188,14 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
             expect(screen.getByText('Bug workflow')).toBeInTheDocument();
         });
     });
+
+    describe('templates modal', () => {
+        test('clicking "Manage templates" opens the templates modal for that type', () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            fireEvent.click(screen.getAllByTitle('Manage templates')[0]);
+
+            expect(screen.getByText('Bug templates')).toBeInTheDocument();
+        });
+    });
 });

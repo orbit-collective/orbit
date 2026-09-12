@@ -83,6 +83,43 @@ describe('WorkspaceSettingsIssueTypeInlineEditor', () => {
         );
     });
 
+    test('toggling a required field checkbox includes it in the saved values', () => {
+        const handleSave = vi.fn();
+        render(
+            <WorkspaceSettingsIssueTypeInlineEditor
+                issueType={null}
+                onSave={handleSave}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
+            target: { value: 'Custom' },
+        });
+        fireEvent.click(screen.getByLabelText('Description'));
+        fireEvent.click(screen.getByLabelText('Assignee'));
+        fireEvent.click(screen.getByText('Create issue type'));
+
+        expect(handleSave).toHaveBeenCalledWith(
+            expect.objectContaining({
+                required_fields: ['description', 'assignee'],
+            }),
+        );
+    });
+
+    test('pre-checks the required fields already set on an existing issue type', () => {
+        render(
+            <WorkspaceSettingsIssueTypeInlineEditor
+                issueType={{ ...bugType, requiredFields: ['priority'] }}
+                onSave={vi.fn()}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByLabelText('Priority')).toBeChecked();
+        expect(screen.getByLabelText('Description')).not.toBeChecked();
+    });
+
     test('calls onCancel when Cancel is clicked', () => {
         const handleCancel = vi.fn();
         render(

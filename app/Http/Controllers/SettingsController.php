@@ -245,6 +245,14 @@ class SettingsController extends Controller
                 'fromStatusId' => $transition->from_status_id,
                 'toStatusId' => $transition->to_status_id,
             ])->values()->all(),
+            'templates' => $issueType->templates()->orderBy('name')->get()->map(fn ($template) => [
+                'id' => $template->id,
+                'issueTypeId' => $template->issue_type_id,
+                'name' => $template->name,
+                'description' => $template->description,
+                'defaultPriority' => $template->default_priority,
+                'defaultLabels' => $template->default_labels ?? [],
+            ])->values()->all(),
         ])->values()->all();
     }
 

@@ -12,6 +12,7 @@ export interface IssueType {
     restrictedRoleTypes: string[];
     statuses?: WorkflowStatus[];
     transitions?: WorkflowTransition[];
+    templates?: IssueTypeTemplate[];
 }
 
 export interface IssueTypeTemplate {
