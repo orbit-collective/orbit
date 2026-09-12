@@ -57,6 +57,7 @@ interface WorkspaceSettingsContentProps {
     canCreateIssueTypes?: boolean;
     canUpdateIssueTypes?: boolean;
     canDeleteIssueTypes?: boolean;
+    canUpdateWorkflow?: boolean;
 }
 
 export default function WorkspaceSettingsContent({
@@ -92,6 +93,7 @@ export default function WorkspaceSettingsContent({
     canCreateIssueTypes = false,
     canUpdateIssueTypes = false,
     canDeleteIssueTypes = false,
+    canUpdateWorkflow = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return (
@@ -117,6 +119,7 @@ export default function WorkspaceSettingsContent({
                 canCreateIssueTypes={canCreateIssueTypes}
                 canUpdateIssueTypes={canUpdateIssueTypes}
                 canDeleteIssueTypes={canDeleteIssueTypes}
+                canUpdateWorkflow={canUpdateWorkflow}
             />
         );
     }

@@ -1,0 +1,141 @@
+import { AlertProvider } from '@/context/AlertContext';
+import { IssueType } from '@/types/IssueTypes';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
+import WorkspaceSettingsWorkflowModal from './WorkspaceSettingsWorkflowModal';
+
+vi.stubGlobal(
+    'route',
+    vi.fn(
+        (name: string, params?: Array<string | number>) =>
+            `/${name}/${(params ?? []).join('/')}`,
+    ),
+);
+
+const routerMock = vi.hoisted(() => ({
+    post: vi.fn(),
+    delete: vi.fn(),
+}));
+
+vi.mock('@inertiajs/react', async () => {
+    const actual =
+        await vi.importActual<typeof import('@inertiajs/react')>(
+            '@inertiajs/react',
+        );
+    return {
+        ...actual,
+        usePage: () => ({ props: { flash: {} } }),
+        router: routerMock,
+    };
+});
+
+const bugType: IssueType = {
+    id: 1,
+    name: 'Bug',
+    icon: 'Bug',
+    color: '#ef4444',
+    description: null,
+    isSystem: true,
+    allowsChildren: false,
+    requiredFields: [],
+    restrictedRoleTypes: [],
+    statuses: [
+        {
+            id: 10,
+            issueTypeId: 1,
+            name: 'To Do',
+            color: '#94a3b8',
+            category: 'todo',
+            isInitial: true,
+        },
+        {
+            id: 11,
+            issueTypeId: 1,
+            name: 'Done',
+            color: '#22c55e',
+            category: 'done',
+            isInitial: false,
+        },
+    ],
+    transitions: [
+        { id: 100, issueTypeId: 1, fromStatusId: 10, toStatusId: 11 },
+    ],
+};
+
+const renderModal = (
+    props: Partial<Parameters<typeof WorkspaceSettingsWorkflowModal>[0]>,
+) =>
+    render(
+        <AlertProvider>
+            <WorkspaceSettingsWorkflowModal
+                isOpen
+                onClose={vi.fn()}
+                projectId={1}
+                issueType={bugType}
+                {...props}
+            />
+        </AlertProvider>,
+    );
+
+describe('WorkspaceSettingsWorkflowModal', () => {
+    test('renders every status and marks the initial one', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        expect(screen.getAllByText('To Do').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Done').length).toBeGreaterThan(0);
+        expect(screen.getByText('Initial')).toBeInTheDocument();
+    });
+
+    test('renders the transition matrix with the existing transition checked', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        expect(
+            screen.getByLabelText('Allow transition from To Do to Done'),
+        ).toBeChecked();
+        expect(
+            screen.getByLabelText('Allow transition from Done to To Do'),
+        ).not.toBeChecked();
+    });
+
+    test('toggling an unchecked cell posts a new transition', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        fireEvent.click(
+            screen.getByLabelText('Allow transition from Done to To Do'),
+        );
+
+        expect(routerMock.post).toHaveBeenCalledWith(
+            expect.stringContaining('issue-types.transitions.store'),
+            { from_status_id: 11, to_status_id: 10 },
+            expect.any(Object),
+        );
+    });
+
+    test('toggling a checked cell deletes the transition', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        fireEvent.click(
+            screen.getByLabelText('Allow transition from To Do to Done'),
+        );
+
+        expect(routerMock.delete).toHaveBeenCalledWith(
+            expect.stringContaining('issue-types.transitions.destroy'),
+            expect.any(Object),
+        );
+    });
+
+    test('without canUpdateWorkflow, checkboxes and the delete-status control are disabled/hidden', () => {
+        renderModal({ canUpdateWorkflow: false });
+
+        expect(
+            screen.getByLabelText('Allow transition from To Do to Done'),
+        ).toBeDisabled();
+        expect(screen.queryByTitle('Delete status')).not.toBeInTheDocument();
+    });
+
+    test('renders nothing when no issue type is given', () => {
+        renderModal({ issueType: null });
+
+        expect(screen.queryByText('Statuses')).not.toBeInTheDocument();
+    });
+});

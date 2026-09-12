@@ -12,6 +12,7 @@ import { icons } from 'lucide-react';
 import { useState } from 'react';
 import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
 import WorkspaceSettingsIssueTypeInlineEditor from './WorkspaceSettingsIssueTypeInlineEditor';
+import WorkspaceSettingsWorkflowModal from './WorkspaceSettingsWorkflowModal';
 
 interface WorkspaceSettingsIssueTypesTabProps {
     memberProjects?: MemberProjectSummary[];
@@ -21,6 +22,7 @@ interface WorkspaceSettingsIssueTypesTabProps {
     canCreateIssueTypes?: boolean;
     canUpdateIssueTypes?: boolean;
     canDeleteIssueTypes?: boolean;
+    canUpdateWorkflow?: boolean;
 }
 
 const NEW_ISSUE_TYPE_EDITOR_TARGET = '__new__';
@@ -33,10 +35,13 @@ export default function WorkspaceSettingsIssueTypesTab({
     canCreateIssueTypes = false,
     canUpdateIssueTypes = false,
     canDeleteIssueTypes = false,
+    canUpdateWorkflow = false,
 }: WorkspaceSettingsIssueTypesTabProps) {
     const { addAlert } = useAlert();
     const [editorTarget, setEditorTarget] = useState<string | null>(null);
     const [deletingIssueType, setDeletingIssueType] =
+        useState<IssueType | null>(null);
+    const [workflowIssueType, setWorkflowIssueType] =
         useState<IssueType | null>(null);
 
     const selectedProject =
@@ -273,9 +278,22 @@ export default function WorkspaceSettingsIssueTypesTab({
                                 </div>
                             </div>
                             {(canUpdateIssueTypes ||
+                                canUpdateWorkflow ||
                                 (canDeleteIssueTypes &&
                                     !issueType.isSystem)) && (
                                 <div className="flex shrink-0 items-center gap-1">
+                                    {canUpdateWorkflow && (
+                                        <button
+                                            type="button"
+                                            title="Manage workflow"
+                                            onClick={() =>
+                                                setWorkflowIssueType(issueType)
+                                            }
+                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                        >
+                                            <Icon name="Workflow" size={14} />
+                                        </button>
+                                    )}
                                     {canUpdateIssueTypes && (
                                         <button
                                             type="button"
@@ -315,6 +333,20 @@ export default function WorkspaceSettingsIssueTypesTab({
                 onClose={() => setDeletingIssueType(null)}
                 issueType={deletingIssueType}
                 onConfirm={handleConfirmDelete}
+            />
+
+            <WorkspaceSettingsWorkflowModal
+                isOpen={workflowIssueType !== null}
+                onClose={() => setWorkflowIssueType(null)}
+                projectId={selectedProject.id}
+                issueType={
+                    workflowIssueType
+                        ? (issueTypes.find(
+                              (type) => type.id === workflowIssueType.id,
+                          ) ?? workflowIssueType)
+                        : null
+                }
+                canUpdateWorkflow={canUpdateWorkflow}
             />
         </div>
     );

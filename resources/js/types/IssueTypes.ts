@@ -1,3 +1,5 @@
+import { WorkflowStatus, WorkflowTransition } from '@/types/Workflow';
+
 export interface IssueType {
     id: number;
     name: string;
@@ -8,6 +10,8 @@ export interface IssueType {
     allowsChildren: boolean;
     requiredFields: string[];
     restrictedRoleTypes: string[];
+    statuses?: WorkflowStatus[];
+    transitions?: WorkflowTransition[];
 }
 
 export interface IssueTypeTemplate {

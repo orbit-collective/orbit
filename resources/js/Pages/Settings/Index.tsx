@@ -67,6 +67,7 @@ interface SettingsIndexProps {
     canCreateIssueTypes?: boolean;
     canUpdateIssueTypes?: boolean;
     canDeleteIssueTypes?: boolean;
+    canUpdateWorkflow?: boolean;
 }
 
 export default function SettingsIndex({
@@ -104,6 +105,7 @@ export default function SettingsIndex({
     canCreateIssueTypes = false,
     canUpdateIssueTypes = false,
     canDeleteIssueTypes = false,
+    canUpdateWorkflow = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -187,6 +189,7 @@ export default function SettingsIndex({
                                 canCreateIssueTypes={canCreateIssueTypes}
                                 canUpdateIssueTypes={canUpdateIssueTypes}
                                 canDeleteIssueTypes={canDeleteIssueTypes}
+                                canUpdateWorkflow={canUpdateWorkflow}
                             />
                         ) : (
                             <SettingsPanel
