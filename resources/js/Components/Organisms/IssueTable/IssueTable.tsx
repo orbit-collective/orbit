@@ -7,20 +7,15 @@ import { useTableResizing } from '@/hooks/useTableResizing';
 import { HeaderConfig, IssueTableProps } from '@/types/Components';
 import { Issue, Sorting, SortingColumn } from '@/types/Issues';
 import { cn } from '@/utils/cn';
+import {
+    DEFAULT_COLUMN_WIDTHS,
+    DEFAULT_ENABLED_COLUMNS,
+    ISSUE_TABLE_COLUMNS,
+} from '@/utils/issueTableColumns';
 import { router } from '@inertiajs/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-const defaultWidths = {
-    id: 70,
-    title: 400,
-    status: 120,
-    assignee: 140,
-    priority: 140,
-    labels: 200,
-    updated: 150,
-    start_date: 150,
-    end_date: 150,
-};
+const defaultWidths = DEFAULT_COLUMN_WIDTHS;
 
 export const IssueTable: React.FC<IssueTableProps> = ({
     issues,
@@ -137,17 +132,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         if (project?.columns) {
             return project.columns;
         }
-        return {
-            id: true,
-            title: true,
-            status: true,
-            assignee: true,
-            priority: true,
-            labels: true,
-            updated: true,
-            start_date: false,
-            end_date: false,
-        };
+        return DEFAULT_ENABLED_COLUMNS;
     });
 
     useEffect(() => {
@@ -264,18 +249,11 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         });
     };
 
-    const headers: HeaderConfig[] = (
-        [
-            { label: 'ID', value: 'id' },
-            { label: 'Title', value: 'title' },
-            { label: 'Status', value: 'status' },
-            { label: 'Assignee', value: 'assignee' },
-            { label: 'Priority', value: 'priority' },
-            { label: 'Labels', value: 'labels' },
-            { label: 'Updated', value: 'updated' },
-            { label: 'Start', value: 'start_date' },
-            { label: 'End', value: 'end_date' },
-        ] as HeaderConfig[]
+    const headers: HeaderConfig[] = ISSUE_TABLE_COLUMNS.map(
+        (column): HeaderConfig => ({
+            label: column.label,
+            value: column.value,
+        }),
     ).filter((h) => enabledColumns[h.value]);
 
     const hasIssues = issues && issues.length > 0;

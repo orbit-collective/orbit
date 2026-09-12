@@ -3,6 +3,7 @@ import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import SelectionDropdown from '@/Components/Molecules/SelectionDropdown/SelectionDropdown';
 import TableHeaderCell from '@/Components/Molecules/TableHeaderCell/TableHeaderCell';
 import { IssueTableHeadProps } from '@/types/Components';
+import { ISSUE_TABLE_COLUMNS } from '@/utils/issueTableColumns';
 import { FC } from 'react';
 export const IssueTableHead: FC<IssueTableHeadProps> = ({
     headers,
@@ -70,15 +71,10 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
                             },
                             { label: 'Row: Spacious', value: 'row_spacious' },
                             { label: '---', value: 'sep2', disabled: true },
-                            { label: 'ID', value: 'id' },
-                            { label: 'Title', value: 'title' },
-                            { label: 'Status', value: 'status' },
-                            { label: 'Assignee', value: 'assignee' },
-                            { label: 'Priority', value: 'priority' },
-                            { label: 'Labels', value: 'labels' },
-                            { label: 'Updated', value: 'updated' },
-                            { label: 'Start Date', value: 'start_date' },
-                            { label: 'End Date', value: 'end_date' },
+                            ...ISSUE_TABLE_COLUMNS.map((column) => ({
+                                label: column.label,
+                                value: column.value,
+                            })),
                         ]}
                         selectedValues={[
                             ...Object.entries(enabledColumns)

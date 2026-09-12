@@ -288,6 +288,33 @@ test('it can sort issues by assignee name', function () {
         ->and($results->items()[1]->title)->toBe('Bob issue');
 });
 
+test('it can sort issues by issue type name', function () {
+    $project = Project::factory()->create();
+    $bugType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#ef4444']);
+    $featureType = $project->issueTypes()->create(['name' => 'Feature', 'icon' => 'Sparkles', 'color' => '#2196f3']);
+    Issue::factory()->create(['project_id' => $project->id, 'issue_type_id' => $bugType->id, 'title' => 'Bug issue']);
+    Issue::factory()->create(['project_id' => $project->id, 'issue_type_id' => $featureType->id, 'title' => 'Feature issue']);
+
+    $results = $this->repository->getAllPaginated($project->id, 10, ['sort' => 'type', 'direction' => 'AZ']);
+
+    expect($results->items()[0]->title)->toBe('Bug issue')
+        ->and($results->items()[1]->title)->toBe('Feature issue');
+});
+
+test('getAllPaginated eager-loads the issueType and workflowStatus relations', function () {
+    $project = Project::factory()->create();
+    $bugType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#ef4444']);
+    $status = $bugType->statuses()->create(['name' => 'To Do', 'color' => '#94a3b8', 'category' => 'todo']);
+    Issue::factory()->create(['project_id' => $project->id, 'issue_type_id' => $bugType->id, 'workflow_status_id' => $status->id]);
+
+    $results = $this->repository->getAllPaginated($project->id, 10);
+
+    expect($results->items()[0]->relationLoaded('issueType'))->toBeTrue()
+        ->and($results->items()[0]->relationLoaded('workflowStatus'))->toBeTrue()
+        ->and($results->items()[0]->issueType->name)->toBe('Bug')
+        ->and($results->items()[0]->workflowStatus->name)->toBe('To Do');
+});
+
 test('it can sort issues by start_date, end_date and updated', function () {
     $project = Project::factory()->create();
     Issue::factory()->create(['project_id' => $project->id, 'start_date' => now()->addDays(2), 'end_date' => now()->addDays(3)]);

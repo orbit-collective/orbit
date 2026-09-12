@@ -150,6 +150,7 @@ class ProjectController extends Controller
             'columns' => 'required|array',
             'columns.id' => 'sometimes|boolean',
             'columns.title' => 'sometimes|boolean',
+            'columns.type' => 'sometimes|boolean',
             'columns.status' => 'sometimes|boolean',
             'columns.assignee' => 'sometimes|boolean',
             'columns.priority' => 'sometimes|boolean',

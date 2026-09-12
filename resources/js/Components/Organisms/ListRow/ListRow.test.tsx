@@ -46,6 +46,44 @@ describe('ListRow Component', () => {
         );
     });
 
+    test('renders the issue type badge when the type column is enabled and issueType is present', () => {
+        renderRow({
+            issue: makeIssue({
+                issueType: {
+                    id: 1,
+                    name: 'Bug',
+                    icon: 'Bug',
+                    color: '#ef4444',
+                    description: null,
+                    isSystem: true,
+                    allowsChildren: false,
+                    requiredFields: [],
+                    restrictedRoleTypes: [],
+                },
+            }),
+        });
+
+        expect(screen.getByText('Bug')).toBeInTheDocument();
+    });
+
+    test('renders a workflow status badge when workflowStatus is present, instead of the legacy status icon', () => {
+        renderRow({
+            issue: makeIssue({
+                workflowStatus: {
+                    id: 5,
+                    issueTypeId: 1,
+                    name: 'In Review',
+                    color: '#f59e0b',
+                    category: 'in_progress',
+                    isInitial: false,
+                },
+            }),
+        });
+
+        expect(screen.getByText('In Review')).toBeInTheDocument();
+        expect(screen.queryByText('open')).not.toBeInTheDocument();
+    });
+
     test('does not render start_date/end_date columns by default', () => {
         renderRow({
             issue: makeIssue({

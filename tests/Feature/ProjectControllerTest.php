@@ -220,6 +220,19 @@ test('a project\'s visible columns can be updated', function () {
     expect($fresh->columns)->toMatchArray(['id' => true, 'title' => false, 'status' => true]);
 });
 
+test('the type column can be toggled', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create(['columns' => ['id' => true]]);
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->patch("/projects/$project->id/columns", [
+        'columns' => ['type' => true],
+    ]);
+
+    $response->assertRedirect();
+    expect($project->fresh()->columns)->toMatchArray(['type' => true]);
+});
+
 test('updating columns requires the columns field to be an array', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();

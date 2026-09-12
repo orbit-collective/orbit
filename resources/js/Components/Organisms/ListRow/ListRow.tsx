@@ -2,12 +2,15 @@ import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
 import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
+import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import { StatusIcon } from '@/Components/Atoms/StatusIcon/StatusIcon';
+import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import { ListRowProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
 import { formatStatusLabel } from '@/utils/text';
 import { formatTimeAgo } from '@/utils/time';
 import React, { useEffect, useRef, useState } from 'react';
@@ -21,17 +24,7 @@ export const ListRow = ({
     onRemove,
     isClosed,
     handleSelectIssueCheckbox,
-    enabledColumns = {
-        id: true,
-        title: true,
-        status: true,
-        assignee: true,
-        priority: true,
-        labels: true,
-        updated: true,
-        start_date: false,
-        end_date: false,
-    },
+    enabledColumns = DEFAULT_ENABLED_COLUMNS,
     rowHeight = 36,
 }: ListRowProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -145,14 +138,31 @@ export const ListRow = ({
                         </span>
                     </td>
                 )}
+                {enabledColumns.type && (
+                    <td className={cellBase} data-column="type">
+                        {issue.issueType ? (
+                            <IssueTypeBadge issueType={issue.issueType} />
+                        ) : (
+                            <span className="text-[var(--text-muted-color)]">
+                                —
+                            </span>
+                        )}
+                    </td>
+                )}
                 {enabledColumns.status && (
                     <td className={cellBase} data-column="status">
-                        <div className="flex items-center gap-1.5">
-                            <StatusIcon status={issue.status} />
-                            <span className="truncate capitalize text-[var(--text-color)]">
-                                {formatStatusLabel(issue.status)}
-                            </span>
-                        </div>
+                        {issue.workflowStatus ? (
+                            <WorkflowStatusBadge
+                                status={issue.workflowStatus}
+                            />
+                        ) : (
+                            <div className="flex items-center gap-1.5">
+                                <StatusIcon status={issue.status} />
+                                <span className="truncate capitalize text-[var(--text-color)]">
+                                    {formatStatusLabel(issue.status)}
+                                </span>
+                            </div>
+                        )}
                     </td>
                 )}
                 {enabledColumns.assignee && (

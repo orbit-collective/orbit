@@ -1,3 +1,6 @@
+import { IssueType } from '@/types/IssueTypes';
+import { WorkflowStatus } from '@/types/Workflow';
+
 /**
  * A label is a per-project record now (see types/Labels.ts ProjectLabel) -
  * this alias just keeps the many existing `IssueLabel` call sites (issue
@@ -57,6 +60,11 @@ export interface Issue {
         id: string;
         title: string;
     };
+    parent_id?: number | string | null;
+    issue_type_id?: number;
+    workflow_status_id?: number;
+    issueType?: IssueType;
+    workflowStatus?: WorkflowStatus;
     due_date?: string | number;
     start_date?: string;
     end_date?: string;
@@ -98,6 +106,7 @@ export type Sorting = 'AZ' | 'ZA';
 export type SortingColumn =
     | 'id'
     | 'title'
+    | 'type'
     | 'status'
     | 'assignee'
     | 'priority'
