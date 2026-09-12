@@ -123,6 +123,41 @@ test('an admin can update an issue type, including a system type', function () {
         ->and($issueType->color)->toBe('#111111');
 });
 
+test('an admin can set required fields and restricted role types on an issue type', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+
+    $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id", [
+        'name' => 'Bug',
+        'icon' => 'Bug',
+        'color' => '#f44336',
+        'required_fields' => ['description', 'assignee'],
+        'restricted_role_types' => ['owner', 'admin'],
+    ]);
+
+    $response->assertRedirect();
+    expect($issueType->refresh()->required_fields)->toBe(['description', 'assignee'])
+        ->and($issueType->restricted_role_types)->toBe(['owner', 'admin']);
+});
+
+test('setting an invalid restricted role type is rejected', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+
+    $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id", [
+        'name' => 'Bug',
+        'icon' => 'Bug',
+        'color' => '#f44336',
+        'restricted_role_types' => ['not-a-role'],
+    ]);
+
+    $response->assertSessionHasErrors('restricted_role_types.0');
+});
+
 test('an issue type from another project cannot be updated through a mismatched project', function () {
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
