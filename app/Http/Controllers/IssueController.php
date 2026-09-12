@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Enums\IssueStatus;
 use App\Models\Issue;
+use App\Models\IssueType;
 use App\Models\Label;
 use App\Models\Project;
 use App\Services\IssueService;
+use App\Services\IssueTypeService;
 use App\Services\LabelService;
 use App\Services\ProjectService;
 use App\Services\UserService;
+use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -24,7 +27,9 @@ class IssueController extends Controller
         protected IssueService $issueService,
         protected UserService $userService,
         protected ProjectService $projectService,
-        protected LabelService $labelService
+        protected LabelService $labelService,
+        protected IssueTypeService $issueTypeService,
+        protected WorkflowService $workflowService
     ) {}
 
     public function show(Request $request, Project $project, Issue $issue): Response
@@ -59,17 +64,21 @@ class IssueController extends Controller
     {
         $this->authorize('update', $issue);
 
-        // Seeds the project's system labels if this is the first time they're
-        // touched - otherwise the exists() rule below would reject a stock
-        // label like "bug" on a project whose Settings > Labels tab nobody
-        // has opened yet.
+        // Seeds the project's system labels/issue types if this is the first
+        // time they're touched - otherwise the exists() rule below would
+        // reject a stock label like "bug" on a project whose Settings tabs
+        // nobody has opened yet, and the issue's issue_type_id/
+        // workflow_status_id backfill wouldn't have run yet either.
         $this->labelService->ensureSystemLabels($issue->project);
+        $this->issueTypeService->ensureSystemIssueTypes($issue->project);
+        $issue->refresh();
 
         $data = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
             'status' => ['sometimes', 'required', Rule::enum(IssueStatus::class)],
             'priority' => 'sometimes|required|string',
+            'issue_type_id' => 'sometimes|required|integer',
             'assignee_id' => [
                 'sometimes',
                 'nullable',
@@ -88,14 +97,44 @@ class IssueController extends Controller
         if (array_key_exists('assignee_id', $data)) {
             $this->authorize('assign', $issue);
         }
-        if (array_key_exists('status', $data)) {
-            $this->authorize('changeStatus', $issue);
-        }
         if (array_key_exists('priority', $data)) {
             $this->authorize('changePriority', $issue);
         }
         if (array_key_exists('labels', $data)) {
             $this->authorize('changeLabels', $issue);
+        }
+
+        $issueType = $issue->issueType;
+
+        if (array_key_exists('issue_type_id', $data)) {
+            $newType = IssueType::query()->where('project_id', $issue->project_id)->find($data['issue_type_id']);
+
+            if ($newType) {
+                $this->authorize('createOfType', [Issue::class, $issue->project, $newType]);
+                $issueType = $newType;
+
+                // The old workflow_status_id almost certainly doesn't belong
+                // to the new type's workflow - reset to its initial status
+                // unless this same request also picks an explicit one below.
+                if (! array_key_exists('status', $data)) {
+                    $data['workflow_status_id'] = $newType->statuses()->where('is_initial', true)->first()?->id;
+                }
+            } else {
+                unset($data['issue_type_id']);
+            }
+        }
+
+        if (array_key_exists('status', $data)) {
+            $this->authorize('changeStatus', $issue);
+
+            $newStatus = $issueType
+                ? $this->issueTypeService->resolveWorkflowStatusForLegacyValue($issueType, $data['status'])
+                : null;
+
+            if ($newStatus && $issueType) {
+                $this->workflowService->assertTransitionAllowed($issueType, $issue->workflow_status_id, $newStatus->id);
+                $data['workflow_status_id'] = $newStatus->id;
+            }
         }
 
         $before = $this->issueService->snapshot($issue);
@@ -120,6 +159,7 @@ class IssueController extends Controller
             'project_id' => 'required|exists:projects,id',
             'priority' => 'required|string',
             'status' => ['required', Rule::enum(IssueStatus::class)],
+            'issue_type_id' => 'nullable|integer',
             'assignee_id' => [
                 'nullable',
                 'exists:users,id',
@@ -140,6 +180,7 @@ class IssueController extends Controller
         // error that leaks which label names exist in a project it can't
         // access.
         $this->labelService->ensureSystemLabels($project);
+        $this->issueTypeService->ensureSystemIssueTypes($project);
 
         $request->validate([
             'labels.*' => [
@@ -147,6 +188,15 @@ class IssueController extends Controller
                 Rule::exists('labels', 'name')->where('project_id', $project->id),
             ],
         ]);
+
+        $issueType = IssueType::query()->where('project_id', $project->id)->find($data['issue_type_id'] ?? null)
+            ?? $this->issueTypeService->defaultIssueType($project);
+
+        $this->authorize('createOfType', [Issue::class, $project, $issueType]);
+
+        $data['issue_type_id'] = $issueType->id;
+        $data['workflow_status_id'] = $this->issueTypeService
+            ->resolveWorkflowStatusForLegacyValue($issueType, $data['status'])?->id;
 
         $issue = $this->issueService->createIssue($data);
 

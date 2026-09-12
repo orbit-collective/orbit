@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\Permissions\Permission;
 use App\Enums\Permissions\RoleType;
 use App\Models\Issue;
+use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
 
@@ -20,6 +21,22 @@ class IssuePolicy
     public function create(User $user, Project $project): bool
     {
         return $project->hasPermissionOrTier($user, Permission::ISSUES_CREATE, self::MODIFY_TIERS);
+    }
+
+    /**
+     * A second, narrower gate on top of create(): an issue type can restrict
+     * who is allowed to use it via restricted_role_types. An empty list
+     * means "no restriction" - anyone who passes create() above may use it.
+     */
+    public function createOfType(User $user, Project $project, IssueType $issueType): bool
+    {
+        if (empty($issueType->restricted_role_types)) {
+            return true;
+        }
+
+        $role = $project->users()->where('users.id', $user->id)->first()?->pivot->role;
+
+        return in_array($role, $issueType->restricted_role_types, true);
     }
 
     public function update(User $user, Issue $issue): bool

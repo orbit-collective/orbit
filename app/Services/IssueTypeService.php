@@ -6,6 +6,7 @@ use App\Enums\WorkflowStatusCategory;
 use App\Models\Issue;
 use App\Models\IssueType;
 use App\Models\Project;
+use App\Models\WorkflowStatus;
 use App\Repositories\IssueTypeRepository;
 use App\Repositories\WorkflowRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -97,6 +98,43 @@ class IssueTypeService
         $this->ensureSystemIssueTypes($project);
 
         return $this->issueTypeRepository->getForProject($project);
+    }
+
+    /**
+     * The issue type new issues fall back to when none is explicitly chosen
+     * (the frontend doesn't offer a picker yet - see the quick-add redesign
+     * step of the Issue Types plan).
+     */
+    public function defaultIssueType(Project $project): IssueType
+    {
+        $this->ensureSystemIssueTypes($project);
+
+        return $this->issueTypeRepository->findForProject($project, 'Task');
+    }
+
+    /**
+     * Maps the legacy issues.status enum value to the best-fit status of the
+     * given issue type's workflow, by category rather than by exact name -
+     * so it still works for a type whose workflow has been customized away
+     * from the three default statuses. Falls back to the type's initial
+     * status, so every issue always resolves to *something*.
+     */
+    public function resolveWorkflowStatusForLegacyValue(IssueType $issueType, ?string $legacyStatus): ?WorkflowStatus
+    {
+        $category = match ($legacyStatus) {
+            'open' => WorkflowStatusCategory::TODO,
+            'in_progress' => WorkflowStatusCategory::IN_PROGRESS,
+            'closed' => WorkflowStatusCategory::DONE,
+            default => null,
+        };
+
+        $status = $category
+            ? $issueType->statuses()->where('category', $category->value)->orderBy('sort_order')->first()
+            : null;
+
+        return $status
+            ?? $issueType->statuses()->where('is_initial', true)->first()
+            ?? $issueType->statuses()->orderBy('sort_order')->first();
     }
 
     public function createIssueType(Project $project, array $data): IssueType
