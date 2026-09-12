@@ -38,7 +38,7 @@ describe('WorkspaceSettingsIssueTypeInlineEditor', () => {
             />,
         );
 
-        expect(screen.getByText('Editing issue type')).toBeInTheDocument();
+        expect(screen.getByText('Edit issue type')).toBeInTheDocument();
         expect(screen.getByDisplayValue('Bug')).toBeInTheDocument();
         expect(
             screen.getByDisplayValue('Something is broken'),
