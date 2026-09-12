@@ -1,12 +1,14 @@
 <?php
 
 use App\DataTransferObjects\ExternalIssueDTO;
+use App\Enums\IntegrationFieldMappingType;
 use App\Events\IssuesImported;
 use App\Models\ExternalIssueLink;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
+use App\Repositories\IntegrationFieldMappingRepository;
 use App\Services\Integrations\ImportOrchestratorService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -158,6 +160,36 @@ test('fires IssuesImported once per run with the final result', function () {
             && $event->importedBy->is($this->importedBy)
             && $event->result->imported === 2;
     });
+});
+
+test('omits an imported label whose mapped orbit value no longer exists in the project taxonomy', function () {
+    app(IntegrationFieldMappingRepository::class)->upsert(
+        $this->projectIntegration, IntegrationFieldMappingType::LABEL, 'Bug', 'not-a-real-label',
+    );
+
+    $this->service->import(
+        $this->projectIntegration, $this->project, $this->importedBy,
+        [makeExternalIssue(['externalId' => '100', 'externalLabels' => ['Bug']])],
+    );
+
+    $issue = Issue::where('project_id', $this->project->id)->first();
+
+    expect($issue->labels)->toBeNull();
+});
+
+test('keeps an imported label whose mapped orbit value exists in the project taxonomy', function () {
+    app(IntegrationFieldMappingRepository::class)->upsert(
+        $this->projectIntegration, IntegrationFieldMappingType::LABEL, 'Bug', 'bug',
+    );
+
+    $this->service->import(
+        $this->projectIntegration, $this->project, $this->importedBy,
+        [makeExternalIssue(['externalId' => '100', 'externalLabels' => ['Bug']])],
+    );
+
+    $issue = Issue::where('project_id', $this->project->id)->first();
+
+    expect($issue->labels)->toBe(['bug']);
 });
 
 test('calls onProgress with running totals after every processed issue', function () {

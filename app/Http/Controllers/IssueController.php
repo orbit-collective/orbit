@@ -114,10 +114,6 @@ class IssueController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        if ($project = Project::find($request->input('project_id'))) {
-            $this->labelService->ensureSystemLabels($project);
-        }
-
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -130,15 +126,27 @@ class IssueController extends Controller
                 Rule::exists('project_user', 'user_id')->where('project_id', $request->input('project_id')),
             ],
             'labels' => 'nullable|array',
-            'labels.*' => [
-                'string',
-                Rule::exists('labels', 'name')->where('project_id', $request->input('project_id')),
-            ],
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
 
-        $this->authorize('create', [Issue::class, Project::findOrFail($data['project_id'])]);
+        $project = $this->projectService->findById($data['project_id']);
+
+        $this->authorize('create', [Issue::class, $project]);
+
+        // Seeding (a write) and the labels.* existence check both have to
+        // come after authorization above - otherwise an unauthorized request
+        // could still seed a project's system labels, or get a validation
+        // error that leaks which label names exist in a project it can't
+        // access.
+        $this->labelService->ensureSystemLabels($project);
+
+        $request->validate([
+            'labels.*' => [
+                'string',
+                Rule::exists('labels', 'name')->where('project_id', $project->id),
+            ],
+        ]);
 
         $issue = $this->issueService->createIssue($data);
 

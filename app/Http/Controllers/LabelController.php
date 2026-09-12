@@ -17,13 +17,20 @@ class LabelController extends Controller
 
     public function store(Request $request, Project $project): RedirectResponse
     {
-        $this->authorize('manageLabels', $project);
+        $this->authorize('createLabels', $project);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50'],
             'color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'description' => ['nullable', 'string', 'max:255'],
         ]);
+
+        // A custom label can otherwise be created before the project's
+        // starter taxonomy is seeded - if its name collides with a system
+        // label (e.g. "bug"), ensureSystemLabels()'s later firstOrCreate()
+        // would just find this custom row and leave it as-is, permanently
+        // losing the real system label under that name.
+        $this->labelService->ensureSystemLabels($project);
 
         $this->labelService->createLabel($project, $validated);
 
@@ -33,7 +40,7 @@ class LabelController extends Controller
     public function update(Request $request, Project $project, Label $label): RedirectResponse
     {
         $this->ensureLabelBelongsToProject($project, $label);
-        $this->authorize('manageLabels', $project);
+        $this->authorize('updateLabels', $project);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50'],
@@ -49,7 +56,7 @@ class LabelController extends Controller
     public function destroy(Project $project, Label $label): RedirectResponse
     {
         $this->ensureLabelBelongsToProject($project, $label);
-        $this->authorize('manageLabels', $project);
+        $this->authorize('deleteLabels', $project);
 
         $name = $label->name;
 
