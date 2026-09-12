@@ -24,10 +24,12 @@ class Project extends Model
         'columns',
         'role',
         'is_system',
+        'labels_seeded_at',
     ];
 
     protected $casts = [
         'columns' => 'array',
+        'labels_seeded_at' => 'datetime',
     ];
 
     public function issues(): HasMany
