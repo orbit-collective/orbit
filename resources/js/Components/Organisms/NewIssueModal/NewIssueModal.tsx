@@ -1,4 +1,3 @@
-import Badge from '@/Components/Atoms/Badge/Badge';
 import Button from '@/Components/Atoms/Button/Button';
 import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
 import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
@@ -6,26 +5,21 @@ import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger'
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import Input from '@/Components/Atoms/Input/Input';
+import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import DatePickerOverlay from '@/Components/Molecules/DatePickerOverlay/DatePickerOverlay';
 import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
+import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { NewIssueModalProps } from '@/types/Components';
 import { IssueLabel, IssuePriority } from '@/types/Issues';
+import { cn } from '@/utils/cn';
 import { useForm } from '@inertiajs/react';
 import React, { SyntheticEvent, useEffect, useState } from 'react';
 
 const PRIORITIES: IssuePriority[] = ['low', 'medium', 'high'];
-const LABELS: IssueLabel[] = [
-    'bug',
-    'feature',
-    'performance',
-    'design',
-    'ux',
-    'chore',
-];
 
 const NewIssueModal: React.FC<NewIssueModalProps> = ({
     isOpen,
@@ -33,6 +27,7 @@ const NewIssueModal: React.FC<NewIssueModalProps> = ({
     project,
     users,
 }) => {
+    const { labels: availableLabels } = useProjectLabels();
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
     const [isAssigneeOpen, setIsAssigneeOpen] = useState(false);
@@ -262,23 +257,23 @@ const NewIssueModal: React.FC<NewIssueModalProps> = ({
                             </SidebarField>
                             <SidebarField label="Labels">
                                 <div className="flex flex-wrap gap-2">
-                                    {LABELS.map((l) => (
+                                    {availableLabels.map((l) => (
                                         <button
-                                            key={l}
+                                            key={l.id}
                                             type="button"
                                             className="cursor-pointer border-none bg-transparent p-0 transition-transform duration-100 hover:scale-105"
-                                            onClick={() => toggleLabel(l)}
+                                            onClick={() => toggleLabel(l.name)}
                                         >
-                                            <Badge
-                                                color={l}
-                                                variant={
-                                                    data.labels.includes(l)
-                                                        ? 'default'
-                                                        : 'outline'
-                                                }
-                                            >
-                                                {l}
-                                            </Badge>
+                                            <LabelBadge
+                                                label={l.name}
+                                                className={cn(
+                                                    'pointer-events-none',
+                                                    data.labels.includes(
+                                                        l.name,
+                                                    ) &&
+                                                        'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]',
+                                                )}
+                                            />
                                         </button>
                                     ))}
                                 </div>

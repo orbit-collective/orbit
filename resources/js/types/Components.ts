@@ -20,6 +20,7 @@ import {
     SortingColumn,
     Status,
 } from '@/types/Issues';
+import { ProjectLabel } from '@/types/Labels';
 import { Project, ProjectColors } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import type { VariantProps } from 'class-variance-authority';
@@ -527,6 +528,7 @@ export interface IssuePageProps {
     projects: Project[];
     issue: Issue;
     users: AssignableUser[];
+    labels?: ProjectLabel[];
 }
 export interface IssuePageHeaderProps {
     project: Project;

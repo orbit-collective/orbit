@@ -5,6 +5,7 @@ import AccountSettingsContent from '@/Components/Organisms/AccountSettingsConten
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import WorkspaceSettingsContent from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsContent';
 import { PageProps } from '@/types';
+import { ProjectLabel } from '@/types/Labels';
 import { NotificationSettings } from '@/types/Notification';
 import {
     ImportIntegrationSettings,
@@ -55,6 +56,9 @@ interface SettingsIndexProps {
     jiraImportProgress?: IntegrationImportProgress | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
+    labels?: ProjectLabel[];
+    hasLabelsAccess?: boolean;
+    canManageLabels?: boolean;
 }
 
 export default function SettingsIndex({
@@ -82,6 +86,9 @@ export default function SettingsIndex({
     jiraImportProgress = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
+    labels = [],
+    hasLabelsAccess = false,
+    canManageLabels = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -155,6 +162,9 @@ export default function SettingsIndex({
                                 jiraImportProgress={jiraImportProgress}
                                 hasIntegrationsAccess={hasIntegrationsAccess}
                                 canUpdateIntegrations={canUpdateIntegrations}
+                                labels={labels}
+                                hasLabelsAccess={hasLabelsAccess}
+                                canManageLabels={canManageLabels}
                             />
                         ) : (
                             <SettingsPanel

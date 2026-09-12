@@ -2,112 +2,82 @@ import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
+import { useAlert } from '@/context/AlertContext';
+import { ProjectLabel } from '@/types/Labels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { WorkspaceLabelDefinition } from '@/types/Settings';
-import { LABEL_COLORS } from '@/utils/labelColors';
-import { useMemo, useState } from 'react';
+import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import WorkspaceSettingsDeleteLabelModal from './WorkspaceSettingsDeleteLabelModal';
 import WorkspaceSettingsLabelInlineEditor from './WorkspaceSettingsLabelInlineEditor';
 
 interface WorkspaceSettingsLabelsTabProps {
     memberProjects?: MemberProjectSummary[];
     selectedProjectId?: number | null;
+    labels?: ProjectLabel[];
+    hasLabelsAccess?: boolean;
+    canManageLabels?: boolean;
 }
 
 const NEW_LABEL_EDITOR_TARGET = '__new__';
 
-const DEFAULT_LABELS: WorkspaceLabelDefinition[] = [
-    {
-        id: 'bug',
-        name: 'bug',
-        color: LABEL_COLORS.bug,
-        description: 'Something isn’t working as expected.',
-        isSystem: true,
-    },
-    {
-        id: 'feature',
-        name: 'feature',
-        color: LABEL_COLORS.feature,
-        description: 'A new capability or request.',
-        isSystem: true,
-    },
-    {
-        id: 'performance',
-        name: 'performance',
-        color: LABEL_COLORS.performance,
-        description: 'Related to speed, load, or resource usage.',
-        isSystem: true,
-    },
-    {
-        id: 'design',
-        name: 'design',
-        color: LABEL_COLORS.design,
-        description: 'Visual, layout, or interaction design work.',
-        isSystem: true,
-    },
-    {
-        id: 'ux',
-        name: 'ux',
-        color: LABEL_COLORS.ux,
-        description: 'Usability and user-experience concerns.',
-        isSystem: true,
-    },
-    {
-        id: 'chore',
-        name: 'chore',
-        color: LABEL_COLORS.chore,
-        description: 'Maintenance work with no direct user impact.',
-        isSystem: true,
-    },
-];
-
 export default function WorkspaceSettingsLabelsTab({
     memberProjects = [],
     selectedProjectId = null,
+    labels = [],
+    hasLabelsAccess = false,
+    canManageLabels = false,
 }: WorkspaceSettingsLabelsTabProps) {
-    const [activeProjectId, setActiveProjectId] = useState<number | null>(
-        selectedProjectId ?? memberProjects[0]?.id ?? null,
-    );
-    const [labelsByProject, setLabelsByProject] = useState<
-        Record<number, WorkspaceLabelDefinition[]>
-    >({});
+    const { addAlert } = useAlert();
     const [editorTarget, setEditorTarget] = useState<string | null>(null);
-    const [deletingLabel, setDeletingLabel] =
-        useState<WorkspaceLabelDefinition | null>(null);
-
-    const activeProject = useMemo(
-        () => memberProjects.find((project) => project.id === activeProjectId),
-        [memberProjects, activeProjectId],
+    const [deletingLabel, setDeletingLabel] = useState<ProjectLabel | null>(
+        null,
     );
 
-    const labels = useMemo(
-        () =>
-            activeProjectId !== null
-                ? (labelsByProject[activeProjectId] ?? DEFAULT_LABELS)
-                : DEFAULT_LABELS,
-        [labelsByProject, activeProjectId],
-    );
+    const selectedProject =
+        memberProjects.find((project) => project.id === selectedProjectId) ??
+        null;
+
+    const switchProject = (projectId: number) => {
+        setEditorTarget(null);
+        router.get(
+            `/settings?tab=labels&project=${projectId}`,
+            {},
+            { preserveScroll: true, preserveState: true },
+        );
+    };
+
+    if (!selectedProject || !hasLabelsAccess) {
+        return (
+            <SettingsPanel
+                title="Label taxonomy"
+                description="Define label taxonomy used across issues and projects."
+                icon="Tag"
+            >
+                <SettingsPanelRow
+                    title={
+                        !selectedProject
+                            ? "You're not part of any project yet"
+                            : "You don't have access to this project's labels"
+                    }
+                    description={
+                        !selectedProject
+                            ? 'Create or join a project to manage its labels here.'
+                            : 'Ask a project admin for the labels.view permission to see labels here.'
+                    }
+                />
+            </SettingsPanel>
+        );
+    }
 
     const customCount = labels.filter((label) => !label.isSystem).length;
     const systemCount = labels.length - customCount;
     const editingLabel =
         editorTarget && editorTarget !== NEW_LABEL_EDITOR_TARGET
-            ? (labels.find((label) => label.id === editorTarget) ?? null)
+            ? (labels.find((label) => String(label.id) === editorTarget) ??
+              null)
             : null;
-
-    const updateLabels = (
-        updater: (
-            current: WorkspaceLabelDefinition[],
-        ) => WorkspaceLabelDefinition[],
-    ) => {
-        if (activeProjectId === null) return;
-
-        setLabelsByProject((prev) => ({
-            ...prev,
-            [activeProjectId]: updater(prev[activeProjectId] ?? DEFAULT_LABELS),
-        }));
-    };
 
     const toggleCreateEditor = () => {
         setEditorTarget((current) =>
@@ -117,8 +87,9 @@ export default function WorkspaceSettingsLabelsTab({
         );
     };
 
-    const toggleEditEditor = (label: WorkspaceLabelDefinition) => {
-        setEditorTarget((current) => (current === label.id ? null : label.id));
+    const toggleEditEditor = (label: ProjectLabel) => {
+        const target = String(label.id);
+        setEditorTarget((current) => (current === target ? null : target));
     };
 
     const handleSaveLabel = (values: {
@@ -126,37 +97,53 @@ export default function WorkspaceSettingsLabelsTab({
         color: string;
         description: string;
     }) => {
-        if (editingLabel) {
-            updateLabels((current) =>
-                current.map((label) =>
-                    label.id === editingLabel.id
-                        ? { ...label, ...values }
-                        : label,
-                ),
-            );
-        } else {
-            const newLabel: WorkspaceLabelDefinition = {
-                id: `custom-${Date.now()}`,
-                isSystem: false,
-                ...values,
-            };
+        const onSuccess = () => setEditorTarget(null);
+        const onError = () => addAlert('Could not save this label.', 'error');
 
-            updateLabels((current) => [...current, newLabel]);
+        if (editingLabel) {
+            router.patch(
+                route('projects.labels.update', [
+                    selectedProject.id,
+                    editingLabel.id,
+                ]),
+                values,
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    onSuccess,
+                    onError,
+                },
+            );
+            return;
         }
 
-        setEditorTarget(null);
+        router.post(
+            route('projects.labels.store', [selectedProject.id]),
+            values,
+            { preserveScroll: true, preserveState: true, onSuccess, onError },
+        );
     };
 
     const handleConfirmDelete = () => {
         if (!deletingLabel) return;
 
-        updateLabels((current) =>
-            current.filter((label) => label.id !== deletingLabel.id),
-        );
+        const target = String(deletingLabel.id);
 
-        if (editorTarget === deletingLabel.id) {
-            setEditorTarget(null);
-        }
+        router.delete(
+            route('projects.labels.destroy', [
+                selectedProject.id,
+                deletingLabel.id,
+            ]),
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    if (editorTarget === target) setEditorTarget(null);
+                },
+                onError: () =>
+                    addAlert('Could not delete this label.', 'error'),
+            },
+        );
     };
 
     return (
@@ -187,21 +174,14 @@ export default function WorkspaceSettingsLabelsTab({
 
             <ProjectPickerPanel
                 projects={memberProjects}
-                selectedProjectId={activeProjectId ?? 0}
+                selectedProjectId={selectedProject.id}
                 description="Choose which project's label taxonomy you're editing."
-                onSelect={(projectId) => {
-                    setActiveProjectId(projectId);
-                    setEditorTarget(null);
-                }}
+                onSelect={switchProject}
             />
 
             <SettingsPanel
                 title="Label taxonomy"
-                description={
-                    activeProject
-                        ? `Labels available for issues in ${activeProject.name}.`
-                        : 'Define label taxonomy used across issues and projects.'
-                }
+                description={`Labels available for issues in ${selectedProject.name}.`}
                 icon="Tag"
             >
                 <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
@@ -209,14 +189,16 @@ export default function WorkspaceSettingsLabelsTab({
                         {labels.length}{' '}
                         {labels.length === 1 ? 'label' : 'labels'} configured
                     </p>
-                    <Button
-                        type="button"
-                        onClick={toggleCreateEditor}
-                        className="gap-1.5"
-                    >
-                        <Icon name="Plus" size={14} />
-                        New label
-                    </Button>
+                    {canManageLabels && (
+                        <Button
+                            type="button"
+                            onClick={toggleCreateEditor}
+                            className="gap-1.5"
+                        >
+                            <Icon name="Plus" size={14} />
+                            New label
+                        </Button>
+                    )}
                 </div>
 
                 {editorTarget === NEW_LABEL_EDITOR_TARGET && (
@@ -245,7 +227,7 @@ export default function WorkspaceSettingsLabelsTab({
                     )}
 
                 {labels.map((label) =>
-                    editorTarget === label.id ? (
+                    editorTarget === String(label.id) ? (
                         <WorkspaceSettingsLabelInlineEditor
                             key={label.id}
                             label={label}
@@ -280,24 +262,26 @@ export default function WorkspaceSettingsLabelsTab({
                                     )}
                                 </div>
                             </div>
-                            <div className="flex shrink-0 items-center gap-1">
-                                <button
-                                    type="button"
-                                    title="Edit label"
-                                    onClick={() => toggleEditEditor(label)}
-                                    className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
-                                >
-                                    <Icon name="Pencil" size={14} />
-                                </button>
-                                <button
-                                    type="button"
-                                    title="Delete label"
-                                    onClick={() => setDeletingLabel(label)}
-                                    className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
-                                >
-                                    <Icon name="Trash" size={14} />
-                                </button>
-                            </div>
+                            {canManageLabels && (
+                                <div className="flex shrink-0 items-center gap-1">
+                                    <button
+                                        type="button"
+                                        title="Edit label"
+                                        onClick={() => toggleEditEditor(label)}
+                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                    >
+                                        <Icon name="Pencil" size={14} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        title="Delete label"
+                                        onClick={() => setDeletingLabel(label)}
+                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
+                                    >
+                                        <Icon name="Trash" size={14} />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ),
                 )}

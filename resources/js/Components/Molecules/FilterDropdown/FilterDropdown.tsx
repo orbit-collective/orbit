@@ -1,8 +1,10 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
-import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
+import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { FilterDropdownProps, FilterDropdownType } from '@/types/Components';
+import { ProjectLabel } from '@/types/Labels';
 import { AssignableUser } from '@/types/Users';
 import { cn } from '@/utils/cn';
 import { router } from '@inertiajs/react';
@@ -42,13 +44,7 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
         paramKey: 'labels',
         label: 'Labels',
         multiSelect: true,
-        options: ['bug', 'feature', 'performance', 'design', 'ux', 'chore'].map(
-            (value) => ({
-                value,
-                label: value,
-                render: () => <Badge color={value as any}>{value}</Badge>,
-            }),
-        ),
+        options: [],
     },
     status: {
         paramKey: 'status',
@@ -106,6 +102,15 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
     },
 };
 
+const buildLabelsConfig = (labels: ProjectLabel[]): FilterConfig => ({
+    ...FILTER_CONFIG.labels,
+    options: labels.map((label) => ({
+        value: label.name,
+        label: label.name,
+        render: () => <LabelBadge label={label.name} />,
+    })),
+});
+
 const buildAssigneeConfig = (users: AssignableUser[]): FilterConfig => ({
     ...FILTER_CONFIG.assignee,
     options: [
@@ -136,13 +141,12 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     isOpen,
     onOpenChange,
 }) => {
-    const config = useMemo(
-        () =>
-            type === 'assignee'
-                ? buildAssigneeConfig(users)
-                : FILTER_CONFIG[type],
-        [type, users],
-    );
+    const { labels: projectLabels } = useProjectLabels();
+    const config = useMemo(() => {
+        if (type === 'assignee') return buildAssigneeConfig(users);
+        if (type === 'labels') return buildLabelsConfig(projectLabels);
+        return FILTER_CONFIG[type];
+    }, [type, users, projectLabels]);
     const triggerRef = useRef<HTMLDivElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
     const [coords, setCoords] = useState<{ top: number; left: number } | null>(

@@ -1,24 +1,19 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
+import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { EditableLabelListProps } from '@/types/Components';
 import { IssueLabel } from '@/types/Issues';
 import { cn } from '@/utils/cn';
 import React, { useEffect, useRef, useState } from 'react';
-
-const AVAILABLE_LABELS: IssueLabel[] = [
-    'bug',
-    'feature',
-    'performance',
-    'design',
-    'ux',
-    'chore',
-];
 
 const EditableLabelList: React.FC<EditableLabelListProps> = ({
     labels,
     onSave,
     disabled = false,
 }) => {
+    const AVAILABLE_LABELS = useProjectLabels().labels.map(
+        (label) => label.name,
+    );
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);

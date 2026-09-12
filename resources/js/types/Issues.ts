@@ -1,5 +1,9 @@
-export type IssueLabel =
-    'bug' | 'feature' | 'performance' | 'design' | 'ux' | 'chore';
+/**
+ * A label is a per-project record now (see types/Labels.ts ProjectLabel) -
+ * this alias just keeps the many existing `IssueLabel` call sites (issue
+ * label arrays, filter/sort params) working as plain label name strings.
+ */
+export type IssueLabel = string;
 
 export interface Comment {
     id: number;

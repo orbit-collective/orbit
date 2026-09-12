@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Label;
 use App\Models\Project;
 use App\Services\ActivityLogService;
 use App\Services\IssueService;
+use App\Services\LabelService;
 use App\Services\ProjectService;
 use App\Services\UserService;
 use Illuminate\Container\EntryNotFoundException;
 use Illuminate\Contracts\Container\CircularDependencyException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 use Psr\Container\ContainerExceptionInterface;
@@ -19,15 +22,22 @@ use Psr\Container\NotFoundExceptionInterface;
 class ProjectController extends Controller
 {
     protected ProjectService $projectService;
+
     protected IssueService $issueService;
+
     protected UserService $userService;
+
     protected ActivityLogService $activityLogService;
 
-    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService) {
+    protected LabelService $labelService;
+
+    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService)
+    {
         $this->projectService = $projectService;
         $this->issueService = $issueService;
         $this->userService = $userService;
         $this->activityLogService = $activityLogService;
+        $this->labelService = $labelService;
     }
 
     /**
@@ -72,7 +82,19 @@ class ProjectController extends Controller
                 'userAvatar' => $entry->user?->avatar,
                 'createdAt' => $entry->created_at->toJSON(),
             ]),
+            'labels' => $this->mapLabels($this->labelService->getLabels($project)),
         ]);
+    }
+
+    private function mapLabels(Collection $labels): array
+    {
+        return $labels->map(fn (Label $label) => [
+            'id' => $label->id,
+            'name' => $label->name,
+            'color' => $label->color,
+            'description' => $label->description,
+            'isSystem' => $label->is_system,
+        ])->values()->all();
     }
 
     public function index(Request $request): Response
@@ -83,13 +105,14 @@ class ProjectController extends Controller
             'projects' => $projects,
         ]);
     }
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'name' => 'required|string|max:30',
             'description' => 'nullable|string',
             'slug' => 'required|string|max:30',
-            'color' => 'required|string'
+            'color' => 'required|string',
         ]);
 
         $project = $this->projectService->createProject($data, $request->user()->id);
@@ -98,6 +121,7 @@ class ProjectController extends Controller
             ->with('success', 'Project has been created successfully.')
             ->with('action_url', route('projects.show', $project->id));
     }
+
     public function updateColumns(Request $request, Project $project): RedirectResponse
     {
         $this->authorize('update', $project);

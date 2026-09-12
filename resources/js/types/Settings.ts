@@ -200,11 +200,3 @@ export const isWorkspaceSettingsTabId = (
 ): value is WorkspaceSettingsTabId => {
     return WORKSPACE_SETTINGS_TAB_IDS.includes(value as WorkspaceSettingsTabId);
 };
-
-export interface WorkspaceLabelDefinition {
-    id: string;
-    name: string;
-    color: string;
-    description: string;
-    isSystem: boolean;
-}

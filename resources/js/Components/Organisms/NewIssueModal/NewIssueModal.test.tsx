@@ -1,3 +1,5 @@
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectLabel } from '@/types/Labels';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -91,6 +93,21 @@ const users: AssignableUser[] = [
     { id: 2, name: 'Grace Hopper', avatar: null },
 ];
 
+const labels: ProjectLabel[] = [
+    'bug',
+    'feature',
+    'performance',
+    'design',
+    'ux',
+    'chore',
+].map((name, index) => ({
+    id: index + 1,
+    name,
+    color: '#f44336',
+    description: null,
+    isSystem: true,
+}));
+
 beforeEach(() => {
     vi.stubGlobal('route', mockRoute);
 });
@@ -148,12 +165,14 @@ describe('NewIssueModal Component', () => {
 
     test('renders a button for every priority and label option', () => {
         render(
-            <NewIssueModal
-                isOpen
-                onClose={() => {}}
-                project={project}
-                users={users}
-            />,
+            <ProjectLabelsProvider labels={labels}>
+                <NewIssueModal
+                    isOpen
+                    onClose={() => {}}
+                    project={project}
+                    users={users}
+                />
+            </ProjectLabelsProvider>,
         );
 
         ['low', 'medium', 'high'].forEach((p) =>
@@ -200,25 +219,24 @@ describe('NewIssueModal Component', () => {
 
     test('toggles a label on and off when its badge is clicked', async () => {
         render(
-            <NewIssueModal
-                isOpen
-                onClose={() => {}}
-                project={project}
-                users={users}
-            />,
+            <ProjectLabelsProvider labels={labels}>
+                <NewIssueModal
+                    isOpen
+                    onClose={() => {}}
+                    project={project}
+                    users={users}
+                />
+            </ProjectLabelsProvider>,
         );
 
-        const badge = screen.getByText('bug');
-        // Unselected labels render with the "outline" variant.
-        expect(badge.parentElement).toHaveClass('group');
+        const badge = screen.getByText('bug').closest('span') as HTMLElement;
+        expect(badge).not.toHaveClass('border-[var(--accent-color)]');
 
         await userEvent.click(badge);
-        // Selecting switches to the "default" variant.
-        expect(badge.parentElement).toHaveClass('group');
+        expect(badge).toHaveClass('border-[var(--accent-color)]');
 
         await userEvent.click(badge);
-        // Clicking again removes it, restoring the outline variant.
-        expect(badge.parentElement).toHaveClass('group');
+        expect(badge).not.toHaveClass('border-[var(--accent-color)]');
     });
 
     test('highlights the priority button the user selects', async () => {

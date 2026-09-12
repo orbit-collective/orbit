@@ -395,7 +395,7 @@ describe('Sidebar Component', () => {
         pageState.url = '/settings';
         render(<Sidebar projects={[]} />);
 
-        expect(screen.getByText('Labels').closest('a')).toBeNull();
+        expect(screen.getByText('Statuses').closest('a')).toBeNull();
         expect(screen.getAllByText('Soon').length).toBeGreaterThan(0);
     });
 });
