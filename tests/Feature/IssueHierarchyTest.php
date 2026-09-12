@@ -33,7 +33,7 @@ test('an issue can be created as a sub-issue of an Epic', function () {
 
     $response->assertRedirect();
     $this->assertDatabaseHas('issues', ['project_id' => $project->id, 'title' => 'Sub task', 'parent_id' => $epic->id]);
-    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => "Issue #".$project->issues()->where('title', 'Sub task')->first()->id." added as a sub-issue of #$epic->id"]);
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => 'Issue #'.$project->issues()->where('title', 'Sub task')->first()->id." added as a sub-issue of #$epic->id"]);
 });
 
 test('an issue cannot be created under a parent whose type does not allow children', function () {
@@ -111,6 +111,71 @@ test('an issue cannot be moved under its own descendant, preventing a cycle', fu
     $response = $this->actingAs($member)->patch("/issues/$epic->id", ['parent_id' => $child->id]);
 
     $response->assertSessionHasErrors('parent_id');
+});
+
+test('a parent type with no configured allowed children accepts any child type', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $epicType = $project->issueTypes()->where('name', 'Epic')->first();
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $epic = $project->issues()->create([
+        'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'Bug sub-issue', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $bugType->id, 'parent_id' => $epic->id,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('issues', ['title' => 'Bug sub-issue', 'parent_id' => $epic->id]);
+});
+
+test('a parent type restricted to specific allowed children rejects an unlisted child type', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $epicType = $project->issueTypes()->where('name', 'Epic')->first();
+    $storyType = $project->issueTypes()->where('name', 'Story')->first();
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $epicType->allowedChildTypes()->sync([$storyType->id]);
+    $epic = $project->issues()->create([
+        'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'Bug sub-issue', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $bugType->id, 'parent_id' => $epic->id,
+    ]);
+
+    $response->assertSessionHasErrors('parent_id');
+});
+
+test('a parent type restricted to specific allowed children accepts a listed child type', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $epicType = $project->issueTypes()->where('name', 'Epic')->first();
+    $storyType = $project->issueTypes()->where('name', 'Story')->first();
+    $epicType->allowedChildTypes()->sync([$storyType->id]);
+    $epic = $project->issues()->create([
+        'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'Story sub-issue', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $storyType->id, 'parent_id' => $epic->id,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('issues', ['title' => 'Story sub-issue', 'parent_id' => $epic->id]);
 });
 
 test('updating an issue to move it under a valid parent succeeds', function () {

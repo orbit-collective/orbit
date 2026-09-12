@@ -51,4 +51,9 @@ class IssueTypeRepository
     {
         $issueType->delete();
     }
+
+    public function syncAllowedChildTypes(IssueType $issueType, array $childIssueTypeIds): void
+    {
+        $issueType->allowedChildTypes()->sync($childIssueTypeIds);
+    }
 }

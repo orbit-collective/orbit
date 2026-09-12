@@ -189,6 +189,16 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
         });
     });
 
+    describe('hierarchy modal', () => {
+        test('clicking "Manage hierarchy" opens the hierarchy modal for that type', () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            fireEvent.click(screen.getAllByTitle('Manage hierarchy')[0]);
+
+            expect(screen.getByText('Bug hierarchy')).toBeInTheDocument();
+        });
+    });
+
     describe('templates modal', () => {
         test('clicking "Manage templates" opens the templates modal for that type', () => {
             renderTab({ canUpdateIssueTypes: true });
