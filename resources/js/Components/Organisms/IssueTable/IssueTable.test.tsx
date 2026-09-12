@@ -133,6 +133,40 @@ describe('IssueTable Component', () => {
         expect(screen.getByText('Second issue')).toBeInTheDocument();
     });
 
+    test('renders a child issue directly beneath its parent with an expand chevron', () => {
+        const issues = [
+            makeIssue({ id: 'EPIC-1', title: 'Epic issue' }),
+            makeIssue({
+                id: 'CHILD-1',
+                title: 'Child issue',
+                parent_id: 'EPIC-1',
+            }),
+        ];
+        render(<IssueTable issues={issues} />);
+
+        expect(screen.getByText('Epic issue')).toBeInTheDocument();
+        expect(screen.getByText('Child issue')).toBeInTheDocument();
+        expect(
+            screen.getByLabelText('Collapse sub-issues'),
+        ).toBeInTheDocument();
+    });
+
+    test('collapsing a parent hides its child row', () => {
+        const issues = [
+            makeIssue({ id: 'EPIC-1', title: 'Epic issue' }),
+            makeIssue({
+                id: 'CHILD-1',
+                title: 'Child issue',
+                parent_id: 'EPIC-1',
+            }),
+        ];
+        render(<IssueTable issues={issues} />);
+
+        fireEvent.click(screen.getByLabelText('Collapse sub-issues'));
+
+        expect(screen.queryByText('Child issue')).not.toBeInTheDocument();
+    });
+
     test('shows the empty state when there are no issues', () => {
         render(<IssueTable issues={[]} />);
 

@@ -26,6 +26,10 @@ export const ListRow = ({
     handleSelectIssueCheckbox,
     enabledColumns = DEFAULT_ENABLED_COLUMNS,
     rowHeight = 36,
+    depth = 0,
+    hasChildren = false,
+    isCollapsed = false,
+    onToggleCollapse,
 }: ListRowProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
@@ -127,15 +131,46 @@ export const ListRow = ({
                         )}
                         data-column="title"
                     >
-                        <span
-                            className={cn(
-                                'truncate font-medium',
-                                isClosed &&
-                                    'text-[var(--text-muted-color)] line-through',
-                            )}
+                        <div
+                            className="flex items-center gap-1"
+                            style={{ paddingLeft: depth * 20 }}
                         >
-                            {issue.title}
-                        </span>
+                            {hasChildren ? (
+                                <button
+                                    type="button"
+                                    aria-label={
+                                        isCollapsed
+                                            ? 'Expand sub-issues'
+                                            : 'Collapse sub-issues'
+                                    }
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onToggleCollapse?.();
+                                    }}
+                                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-[var(--text-muted-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                >
+                                    <Icon
+                                        name={
+                                            isCollapsed
+                                                ? 'ChevronRight'
+                                                : 'ChevronDown'
+                                        }
+                                        size={12}
+                                    />
+                                </button>
+                            ) : (
+                                depth > 0 && <span className="w-4 shrink-0" />
+                            )}
+                            <span
+                                className={cn(
+                                    'truncate font-medium',
+                                    isClosed &&
+                                        'text-[var(--text-muted-color)] line-through',
+                                )}
+                            >
+                                {issue.title}
+                            </span>
+                        </div>
                     </td>
                 )}
                 {enabledColumns.type && (
