@@ -20,10 +20,12 @@ import {
     SortingColumn,
     Status,
 } from '@/types/Issues';
+import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { Project, ProjectColors } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
+import { WorkflowStatus } from '@/types/Workflow';
 import type { VariantProps } from 'class-variance-authority';
 import { icons } from 'lucide-react';
 import React, {
@@ -177,6 +179,16 @@ export interface EditableMarkdownProps {
 }
 export interface LabelBadgeProps {
     label: IssueLabel;
+    className?: string;
+    onClick?: (e: React.MouseEvent) => void;
+}
+export interface IssueTypeBadgeProps {
+    issueType: Pick<IssueType, 'name' | 'icon' | 'color'>;
+    className?: string;
+    onClick?: (e: React.MouseEvent) => void;
+}
+export interface WorkflowStatusBadgeProps {
+    status: Pick<WorkflowStatus, 'name' | 'color'>;
     className?: string;
     onClick?: (e: React.MouseEvent) => void;
 }
