@@ -63,6 +63,11 @@ class Project extends Model
         return $this->hasMany(ProjectIntegration::class);
     }
 
+    public function labels(): HasMany
+    {
+        return $this->hasMany(Label::class);
+    }
+
     public function hasPermission(User $user, PermissionEnum $permission): bool
     {
         $member = $this->users()->where('users.id', $user->id)->first();
