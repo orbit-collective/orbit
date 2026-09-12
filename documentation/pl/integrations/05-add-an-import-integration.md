@@ -116,8 +116,10 @@ Uwagi:
   `IntegrationImporter::fetchMappingMetadata()` może z góry enumerować
   (zobacz Krok 3) — mapowania `label` stosują się automatycznie w
   trakcie importu (niezmapowana zewnętrzna etykieta/komponent jest po
-  prostu pomijana, bo enum `IssueLabel` w Orbicie to mały, stały zbiór),
-  na razie nie ma dla nich UI przed importem.
+  prostu pomijana, bo każdy projekt definiuje własną taksonomię
+  labeli zamiast sztywnego zbioru — zobacz
+  [`../labels/README.md`](../labels/README.md)), na razie nie ma dla
+  nich UI przed importem.
 - Istniejące `subOptions` (`issue-import`, `status-sync`) to na razie
   czysto kosmetyczny opis dla wpisów `kind: 'import'` — nie są czytane
   przez żaden kod backendu (w przeciwieństwie do `subOptions` integracji

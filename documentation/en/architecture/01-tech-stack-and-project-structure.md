@@ -52,7 +52,7 @@ app/
   Repositories/         All Eloquent query logic — controllers/services never build queries directly
   Policies/             Gate-backed authorization, resolved permission sets
   Models/               Eloquent models
-  Enums/                Plain domain enums (IssueLabel)
+  Enums/                Plain domain enums (IssueStatus)
   Enums/Permissions/    RoleType, Permission
   Enums/Notifications/  NotificationType, NotificationChannel
   Events/               Immutable domain facts, fired unconditionally
