@@ -128,9 +128,8 @@ describe('WorkspaceSettingsTemplatesModal', () => {
             ),
             { target: { value: 'Steps to reproduce' } },
         );
-        fireEvent.change(screen.getByDisplayValue('Default priority'), {
-            target: { value: 'high' },
-        });
+        fireEvent.click(screen.getByText('Default priority'));
+        fireEvent.click(screen.getByText('High'));
         fireEvent.click(screen.getByText('Add template'));
 
         expect(routerMock.post).toHaveBeenCalledWith(

@@ -1,6 +1,6 @@
 import { AlertProvider } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsWorkflowModal from './WorkspaceSettingsWorkflowModal';
 
@@ -86,18 +86,18 @@ describe('WorkspaceSettingsWorkflowModal', () => {
         expect(screen.getByText('Initial')).toBeInTheDocument();
     });
 
-    test('renders the transition matrix with the existing transition checked', () => {
+    test('renders the transition chips with the existing transition marked allowed', () => {
         renderModal({ canUpdateWorkflow: true });
 
         expect(
             screen.getByLabelText('Allow transition from To Do to Done'),
-        ).toBeChecked();
+        ).toHaveAttribute('aria-pressed', 'true');
         expect(
             screen.getByLabelText('Allow transition from Done to To Do'),
-        ).not.toBeChecked();
+        ).toHaveAttribute('aria-pressed', 'false');
     });
 
-    test('toggling an unchecked cell posts a new transition', () => {
+    test('toggling an unmarked chip posts a new transition', () => {
         renderModal({ canUpdateWorkflow: true });
 
         fireEvent.click(
@@ -111,7 +111,7 @@ describe('WorkspaceSettingsWorkflowModal', () => {
         );
     });
 
-    test('toggling a checked cell deletes the transition', () => {
+    test('toggling an allowed chip deletes the transition', () => {
         renderModal({ canUpdateWorkflow: true });
 
         fireEvent.click(
@@ -124,7 +124,7 @@ describe('WorkspaceSettingsWorkflowModal', () => {
         );
     });
 
-    test('without canUpdateWorkflow, checkboxes and the delete-status control are disabled/hidden', () => {
+    test('without canUpdateWorkflow, transition chips and the delete-status control are disabled/hidden', () => {
         renderModal({ canUpdateWorkflow: false });
 
         expect(
@@ -139,9 +139,12 @@ describe('WorkspaceSettingsWorkflowModal', () => {
         fireEvent.change(screen.getByPlaceholderText('New status name'), {
             target: { value: 'Blocked' },
         });
-        fireEvent.change(screen.getByDisplayValue('To Do'), {
-            target: { value: 'in_progress' },
-        });
+        fireEvent.click(
+            within(screen.getByTestId('new-status-category')).getByRole(
+                'button',
+            ),
+        );
+        fireEvent.click(screen.getByText('In Progress'));
         fireEvent.click(screen.getByLabelText('Use color #ff5722'));
         fireEvent.click(screen.getByText('Add status'));
 
