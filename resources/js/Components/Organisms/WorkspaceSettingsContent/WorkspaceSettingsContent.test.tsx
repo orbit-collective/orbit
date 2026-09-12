@@ -63,6 +63,37 @@ describe('WorkspaceSettingsContent', () => {
         expect(screen.getByText('bug')).toBeInTheDocument();
     });
 
+    test('renders issue types content for the selected project', () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsContent
+                    tabId="issue-types"
+                    memberProjects={[{ id: 1, name: 'Orbit', color: 'blue' }]}
+                    selectedProjectId={1}
+                    hasIssueTypesAccess
+                    issueTypes={[
+                        {
+                            id: 1,
+                            name: 'Bug',
+                            icon: 'Bug',
+                            color: '#ef4444',
+                            description: null,
+                            isSystem: true,
+                            allowsChildren: false,
+                            requiredFields: [],
+                            restrictedRoleTypes: [],
+                        },
+                    ]}
+                />
+            </AlertProvider>,
+        );
+
+        expect(
+            screen.getByText('Issue types available for issues in Orbit.'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Bug')).toBeInTheDocument();
+    });
+
     test('renders statuses content', () => {
         render(<WorkspaceSettingsContent tabId="statuses" />);
 
