@@ -88,6 +88,12 @@ documentation/
       README.md              <- index for this category
       01-add-a-new-default-label.md
       02-expose-project-labels-to-a-new-page.md
+    issue-types/
+      README.md              <- index for this category
+      01-add-a-new-default-issue-type.md
+      02-add-a-workflow-status-category.md
+      03-extend-required-fields.md
+      04-add-a-new-list-column.md
     issue-views/
       README.md              <- index for this category
       01-add-a-new-issue-view.md
@@ -113,6 +119,7 @@ documentation/
     activity-log/            <- Polish translation of every guide above
     saved-filters/           <- Polish translation of every guide above
     labels/                  <- Polish translation of every guide above
+    issue-types/             <- Polish translation of every guide above
     issue-views/             <- Polish translation of every guide above
     rich-text-editor/        <- Polish translation of every guide above
     project-onboarding/      <- Polish translation of every guide above
