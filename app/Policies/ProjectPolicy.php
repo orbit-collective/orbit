@@ -61,4 +61,14 @@ class ProjectPolicy
     {
         return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
     }
+
+    public function viewLabels(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::LABELS_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER]);
+    }
+
+    public function manageLabels(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
 }

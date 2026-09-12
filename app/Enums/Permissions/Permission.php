@@ -27,6 +27,11 @@ enum Permission: string
     case INTEGRATIONS_VIEW = 'projects.integrations.view';
     case INTEGRATIONS_UPDATE = 'projects.integrations.update';
 
+    case LABELS_VIEW = 'projects.labels.view';
+    case LABELS_CREATE = 'projects.labels.create';
+    case LABELS_UPDATE = 'projects.labels.update';
+    case LABELS_DELETE = 'projects.labels.delete';
+
     // ISSUES PERMISSIONS
     case ISSUES_VIEW = 'issues.view';
     case ISSUES_CREATE = 'issues.create';
