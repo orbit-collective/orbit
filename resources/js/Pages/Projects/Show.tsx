@@ -5,6 +5,7 @@ import FilterBar from '@/Components/Organisms/FilterBar/FilterBar';
 import IssueBoard from '@/Components/Organisms/IssueBoard/IssueBoard';
 import IssueTable from '@/Components/Organisms/IssueTable/IssueTable';
 import UpcomingDeadlinesPanel from '@/Components/Organisms/UpcomingDeadlinesPanel/UpcomingDeadlinesPanel';
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { SavedFilter } from '@/hooks/useSavedFilters';
 import MainLayout from '@/Layouts/MainLayout';
 import { ActivityLogEntry } from '@/types/ActivityLog';
@@ -15,6 +16,7 @@ import {
     Sorting,
     SortingColumn,
 } from '@/types/Issues';
+import { ProjectLabel } from '@/types/Labels';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import { useState } from 'react';
@@ -35,6 +37,7 @@ export default function Show({
     savedFilters,
     users,
     activityLogs,
+    labels = [],
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
@@ -44,6 +47,7 @@ export default function Show({
     savedFilters: SavedFilter[];
     users: AssignableUser[];
     activityLogs: ActivityLogEntry[];
+    labels?: ProjectLabel[];
 }) {
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         if (typeof window !== 'undefined') {
@@ -61,34 +65,55 @@ export default function Show({
     });
 
     return (
-        <MainLayout
-            selectedLook={selectedLook}
-            setSelectedLook={setSelectedLook}
-            projects={projects}
-            project={project}
-            users={users}
-        >
-            <div className={'flex h-full flex-col'}>
-                <FilterBar
-                    queryParams={queryParams}
-                    project={project}
-                    savedFilters={savedFilters}
-                    users={users}
-                />
-                <div
-                    className={
-                        'relative flex flex-1 overflow-hidden border-t border-solid border-[var(--bg-light-color)]'
-                    }
-                >
+        <ProjectLabelsProvider labels={labels}>
+            <MainLayout
+                selectedLook={selectedLook}
+                setSelectedLook={setSelectedLook}
+                projects={projects}
+                project={project}
+                users={users}
+            >
+                <div className={'flex h-full flex-col'}>
+                    <FilterBar
+                        queryParams={queryParams}
+                        project={project}
+                        savedFilters={savedFilters}
+                        users={users}
+                    />
                     <div
-                        className={'flex flex-1 flex-col overflow-hidden px-4'}
+                        className={
+                            'relative flex flex-1 overflow-hidden border-t border-solid border-[var(--bg-light-color)]'
+                        }
                     >
-                        {selectedLook === 'List' ? (
-                            <IssueTable
-                                issues={issues.data}
-                                queryParams={queryParams}
-                                project={project}
-                                pagination={
+                        <div
+                            className={
+                                'flex flex-1 flex-col overflow-hidden px-4'
+                            }
+                        >
+                            {selectedLook === 'List' ? (
+                                <IssueTable
+                                    issues={issues.data}
+                                    queryParams={queryParams}
+                                    project={project}
+                                    pagination={
+                                        <Pagination
+                                            links={issues.links}
+                                            from={issues.from}
+                                            to={issues.to}
+                                            total={issues.total}
+                                            queryParams={queryParams}
+                                        />
+                                    }
+                                />
+                            ) : selectedLook === 'Board' ? (
+                                <>
+                                    <div
+                                        className={
+                                            'flex flex-1 flex-row overflow-hidden'
+                                        }
+                                    >
+                                        <IssueBoard issues={issues.data} />
+                                    </div>
                                     <Pagination
                                         links={issues.links}
                                         from={issues.from}
@@ -96,54 +121,37 @@ export default function Show({
                                         total={issues.total}
                                         queryParams={queryParams}
                                     />
-                                }
-                            />
-                        ) : selectedLook === 'Board' ? (
-                            <>
-                                <div
-                                    className={
-                                        'flex flex-1 flex-row overflow-hidden'
-                                    }
-                                >
-                                    <IssueBoard issues={issues.data} />
-                                </div>
-                                <Pagination
-                                    links={issues.links}
-                                    from={issues.from}
-                                    to={issues.to}
-                                    total={issues.total}
-                                    queryParams={queryParams}
-                                />
-                            </>
-                        ) : selectedLook === 'Calendar' ? (
-                            <div className="flex flex-1 flex-col gap-4 overflow-y-auto xl:flex-row xl:overflow-hidden">
-                                <CalendarView issues={calendarIssues} />
-                                <UpcomingDeadlinesPanel
-                                    issues={calendarIssues}
-                                />
-                            </div>
-                        ) : (
-                            <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
-                                <div className="mb-2 flex items-center justify-between">
-                                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
-                                        Recent Work Activity
-                                    </h3>
-                                    <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
-                                        Showing {activityLogs.length} latest
-                                        events
-                                    </span>
-                                </div>
-                                <div className="flex-1 overflow-y-auto">
-                                    <ActivityLogs
-                                        logs={activityLogs}
-                                        users={users}
+                                </>
+                            ) : selectedLook === 'Calendar' ? (
+                                <div className="flex flex-1 flex-col gap-4 overflow-y-auto xl:flex-row xl:overflow-hidden">
+                                    <CalendarView issues={calendarIssues} />
+                                    <UpcomingDeadlinesPanel
+                                        issues={calendarIssues}
                                     />
                                 </div>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                                            Recent Work Activity
+                                        </h3>
+                                        <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
+                                            Showing {activityLogs.length} latest
+                                            events
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto">
+                                        <ActivityLogs
+                                            logs={activityLogs}
+                                            users={users}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </MainLayout>
+            </MainLayout>
+        </ProjectLabelsProvider>
     );
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\IssueStatus;
 use App\Models\Issue;
+use App\Models\Label;
 use App\Models\Project;
 use App\Services\IssueService;
 use App\Services\LabelService;
@@ -11,6 +12,7 @@ use App\Services\ProjectService;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,7 +40,19 @@ class IssueController extends Controller
             'projects' => $this->projectService->getAllForUser($request->user()->id),
             'issue' => $this->issueService->getIssueWithRelations($issue->id),
             'users' => $this->userService->getAssignableUsersForProject($project->id),
+            'labels' => $this->mapLabels($this->labelService->getLabels($project)),
         ]);
+    }
+
+    private function mapLabels(Collection $labels): array
+    {
+        return $labels->map(fn (Label $label) => [
+            'id' => $label->id,
+            'name' => $label->name,
+            'color' => $label->color,
+            'description' => $label->description,
+            'isSystem' => $label->is_system,
+        ])->values()->all();
     }
 
     public function update(Request $request, Issue $issue): RedirectResponse

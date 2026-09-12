@@ -1,12 +1,12 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
-import { WorkspaceLabelDefinition } from '@/types/Settings';
+import { ProjectLabel } from '@/types/Labels';
 
 interface WorkspaceSettingsDeleteLabelModalProps {
     isOpen: boolean;
     onClose: () => void;
-    label: WorkspaceLabelDefinition | null;
+    label: ProjectLabel | null;
     onConfirm: () => void;
 }
 

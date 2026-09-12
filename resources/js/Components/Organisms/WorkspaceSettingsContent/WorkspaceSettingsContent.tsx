@@ -1,3 +1,4 @@
+import { ProjectLabel } from '@/types/Labels';
 import {
     ImportIntegrationSettings,
     IntegrationImportProgress,
@@ -44,6 +45,9 @@ interface WorkspaceSettingsContentProps {
     jiraImportProgress?: IntegrationImportProgress | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
+    labels?: ProjectLabel[];
+    hasLabelsAccess?: boolean;
+    canManageLabels?: boolean;
 }
 
 export default function WorkspaceSettingsContent({
@@ -69,12 +73,18 @@ export default function WorkspaceSettingsContent({
     jiraImportProgress = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
+    labels = [],
+    hasLabelsAccess = false,
+    canManageLabels = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return (
             <WorkspaceSettingsLabelsTab
                 memberProjects={memberProjects}
                 selectedProjectId={selectedProjectId}
+                labels={labels}
+                hasLabelsAccess={hasLabelsAccess}
+                canManageLabels={canManageLabels}
             />
         );
     }

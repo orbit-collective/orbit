@@ -1,11 +1,36 @@
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectLabel } from '@/types/Labels';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import EditableLabelList from './EditableLabelList';
 
+const TEST_LABELS: ProjectLabel[] = [
+    'bug',
+    'feature',
+    'performance',
+    'design',
+    'ux',
+    'chore',
+].map((name, index) => ({
+    id: index + 1,
+    name,
+    color: '#f44336',
+    description: null,
+    isSystem: true,
+}));
+
+const renderWithLabels = (children: ReactNode) =>
+    render(
+        <ProjectLabelsProvider labels={TEST_LABELS}>
+            {children}
+        </ProjectLabelsProvider>,
+    );
+
 describe('EditableLabelList Component', () => {
     test('renders "None" and an add button when there are no labels', () => {
-        render(<EditableLabelList labels={[]} onSave={() => {}} />);
+        renderWithLabels(<EditableLabelList labels={[]} onSave={() => {}} />);
 
         expect(screen.getByText('None')).toBeInTheDocument();
         expect(
@@ -14,7 +39,7 @@ describe('EditableLabelList Component', () => {
     });
 
     test('renders every current label as a pill', () => {
-        render(
+        renderWithLabels(
             <EditableLabelList labels={['bug', 'feature']} onSave={() => {}} />,
         );
 
@@ -24,7 +49,7 @@ describe('EditableLabelList Component', () => {
     });
 
     test('does not show the picker until the add button is clicked', () => {
-        render(<EditableLabelList labels={[]} onSave={() => {}} />);
+        renderWithLabels(<EditableLabelList labels={[]} onSave={() => {}} />);
 
         expect(
             screen.queryByPlaceholderText('Change or add labels...'),
@@ -32,7 +57,7 @@ describe('EditableLabelList Component', () => {
     });
 
     test('clicking the add button opens a picker listing every available label', async () => {
-        render(<EditableLabelList labels={[]} onSave={() => {}} />);
+        renderWithLabels(<EditableLabelList labels={[]} onSave={() => {}} />);
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
@@ -46,7 +71,7 @@ describe('EditableLabelList Component', () => {
     });
 
     test('typing in the search field filters the label list', async () => {
-        render(<EditableLabelList labels={[]} onSave={() => {}} />);
+        renderWithLabels(<EditableLabelList labels={[]} onSave={() => {}} />);
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
@@ -61,7 +86,7 @@ describe('EditableLabelList Component', () => {
     });
 
     test('shows a "No labels found." message when the search matches nothing', async () => {
-        render(<EditableLabelList labels={[]} onSave={() => {}} />);
+        renderWithLabels(<EditableLabelList labels={[]} onSave={() => {}} />);
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
@@ -76,7 +101,9 @@ describe('EditableLabelList Component', () => {
 
     test('clicking an unselected label in the picker adds it', async () => {
         const handleSave = vi.fn();
-        render(<EditableLabelList labels={['bug']} onSave={handleSave} />);
+        renderWithLabels(
+            <EditableLabelList labels={['bug']} onSave={handleSave} />,
+        );
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
@@ -88,7 +115,7 @@ describe('EditableLabelList Component', () => {
 
     test('clicking an already-selected label in the picker removes it', async () => {
         const handleSave = vi.fn();
-        render(
+        renderWithLabels(
             <EditableLabelList
                 labels={['bug', 'design']}
                 onSave={handleSave}
@@ -104,7 +131,9 @@ describe('EditableLabelList Component', () => {
     });
 
     test('shows a checkmark next to selected labels in the picker', async () => {
-        render(<EditableLabelList labels={['bug']} onSave={() => {}} />);
+        renderWithLabels(
+            <EditableLabelList labels={['bug']} onSave={() => {}} />,
+        );
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
@@ -118,7 +147,7 @@ describe('EditableLabelList Component', () => {
     });
 
     test('clicking outside the component closes the picker', async () => {
-        render(
+        renderWithLabels(
             <div>
                 <EditableLabelList labels={[]} onSave={() => {}} />
                 <button>Outside</button>
@@ -140,7 +169,9 @@ describe('EditableLabelList Component', () => {
     });
 
     test('does not open the picker when disabled', async () => {
-        render(<EditableLabelList labels={[]} onSave={() => {}} disabled />);
+        renderWithLabels(
+            <EditableLabelList labels={[]} onSave={() => {}} disabled />,
+        );
 
         expect(
             screen.getByRole('button', { name: 'Edit labels' }),
@@ -156,7 +187,7 @@ describe('EditableLabelList Component', () => {
     });
 
     test('shows the results count for the label list', async () => {
-        render(<EditableLabelList labels={[]} onSave={() => {}} />);
+        renderWithLabels(<EditableLabelList labels={[]} onSave={() => {}} />);
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
@@ -167,7 +198,7 @@ describe('EditableLabelList Component', () => {
 
     test('selects every label via "Select all"', async () => {
         const handleSave = vi.fn();
-        render(<EditableLabelList labels={[]} onSave={handleSave} />);
+        renderWithLabels(<EditableLabelList labels={[]} onSave={handleSave} />);
 
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
@@ -186,7 +217,7 @@ describe('EditableLabelList Component', () => {
 
     test('deselects every label via "Select all" when all are already selected', async () => {
         const handleSave = vi.fn();
-        render(
+        renderWithLabels(
             <EditableLabelList
                 labels={[
                     'bug',

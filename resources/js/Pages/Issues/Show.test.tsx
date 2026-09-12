@@ -393,6 +393,13 @@ describe('Issues/Show Page', () => {
                 projects={[project]}
                 issue={buildIssue({ labels: ['bug'] })}
                 users={users}
+                labels={['bug', 'design'].map((name, index) => ({
+                    id: index + 1,
+                    name,
+                    color: '#f44336',
+                    description: null,
+                    isSystem: true,
+                }))}
             />,
         );
 

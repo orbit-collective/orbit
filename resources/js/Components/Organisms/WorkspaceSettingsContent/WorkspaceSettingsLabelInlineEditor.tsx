@@ -2,12 +2,12 @@ import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
-import { WorkspaceLabelDefinition } from '@/types/Settings';
+import { ProjectLabel } from '@/types/Labels';
 import { LABEL_COLOR_PALETTE } from '@/utils/labelColors';
 import { useState } from 'react';
 
 interface WorkspaceSettingsLabelInlineEditorProps {
-    label: WorkspaceLabelDefinition | null;
+    label: ProjectLabel | null;
     onSave: (values: {
         name: string;
         color: string;

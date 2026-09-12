@@ -20,11 +20,45 @@ vi.mock('@inertiajs/react', async () => {
 });
 
 describe('WorkspaceSettingsContent', () => {
-    test('renders labels content', () => {
-        render(<WorkspaceSettingsContent tabId="labels" />);
+    test('renders an empty state for labels when the user has no project', () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsContent tabId="labels" />
+            </AlertProvider>,
+        );
 
         expect(screen.getByText('Label taxonomy')).toBeInTheDocument();
-        expect(screen.getByText('Governance')).toBeInTheDocument();
+        expect(
+            screen.getByText("You're not part of any project yet"),
+        ).toBeInTheDocument();
+    });
+
+    test('renders labels content for the selected project', () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsContent
+                    tabId="labels"
+                    memberProjects={[{ id: 1, name: 'Orbit', color: 'blue' }]}
+                    selectedProjectId={1}
+                    hasLabelsAccess
+                    canManageLabels
+                    labels={[
+                        {
+                            id: 1,
+                            name: 'bug',
+                            color: '#f44336',
+                            description: null,
+                            isSystem: true,
+                        },
+                    ]}
+                />
+            </AlertProvider>,
+        );
+
+        expect(
+            screen.getByText('Labels available for issues in Orbit.'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('bug')).toBeInTheDocument();
     });
 
     test('renders statuses content', () => {

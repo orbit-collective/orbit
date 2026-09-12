@@ -1,3 +1,5 @@
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectLabel } from '@/types/Labels';
 import { AssignableUser } from '@/types/Users';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -14,6 +16,14 @@ const users: AssignableUser[] = [
     { id: 1, name: 'Ada Lovelace', avatar: null },
     { id: 2, name: 'Grace Hopper', avatar: null },
 ];
+
+const testLabels: ProjectLabel[] = ['bug', 'feature'].map((name, index) => ({
+    id: index + 1,
+    name,
+    color: '#f44336',
+    description: null,
+    isSystem: true,
+}));
 
 describe('FilterDropdown Component', () => {
     beforeEach(() => {
@@ -115,12 +125,14 @@ describe('FilterDropdown Component', () => {
     test('adds a value to a multi-select filter', async () => {
         const user = userEvent.setup();
         render(
-            <FilterDropdown
-                type="labels"
-                queryParams={{ labels: 'bug' }}
-                isOpen
-                onOpenChange={vi.fn()}
-            />,
+            <ProjectLabelsProvider labels={testLabels}>
+                <FilterDropdown
+                    type="labels"
+                    queryParams={{ labels: 'bug' }}
+                    isOpen
+                    onOpenChange={vi.fn()}
+                />
+            </ProjectLabelsProvider>,
         );
 
         await user.click(await screen.findByText('feature'));
@@ -135,12 +147,14 @@ describe('FilterDropdown Component', () => {
     test('removes a value from a multi-select filter', async () => {
         const user = userEvent.setup();
         render(
-            <FilterDropdown
-                type="labels"
-                queryParams={{ labels: 'bug,feature' }}
-                isOpen
-                onOpenChange={vi.fn()}
-            />,
+            <ProjectLabelsProvider labels={testLabels}>
+                <FilterDropdown
+                    type="labels"
+                    queryParams={{ labels: 'bug,feature' }}
+                    isOpen
+                    onOpenChange={vi.fn()}
+                />
+            </ProjectLabelsProvider>,
         );
 
         await user.click(await screen.findByText('bug'));

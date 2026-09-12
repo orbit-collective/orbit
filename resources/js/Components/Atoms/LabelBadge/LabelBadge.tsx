@@ -1,6 +1,6 @@
+import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { LabelBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { LABEL_COLORS } from '@/utils/labelColors';
 import React from 'react';
 
 const LabelBadge: React.FC<LabelBadgeProps> = ({
@@ -8,6 +8,8 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
     className,
     onClick,
 }) => {
+    const { getColor } = useProjectLabels();
+
     return (
         <span
             onClick={onClick}
@@ -19,7 +21,7 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
         >
             <span
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
-                style={{ backgroundColor: LABEL_COLORS[label] }}
+                style={{ backgroundColor: getColor(label) }}
             />
             {label}
         </span>
