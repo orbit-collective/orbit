@@ -15,6 +15,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SavedFilterController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WorkflowController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
@@ -47,6 +48,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects/{project}/issue-types', [IssueTypeController::class, 'store'])->name('projects.issue-types.store');
     Route::patch('/projects/{project}/issue-types/{issueType}', [IssueTypeController::class, 'update'])->name('projects.issue-types.update');
     Route::delete('/projects/{project}/issue-types/{issueType}', [IssueTypeController::class, 'destroy'])->name('projects.issue-types.destroy');
+    Route::post('/projects/{project}/issue-types/{issueType}/statuses', [WorkflowController::class, 'storeStatus'])->name('projects.issue-types.statuses.store');
+    Route::patch('/projects/{project}/issue-types/{issueType}/statuses/{status}', [WorkflowController::class, 'updateStatus'])->name('projects.issue-types.statuses.update');
+    Route::delete('/projects/{project}/issue-types/{issueType}/statuses/{status}', [WorkflowController::class, 'destroyStatus'])->name('projects.issue-types.statuses.destroy');
+    Route::post('/projects/{project}/issue-types/{issueType}/transitions', [WorkflowController::class, 'storeTransition'])->name('projects.issue-types.transitions.store');
+    Route::delete('/projects/{project}/issue-types/{issueType}/transitions/{transition}', [WorkflowController::class, 'destroyTransition'])->name('projects.issue-types.transitions.destroy');
     Route::patch('/projects/{project}/integrations/{integration}', [ProjectIntegrationController::class, 'update'])->name('projects.integrations.update');
     Route::patch('/projects/{project}/integrations/{integration}/settings', [ProjectIntegrationController::class, 'updateSettings'])->name('projects.integrations.settings.update');
     Route::post('/projects/{project}/integrations/jira/connect', [JiraIntegrationController::class, 'connect'])->name('projects.integrations.jira.connect');
