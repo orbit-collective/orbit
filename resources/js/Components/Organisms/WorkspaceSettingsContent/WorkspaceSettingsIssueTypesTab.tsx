@@ -222,128 +222,113 @@ export default function WorkspaceSettingsIssueTypesTab({
                     )}
                 </div>
 
-                {editorTarget === NEW_ISSUE_TYPE_EDITOR_TARGET && (
-                    <WorkspaceSettingsIssueTypeInlineEditor
-                        key={NEW_ISSUE_TYPE_EDITOR_TARGET}
-                        issueType={null}
-                        onSave={handleSaveIssueType}
-                        onCancel={() => setEditorTarget(null)}
-                    />
-                )}
-
-                {issueTypes.map((issueType) =>
-                    editorTarget === String(issueType.id) ? (
-                        <WorkspaceSettingsIssueTypeInlineEditor
-                            key={issueType.id}
-                            issueType={issueType}
-                            onSave={handleSaveIssueType}
-                            onCancel={() => setEditorTarget(null)}
-                        />
-                    ) : (
-                        <div
-                            key={issueType.id}
-                            className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
-                        >
-                            <div className="flex min-w-0 items-center gap-3">
-                                <span
-                                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                                    style={{
-                                        backgroundColor: `${issueType.color}1a`,
-                                        color: issueType.color,
-                                    }}
-                                >
-                                    <Icon
-                                        name={
-                                            issueType.icon as keyof typeof icons
-                                        }
-                                        size={15}
-                                    />
-                                </span>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <p className="truncate text-sm font-medium text-[var(--text-color)]">
-                                            {issueType.name}
-                                        </p>
-                                        {issueType.isSystem && (
-                                            <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                                System
-                                            </span>
-                                        )}
-                                        {issueType.allowsChildren && (
-                                            <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                                Allows sub-issues
-                                            </span>
-                                        )}
-                                    </div>
-                                    {issueType.description && (
-                                        <p className="truncate text-sm text-[var(--text-gray-color)]">
-                                            {issueType.description}
-                                        </p>
+                {issueTypes.map((issueType) => (
+                    <div
+                        key={issueType.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                    >
+                        <div className="flex min-w-0 items-center gap-3">
+                            <span
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                                style={{
+                                    backgroundColor: `${issueType.color}1a`,
+                                    color: issueType.color,
+                                }}
+                            >
+                                <Icon
+                                    name={issueType.icon as keyof typeof icons}
+                                    size={15}
+                                />
+                            </span>
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                        {issueType.name}
+                                    </p>
+                                    {issueType.isSystem && (
+                                        <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                            System
+                                        </span>
+                                    )}
+                                    {issueType.allowsChildren && (
+                                        <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                            Allows sub-issues
+                                        </span>
                                     )}
                                 </div>
+                                {issueType.description && (
+                                    <p className="truncate text-sm text-[var(--text-gray-color)]">
+                                        {issueType.description}
+                                    </p>
+                                )}
                             </div>
-                            {(canUpdateIssueTypes ||
-                                canUpdateWorkflow ||
-                                (canDeleteIssueTypes &&
-                                    !issueType.isSystem)) && (
-                                <div className="flex shrink-0 items-center gap-1">
-                                    {canUpdateWorkflow && (
-                                        <button
-                                            type="button"
-                                            title="Manage workflow"
-                                            onClick={() =>
-                                                setWorkflowIssueType(issueType)
-                                            }
-                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
-                                        >
-                                            <Icon name="Workflow" size={14} />
-                                        </button>
-                                    )}
-                                    {canUpdateIssueTypes && (
-                                        <button
-                                            type="button"
-                                            title="Manage templates"
-                                            onClick={() =>
-                                                setTemplatesIssueType(issueType)
-                                            }
-                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
-                                        >
-                                            <Icon name="FileText" size={14} />
-                                        </button>
-                                    )}
-                                    {canUpdateIssueTypes && (
-                                        <button
-                                            type="button"
-                                            title="Edit issue type"
-                                            onClick={() =>
-                                                toggleEditEditor(issueType)
-                                            }
-                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
-                                        >
-                                            <Icon name="Pencil" size={14} />
-                                        </button>
-                                    )}
-                                    {canDeleteIssueTypes &&
-                                        !issueType.isSystem && (
-                                            <button
-                                                type="button"
-                                                title="Delete issue type"
-                                                onClick={() =>
-                                                    setDeletingIssueType(
-                                                        issueType,
-                                                    )
-                                                }
-                                                className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
-                                            >
-                                                <Icon name="Trash" size={14} />
-                                            </button>
-                                        )}
-                                </div>
-                            )}
                         </div>
-                    ),
-                )}
+                        {(canUpdateIssueTypes ||
+                            canUpdateWorkflow ||
+                            (canDeleteIssueTypes && !issueType.isSystem)) && (
+                            <div className="flex shrink-0 items-center gap-1">
+                                {canUpdateWorkflow && (
+                                    <button
+                                        type="button"
+                                        title="Manage workflow"
+                                        onClick={() =>
+                                            setWorkflowIssueType(issueType)
+                                        }
+                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                    >
+                                        <Icon name="Workflow" size={14} />
+                                    </button>
+                                )}
+                                {canUpdateIssueTypes && (
+                                    <button
+                                        type="button"
+                                        title="Manage templates"
+                                        onClick={() =>
+                                            setTemplatesIssueType(issueType)
+                                        }
+                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                    >
+                                        <Icon name="FileText" size={14} />
+                                    </button>
+                                )}
+                                {canUpdateIssueTypes && (
+                                    <button
+                                        type="button"
+                                        title="Edit issue type"
+                                        onClick={() =>
+                                            toggleEditEditor(issueType)
+                                        }
+                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                    >
+                                        <Icon name="Pencil" size={14} />
+                                    </button>
+                                )}
+                                {canDeleteIssueTypes && !issueType.isSystem && (
+                                    <button
+                                        type="button"
+                                        title="Delete issue type"
+                                        onClick={() =>
+                                            setDeletingIssueType(issueType)
+                                        }
+                                        className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                    >
+                                        <Icon name="Trash" size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ))}
             </SettingsPanel>
+
+            {editorTarget !== null && (
+                <WorkspaceSettingsIssueTypeInlineEditor
+                    key={editorTarget}
+                    issueType={editingIssueType}
+                    onSave={handleSaveIssueType}
+                    onCancel={() => setEditorTarget(null)}
+                />
+            )}
 
             <WorkspaceSettingsDeleteIssueTypeModal
                 isOpen={deletingIssueType !== null}
