@@ -166,7 +166,7 @@ describe('MainLayout Component', () => {
         expect(setSelectedLook).toHaveBeenCalledWith('Board');
     });
 
-    test('switches the view with the "1"/"2"/"3" keyboard shortcuts', () => {
+    test('switches the view with the "1"/"2"/"3"/"4" keyboard shortcuts', () => {
         const setSelectedLook = vi.fn();
         renderWithShortcuts(
             <MainLayout
@@ -186,8 +186,35 @@ describe('MainLayout Component', () => {
         fireEvent.keyDown(window, { key: '3' });
         expect(setSelectedLook).toHaveBeenCalledWith('Calendar');
 
+        fireEvent.keyDown(window, { key: '4' });
+        expect(setSelectedLook).toHaveBeenCalledWith('Activity');
+
         fireEvent.keyDown(window, { key: '1' });
         expect(setSelectedLook).toHaveBeenCalledWith('List');
+    });
+
+    test('switches the view when the List, Calendar or Activity tab is clicked', () => {
+        const setSelectedLook = vi.fn();
+        renderWithShortcuts(
+            <MainLayout
+                selectedLook="Board"
+                setSelectedLook={setSelectedLook}
+                projects={[]}
+                project={makeProject()}
+                users={[]}
+            >
+                <div>Page content</div>
+            </MainLayout>,
+        );
+
+        fireEvent.click(screen.getByTestId('tab-List'));
+        expect(setSelectedLook).toHaveBeenCalledWith('List');
+
+        fireEvent.click(screen.getByTestId('tab-Calendar'));
+        expect(setSelectedLook).toHaveBeenCalledWith('Calendar');
+
+        fireEvent.click(screen.getByTestId('tab-Activity'));
+        expect(setSelectedLook).toHaveBeenCalledWith('Activity');
     });
 
     test('dispatches the quick-add issue event when the "New issue" primary action is clicked', () => {

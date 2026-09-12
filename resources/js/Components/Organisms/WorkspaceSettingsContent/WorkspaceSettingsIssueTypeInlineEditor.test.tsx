@@ -157,6 +157,61 @@ describe('WorkspaceSettingsIssueTypeInlineEditor', () => {
         expect(screen.getByLabelText('Admin')).not.toBeChecked();
     });
 
+    test('changing the description, color and icon includes them in the saved values', () => {
+        const handleSave = vi.fn();
+        render(
+            <WorkspaceSettingsIssueTypeInlineEditor
+                issueType={null}
+                onSave={handleSave}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
+            target: { value: 'Custom' },
+        });
+        fireEvent.change(
+            screen.getByPlaceholderText(
+                'What is this issue type used for? (optional)',
+            ),
+            { target: { value: 'A custom description' } },
+        );
+        fireEvent.click(screen.getByLabelText('Use color #ff5722'));
+        fireEvent.click(screen.getByLabelText('Use icon Rocket'));
+        fireEvent.click(screen.getByText('Create issue type'));
+
+        expect(handleSave).toHaveBeenCalledWith(
+            expect.objectContaining({
+                description: 'A custom description',
+                color: '#ff5722',
+                icon: 'Rocket',
+            }),
+        );
+    });
+
+    test('toggling the allows-children checkbox includes it in the saved values', () => {
+        const handleSave = vi.fn();
+        render(
+            <WorkspaceSettingsIssueTypeInlineEditor
+                issueType={null}
+                onSave={handleSave}
+                onCancel={vi.fn()}
+            />,
+        );
+
+        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
+            target: { value: 'Custom' },
+        });
+        fireEvent.click(
+            screen.getByLabelText('Allows sub-issues (like an Epic)'),
+        );
+        fireEvent.click(screen.getByText('Create issue type'));
+
+        expect(handleSave).toHaveBeenCalledWith(
+            expect.objectContaining({ allows_children: true }),
+        );
+    });
+
     test('calls onCancel when Cancel is clicked', () => {
         const handleCancel = vi.fn();
         render(
