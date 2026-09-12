@@ -15,3 +15,10 @@ export interface WorkspaceRole {
     memberCount: number;
     permissionIds: number[];
 }
+
+/**
+ * Just enough of a role to look up its tier by name - e.g. for the activity
+ * log, which only ever needs a role's name and type, not the full shape
+ * above (slug, member count, permission ids).
+ */
+export type RoleNameSummary = Pick<WorkspaceRole, 'name' | 'type'>;

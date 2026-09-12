@@ -18,6 +18,7 @@ const COLOR_TEXT_CLASSES = {
 const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
     group,
     users = [],
+    roles = [],
 }) => {
     return (
         <div>
@@ -71,6 +72,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                                             entry.body,
                                             users,
                                             entry.userAvatar,
+                                            roles,
                                         )}
                                     </span>
                                 </div>

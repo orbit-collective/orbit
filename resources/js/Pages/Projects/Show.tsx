@@ -18,6 +18,7 @@ import {
 } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
 import { Project } from '@/types/Projects';
+import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
 import { useState } from 'react';
 
@@ -38,6 +39,7 @@ export default function Show({
     users,
     activityLogs,
     labels = [],
+    roles = [],
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
@@ -48,6 +50,7 @@ export default function Show({
     users: AssignableUser[];
     activityLogs: ActivityLogEntry[];
     labels?: ProjectLabel[];
+    roles?: RoleNameSummary[];
 }) {
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         if (typeof window !== 'undefined') {
@@ -144,6 +147,7 @@ export default function Show({
                                         <ActivityLogs
                                             logs={activityLogs}
                                             users={users}
+                                            roles={roles}
                                         />
                                     </div>
                                 </div>
