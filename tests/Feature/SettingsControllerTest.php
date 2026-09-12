@@ -334,7 +334,7 @@ test('settings page reflects saved notification setting overrides', function () 
     );
 });
 
-test('a viewer has label view access but not manage access', function () {
+test('a viewer has label view access but no create, update or delete access', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'viewer']);
@@ -343,11 +343,13 @@ test('a viewer has label view access but not manage access', function () {
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('hasLabelsAccess', true)
-        ->where('canManageLabels', false)
+        ->where('canCreateLabels', false)
+        ->where('canUpdateLabels', false)
+        ->where('canDeleteLabels', false)
     );
 });
 
-test('a member without any labels permission cannot manage labels', function () {
+test('a member without any labels permission cannot create, update or delete labels', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'member']);
@@ -356,11 +358,13 @@ test('a member without any labels permission cannot manage labels', function () 
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('hasLabelsAccess', true)
-        ->where('canManageLabels', false)
+        ->where('canCreateLabels', false)
+        ->where('canUpdateLabels', false)
+        ->where('canDeleteLabels', false)
     );
 });
 
-test('a member with a custom role granting only labels.delete can manage labels', function () {
+test('a member with a custom role granting only labels.delete can delete but not create or update labels', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'member']);
@@ -373,6 +377,8 @@ test('a member with a custom role granting only labels.delete can manage labels'
     $response = $this->actingAs($user)->get('/settings?tab=labels');
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->where('canManageLabels', true)
+        ->where('canCreateLabels', false)
+        ->where('canUpdateLabels', false)
+        ->where('canDeleteLabels', true)
     );
 });

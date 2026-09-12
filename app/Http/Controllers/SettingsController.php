@@ -54,11 +54,9 @@ class SettingsController extends Controller
         // grants view access a tier wider than the general $viewTiers above.
         $labelViewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
         $hasLabelsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_VIEW, $labelViewTiers) ?? false;
-        $canManageLabels = $hasLabelsAccess && (
-            $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_CREATE, [RoleType::OWNER, RoleType::ADMIN])
-            || $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN])
-            || $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN])
-        );
+        $canCreateLabels = $hasLabelsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_CREATE, [RoleType::OWNER, RoleType::ADMIN]);
+        $canUpdateLabels = $hasLabelsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        $canDeleteLabels = $hasLabelsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN]);
 
         return Inertia::render('Settings/Index', [
             'projects' => $projects,
@@ -126,7 +124,9 @@ class SettingsController extends Controller
                 ? $this->mapLabels($this->labelService->getLabels($selectedProject))
                 : [],
             'hasLabelsAccess' => $hasLabelsAccess,
-            'canManageLabels' => $canManageLabels,
+            'canCreateLabels' => $canCreateLabels,
+            'canUpdateLabels' => $canUpdateLabels,
+            'canDeleteLabels' => $canDeleteLabels,
         ]);
     }
 

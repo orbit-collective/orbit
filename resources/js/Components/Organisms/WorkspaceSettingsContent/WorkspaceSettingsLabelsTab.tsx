@@ -17,7 +17,9 @@ interface WorkspaceSettingsLabelsTabProps {
     selectedProjectId?: number | null;
     labels?: ProjectLabel[];
     hasLabelsAccess?: boolean;
-    canManageLabels?: boolean;
+    canCreateLabels?: boolean;
+    canUpdateLabels?: boolean;
+    canDeleteLabels?: boolean;
 }
 
 const NEW_LABEL_EDITOR_TARGET = '__new__';
@@ -27,7 +29,9 @@ export default function WorkspaceSettingsLabelsTab({
     selectedProjectId = null,
     labels = [],
     hasLabelsAccess = false,
-    canManageLabels = false,
+    canCreateLabels = false,
+    canUpdateLabels = false,
+    canDeleteLabels = false,
 }: WorkspaceSettingsLabelsTabProps) {
     const { addAlert } = useAlert();
     const [editorTarget, setEditorTarget] = useState<string | null>(null);
@@ -189,7 +193,7 @@ export default function WorkspaceSettingsLabelsTab({
                         {labels.length}{' '}
                         {labels.length === 1 ? 'label' : 'labels'} configured
                     </p>
-                    {canManageLabels && (
+                    {canCreateLabels && (
                         <Button
                             type="button"
                             onClick={toggleCreateEditor}
@@ -262,24 +266,32 @@ export default function WorkspaceSettingsLabelsTab({
                                     )}
                                 </div>
                             </div>
-                            {canManageLabels && (
+                            {(canUpdateLabels || canDeleteLabels) && (
                                 <div className="flex shrink-0 items-center gap-1">
-                                    <button
-                                        type="button"
-                                        title="Edit label"
-                                        onClick={() => toggleEditEditor(label)}
-                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
-                                    >
-                                        <Icon name="Pencil" size={14} />
-                                    </button>
-                                    <button
-                                        type="button"
-                                        title="Delete label"
-                                        onClick={() => setDeletingLabel(label)}
-                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
-                                    >
-                                        <Icon name="Trash" size={14} />
-                                    </button>
+                                    {canUpdateLabels && (
+                                        <button
+                                            type="button"
+                                            title="Edit label"
+                                            onClick={() =>
+                                                toggleEditEditor(label)
+                                            }
+                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                        >
+                                            <Icon name="Pencil" size={14} />
+                                        </button>
+                                    )}
+                                    {canDeleteLabels && (
+                                        <button
+                                            type="button"
+                                            title="Delete label"
+                                            onClick={() =>
+                                                setDeletingLabel(label)
+                                            }
+                                            className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                        >
+                                            <Icon name="Trash" size={14} />
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>

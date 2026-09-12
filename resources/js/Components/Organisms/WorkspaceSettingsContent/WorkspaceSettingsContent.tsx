@@ -47,7 +47,9 @@ interface WorkspaceSettingsContentProps {
     canUpdateIntegrations?: boolean;
     labels?: ProjectLabel[];
     hasLabelsAccess?: boolean;
-    canManageLabels?: boolean;
+    canCreateLabels?: boolean;
+    canUpdateLabels?: boolean;
+    canDeleteLabels?: boolean;
 }
 
 export default function WorkspaceSettingsContent({
@@ -75,7 +77,9 @@ export default function WorkspaceSettingsContent({
     canUpdateIntegrations = false,
     labels = [],
     hasLabelsAccess = false,
-    canManageLabels = false,
+    canCreateLabels = false,
+    canUpdateLabels = false,
+    canDeleteLabels = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return (
@@ -84,7 +88,9 @@ export default function WorkspaceSettingsContent({
                 selectedProjectId={selectedProjectId}
                 labels={labels}
                 hasLabelsAccess={hasLabelsAccess}
-                canManageLabels={canManageLabels}
+                canCreateLabels={canCreateLabels}
+                canUpdateLabels={canUpdateLabels}
+                canDeleteLabels={canDeleteLabels}
             />
         );
     }
