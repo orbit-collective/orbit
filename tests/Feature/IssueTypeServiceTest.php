@@ -5,6 +5,7 @@ use App\Models\Issue;
 use App\Models\Project;
 use App\Services\IssueTypeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
@@ -104,4 +105,65 @@ test('it does not touch issues that already have an issue type assigned', functi
 
     expect($issue->refresh()->issue_type_id)->toBe($bugType->id)
         ->and($issue->workflow_status_id)->toBe($bugStatus->id);
+});
+
+test('it can create a custom issue type with its own default workflow and logs the change', function () {
+    $project = Project::factory()->create();
+
+    $issueType = $this->service->createIssueType($project, ['name' => 'Marketing Campaign', 'icon' => 'Megaphone', 'color' => '#ff0000']);
+
+    $this->assertDatabaseHas('issue_types', ['id' => $issueType->id, 'name' => 'Marketing Campaign', 'is_system' => false]);
+    expect($issueType->statuses)->toHaveCount(3);
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => 'Created the "Marketing Campaign" issue type']);
+});
+
+test('it rejects creating an issue type with a name already used in the project', function () {
+    $project = Project::factory()->create();
+    $project->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#ff0000']);
+
+    $this->service->createIssueType($project, ['name' => 'Custom', 'icon' => 'Bug', 'color' => '#000000']);
+})->throws(ValidationException::class);
+
+test('it can update an issue type, including a system type, and logs the change', function () {
+    $project = Project::factory()->create();
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336', 'is_system' => true]);
+
+    $updated = $this->service->updateIssueType($project, $issueType, ['name' => 'Defect', 'icon' => 'Bug', 'color' => '#111111']);
+
+    expect($updated->name)->toBe('Defect')
+        ->and($updated->color)->toBe('#111111');
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => 'Updated the "Defect" issue type']);
+});
+
+test('it rejects renaming an issue type to a name already used by another issue type in the project', function () {
+    $project = Project::factory()->create();
+    $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+    $typeToRename = $project->issueTypes()->create(['name' => 'Feature', 'icon' => 'Sparkles', 'color' => '#2196f3']);
+
+    $this->service->updateIssueType($project, $typeToRename, ['name' => 'Bug', 'icon' => 'Sparkles', 'color' => '#2196f3']);
+})->throws(ValidationException::class);
+
+test('a system issue type cannot be deleted', function () {
+    $project = Project::factory()->create();
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336', 'is_system' => true]);
+
+    $this->service->deleteIssueType($project, $issueType);
+})->throws(ValidationException::class);
+
+test('a custom issue type still referenced by issues cannot be deleted', function () {
+    $project = Project::factory()->create();
+    $issueType = $project->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#f44336']);
+    Issue::factory()->create(['project_id' => $project->id, 'issue_type_id' => $issueType->id]);
+
+    $this->service->deleteIssueType($project, $issueType);
+})->throws(ValidationException::class);
+
+test('a custom issue type not referenced by any issue can be deleted and logs the change', function () {
+    $project = Project::factory()->create();
+    $issueType = $project->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#f44336']);
+
+    $this->service->deleteIssueType($project, $issueType);
+
+    $this->assertDatabaseMissing('issue_types', ['id' => $issueType->id]);
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => 'Deleted the "Custom" issue type']);
 });
