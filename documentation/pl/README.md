@@ -26,7 +26,7 @@ documentation/
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
     saved-filters/           <- angielskie tłumaczenie każdego przewodnika poniżej
-    label-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
+    labels/                  <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-views/             <- angielskie tłumaczenie każdego przewodnika poniżej
     rich-text-editor/        <- angielskie tłumaczenie każdego przewodnika poniżej
     project-onboarding/      <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -97,9 +97,10 @@ documentation/
       README.md              <- indeks tej kategorii
       01-extract-the-service-layer.md
       02-make-context-scope-which-filters-show.md
-    label-colors/
+    labels/
       README.md              <- indeks tej kategorii
-      01-add-a-new-label.md
+      01-add-a-new-default-label.md
+      02-expose-project-labels-to-a-new-page.md
     issue-views/
       README.md              <- indeks tej kategorii
       01-add-a-new-issue-view.md

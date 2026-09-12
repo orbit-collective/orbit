@@ -84,9 +84,10 @@ documentation/
       README.md              <- index for this category
       01-extract-the-service-layer.md
       02-make-context-scope-which-filters-show.md
-    label-colors/
+    labels/
       README.md              <- index for this category
-      01-add-a-new-label.md
+      01-add-a-new-default-label.md
+      02-expose-project-labels-to-a-new-page.md
     issue-views/
       README.md              <- index for this category
       01-add-a-new-issue-view.md
@@ -111,7 +112,7 @@ documentation/
     project-invitations/     <- Polish translation of every guide above
     activity-log/            <- Polish translation of every guide above
     saved-filters/           <- Polish translation of every guide above
-    label-colors/            <- Polish translation of every guide above
+    labels/                  <- Polish translation of every guide above
     issue-views/             <- Polish translation of every guide above
     rich-text-editor/        <- Polish translation of every guide above
     project-onboarding/      <- Polish translation of every guide above

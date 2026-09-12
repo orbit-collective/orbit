@@ -112,9 +112,10 @@ Notes:
   today, because those are the two kinds of remote metadata
   `IntegrationImporter::fetchMappingMetadata()` can enumerate up front
   (see Step 3) — `label` mappings apply automatically at import time
-  (an unmapped remote label/component is simply omitted, since Orbit's
-  `IssueLabel` enum is a small fixed set), there's no pre-import UI for
-  them yet.
+  (an unmapped remote label/component is simply omitted, since each
+  project defines its own label taxonomy rather than a fixed set —
+  see [`../labels/README.md`](../labels/README.md)), there's no
+  pre-import UI for them yet.
 - Existing `subOptions` (`issue-import`, `status-sync`) are cosmetic
   copy only for `kind: 'import'` entries right now — they aren't read
   by any backend code (unlike a `kind: 'notify'` integration's
