@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\IssueLabel;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
@@ -30,7 +29,7 @@ test('mass assignment via fillable creates an issue', function () {
         'priority' => 'high',
         'project_id' => $project->id,
         'user_id' => $user->id,
-        'labels' => [IssueLabel::BUG],
+        'labels' => ['bug'],
     ]);
 
     $this->assertDatabaseHas('issues', [
@@ -71,13 +70,11 @@ test('project() belongs to the project referenced by project_id', function () {
         ->and($issue->project->id)->toBe($project->id);
 });
 
-test('labels are cast to an array of IssueLabel enum instances', function () {
-    $issue = Issue::factory()->create(['labels' => [IssueLabel::BUG, IssueLabel::DESIGN]]);
+test('labels are cast to a plain array of label name strings', function () {
+    $issue = Issue::factory()->create(['labels' => ['bug', 'design']]);
     $fresh = $issue->fresh();
 
-    expect($fresh->labels[0])->toBeInstanceOf(IssueLabel::class)
-        ->and($fresh->labels[0]->value)->toBe('bug')
-        ->and($fresh->labels[1]->value)->toBe('design');
+    expect($fresh->labels)->toBe(['bug', 'design']);
 });
 
 test('labels persist as an empty set when none are given', function () {

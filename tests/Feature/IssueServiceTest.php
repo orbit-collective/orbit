@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\IssueLabel;
 use App\Events\IssueAssigned;
 use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
@@ -517,7 +516,7 @@ test('updateIssue describes labels changing to a non-empty set', function () {
         ->once()
         ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'labels changed to [bug]')));
 
-    $this->service->updateIssue($issue, ['labels' => [IssueLabel::BUG]]);
+    $this->service->updateIssue($issue, ['labels' => ['bug']]);
 
     Event::assertDispatched(
         IssueUpdated::class,
@@ -533,7 +532,7 @@ test('updateIssue describes labels being cleared as "none"', function () {
     $issue = Issue::factory()->create([
         'project_id' => $project->id,
         'assignee_id' => null,
-        'labels' => [IssueLabel::BUG],
+        'labels' => ['bug'],
     ]);
 
     $this->issueRepository->shouldReceive('update')

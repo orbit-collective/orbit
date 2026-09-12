@@ -6,6 +6,7 @@ use App\Enums\IssueStatus;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Services\IssueService;
+use App\Services\LabelService;
 use App\Services\ProjectService;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,8 @@ class IssueController extends Controller
     public function __construct(
         protected IssueService $issueService,
         protected UserService $userService,
-        protected ProjectService $projectService
+        protected ProjectService $projectService,
+        protected LabelService $labelService
     ) {}
 
     public function show(Request $request, Project $project, Issue $issue): Response
@@ -43,6 +45,12 @@ class IssueController extends Controller
     {
         $this->authorize('update', $issue);
 
+        // Seeds the project's system labels if this is the first time they're
+        // touched - otherwise the exists() rule below would reject a stock
+        // label like "bug" on a project whose Settings > Labels tab nobody
+        // has opened yet.
+        $this->labelService->ensureSystemLabels($issue->project);
+
         $data = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
@@ -55,6 +63,10 @@ class IssueController extends Controller
                 Rule::exists('project_user', 'user_id')->where('project_id', $issue->project_id),
             ],
             'labels' => 'sometimes|nullable|array',
+            'labels.*' => [
+                'string',
+                Rule::exists('labels', 'name')->where('project_id', $issue->project_id),
+            ],
             'start_date' => 'sometimes|nullable|date',
             'end_date' => 'sometimes|nullable|date|after_or_equal:start_date',
         ]);
@@ -83,10 +95,15 @@ class IssueController extends Controller
 
         return redirect()->back()
             ->with('success', $message)
-            ->with('action_url', route('projects.show', $issue->project_id) . '?issue=' . $issue->id);
+            ->with('action_url', route('projects.show', $issue->project_id).'?issue='.$issue->id);
     }
+
     public function store(Request $request): RedirectResponse
     {
+        if ($project = Project::find($request->input('project_id'))) {
+            $this->labelService->ensureSystemLabels($project);
+        }
+
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -99,6 +116,10 @@ class IssueController extends Controller
                 Rule::exists('project_user', 'user_id')->where('project_id', $request->input('project_id')),
             ],
             'labels' => 'nullable|array',
+            'labels.*' => [
+                'string',
+                Rule::exists('labels', 'name')->where('project_id', $request->input('project_id')),
+            ],
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
@@ -109,8 +130,9 @@ class IssueController extends Controller
 
         return redirect()->back()
             ->with('success', "Issue #$issue->id \"$issue->title\" has been created successfully.")
-            ->with('action_url', route('projects.show', $issue->project_id) . '?issue=' . $issue->id);
+            ->with('action_url', route('projects.show', $issue->project_id).'?issue='.$issue->id);
     }
+
     public function destroy(Issue $issue): RedirectResponse
     {
         $this->authorize('delete', $issue);
@@ -120,6 +142,7 @@ class IssueController extends Controller
         return redirect()->back()
             ->with('success', "Issue #$issue->id \"$issue->title\" has been deleted successfully.");
     }
+
     public function bulkDestroy(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -134,6 +157,6 @@ class IssueController extends Controller
         $this->issueService->bulkDeleteIssues($validated['ids']);
 
         return redirect()->back()
-            ->with('success', "Selected issues have been deleted successfully.");
+            ->with('success', 'Selected issues have been deleted successfully.');
     }
 }
