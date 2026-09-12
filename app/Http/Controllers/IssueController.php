@@ -137,6 +137,10 @@ class IssueController extends Controller
             }
         }
 
+        if ($issueType) {
+            $this->issueTypeService->assertRequiredFieldsSatisfied($issueType, $data, isCreate: false);
+        }
+
         $before = $this->issueService->snapshot($issue);
 
         $this->issueService->updateIssue($issue, $data);
@@ -160,6 +164,7 @@ class IssueController extends Controller
             'priority' => 'required|string',
             'status' => ['required', Rule::enum(IssueStatus::class)],
             'issue_type_id' => 'nullable|integer',
+            'template_id' => 'nullable|integer',
             'assignee_id' => [
                 'nullable',
                 'exists:users,id',
@@ -197,6 +202,18 @@ class IssueController extends Controller
         $data['issue_type_id'] = $issueType->id;
         $data['workflow_status_id'] = $this->issueTypeService
             ->resolveWorkflowStatusForLegacyValue($issueType, $data['status'])?->id;
+
+        if (! empty($data['template_id'])) {
+            $template = $issueType->templates()->find($data['template_id']);
+
+            if ($template) {
+                $data['description'] = ($data['description'] ?? null) ?: $template->description;
+                $data['labels'] = ! empty($data['labels']) ? $data['labels'] : ($template->default_labels ?? []);
+            }
+        }
+        unset($data['template_id']);
+
+        $this->issueTypeService->assertRequiredFieldsSatisfied($issueType, $data, isCreate: true);
 
         $issue = $this->issueService->createIssue($data);
 

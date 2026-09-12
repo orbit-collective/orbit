@@ -4,6 +4,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\IssueTypeController;
+use App\Http\Controllers\IssueTypeTemplateController;
 use App\Http\Controllers\JiraIntegrationController;
 use App\Http\Controllers\LabelController;
 use App\Http\Controllers\NotificationController;
@@ -53,6 +54,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/projects/{project}/issue-types/{issueType}/statuses/{status}', [WorkflowController::class, 'destroyStatus'])->name('projects.issue-types.statuses.destroy');
     Route::post('/projects/{project}/issue-types/{issueType}/transitions', [WorkflowController::class, 'storeTransition'])->name('projects.issue-types.transitions.store');
     Route::delete('/projects/{project}/issue-types/{issueType}/transitions/{transition}', [WorkflowController::class, 'destroyTransition'])->name('projects.issue-types.transitions.destroy');
+    Route::post('/projects/{project}/issue-types/{issueType}/templates', [IssueTypeTemplateController::class, 'store'])->name('projects.issue-types.templates.store');
+    Route::patch('/projects/{project}/issue-types/{issueType}/templates/{template}', [IssueTypeTemplateController::class, 'update'])->name('projects.issue-types.templates.update');
+    Route::delete('/projects/{project}/issue-types/{issueType}/templates/{template}', [IssueTypeTemplateController::class, 'destroy'])->name('projects.issue-types.templates.destroy');
     Route::patch('/projects/{project}/integrations/{integration}', [ProjectIntegrationController::class, 'update'])->name('projects.integrations.update');
     Route::patch('/projects/{project}/integrations/{integration}/settings', [ProjectIntegrationController::class, 'updateSettings'])->name('projects.integrations.settings.update');
     Route::post('/projects/{project}/integrations/jira/connect', [JiraIntegrationController::class, 'connect'])->name('projects.integrations.jira.connect');

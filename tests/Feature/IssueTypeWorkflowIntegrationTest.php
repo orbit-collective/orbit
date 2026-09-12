@@ -168,3 +168,92 @@ test('a member cannot move an issue into a role-restricted issue type', function
 
     $response->assertForbidden();
 });
+
+test('creating an issue of a type with required fields rejects a request missing one', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $bugType->update(['required_fields' => ['description', 'assignee']]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'Missing fields',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+        'issue_type_id' => $bugType->id,
+    ]);
+
+    $response->assertSessionHasErrors(['description', 'assignee_id']);
+    $this->assertDatabaseMissing('issues', ['project_id' => $project->id, 'title' => 'Missing fields']);
+});
+
+test('creating an issue satisfying its type\'s required fields succeeds', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $bugType->update(['required_fields' => ['description']]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'Has description',
+        'description' => 'Steps to reproduce',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+        'issue_type_id' => $bugType->id,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('issues', ['project_id' => $project->id, 'title' => 'Has description']);
+});
+
+test('updating an issue to clear a field required by its type is rejected', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $bugType->update(['required_fields' => ['description']]);
+    $this->actingAs($member)->post('/issues', [
+        'title' => 'Has description', 'description' => 'x', 'project_id' => $project->id,
+        'priority' => 'high', 'status' => 'open', 'issue_type_id' => $bugType->id,
+    ]);
+    $issue = $project->issues()->where('title', 'Has description')->first();
+
+    $response = $this->actingAs($member)->patch("/issues/$issue->id", ['description' => '']);
+
+    $response->assertSessionHasErrors('description');
+});
+
+test('creating an issue with a template_id prefills description and labels when not provided', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $template = $bugType->templates()->create([
+        'name' => 'Standard Bug Report',
+        'description' => 'Steps to reproduce...',
+        'default_labels' => ['bug'],
+    ]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'Login fails',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+        'issue_type_id' => $bugType->id,
+        'template_id' => $template->id,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('issues', [
+        'project_id' => $project->id,
+        'title' => 'Login fails',
+        'description' => 'Steps to reproduce...',
+    ]);
+    expect($project->issues()->where('title', 'Login fails')->first()->labels)->toBe(['bug']);
+});
