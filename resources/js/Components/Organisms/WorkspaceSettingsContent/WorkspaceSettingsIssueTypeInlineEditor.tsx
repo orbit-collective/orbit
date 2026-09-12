@@ -10,6 +10,15 @@ import { ISSUE_TYPE_ICON_OPTIONS } from '@/utils/issueTypeIcons';
 import { LABEL_COLOR_PALETTE } from '@/utils/labelColors';
 import { useState } from 'react';
 
+const REQUIRED_FIELD_OPTIONS: { value: string; label: string }[] = [
+    { value: 'description', label: 'Description' },
+    { value: 'assignee', label: 'Assignee' },
+    { value: 'labels', label: 'Labels' },
+    { value: 'start_date', label: 'Start date' },
+    { value: 'end_date', label: 'End date' },
+    { value: 'priority', label: 'Priority' },
+];
+
 interface WorkspaceSettingsIssueTypeInlineEditorProps {
     issueType: IssueType | null;
     onSave: (values: {
@@ -18,6 +27,7 @@ interface WorkspaceSettingsIssueTypeInlineEditorProps {
         color: string;
         description: string;
         allows_children: boolean;
+        required_fields: string[];
     }) => void;
     onCancel: () => void;
 }
@@ -40,9 +50,20 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
     const [allowsChildren, setAllowsChildren] = useState(
         issueType?.allowsChildren ?? false,
     );
+    const [requiredFields, setRequiredFields] = useState<string[]>(
+        issueType?.requiredFields ?? [],
+    );
 
     const isEditing = issueType !== null;
     const trimmedName = name.trim();
+
+    const toggleRequiredField = (field: string) => {
+        setRequiredFields((current) =>
+            current.includes(field)
+                ? current.filter((f) => f !== field)
+                : [...current, field],
+        );
+    };
 
     const handleSave = () => {
         if (!trimmedName) return;
@@ -52,6 +73,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
             color,
             description: description.trim(),
             allows_children: allowsChildren,
+            required_fields: requiredFields,
         });
     };
 
@@ -83,6 +105,26 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                         onChange={(e) => setAllowsChildren(e.target.checked)}
                         label="Allows sub-issues (like an Epic)"
                     />
+
+                    <div className="space-y-1.5">
+                        <span className="text-xs font-medium text-[var(--text-gray-color)]">
+                            Required fields
+                        </span>
+                        <div className="grid grid-cols-2 gap-1.5">
+                            {REQUIRED_FIELD_OPTIONS.map((option) => (
+                                <Checkbox
+                                    key={option.value}
+                                    checked={requiredFields.includes(
+                                        option.value,
+                                    )}
+                                    onChange={() =>
+                                        toggleRequiredField(option.value)
+                                    }
+                                    label={option.label}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex flex-1 flex-col gap-3">
