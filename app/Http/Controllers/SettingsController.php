@@ -54,9 +54,12 @@ class SettingsController extends Controller
         // grants view access a tier wider than the general $viewTiers above.
         $labelViewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
         $hasLabelsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_VIEW, $labelViewTiers) ?? false;
-        $canCreateLabels = $hasLabelsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_CREATE, [RoleType::OWNER, RoleType::ADMIN]);
-        $canUpdateLabels = $hasLabelsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
-        $canDeleteLabels = $hasLabelsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN]);
+        // Deliberately independent of $hasLabelsAccess: a custom role can be
+        // granted a mutation permission (e.g. labels.create) without also
+        // being granted labels.view, and that grant must still work.
+        $canCreateLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_CREATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
+        $canUpdateLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
+        $canDeleteLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
 
         return Inertia::render('Settings/Index', [
             'projects' => $projects,
