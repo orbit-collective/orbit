@@ -79,6 +79,7 @@ class IssueController extends Controller
             'status' => ['sometimes', 'required', Rule::enum(IssueStatus::class)],
             'priority' => 'sometimes|required|string',
             'issue_type_id' => 'sometimes|required|integer',
+            'parent_id' => 'sometimes|nullable|integer',
             'assignee_id' => [
                 'sometimes',
                 'nullable',
@@ -141,6 +142,10 @@ class IssueController extends Controller
             $this->issueTypeService->assertRequiredFieldsSatisfied($issueType, $data, isCreate: false);
         }
 
+        if (array_key_exists('parent_id', $data)) {
+            $this->issueService->assertValidParent($issue->project, $data['parent_id'], $issue->id);
+        }
+
         $before = $this->issueService->snapshot($issue);
 
         $this->issueService->updateIssue($issue, $data);
@@ -165,6 +170,7 @@ class IssueController extends Controller
             'status' => ['required', Rule::enum(IssueStatus::class)],
             'issue_type_id' => 'nullable|integer',
             'template_id' => 'nullable|integer',
+            'parent_id' => 'nullable|integer',
             'assignee_id' => [
                 'nullable',
                 'exists:users,id',
@@ -198,6 +204,8 @@ class IssueController extends Controller
             ?? $this->issueTypeService->defaultIssueType($project);
 
         $this->authorize('createOfType', [Issue::class, $project, $issueType]);
+
+        $this->issueService->assertValidParent($project, $data['parent_id'] ?? null);
 
         $data['issue_type_id'] = $issueType->id;
         $data['workflow_status_id'] = $this->issueTypeService

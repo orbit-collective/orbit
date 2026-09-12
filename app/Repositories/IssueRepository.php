@@ -31,7 +31,11 @@ class IssueRepository
     public function findWithRelations(int $id): Issue
     {
         return Issue::query()
-            ->with(['creator', 'assignee', 'project', 'comments.user'])
+            ->with([
+                'creator', 'assignee', 'project', 'comments.user',
+                'issueType', 'workflowStatus', 'parent',
+                'children' => fn ($query) => $query->with(['assignee', 'issueType', 'workflowStatus']),
+            ])
             ->findOrFail($id);
     }
 
