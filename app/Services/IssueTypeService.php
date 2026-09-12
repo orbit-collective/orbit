@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Repositories\IssueTypeRepository;
 use App\Repositories\WorkflowRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Validation\ValidationException;
 
 class IssueTypeService
 {
@@ -96,6 +97,71 @@ class IssueTypeService
         $this->ensureSystemIssueTypes($project);
 
         return $this->issueTypeRepository->getForProject($project);
+    }
+
+    public function createIssueType(Project $project, array $data): IssueType
+    {
+        $this->assertNameAvailable($project, $data['name']);
+
+        $issueType = $this->issueTypeRepository->create($project, [
+            'name' => $data['name'],
+            'icon' => $data['icon'],
+            'color' => $data['color'],
+            'description' => $data['description'] ?? null,
+            'allows_children' => $data['allows_children'] ?? false,
+            'is_system' => false,
+            'required_fields' => [],
+            'restricted_role_types' => [],
+        ]);
+
+        $this->ensureDefaultWorkflow($issueType);
+
+        $this->activityLogService->log($project->id, "Created the \"$issueType->name\" issue type");
+
+        return $issueType;
+    }
+
+    public function updateIssueType(Project $project, IssueType $issueType, array $data): IssueType
+    {
+        if (array_key_exists('name', $data) && $data['name'] !== $issueType->name) {
+            $this->assertNameAvailable($project, $data['name']);
+        }
+
+        $issueType = $this->issueTypeRepository->update($issueType, $data);
+
+        $this->activityLogService->log($project->id, "Updated the \"$issueType->name\" issue type");
+
+        return $issueType;
+    }
+
+    public function deleteIssueType(Project $project, IssueType $issueType): void
+    {
+        if ($issueType->is_system) {
+            throw ValidationException::withMessages([
+                'name' => 'A system issue type cannot be deleted.',
+            ]);
+        }
+
+        if ($issueType->issues()->exists()) {
+            throw ValidationException::withMessages([
+                'name' => 'Reassign the issues using this type before deleting it.',
+            ]);
+        }
+
+        $name = $issueType->name;
+
+        $this->issueTypeRepository->delete($issueType);
+
+        $this->activityLogService->log($project->id, "Deleted the \"$name\" issue type");
+    }
+
+    private function assertNameAvailable(Project $project, string $name): void
+    {
+        if ($this->issueTypeRepository->findForProject($project, $name)) {
+            throw ValidationException::withMessages([
+                'name' => 'An issue type with this name already exists in this project.',
+            ]);
+        }
     }
 
     private function ensureDefaultWorkflow(IssueType $issueType): void
