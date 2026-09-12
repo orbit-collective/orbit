@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
+use App\Models\IssueType;
 use App\Models\Label;
 use App\Models\Permission as PermissionModel;
 use App\Models\Project;
 use App\Models\Role;
 use App\Services\Integrations\Jira\JiraIntegrationService;
+use App\Services\IssueTypeService;
 use App\Services\LabelService;
 use App\Services\NotificationSettingService;
 use App\Services\PermissionService;
@@ -36,6 +38,7 @@ class SettingsController extends Controller
         protected ProjectIntegrationService $projectIntegrationService,
         protected JiraIntegrationService $jiraIntegrationService,
         protected LabelService $labelService,
+        protected IssueTypeService $issueTypeService,
     ) {}
 
     public function index(Request $request): Response
@@ -60,6 +63,13 @@ class SettingsController extends Controller
         $canCreateLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_CREATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
         $canUpdateLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
         $canDeleteLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
+        // Same tier shape as labels above - issue types.view is granted to
+        // the same wider audience, mutations stay owner/admin-only.
+        $issueTypeViewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
+        $hasIssueTypesAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_VIEW, $issueTypeViewTiers) ?? false;
+        $canCreateIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_CREATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
+        $canUpdateIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_UPDATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
+        $canDeleteIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_DELETE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
 
         return Inertia::render('Settings/Index', [
             'projects' => $projects,
@@ -130,6 +140,13 @@ class SettingsController extends Controller
             'canCreateLabels' => $canCreateLabels,
             'canUpdateLabels' => $canUpdateLabels,
             'canDeleteLabels' => $canDeleteLabels,
+            'issueTypes' => $hasIssueTypesAccess
+                ? $this->mapIssueTypes($this->issueTypeService->getIssueTypes($selectedProject))
+                : [],
+            'hasIssueTypesAccess' => $hasIssueTypesAccess,
+            'canCreateIssueTypes' => $canCreateIssueTypes,
+            'canUpdateIssueTypes' => $canUpdateIssueTypes,
+            'canDeleteIssueTypes' => $canDeleteIssueTypes,
         ]);
     }
 
@@ -197,6 +214,21 @@ class SettingsController extends Controller
             'color' => $label->color,
             'description' => $label->description,
             'isSystem' => $label->is_system,
+        ])->values()->all();
+    }
+
+    private function mapIssueTypes(Collection $issueTypes): array
+    {
+        return $issueTypes->map(fn (IssueType $issueType) => [
+            'id' => $issueType->id,
+            'name' => $issueType->name,
+            'icon' => $issueType->icon,
+            'color' => $issueType->color,
+            'description' => $issueType->description,
+            'isSystem' => $issueType->is_system,
+            'allowsChildren' => $issueType->allows_children,
+            'requiredFields' => $issueType->required_fields ?? [],
+            'restrictedRoleTypes' => $issueType->restricted_role_types ?? [],
         ])->values()->all();
     }
 

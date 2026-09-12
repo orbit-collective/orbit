@@ -1,3 +1,4 @@
+import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import {
     ImportIntegrationSettings,
@@ -15,6 +16,7 @@ import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import { WorkspaceSettingsTabId } from '@/types/Settings';
 import WorkspaceSettingsDocumentsTab from './WorkspaceSettingsDocumentsTab';
 import WorkspaceSettingsIntegrationsTab from './WorkspaceSettingsIntegrationsTab';
+import WorkspaceSettingsIssueTypesTab from './WorkspaceSettingsIssueTypesTab';
 import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
 import WorkspaceSettingsMembersTab from './WorkspaceSettingsMembersTab';
 import WorkspaceSettingsPrioritiesTab from './WorkspaceSettingsPrioritiesTab';
@@ -50,6 +52,11 @@ interface WorkspaceSettingsContentProps {
     canCreateLabels?: boolean;
     canUpdateLabels?: boolean;
     canDeleteLabels?: boolean;
+    issueTypes?: IssueType[];
+    hasIssueTypesAccess?: boolean;
+    canCreateIssueTypes?: boolean;
+    canUpdateIssueTypes?: boolean;
+    canDeleteIssueTypes?: boolean;
 }
 
 export default function WorkspaceSettingsContent({
@@ -80,6 +87,11 @@ export default function WorkspaceSettingsContent({
     canCreateLabels = false,
     canUpdateLabels = false,
     canDeleteLabels = false,
+    issueTypes = [],
+    hasIssueTypesAccess = false,
+    canCreateIssueTypes = false,
+    canUpdateIssueTypes = false,
+    canDeleteIssueTypes = false,
 }: WorkspaceSettingsContentProps) {
     if (tabId === 'labels') {
         return (
@@ -91,6 +103,20 @@ export default function WorkspaceSettingsContent({
                 canCreateLabels={canCreateLabels}
                 canUpdateLabels={canUpdateLabels}
                 canDeleteLabels={canDeleteLabels}
+            />
+        );
+    }
+
+    if (tabId === 'issue-types') {
+        return (
+            <WorkspaceSettingsIssueTypesTab
+                memberProjects={memberProjects}
+                selectedProjectId={selectedProjectId}
+                issueTypes={issueTypes}
+                hasIssueTypesAccess={hasIssueTypesAccess}
+                canCreateIssueTypes={canCreateIssueTypes}
+                canUpdateIssueTypes={canUpdateIssueTypes}
+                canDeleteIssueTypes={canDeleteIssueTypes}
             />
         );
     }

@@ -5,6 +5,7 @@ import AccountSettingsContent from '@/Components/Organisms/AccountSettingsConten
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import WorkspaceSettingsContent from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsContent';
 import { PageProps } from '@/types';
+import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { NotificationSettings } from '@/types/Notification';
 import {
@@ -61,6 +62,11 @@ interface SettingsIndexProps {
     canCreateLabels?: boolean;
     canUpdateLabels?: boolean;
     canDeleteLabels?: boolean;
+    issueTypes?: IssueType[];
+    hasIssueTypesAccess?: boolean;
+    canCreateIssueTypes?: boolean;
+    canUpdateIssueTypes?: boolean;
+    canDeleteIssueTypes?: boolean;
 }
 
 export default function SettingsIndex({
@@ -93,6 +99,11 @@ export default function SettingsIndex({
     canCreateLabels = false,
     canUpdateLabels = false,
     canDeleteLabels = false,
+    issueTypes = [],
+    hasIssueTypesAccess = false,
+    canCreateIssueTypes = false,
+    canUpdateIssueTypes = false,
+    canDeleteIssueTypes = false,
 }: SettingsIndexProps) {
     const { url, props } = usePage<PageProps>();
     const userName = props.auth?.user?.name ?? 'John Doe';
@@ -171,6 +182,11 @@ export default function SettingsIndex({
                                 canCreateLabels={canCreateLabels}
                                 canUpdateLabels={canUpdateLabels}
                                 canDeleteLabels={canDeleteLabels}
+                                issueTypes={issueTypes}
+                                hasIssueTypesAccess={hasIssueTypesAccess}
+                                canCreateIssueTypes={canCreateIssueTypes}
+                                canUpdateIssueTypes={canUpdateIssueTypes}
+                                canDeleteIssueTypes={canDeleteIssueTypes}
                             />
                         ) : (
                             <SettingsPanel

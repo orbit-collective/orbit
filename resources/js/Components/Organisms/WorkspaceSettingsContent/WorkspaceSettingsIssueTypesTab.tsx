@@ -1,0 +1,206 @@
+import Icon from '@/Components/Atoms/Icon/Icon';
+import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
+import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
+import StatCard from '@/Components/Molecules/StatCard/StatCard';
+import { useAlert } from '@/context/AlertContext';
+import { IssueType } from '@/types/IssueTypes';
+import { MemberProjectSummary } from '@/types/ProjectMembers';
+import { router } from '@inertiajs/react';
+import { icons } from 'lucide-react';
+import { useState } from 'react';
+import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
+
+interface WorkspaceSettingsIssueTypesTabProps {
+    memberProjects?: MemberProjectSummary[];
+    selectedProjectId?: number | null;
+    issueTypes?: IssueType[];
+    hasIssueTypesAccess?: boolean;
+    canCreateIssueTypes?: boolean;
+    canUpdateIssueTypes?: boolean;
+    canDeleteIssueTypes?: boolean;
+}
+
+export default function WorkspaceSettingsIssueTypesTab({
+    memberProjects = [],
+    selectedProjectId = null,
+    issueTypes = [],
+    hasIssueTypesAccess = false,
+    canDeleteIssueTypes = false,
+}: WorkspaceSettingsIssueTypesTabProps) {
+    const { addAlert } = useAlert();
+    const [deletingIssueType, setDeletingIssueType] =
+        useState<IssueType | null>(null);
+
+    const selectedProject =
+        memberProjects.find((project) => project.id === selectedProjectId) ??
+        null;
+
+    const switchProject = (projectId: number) => {
+        router.get(
+            `/settings?tab=issue-types&project=${projectId}`,
+            {},
+            { preserveScroll: true, preserveState: true },
+        );
+    };
+
+    if (!selectedProject || !hasIssueTypesAccess) {
+        return (
+            <SettingsPanel
+                title="Issue types"
+                description="Customize the catalog of issue types used across your issues."
+                icon="Shapes"
+            >
+                <SettingsPanelRow
+                    title={
+                        !selectedProject
+                            ? "You're not part of any project yet"
+                            : "You don't have access to this project's issue types"
+                    }
+                    description={
+                        !selectedProject
+                            ? 'Create or join a project to manage its issue types here.'
+                            : 'Ask a project admin for the issue_types.view permission to see issue types here.'
+                    }
+                />
+            </SettingsPanel>
+        );
+    }
+
+    const customCount = issueTypes.filter((type) => !type.isSystem).length;
+    const systemCount = issueTypes.length - customCount;
+
+    const handleConfirmDelete = () => {
+        if (!deletingIssueType) return;
+
+        router.delete(
+            route('projects.issue-types.destroy', [
+                selectedProject.id,
+                deletingIssueType.id,
+            ]),
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () =>
+                    addAlert(
+                        'Could not delete this issue type. Make sure no issues use it.',
+                        'error',
+                    ),
+            },
+        );
+    };
+
+    return (
+        <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <StatCard
+                    variant="vivid"
+                    title="Total issue types"
+                    value={issueTypes.length}
+                    icon="Shapes"
+                    color="accent"
+                />
+                <StatCard
+                    variant="vivid"
+                    title="Custom issue types"
+                    value={customCount}
+                    icon="Sparkles"
+                    color="info"
+                />
+                <StatCard
+                    variant="vivid"
+                    title="System issue types"
+                    value={systemCount}
+                    icon="ShieldCheck"
+                    color="warning"
+                />
+            </div>
+
+            <ProjectPickerPanel
+                projects={memberProjects}
+                selectedProjectId={selectedProject.id}
+                description="Choose which project's issue type catalog you're editing."
+                onSelect={switchProject}
+            />
+
+            <SettingsPanel
+                title="Issue type catalog"
+                description={`Issue types available for issues in ${selectedProject.name}.`}
+                icon="Shapes"
+            >
+                <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                    <p className="text-sm text-[var(--text-gray-color)]">
+                        {issueTypes.length}{' '}
+                        {issueTypes.length === 1 ? 'issue type' : 'issue types'}{' '}
+                        configured
+                    </p>
+                </div>
+
+                {issueTypes.map((issueType) => (
+                    <div
+                        key={issueType.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                    >
+                        <div className="flex min-w-0 items-center gap-3">
+                            <span
+                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                                style={{
+                                    backgroundColor: `${issueType.color}1a`,
+                                    color: issueType.color,
+                                }}
+                            >
+                                <Icon
+                                    name={issueType.icon as keyof typeof icons}
+                                    size={15}
+                                />
+                            </span>
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                        {issueType.name}
+                                    </p>
+                                    {issueType.isSystem && (
+                                        <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                            System
+                                        </span>
+                                    )}
+                                    {issueType.allowsChildren && (
+                                        <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                            Allows sub-issues
+                                        </span>
+                                    )}
+                                </div>
+                                {issueType.description && (
+                                    <p className="truncate text-sm text-[var(--text-gray-color)]">
+                                        {issueType.description}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        {canDeleteIssueTypes && !issueType.isSystem && (
+                            <div className="flex shrink-0 items-center gap-1">
+                                <button
+                                    type="button"
+                                    title="Delete issue type"
+                                    onClick={() =>
+                                        setDeletingIssueType(issueType)
+                                    }
+                                    className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                >
+                                    <Icon name="Trash" size={14} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </SettingsPanel>
+
+            <WorkspaceSettingsDeleteIssueTypeModal
+                isOpen={deletingIssueType !== null}
+                onClose={() => setDeletingIssueType(null)}
+                issueType={deletingIssueType}
+                onConfirm={handleConfirmDelete}
+            />
+        </div>
+    );
+}

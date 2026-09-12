@@ -10,6 +10,7 @@ export type SettingsTabId =
     | 'integrations'
     | 'export'
     | 'labels'
+    | 'issue-types'
     | 'statuses'
     | 'priorities'
     | 'templates'
@@ -79,6 +80,15 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Tag',
         section: 'workspace',
         description: 'Define label taxonomy used across issues and projects.',
+        enabled: true,
+    },
+    {
+        id: 'issue-types',
+        label: 'Issue Types',
+        icon: 'Shapes',
+        section: 'workspace',
+        description:
+            'Customize the catalog of issue types, their icons, colors and workflows.',
         enabled: true,
     },
     {
@@ -183,6 +193,7 @@ export const isAccountSettingsTabId = (
 
 export const WORKSPACE_SETTINGS_TAB_IDS = [
     'labels',
+    'issue-types',
     'statuses',
     'priorities',
     'templates',
