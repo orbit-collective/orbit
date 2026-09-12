@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\Issue;
+use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\WorkflowStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -68,6 +70,22 @@ test('project() belongs to the project referenced by project_id', function () {
 
     expect($issue->project())->toBeInstanceOf(BelongsTo::class)
         ->and($issue->project->id)->toBe($project->id);
+});
+
+test('issueType() belongs to the issue type referenced by issue_type_id', function () {
+    $issueType = IssueType::factory()->create();
+    $issue = Issue::factory()->create(['issue_type_id' => $issueType->id]);
+
+    expect($issue->issueType())->toBeInstanceOf(BelongsTo::class)
+        ->and($issue->issueType->id)->toBe($issueType->id);
+});
+
+test('workflowStatus() belongs to the workflow status referenced by workflow_status_id', function () {
+    $status = WorkflowStatus::factory()->create();
+    $issue = Issue::factory()->create(['workflow_status_id' => $status->id]);
+
+    expect($issue->workflowStatus())->toBeInstanceOf(BelongsTo::class)
+        ->and($issue->workflowStatus->id)->toBe($status->id);
 });
 
 test('labels are cast to a plain array of label name strings', function () {

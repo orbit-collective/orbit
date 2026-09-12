@@ -21,6 +21,8 @@ class Issue extends Model
         'priority',
         'project_id',
         'parent_id',
+        'issue_type_id',
+        'workflow_status_id',
         'user_id',
         'assignee_id',
         'labels',
@@ -69,5 +71,15 @@ class Issue extends Model
     public function externalLinks(): HasMany
     {
         return $this->hasMany(ExternalIssueLink::class);
+    }
+
+    public function issueType(): BelongsTo
+    {
+        return $this->belongsTo(IssueType::class);
+    }
+
+    public function workflowStatus(): BelongsTo
+    {
+        return $this->belongsTo(WorkflowStatus::class);
     }
 }

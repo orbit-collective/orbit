@@ -32,6 +32,12 @@ enum Permission: string
     case LABELS_UPDATE = 'projects.labels.update';
     case LABELS_DELETE = 'projects.labels.delete';
 
+    case ISSUE_TYPES_VIEW = 'projects.issue_types.view';
+    case ISSUE_TYPES_CREATE = 'projects.issue_types.create';
+    case ISSUE_TYPES_UPDATE = 'projects.issue_types.update';
+    case ISSUE_TYPES_DELETE = 'projects.issue_types.delete';
+    case WORKFLOW_UPDATE = 'projects.issue_types.workflow_update';
+
     // ISSUES PERMISSIONS
     case ISSUES_VIEW = 'issues.view';
     case ISSUES_CREATE = 'issues.create';

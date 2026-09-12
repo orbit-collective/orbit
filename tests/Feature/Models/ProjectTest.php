@@ -4,6 +4,7 @@ use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
 use App\Models\ActivityLog;
 use App\Models\Issue;
+use App\Models\IssueType;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Models\ProjectUser;
@@ -69,6 +70,17 @@ test('issues() returns only issues belonging to the project', function () {
         ->and($project->issues)->toHaveCount(3)
         ->and($project->issues->pluck('id')->sort()->values()->all())
         ->toBe($ownIssues->pluck('id')->sort()->values()->all());
+});
+
+test('issueTypes() returns only issue types belonging to the project', function () {
+    $project = Project::factory()->create();
+    $ownIssueTypes = IssueType::factory()->count(2)->create(['project_id' => $project->id]);
+    IssueType::factory()->create();
+
+    expect($project->issueTypes())->toBeInstanceOf(HasMany::class)
+        ->and($project->issueTypes)->toHaveCount(2)
+        ->and($project->issueTypes->pluck('id')->sort()->values()->all())
+        ->toBe($ownIssueTypes->pluck('id')->sort()->values()->all());
 });
 
 test('savedFilters() returns only saved filters belonging to the project', function () {

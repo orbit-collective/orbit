@@ -81,4 +81,29 @@ class ProjectPolicy
     {
         return $project->hasPermissionOrTier($user, Permission::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN]);
     }
+
+    public function viewIssueTypes(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::ISSUE_TYPES_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER]);
+    }
+
+    public function createIssueTypes(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::ISSUE_TYPES_CREATE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
+
+    public function updateIssueTypes(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::ISSUE_TYPES_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
+
+    public function deleteIssueTypes(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::ISSUE_TYPES_DELETE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
+
+    public function updateWorkflow(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::WORKFLOW_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
 }

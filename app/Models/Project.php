@@ -25,11 +25,13 @@ class Project extends Model
         'role',
         'is_system',
         'labels_seeded_at',
+        'issue_types_seeded_at',
     ];
 
     protected $casts = [
         'columns' => 'array',
         'labels_seeded_at' => 'datetime',
+        'issue_types_seeded_at' => 'datetime',
     ];
 
     public function issues(): HasMany
@@ -68,6 +70,11 @@ class Project extends Model
     public function labels(): HasMany
     {
         return $this->hasMany(Label::class);
+    }
+
+    public function issueTypes(): HasMany
+    {
+        return $this->hasMany(IssueType::class);
     }
 
     public function hasPermission(User $user, PermissionEnum $permission): bool
