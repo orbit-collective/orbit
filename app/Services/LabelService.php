@@ -33,15 +33,23 @@ class LabelService
     ) {}
 
     /**
-     * Seeds the project's system labels on first use. Idempotent - safe to
-     * call on every read, since firstOrCreate() only inserts the rows that
-     * are still missing (e.g. one a project owner deleted stays deleted).
+     * Seeds the project's system labels exactly once, the first time this is
+     * called for the project. Guarded by projects.labels_seeded_at rather
+     * than "insert whatever's missing" - the latter would silently resurrect
+     * a system label an owner deliberately deleted the next time any issue
+     * is created or edited.
      */
     public function ensureSystemLabels(Project $project): void
     {
+        if ($project->labels_seeded_at !== null) {
+            return;
+        }
+
         foreach (self::SYSTEM_LABELS as $definition) {
             $this->labelRepository->firstOrCreateSystemLabel($project, $definition);
         }
+
+        $project->forceFill(['labels_seeded_at' => now()])->save();
     }
 
     public function getLabels(Project $project): Collection

@@ -214,6 +214,57 @@ test('creating an issue rejects an end_date before the start_date', function () 
     $response->assertSessionHasErrors('end_date');
 });
 
+test('creating an issue accepts a system label, seeding it automatically', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+
+    $this->assertDatabaseMissing('labels', ['project_id' => $project->id, 'name' => 'bug']);
+
+    $response = $this->actingAs($user)->post('/issues', [
+        'title' => 'Broken login',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+        'labels' => ['bug'],
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('labels', ['project_id' => $project->id, 'name' => 'bug']);
+    $this->assertDatabaseHas('issues', ['title' => 'Broken login', 'labels' => json_encode(['bug'])]);
+});
+
+test('creating an issue rejects a label name that does not exist in the project', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+
+    $response = $this->actingAs($user)->post('/issues', [
+        'title' => 'Broken login',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+        'labels' => ['not-a-real-label'],
+    ]);
+
+    $response->assertSessionHasErrors('labels.0');
+});
+
+test('creating an issue rejects a label that belongs to a different project', function () {
+    $project = Project::factory()->create();
+    $otherProject = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+    $otherProject->labels()->create(['name' => 'other-project-label', 'color' => '#000000']);
+
+    $response = $this->actingAs($user)->post('/issues', [
+        'title' => 'Broken login',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+        'labels' => ['other-project-label'],
+    ]);
+
+    $response->assertSessionHasErrors('labels.0');
+});
+
 test('guests cannot create an issue', function () {
     $response = $this->post('/issues');
 
@@ -286,6 +337,31 @@ test('updating an issue rejects an assignee who is not a member of the project',
     ]);
 
     $response->assertSessionHasErrors('assignee_id');
+});
+
+test('updating an issue accepts a label that exists in the project, seeding system labels first', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'labels' => []]);
+    $user = actingAsProjectMember($project);
+
+    $response = $this->actingAs($user)->patch("/issues/$issue->id", [
+        'labels' => ['bug'],
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('issues', ['id' => $issue->id, 'labels' => json_encode(['bug'])]);
+});
+
+test('updating an issue rejects a label name that does not exist in the project', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'labels' => []]);
+    $user = actingAsProjectMember($project);
+
+    $response = $this->actingAs($user)->patch("/issues/$issue->id", [
+        'labels' => ['not-a-real-label'],
+    ]);
+
+    $response->assertSessionHasErrors('labels.0');
 });
 
 test('a non-member cannot update an issue', function () {
