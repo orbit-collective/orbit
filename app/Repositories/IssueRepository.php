@@ -20,7 +20,7 @@ class IssueRepository
     {
         $query = Issue::query()
             ->where('project_id', $projectId)
-            ->with(['creator', 'assignee'])
+            ->with(['creator', 'assignee', 'issueType', 'workflowStatus'])
             ->orderByRaw("CASE WHEN priority = 'high' THEN 1 WHEN priority = 'medium' THEN 2 WHEN priority = 'low' THEN 3 ELSE 4 END");
 
         $this->applySearchAndFilters($query, $searchParams, $filters);
@@ -74,17 +74,17 @@ class IssueRepository
 
     public function getAllPaginated(string|int $projectID = 'all', int $perPage = 20, array $sortParams = [], array $searchParams = [], array $filters = []): LengthAwarePaginator
     {
-        $query = Issue::query()->with(['creator', 'assignee']);
+        $query = Issue::query()->with(['creator', 'assignee', 'issueType', 'workflowStatus']);
 
         if ($projectID !== 'all') {
-            $query->where('project_id', $projectID);
+            $query->where('issues.project_id', $projectID);
         }
 
         $directionInput = $sortParams['direction'] ?? 'AZ';
         $direction = $directionInput === 'ZA' ? 'desc' : 'asc';
 
         $column = $sortParams['sort'] ?? null;
-        $allowedColumns = ['id', 'title', 'status', 'assignee', 'priority', 'labels', 'updated', 'start_date', 'end_date'];
+        $allowedColumns = ['id', 'title', 'status', 'assignee', 'priority', 'labels', 'updated', 'start_date', 'end_date', 'type'];
 
         if ($column && in_array($column, $allowedColumns)) {
             switch ($column) {
@@ -107,6 +107,12 @@ class IssueRepository
                     $query->leftJoin('users', 'issues.assignee_id', '=', 'users.id')
                         ->select('issues.*')
                         ->orderBy('users.name', $direction);
+                    break;
+
+                case 'type':
+                    $query->leftJoin('issue_types', 'issues.issue_type_id', '=', 'issue_types.id')
+                        ->select('issues.*')
+                        ->orderBy('issue_types.name', $direction);
                     break;
 
                 case 'updated':
