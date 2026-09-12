@@ -43,6 +43,17 @@ const issueTypes: IssueType[] = [
         allowsChildren: false,
         requiredFields: [],
         restrictedRoleTypes: [],
+        statuses: [
+            {
+                id: 10,
+                issueTypeId: 1,
+                name: 'To Do',
+                color: '#94a3b8',
+                category: 'todo',
+                isInitial: true,
+            },
+        ],
+        transitions: [],
     },
     {
         id: 2,
@@ -131,6 +142,20 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
 
             expect(screen.getAllByTitle('Delete issue type')).toHaveLength(1);
         });
+
+        test('without canUpdateWorkflow, no "Manage workflow" control is shown', () => {
+            renderTab({});
+
+            expect(
+                screen.queryByTitle('Manage workflow'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('a canUpdateWorkflow user sees a "Manage workflow" control on every type', () => {
+            renderTab({ canUpdateWorkflow: true });
+
+            expect(screen.getAllByTitle('Manage workflow')).toHaveLength(2);
+        });
     });
 
     describe('inline editor', () => {
@@ -151,6 +176,16 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
             fireEvent.click(screen.getAllByTitle('Edit issue type')[0]);
 
             expect(screen.getByDisplayValue('Bug')).toBeInTheDocument();
+        });
+    });
+
+    describe('workflow modal', () => {
+        test('clicking "Manage workflow" opens the workflow modal for that type', () => {
+            renderTab({ canUpdateWorkflow: true });
+
+            fireEvent.click(screen.getAllByTitle('Manage workflow')[0]);
+
+            expect(screen.getByText('Bug workflow')).toBeInTheDocument();
         });
     });
 });

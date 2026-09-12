@@ -70,6 +70,7 @@ class SettingsController extends Controller
         $canCreateIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_CREATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
         $canUpdateIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_UPDATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
         $canDeleteIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_DELETE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
+        $canUpdateWorkflow = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::WORKFLOW_UPDATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
 
         return Inertia::render('Settings/Index', [
             'projects' => $projects,
@@ -147,6 +148,7 @@ class SettingsController extends Controller
             'canCreateIssueTypes' => $canCreateIssueTypes,
             'canUpdateIssueTypes' => $canUpdateIssueTypes,
             'canDeleteIssueTypes' => $canDeleteIssueTypes,
+            'canUpdateWorkflow' => $canUpdateWorkflow,
         ]);
     }
 
@@ -229,6 +231,20 @@ class SettingsController extends Controller
             'allowsChildren' => $issueType->allows_children,
             'requiredFields' => $issueType->required_fields ?? [],
             'restrictedRoleTypes' => $issueType->restricted_role_types ?? [],
+            'statuses' => $issueType->statuses()->orderBy('sort_order')->get()->map(fn ($status) => [
+                'id' => $status->id,
+                'issueTypeId' => $status->issue_type_id,
+                'name' => $status->name,
+                'color' => $status->color,
+                'category' => $status->category->value,
+                'isInitial' => $status->is_initial,
+            ])->values()->all(),
+            'transitions' => $issueType->transitions()->get()->map(fn ($transition) => [
+                'id' => $transition->id,
+                'issueTypeId' => $transition->issue_type_id,
+                'fromStatusId' => $transition->from_status_id,
+                'toStatusId' => $transition->to_status_id,
+            ])->values()->all(),
         ])->values()->all();
     }
 
