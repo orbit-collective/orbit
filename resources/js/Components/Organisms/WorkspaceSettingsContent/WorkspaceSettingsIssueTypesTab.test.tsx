@@ -198,4 +198,55 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
             expect(screen.getByText('Bug templates')).toBeInTheDocument();
         });
     });
+
+    describe('delete modal', () => {
+        test('clicking delete on the custom type opens the confirmation modal', () => {
+            renderTab({ canDeleteIssueTypes: true });
+
+            fireEvent.click(screen.getByTitle('Delete issue type'));
+
+            expect(
+                screen.getByText('Delete issue type', { selector: 'button' }),
+            ).toBeInTheDocument();
+        });
+
+        test('closing the delete modal hides it again', () => {
+            renderTab({ canDeleteIssueTypes: true });
+
+            fireEvent.click(screen.getByTitle('Delete issue type'));
+            fireEvent.click(screen.getByText('Cancel'));
+
+            expect(
+                screen.queryByText('Delete issue type', {
+                    selector: 'button',
+                }),
+            ).not.toBeInTheDocument();
+        });
+    });
+
+    describe('closing workflow and templates modals', () => {
+        test('closing the workflow modal hides it', () => {
+            renderTab({ canUpdateWorkflow: true });
+
+            fireEvent.click(screen.getAllByTitle('Manage workflow')[0]);
+            expect(screen.getByText('Bug workflow')).toBeInTheDocument();
+
+            const closeButton = document.querySelector('header button');
+            fireEvent.click(closeButton as Element);
+
+            expect(screen.queryByText('Bug workflow')).not.toBeInTheDocument();
+        });
+
+        test('closing the templates modal hides it', () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            fireEvent.click(screen.getAllByTitle('Manage templates')[0]);
+            expect(screen.getByText('Bug templates')).toBeInTheDocument();
+
+            const closeButton = document.querySelector('header button');
+            fireEvent.click(closeButton as Element);
+
+            expect(screen.queryByText('Bug templates')).not.toBeInTheDocument();
+        });
+    });
 });

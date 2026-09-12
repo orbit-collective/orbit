@@ -116,6 +116,45 @@ describe('WorkspaceSettingsTemplatesModal', () => {
         );
     });
 
+    test('creating a template includes the description and default priority', () => {
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.change(screen.getByPlaceholderText('Template name'), {
+            target: { value: 'Quick Report' },
+        });
+        fireEvent.change(
+            screen.getByPlaceholderText(
+                'Description prefilled on new issues (optional)',
+            ),
+            { target: { value: 'Steps to reproduce' } },
+        );
+        fireEvent.change(screen.getByDisplayValue('Default priority'), {
+            target: { value: 'high' },
+        });
+        fireEvent.click(screen.getByText('Add template'));
+
+        expect(routerMock.post).toHaveBeenCalledWith(
+            expect.stringContaining('issue-types.templates.store'),
+            expect.objectContaining({
+                description: 'Steps to reproduce',
+                default_priority: 'high',
+            }),
+            expect.any(Object),
+        );
+    });
+
+    test('the add-template button is disabled until a name is entered', () => {
+        renderModal({ canManageTemplates: true });
+
+        expect(screen.getByText('Add template')).toBeDisabled();
+
+        fireEvent.change(screen.getByPlaceholderText('Template name'), {
+            target: { value: 'Quick Report' },
+        });
+
+        expect(screen.getByText('Add template')).not.toBeDisabled();
+    });
+
     test('deleting a template calls the destroy endpoint', () => {
         renderModal({ canManageTemplates: true });
 

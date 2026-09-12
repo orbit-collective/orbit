@@ -133,6 +133,48 @@ describe('WorkspaceSettingsWorkflowModal', () => {
         expect(screen.queryByTitle('Delete status')).not.toBeInTheDocument();
     });
 
+    test('filling in the add-status form and submitting posts the new status', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        fireEvent.change(screen.getByPlaceholderText('New status name'), {
+            target: { value: 'Blocked' },
+        });
+        fireEvent.change(screen.getByDisplayValue('To Do'), {
+            target: { value: 'in_progress' },
+        });
+        fireEvent.click(screen.getByLabelText('Use color #ff5722'));
+        fireEvent.click(screen.getByText('Add status'));
+
+        expect(routerMock.post).toHaveBeenCalledWith(
+            expect.stringContaining('issue-types.statuses.store'),
+            { name: 'Blocked', color: '#ff5722', category: 'in_progress' },
+            expect.any(Object),
+        );
+    });
+
+    test('the add-status button is disabled until a name is entered', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        expect(screen.getByText('Add status')).toBeDisabled();
+
+        fireEvent.change(screen.getByPlaceholderText('New status name'), {
+            target: { value: 'Blocked' },
+        });
+
+        expect(screen.getByText('Add status')).not.toBeDisabled();
+    });
+
+    test('clicking delete on a status calls the destroy endpoint', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        fireEvent.click(screen.getAllByTitle('Delete status')[0]);
+
+        expect(routerMock.delete).toHaveBeenCalledWith(
+            expect.stringContaining('issue-types.statuses.destroy'),
+            expect.any(Object),
+        );
+    });
+
     test('renders nothing when no issue type is given', () => {
         renderModal({ issueType: null });
 
