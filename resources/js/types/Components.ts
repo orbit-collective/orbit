@@ -22,6 +22,7 @@ import {
 } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
 import { Project, ProjectColors } from '@/types/Projects';
+import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
 import type { VariantProps } from 'class-variance-authority';
 import { icons } from 'lucide-react';
@@ -497,6 +498,7 @@ export interface ProjectOnboardingFormProps {
 export interface ActivityLogItemProps {
     group: ActivityLogGroup;
     users?: AssignableUser[];
+    roles?: RoleNameSummary[];
 }
 export interface ProjectOnboardingPreviewProps {
     data: ProjectOnboardingFormData;
@@ -505,6 +507,7 @@ export interface ProjectOnboardingPreviewProps {
 export interface ActivityLogsProps {
     logs: ActivityLogEntry[];
     users?: AssignableUser[];
+    roles?: RoleNameSummary[];
 }
 export interface CalendarViewProps {
     issues: Issue[];

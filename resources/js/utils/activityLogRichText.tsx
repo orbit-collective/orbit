@@ -1,12 +1,16 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
+import { RoleNameSummary, RoleTypeValue } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
+import { cn } from '@/utils/cn';
+import { ROLE_TYPE_THEME } from '@/utils/roleTheme';
 import { ReactNode } from 'react';
 
 const CHANGE_PATTERN =
-    /(status|priority) changed from "([a-z_]+)" to "([a-z_]+)"|labels changed to \[([a-z_, ]*)]|assignee changed from "((?:[^"\\]|\\.)*)"(?:#(\d+))? to "((?:[^"\\]|\\.)*)"(?:#(\d+))?|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|task:|[Nn]otification:?)\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)/g;
+    /(status|priority) changed from "([a-z_]+)" to "([a-z_]+)"|labels changed to \[([^\]]*)]|assignee changed from "((?:[^"\\]|\\.)*)"(?:#(\d+))? to "((?:[^"\\]|\\.)*)"(?:#(\d+))?|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|task:|[Nn]otification:?)\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)|(?<=\bthe )"([^"]+)"(?= label\b)|(?<=\bthe )"([^"]+)"(?= role\b)/g;
 
 const unescapeQuoted = (value: string) => value.replace(/\\(.)/g, '$1');
 
@@ -36,10 +40,24 @@ const LabelsValue = ({ labelsCsv }: { labelsCsv: string }) => {
     return (
         <span className="mx-0.5 inline-flex flex-wrap items-center gap-1 align-middle">
             {labels.map((label) => (
-                <Badge key={label} color={label as never}>
-                    {label}
-                </Badge>
+                <LabelBadge key={label} label={label} />
             ))}
+        </span>
+    );
+};
+
+const RoleValue = ({ name, type }: { name: string; type?: RoleTypeValue }) => {
+    const theme = ROLE_TYPE_THEME[type ?? 'custom'];
+
+    return (
+        <span
+            className={cn(
+                'mx-0.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 align-middle text-[10px] font-medium',
+                theme.badgeClass,
+            )}
+        >
+            <span className={cn('h-1.5 w-1.5 rounded-full', theme.dot)} />
+            {name}
         </span>
     );
 };
@@ -78,12 +96,19 @@ export function renderActivityLogBody(
     // Always the right person even when two project members share a name -
     // pass this whenever the caller already knows the entry's actor.
     actorAvatar?: string | null,
+    // The project's current roles, used only to look up a role-management
+    // message's tier (owner/admin/member/viewer/custom) by name so its badge
+    // gets the same color as Settings > Roles & management. A role renamed
+    // or deleted since the log was written just falls back to the "custom"
+    // theme - there's no id in the log text to resolve it unambiguously.
+    roles: RoleNameSummary[] = [],
 ): ReactNode[] {
     const avatarById = new Map(users.map((user) => [user.id, user.avatar]));
     // Legacy fallback only: activity logs written before assignee names
     // carried an id suffix have no way to be resolved unambiguously, so a
     // name collision there still shows whichever matching user comes last.
     const avatarByName = new Map(users.map((user) => [user.name, user.avatar]));
+    const roleTypeByName = new Map(roles.map((role) => [role.name, role.type]));
     const nodes: ReactNode[] = [];
     let lastIndex = 0;
     let matchCount = 0;
@@ -113,6 +138,8 @@ export function renderActivityLogBody(
             issueNumber,
             authorBy,
             authorStart,
+            labelCrudName,
+            roleCrudName,
         ] = match;
 
         const authorName = authorBy ?? authorStart;
@@ -186,6 +213,21 @@ export function renderActivityLogBody(
                             ? actorAvatar
                             : avatarByName.get(authorName)
                     }
+                />,
+            );
+        } else if (labelCrudName !== undefined) {
+            nodes.push(
+                <LabelBadge
+                    key={`label-crud-${matchCount}`}
+                    label={labelCrudName}
+                />,
+            );
+        } else if (roleCrudName !== undefined) {
+            nodes.push(
+                <RoleValue
+                    key={`role-crud-${matchCount}`}
+                    name={roleCrudName}
+                    type={roleTypeByName.get(roleCrudName)}
                 />,
             );
         }

@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Label;
 use App\Models\Project;
+use App\Models\Role;
 use App\Services\ActivityLogService;
 use App\Services\IssueService;
 use App\Services\LabelService;
 use App\Services\ProjectService;
+use App\Services\RoleService;
 use App\Services\UserService;
 use Illuminate\Container\EntryNotFoundException;
 use Illuminate\Contracts\Container\CircularDependencyException;
@@ -31,13 +33,16 @@ class ProjectController extends Controller
 
     protected LabelService $labelService;
 
-    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService)
+    protected RoleService $roleService;
+
+    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService, RoleService $roleService)
     {
         $this->projectService = $projectService;
         $this->issueService = $issueService;
         $this->userService = $userService;
         $this->activityLogService = $activityLogService;
         $this->labelService = $labelService;
+        $this->roleService = $roleService;
     }
 
     /**
@@ -83,6 +88,7 @@ class ProjectController extends Controller
                 'createdAt' => $entry->created_at->toJSON(),
             ]),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
+            'roles' => $this->mapRoleNames($this->roleService->getRoles($project)),
         ]);
     }
 
@@ -94,6 +100,20 @@ class ProjectController extends Controller
             'color' => $label->color,
             'description' => $label->description,
             'isSystem' => $label->is_system,
+        ])->values()->all();
+    }
+
+    /**
+     * Just enough of a role to look its tier up by name in the activity log
+     * (see resources/js/utils/activityLogRichText.tsx's RoleValue) - not the
+     * full shape SettingsController::mapRoles() builds for the Roles &
+     * management tab itself.
+     */
+    private function mapRoleNames(Collection $roles): array
+    {
+        return $roles->map(fn (Role $role) => [
+            'name' => $role->name,
+            'type' => $role->role,
         ])->values()->all();
     }
 

@@ -1,3 +1,4 @@
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { renderActivityLogBody } from './activityLogRichText';
@@ -51,6 +52,122 @@ describe('renderActivityLogBody', () => {
         render(<p>{renderActivityLogBody('labels changed to [none]')}</p>);
 
         expect(screen.getByText('none')).toBeInTheDocument();
+    });
+
+    test('renders a custom (non-enum) label name from the brackets, not just lowercase letters', () => {
+        render(
+            <p>{renderActivityLogBody('labels changed to [Test-2, bug]')}</p>,
+        );
+
+        expect(screen.getByText('Test-2')).toBeInTheDocument();
+        expect(screen.getByText('bug')).toBeInTheDocument();
+    });
+
+    test('resolves a custom label to its real project color instead of an unstyled fallback', () => {
+        const { container } = render(
+            <ProjectLabelsProvider
+                labels={[
+                    {
+                        id: 1,
+                        name: 'test',
+                        color: '#ff9800',
+                        description: null,
+                        isSystem: false,
+                    },
+                ]}
+            >
+                <p>{renderActivityLogBody('labels changed to [test]')}</p>
+            </ProjectLabelsProvider>,
+        );
+
+        const dot = container.querySelector('span[style]');
+        expect(dot).toHaveStyle({ backgroundColor: '#ff9800' });
+    });
+
+    test('renders a label-management message ("Created the ... label") with a label badge', () => {
+        render(<p>{renderActivityLogBody('Created the "test" label')}</p>);
+
+        expect(screen.getByText('test')).toBeInTheDocument();
+        expect(screen.queryByText('"test"')).not.toBeInTheDocument();
+        expect(
+            screen.getByText(
+                (_, element) =>
+                    element?.tagName === 'P' &&
+                    element.textContent === 'Created the test label',
+            ),
+        ).toBeInTheDocument();
+    });
+
+    test("resolves a label-management message's badge to the real project color", () => {
+        const { container } = render(
+            <ProjectLabelsProvider
+                labels={[
+                    {
+                        id: 1,
+                        name: 'test',
+                        color: '#ff9800',
+                        description: null,
+                        isSystem: false,
+                    },
+                ]}
+            >
+                <p>{renderActivityLogBody('Updated the "test" label')}</p>
+            </ProjectLabelsProvider>,
+        );
+
+        const dot = container.querySelector('span[style]');
+        expect(dot).toHaveStyle({ backgroundColor: '#ff9800' });
+    });
+
+    test('renders a role-management message ("Updated permissions for the ... role") with a badge', () => {
+        render(
+            <p>
+                {renderActivityLogBody(
+                    'Updated permissions for the "Admin" role',
+                )}
+            </p>,
+        );
+
+        expect(screen.getByText('Admin')).toBeInTheDocument();
+        expect(screen.queryByText('"Admin"')).not.toBeInTheDocument();
+        expect(
+            screen.getByText(
+                (_, element) =>
+                    element?.tagName === 'P' &&
+                    element.textContent ===
+                        'Updated permissions for the Admin role',
+            ),
+        ).toBeInTheDocument();
+    });
+
+    test('renders a "Created the ... role" message with a badge', () => {
+        render(<p>{renderActivityLogBody('Created the "QA" role')}</p>);
+
+        expect(screen.getByText('QA')).toBeInTheDocument();
+        expect(screen.queryByText('"QA"')).not.toBeInTheDocument();
+    });
+
+    test('colors a role badge by its tier when a matching project role is passed', () => {
+        const { container } = render(
+            <p>
+                {renderActivityLogBody(
+                    'Updated permissions for the "Admin" role',
+                    [],
+                    undefined,
+                    [{ name: 'Admin', type: 'admin' }],
+                )}
+            </p>,
+        );
+
+        expect(container.querySelector('.bg-emerald-400\\/10')).not.toBeNull();
+    });
+
+    test('falls back to the "custom" role theme when no matching role is found', () => {
+        const { container } = render(
+            <p>{renderActivityLogBody('Created the "QA" role')}</p>,
+        );
+
+        expect(container.querySelector('.bg-slate-400\\/10')).not.toBeNull();
     });
 
     test('keeps surrounding plain text fragments around richer values', () => {
