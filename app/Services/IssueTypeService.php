@@ -42,7 +42,7 @@ class IssueTypeService
      * issues are backfilled onto it in backfillExistingIssues().
      */
     private const array SYSTEM_ISSUE_TYPES = [
-        ['name' => 'Task', 'icon' => 'CheckSquare', 'color' => '#3b82f6', 'description' => 'A unit of work to be done.'],
+        ['name' => 'Task', 'icon' => 'SquareCheck', 'color' => '#3b82f6', 'description' => 'A unit of work to be done.'],
         ['name' => 'Feature', 'icon' => 'Sparkles', 'color' => '#6366f1', 'description' => 'A new capability or request.'],
         ['name' => 'Story', 'icon' => 'BookOpen', 'color' => '#22c55e', 'description' => 'A user-facing piece of functionality.'],
         ['name' => 'Bug', 'icon' => 'Bug', 'color' => '#ef4444', 'description' => 'Something isn’t working as expected.'],
