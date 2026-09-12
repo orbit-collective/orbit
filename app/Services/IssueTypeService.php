@@ -15,6 +15,20 @@ use Illuminate\Validation\ValidationException;
 class IssueTypeService
 {
     /**
+     * The fixed set of issue fields that an issue type can mark as required,
+     * mapped to the request/data key each one corresponds to on Issue
+     * create/update.
+     */
+    public const array REQUIRED_FIELD_TO_DATA_KEY = [
+        'description' => 'description',
+        'assignee' => 'assignee_id',
+        'labels' => 'labels',
+        'start_date' => 'start_date',
+        'end_date' => 'end_date',
+        'priority' => 'priority',
+    ];
+
+    /**
      * The starter catalog every project gets on first use, mirroring
      * LabelService::SYSTEM_LABELS. Projects created before this system
      * existed are backfilled lazily the first time their issue types are
@@ -148,7 +162,7 @@ class IssueTypeService
             'description' => $data['description'] ?? null,
             'allows_children' => $data['allows_children'] ?? false,
             'is_system' => false,
-            'required_fields' => [],
+            'required_fields' => $data['required_fields'] ?? [],
             'restricted_role_types' => [],
         ]);
 
@@ -191,6 +205,58 @@ class IssueTypeService
         $this->issueTypeRepository->delete($issueType);
 
         $this->activityLogService->log($project->id, "Deleted the \"$name\" issue type");
+    }
+
+    /**
+     * Enforces the issue type's required_fields against issue create/update
+     * data. On create every required field must be present and non-empty.
+     * On update, a required field is only checked when the request actually
+     * touches it (an untouched required field on an existing issue is left
+     * alone - this isn't a full-issue revalidation).
+     */
+    public function assertRequiredFieldsSatisfied(IssueType $issueType, array $data, bool $isCreate): void
+    {
+        $missingDataKeys = [];
+
+        foreach ($issueType->required_fields ?? [] as $field) {
+            $dataKey = self::REQUIRED_FIELD_TO_DATA_KEY[$field] ?? null;
+
+            if (! $dataKey) {
+                continue;
+            }
+
+            if ($isCreate) {
+                if ($this->isEmptyValue($data[$dataKey] ?? null)) {
+                    $missingDataKeys[$dataKey] = true;
+                }
+            } elseif (array_key_exists($dataKey, $data) && $this->isEmptyValue($data[$dataKey])) {
+                $missingDataKeys[$dataKey] = true;
+            }
+        }
+
+        if ($missingDataKeys) {
+            throw ValidationException::withMessages(array_fill_keys(
+                array_keys($missingDataKeys),
+                'This field is required for the selected issue type.',
+            ));
+        }
+    }
+
+    private function isEmptyValue(mixed $value): bool
+    {
+        if ($value === null) {
+            return true;
+        }
+
+        if (is_array($value)) {
+            return count($value) === 0;
+        }
+
+        if (is_string($value)) {
+            return trim($value) === '';
+        }
+
+        return false;
     }
 
     private function assertNameAvailable(Project $project, string $name): void

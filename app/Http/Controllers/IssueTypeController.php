@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Services\IssueTypeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class IssueTypeController extends Controller
@@ -25,6 +26,8 @@ class IssueTypeController extends Controller
             'color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'description' => ['nullable', 'string', 'max:255'],
             'allows_children' => ['sometimes', 'boolean'],
+            'required_fields' => ['sometimes', 'array'],
+            'required_fields.*' => ['string', Rule::in(array_keys(IssueTypeService::REQUIRED_FIELD_TO_DATA_KEY))],
         ]);
 
         // A custom type can otherwise be created before the project's
@@ -50,6 +53,8 @@ class IssueTypeController extends Controller
             'color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'description' => ['nullable', 'string', 'max:255'],
             'allows_children' => ['sometimes', 'boolean'],
+            'required_fields' => ['sometimes', 'array'],
+            'required_fields.*' => ['string', Rule::in(array_keys(IssueTypeService::REQUIRED_FIELD_TO_DATA_KEY))],
         ]);
 
         $this->issueTypeService->updateIssueType($project, $issueType, $validated);
