@@ -67,8 +67,18 @@ class ProjectPolicy
         return $project->hasPermissionOrTier($user, Permission::LABELS_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER]);
     }
 
-    public function manageLabels(User $user, Project $project): bool
+    public function createLabels(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::LABELS_CREATE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
+
+    public function updateLabels(User $user, Project $project): bool
     {
         return $project->hasPermissionOrTier($user, Permission::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
+
+    public function deleteLabels(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN]);
     }
 }

@@ -3,7 +3,9 @@
 use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
 use App\Models\NotificationSetting;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
 use App\Services\ProjectIntegrationService;
 use App\Services\ProjectInvitationService;
@@ -169,7 +171,7 @@ test('settings page exposes roles and permissions data to a member', function ()
 
     $response->assertInertia(fn (Assert $page) => PermissionEnum::cases()
             |> count(...)
-            |> (fn($x) => $page->where('hasSettingsAccess', true)->has('permissions', $x))
+            |> (fn ($x) => $page->where('hasSettingsAccess', true)->has('permissions', $x))
     );
 });
 
@@ -329,5 +331,48 @@ test('settings page reflects saved notification setting overrides', function () 
         ->component('Settings/Index')
         ->where('notificationSettings.issue_assigned.email', true)
         ->where('notificationSettings.issue_assigned.in_app', false)
+    );
+});
+
+test('a viewer has label view access but not manage access', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=labels');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasLabelsAccess', true)
+        ->where('canManageLabels', false)
+    );
+});
+
+test('a member without any labels permission cannot manage labels', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->get('/settings?tab=labels');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasLabelsAccess', true)
+        ->where('canManageLabels', false)
+    );
+});
+
+test('a member with a custom role granting only labels.delete can manage labels', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $permission = Permission::where('key', 'projects.labels.delete')->first();
+    $role = $project->roles()->create(['name' => 'Label Cleaner', 'slug' => 'label-cleaner', 'role' => 'custom']);
+    $role->permissions()->attach($permission);
+    ProjectUser::where('project_id', $project->id)->where('user_id', $user->id)->first()->roles()->attach($role->id);
+
+    $response = $this->actingAs($user)->get('/settings?tab=labels');
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('canManageLabels', true)
     );
 });

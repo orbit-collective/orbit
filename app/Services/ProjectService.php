@@ -16,7 +16,8 @@ class ProjectService
         protected RoleService $roleService
     ) {}
 
-    public function createProject(array $data, int $creatorId): Project {
+    public function createProject(array $data, int $creatorId): Project
+    {
         $data['slug'] = Str::slug($data['name']);
         $project = $this->projectRepository->store($data);
         $this->projectRepository->attachMember($project, $creatorId, RoleType::OWNER);
@@ -25,19 +26,30 @@ class ProjectService
 
         return $project;
     }
-    public function getAllForUser(int $userId): Collection {
+
+    public function getAllForUser(int $userId): Collection
+    {
         return $this->projectRepository->getAllForUser($userId);
     }
-    public function hasAnyProjectsForUser(int $userId): bool {
+
+    public function findById(int $id): ?Project
+    {
+        return $this->projectRepository->findById($id);
+    }
+
+    public function hasAnyProjectsForUser(int $userId): bool
+    {
         return $this->projectRepository->hasAnyProjectsForUser($userId);
     }
-    public function updateColumns(Project $project, array $newColumns): Project {
+
+    public function updateColumns(Project $project, array $newColumns): Project
+    {
         $currentColumns = $project->columns ?? [];
         $updatedColumns = array_merge($currentColumns, $newColumns);
 
         $project = $this->projectRepository->update($project, ['columns' => $updatedColumns]);
 
-        $this->activityLogService->log($project->id, "Updated visible columns configuration");
+        $this->activityLogService->log($project->id, 'Updated visible columns configuration');
 
         return $project;
     }
@@ -46,7 +58,7 @@ class ProjectService
     {
         $project = $this->projectRepository->update($project, $data);
 
-        $this->activityLogService->log($project->id, "Updated project details");
+        $this->activityLogService->log($project->id, 'Updated project details');
 
         return $project;
     }

@@ -118,6 +118,22 @@ test('a non-member cannot create an issue in a project they do not belong to', f
     $response->assertForbidden();
 });
 
+test('a rejected create request does not seed the target project\'s labels as a side effect', function () {
+    $project = Project::factory()->create();
+
+    $response = $this->actingAs(User::factory()->create())->post('/issues', [
+        'title' => 'New issue',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'status' => 'open',
+        'labels' => ['bug'],
+    ]);
+
+    $response->assertForbidden();
+    $this->assertDatabaseMissing('labels', ['project_id' => $project->id]);
+    expect($project->refresh()->labels_seeded_at)->toBeNull();
+});
+
 test('creating an issue stamps the authenticated user as the creator', function () {
     $project = Project::factory()->create();
     $user = actingAsProjectMember($project);

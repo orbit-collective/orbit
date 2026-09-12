@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -45,6 +47,46 @@ test('creating a label rejects a duplicate name within the same project', functi
     ]);
 
     $response->assertSessionHasErrors('name');
+});
+
+test('creating a label seeds the project\'s starter taxonomy first, so a custom label cannot shadow a system one', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+
+    $response = $this->actingAs($admin)->post("/projects/$project->id/labels", [
+        'name' => 'bug',
+        'color' => '#000000',
+    ]);
+
+    $response->assertSessionHasErrors('name');
+    $this->assertDatabaseHas('labels', ['project_id' => $project->id, 'name' => 'bug', 'is_system' => true, 'color' => '#f44336']);
+});
+
+test('a member with a custom role granting only labels.create can create but not update or delete labels', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $permission = Permission::where('key', 'projects.labels.create')->first();
+    $role = $project->roles()->create(['name' => 'Label Creator', 'slug' => 'label-creator', 'role' => 'custom']);
+    $role->permissions()->attach($permission);
+    ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first()->roles()->attach($role->id);
+    $label = $project->labels()->create(['name' => 'bug', 'color' => '#f44336']);
+
+    $createResponse = $this->actingAs($member)->post("/projects/$project->id/labels", [
+        'name' => 'urgent',
+        'color' => '#ff0000',
+    ]);
+    $updateResponse = $this->actingAs($member)->patch("/projects/$project->id/labels/$label->id", [
+        'name' => 'defect',
+        'color' => '#111111',
+    ]);
+    $deleteResponse = $this->actingAs($member)->delete("/projects/$project->id/labels/$label->id");
+
+    $createResponse->assertRedirect();
+    $this->assertDatabaseHas('labels', ['project_id' => $project->id, 'name' => 'urgent']);
+    $updateResponse->assertForbidden();
+    $deleteResponse->assertForbidden();
 });
 
 test('a member without the labels.update permission cannot create a label', function () {

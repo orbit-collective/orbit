@@ -21,6 +21,11 @@ class ProjectRepository
         return Project::query()->where('slug', $slug)->firstOrFail();
     }
 
+    public function findById(int $id): ?Project
+    {
+        return Project::query()->find($id);
+    }
+
     public function store(array $data): Project
     {
         return Project::query()->create($data);

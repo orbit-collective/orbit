@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Repositories\ExternalIssueLinkRepository;
 use App\Repositories\IssueRepository;
 use App\Services\IssueService;
+use App\Services\LabelService;
 use Throwable;
 
 /**
@@ -29,6 +30,7 @@ class ImportOrchestratorService
         protected IssueRepository $issueRepository,
         protected FieldMappingResolverService $fieldMappingResolverService,
         protected ExternalIssueLinkRepository $externalIssueLinkRepository,
+        protected LabelService $labelService,
     ) {}
 
     /**
@@ -55,6 +57,15 @@ class ImportOrchestratorService
         $failed = 0;
         $errors = [];
 
+        // Computed once per run, not per issue: a label mapping's target
+        // value is a free-form string configured by whoever set up the
+        // mapping, so it can point at a label that doesn't exist (anymore)
+        // in this project. Filtering against this set keeps an import from
+        // writing a label value onto Issue.labels that a normal issue
+        // request would reject and the project can't select or resolve.
+        $this->labelService->ensureSystemLabels($project);
+        $validLabelNames = $this->labelService->getLabels($project)->pluck('name')->all();
+
         /** @var array<string, array{issue: Issue, parentExternalId: ?string}> $importedItems keyed by externalId */
         $importedItems = [];
 
@@ -68,7 +79,7 @@ class ImportOrchestratorService
             }
 
             try {
-                $issueData = $this->mapIssueData($projectIntegration, $project, $externalIssue);
+                $issueData = $this->mapIssueData($projectIntegration, $project, $externalIssue, $validLabelNames);
 
                 if ($existingLink) {
                     $issue = $this->issueService->syncImportedIssue($existingLink->issue, $issueData, $importedBy);
@@ -124,7 +135,10 @@ class ImportOrchestratorService
         return $result;
     }
 
-    private function mapIssueData(ProjectIntegration $projectIntegration, Project $project, ExternalIssueDTO $externalIssue): array
+    /**
+     * @param  list<string>  $validLabelNames
+     */
+    private function mapIssueData(ProjectIntegration $projectIntegration, Project $project, ExternalIssueDTO $externalIssue, array $validLabelNames): array
     {
         $data = [
             'title' => $externalIssue->title,
@@ -147,12 +161,15 @@ class ImportOrchestratorService
         }
 
         // Each project defines its own label taxonomy - an unmapped remote
-        // label/component is simply omitted rather than forcing a match.
+        // label/component is simply omitted rather than forcing a match, and
+        // so is a mapping whose configured target no longer exists as a
+        // label in this project.
         $labels = collect($externalIssue->externalLabels)
             ->map(fn (string $label) => $this->fieldMappingResolverService->resolve(
                 $projectIntegration, IntegrationFieldMappingType::LABEL, $label,
             ))
             ->filter()
+            ->filter(fn (string $label) => in_array($label, $validLabelNames, true))
             ->unique()
             ->values()
             ->all();
