@@ -105,6 +105,24 @@ class WorkflowService
         $this->activityLogService->log($issueType->project_id, "Removed the transition from \"$fromName\" to \"$toName\" in the \"$issueType->name\" workflow");
     }
 
+    /**
+     * Guards an issue's status change against the issue type's transition
+     * graph. A null $fromStatusId (issue has no status yet) or a no-op
+     * change is always allowed.
+     */
+    public function assertTransitionAllowed(IssueType $issueType, ?int $fromStatusId, int $toStatusId): void
+    {
+        if ($fromStatusId === null || $fromStatusId === $toStatusId) {
+            return;
+        }
+
+        if (! $this->workflowRepository->transitionExists($issueType, $fromStatusId, $toStatusId)) {
+            throw ValidationException::withMessages([
+                'status' => 'This status transition is not allowed by this issue type\'s workflow.',
+            ]);
+        }
+    }
+
     private function assertStatusNameAvailable(IssueType $issueType, string $name): void
     {
         if ($issueType->statuses()->where('name', $name)->exists()) {
