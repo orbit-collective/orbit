@@ -1,7 +1,26 @@
+import { IssueType } from '@/types/IssueTypes';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import QuickAddIssueRow, { QuickAddIssueRowHandle } from './QuickAddIssueRow';
+
+const issueTypes: IssueType[] = [
+    { id: 1, name: 'Task', icon: 'SquareCheck', color: '#3b82f6' } as IssueType,
+    { id: 2, name: 'Bug', icon: 'Bug', color: '#ef4444' } as IssueType,
+];
+
+const enabledColumns = {
+    id: true,
+    title: true,
+    type: true,
+    status: true,
+    assignee: true,
+    priority: true,
+    labels: true,
+    updated: true,
+    start_date: true,
+    end_date: true,
+};
 
 const renderRow = (
     props: Partial<React.ComponentProps<typeof QuickAddIssueRow>> = {},
@@ -9,7 +28,13 @@ const renderRow = (
     render(
         <table>
             <tbody>
-                <QuickAddIssueRow colSpan={5} onSubmit={vi.fn()} {...props} />
+                <QuickAddIssueRow
+                    colSpan={5}
+                    enabledColumns={enabledColumns}
+                    issueTypes={issueTypes}
+                    onSubmit={vi.fn()}
+                    {...props}
+                />
             </tbody>
         </table>,
     );
@@ -20,7 +45,7 @@ describe('QuickAddIssueRow', () => {
 
         expect(screen.getByText('New issue')).toBeInTheDocument();
         expect(
-            screen.queryByPlaceholderText('Issue title, press Enter to create'),
+            screen.queryByPlaceholderText('What needs to be done?'),
         ).not.toBeInTheDocument();
     });
 
@@ -30,29 +55,43 @@ describe('QuickAddIssueRow', () => {
         expect(screen.getByText('Add sub-issue')).toBeInTheDocument();
     });
 
-    test('clicking reveals the input', () => {
+    test('clicking reveals the input and defaults the issue type to Task', () => {
         renderRow();
 
         fireEvent.click(screen.getByText('New issue'));
 
         expect(
-            screen.getByPlaceholderText('Issue title, press Enter to create'),
+            screen.getByPlaceholderText('What needs to be done?'),
         ).toBeInTheDocument();
+        expect(screen.getByText('Task')).toBeInTheDocument();
     });
 
-    test('pressing Enter with a title calls onSubmit and clears the field', () => {
+    test('pressing Enter with a title calls onSubmit with the title and selected type, and clears the field', () => {
         const handleSubmit = vi.fn();
         renderRow({ onSubmit: handleSubmit });
 
         fireEvent.click(screen.getByText('New issue'));
-        const input = screen.getByPlaceholderText(
-            'Issue title, press Enter to create',
-        );
+        const input = screen.getByPlaceholderText('What needs to be done?');
         fireEvent.change(input, { target: { value: 'Fix the bug' } });
         fireEvent.keyDown(input, { key: 'Enter' });
 
-        expect(handleSubmit).toHaveBeenCalledWith('Fix the bug');
+        expect(handleSubmit).toHaveBeenCalledWith('Fix the bug', 1);
         expect(input).toHaveValue('');
+    });
+
+    test('changing the issue type dropdown changes what is submitted', () => {
+        const handleSubmit = vi.fn();
+        renderRow({ onSubmit: handleSubmit });
+
+        fireEvent.click(screen.getByText('New issue'));
+        fireEvent.click(screen.getByText('Task'));
+        fireEvent.click(screen.getByText('Bug'));
+
+        const input = screen.getByPlaceholderText('What needs to be done?');
+        fireEvent.change(input, { target: { value: 'Something broke' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+
+        expect(handleSubmit).toHaveBeenCalledWith('Something broke', 2);
     });
 
     test('pressing Enter with an empty title does not submit', () => {
@@ -61,7 +100,7 @@ describe('QuickAddIssueRow', () => {
 
         fireEvent.click(screen.getByText('New issue'));
         fireEvent.keyDown(
-            screen.getByPlaceholderText('Issue title, press Enter to create'),
+            screen.getByPlaceholderText('What needs to be done?'),
             { key: 'Enter' },
         );
 
@@ -73,7 +112,7 @@ describe('QuickAddIssueRow', () => {
 
         fireEvent.click(screen.getByText('New issue'));
         fireEvent.keyDown(
-            screen.getByPlaceholderText('Issue title, press Enter to create'),
+            screen.getByPlaceholderText('What needs to be done?'),
             { key: 'Escape' },
         );
 
@@ -88,6 +127,8 @@ describe('QuickAddIssueRow', () => {
                     <QuickAddIssueRow
                         ref={ref}
                         colSpan={5}
+                        enabledColumns={enabledColumns}
+                        issueTypes={issueTypes}
                         onSubmit={vi.fn()}
                     />
                 </tbody>
@@ -99,7 +140,17 @@ describe('QuickAddIssueRow', () => {
         });
 
         expect(
-            screen.getByPlaceholderText('Issue title, press Enter to create'),
+            screen.getByPlaceholderText('What needs to be done?'),
+        ).toBeInTheDocument();
+    });
+
+    test('renders a placeholder dash for the type cell when no issue types exist', () => {
+        renderRow({ issueTypes: [] });
+
+        fireEvent.click(screen.getByText('New issue'));
+
+        expect(
+            screen.getByPlaceholderText('What needs to be done?'),
         ).toBeInTheDocument();
     });
 });

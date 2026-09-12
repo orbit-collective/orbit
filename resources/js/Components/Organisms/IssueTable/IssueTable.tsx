@@ -28,6 +28,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     pagination,
     project,
     bare = false,
+    issueTypes = [],
 }) => {
     const { addAlert } = useAlert();
     const tableRef = useRef<HTMLTableElement>(null);
@@ -268,7 +269,11 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         return () => window.removeEventListener(QUICK_ADD_ISSUE_EVENT, handler);
     }, []);
 
-    const handleCreateIssue = (title: string, parentId?: string) => {
+    const handleCreateIssue = (
+        title: string,
+        issueTypeId: number | null,
+        parentId?: string,
+    ) => {
         if (!project) return;
 
         setIsCreatingIssue(true);
@@ -279,6 +284,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                 project_id: project.id,
                 priority: 'medium',
                 status: 'open',
+                ...(issueTypeId ? { issue_type_id: issueTypeId } : {}),
                 ...(parentId ? { parent_id: parentId } : {}),
             },
             {
@@ -344,9 +350,11 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                 <QuickAddIssueRow
                                     ref={quickAddRef}
                                     colSpan={headers.length + 3}
+                                    enabledColumns={enabledColumns}
+                                    issueTypes={issueTypes}
                                     isSubmitting={isCreatingIssue}
-                                    onSubmit={(title) =>
-                                        handleCreateIssue(title)
+                                    onSubmit={(title, issueTypeId) =>
+                                        handleCreateIssue(title, issueTypeId)
                                     }
                                 />
                             )}
@@ -389,14 +397,22 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                                         colSpan={
                                                             headers.length + 3
                                                         }
+                                                        enabledColumns={
+                                                            enabledColumns
+                                                        }
+                                                        issueTypes={issueTypes}
                                                         indent={depth + 1}
                                                         label="Add sub-issue"
                                                         isSubmitting={
                                                             isCreatingIssue
                                                         }
-                                                        onSubmit={(title) =>
+                                                        onSubmit={(
+                                                            title,
+                                                            issueTypeId,
+                                                        ) =>
                                                             handleCreateIssue(
                                                                 title,
+                                                                issueTypeId,
                                                                 String(
                                                                     issue.id,
                                                                 ),

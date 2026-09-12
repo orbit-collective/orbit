@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\IssueType;
 use App\Models\Label;
 use App\Models\Project;
 use App\Models\Role;
 use App\Services\ActivityLogService;
 use App\Services\IssueService;
+use App\Services\IssueTypeService;
 use App\Services\LabelService;
 use App\Services\ProjectService;
 use App\Services\RoleService;
@@ -35,7 +37,9 @@ class ProjectController extends Controller
 
     protected RoleService $roleService;
 
-    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService, RoleService $roleService)
+    protected IssueTypeService $issueTypeService;
+
+    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService, RoleService $roleService, IssueTypeService $issueTypeService)
     {
         $this->projectService = $projectService;
         $this->issueService = $issueService;
@@ -43,6 +47,7 @@ class ProjectController extends Controller
         $this->activityLogService = $activityLogService;
         $this->labelService = $labelService;
         $this->roleService = $roleService;
+        $this->issueTypeService = $issueTypeService;
     }
 
     /**
@@ -89,7 +94,23 @@ class ProjectController extends Controller
             ]),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
             'roles' => $this->mapRoleNames($this->roleService->getRoles($project)),
+            'issueTypes' => $this->mapIssueTypes($this->issueTypeService->getIssueTypes($project)),
         ]);
+    }
+
+    private function mapIssueTypes(Collection $issueTypes): array
+    {
+        return $issueTypes->map(fn (IssueType $issueType) => [
+            'id' => $issueType->id,
+            'name' => $issueType->name,
+            'icon' => $issueType->icon,
+            'color' => $issueType->color,
+            'description' => $issueType->description,
+            'isSystem' => $issueType->is_system,
+            'allowsChildren' => $issueType->allows_children,
+            'requiredFields' => $issueType->required_fields ?? [],
+            'restrictedRoleTypes' => $issueType->restricted_role_types ?? [],
+        ])->values()->all();
     }
 
     private function mapLabels(Collection $labels): array

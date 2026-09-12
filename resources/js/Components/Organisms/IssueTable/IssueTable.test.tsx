@@ -199,9 +199,7 @@ describe('IssueTable Component', () => {
         render(<IssueTable issues={[]} project={makeProject()} />);
 
         fireEvent.click(screen.getByText('New issue'));
-        const input = screen.getByPlaceholderText(
-            'Issue title, press Enter to create',
-        );
+        const input = screen.getByPlaceholderText('What needs to be done?');
         fireEvent.change(input, { target: { value: 'Quick issue' } });
         fireEvent.keyDown(input, { key: 'Enter' });
 
