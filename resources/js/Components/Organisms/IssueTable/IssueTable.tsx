@@ -1,6 +1,9 @@
 import BulkActionBar from '@/Components/Molecules/BulkActionBar/BulkActionBar';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
 import { IssueElement } from '@/Components/Molecules/IssueElement/IssueElement';
+import QuickAddIssueRow, {
+    QuickAddIssueRowHandle,
+} from '@/Components/Molecules/QuickAddIssueRow/QuickAddIssueRow';
 import IssueTableHead from '@/Components/Organisms/IssueTableHead/IssueTableHead';
 import { useAlert } from '@/context/AlertContext';
 import { useIssueHierarchy } from '@/hooks/useIssueHierarchy';
@@ -13,6 +16,7 @@ import {
     DEFAULT_ENABLED_COLUMNS,
     ISSUE_TABLE_COLUMNS,
 } from '@/utils/issueTableColumns';
+import { QUICK_ADD_ISSUE_EVENT } from '@/utils/quickAddIssueEvent';
 import { router } from '@inertiajs/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -255,6 +259,37 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         project?.id,
     );
 
+    const [isCreatingIssue, setIsCreatingIssue] = useState(false);
+    const quickAddRef = useRef<QuickAddIssueRowHandle>(null);
+
+    useEffect(() => {
+        const handler = () => quickAddRef.current?.open();
+        window.addEventListener(QUICK_ADD_ISSUE_EVENT, handler);
+        return () => window.removeEventListener(QUICK_ADD_ISSUE_EVENT, handler);
+    }, []);
+
+    const handleCreateIssue = (title: string, parentId?: string) => {
+        if (!project) return;
+
+        setIsCreatingIssue(true);
+        router.post(
+            route('issues.store'),
+            {
+                title,
+                project_id: project.id,
+                priority: 'medium',
+                status: 'open',
+                ...(parentId ? { parent_id: parentId } : {}),
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => addAlert('Could not create the issue', 'error'),
+                onFinish: () => setIsCreatingIssue(false),
+            },
+        );
+    };
+
     const headers: HeaderConfig[] = ISSUE_TABLE_COLUMNS.map(
         (column): HeaderConfig => ({
             label: column.label,
@@ -305,6 +340,16 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                             onColumnToggle={handleColumnToggle}
                         />
                         <tbody>
+                            {project && (
+                                <QuickAddIssueRow
+                                    ref={quickAddRef}
+                                    colSpan={headers.length + 3}
+                                    isSubmitting={isCreatingIssue}
+                                    onSubmit={(title) =>
+                                        handleCreateIssue(title)
+                                    }
+                                />
+                            )}
                             {hasIssues ? (
                                 hierarchyRows.map(
                                     ({
@@ -313,28 +358,53 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                         hasChildren,
                                         isCollapsed,
                                     }) => (
-                                        <IssueElement
-                                            key={issue.id}
-                                            issue={{
-                                                ...issue,
-                                                isChecked: selectedIds.includes(
-                                                    issue.id,
-                                                ),
-                                            }}
-                                            handleSelectIssueCheckbox={
-                                                handleSelectIssueCheckbox
-                                            }
-                                            enabledColumns={enabledColumns}
-                                            rowHeight={rowHeight}
-                                            depth={depth}
-                                            hasChildren={hasChildren}
-                                            isCollapsed={isCollapsed}
-                                            onToggleCollapse={() =>
-                                                toggleCollapsed(
-                                                    String(issue.id),
-                                                )
-                                            }
-                                        />
+                                        <React.Fragment key={issue.id}>
+                                            <IssueElement
+                                                issue={{
+                                                    ...issue,
+                                                    isChecked:
+                                                        selectedIds.includes(
+                                                            issue.id,
+                                                        ),
+                                                }}
+                                                handleSelectIssueCheckbox={
+                                                    handleSelectIssueCheckbox
+                                                }
+                                                enabledColumns={enabledColumns}
+                                                rowHeight={rowHeight}
+                                                depth={depth}
+                                                hasChildren={hasChildren}
+                                                isCollapsed={isCollapsed}
+                                                onToggleCollapse={() =>
+                                                    toggleCollapsed(
+                                                        String(issue.id),
+                                                    )
+                                                }
+                                            />
+                                            {project &&
+                                                issue.issueType
+                                                    ?.allowsChildren &&
+                                                !isCollapsed && (
+                                                    <QuickAddIssueRow
+                                                        colSpan={
+                                                            headers.length + 3
+                                                        }
+                                                        indent={depth + 1}
+                                                        label="Add sub-issue"
+                                                        isSubmitting={
+                                                            isCreatingIssue
+                                                        }
+                                                        onSubmit={(title) =>
+                                                            handleCreateIssue(
+                                                                title,
+                                                                String(
+                                                                    issue.id,
+                                                                ),
+                                                            )
+                                                        }
+                                                    />
+                                                )}
+                                        </React.Fragment>
                                     ),
                                 )
                             ) : (
