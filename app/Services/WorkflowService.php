@@ -46,6 +46,33 @@ class WorkflowService
     }
 
     /**
+     * Rewrites sort_order to match the given id order, which is how the
+     * workflow modal persists a drag-and-drop reorder. Ids that don't belong
+     * to this type are ignored rather than rejected, so a stale drag from a
+     * modal left open while another tab deleted a status is a no-op.
+     *
+     * @param  array<int, int>  $orderedStatusIds
+     */
+    public function reorderStatuses(IssueType $issueType, array $orderedStatusIds): void
+    {
+        $statusesById = $issueType->statuses()->get()->keyBy('id');
+        $position = 0;
+
+        foreach ($orderedStatusIds as $statusId) {
+            $status = $statusesById->get($statusId);
+
+            if (! $status) {
+                continue;
+            }
+
+            $this->workflowRepository->updateStatus($status, ['sort_order' => $position]);
+            $position++;
+        }
+
+        $this->activityLogService->log($issueType->project_id, "Reordered the statuses in the \"$issueType->name\" workflow");
+    }
+
+    /**
      * Exactly one status per workflow is the one new issues start in, so
      * promoting a status has to demote whichever one held the flag before.
      */
