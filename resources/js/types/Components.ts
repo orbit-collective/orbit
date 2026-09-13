@@ -297,6 +297,11 @@ export interface InlineSelectDropdownProps {
     value: string | null;
     onChange: (value: string | null) => void;
     disabled?: boolean;
+    /**
+     * Renders the selected state in the normal text color instead of the
+     * accent one, for triggers sitting inside an already-tinted surface.
+     */
+    subtle?: boolean;
 }
 export interface SavedFiltersDropdownProps {
     savedFilters?: SavedFilter[];

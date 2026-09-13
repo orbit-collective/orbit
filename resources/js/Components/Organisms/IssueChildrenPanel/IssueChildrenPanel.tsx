@@ -150,7 +150,7 @@ export default function IssueChildrenPanel({
                 ))}
 
                 {isAdding && (
-                    <div className="flex items-center gap-2 border-t border-[var(--border-color)] bg-[var(--accent-color-opacity)] px-3 py-2">
+                    <div className="flex items-center gap-2 border-t border-[var(--border-color)] px-3 py-2">
                         <input
                             ref={inputRef}
                             value={title}
@@ -164,6 +164,7 @@ export default function IssueChildrenPanel({
                             <InlineSelectDropdown
                                 label="Issue type"
                                 placeholder="Type"
+                                subtle
                                 options={selectableTypes.map((type) => ({
                                     value: String(type.id),
                                     label: type.name,

@@ -22,6 +22,7 @@ export default function InlineSelectDropdown({
     value,
     onChange,
     disabled = false,
+    subtle = false,
 }: InlineSelectDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
@@ -104,9 +105,11 @@ export default function InlineSelectDropdown({
                 onClick={() => setIsOpen((prev) => !prev)}
                 className={cn(
                     'flex min-w-[9rem] cursor-pointer items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm transition-all duration-100 ease-in-out disabled:cursor-not-allowed disabled:opacity-50',
-                    selectedOption
-                        ? 'border-solid border-[var(--accent-color-opacity)] bg-[var(--bg-color)] text-[var(--accent-color)]'
-                        : 'border-dashed border-[var(--bg-light-color)] bg-transparent text-[var(--text-gray-color)] hover:border-solid hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                    selectedOption && subtle
+                        ? 'border-solid border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)]'
+                        : selectedOption
+                          ? 'border-solid border-[var(--accent-color-opacity)] bg-[var(--bg-color)] text-[var(--accent-color)]'
+                          : 'border-dashed border-[var(--bg-light-color)] bg-transparent text-[var(--text-gray-color)] hover:border-solid hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
                 )}
             >
                 <span className="flex min-w-0 items-center gap-1.5">
@@ -121,9 +124,11 @@ export default function InlineSelectDropdown({
                     <span
                         className={cn(
                             'truncate font-medium',
-                            selectedOption
-                                ? 'text-[var(--accent-color)]'
-                                : 'text-[var(--text-gray-color)]',
+                            selectedOption && subtle
+                                ? 'text-[var(--text-color)]'
+                                : selectedOption
+                                  ? 'text-[var(--accent-color)]'
+                                  : 'text-[var(--text-gray-color)]',
                         )}
                     >
                         {selectedOption?.label ?? placeholder}
@@ -133,7 +138,7 @@ export default function InlineSelectDropdown({
                     name="ChevronDown"
                     size={12}
                     color={
-                        selectedOption
+                        selectedOption && !subtle
                             ? 'var(--accent-color)'
                             : 'var(--text-gray-color)'
                     }
