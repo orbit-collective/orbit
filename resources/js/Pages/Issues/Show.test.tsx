@@ -639,3 +639,48 @@ describe('Issues/Show workflow status', () => {
         );
     });
 });
+
+describe('Issues/Show sub-issues', () => {
+    const epicType = {
+        id: 9,
+        name: 'Epic',
+        icon: 'Zap',
+        color: '#a855f7',
+        description: null,
+        isSystem: true,
+        allowsChildren: true,
+        isTopLevel: true,
+        requiredFields: [],
+        restrictedRoleTypes: [],
+    };
+
+    test('renders the sub-issues panel for a type that allows children', () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue({ issueType: epicType })}
+                users={users}
+                issueTypes={[epicType]}
+            />,
+        );
+
+        expect(screen.getByText('Sub-issues')).toBeInTheDocument();
+    });
+
+    test('hides the sub-issues panel for a type that does not allow children', () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue({
+                    issueType: { ...epicType, allowsChildren: false },
+                })}
+                users={users}
+                issueTypes={[epicType]}
+            />,
+        );
+
+        expect(screen.queryByText('Sub-issues')).not.toBeInTheDocument();
+    });
+});

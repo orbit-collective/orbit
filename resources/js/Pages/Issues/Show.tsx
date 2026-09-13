@@ -12,6 +12,7 @@ import EditableLabelList from '@/Components/Molecules/EditableLabelList/Editable
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
+import IssueChildrenPanel from '@/Components/Organisms/IssueChildrenPanel/IssueChildrenPanel';
 import IssuePageHeader from '@/Components/Organisms/IssuePageHeader/IssuePageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
@@ -179,6 +180,14 @@ export default function Show({
                                     }
                                     placeholder="Add a description..."
                                 />
+
+                                {issue.issueType?.allowsChildren && (
+                                    <IssueChildrenPanel
+                                        project={project}
+                                        issue={issue}
+                                        issueTypes={issueTypes}
+                                    />
+                                )}
 
                                 <div className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
                                     <span className="text-sm font-medium text-[var(--text-color)]">
