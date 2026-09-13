@@ -35,6 +35,7 @@ class IssueTypeRepository
                 'description' => $definition['description'] ?? null,
                 'is_system' => true,
                 'allows_children' => $definition['allows_children'] ?? false,
+                'is_top_level' => $definition['is_top_level'] ?? true,
                 'required_fields' => $definition['required_fields'] ?? [],
                 'restricted_role_types' => $definition['restricted_role_types'] ?? [],
                 'sort_order' => $definition['sort_order'] ?? 0,

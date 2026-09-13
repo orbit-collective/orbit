@@ -113,6 +113,7 @@ export default function WorkspaceSettingsIssueTypesTab({
         color: string;
         description: string;
         allows_children: boolean;
+        is_top_level: boolean;
         required_fields: string[];
         restricted_role_types: string[];
     }) => {

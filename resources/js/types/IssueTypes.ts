@@ -8,6 +8,7 @@ export interface IssueType {
     description: string | null;
     isSystem: boolean;
     allowsChildren: boolean;
+    isTopLevel: boolean;
     requiredFields: string[];
     restrictedRoleTypes: string[];
     statuses?: WorkflowStatus[];

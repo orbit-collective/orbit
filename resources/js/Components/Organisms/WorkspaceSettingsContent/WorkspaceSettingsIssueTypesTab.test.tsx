@@ -41,6 +41,7 @@ const issueTypes: IssueType[] = [
         description: null,
         isSystem: true,
         allowsChildren: false,
+        isTopLevel: true,
         requiredFields: [],
         restrictedRoleTypes: [],
         statuses: [
@@ -63,6 +64,7 @@ const issueTypes: IssueType[] = [
         description: null,
         isSystem: false,
         allowsChildren: false,
+        isTopLevel: true,
         requiredFields: [],
         restrictedRoleTypes: [],
     },

@@ -7,6 +7,7 @@ use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Models\Issue;
+use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\IssueRepository;
@@ -331,6 +332,8 @@ class IssueService
     public function assertValidParent(Project $project, ?int $parentId, ?int $childIssueTypeId = null, ?int $excludingIssueId = null): void
     {
         if ($parentId === null) {
+            $this->assertTypeAllowedAtTopLevel($project, $childIssueTypeId);
+
             return;
         }
 
@@ -384,6 +387,27 @@ class IssueService
 
             $ancestor = $ancestor->parent_id ? Issue::query()->find($ancestor->parent_id) : null;
             $depth++;
+        }
+    }
+
+    /**
+     * Types with is_top_level off exist only as sub-issues (e.g. a Spike
+     * lives inside an Epic), so they cannot be created as a root row - which
+     * is what keeps the "New issue" picker down to the handful of types a
+     * project actually starts work from.
+     */
+    private function assertTypeAllowedAtTopLevel(Project $project, ?int $childIssueTypeId): void
+    {
+        if ($childIssueTypeId === null) {
+            return;
+        }
+
+        $type = IssueType::query()->where('project_id', $project->id)->find($childIssueTypeId);
+
+        if ($type && ! $type->is_top_level) {
+            throw ValidationException::withMessages([
+                'issue_type_id' => "The \"{$type->name}\" issue type can only be created as a sub-issue.",
+            ]);
         }
     }
 

@@ -14,7 +14,7 @@ describe('issueTableColumns', () => {
         expect(values).toContain('id');
     });
 
-    test('DEFAULT_ENABLED_COLUMNS reflects each column\'s defaultEnabled flag', () => {
+    test("DEFAULT_ENABLED_COLUMNS reflects each column's defaultEnabled flag", () => {
         expect(DEFAULT_ENABLED_COLUMNS.type).toBe(true);
         expect(DEFAULT_ENABLED_COLUMNS.start_date).toBe(false);
         expect(DEFAULT_ENABLED_COLUMNS.end_date).toBe(false);

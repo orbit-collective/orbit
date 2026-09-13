@@ -80,6 +80,7 @@ describe('WorkspaceSettingsContent', () => {
                             description: null,
                             isSystem: true,
                             allowsChildren: false,
+                            isTopLevel: true,
                             requiredFields: [],
                             restrictedRoleTypes: [],
                         },

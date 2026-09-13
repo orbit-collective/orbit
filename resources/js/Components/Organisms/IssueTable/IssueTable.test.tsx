@@ -234,6 +234,7 @@ describe('IssueTable Component', () => {
                     description: null,
                     isSystem: true,
                     allowsChildren: true,
+                    isTopLevel: true,
                     requiredFields: [],
                     restrictedRoleTypes: [],
                 },
