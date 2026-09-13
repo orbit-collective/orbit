@@ -218,3 +218,33 @@ describe('EditableSelect Component', () => {
         expect(screen.getByText('No matches found')).toBeInTheDocument();
     });
 });
+
+describe('EditableSelect bare trigger', () => {
+    const options = [
+        { value: 'a', label: <span>Alpha</span> },
+        { value: 'b', label: <span>Beta</span> },
+    ];
+
+    test('the default trigger carries its own padding and hover background', () => {
+        render(<EditableSelect value="a" options={options} onSave={vi.fn()} />);
+
+        expect(screen.getByRole('button')).toHaveClass(
+            'hover:bg-[var(--bg-light-color)]',
+        );
+    });
+
+    test('a bare trigger leaves the highlight to whatever it renders', () => {
+        render(
+            <EditableSelect
+                value="a"
+                options={options}
+                onSave={vi.fn()}
+                bare
+            />,
+        );
+
+        expect(screen.getByRole('button')).not.toHaveClass(
+            'hover:bg-[var(--bg-light-color)]',
+        );
+    });
+});

@@ -205,6 +205,11 @@ export interface EditableSelectProps {
     header?: ReactNode;
     disabled?: boolean;
     className?: string;
+    /**
+     * Drops the trigger's own padding and hover background, for when
+     * renderValue already returns a badge that highlights on its own.
+     */
+    bare?: boolean;
 }
 export interface KeybindProps {
     tooltipText: string;

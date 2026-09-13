@@ -13,6 +13,7 @@ const EditableSelect: React.FC<EditableSelectProps> = ({
     header,
     disabled = false,
     className,
+    bare = false,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
@@ -56,7 +57,11 @@ const EditableSelect: React.FC<EditableSelectProps> = ({
                     setSearch('');
                     setIsOpen((prev) => !prev);
                 }}
-                className="flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 text-left transition-colors hover:bg-[var(--bg-light-color)] disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                className={cn(
+                    'flex cursor-pointer items-center gap-2 rounded-full text-left transition-colors disabled:cursor-not-allowed',
+                    !bare &&
+                        'px-2 py-1 hover:bg-[var(--bg-light-color)] disabled:hover:bg-transparent',
+                )}
             >
                 {renderValue ? renderValue(value) : (selected?.label ?? value)}
             </button>
