@@ -68,6 +68,23 @@ export default function WorkspaceSettingsWorkflowModal({
         );
     };
 
+    const handleMakeInitial = (statusId: number) => {
+        router.patch(
+            route('projects.issue-types.statuses.initial', [
+                projectId,
+                issueType.id,
+                statusId,
+            ]),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () =>
+                    addAlert('Could not change the starting status.', 'error'),
+            },
+        );
+    };
+
     const handleDeleteStatus = (statusId: number) => {
         router.delete(
             route('projects.issue-types.statuses.destroy', [
@@ -176,16 +193,31 @@ export default function WorkspaceSettingsWorkflowModal({
                                     </div>
                                 </div>
                                 {canUpdateWorkflow && (
-                                    <button
-                                        type="button"
-                                        title="Delete status"
-                                        onClick={() =>
-                                            handleDeleteStatus(status.id)
-                                        }
-                                        className="hover:bg-[var(--error-color)]/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
-                                    >
-                                        <Icon name="Trash" size={13} />
-                                    </button>
+                                    <div className="flex shrink-0 items-center gap-1">
+                                        {!status.isInitial && (
+                                            <button
+                                                type="button"
+                                                title="Make this the starting status"
+                                                aria-label={`Make ${status.name} the starting status`}
+                                                onClick={() =>
+                                                    handleMakeInitial(status.id)
+                                                }
+                                                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--accent-color)]"
+                                            >
+                                                <Icon name="Flag" size={13} />
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            title="Delete status"
+                                            onClick={() =>
+                                                handleDeleteStatus(status.id)
+                                            }
+                                            className="hover:bg-[var(--error-color)]/10 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                        >
+                                            <Icon name="Trash" size={13} />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         ))}

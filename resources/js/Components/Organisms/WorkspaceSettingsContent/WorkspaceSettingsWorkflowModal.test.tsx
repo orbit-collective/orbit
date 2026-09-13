@@ -14,6 +14,7 @@ vi.stubGlobal(
 
 const routerMock = vi.hoisted(() => ({
     post: vi.fn(),
+    patch: vi.fn(),
     delete: vi.fn(),
 }));
 
@@ -183,5 +184,27 @@ describe('WorkspaceSettingsWorkflowModal', () => {
         renderModal({ issueType: null });
 
         expect(screen.queryByText('Statuses')).not.toBeInTheDocument();
+    });
+});
+
+describe('WorkspaceSettingsWorkflowModal starting status', () => {
+    test('promoting a status patches the initial-status route', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        fireEvent.click(screen.getByLabelText('Make Done the starting status'));
+
+        expect(routerMock.patch).toHaveBeenCalledWith(
+            expect.stringContaining('statuses.initial'),
+            {},
+            expect.any(Object),
+        );
+    });
+
+    test('the status that is already initial offers no promote button', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        expect(
+            screen.queryByLabelText('Make To Do the starting status'),
+        ).not.toBeInTheDocument();
     });
 });

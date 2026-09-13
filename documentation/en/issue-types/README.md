@@ -37,8 +37,13 @@ restrict who's allowed to create one, and can define reusable
 `issue_types` (migration `2026_09_12_140000_create_issue_types_table.php`)
 has `project_id`, `name`, `icon` (a lucide-react component name),
 `color`, `description`, `is_system`, `allows_children`,
-`required_fields` (JSON array), `restricted_role_types` (JSON array),
-`sort_order`, unique on `(project_id, name)`. `App\Repositories\IssueTypeRepository`
+`is_top_level`, `required_fields` (JSON array),
+`restricted_role_types` (JSON array), `sort_order`, unique on
+`(project_id, name)`. The model serializes itself into the exact
+camelCase shape `resources/js/types/IssueTypes.ts` declares (see
+`IssueType::toArray()`), which is why no controller needs a mapping
+helper of its own and why a type nested inside an issue looks identical
+to one sent as a top-level page prop. `App\Repositories\IssueTypeRepository`
 and `App\Services\IssueTypeService` follow this codebase's usual
 Controller → Service → Repository split (see
 [`../architecture/02-backend-layered-architecture.md`](../architecture/02-backend-layered-architecture.md)):
@@ -65,13 +70,25 @@ add/rename/delete for statuses and add/remove for transitions;
 `IssueController::update` calls
 `WorkflowService::assertTransitionAllowed()` before accepting a status
 change, so an issue can only move to a status its type's workflow
-actually allows moving to. The legacy `issues.status` enum
-(`open`/`in_progress`/`closed`) still exists and is still read/written
-for backward compatibility — `IssueTypeService::resolveWorkflowStatusForLegacyValue()`
-maps a legacy value to the **best-fit status by category**, not by
-exact name, so it still resolves to something sensible even for a type
-whose workflow has been customized away from the three default
-statuses. Every system type's default workflow is a simple three-status
+actually allows moving to. Exactly one status per workflow carries
+`is_initial` — the one new issues start in; promoting another demotes
+the previous holder, which is what
+`WorkflowService::setInitialStatus()` (route
+`projects.issue-types.statuses.initial`) does from the workflow modal.
+
+An issue's status is changed by sending **`workflow_status_id`**, which
+is the only way to reach a custom status like "In Review" — the issue
+detail sidebar builds its picker from the type's own statuses, filtered
+down to the ones a transition actually leads to from the current one.
+The legacy `issues.status` enum (`open`/`in_progress`/`closed`) still
+exists and is kept in sync in both directions for backward
+compatibility: `IssueTypeService::legacyValueForWorkflowStatus()`
+collapses a picked status back onto the enum by category, and
+`IssueTypeService::resolveWorkflowStatusForLegacyValue()` maps the
+other way — to the **best-fit status by category**, not by exact name,
+so a request that still sends the old `status` field resolves to
+something sensible even for a type whose workflow has been customized
+away from the three default statuses. Every system type's default workflow is a simple three-status
 board (To Do/In Progress/Done) with **every** status able to transition
 to every other one (a full mesh) — this matches the pre-Issue-Types
 behavior, where any `IssueStatus` value could be set at any time; a
@@ -92,11 +109,23 @@ check; an empty `restricted_role_types` array means "no extra
 restriction, anyone who can create issues at all may use this type."
 
 Hierarchy reuses the pre-existing `issues.parent_id` column — nothing
-new there — gated by a new `issue_types.allows_children` flag: only an
-issue whose type has that flag set can be a parent.
-`App\Services\IssueService::assertValidParent()` enforces same-project,
-type-allows-children, no self-parenting, and no cycles, whichever
-endpoint (create or update) is setting `parent_id`. On the frontend,
+new there — gated by three per-type settings. `allows_children` decides
+whether an issue of this type can be a parent at all. The
+`issue_type_children` pivot (`IssueType::allowedChildTypes()`) narrows
+*which* types may be nested underneath it; an **empty** pivot set means
+unrestricted, so only configuring at least one row starts restricting.
+`is_top_level` decides the other direction: a type with it turned off
+exists only as a sub-issue and cannot be created as a root row, which
+is what keeps the "New issue" picker down to the handful of types a
+project actually starts work from (`Task`, `Feature`, `Story`, `Bug`,
+`Epic` out of the box — every other system type is seeded sub-issue
+only). All three are toggled from **Settings → Issue Types**, and
+`App\Services\IssueService::assertValidParent()` enforces every one of
+them — plus same-project, no self-parenting, and no cycles — whichever
+endpoint (create or update) is setting `parent_id`. An issue's own
+detail view lists its children and creates new ones through
+`resources/js/Components/Organisms/IssueChildrenPanel/IssueChildrenPanel.tsx`,
+rendered only for a type whose `allows_children` is on. On the frontend,
 `resources/js/hooks/useIssueHierarchy.ts` turns the flat, paginated
 `issues` array into a rendered tree by grouping on `parent_id` — this
 is a **page-local** hierarchy: a child whose parent didn't happen to
@@ -109,13 +138,19 @@ widths.
 Issue creation itself was redesigned around this feature: the old
 `NewIssueModal` is gone, replaced by
 `resources/js/Components/Molecules/QuickAddIssueRow/QuickAddIssueRow.tsx`,
-an inline, title-only row at the top of `IssueTable` (and, for a type
-with `allows_children`, a second "Add sub-issue" row right under it).
-Submitting posts straight to `issues.store` with just a title (plus
-`parent_id` for a sub-issue); the issue type defaults to the project's
-`Task` system type via `IssueTypeService::defaultIssueType()` since
-there's no type picker in the quick-add row itself — open the issue
-afterward to change its type, fill in the rest, or apply an
+an inline row at the top of `IssueTable` (and, for a type with
+`allows_children`, a second "Add sub-issue" row right under it). It
+renders as a real table row: the title and the **issue type** are
+editable, while the remaining cells preview what the issue will be
+created with — the id it will get (`IssueService::peekNextIssueId()`,
+a hint only, since a concurrent create wins the real id), the selected
+type's initial workflow status, `Medium` priority, and unassigned. The
+top-level row offers only `is_top_level` types; a nested one offers
+only the parent type's allowed children. Submitting posts to
+`issues.store` with the title, the chosen `issue_type_id` (falling back
+to `IssueTypeService::defaultIssueType()` when none is sent) and
+`parent_id` for a sub-issue — open the issue afterward to fill in the
+rest, or apply an
 `IssueTypeTemplate` (`name`, `description`, `default_priority`,
 `default_labels`, managed from **Settings → Issue Types → Manage
 templates**) via a `template_id` on that same create request, which
