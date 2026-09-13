@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\WorkflowStatus;
 use App\Repositories\IssueTypeRepository;
 use App\Repositories\WorkflowRepository;
+use App\Support\SystemIssueTypeDefaults;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -71,6 +72,13 @@ class IssueTypeService
         ['name' => 'Done', 'color' => '#22c55e', 'category' => WorkflowStatusCategory::DONE, 'is_initial' => false],
     ];
 
+    /**
+     * Bumped whenever SystemIssueTypeDefaults gains something new. Projects
+     * stamped with an older version get the additions applied on their next
+     * read - see applyTypeDefaults(), which only ever adds.
+     */
+    public const int DEFAULTS_VERSION = 1;
+
     /** Maps the legacy issues.status enum value to a default-workflow status name, for the one-time backfill. */
     private const array LEGACY_STATUS_TO_DEFAULT_STATUS = [
         'open' => 'To Do',
@@ -93,18 +101,235 @@ class IssueTypeService
      */
     public function ensureSystemIssueTypes(Project $project): void
     {
-        if ($project->issue_types_seeded_at !== null) {
+        $isFirstSeed = $project->issue_types_seeded_at === null;
+
+        if ($isFirstSeed) {
+            foreach (self::SYSTEM_ISSUE_TYPES as $definition) {
+                $this->issueTypeRepository->firstOrCreateSystemType($project, $definition);
+            }
+        }
+
+        if ($project->issue_type_defaults_version < self::DEFAULTS_VERSION) {
+            $this->applyTypeDefaults($project);
+
+            $project->forceFill(['issue_type_defaults_version' => self::DEFAULTS_VERSION])->save();
+        }
+
+        if ($isFirstSeed) {
+            // Whatever the defaults didn't give a workflow of its own still
+            // needs one before any issue can be backfilled onto it.
+            foreach ($project->issueTypes()->get() as $issueType) {
+                $this->ensureDefaultWorkflow($issueType);
+            }
+
+            $this->backfillExistingIssues($project);
+
+            $project->forceFill(['issue_types_seeded_at' => now()])->save();
+        }
+    }
+
+    /**
+     * Brings a project's system types up to the current defaults. Strictly
+     * additive: it never creates a type that isn't there (an owner may have
+     * deleted it on purpose), never removes a status, transition, template or
+     * field, and never overwrites one that already exists under the same
+     * name - so a customized workflow survives untouched.
+     */
+    private function applyTypeDefaults(Project $project): void
+    {
+        $typesByName = $project->issueTypes()->get()->keyBy('name');
+
+        foreach (SystemIssueTypeDefaults::all() as $name => $defaults) {
+            $issueType = $typesByName->get($name);
+
+            if (! $issueType) {
+                continue;
+            }
+
+            $this->applyStatusDefaults($issueType, $defaults['statuses'] ?? []);
+            $this->applyFieldDefaults($issueType, $defaults['fields'] ?? []);
+            $this->applyTemplateDefault($issueType, $defaults['template'] ?? null);
+
+            if (($defaults['allows_children'] ?? false) && ! $issueType->allows_children) {
+                $issueType->forceFill(['allows_children' => true])->save();
+            }
+
+            $this->applyAllowedChildDefaults($issueType, $defaults['allowed_children'] ?? [], $typesByName);
+        }
+    }
+
+    /**
+     * Adds any missing status of the type's own default workflow, then wires
+     * up the transitions implied by their order.
+     */
+    private function applyStatusDefaults(IssueType $issueType, array $definitions): void
+    {
+        if ($definitions === []) {
             return;
         }
 
-        foreach (self::SYSTEM_ISSUE_TYPES as $definition) {
-            $issueType = $this->issueTypeRepository->firstOrCreateSystemType($project, $definition);
-            $this->ensureDefaultWorkflow($issueType);
+        $existing = $issueType->statuses()->get();
+        $targetNames = array_column($definitions, 'name');
+        $genericNames = array_column(SystemIssueTypeDefaults::DEFAULT_STATUSES, 'name');
+
+        // A type still carrying the stock three-status board has never been
+        // customized, so swapping it for the type's own workflow is safe -
+        // anything else is merged into, never replaced.
+        if ($targetNames !== $genericNames && $existing->pluck('name')->sort()->values()->all() === collect($genericNames)->sort()->values()->all()) {
+            $this->replaceGenericWorkflow($issueType, $definitions, $existing);
+
+            return;
         }
 
-        $this->backfillExistingIssues($project);
+        $existing = $existing->keyBy('name');
+        $ordered = [];
 
-        $project->forceFill(['issue_types_seeded_at' => now()])->save();
+        foreach (array_values($definitions) as $index => $definition) {
+            $status = $existing->get($definition['name']);
+
+            $ordered[] = $status ?? $this->workflowRepository->createStatus($issueType, [
+                'name' => $definition['name'],
+                'color' => $definition['color'],
+                'category' => $definition['category'],
+                'sort_order' => $index,
+                'is_initial' => $index === 0 && $existing->isEmpty(),
+            ]);
+        }
+
+        foreach ($this->defaultTransitionPairs($definitions) as [$fromIndex, $toIndex]) {
+            $from = $ordered[$fromIndex];
+            $to = $ordered[$toIndex];
+
+            if (! $this->workflowRepository->transitionExists($issueType, $from->id, $to->id)) {
+                $this->workflowRepository->createTransition($issueType, $from, $to);
+            }
+        }
+    }
+
+    /**
+     * Swaps the stock workflow for the type's own, moving every issue onto
+     * the new status that shares its old one's category so nothing is left
+     * pointing at a row that is about to disappear.
+     *
+     * @param  Collection<int, WorkflowStatus>  $oldStatuses
+     */
+    private function replaceGenericWorkflow(IssueType $issueType, array $definitions, Collection $oldStatuses): void
+    {
+        $newStatuses = collect(array_values($definitions))
+            ->map(fn (array $definition, int $index) => $this->workflowRepository->createStatus($issueType, [
+                'name' => $definition['name'],
+                'color' => $definition['color'],
+                'category' => $definition['category'],
+                'sort_order' => $index,
+                'is_initial' => $index === 0,
+            ]));
+
+        foreach ($oldStatuses as $oldStatus) {
+            $replacement = $newStatuses->firstWhere('category', $oldStatus->category) ?? $newStatuses->first();
+
+            Issue::query()
+                ->where('workflow_status_id', $oldStatus->id)
+                ->update(['workflow_status_id' => $replacement->id]);
+        }
+
+        $issueType->transitions()
+            ->whereIn('from_status_id', $oldStatuses->pluck('id'))
+            ->orWhereIn('to_status_id', $oldStatuses->pluck('id'))
+            ->delete();
+
+        WorkflowStatus::query()->whereIn('id', $oldStatuses->pluck('id'))->delete();
+
+        foreach ($this->defaultTransitionPairs($definitions) as [$fromIndex, $toIndex]) {
+            $this->workflowRepository->createTransition($issueType, $newStatuses[$fromIndex], $newStatuses[$toIndex]);
+        }
+    }
+
+    /**
+     * The transitions a linear workflow should have: a step forward, a step
+     * back, and a jump straight to any terminal status from anywhere - which
+     * is how an issue gets abandoned ("Won't Fix") without walking the chain.
+     *
+     * @return array<int, array{int, int}>
+     */
+    private function defaultTransitionPairs(array $definitions): array
+    {
+        $count = count($definitions);
+        $pairs = [];
+
+        for ($i = 0; $i < $count - 1; $i++) {
+            $pairs[] = [$i, $i + 1];
+            $pairs[] = [$i + 1, $i];
+        }
+
+        $doneIndexes = [];
+        foreach (array_values($definitions) as $index => $definition) {
+            if ($definition['category'] === WorkflowStatusCategory::DONE) {
+                $doneIndexes[] = $index;
+            }
+        }
+
+        foreach (array_keys(array_values($definitions)) as $from) {
+            foreach ($doneIndexes as $to) {
+                if ($from !== $to && ! in_array([$from, $to], $pairs, true)) {
+                    $pairs[] = [$from, $to];
+                }
+            }
+        }
+
+        return $pairs;
+    }
+
+    private function applyFieldDefaults(IssueType $issueType, array $definitions): void
+    {
+        $existing = $issueType->fields()->pluck('label')->all();
+        $sortOrder = (int) $issueType->fields()->max('sort_order');
+
+        foreach ($definitions as $definition) {
+            if (in_array($definition['label'], $existing, true)) {
+                continue;
+            }
+
+            $sortOrder++;
+
+            $issueType->fields()->create([
+                'label' => $definition['label'],
+                'type' => $definition['type'],
+                'options' => $definition['options'] ?? [],
+                'placeholder' => $definition['placeholder'] ?? null,
+                'is_required' => $definition['is_required'] ?? false,
+                'sort_order' => $sortOrder,
+            ]);
+        }
+    }
+
+    private function applyTemplateDefault(IssueType $issueType, ?array $template): void
+    {
+        if (! $template || $issueType->templates()->where('name', $template['name'])->exists()) {
+            return;
+        }
+
+        $issueType->templates()->create([
+            'name' => $template['name'],
+            'description' => $template['description'],
+            'default_priority' => $template['priority'],
+            'default_labels' => $template['labels'],
+        ]);
+    }
+
+    private function applyAllowedChildDefaults(IssueType $issueType, array $childNames, Collection $typesByName): void
+    {
+        if ($childNames === [] || $issueType->allowedChildTypes()->exists()) {
+            return;
+        }
+
+        $ids = collect($childNames)
+            ->map(fn (string $name) => $typesByName->get($name)?->id)
+            ->filter()
+            ->all();
+
+        if ($ids !== []) {
+            $issueType->allowedChildTypes()->sync($ids);
+        }
     }
 
     /**
