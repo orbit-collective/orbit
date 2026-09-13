@@ -51,7 +51,7 @@
                         <td class="email-border-top" style="padding: 24px 32px; border-top:1px solid rgba(255,255,255,0.08);">
                             <p class="email-muted" style="margin:0; font-size:13px; line-height:20px; color:#8a8f98;">
                                 You're receiving this because of activity on Orbit. You can fine-tune which notifications reach your inbox from your
-                                <a href="{{ route('settings') }}?tab=notifications" style="color:#8844da; text-decoration:none;">account settings</a>.
+                                <a href="{{ route('settings.notifications') }}" style="color:#8844da; text-decoration:none;">account settings</a>.
                             </p>
                             <p class="email-footer-muted" style="margin:12px 0 0; font-size:13px; color:#71717a;">&mdash; The Orbit Team</p>
                         </td>
