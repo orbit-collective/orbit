@@ -69,3 +69,49 @@ describe('IssuePageHeader Component', () => {
         expect(writeText).toHaveBeenCalledWith(window.location.href);
     });
 });
+
+describe('IssuePageHeader breadcrumb', () => {
+    const epic: Issue = {
+        id: '10',
+        title: 'Checkout revamp',
+        status: 'open',
+        priority: 'high',
+        project_id: 1,
+        user_id: 1,
+    };
+
+    test('renders each ancestor as a link back to it', () => {
+        render(
+            <IssuePageHeader
+                project={project}
+                issue={issue}
+                ancestors={[epic]}
+            />,
+        );
+
+        const crumb = screen.getByRole('link', { name: /Checkout revamp/ });
+        expect(crumb).toBeInTheDocument();
+        expect(crumb).toHaveAttribute('href', expect.stringContaining('10'));
+    });
+
+    test('renders no ancestor crumbs for a root issue', () => {
+        render(<IssuePageHeader project={project} issue={issue} />);
+
+        expect(
+            screen.queryByRole('link', { name: /Checkout revamp/ }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('keeps the issue itself as the last, non-link crumb', () => {
+        render(
+            <IssuePageHeader
+                project={project}
+                issue={issue}
+                ancestors={[epic]}
+            />,
+        );
+
+        expect(screen.getByText(/#42/)).toBeInTheDocument();
+    });
+});
+

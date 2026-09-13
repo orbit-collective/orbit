@@ -49,6 +49,7 @@ class IssueController extends Controller
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
             'nextIssueId' => $this->issueService->peekNextIssueId(),
+            'ancestors' => $this->issueService->ancestorsOf($issue)->values(),
         ]);
     }
 

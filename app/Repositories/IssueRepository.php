@@ -50,6 +50,12 @@ class IssueRepository
         return (int) Issue::query()->max('id');
     }
 
+    /** Just enough of an issue to render it as a breadcrumb crumb. */
+    public function findBasic(int $id): ?Issue
+    {
+        return Issue::query()->with('issueType')->find($id);
+    }
+
     /**
      * Bulk-create primitive: loops the existing store() per row rather than a
      * raw insert(), so Eloquent casts/model events still run per issue (e.g.
