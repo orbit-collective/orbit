@@ -2,6 +2,7 @@
 
 use App\Models\Project;
 use App\Models\User;
+use App\Services\IssueService;
 use App\Services\IssueTypeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -245,4 +246,43 @@ test('the core system types stay creatable at the top level', function () {
     $topLevel = $project->issueTypes()->where('is_top_level', true)->pluck('name')->sort()->values()->all();
 
     expect($topLevel)->toBe(['Bug', 'Epic', 'Feature', 'Story', 'Task']);
+});
+
+test('the issue detail view exposes the ancestors of a nested issue, root first', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $epicType = $project->issueTypes()->where('name', 'Epic')->first();
+    $taskType = $project->issueTypes()->where('name', 'Task')->first();
+    $epic = $project->issues()->create([
+        'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+    ]);
+    $middle = $project->issues()->create([
+        'title' => 'Middle', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open', 'parent_id' => $epic->id,
+    ]);
+    $leaf = $project->issues()->create([
+        'title' => 'Leaf', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open', 'parent_id' => $middle->id,
+    ]);
+
+    $ancestors = app(IssueService::class)->ancestorsOf($leaf);
+
+    expect($ancestors->pluck('title')->all())->toBe(['Epic', 'Middle']);
+});
+
+test('a root issue has no ancestors', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $issue = $project->issues()->create([
+        'title' => 'Loose', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $project->issueTypes()->where('name', 'Task')->first()->id,
+        'priority' => 'low', 'status' => 'open',
+    ]);
+
+    expect(app(IssueService::class)->ancestorsOf($issue))->toBeEmpty();
 });

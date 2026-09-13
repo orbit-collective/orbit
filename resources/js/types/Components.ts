@@ -564,10 +564,13 @@ export interface IssuePageProps {
     labels?: ProjectLabel[];
     issueTypes?: IssueType[];
     nextIssueId?: number | null;
+    ancestors?: Issue[];
 }
 export interface IssuePageHeaderProps {
     project: Project;
     issue: Issue;
+    /** The issue's ancestors, root-first, rendered as breadcrumb crumbs. */
+    ancestors?: Issue[];
 }
 export interface CommentItemProps {
     comment: Comment;

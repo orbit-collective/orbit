@@ -34,6 +34,7 @@ export default function Show({
     users,
     labels = [],
     issueTypes = [],
+    ancestors = [],
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
@@ -158,7 +159,11 @@ export default function Show({
             <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
                 <Sidebar projects={projects} />
                 <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
-                    <IssuePageHeader project={project} issue={issue} />
+                    <IssuePageHeader
+                        project={project}
+                        issue={issue}
+                        ancestors={ancestors}
+                    />
                     <main className="flex flex-1 flex-col overflow-y-auto">
                         <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-6 px-6 py-6 md:grid-cols-[1fr_260px]">
                             <div className="flex min-w-0 flex-col gap-4">

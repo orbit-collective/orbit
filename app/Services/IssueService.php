@@ -116,6 +116,35 @@ class IssueService
     }
 
     /**
+     * The issue's ancestors ordered root-first, for the detail view's
+     * breadcrumb. Depth is capped the same way assertValidParent() caps its
+     * cycle walk, so a hierarchy corrupted outside the app can't hang the
+     * request.
+     *
+     * @return Collection<int, Issue>
+     */
+    public function ancestorsOf(Issue $issue): Collection
+    {
+        $ancestors = collect();
+        $current = $issue;
+        $depth = 0;
+
+        while ($current->parent_id && $depth < 50) {
+            $parent = $this->issueRepository->findBasic($current->parent_id);
+
+            if (! $parent) {
+                break;
+            }
+
+            $ancestors->prepend($parent);
+            $current = $parent;
+            $depth++;
+        }
+
+        return $ancestors;
+    }
+
+    /**
      * Best-effort preview of the id the next created issue will get, so the
      * inline quick-add row can show it instead of a blank cell. Only a hint -
      * a concurrent create wins the actual id, and nothing depends on it.
