@@ -476,7 +476,7 @@ nie ma osobnego API JSON (zobacz górę głównego `CLAUDE.md`) — każda
 strona jest renderowana po stronie serwera jako props Inertii.
 Metadane mapowania Jiry, zapisane mapowania pól i podsumowanie
 ostatniego importu płyną jako zwykły prop Inertii:
-`SettingsController::index()` oblicza prop `jiraSettings` przez
+`SettingsController::integrations()` oblicza prop `jiraSettings` przez
 `JiraIntegrationService::getSettingsExtras()`, bramkowany przez
 `canUpdateIntegrations` dokładnie tak, jak istniejące maskowanie
 `webhookUrl` dla Discorda. Dodanie Lineara oznacza albo uogólnienie tego
@@ -562,7 +562,7 @@ pokazał ruch), oznaczone świeżym `run_id` (UUID, nie znacznikiem czasu
 — omija problemy z precyzją zegara) generowanym raz na próbę
 `handle()`. `JiraIntegrationService::getImportProgress()` odczytuje to
 z powrotem jako **osobny, tani** prop (`jiraImportProgress`, podłączony
-w `SettingsController::index()`) — celowo nie połączony z
+w `SettingsController::integrations()`) — celowo nie połączony z
 `getSettingsExtras()`/`jiraSettings`, który też wywołuje żywe API Jiry
 po metadane mapowania; odpytywanie tego co ~1.5s podczas trwania
 importu bez potrzeby zarzucałoby Jirę żądaniami.
@@ -645,8 +645,8 @@ specyficznego dla importera do dodania dla niego na froncie.
 
 To, czego wciąż musisz dotknąć, zgodnie z uwagą architektoniczną z
 Kroku 6: prop `jiraSettings`, przekazywany przez `SettingsController` →
-`Settings/Index.tsx` → `WorkspaceSettingsContent.tsx` →
-`WorkspaceSettingsIntegrationsTab.tsx` → modal → panel, jest obecnie
+`Settings/Integrations.tsx` → `WorkspaceSettingsIntegrationsTab.tsx` →
+modal → panel, jest obecnie
 pojedynczy i specyficzny dla Jiry. Uogólnij go (mapa per-integracja albo
 drugi, identycznie ukształtowany prop), zanim ustawienia Lineara będą
 mogły renderować się obok ustawień Jiry — nie używaj po cichu propa

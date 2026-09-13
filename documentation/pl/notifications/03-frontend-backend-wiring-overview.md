@@ -100,10 +100,10 @@ krok 3), jeśli musisz to podłączyć.
 **Zupełnie osobna** ścieżka odczytu/zapisu od części 1–2 — ta *jest* prawdziwym wczytaniem strony, nie współdzielonym propem:
 
 ```
-GET /settings?tab=notifications
+GET /settings/notifications
         │
         ▼
-SettingsController::index()
+SettingsController::notifications()
   - 'notificationSettings' => $this->notificationSettingService->getAllSettings($user->id)
     (every NotificationType × NotificationChannel pair, defaulting via
     NotificationChannel::enabledByDefault() unless a NotificationSetting row overrides it)

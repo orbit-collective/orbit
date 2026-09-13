@@ -116,10 +116,10 @@ A **completely separate** read/write path from parts 1–2 — this one
 *is* a real page load, not the shared prop:
 
 ```
-GET /settings?tab=notifications
+GET /settings/notifications
         │
         ▼
-SettingsController::index()
+SettingsController::notifications()
   - 'notificationSettings' => $this->notificationSettingService->getAllSettings($user->id)
     (every NotificationType × NotificationChannel pair, defaulting via
     NotificationChannel::enabledByDefault() unless a NotificationSetting row overrides it)

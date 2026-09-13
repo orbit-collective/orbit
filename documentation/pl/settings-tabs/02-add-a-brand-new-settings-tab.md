@@ -1,6 +1,6 @@
 # Dodaj zupełnie nową zakładkę ustawień
 
-Przećwiczony przykład: dodanie zakładki `billing` do sekcji Account — id zakładki, które jeszcze w ogóle nie istnieje nigdzie w kodzie, w przeciwieństwie do Export z przewodnika 1 (który już miał komponent i wiersz w rejestrze, tylko wyłączony).
+Przećwiczony przykład: dodanie zakładki `billing` do sekcji Account — id zakładki, które jeszcze nigdzie w kodzie nie istnieje, w odróżnieniu od Export z przewodnika 1 (który miał już komponent i wiersz w rejestrze, tylko wyłączony i bez trasy).
 
 ## Krok 1 — Dodaj id zakładki
 
@@ -16,9 +16,8 @@ export type SettingsTabId =
     | 'integrations'
     | 'export'
     | 'labels'
-    | 'statuses'
+    | 'issue-types'
     | 'priorities'
-    | 'templates'
     | 'documents'
     | 'members'
     | 'roles-management';
@@ -33,6 +32,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
     // ...existing entries...
     {
         id: 'billing',
+        path: '/settings/billing',
         label: 'Billing',
         icon: 'CreditCard',
         section: 'account',
@@ -41,22 +41,67 @@ export const SETTINGS_TABS: SettingsTab[] = [
     },
     // ...remaining entries...
 ];
-
-export const ACCOUNT_SETTINGS_TAB_IDS = [
-    'preferences',
-    'profile',
-    'notifications',
-    'security-access',
-    'billing',
-    'export',
-] as const;
 ```
 
-`section: 'account'` oraz dodanie id do `ACCOUNT_SETTINGS_TAB_IDS` są oba wymagane, i niezależnie od siebie — pierwsze decyduje, pod jaką grupą paska bocznego (`Sidebar.tsx` filtruje `SETTINGS_TABS` po `section` na sekcje nawigacji "Account"/"Workspace", gdy tylko URL znajduje się pod `/settings`) renderuje się element nawigacji; drugie to to, co sprawdza `isAccountSettingsTabId()`, żeby zdecydować, czy `AccountSettingsContent` czy `WorkspaceSettingsContent` ją obsługuje (zobacz sekcję architektury w [README](./README.md)). Umieść id w tablicy pasującej do złej sekcji (albo żadnej) i zakładka jest wybieralna w pasku bocznym, ale nie rozstrzyga się do łańcucha `if` żadnego z komponentów treści, więc nic się nie renderuje.
+`section: 'account'` decyduje, pod jaką grupą paska bocznego renderuje się element nawigacji — `Sidebar.tsx` filtruje `SETTINGS_TABS` po `section` na sekcje nawigacji "Account"/"Workspace", gdy tylko URL znajduje się pod `/settings`. `path` to to, do czego linkuje element nawigacji i to, z czym `getSettingsTabByPath()` porównuje aktualny URL, żeby oznaczyć zakładkę jako aktywną, więc musi być równe trasie, którą rejestrujesz w kroku 3; trzymaj je w formie `/settings/<id zakładki>`, chyba że masz powód, żeby tego nie robić.
 
 Wybierz `icon` z `lucide-react` (dowolna nazwa poprawna jako `keyof typeof icons`), która nie reprezentuje już innej zakładki.
 
-## Krok 3 — Stwórz komponent zakładki
+## Krok 3 — Dodaj trasę
+
+Plik: `routes/web.php`
+
+```php
+Route::get('/settings/billing', [SettingsController::class, 'billing'])->name('settings.billing');
+```
+
+Wewnątrz istniejącej grupy `Route::middleware('auth')`, obok pozostałych tras `settings.*`. Zakładka z wpisem w rejestrze, ale bez trasy, to link nawigacji do 404 — nie ma już po stronie klienta żadnego spadku z powrotem do domyślnej zakładki.
+
+## Krok 4 — Dodaj akcję kontrolera
+
+Plik: `app/Http/Controllers/SettingsController.php`
+
+```php
+public function billing(Request $request): Response
+{
+    return Inertia::render('Settings/Billing', [
+        'projects' => $this->projects($request),
+        'planName' => $this->billingService->getPlanName($request->user()),
+    ]);
+}
+```
+
+Jedna akcja na zakładkę, każda wysyłająca tylko propy tej zakładki plus `projects` (którego `Sidebar` potrzebuje wszędzie). Zakładka działająca w kontekście projektu rozwija zamiast tego `$this->projectScope($projects, $selectedProject)`, zamiast przekazywać `projects` ręcznie, i zabezpiecza swoje dane tym sprawdzeniem dostępu, które ma sens — `hasIntegrationsAccess` / `integrationStatuses` w `integrations()` to wzorzec dla propa zależnego od funkcji, a `can()` / `hasRolesAccess()` to współdzielone helpery dla wartości boolean z uprawnień.
+
+## Krok 5 — Dodaj stronę
+
+Nowy plik: `resources/js/Pages/Settings/Billing.tsx`
+
+```tsx
+import AccountSettingsBillingTab from '@/Components/Organisms/AccountSettingsContent/AccountSettingsBillingTab';
+import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
+import { Project } from '@/types/Projects';
+
+interface SettingsBillingProps {
+    projects?: Project[];
+    planName?: string;
+}
+
+export default function SettingsBilling({
+    projects = [],
+    planName = 'Free',
+}: SettingsBillingProps) {
+    return (
+        <SettingsLayout tabId="billing" projects={projects}>
+            <AccountSettingsBillingTab planName={planName} />
+        </SettingsLayout>
+    );
+}
+```
+
+Ścieżka pliku pod `resources/js/Pages/` jest nazwą strony Inertii, którą renderuje kontroler, więc `Settings/Billing.tsx` ↔ `Inertia::render('Settings/Billing', ...)`. `SettingsLayout` bierze nagłówek, breadcrumb i opis z wpisu w rejestrze dla danego `tabId` — nie powtarzaj tej treści na stronie.
+
+## Krok 6 — Utwórz komponent zakładki
 
 Nowy plik: `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsBillingTab.tsx`
 
@@ -93,57 +138,10 @@ export default function AccountSettingsBillingTab({
 }
 ```
 
-Każda istniejąca zakładka Account trzyma się tego samego kształtu — jeden albo więcej `SettingsPanel`, każdy trzymający albo dowolną treść, albo `SettingsPanelRow` — skopiuj layout tej istniejącej zakładki, która jest najbliższa temu, czego potrzebuje nowa (`AccountSettingsSecurityTab` dla panelu z listą elementów, `AccountSettingsPreferencesTab` dla siatki wybieralnych kart).
-
-## Krok 4 — Podłącz ją do switcha
-
-Plik: `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsContent.tsx`
-
-```tsx
-import AccountSettingsBillingTab from './AccountSettingsBillingTab';
-// ...existing imports...
-
-interface AccountSettingsContentProps {
-    tabId: AccountSettingsTabId;
-    userName?: string;
-    userAvatar?: string | null;
-    sessions?: Session[];
-    notificationSettings?: NotificationSettings;
-    planName?: string;
-}
-
-export default function AccountSettingsContent({
-    tabId,
-    userName,
-    userAvatar,
-    sessions = [],
-    notificationSettings,
-    planName,
-}: AccountSettingsContentProps) {
-    if (tabId === 'preferences') {
-        return <AccountSettingsPreferencesTab />;
-    }
-
-    // ...existing tabId branches, unchanged...
-
-    if (tabId === 'billing') {
-        return <AccountSettingsBillingTab planName={planName} />;
-    }
-
-    return <AccountSettingsExportTab />;
-}
-```
-
-To płaski łańcuch `if`, nie obiekt przeglądowy — dodaj nową gałąź gdziekolwiek przed ostatnim `return`, w dowolnej kolejności, która czyta się jasno; kolejność nie ma żadnego wpływu funkcjonalnego, bo każdy `if` zwraca natychmiast.
-
-## Krok 5 — Przekaż w dół jakiekolwiek prawdziwe dane ze strony
-
-Plik: `resources/js/Pages/Settings/Index.tsx` — dodaj `planName` do `SettingsIndexProps` i przekaż go do `AccountSettingsContent`, w ten sam sposób, w jaki `notificationSettings` już płynie bez zmian.
-
-Plik: `app/Http/Controllers/SettingsController.php` — dodaj klucz `'planName' => ...` do tablicy propów `Inertia::render(...)`, obliczony z dowolnego Serwisu stojącego za prawdziwymi danymi billingowymi (jeszcze niezbudowanego — ten krok to tylko wzorzec podłączania, na wzór istniejącego kształtu `SettingsController::index()`: jeden klucz tablicy na prop, zazwyczaj zabezpieczony jakimkolwiek sensownym sprawdzeniem dostępu, na wzór `hasIntegrationsAccess`/`integrationStatuses` dla propa zależnego od funkcji).
+Każda istniejąca zakładka Account podąża za tym samym kształtem — jeden lub więcej `SettingsPanel`, każdy zawierający albo swobodną treść, albo `SettingsPanelRow` — skopiuj układ tej istniejącej zakładki, która jest najbliższa temu, czego potrzebuje nowa (`AccountSettingsSecurityTab` dla panelu z listą elementów, `AccountSettingsPreferencesTab` dla siatki wybieralnych kart). Zakładki Account żyją w `Components/Organisms/AccountSettingsContent/`, zakładki Workspace w `Components/Organisms/WorkspaceSettingsContent/`; ten podział na katalogi jest teraz czysto organizacyjny, bo nic już na jego podstawie nie rozdziela renderowania.
 
 ## Testy
 
-- `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsBillingTab.test.tsx` — nowy plik, na wzór kształtu dowolnego istniejącego testu zakładki Account (np. `AccountSettingsPreferencesTab.test.tsx`): wyrenderuj komponent, asercuj oczekiwaną treść/propy się renderują.
-- `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsContent.test.tsx` (jeśli istnieje) — dodaj przypadek asercujący, że `tabId="billing"` renderuje `AccountSettingsBillingTab`.
-- `tests/Feature/SettingsControllerTest.php` — jeśli podłączyłeś prawdziwy prop backendu w kroku 5, dodaj test asercujący, że pojawia się w odpowiedzi Inertii dla zalogowanego użytkownika.
+- `tests/Feature/SettingsControllerTest.php` — dodaj przypadek asercujący, że `GET /settings/billing` renderuje `Settings/Billing` z propami z kroku 4, i rozszerz przypadek "each settings page only ships its own tab data", jeśli nowa zakładka wprowadza propa, którego inne zakładki nie mogą dostawać.
+- `resources/js/Pages/Settings/Billing.test.tsx` — nowy plik, kopiujący dowolny istniejący test strony (np. `Preferences.test.tsx`): zamockuj `SettingsLayout` i komponent zakładki, zaaseruj `tabId` i przekazane propy.
+- `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsBillingTab.test.tsx` — nowy plik, na wzór dowolnego istniejącego testu zakładki Account (np. `AccountSettingsSecurityTab.test.tsx`): wyrenderuj komponent, zaaseruj, że oczekiwana treść/propy się renderują.

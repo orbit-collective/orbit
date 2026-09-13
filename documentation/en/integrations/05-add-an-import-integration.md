@@ -465,7 +465,7 @@ to the Policy.
 either.** Orbit has no separate JSON API (see the top of the root
 `CLAUDE.md`) — every page is server-rendered Inertia props. The
 Jira mapping metadata, saved field mappings, and last-import summary
-all flow as an ordinary Inertia prop instead: `SettingsController::index()`
+all flow as an ordinary Inertia prop instead: `SettingsController::integrations()`
 computes a `jiraSettings` prop via `JiraIntegrationService::getSettingsExtras()`,
 gated by `canUpdateIntegrations` exactly like the existing `webhookUrl`
 masking Discord uses. Adding Linear means either generalizing that
@@ -548,7 +548,7 @@ shows movement quickly), tagged with a fresh `run_id` (a UUID, not a
 timestamp — sidesteps clock precision concerns) generated once per
 `handle()` attempt. `JiraIntegrationService::getImportProgress()`
 reads that back as a **separate, cheap** prop (`jiraImportProgress`,
-wired in `SettingsController::index()`) — deliberately not folded into
+wired in `SettingsController::integrations()`) — deliberately not folded into
 `getSettingsExtras()`/`jiraSettings`, which also calls Jira's live API
 for mapping metadata; polling that every ~1.5s while an import runs
 would hammer Jira for no reason.
@@ -628,8 +628,7 @@ to add for it on the frontend.
 
 What you do still need to touch, per the Step 6 architecture note: the
 `jiraSettings` prop threaded through `SettingsController` →
-`Settings/Index.tsx` → `WorkspaceSettingsContent.tsx` →
-`WorkspaceSettingsIntegrationsTab.tsx` → the modal → the panel is
+`Settings/Integrations.tsx` → `WorkspaceSettingsIntegrationsTab.tsx` → the modal → the panel is
 currently singular and Jira-specific. Generalize it (a per-integration
 map, or a second identically-shaped prop) before Linear's settings can
 render alongside Jira's — don't silently reuse the `jiraSettings` prop

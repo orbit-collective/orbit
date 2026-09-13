@@ -104,7 +104,7 @@ każde i zdecyduj, czy Contributor powinien się na nim znaleźć:
 - `app/Policies/IssuePolicy.php` — `MODIFY_TIERS = [OWNER, ADMIN, MEMBER]`
 - `app/Policies/CommentPolicy.php` — `OWN_TIERS = [OWNER, ADMIN, MEMBER]`, `ANY_TIERS = [OWNER, ADMIN]`
 - `app/Policies/ProjectPolicy.php` — `updateDetails`, `inviteMembers`, `updateMemberRole`, `removeMember`, `viewIntegrations`, `updateIntegrations`
-- `app/Http/Controllers/SettingsController.php` — `$viewTiers` oraz dwie osadzone w kodzie tablice poziomów dla `PROJECT_UPDATE`/`PROJECT_DELETE`
+- `app/Http/Controllers/SettingsController.php` — `VIEW_TIERS`, `CATALOG_VIEW_TIERS`, `MANAGE_TIERS` oraz osadzona w kodzie tablica `[RoleType::OWNER]` dla `PROJECT_DELETE`
 
 W tym przećwiczonym przykładzie Contributor dostaje tworzenie
 issues/komentarzy oraz edycję własnych, ale nie moderację ani

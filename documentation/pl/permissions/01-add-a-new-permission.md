@@ -92,16 +92,15 @@ Użyj opcji B tylko wtedy, gdy nie ma jeszcze instancji, względem której możn
 
 Plik: `app/Http/Controllers/SettingsController.php`
 
-Oblicz wartość boolean **bezpośrednio z modelu `Project`** (`hasPermissionOrTier`/`hasPermission`) w `index()` — nie przechodź tu przez Policy; Policy tutaj są zarezerwowane do autoryzacji rzeczywistych żądań mutujących (`$this->authorize(...)` w akcji kontrolera), podczas gdy `SettingsController::index()` oblicza zwykłe wartości boolean, żeby UI mógł warunkowo renderować:
+Oblicz wartość boolean **bezpośrednio z modelu `Project`** (`hasPermissionOrTier`/`hasPermission`) w akcji tej zakładki, która jej potrzebuje — każda zakładka ustawień ma własną akcję (zobacz [`../settings-tabs/README.md`](../settings-tabs/README.md)) — i nie przechodź tu przez Policy; Policy tutaj są zarezerwowane do autoryzacji rzeczywistych żądań mutujących (`$this->authorize(...)` w akcji kontrolera), podczas gdy `SettingsController` oblicza zwykłe wartości boolean, żeby UI mógł warunkowo renderować:
 
 ```php
-$viewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-$hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, $viewTiers) ?? false;
+$hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, self::VIEW_TIERS) ?? false;
 $canUpdateIntegrations = $hasIntegrationsAccess
-    && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, self::MANAGE_TIERS);
 ```
 
-potem dodaj obie wartości do tablicy props `Inertia::render(...)` i przeprowadź je przez `Settings/Index.tsx` → `WorkspaceSettingsContent.tsx` → Twój komponent zakładki dokładnie tak, jak robi to już `canUpdateIntegrations` (zobacz [`../integrations/04-frontend-backend-wiring-overview.md`](../integrations/04-frontend-backend-wiring-overview.md) po pełną listę przekazywania propsów).
+`self::VIEW_TIERS` / `self::MANAGE_TIERS` to współdzielone stałe tierów na Controllerze, a `can()` opakowuje sprawdzenie `MANAGE_TIERS` dla najczęstszego przypadku. Dodaj obie wartości do tablicy props `Inertia::render(...)` **tej** akcji — i tylko tej, żeby żadna inna zakładka za nie nie płaciła — a potem przeprowadź je przez stronę zakładki (np. `Settings/Integrations.tsx`) do Twojego komponentu zakładki dokładnie tak, jak robi to już `canUpdateIntegrations` (zobacz [`../integrations/04-frontend-backend-wiring-overview.md`](../integrations/04-frontend-backend-wiring-overview.md) po pełną listę przekazywania propsów).
 
 ## Krok 5 — Spraw, żeby dobrze się renderowało w Settings → Roles & management
 
@@ -150,4 +149,4 @@ php artisan tinker --execute="App\Models\Permission::where('key', 'like', 'proje
 - `tests/Feature/PermissionSeederTest.php` — nie trzeba zmian, już asertuje, że seeder jest idempotentny i pokrywa wszystkie aktualne przypadki generycznie.
 - `tests/Feature/RoleServiceTest.php` — test `'it creates the owner, admin, member and viewer system roles with their default permissions'` asertuje dokładne zbiory id uprawnień na poziom; jeśli dodałeś nowy przypadek do `MEMBER_DEFAULT_PERMISSIONS`/`VIEWER_DEFAULT_PERMISSIONS`, zaktualizuj tam oczekiwaną listę.
 - Jakąkolwiek metodę Policy dodałeś — pokryj ją bezpośrednio, jeśli ma ciekawe rozgałęzienia, albo (częściej) jest pokryta pośrednio przez test kontrolera dla akcji, którą chroni (zobacz test "member without the integrations.update permission cannot toggle an integration" w `tests/Feature/ProjectIntegrationControllerTest.php` po kształt do skopiowania).
-- `tests/Feature/SettingsControllerTest.php` — dodaj testy `'settings page grants a[n] X access to Y'` asertujące nowy prop boolean dla Owner/Admin (true), zwykłego Membera (tylko podgląd: view=true, update=false) i Vievera bez zsynchronizowanej roli systemowej (false) — zobacz trzy istniejące już testy `*integrations*` po dokładny wzorzec.
+- `tests/Feature/SettingsControllerTest.php` — dodaj testy `'settings page grants a[n] X access to Y'` uderzające we własną trasę zakładki (`/settings/<tab>`) i asertujące nowy prop boolean dla Owner/Admin (true), zwykłego Membera (tylko podgląd: view=true, update=false) i Vievera bez zsynchronizowanej roli systemowej (false) — zobacz trzy istniejące już testy `*integrations*` po dokładny wzorzec.

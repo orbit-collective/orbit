@@ -10,18 +10,17 @@ account activity" panel on the Account → Security & access settings
 tab, reusing `getRecentForUser()` (the exact same read method the
 Dashboard already calls) rather than adding a new one.
 
-## Step 1 — Thread the read method into the Settings controller
+## Step 1 — Thread the read method into the Security & access action
 
 File: `app/Http/Controllers/SettingsController.php`
 
 ```php
-public function index(Request $request): Response
+public function securityAccess(Request $request): Response
 {
     $user = $request->user();
-    // ...existing $projects/$selectedProject/etc. setup...
 
-    return Inertia::render('Settings/Index', [
-        // ...existing keys...
+    return Inertia::render('Settings/SecurityAccess', [
+        'projects' => $this->projects($request),
         'sessions' => $this->userService->getUserSessions($user),
         'accountActivity' => $this->activityLogService
             ->getRecentForUser($user->id, 15)
@@ -45,34 +44,36 @@ formatter for what's the same `ActivityLogEntry` type.
 
 ## Step 2 — Pass it down to the tab
 
-File: `resources/js/Pages/Settings/Index.tsx`
+File: `resources/js/Pages/Settings/SecurityAccess.tsx`
 
 ```tsx
-interface SettingsIndexProps {
-    // ...existing props...
+interface SettingsSecurityAccessProps {
+    projects?: Project[];
+    sessions?: Session[];
     accountActivity?: ActivityLogEntry[];
 }
 
-export default function SettingsIndex({
-    // ...existing props...
+export default function SettingsSecurityAccess({
+    projects = [],
+    sessions = [],
     accountActivity = [],
-}: SettingsIndexProps) {
-    // ...
-
-    {isAccountSettingsTabId(activeTab) ? (
-        <AccountSettingsContent
-            tabId={activeTab}
-            // ...existing props...
-            accountActivity={accountActivity}
-        />
-    ) : ( /* ...unchanged... */ )}
+}: SettingsSecurityAccessProps) {
+    return (
+        <SettingsLayout tabId="security-access" projects={projects}>
+            <AccountSettingsSecurityTab
+                sessions={sessions}
+                accountActivity={accountActivity}
+            />
+        </SettingsLayout>
+    );
 }
 ```
 
-Then thread `accountActivity` one level further through
-`AccountSettingsContent`'s `tabId === 'security-access'` branch into
-`AccountSettingsSecurityTab`, the same way `sessions` already flows
-today.
+Each settings tab is its own page (see
+[`../settings-tabs/README.md`](../settings-tabs/README.md)), so there
+is no dispatcher to thread the prop through — the page hands it
+straight to `AccountSettingsSecurityTab`, the same way `sessions`
+already does today.
 
 ## Step 3 — Render it with the existing components
 
@@ -122,13 +123,12 @@ third surface is a data-plumbing change, not a new UI.
 ## Tests
 
 - `tests/Feature/SettingsControllerTest.php` — add a case asserting
-  the Inertia response includes an `accountActivity` prop shaped like
+  `GET /settings/security-access` includes an `accountActivity` prop shaped like
   `{ id, body, userName, createdAt }`, mirroring however
   `DashboardControllerTest` (if one exists) already asserts
   `activityLogs`.
-- `resources/js/Pages/Settings/Index.test.tsx` — add a case asserting
-  `accountActivity` reaches `AccountSettingsSecurityTab` when
-  `tab=security-access`.
+- `resources/js/Pages/Settings/SecurityAccess.test.tsx` — add a case
+  asserting `accountActivity` reaches `AccountSettingsSecurityTab`.
 - `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsSecurityTab.test.tsx` —
   add a case rendering with a couple of `accountActivity` entries and
   asserting they show up, plus a case with an empty array asserting
