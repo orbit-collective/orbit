@@ -684,3 +684,79 @@ describe('Issues/Show sub-issues', () => {
         expect(screen.queryByText('Sub-issues')).not.toBeInTheDocument();
     });
 });
+
+describe('Issues/Show custom fields', () => {
+    const bugType = {
+        id: 3,
+        name: 'Bug',
+        icon: 'Bug',
+        color: '#ef4444',
+        description: null,
+        isSystem: true,
+        allowsChildren: false,
+        isTopLevel: true,
+        requiredFields: [],
+        restrictedRoleTypes: [],
+        fields: [
+            {
+                id: 11,
+                issueTypeId: 3,
+                label: 'Severity',
+                type: 'select' as const,
+                options: ['Low', 'High'],
+                placeholder: null,
+                isRequired: true,
+            },
+        ],
+    };
+
+    test("renders the type's custom fields in the sidebar", () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue({ issueType: bugType })}
+                users={users}
+                issueTypes={[bugType]}
+            />,
+        );
+
+        expect(screen.getByText('Severity *')).toBeInTheDocument();
+        expect(screen.getByText('High')).toBeInTheDocument();
+    });
+
+    test('picking a custom field value patches only that field', async () => {
+        const { router } = await import('@inertiajs/react');
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue({ issueType: bugType })}
+                users={users}
+                issueTypes={[bugType]}
+            />,
+        );
+
+        screen.getByText('High').click();
+
+        expect(router.patch).toHaveBeenCalledWith(
+            expect.anything(),
+            { custom_fields: { 11: 'High' } },
+            expect.any(Object),
+        );
+    });
+
+    test('renders no custom field section for a type without any', () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue({ issueType: { ...bugType, fields: [] } })}
+                users={users}
+                issueTypes={[bugType]}
+            />,
+        );
+
+        expect(screen.queryByText('Severity *')).not.toBeInTheDocument();
+    });
+});

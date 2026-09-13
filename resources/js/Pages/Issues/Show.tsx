@@ -10,6 +10,7 @@ import CommentForm from '@/Components/Molecules/CommentForm/CommentForm';
 import CommentList from '@/Components/Molecules/CommentList/CommentList';
 import EditableLabelList from '@/Components/Molecules/EditableLabelList/EditableLabelList';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
+import IssueCustomField from '@/Components/Molecules/IssueCustomField/IssueCustomField';
 import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import IssueChildrenPanel from '@/Components/Organisms/IssueChildrenPanel/IssueChildrenPanel';
@@ -112,6 +113,17 @@ export default function Show({
             </div>
         ),
     }));
+
+    const customFields = issue.issueType?.fields ?? [];
+    const customFieldValues = issue.custom_fields ?? {};
+
+    const saveCustomField = (
+        fieldId: number,
+        value: string | number | boolean | null,
+    ) =>
+        updateIssue({
+            custom_fields: { [fieldId]: value } as never,
+        });
 
     const issueTypeOptions = issueTypes.map((type) => ({
         value: String(type.id),
@@ -362,6 +374,28 @@ export default function Show({
                                         }
                                     />
                                 </SidebarField>
+
+                                {customFields.map((field) => (
+                                    <SidebarField
+                                        key={field.id}
+                                        label={
+                                            field.isRequired
+                                                ? `${field.label} *`
+                                                : field.label
+                                        }
+                                    >
+                                        <IssueCustomField
+                                            field={field}
+                                            value={
+                                                customFieldValues[field.id] ??
+                                                null
+                                            }
+                                            onSave={(value) =>
+                                                saveCustomField(field.id, value)
+                                            }
+                                        />
+                                    </SidebarField>
+                                ))}
 
                                 <SidebarField label="Labels">
                                     <EditableLabelList
