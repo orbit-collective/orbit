@@ -199,3 +199,50 @@ test('updating an issue to move it under a valid parent succeeds', function () {
     $response->assertRedirect();
     expect($issue->refresh()->parent_id)->toBe($epic->id);
 });
+
+test('an issue whose type is sub-issue only cannot be created at the top level', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $spikeType = $project->issueTypes()->where('name', 'Spike')->first();
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'Loose spike', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $spikeType->id,
+    ]);
+
+    $response->assertSessionHasErrors('issue_type_id');
+});
+
+test('a sub-issue only type can still be created underneath an allowed parent', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $epicType = $project->issueTypes()->where('name', 'Epic')->first();
+    $spikeType = $project->issueTypes()->where('name', 'Spike')->first();
+    $epic = $project->issues()->create([
+        'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'Nested spike', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $spikeType->id, 'parent_id' => $epic->id,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('issues', ['title' => 'Nested spike', 'parent_id' => $epic->id]);
+});
+
+test('the core system types stay creatable at the top level', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+
+    $topLevel = $project->issueTypes()->where('is_top_level', true)->pluck('name')->sort()->values()->all();
+
+    expect($topLevel)->toBe(['Bug', 'Epic', 'Feature', 'Story', 'Task']);
+});

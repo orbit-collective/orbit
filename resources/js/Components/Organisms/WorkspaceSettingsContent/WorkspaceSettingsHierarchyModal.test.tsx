@@ -36,6 +36,7 @@ const epicType: IssueType = {
     description: null,
     isSystem: true,
     allowsChildren: true,
+    isTopLevel: true,
     requiredFields: [],
     restrictedRoleTypes: [],
     allowedChildTypeIds: [2],
@@ -49,6 +50,7 @@ const storyType: IssueType = {
     description: null,
     isSystem: true,
     allowsChildren: false,
+    isTopLevel: true,
     requiredFields: [],
     restrictedRoleTypes: [],
 };
@@ -61,6 +63,7 @@ const bugType: IssueType = {
     description: null,
     isSystem: true,
     allowsChildren: false,
+    isTopLevel: true,
     requiredFields: [],
     restrictedRoleTypes: [],
 };

@@ -22,6 +22,7 @@ class IssueType extends Model
         'description',
         'is_system',
         'allows_children',
+        'is_top_level',
         'required_fields',
         'restricted_role_types',
         'sort_order',
@@ -30,6 +31,7 @@ class IssueType extends Model
     protected $casts = [
         'is_system' => 'boolean',
         'allows_children' => 'boolean',
+        'is_top_level' => 'boolean',
         'required_fields' => 'array',
         'restricted_role_types' => 'array',
         'sort_order' => 'integer',
@@ -94,6 +96,7 @@ class IssueType extends Model
             'description' => $this->description,
             'isSystem' => $this->is_system,
             'allowsChildren' => $this->allows_children,
+            'isTopLevel' => $this->is_top_level,
             'requiredFields' => $this->required_fields ?? [],
             'restrictedRoleTypes' => $this->restricted_role_types ?? [],
         ];

@@ -36,6 +36,7 @@ interface WorkspaceSettingsIssueTypeInlineEditorProps {
         color: string;
         description: string;
         allows_children: boolean;
+        is_top_level: boolean;
         required_fields: string[];
         restricted_role_types: string[];
     }) => void;
@@ -60,6 +61,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
     const [allowsChildren, setAllowsChildren] = useState(
         issueType?.allowsChildren ?? false,
     );
+    const [isTopLevel, setIsTopLevel] = useState(issueType?.isTopLevel ?? true);
     const [requiredFields, setRequiredFields] = useState<string[]>(
         issueType?.requiredFields ?? [],
     );
@@ -94,6 +96,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
             color,
             description: description.trim(),
             allows_children: allowsChildren,
+            is_top_level: isTopLevel,
             required_fields: requiredFields,
             restricted_role_types: restrictedRoleTypes,
         });
@@ -138,6 +141,13 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                                     setAllowsChildren(e.target.checked)
                                 }
                                 label="Allows sub-issues (like an Epic)"
+                            />
+                            <Checkbox
+                                checked={isTopLevel}
+                                onChange={(e) =>
+                                    setIsTopLevel(e.target.checked)
+                                }
+                                label="Can be created on its own (otherwise sub-issue only)"
                             />
                         </div>
 

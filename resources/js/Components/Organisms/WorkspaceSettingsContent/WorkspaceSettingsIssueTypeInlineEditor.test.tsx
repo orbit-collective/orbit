@@ -11,6 +11,7 @@ const bugType: IssueType = {
     description: 'Something is broken',
     isSystem: true,
     allowsChildren: false,
+    isTopLevel: true,
     requiredFields: [],
     restrictedRoleTypes: [],
 };
