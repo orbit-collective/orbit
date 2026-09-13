@@ -174,3 +174,33 @@ test('updating an issue merges custom field values instead of replacing them', f
         (string) $two->id => 'Firefox',
     ]);
 });
+
+test('the issue detail view carries the custom fields of the issue type', function () {
+    [$project, $admin, $bugType] = projectWithTypes();
+    $issue = $project->issues()->create([
+        'title' => 'A bug', 'project_id' => $project->id, 'user_id' => $admin->id,
+        'issue_type_id' => $bugType->id, 'priority' => 'low', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($admin)->get("/projects/$project->id/issues/$issue->id");
+
+    $response->assertOk();
+    $payload = $response->viewData('page')['props']['issue'];
+    expect($payload['issueType'])->toHaveKey('fields')
+        ->and(collect($payload['issueType']['fields'])->pluck('label'))->toContain('Steps to reproduce');
+});
+
+test('an issue of every system type can still be created from a title alone', function () {
+    [$project, $admin] = projectWithTypes();
+
+    foreach ($project->issueTypes()->get() as $issueType) {
+        if (! $issueType->is_top_level) {
+            continue;
+        }
+
+        $this->actingAs($admin)->post('/issues', [
+            'title' => "A {$issueType->name}", 'project_id' => $project->id,
+            'priority' => 'medium', 'status' => 'open', 'issue_type_id' => $issueType->id,
+        ])->assertRedirect()->assertSessionHasNoErrors();
+    }
+});

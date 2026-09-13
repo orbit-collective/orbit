@@ -286,3 +286,44 @@ test('a root issue has no ancestors', function () {
 
     expect(app(IssueService::class)->ancestorsOf($issue))->toBeEmpty();
 });
+
+test('a Bug can be created as a sub-issue of a Task, which now accepts one', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $taskType = $project->issueTypes()->where('name', 'Task')->first();
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $task = $project->issues()->create([
+        'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'A nested bug', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $bugType->id, 'parent_id' => $task->id,
+    ]);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $this->assertDatabaseHas('issues', ['title' => 'A nested bug', 'parent_id' => $task->id]);
+});
+
+test('a type the parent does not list as an allowed child is still rejected', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    seedTypesFor($project, $member);
+    $taskType = $project->issueTypes()->where('name', 'Task')->first();
+    $storyType = $project->issueTypes()->where('name', 'Story')->first();
+    $task = $project->issues()->create([
+        'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'A nested story', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $storyType->id, 'parent_id' => $task->id,
+    ]);
+
+    $response->assertSessionHasErrors('parent_id');
+});

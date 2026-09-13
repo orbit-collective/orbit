@@ -11,6 +11,7 @@ use App\Repositories\IssueTypeRepository;
 use App\Repositories\WorkflowRepository;
 use App\Support\SystemIssueTypeDefaults;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class IssueTypeService
@@ -110,9 +111,14 @@ class IssueTypeService
         }
 
         if ($project->issue_type_defaults_version < self::DEFAULTS_VERSION) {
-            $this->applyTypeDefaults($project);
+            // One transaction for the whole upgrade: a project half-migrated
+            // by a failure part-way through would be retried from the top on
+            // every subsequent read, against types already moved on.
+            DB::transaction(function () use ($project) {
+                $this->applyTypeDefaults($project);
 
-            $project->forceFill(['issue_type_defaults_version' => self::DEFAULTS_VERSION])->save();
+                $project->forceFill(['issue_type_defaults_version' => self::DEFAULTS_VERSION])->save();
+            });
         }
 
         if ($isFirstSeed) {
@@ -207,24 +213,46 @@ class IssueTypeService
     }
 
     /**
-     * Swaps the stock workflow for the type's own, moving every issue onto
-     * the new status that shares its old one's category so nothing is left
-     * pointing at a row that is about to disappear.
+     * Swaps the stock workflow for the type's own. A status whose name the
+     * new workflow also uses is updated in place rather than recreated -
+     * (issue_type_id, name) is unique, so inserting a second "In Progress"
+     * before the old one is gone would violate the constraint, and reusing
+     * the row keeps every issue already sitting on it exactly where it is.
      *
      * @param  Collection<int, WorkflowStatus>  $oldStatuses
      */
     private function replaceGenericWorkflow(IssueType $issueType, array $definitions, Collection $oldStatuses): void
     {
-        $newStatuses = collect(array_values($definitions))
-            ->map(fn (array $definition, int $index) => $this->workflowRepository->createStatus($issueType, [
-                'name' => $definition['name'],
+        $oldByName = $oldStatuses->keyBy('name');
+        $reusedIds = [];
+        $newStatuses = collect();
+
+        foreach (array_values($definitions) as $index => $definition) {
+            $attributes = [
                 'color' => $definition['color'],
                 'category' => $definition['category'],
                 'sort_order' => $index,
                 'is_initial' => $index === 0,
-            ]));
+            ];
 
-        foreach ($oldStatuses as $oldStatus) {
+            $reused = $oldByName->get($definition['name']);
+
+            if ($reused) {
+                $reusedIds[] = $reused->id;
+                $newStatuses->push($this->workflowRepository->updateStatus($reused, $attributes));
+
+                continue;
+            }
+
+            $newStatuses->push($this->workflowRepository->createStatus($issueType, [
+                'name' => $definition['name'],
+                ...$attributes,
+            ]));
+        }
+
+        $obsolete = $oldStatuses->reject(fn (WorkflowStatus $status) => in_array($status->id, $reusedIds, true));
+
+        foreach ($obsolete as $oldStatus) {
             $replacement = $newStatuses->firstWhere('category', $oldStatus->category) ?? $newStatuses->first();
 
             Issue::query()
@@ -232,12 +260,10 @@ class IssueTypeService
                 ->update(['workflow_status_id' => $replacement->id]);
         }
 
-        $issueType->transitions()
-            ->whereIn('from_status_id', $oldStatuses->pluck('id'))
-            ->orWhereIn('to_status_id', $oldStatuses->pluck('id'))
-            ->delete();
+        // The whole shape changed, so none of the old edges still make sense.
+        $issueType->transitions()->delete();
 
-        WorkflowStatus::query()->whereIn('id', $oldStatuses->pluck('id'))->delete();
+        WorkflowStatus::query()->whereIn('id', $obsolete->pluck('id'))->delete();
 
         foreach ($this->defaultTransitionPairs($definitions) as [$fromIndex, $toIndex]) {
             $this->workflowRepository->createTransition($issueType, $newStatuses[$fromIndex], $newStatuses[$toIndex]);

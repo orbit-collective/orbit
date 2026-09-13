@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\Project;
+use App\Models\User;
+use App\Models\WorkflowStatus;
 use App\Services\IssueTypeService;
 use App\Services\LabelService;
 use App\Support\SystemIssueTypeDefaults;
@@ -128,4 +130,68 @@ test('a customized workflow is added to rather than replaced', function () {
     app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
 
     expect($task->statuses()->pluck('name')->all())->toContain('Parked');
+});
+
+test('upgrading a workflow whose new statuses reuse an existing name does not collide', function () {
+    $project = Project::factory()->create();
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+
+    // Rewind Story to the stock board it had before per-type workflows: its
+    // own defaults reuse "In Progress", which is where the unique index on
+    // (issue_type_id, name) used to blow up.
+    $story = $project->issueTypes()->where('name', 'Story')->first();
+    $story->statuses()->delete();
+    foreach ([['To Do', 'todo'], ['In Progress', 'in_progress'], ['Done', 'done']] as $index => [$name, $category]) {
+        $story->statuses()->create([
+            'name' => $name, 'color' => '#94a3b8', 'category' => $category,
+            'sort_order' => $index, 'is_initial' => $index === 0,
+        ]);
+    }
+    $project->forceFill(['issue_type_defaults_version' => 0])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    expect($story->statuses()->orderBy('sort_order')->pluck('name')->all())
+        ->toBe(['Backlog', 'Ready', 'In Progress', 'In Review', 'Done']);
+});
+
+test('an issue sitting on a replaced status is moved onto the new equivalent', function () {
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'admin']);
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+
+    $bug = $project->issueTypes()->where('name', 'Bug')->first();
+    $bug->statuses()->delete();
+    $stock = collect([['To Do', 'todo'], ['In Progress', 'in_progress'], ['Done', 'done']])
+        ->map(fn ($pair, $index) => $bug->statuses()->create([
+            'name' => $pair[0], 'color' => '#94a3b8', 'category' => $pair[1],
+            'sort_order' => $index, 'is_initial' => $index === 0,
+        ]));
+    $issue = $project->issues()->create([
+        'title' => 'Old bug', 'project_id' => $project->id, 'user_id' => $user->id,
+        'issue_type_id' => $bug->id, 'workflow_status_id' => $stock[1]->id,
+        'priority' => 'low', 'status' => 'in_progress',
+    ]);
+    $project->forceFill(['issue_type_defaults_version' => 0])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    $newStatus = WorkflowStatus::find($issue->refresh()->workflow_status_id);
+    expect($newStatus)->not->toBeNull()
+        ->and($newStatus->issue_type_id)->toBe($bug->id)
+        ->and($newStatus->category->value)->toBe('in_progress');
+});
+
+test('every seeded workflow keeps its statuses reachable after an upgrade', function () {
+    $project = Project::factory()->create();
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $project->forceFill(['issue_type_defaults_version' => 0])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    foreach ($project->issueTypes()->get() as $issueType) {
+        $names = $issueType->statuses()->pluck('name');
+        expect($names->count())->toBe($names->unique()->count(), "{$issueType->name} has duplicate statuses");
+    }
 });
