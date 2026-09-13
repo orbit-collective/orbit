@@ -81,7 +81,7 @@ class IssueTypeController extends Controller
 
         $this->issueTypeService->syncAllowedChildTypes($project, $issueType, $validated['child_issue_type_ids']);
 
-        return redirect()->back()->with('success', "Updated which types can be sub-issues of \"{$issueType->name}\".");
+        return redirect()->back()->with('success', "Updated which types can be sub-issues of \"$issueType->name\".");
     }
 
     public function destroy(Project $project, IssueType $issueType): RedirectResponse

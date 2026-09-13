@@ -1,6 +1,6 @@
 import { IssueType } from '@/types/IssueTypes';
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { createRef } from 'react';
+import { ComponentProps, createRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import QuickAddIssueRow, { QuickAddIssueRowHandle } from './QuickAddIssueRow';
 
@@ -38,7 +38,7 @@ const enabledColumns = {
 };
 
 const renderRow = (
-    props: Partial<React.ComponentProps<typeof QuickAddIssueRow>> = {},
+    props: Partial<ComponentProps<typeof QuickAddIssueRow>> = {},
 ) =>
     render(
         <table>
