@@ -383,12 +383,26 @@ describe('Sidebar Component', () => {
         expect(screen.queryByText('PROJECTS')).not.toBeInTheDocument();
     });
 
-    test('marks the active settings tab based on the url', () => {
-        pageState.url = '/settings?tab=members';
+    test('marks the active settings tab based on the url path', () => {
+        pageState.url = '/settings/members';
         render(<Sidebar projects={[]} />);
 
         const membersLink = screen.getByText('Members').closest('a');
         expect(membersLink).toHaveClass('text-[var(--text-color)]');
+        expect(membersLink).toHaveAttribute('href', '/settings/members');
+    });
+
+    test('links every enabled settings tab to its own page', () => {
+        pageState.url = '/settings/preferences';
+        render(<Sidebar projects={[]} />);
+
+        expect(screen.getByText('Labels').closest('a')).toHaveAttribute(
+            'href',
+            '/settings/labels',
+        );
+        expect(
+            screen.getByText('Roles & management').closest('a'),
+        ).toHaveAttribute('href', '/settings/roles-management');
     });
 
     test('renders disabled settings tabs without a link', () => {

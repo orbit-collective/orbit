@@ -1,0 +1,55 @@
+import { render, screen } from '@testing-library/react';
+import React from 'react';
+import { describe, expect, test, vi } from 'vitest';
+import SettingsIssueTypes from './IssueTypes';
+
+vi.mock('@/Components/Organisms/SettingsLayout/SettingsLayout', () => ({
+    default: ({
+        tabId,
+        projects = [],
+        children,
+    }: {
+        tabId: string;
+        projects?: unknown[];
+        children: React.ReactNode;
+    }) => (
+        <div
+            data-testid="layout"
+            data-tab-id={tabId}
+            data-projects-count={projects.length}
+        >
+            {children}
+        </div>
+    ),
+}));
+
+vi.mock(
+    '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIssueTypesTab',
+    () => ({
+        default: (props: Record<string, unknown>) => (
+            <div data-testid="tab" data-props={JSON.stringify(props)} />
+        ),
+    }),
+);
+
+describe('Settings SettingsIssueTypes page', () => {
+    test('renders its tab inside the settings layout', () => {
+        render(
+            <SettingsIssueTypes
+                projects={[{ id: 1 }] as never}
+                issueTypes={[{ id: 3 }] as never}
+                canUpdateWorkflow
+            />,
+        );
+
+        const layout = screen.getByTestId('layout');
+        expect(layout).toHaveAttribute('data-tab-id', 'issue-types');
+        expect(layout).toHaveAttribute('data-projects-count', '1');
+
+        const tabProps = JSON.parse(
+            screen.getByTestId('tab').getAttribute('data-props') ?? '{}',
+        );
+        expect(tabProps.issueTypes).toEqual([{ id: 3 }]);
+        expect(tabProps.canUpdateWorkflow).toEqual(true);
+    });
+});

@@ -224,7 +224,7 @@ class SendNotificationListener
             $result->failed > 0 ? 'warning' : 'success',
             'Import finished',
             "Imported $result->imported, updated $result->updated, skipped $result->skipped, failed $result->failed issue(s) into \"{$event->project->name}\".",
-            route('settings', ['tab' => 'integrations', 'project' => $event->project->id])
+            route('settings.integrations', ['project' => $event->project->id])
         );
     }
 

@@ -337,7 +337,7 @@ describe('WorkspaceSettingsMembersTab', () => {
         await user.click(screen.getByText('Second Project'));
 
         expect(mockRouterGet).toHaveBeenCalledWith(
-            '/settings?tab=members&project=2',
+            '/settings/members?project=2',
             {},
             expect.any(Object),
         );

@@ -46,7 +46,7 @@ export default function WorkspaceSettingsLabelsTab({
     const switchProject = (projectId: number) => {
         setEditorTarget(null);
         router.get(
-            `/settings?tab=labels&project=${projectId}`,
+            `/settings/labels?project=${projectId}`,
             {},
             { preserveScroll: true, preserveState: true },
         );

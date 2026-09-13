@@ -162,10 +162,6 @@ export const getSettingsTab = (id: SettingsTabId): SettingsTab => {
     );
 };
 
-export const getSettingsTabPath = (id: SettingsTabId): string => {
-    return getSettingsTab(id).path;
-};
-
 /**
  * Resolves the tab that owns a URL, ignoring any query string — each tab
  * is its own page now, so the path alone identifies it. Falls back to the
@@ -179,63 +175,4 @@ export const getSettingsTabByPath = (url: string): SettingsTabId => {
         SETTINGS_TABS.find((tab) => tab.path === normalized && tab.enabled)
             ?.id ?? SETTINGS_DEFAULT_TAB
     );
-};
-
-export const isSettingsTabId = (value: string): value is SettingsTabId => {
-    return SETTINGS_TABS.some((tab) => tab.id === value);
-};
-
-export const isEnabledSettingsTabId = (value: SettingsTabId): boolean => {
-    return SETTINGS_TABS.find((tab) => tab.id === value)?.enabled ?? false;
-};
-
-export const getActiveSettingsTab = (url: string): SettingsTabId => {
-    const [, queryString = ''] = url.split('?');
-    const params = new URLSearchParams(queryString);
-    const tabParam = params.get('tab');
-
-    if (
-        tabParam &&
-        isSettingsTabId(tabParam) &&
-        isEnabledSettingsTabId(tabParam)
-    ) {
-        return tabParam;
-    }
-
-    return SETTINGS_DEFAULT_TAB;
-};
-
-export const ACCOUNT_SETTINGS_TAB_IDS = [
-    'preferences',
-    'profile',
-    'notifications',
-    'security-access',
-    'export',
-] as const;
-
-export type AccountSettingsTabId = (typeof ACCOUNT_SETTINGS_TAB_IDS)[number];
-
-export const isAccountSettingsTabId = (
-    value: SettingsTabId,
-): value is AccountSettingsTabId => {
-    return ACCOUNT_SETTINGS_TAB_IDS.includes(value as AccountSettingsTabId);
-};
-
-export const WORKSPACE_SETTINGS_TAB_IDS = [
-    'labels',
-    'issue-types',
-    'priorities',
-    'documents',
-    'members',
-    'roles-management',
-    'integrations',
-] as const;
-
-export type WorkspaceSettingsTabId =
-    (typeof WORKSPACE_SETTINGS_TAB_IDS)[number];
-
-export const isWorkspaceSettingsTabId = (
-    value: SettingsTabId,
-): value is WorkspaceSettingsTabId => {
-    return WORKSPACE_SETTINGS_TAB_IDS.includes(value as WorkspaceSettingsTabId);
 };

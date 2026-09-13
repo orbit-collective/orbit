@@ -5,7 +5,7 @@ import NewProjectModal from '@/Components/Organisms/NewProjectModal/NewProjectMo
 import { useShortcuts } from '@/context/ShortcutContext';
 import { PageProps } from '@/types';
 import { Project } from '@/types/Projects';
-import { SETTINGS_TABS, getActiveSettingsTab } from '@/types/Settings';
+import { SETTINGS_TABS, getSettingsTabByPath } from '@/types/Settings';
 import { ShortcutDefinition } from '@/types/Shortcuts';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
@@ -39,7 +39,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
     } = usePage<PageProps>();
 
     const isSettingsPage = url.startsWith('/settings');
-    const activeSettingsTab = useMemo(() => getActiveSettingsTab(url), [url]);
+    const activeSettingsTab = useMemo(() => getSettingsTabByPath(url), [url]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -213,7 +213,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                                 key={tab.id}
                                                 icon={tab.icon}
                                                 label={tab.label}
-                                                link={`/settings?tab=${tab.id}`}
+                                                link={tab.path}
                                                 isActive={
                                                     tab.id === activeSettingsTab
                                                 }

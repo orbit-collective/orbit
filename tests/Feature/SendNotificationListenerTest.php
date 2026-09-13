@@ -365,7 +365,7 @@ test('IssuesImported notifies the importing user with a success severity when no
             'success',
             'Import finished',
             'Imported 3, updated 1, skipped 2, failed 0 issue(s) into "Orbit".',
-            route('settings', ['tab' => 'integrations', 'project' => $project->id])
+            route('settings.integrations', ['project' => $project->id])
         );
 
     $this->listener->handle(new IssuesImported($project, $importedBy, $result));

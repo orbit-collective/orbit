@@ -20,13 +20,54 @@ beforeEach(function () {
     $this->withoutVite();
 });
 
-test('authenticated user can view the settings page', function () {
+test('the settings root redirects to the default tab', function () {
     $response = $this->actingAs(User::factory()->create())->get('/settings');
+
+    $response->assertRedirect(route('settings.preferences'));
+});
+
+test('authenticated user can view the preferences page', function () {
+    $response = $this->actingAs(User::factory()->create())->get('/settings/preferences');
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('Settings/Index')
+        ->component('Settings/Preferences')
+        ->has('projects')
     );
+});
+
+test('each settings page only ships its own tab data', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'owner']);
+
+    $this->actingAs($user)->get('/settings/preferences')
+        ->assertInertia(fn (Assert $page) => $page
+            ->missing('members')
+            ->missing('integrationStatuses')
+            ->missing('labels')
+            ->missing('issueTypes')
+            ->missing('permissions')
+            ->missing('sessions')
+            ->missing('notificationSettings')
+        );
+
+    $this->actingAs($user)->get('/settings/members')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('members')
+            ->missing('integrationStatuses')
+            ->missing('permissions')
+            ->missing('issueTypes')
+            ->missing('sessions')
+        );
+
+    $this->actingAs($user)->get('/settings/labels')
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('labels')
+            ->missing('members')
+            ->missing('integrationStatuses')
+            ->missing('issueTypes')
+        );
 });
 
 test('guest is redirected to login when visiting settings', function () {
@@ -60,11 +101,11 @@ test('settings page includes the authenticated user sessions with the current on
 
     $response = $this->withCookie(config('session.cookie'), $currentSessionId)
         ->actingAs($user)
-        ->get('/settings');
+        ->get('/settings/security-access');
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('Settings/Index')
+        ->component('Settings/SecurityAccess')
         ->has('sessions', 2)
         ->where('sessions', fn ($sessions) => collect($sessions)
             ->firstWhere('id', $currentSessionId)['isCurrent'] === true
@@ -75,11 +116,11 @@ test('settings page includes the authenticated user sessions with the current on
 test('settings page defaults in-app notifications to enabled and email notifications to disabled', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->get('/settings');
+    $response = $this->actingAs($user)->get('/settings/notifications');
 
     $response->assertOk();
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('Settings/Index')
+        ->component('Settings/Notifications')
         ->where('notificationSettings.issue_assigned.in_app', true)
         ->where('notificationSettings.issue_assigned.email', false)
         ->where('notificationSettings.project_invited.email', false)
@@ -87,7 +128,7 @@ test('settings page defaults in-app notifications to enabled and email notificat
 });
 
 test('settings page has no selected project when the user belongs to none', function () {
-    $response = $this->actingAs(User::factory()->create())->get('/settings');
+    $response = $this->actingAs(User::factory()->create())->get('/settings/members');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('memberProjects', [])
@@ -105,7 +146,7 @@ test('settings page defaults to the user\'s first project and lists its members'
     $project->users()->attach($user->id, ['role' => 'admin']);
     $project->users()->attach($otherMember->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->get('/settings');
+    $response = $this->actingAs($user)->get('/settings/members');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('selectedProjectId', $project->id)
@@ -120,14 +161,16 @@ test('settings page grants an owner all granular role permissions', function () 
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'owner']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+    $response = $this->actingAs($user)->get('/settings/roles-management');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('canCreateRoles', true)
         ->where('canUpdateRoles', true)
         ->where('canDeleteRoles', true)
-        ->where('canAssignRoles', true)
     );
+
+    $this->actingAs($user)->get('/settings/members')
+        ->assertInertia(fn (Assert $page) => $page->where('canAssignRoles', true));
 });
 
 test('settings page denies a plain member all granular role permissions', function () {
@@ -135,14 +178,16 @@ test('settings page denies a plain member all granular role permissions', functi
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+    $response = $this->actingAs($user)->get('/settings/roles-management');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('canCreateRoles', false)
         ->where('canUpdateRoles', false)
         ->where('canDeleteRoles', false)
-        ->where('canAssignRoles', false)
     );
+
+    $this->actingAs($user)->get('/settings/members')
+        ->assertInertia(fn (Assert $page) => $page->where('canAssignRoles', false));
 });
 
 test('settings page hides roles and permissions data from a viewer', function () {
@@ -150,7 +195,7 @@ test('settings page hides roles and permissions data from a viewer', function ()
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'viewer']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+    $response = $this->actingAs($user)->get('/settings/roles-management');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('hasSettingsAccess', false)
@@ -167,7 +212,7 @@ test('settings page exposes roles and permissions data to a member', function ()
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=roles-management');
+    $response = $this->actingAs($user)->get('/settings/roles-management');
 
     $response->assertInertia(fn (Assert $page) => PermissionEnum::cases()
             |> count(...)
@@ -180,7 +225,7 @@ test('settings page grants an owner control over project details', function () {
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'owner']);
 
-    $response = $this->actingAs($user)->get('/settings');
+    $response = $this->actingAs($user)->get('/settings/members');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('canUpdateProjectDetails', true)
@@ -193,7 +238,7 @@ test('settings page grants an admin access to view and update integrations', fun
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'admin']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+    $response = $this->actingAs($user)->get('/settings/integrations');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('hasIntegrationsAccess', true)
@@ -207,7 +252,7 @@ test('settings page grants a plain member view-only access to integrations', fun
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+    $response = $this->actingAs($user)->get('/settings/integrations');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('hasIntegrationsAccess', true)
@@ -221,7 +266,7 @@ test('settings page hides integrations data from a viewer with no view tier matc
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'viewer']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+    $response = $this->actingAs($user)->get('/settings/integrations');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('hasIntegrationsAccess', false)
@@ -236,7 +281,7 @@ test('settings page reflects an enabled integration for the selected project', f
     $project->users()->attach($user->id, ['role' => 'owner']);
     app(ProjectIntegrationService::class)->setEnabled($project, 'discord', true);
 
-    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+    $response = $this->actingAs($user)->get('/settings/integrations');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('integrationStatuses.discord', true)
@@ -251,7 +296,7 @@ test('settings page exposes the webhook url to an admin who can update integrati
         'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
     ]);
 
-    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+    $response = $this->actingAs($user)->get('/settings/integrations');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('integrationSettings.discord.hasWebhookUrl', true)
@@ -270,7 +315,7 @@ test('settings page masks the webhook url from a member who cannot update integr
         'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
     ]);
 
-    $response = $this->actingAs($user)->get('/settings?tab=integrations');
+    $response = $this->actingAs($user)->get('/settings/integrations');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('integrationSettings.discord.hasWebhookUrl', true)
@@ -285,7 +330,7 @@ test('settings page respects the project query parameter', function () {
     $projectA->users()->attach($user->id, ['role' => 'admin']);
     $projectB->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->get("/settings?project=$projectB->id");
+    $response = $this->actingAs($user)->get("/settings/members?project=$projectB->id");
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('selectedProjectId', $projectB->id)
@@ -302,7 +347,7 @@ test('settings page lists pending invitations for the selected project', functio
     $project->users()->attach($user->id, ['role' => 'admin']);
     app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $user);
 
-    $response = $this->actingAs($user)->get('/settings');
+    $response = $this->actingAs($user)->get('/settings/members');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->has('pendingInvitations', 1)
@@ -325,10 +370,10 @@ test('settings page reflects saved notification setting overrides', function () 
         'enabled' => false,
     ]);
 
-    $response = $this->actingAs($user)->get('/settings');
+    $response = $this->actingAs($user)->get('/settings/notifications');
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('Settings/Index')
+        ->component('Settings/Notifications')
         ->where('notificationSettings.issue_assigned.email', true)
         ->where('notificationSettings.issue_assigned.in_app', false)
     );
@@ -339,7 +384,7 @@ test('a viewer has label view access but no create, update or delete access', fu
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'viewer']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=labels');
+    $response = $this->actingAs($user)->get('/settings/labels');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('hasLabelsAccess', true)
@@ -354,7 +399,7 @@ test('a member without any labels permission cannot create, update or delete lab
     $project = Project::factory()->create();
     $project->users()->attach($user->id, ['role' => 'member']);
 
-    $response = $this->actingAs($user)->get('/settings?tab=labels');
+    $response = $this->actingAs($user)->get('/settings/labels');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('hasLabelsAccess', true)
@@ -374,7 +419,7 @@ test('a member with a custom role granting only labels.delete can delete but not
     $role->permissions()->attach($permission);
     ProjectUser::where('project_id', $project->id)->where('user_id', $user->id)->first()->roles()->attach($role->id);
 
-    $response = $this->actingAs($user)->get('/settings?tab=labels');
+    $response = $this->actingAs($user)->get('/settings/labels');
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('canCreateLabels', false)
