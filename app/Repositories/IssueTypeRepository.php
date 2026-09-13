@@ -8,6 +8,22 @@ use Illuminate\Database\Eloquent\Collection;
 
 class IssueTypeRepository
 {
+    /**
+     * Read-only lookup across several projects at once, for views (the
+     * dashboard's activity feed) that render types they must not seed.
+     *
+     * @param  array<int, int>  $projectIds
+     * @return Collection<int, IssueType>
+     */
+    public function getForProjects(array $projectIds): Collection
+    {
+        return IssueType::query()
+            ->whereIn('project_id', $projectIds)
+            ->with(['statuses' => fn ($query) => $query->orderBy('sort_order')])
+            ->orderBy('name')
+            ->get();
+    }
+
     public function getForProject(Project $project): Collection
     {
         return $project->issueTypes()

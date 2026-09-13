@@ -107,6 +107,17 @@ class IssueTypeService
         $project->forceFill(['issue_types_seeded_at' => now()])->save();
     }
 
+    /**
+     * Types across several projects, without the lazy system-type seeding
+     * getIssueTypes() performs - a read-only view must not write.
+     *
+     * @param  array<int, int>  $projectIds
+     */
+    public function getIssueTypesForProjects(array $projectIds): Collection
+    {
+        return $this->issueTypeRepository->getForProjects($projectIds);
+    }
+
     public function getIssueTypes(Project $project): Collection
     {
         $this->ensureSystemIssueTypes($project);
