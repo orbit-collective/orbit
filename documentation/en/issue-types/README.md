@@ -102,6 +102,48 @@ behavior, where any `IssueStatus` value could be set at any time; a
 custom, restrictive workflow is something a project has to build
 deliberately from **Settings → Issue Types → Manage workflow**.
 
+On top of the built-in fields every issue has, a type can define its own
+**custom fields**: `issue_type_fields` (`label`, `type` — one of
+`text`/`textarea`/`number`/`date`/`select`/`checkbox`/`url`, cast to
+`App\Enums\IssueFieldType` — plus `options` for a choice field,
+`placeholder`, `is_required` and `sort_order`), managed from
+**Settings → Issue Types → Manage fields**. Values live in
+`issues.custom_fields`, a JSON map keyed by **field id** rather than by
+label, for the same reason the type itself is a foreign key: renaming a
+field never orphans the values already stored against it.
+`IssueTypeFieldService::sanitizeValues()` is the gate on the way in — it
+drops values addressed to a field that no longer exists or belongs to
+another type, and coerces each value to its field's shape (a choice
+outside the option list, or a non-numeric number, is discarded rather
+than stored). On update the incoming map is merged onto what the issue
+already holds with `array_replace` — **not** `array_merge`, which would
+renumber the numeric field-id keys — so a partial save from the sidebar
+never wipes the fields it didn't send.
+
+Everything a system type ships with lives in
+`App\Support\SystemIssueTypeDefaults` — its own workflow statuses, the
+child types it accepts, a starter template, and its custom fields — so a
+Bug really does move `Reported → Triaged → Fixing → In Review → Fixed`
+(or straight to `Won't Fix` from anywhere) and really does ask for steps
+to reproduce, while an Incident tracks severity and a postmortem link.
+Transitions are derived from the status order rather than listed by hand
+(`IssueTypeService::defaultTransitionPairs()`: a step forward, a step
+back, and a jump to any terminal status from anywhere). No seeded field
+is `is_required`, because quick-add creates an issue from a title alone
+and a required field would break that for the whole type; marking one
+required is a deliberate per-project choice. Because these defaults
+arrived after projects had already been seeded, they are versioned:
+`projects.issue_type_defaults_version` against
+`IssueTypeService::DEFAULTS_VERSION`. A project behind the current
+version has `applyTypeDefaults()` run on its next read, which is
+strictly **additive** — it never creates a type that was deleted, never
+removes a status, transition, template or field, and never overwrites
+one that already exists under the same name. The single exception is a
+type still carrying the untouched stock three-status board: that has
+never been customized, so it is swapped for the type's own workflow and
+every issue is moved onto the new status sharing its old one's category
+(`replaceGenericWorkflow()`).
+
 Permissions follow the same `Permission` enum / `ProjectPolicy` /
 `RoleService` tier pattern as labels: `ISSUE_TYPES_VIEW/CREATE/UPDATE/DELETE`
 and `WORKFLOW_UPDATE` (view: owner/admin/member/viewer; every mutation:

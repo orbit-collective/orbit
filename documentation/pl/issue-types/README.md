@@ -107,6 +107,49 @@ mogła zostać ustawiona w dowolnym momencie; restrykcyjny, niestandardowy
 workflow to coś, co projekt musi celowo zbudować z **Ustawienia →
 Issue Types → Manage workflow**.
 
+Poza wbudowanymi polami, które ma każde issue, typ może definiować
+własne **pola niestandardowe**: `issue_type_fields` (`label`, `type` —
+jeden z `text`/`textarea`/`number`/`date`/`select`/`checkbox`/`url`,
+rzutowany na `App\Enums\IssueFieldType` — plus `options` dla pola
+wyboru, `placeholder`, `is_required` i `sort_order`), zarządzane z
+**Ustawienia → Issue Types → Manage fields**. Wartości żyją w
+`issues.custom_fields`, mapie JSON kluczowanej **id pola**, a nie
+etykietą — z tego samego powodu, dla którego sam typ jest kluczem
+obcym: zmiana nazwy pola nigdy nie osieroca zapisanych pod nim wartości.
+`IssueTypeFieldService::sanitizeValues()` jest bramką na wejściu —
+odrzuca wartości adresowane do pola, które już nie istnieje albo należy
+do innego typu, i sprowadza każdą wartość do kształtu jej pola (wybór
+spoza listy opcji albo nieliczbowa liczba są odrzucane, a nie
+zapisywane). Przy edycji przychodząca mapa jest scalana z tym, co issue
+już ma, przez `array_replace` — a **nie** `array_merge`, który
+przenumerowałby liczbowe klucze id pól — więc częściowy zapis z panelu
+bocznego nigdy nie czyści pól, których nie wysłał.
+
+Wszystko, z czym typ systemowy startuje, leży w
+`App\Support\SystemIssueTypeDefaults` — własne statusy workflow,
+akceptowane typy dzieci, startowy szablon i pola niestandardowe — więc
+Bug faktycznie przechodzi `Reported → Triaged → Fixing → In Review →
+Fixed` (albo prosto do `Won't Fix` z dowolnego miejsca) i faktycznie
+pyta o kroki reprodukcji, a Incident śledzi severity i link do
+postmortemu. Przejścia są wyprowadzane z kolejności statusów, a nie
+wypisywane ręcznie (`IssueTypeService::defaultTransitionPairs()`: krok
+naprzód, krok wstecz i skok do dowolnego statusu końcowego z każdego
+miejsca). Żadne zaseedowane pole nie jest `is_required`, ponieważ
+quick-add tworzy issue z samego tytułu, a pole wymagane zepsułoby to dla
+całego typu; oznaczenie pola jako wymagane to świadoma decyzja per
+projekt. Ponieważ te domyślne wartości pojawiły się już po zasianiu
+projektów, są wersjonowane:
+`projects.issue_type_defaults_version` względem
+`IssueTypeService::DEFAULTS_VERSION`. Projektowi z niższą wersją przy
+najbliższym odczycie uruchamia się `applyTypeDefaults()`, ściśle
+**addytywne** — nigdy nie tworzy typu, który został usunięty, nigdy nie
+kasuje statusu, przejścia, szablonu ani pola i nigdy nie nadpisuje tego,
+co już istnieje pod tą samą nazwą. Jedyny wyjątek to typ wciąż
+z nietkniętą standardową trójstanową tablicą: nigdy nie był
+dostosowywany, więc zostaje wymieniony na własny workflow typu, a każde
+issue przeniesione na nowy status o tej samej kategorii co stary
+(`replaceGenericWorkflow()`).
+
 Uprawnienia idą za tym samym wzorcem enuma `Permission` /
 `ProjectPolicy` / poziomów `RoleService`, co labele:
 `ISSUE_TYPES_VIEW/CREATE/UPDATE/DELETE` i `WORKFLOW_UPDATE` (podgląd:
