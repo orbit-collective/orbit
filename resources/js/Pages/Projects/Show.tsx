@@ -155,6 +155,7 @@ export default function Show({
                                             logs={activityLogs}
                                             users={users}
                                             roles={roles}
+                                            issueTypes={issueTypes}
                                         />
                                     </div>
                                 </div>

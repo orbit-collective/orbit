@@ -529,6 +529,7 @@ export interface ActivityLogItemProps {
     group: ActivityLogGroup;
     users?: AssignableUser[];
     roles?: RoleNameSummary[];
+    issueTypes?: IssueType[];
 }
 export interface ProjectOnboardingPreviewProps {
     data: ProjectOnboardingFormData;
@@ -538,6 +539,7 @@ export interface ActivityLogsProps {
     logs: ActivityLogEntry[];
     users?: AssignableUser[];
     roles?: RoleNameSummary[];
+    issueTypes?: IssueType[];
 }
 export interface CalendarViewProps {
     issues: Issue[];

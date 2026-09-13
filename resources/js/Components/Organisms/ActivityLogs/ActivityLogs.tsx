@@ -8,6 +8,7 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({
     logs,
     users = [],
     roles = [],
+    issueTypes = [],
 }) => {
     const groups = useMemo(() => groupActivityLogs(logs), [logs]);
 
@@ -34,6 +35,7 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({
                     group={group}
                     users={users}
                     roles={roles}
+                    issueTypes={issueTypes}
                 />
             ))}
         </div>
