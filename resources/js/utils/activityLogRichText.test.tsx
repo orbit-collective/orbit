@@ -534,7 +534,9 @@ describe('renderActivityLogBody issue types and workflow statuses', () => {
     });
 
     test('tints a resolved workflow status with its own color', () => {
-        const { container } = renderBody('Removed the "To Do" status from the "Epic" workflow');
+        const { container } = renderBody(
+            'Removed the "To Do" status from the "Epic" workflow',
+        );
 
         expect(
             container.querySelector('[style*="rgb(148, 163, 184)"]'),

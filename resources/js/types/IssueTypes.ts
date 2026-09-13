@@ -14,6 +14,7 @@ export interface IssueType {
     statuses?: WorkflowStatus[];
     transitions?: WorkflowTransition[];
     templates?: IssueTypeTemplate[];
+    fields?: IssueTypeField[];
     allowedChildTypeIds?: number[];
 }
 
@@ -24,4 +25,17 @@ export interface IssueTypeTemplate {
     description: string | null;
     defaultPriority: string | null;
     defaultLabels: string[];
+}
+
+export type IssueFieldType =
+    'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'url';
+
+export interface IssueTypeField {
+    id: number;
+    issueTypeId: number;
+    label: string;
+    type: IssueFieldType;
+    options: string[];
+    placeholder: string | null;
+    isRequired: boolean;
 }

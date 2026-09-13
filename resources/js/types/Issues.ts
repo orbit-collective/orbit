@@ -65,6 +65,7 @@ export interface Issue {
     workflow_status_id?: number;
     issueType?: IssueType;
     workflowStatus?: WorkflowStatus;
+    custom_fields?: Record<string, string | number | boolean>;
     children?: Issue[];
     parent?: Issue;
     due_date?: string | number;

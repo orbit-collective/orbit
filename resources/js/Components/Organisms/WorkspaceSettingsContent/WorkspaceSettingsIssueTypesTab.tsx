@@ -11,6 +11,7 @@ import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
+import WorkspaceSettingsFieldsModal from './WorkspaceSettingsFieldsModal';
 import WorkspaceSettingsHierarchyModal from './WorkspaceSettingsHierarchyModal';
 import WorkspaceSettingsIssueTypeInlineEditor from './WorkspaceSettingsIssueTypeInlineEditor';
 import WorkspaceSettingsTemplatesModal from './WorkspaceSettingsTemplatesModal';
@@ -45,6 +46,9 @@ export default function WorkspaceSettingsIssueTypesTab({
         useState<IssueType | null>(null);
     const [workflowIssueType, setWorkflowIssueType] =
         useState<IssueType | null>(null);
+    const [fieldsIssueType, setFieldsIssueType] = useState<IssueType | null>(
+        null,
+    );
     const [templatesIssueType, setTemplatesIssueType] =
         useState<IssueType | null>(null);
     const [hierarchyIssueType, setHierarchyIssueType] =
@@ -314,6 +318,18 @@ export default function WorkspaceSettingsIssueTypesTab({
                                 {canUpdateIssueTypes && (
                                     <button
                                         type="button"
+                                        title="Manage fields"
+                                        onClick={() =>
+                                            setFieldsIssueType(issueType)
+                                        }
+                                        className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                    >
+                                        <Icon name="ListChecks" size={14} />
+                                    </button>
+                                )}
+                                {canUpdateIssueTypes && (
+                                    <button
+                                        type="button"
                                         title="Edit issue type"
                                         onClick={() =>
                                             toggleEditEditor(issueType)
@@ -383,6 +399,20 @@ export default function WorkspaceSettingsIssueTypesTab({
                         : null
                 }
                 canManageTemplates={canUpdateIssueTypes}
+            />
+
+            <WorkspaceSettingsFieldsModal
+                isOpen={fieldsIssueType !== null}
+                onClose={() => setFieldsIssueType(null)}
+                projectId={selectedProject.id}
+                issueType={
+                    fieldsIssueType
+                        ? (issueTypes.find(
+                              (type) => type.id === fieldsIssueType.id,
+                          ) ?? fieldsIssueType)
+                        : null
+                }
+                canManageFields={canUpdateIssueTypes}
             />
 
             <WorkspaceSettingsHierarchyModal
