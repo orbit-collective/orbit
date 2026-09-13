@@ -1,6 +1,7 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { InlineSelectDropdownProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { icons } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -108,15 +109,25 @@ export default function InlineSelectDropdown({
                         : 'border-dashed border-[var(--bg-light-color)] bg-transparent text-[var(--text-gray-color)] hover:border-solid hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
                 )}
             >
-                <span
-                    className={cn(
-                        'truncate font-medium',
-                        selectedOption
-                            ? 'text-[var(--accent-color)]'
-                            : 'text-[var(--text-gray-color)]',
+                <span className="flex min-w-0 items-center gap-1.5">
+                    {selectedOption?.icon && (
+                        <Icon
+                            name={selectedOption.icon as keyof typeof icons}
+                            size={13}
+                            color={selectedOption.color}
+                            className="shrink-0"
+                        />
                     )}
-                >
-                    {selectedOption?.label ?? placeholder}
+                    <span
+                        className={cn(
+                            'truncate font-medium',
+                            selectedOption
+                                ? 'text-[var(--accent-color)]'
+                                : 'text-[var(--text-gray-color)]',
+                        )}
+                    >
+                        {selectedOption?.label ?? placeholder}
+                    </span>
                 </span>
                 <Icon
                     name="ChevronDown"
@@ -225,6 +236,16 @@ export default function InlineSelectDropdown({
                                                     />
                                                 )}
                                             </div>
+                                            {option.icon && (
+                                                <Icon
+                                                    name={
+                                                        option.icon as keyof typeof icons
+                                                    }
+                                                    size={13}
+                                                    color={option.color}
+                                                    className="shrink-0"
+                                                />
+                                            )}
                                             <span className="font-medium">
                                                 {option.label}
                                             </span>

@@ -42,6 +42,7 @@ export default function Show({
     labels = [],
     roles = [],
     issueTypes = [],
+    nextIssueId = null,
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
@@ -54,6 +55,7 @@ export default function Show({
     labels?: ProjectLabel[];
     roles?: RoleNameSummary[];
     issueTypes?: IssueType[];
+    nextIssueId?: number | null;
 }) {
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         if (typeof window !== 'undefined') {
@@ -102,6 +104,7 @@ export default function Show({
                                     queryParams={queryParams}
                                     project={project}
                                     issueTypes={issueTypes}
+                                    nextIssueId={nextIssueId}
                                     pagination={
                                         <Pagination
                                             links={issues.links}

@@ -44,6 +44,11 @@ class IssueRepository
         return Issue::query()->create($data);
     }
 
+    public function maxId(): int
+    {
+        return (int) Issue::query()->max('id');
+    }
+
     /**
      * Bulk-create primitive: loops the existing store() per row rather than a
      * raw insert(), so Eloquent casts/model events still run per issue (e.g.
