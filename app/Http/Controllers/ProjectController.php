@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\IssueType;
 use App\Models\Label;
 use App\Models\Project;
 use App\Models\Role;
@@ -94,23 +93,8 @@ class ProjectController extends Controller
             ]),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
             'roles' => $this->mapRoleNames($this->roleService->getRoles($project)),
-            'issueTypes' => $this->mapIssueTypes($this->issueTypeService->getIssueTypes($project)),
+            'issueTypes' => $this->issueTypeService->getIssueTypes($project),
         ]);
-    }
-
-    private function mapIssueTypes(Collection $issueTypes): array
-    {
-        return $issueTypes->map(fn (IssueType $issueType) => [
-            'id' => $issueType->id,
-            'name' => $issueType->name,
-            'icon' => $issueType->icon,
-            'color' => $issueType->color,
-            'description' => $issueType->description,
-            'isSystem' => $issueType->is_system,
-            'allowsChildren' => $issueType->allows_children,
-            'requiredFields' => $issueType->required_fields ?? [],
-            'restrictedRoleTypes' => $issueType->restricted_role_types ?? [],
-        ])->values()->all();
     }
 
     private function mapLabels(Collection $labels): array

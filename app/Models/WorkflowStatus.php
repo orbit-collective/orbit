@@ -48,4 +48,17 @@ class WorkflowStatus extends Model
     {
         return $this->hasMany(Issue::class);
     }
+
+    /** Matches resources/js/types/Workflow.ts's WorkflowStatus. */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'issueTypeId' => $this->issue_type_id,
+            'name' => $this->name,
+            'color' => $this->color,
+            'category' => $this->category->value,
+            'isInitial' => $this->is_initial,
+        ];
+    }
 }

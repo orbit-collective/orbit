@@ -163,3 +163,21 @@ test('an issue without start or end dates is allowed', function () {
 
     $this->assertDatabaseHas('issues', ['id' => $issue->id]);
 });
+
+test('an issue serializes its type and workflow status under camelCase relation keys', function () {
+    $project = Project::factory()->create();
+    app(App\Services\IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $issueType = $project->issueTypes()->where('name', 'Epic')->first();
+    $issue = Issue::factory()->create([
+        'project_id' => $project->id,
+        'issue_type_id' => $issueType->id,
+        'workflow_status_id' => $issueType->statuses()->first()->id,
+    ]);
+
+    $array = $issue->load(['issueType', 'workflowStatus'])->toArray();
+
+    expect($array)->toHaveKeys(['issueType', 'workflowStatus'])
+        ->and($array)->not->toHaveKeys(['issue_type', 'workflow_status'])
+        ->and($array['issueType']['allowsChildren'])->toBeTrue()
+        ->and($array['workflowStatus'])->toHaveKeys(['isInitial', 'issueTypeId', 'category']);
+});

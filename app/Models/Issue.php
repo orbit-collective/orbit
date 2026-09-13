@@ -13,6 +13,14 @@ class Issue extends Model
     /** @use HasFactory<IssueFactory> */
     use HasFactory;
 
+    /**
+     * Serialize eager-loaded relations under their camelCase names so the
+     * Inertia payload matches resources/js/types/Issues.ts - without this,
+     * issueType()/workflowStatus() arrive as issue_type/workflow_status and
+     * the type and status columns silently render as empty.
+     */
+    public static $snakeAttributes = false;
+
     protected $fillable = [
         'id',
         'title',

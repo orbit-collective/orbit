@@ -92,3 +92,33 @@ test('an issue type referenced by an issue cannot be deleted at the database lev
 
     $issueType->delete();
 })->throws(QueryException::class);
+
+test('an issue type serializes into the camelCase shape the frontend types declare', function () {
+    $issueType = IssueType::factory()->create([
+        'name' => 'Epic',
+        'is_system' => true,
+        'allows_children' => true,
+        'required_fields' => ['description'],
+        'restricted_role_types' => ['owner'],
+    ]);
+
+    $array = $issueType->toArray();
+
+    expect($array)->toMatchArray([
+        'name' => 'Epic',
+        'isSystem' => true,
+        'allowsChildren' => true,
+        'requiredFields' => ['description'],
+        'restrictedRoleTypes' => ['owner'],
+    ])->and($array)->not->toHaveKeys(['is_system', 'allows_children', 'required_fields']);
+});
+
+test('an issue type only serializes relation-backed keys once they are eager-loaded', function () {
+    $issueType = IssueType::factory()->create();
+
+    expect($issueType->toArray())->not->toHaveKeys(['statuses', 'transitions', 'templates', 'allowedChildTypeIds']);
+
+    $issueType->load(['statuses', 'transitions', 'templates', 'allowedChildTypes']);
+
+    expect($issueType->toArray())->toHaveKeys(['statuses', 'transitions', 'templates', 'allowedChildTypeIds']);
+});

@@ -28,4 +28,17 @@ class IssueTypeTemplate extends Model
     {
         return $this->belongsTo(IssueType::class);
     }
+
+    /** Matches resources/js/types/IssueTypes.ts's IssueTypeTemplate. */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'issueTypeId' => $this->issue_type_id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'defaultPriority' => $this->default_priority,
+            'defaultLabels' => $this->default_labels ?? [],
+        ];
+    }
 }

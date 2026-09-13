@@ -10,7 +10,14 @@ class IssueTypeRepository
 {
     public function getForProject(Project $project): Collection
     {
-        return $project->issueTypes()->orderBy('is_system', 'desc')->orderBy('sort_order')->orderBy('name')->get();
+        return $project->issueTypes()
+            ->with([
+                'statuses' => fn ($query) => $query->orderBy('sort_order'),
+                'transitions',
+                'templates' => fn ($query) => $query->orderBy('name'),
+                'allowedChildTypes',
+            ])
+            ->orderBy('is_system', 'desc')->orderBy('sort_order')->orderBy('name')->get();
     }
 
     public function findForProject(Project $project, string $name): ?IssueType
