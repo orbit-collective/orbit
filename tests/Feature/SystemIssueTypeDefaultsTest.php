@@ -195,3 +195,69 @@ test('every seeded workflow keeps its statuses reachable after an upgrade', func
         expect($names->count())->toBe($names->unique()->count(), "{$issueType->name} has duplicate statuses");
     }
 });
+
+test('a seeded field left required by an earlier defaults version is repaired', function () {
+    $project = Project::factory()->create();
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+
+    $bug = $project->issueTypes()->where('name', 'Bug')->first();
+    $bug->fields()->where('label', 'Steps to reproduce')->update(['is_required' => true]);
+    $project->forceFill(['issue_type_defaults_version' => 1])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    expect($bug->fields()->where('label', 'Steps to reproduce')->first()->is_required)->toBeFalse();
+});
+
+test('a field the project added itself keeps its required flag', function () {
+    $project = Project::factory()->create();
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+
+    $bug = $project->issueTypes()->where('name', 'Bug')->first();
+    $own = $bug->fields()->create([
+        'label' => 'Customer ticket', 'type' => 'text', 'options' => [],
+        'is_required' => true, 'sort_order' => 99,
+    ]);
+    $project->forceFill(['issue_type_defaults_version' => 1])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    expect($own->refresh()->is_required)->toBeTrue();
+});
+
+test('no system type ships a required field, so title-only quick-add always works', function () {
+    $project = seededProject();
+
+    foreach ($project->issueTypes()->get() as $issueType) {
+        expect($issueType->fields()->where('is_required', true)->count())
+            ->toBe(0, "{$issueType->name} must not seed a required field");
+    }
+});
+
+test('a project seeded before is_top_level existed gets the catalog flags stamped on', function () {
+    $project = Project::factory()->create();
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+
+    // Pre-column state: the boolean defaulted to true for every type.
+    $project->issueTypes()->update(['is_top_level' => true]);
+    $project->forceFill(['issue_type_defaults_version' => 1])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    expect($project->issueTypes()->where('is_top_level', true)->pluck('name')->sort()->values()->all())
+        ->toBe(['Bug', 'Epic', 'Feature', 'Story', 'Task']);
+});
+
+test('a custom type is never touched by the top-level repair', function () {
+    $project = Project::factory()->create();
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $custom = $project->issueTypes()->create([
+        'name' => 'Compliance', 'icon' => 'Scale', 'color' => '#0ea5e9',
+        'is_system' => false, 'is_top_level' => true,
+    ]);
+    $project->forceFill(['issue_type_defaults_version' => 1])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    expect($custom->refresh()->is_top_level)->toBeTrue();
+});

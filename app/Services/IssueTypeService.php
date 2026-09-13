@@ -78,7 +78,7 @@ class IssueTypeService
      * stamped with an older version get the additions applied on their next
      * read - see applyTypeDefaults(), which only ever adds.
      */
-    public const int DEFAULTS_VERSION = 1;
+    public const int DEFAULTS_VERSION = 3;
 
     /** Maps the legacy issues.status enum value to a default-workflow status name, for the one-time backfill. */
     private const array LEGACY_STATUS_TO_DEFAULT_STATUS = [
@@ -145,6 +145,8 @@ class IssueTypeService
     {
         $typesByName = $project->issueTypes()->get()->keyBy('name');
 
+        $this->applyTopLevelDefaults($typesByName);
+
         foreach (SystemIssueTypeDefaults::all() as $name => $defaults) {
             $issueType = $typesByName->get($name);
 
@@ -154,6 +156,7 @@ class IssueTypeService
 
             $this->applyStatusDefaults($issueType, $defaults['statuses'] ?? []);
             $this->applyFieldDefaults($issueType, $defaults['fields'] ?? []);
+            $this->repairSeededRequiredFlags($issueType, $defaults['fields'] ?? []);
             $this->applyTemplateDefault($issueType, $defaults['template'] ?? null);
 
             if (($defaults['allows_children'] ?? false) && ! $issueType->allows_children) {
@@ -326,6 +329,50 @@ class IssueTypeService
                 'sort_order' => $sortOrder,
             ]);
         }
+    }
+
+    /**
+     * Stamps is_top_level from the starter catalog onto the system types of a
+     * project seeded before that column existed - those all defaulted to
+     * true, leaving every type in the "New issue" picker. Runs once, with the
+     * version bump, so a project that later changes the flag keeps its choice.
+     *
+     * @param  Collection<string, IssueType>  $typesByName
+     */
+    private function applyTopLevelDefaults(Collection $typesByName): void
+    {
+        foreach (self::SYSTEM_ISSUE_TYPES as $definition) {
+            $issueType = $typesByName->get($definition['name']);
+            $isTopLevel = $definition['is_top_level'] ?? true;
+
+            if ($issueType && $issueType->is_system && $issueType->is_top_level !== $isTopLevel) {
+                $issueType->forceFill(['is_top_level' => $isTopLevel])->save();
+            }
+        }
+    }
+
+    /**
+     * Clears is_required on fields this class seeded with it set. An early
+     * version of the defaults shipped required fields, which made title-only
+     * quick-add fail for the whole type with nothing but a generic toast;
+     * the seed has not marked a field required since. Scoped to labels this
+     * class owns, so a flag a project set itself is left alone.
+     */
+    private function repairSeededRequiredFlags(IssueType $issueType, array $definitions): void
+    {
+        $seededLabels = collect($definitions)
+            ->reject(fn (array $definition) => $definition['is_required'] ?? false)
+            ->pluck('label')
+            ->all();
+
+        if ($seededLabels === []) {
+            return;
+        }
+
+        $issueType->fields()
+            ->whereIn('label', $seededLabels)
+            ->where('is_required', true)
+            ->update(['is_required' => false]);
     }
 
     private function applyTemplateDefault(IssueType $issueType, ?array $template): void

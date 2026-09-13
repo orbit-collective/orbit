@@ -1,3 +1,4 @@
+import { AlertProvider } from '@/context/AlertContext';
 import { Issue } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
@@ -26,6 +27,7 @@ vi.mock('@inertiajs/react', () => ({
         </a>
     ),
     router: { post: vi.fn() },
+    usePage: () => ({ props: { flash: {} } }),
 }));
 
 const project: Project = {
@@ -80,11 +82,13 @@ describe('IssueChildrenPanel', () => {
 
     test('shows an empty state when the issue has no sub-issues', () => {
         render(
-            <IssueChildrenPanel
-                project={project}
-                issue={makeIssue()}
-                issueTypes={issueTypes}
-            />,
+            <AlertProvider>
+                <IssueChildrenPanel
+                    project={project}
+                    issue={makeIssue()}
+                    issueTypes={issueTypes}
+                />
+            </AlertProvider>,
         );
 
         expect(screen.getByText(/No sub-issues yet/)).toBeInTheDocument();
@@ -92,24 +96,26 @@ describe('IssueChildrenPanel', () => {
 
     test('lists each child issue with its id and title', () => {
         render(
-            <IssueChildrenPanel
-                project={project}
-                issue={makeIssue({
-                    children: [
-                        makeIssue({
-                            id: '11',
-                            title: 'Child one',
-                            issueType: taskType,
-                        }),
-                        makeIssue({
-                            id: '12',
-                            title: 'Child two',
-                            issueType: bugType,
-                        }),
-                    ],
-                })}
-                issueTypes={issueTypes}
-            />,
+            <AlertProvider>
+                <IssueChildrenPanel
+                    project={project}
+                    issue={makeIssue({
+                        children: [
+                            makeIssue({
+                                id: '11',
+                                title: 'Child one',
+                                issueType: taskType,
+                            }),
+                            makeIssue({
+                                id: '12',
+                                title: 'Child two',
+                                issueType: bugType,
+                            }),
+                        ],
+                    })}
+                    issueTypes={issueTypes}
+                />
+            </AlertProvider>,
         );
 
         expect(screen.getByText('Child one')).toBeInTheDocument();
@@ -121,11 +127,13 @@ describe('IssueChildrenPanel', () => {
     test('adding a sub-issue posts it with the parent id and selected type', async () => {
         const { router } = await import('@inertiajs/react');
         render(
-            <IssueChildrenPanel
-                project={project}
-                issue={makeIssue()}
-                issueTypes={issueTypes}
-            />,
+            <AlertProvider>
+                <IssueChildrenPanel
+                    project={project}
+                    issue={makeIssue()}
+                    issueTypes={issueTypes}
+                />
+            </AlertProvider>,
         );
 
         fireEvent.click(screen.getByText('Add sub-issue'));
@@ -148,11 +156,13 @@ describe('IssueChildrenPanel', () => {
     test('an empty title does not create a sub-issue', async () => {
         const { router } = await import('@inertiajs/react');
         render(
-            <IssueChildrenPanel
-                project={project}
-                issue={makeIssue()}
-                issueTypes={issueTypes}
-            />,
+            <AlertProvider>
+                <IssueChildrenPanel
+                    project={project}
+                    issue={makeIssue()}
+                    issueTypes={issueTypes}
+                />
+            </AlertProvider>,
         );
 
         fireEvent.click(screen.getByText('Add sub-issue'));
@@ -166,13 +176,15 @@ describe('IssueChildrenPanel', () => {
 
     test('only offers the types the parent allows as children', () => {
         render(
-            <IssueChildrenPanel
-                project={project}
-                issue={makeIssue({
-                    issueType: { ...epicType, allowedChildTypeIds: [2] },
-                })}
-                issueTypes={issueTypes}
-            />,
+            <AlertProvider>
+                <IssueChildrenPanel
+                    project={project}
+                    issue={makeIssue({
+                        issueType: { ...epicType, allowedChildTypeIds: [2] },
+                    })}
+                    issueTypes={issueTypes}
+                />
+            </AlertProvider>,
         );
 
         fireEvent.click(screen.getByText('Add sub-issue'));
@@ -183,11 +195,13 @@ describe('IssueChildrenPanel', () => {
 
     test('pressing Escape closes the inline add row', () => {
         render(
-            <IssueChildrenPanel
-                project={project}
-                issue={makeIssue()}
-                issueTypes={issueTypes}
-            />,
+            <AlertProvider>
+                <IssueChildrenPanel
+                    project={project}
+                    issue={makeIssue()}
+                    issueTypes={issueTypes}
+                />
+            </AlertProvider>,
         );
 
         fireEvent.click(screen.getByText('Add sub-issue'));

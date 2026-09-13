@@ -102,6 +102,8 @@ export default function InlineSelectDropdown({
                 ref={triggerRef}
                 type="button"
                 disabled={disabled}
+                aria-label={label}
+                aria-expanded={isOpen}
                 onClick={() => setIsOpen((prev) => !prev)}
                 className={cn(
                     'flex min-w-[9rem] cursor-pointer items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm transition-all duration-100 ease-in-out disabled:cursor-not-allowed disabled:opacity-50',

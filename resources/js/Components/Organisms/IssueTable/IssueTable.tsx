@@ -268,12 +268,19 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     const topLevelIssueTypes = issueTypes.filter((type) => type.isTopLevel);
 
     /**
-     * An empty allowedChildTypeIds set means "unrestricted" on the backend
-     * (see IssueService::assertValidParent), so mirror that here rather than
-     * offering an empty picker.
+     * The type nested on a listed issue is a lightweight copy without the
+     * hierarchy relation, so the parent's real type is looked up in the
+     * issueTypes prop - trusting the nested copy would read "no restrictions"
+     * for every parent and offer child types the backend then rejects.
+     *
+     * An empty allowedChildTypeIds set genuinely does mean "unrestricted"
+     * on the backend (see IssueService::assertValidParent), so mirror that.
      */
     const childIssueTypesFor = (parentType?: IssueType) => {
-        const allowed = parentType?.allowedChildTypeIds ?? [];
+        const fullType =
+            issueTypes.find((type) => type.id === parentType?.id) ?? parentType;
+        const allowed = fullType?.allowedChildTypeIds ?? [];
+
         return allowed.length > 0
             ? issueTypes.filter((type) => allowed.includes(type.id))
             : issueTypes;
@@ -306,7 +313,15 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             {
                 preserveScroll: true,
                 preserveState: true,
-                onError: () => addAlert('Could not create the issue', 'error'),
+                // Surface what the server actually objected to (a required
+                // custom field, a child type this parent rejects) - a generic
+                // toast leaves no way to tell those apart.
+                onError: (errors) =>
+                    addAlert(
+                        Object.values(errors)[0] ??
+                            'Could not create the issue',
+                        'error',
+                    ),
                 onFinish: () => setIsCreatingIssue(false),
             },
         );
