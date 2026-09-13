@@ -216,6 +216,7 @@ export default function Show({
                                                     : ''
                                             }
                                             options={issueTypeOptions}
+                                            bare
                                             header="Change issue type to..."
                                             onSave={(value) =>
                                                 updateIssue({
@@ -249,6 +250,7 @@ export default function Show({
                                                     : ''
                                             }
                                             options={workflowStatusOptions}
+                                            bare
                                             header="Change status to..."
                                             onSave={(value) =>
                                                 updateIssue({
