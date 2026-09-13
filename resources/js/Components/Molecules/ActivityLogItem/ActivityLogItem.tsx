@@ -19,6 +19,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
     group,
     users = [],
     roles = [],
+    issueTypes = [],
 }) => {
     return (
         <div>
@@ -73,6 +74,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                                             users,
                                             entry.userAvatar,
                                             roles,
+                                            issueTypes,
                                         )}
                                     </span>
                                 </div>

@@ -114,4 +114,3 @@ describe('IssuePageHeader breadcrumb', () => {
         expect(screen.getByText(/#42/)).toBeInTheDocument();
     });
 });
-

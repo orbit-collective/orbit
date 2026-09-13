@@ -1,8 +1,11 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
+import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
+import { IssueType } from '@/types/IssueTypes';
 import { RoleNameSummary, RoleTypeValue } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
 import { cn } from '@/utils/cn';
@@ -10,7 +13,7 @@ import { ROLE_TYPE_THEME } from '@/utils/roleTheme';
 import { ReactNode } from 'react';
 
 const CHANGE_PATTERN =
-    /(status|priority) changed from "([a-z_]+)" to "([a-z_]+)"|labels changed to \[([^\]]*)]|assignee changed from "((?:[^"\\]|\\.)*)"(?:#(\d+))? to "((?:[^"\\]|\\.)*)"(?:#(\d+))?|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|task:|[Nn]otification:?)\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)|(?<=\bthe )"([^"]+)"(?= label\b)|(?<=\bthe )"([^"]+)"(?= role\b)/g;
+    /(status|priority) changed from "([a-z_]+)" to "([a-z_]+)"|labels changed to \[([^\]]*)]|assignee changed from "((?:[^"\\]|\\.)*)"(?:#(\d+))? to "((?:[^"\\]|\\.)*)"(?:#(\d+))?|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|task:|[Nn]otification:?|sub-issue of)\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)|(?<=\bthe )"([^"]+)"(?= label\b)|(?<=\bthe )"([^"]+)"(?= role\b)|transition from "([^"]+)" to "([^"]+)"|(?<=\bthe )"([^"]+)"(?= issue type\b)|(?<=\bthe )"([^"]+)"(?= workflow\b)|(?<=\bthe )"([^"]+)"(?= status\b)|(?<=\bMade )"([^"]+)"(?= the starting status\b)|(?<=sub-issues of )"([^"]+)"|(?<=\bthe )"([^"]+)"(?= template\b)/g;
 
 const unescapeQuoted = (value: string) => value.replace(/\\(.)/g, '$1');
 
@@ -88,6 +91,40 @@ const AssigneeValue = ({
     </span>
 );
 
+/**
+ * Falls back to a plain badge when the named type or status no longer
+ * exists in the project - a log entry is a historical record, and the
+ * thing it names may since have been renamed or deleted.
+ */
+const IssueTypeValue = ({
+    name,
+    issueType,
+}: {
+    name: string;
+    issueType?: IssueType;
+}) =>
+    issueType ? (
+        <IssueTypeBadge issueType={issueType} className="mx-0.5 align-middle" />
+    ) : (
+        <Badge>{name}</Badge>
+    );
+
+const WorkflowStatusValue = ({
+    name,
+    color,
+}: {
+    name: string;
+    color?: string;
+}) =>
+    color ? (
+        <WorkflowStatusBadge
+            status={{ name, color }}
+            className="mx-0.5 align-middle"
+        />
+    ) : (
+        <Badge>{name}</Badge>
+    );
+
 export function renderActivityLogBody(
     body: string,
     users: AssignableUser[] = [],
@@ -102,6 +139,10 @@ export function renderActivityLogBody(
     // or deleted since the log was written just falls back to the "custom"
     // theme - there's no id in the log text to resolve it unambiguously.
     roles: RoleNameSummary[] = [],
+    // The project's current issue types (with their workflow statuses), used
+    // to give an issue-type or status named in the text its real icon/color,
+    // the same way roles are resolved above.
+    issueTypes: IssueType[] = [],
 ): ReactNode[] {
     const avatarById = new Map(users.map((user) => [user.id, user.avatar]));
     // Legacy fallback only: activity logs written before assignee names
@@ -109,6 +150,14 @@ export function renderActivityLogBody(
     // name collision there still shows whichever matching user comes last.
     const avatarByName = new Map(users.map((user) => [user.name, user.avatar]));
     const roleTypeByName = new Map(roles.map((role) => [role.name, role.type]));
+    const issueTypeByName = new Map(
+        issueTypes.map((type) => [type.name, type]),
+    );
+    const statusColorByName = new Map(
+        issueTypes.flatMap((type) =>
+            (type.statuses ?? []).map((status) => [status.name, status.color]),
+        ),
+    );
     const nodes: ReactNode[] = [];
     let lastIndex = 0;
     let matchCount = 0;
@@ -140,6 +189,14 @@ export function renderActivityLogBody(
             authorStart,
             labelCrudName,
             roleCrudName,
+            transitionFrom,
+            transitionTo,
+            issueTypeCrudName,
+            workflowTypeName,
+            statusCrudName,
+            startingStatusName,
+            subIssueParentTypeName,
+            templateCrudName,
         ] = match;
 
         const authorName = authorBy ?? authorStart;
@@ -229,6 +286,56 @@ export function renderActivityLogBody(
                     name={roleCrudName}
                     type={roleTypeByName.get(roleCrudName)}
                 />,
+            );
+        } else if (transitionFrom !== undefined) {
+            nodes.push('transition from ');
+            nodes.push(
+                <WorkflowStatusValue
+                    key={`transition-from-${matchCount}`}
+                    name={transitionFrom}
+                    color={statusColorByName.get(transitionFrom)}
+                />,
+            );
+            nodes.push(' to ');
+            nodes.push(
+                <WorkflowStatusValue
+                    key={`transition-to-${matchCount}`}
+                    name={transitionTo}
+                    color={statusColorByName.get(transitionTo)}
+                />,
+            );
+        } else if (
+            issueTypeCrudName !== undefined ||
+            workflowTypeName !== undefined ||
+            subIssueParentTypeName !== undefined
+        ) {
+            const typeName = (issueTypeCrudName ??
+                workflowTypeName ??
+                subIssueParentTypeName) as string;
+            nodes.push(
+                <IssueTypeValue
+                    key={`issue-type-${matchCount}`}
+                    name={typeName}
+                    issueType={issueTypeByName.get(typeName)}
+                />,
+            );
+        } else if (
+            statusCrudName !== undefined ||
+            startingStatusName !== undefined
+        ) {
+            const statusName = (statusCrudName ?? startingStatusName) as string;
+            nodes.push(
+                <WorkflowStatusValue
+                    key={`status-${matchCount}`}
+                    name={statusName}
+                    color={statusColorByName.get(statusName)}
+                />,
+            );
+        } else if (templateCrudName !== undefined) {
+            nodes.push(
+                <Badge key={`template-${matchCount}`}>
+                    {templateCrudName}
+                </Badge>,
             );
         }
 

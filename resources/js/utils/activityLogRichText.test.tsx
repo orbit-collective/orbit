@@ -479,3 +479,87 @@ describe('renderActivityLogBody', () => {
         expect(container.querySelector('img')).toBeNull();
     });
 });
+
+describe('renderActivityLogBody issue types and workflow statuses', () => {
+    const epicType = {
+        id: 1,
+        name: 'Epic',
+        icon: 'Zap',
+        color: '#a855f7',
+        description: null,
+        isSystem: true,
+        allowsChildren: true,
+        isTopLevel: true,
+        requiredFields: [],
+        restrictedRoleTypes: [],
+        statuses: [
+            {
+                id: 1,
+                issueTypeId: 1,
+                name: 'To Do',
+                color: '#94a3b8',
+                category: 'todo' as const,
+                isInitial: true,
+            },
+            {
+                id: 2,
+                issueTypeId: 1,
+                name: 'In Progress',
+                color: '#f59e0b',
+                category: 'in_progress' as const,
+                isInitial: false,
+            },
+        ],
+    };
+
+    const renderBody = (body: string) =>
+        render(
+            <ProjectLabelsProvider labels={[]}>
+                <p>{renderActivityLogBody(body, [], null, [], [epicType])}</p>
+            </ProjectLabelsProvider>,
+        );
+
+    test('badges the issue type behind a workflow message', () => {
+        renderBody('Added the "To Do" status to the "Epic" workflow');
+
+        expect(screen.getByText('Epic')).toBeInTheDocument();
+        expect(screen.getByText('To Do')).toBeInTheDocument();
+    });
+
+    test('badges both ends of a transition message', () => {
+        renderBody(
+            'Added a transition from "To Do" to "In Progress" in the "Epic" workflow',
+        );
+
+        expect(screen.getByText('To Do')).toBeInTheDocument();
+        expect(screen.getByText('In Progress')).toBeInTheDocument();
+        expect(screen.getByText('Epic')).toBeInTheDocument();
+    });
+
+    test('badges the type in an issue-type CRUD message', () => {
+        renderBody('Created the "Epic" issue type');
+
+        expect(screen.getByText('Epic')).toBeInTheDocument();
+    });
+
+    test('badges the starting status', () => {
+        renderBody(
+            'Made "In Progress" the starting status of the "Epic" workflow',
+        );
+
+        expect(screen.getByText('In Progress')).toBeInTheDocument();
+    });
+
+    test('badges the parent issue number in a sub-issue message', () => {
+        renderBody('Issue #606 added as a sub-issue of #602');
+
+        expect(screen.getByText('#606')).toBeInTheDocument();
+        expect(screen.getByText('#602')).toBeInTheDocument();
+    });
+
+    test('falls back to a plain badge for a type that no longer exists', () => {
+        renderBody('Deleted the "Gone" issue type');
+
+        expect(screen.getByText('Gone')).toBeInTheDocument();
+    });
+});
