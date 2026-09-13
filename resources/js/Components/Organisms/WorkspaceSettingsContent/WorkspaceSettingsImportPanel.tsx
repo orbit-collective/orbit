@@ -5,6 +5,8 @@ import {
     IntegrationDefinition,
     IntegrationFieldMappingType,
 } from '@/types/Integrations';
+import { IssueType } from '@/types/IssueTypes';
+import { ProjectLabel } from '@/types/Labels';
 import {
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
@@ -16,43 +18,25 @@ interface WorkspaceSettingsImportPanelProps {
     integration: IntegrationDefinition;
     canUpdate: boolean;
     settings: ImportIntegrationSettings | null;
+    /** This project's own issue types, with their workflow statuses. */
+    issueTypes?: IssueType[];
+    labels?: ProjectLabel[];
     onConnect: (credentials: Record<string, string>) => void;
     onSaveMappings: (mappings: IntegrationFieldMappingDraft[]) => void;
     onImport: (projectKey: string, syncExisting: boolean) => void;
 }
 
-/**
- * Orbit's own fixed enums - a mapping row's target side is always one of
- * these, regardless of which remote system produced the source side.
- */
-const ORBIT_VALUE_OPTIONS: Record<
-    IntegrationFieldMappingType,
-    IntegrationMappingOption[]
-> = {
-    status: [
-        { value: 'open', label: 'Open' },
-        { value: 'in_progress', label: 'In progress' },
-        { value: 'closed', label: 'Closed' },
-    ],
-    priority: [
-        { value: 'low', label: 'Low' },
-        { value: 'medium', label: 'Medium' },
-        { value: 'high', label: 'High' },
-    ],
-    label: [
-        { value: 'bug', label: 'Bug' },
-        { value: 'feature', label: 'Feature' },
-        { value: 'performance', label: 'Performance' },
-        { value: 'design', label: 'Design' },
-        { value: 'ux', label: 'UX' },
-        { value: 'chore', label: 'Chore' },
-    ],
-};
+const PRIORITY_OPTIONS: IntegrationMappingOption[] = [
+    { value: 'low', label: 'Low' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'high', label: 'High' },
+];
 
 const MAPPING_TYPE_LABELS: Record<IntegrationFieldMappingType, string> = {
     status: 'Statuses',
     priority: 'Priorities',
     label: 'Labels',
+    issue_type: 'Issue types',
 };
 
 function mappingKey(mappingType: string, externalValue: string): string {
@@ -71,6 +55,8 @@ export default function WorkspaceSettingsImportPanel({
     integration,
     canUpdate,
     settings,
+    issueTypes = [],
+    labels = [],
     onConnect,
     onSaveMappings,
     onImport,
@@ -115,6 +101,44 @@ export default function WorkspaceSettingsImportPanel({
 
     if (!importConfig) return null;
 
+    /**
+     * The target side of a mapping row is this project's own configuration,
+     * not a fixed enum: its issue types, the workflow statuses those types
+     * define, and its label taxonomy. A status may be named on any type's
+     * workflow, so the union is offered and the backend resolves the name
+     * against whichever type the issue ends up with.
+     */
+    const orbitOptionsFor = (
+        mappingType: IntegrationFieldMappingType,
+    ): IntegrationMappingOption[] => {
+        switch (mappingType) {
+            case 'issue_type':
+                return issueTypes.map((type) => ({
+                    value: type.name,
+                    label: type.name,
+                }));
+            case 'status': {
+                const names = new Set<string>();
+                issueTypes.forEach((type) =>
+                    (type.statuses ?? []).forEach((status) =>
+                        names.add(status.name),
+                    ),
+                );
+                return [...names].sort().map((name) => ({
+                    value: name,
+                    label: name,
+                }));
+            }
+            case 'priority':
+                return PRIORITY_OPTIONS;
+            default:
+                return labels.map((label) => ({
+                    value: label.name,
+                    label: label.name,
+                }));
+        }
+    };
+
     const mappingOptionsFor = (
         mappingType: IntegrationFieldMappingType,
     ): IntegrationMappingOption[] => {
@@ -123,13 +147,15 @@ export default function WorkspaceSettingsImportPanel({
         switch (mappingType) {
             case 'status':
                 return settings.mappingMetadata.statuses;
+            case 'issue_type':
+                return settings.mappingMetadata.issueTypes;
             case 'priority':
                 return settings.mappingMetadata.priorities;
             default:
-                // Remote labels/components have no fixed registry to
-                // enumerate up front (unlike status/priority) - unmapped
-                // labels are simply omitted on import rather than mapped here.
-                return [];
+                // Jira's label registry is paginated and optional, so an
+                // instance that exposes none simply shows no rows to map -
+                // an unmapped remote label is omitted on import.
+                return settings.mappingMetadata.labels ?? [];
         }
     };
 
@@ -241,11 +267,9 @@ export default function WorkspaceSettingsImportPanel({
                                                 <InlineSelectDropdown
                                                     label={`Map to Orbit ${MAPPING_TYPE_LABELS[mappingType].toLowerCase()}`}
                                                     placeholder="Default"
-                                                    options={
-                                                        ORBIT_VALUE_OPTIONS[
-                                                            mappingType
-                                                        ]
-                                                    }
+                                                    options={orbitOptionsFor(
+                                                        mappingType,
+                                                    )}
                                                     value={
                                                         mappingDrafts[
                                                             mappingKey(

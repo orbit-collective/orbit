@@ -16,6 +16,7 @@ export interface IntegrationMappingMetadata {
     statuses: IntegrationMappingOption[];
     priorities: IntegrationMappingOption[];
     issueTypes: IntegrationMappingOption[];
+    labels?: IntegrationMappingOption[];
 }
 
 export interface IntegrationFieldMapping {

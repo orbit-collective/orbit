@@ -528,6 +528,28 @@ class IssueTypeService
      * several picks by name order, and the caller can always override with
      * an explicit template_id.
      */
+    /**
+     * Widens a type so it accepts the given child type, used by imports:
+     * a remote system is the source of truth for its own hierarchy, so
+     * rather than dropping structure that this project's rules happen not to
+     * allow yet, the rules are relaxed to match what was imported. Only ever
+     * widens - an existing allowed set gains a member, it never loses one.
+     */
+    public function allowChildType(IssueType $parentType, int $childIssueTypeId): void
+    {
+        if (! $parentType->allows_children) {
+            $parentType->forceFill(['allows_children' => true])->save();
+        }
+
+        $allowed = $parentType->allowedChildTypes()->pluck('issue_types.id');
+
+        // An empty set already means "anything", so adding to it would
+        // narrow the type rather than widen it.
+        if ($allowed->isNotEmpty() && ! $allowed->contains($childIssueTypeId)) {
+            $parentType->allowedChildTypes()->syncWithoutDetaching([$childIssueTypeId]);
+        }
+    }
+
     public function defaultTemplateFor(IssueType $issueType): ?IssueTypeTemplate
     {
         return $issueType->templates()->orderBy('name')->first();

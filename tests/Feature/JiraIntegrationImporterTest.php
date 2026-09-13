@@ -29,6 +29,7 @@ test('fetchMappingMetadata maps statuses, priorities, and issue types into value
         '*/rest/api/3/status' => Http::response([['id' => '1', 'name' => 'To Do'], ['id' => '2', 'name' => 'Done']], 200),
         '*/rest/api/3/priority' => Http::response([['id' => '10', 'name' => 'High']], 200),
         '*/rest/api/3/issuetype' => Http::response([['id' => '20', 'name' => 'Epic']], 200),
+        '*/rest/api/3/label*' => Http::response(['values' => [], 'isLast' => true], 200),
     ]);
 
     $metadata = $this->importer->fetchMappingMetadata($this->projectIntegration);
@@ -45,9 +46,43 @@ test('fetchMappingMetadata falls back to the id when an entry has no name', func
         '*/rest/api/3/status' => Http::response([['id' => '1']], 200),
         '*/rest/api/3/priority' => Http::response([], 200),
         '*/rest/api/3/issuetype' => Http::response([], 200),
+        '*/rest/api/3/label*' => Http::response(['values' => [], 'isLast' => true], 200),
     ]);
 
     $metadata = $this->importer->fetchMappingMetadata($this->projectIntegration);
 
     expect($metadata['statuses'])->toBe([['value' => '1', 'label' => '1']]);
+});
+
+test('fetchMappingMetadata includes the remote label registry', function () {
+    Http::fake([
+        '*/rest/api/3/status' => Http::response([], 200),
+        '*/rest/api/3/priority' => Http::response([], 200),
+        '*/rest/api/3/issuetype' => Http::response([], 200),
+        '*/rest/api/3/label*' => Http::response([
+            'values' => ['regression', 'flaky'], 'isLast' => true,
+        ], 200),
+    ]);
+
+    $metadata = app(JiraIntegrationImporter::class)->fetchMappingMetadata($this->projectIntegration);
+
+    expect($metadata['labels'])->toBe([
+        ['value' => 'regression', 'label' => 'regression'],
+        ['value' => 'flaky', 'label' => 'flaky'],
+    ]);
+});
+
+test('a paginated label registry is followed to the last page', function () {
+    Http::fake([
+        '*/rest/api/3/status' => Http::response([], 200),
+        '*/rest/api/3/priority' => Http::response([], 200),
+        '*/rest/api/3/issuetype' => Http::response([], 200),
+        '*/rest/api/3/label*' => Http::sequence()
+            ->push(['values' => ['one'], 'isLast' => false], 200)
+            ->push(['values' => ['two'], 'isLast' => true], 200),
+    ]);
+
+    $metadata = app(JiraIntegrationImporter::class)->fetchMappingMetadata($this->projectIntegration);
+
+    expect(collect($metadata['labels'])->pluck('value')->all())->toBe(['one', 'two']);
 });

@@ -29,6 +29,7 @@ class JiraIntegrationImporter implements IntegrationImporter
             'statuses' => $this->toMetadataOptions($this->jiraApiClient->getStatuses($projectIntegration)),
             'priorities' => $this->toMetadataOptions($this->jiraApiClient->getPriorities($projectIntegration)),
             'issueTypes' => $this->toMetadataOptions($this->jiraApiClient->getIssueTypes($projectIntegration)),
+            'labels' => $this->toMetadataOptions($this->jiraApiClient->getLabels($projectIntegration)),
         ];
     }
 

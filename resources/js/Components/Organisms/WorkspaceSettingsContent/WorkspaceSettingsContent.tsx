@@ -154,6 +154,8 @@ export default function WorkspaceSettingsContent({
                 memberProjects={memberProjects}
                 selectedProjectId={selectedProjectId}
                 integrationStatuses={integrationStatuses}
+                issueTypes={issueTypes}
+                labels={labels}
                 integrationSettings={integrationSettings}
                 jiraSettings={jiraSettings}
                 jiraImportProgress={jiraImportProgress}

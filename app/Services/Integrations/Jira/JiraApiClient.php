@@ -44,6 +44,36 @@ class JiraApiClient
     }
 
     /**
+     * Unlike statuses/priorities, Jira's label endpoint is paginated and
+     * returns bare strings rather than objects, so it is normalised here
+     * into the same {name: ...} shape every other metadata call yields.
+     *
+     * @return array<int, array{name: string}>
+     */
+    public function getLabels(ProjectIntegration $projectIntegration, int $maxPages = 10): array
+    {
+        $labels = [];
+        $startAt = 0;
+
+        for ($page = 0; $page < $maxPages; $page++) {
+            $response = $this->getJson($projectIntegration, '/rest/api/3/label', ['startAt' => $startAt, 'maxResults' => 100]);
+            $values = $response['values'] ?? [];
+
+            foreach ($values as $value) {
+                $labels[] = ['name' => (string) $value];
+            }
+
+            if ($response['isLast'] ?? true) {
+                break;
+            }
+
+            $startAt += count($values);
+        }
+
+        return $labels;
+    }
+
+    /**
      * One page of a JQL search via /rest/api/3/search/jql — the endpoint
      * that replaced the deprecated GET/POST /rest/api/3/search (which now
      * returns HTTP 410 Gone on every Jira Cloud site). That old endpoint's

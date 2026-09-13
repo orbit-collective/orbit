@@ -60,7 +60,8 @@ export interface IntegrationImportCredentialField {
     placeholder?: string;
 }
 
-export type IntegrationFieldMappingType = 'status' | 'priority' | 'label';
+export type IntegrationFieldMappingType =
+    'status' | 'priority' | 'label' | 'issue_type';
 
 /**
  * Parameterizes the shared import panel per integration: which credential
@@ -406,7 +407,7 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
                     type: 'password',
                 },
             ],
-            mappingTypes: ['status', 'priority', 'label'],
+            mappingTypes: ['issue_type', 'status', 'priority', 'label'],
         },
         comingSoon: false,
     },

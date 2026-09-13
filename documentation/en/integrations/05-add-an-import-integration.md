@@ -95,7 +95,7 @@ following the exact shape Jira uses:
                 type: 'password',
             },
         ],
-        mappingTypes: ['status', 'priority', 'label'],
+        mappingTypes: ['issue_type', 'status', 'priority', 'label'],
     },
     comingSoon: true, // <- flip this in the last step, once wired end to end
 },
@@ -108,14 +108,20 @@ Notes:
   `WorkspaceSettingsImportPanel.tsx` renders however many fields you
   list here with no further frontend changes.
 - `importConfig.mappingTypes` controls which of the panel's mapping
-  tables render. Only `status` and `priority` actually show a table
-  today, because those are the two kinds of remote metadata
-  `IntegrationImporter::fetchMappingMetadata()` can enumerate up front
-  (see Step 3) — `label` mappings apply automatically at import time
-  (an unmapped remote label/component is simply omitted, since each
-  project defines its own label taxonomy rather than a fixed set —
-  see [`../labels/README.md`](../labels/README.md)), there's no
-  pre-import UI for them yet.
+  tables render. A table only has rows for the kinds of remote metadata
+  `IntegrationImporter::fetchMappingMetadata()` enumerates (see Step 3):
+  Jira returns `statuses`, `priorities`, `issueTypes` and `labels`, so
+  all four map. A source that can't enumerate its labels simply shows
+  no rows there, and an unmapped remote label is omitted at import time
+  since each project defines its own taxonomy (see
+  [`../labels/README.md`](../labels/README.md)).
+- The **target** side of every mapping row is the importing project's
+  own configuration, not a fixed enum: its issue types, the workflow
+  statuses those types define, and its labels (see
+  [`../issue-types/README.md`](../issue-types/README.md)). A status
+  target is offered as the union of every type's status names, because
+  the type an issue lands on is only known at import time — the backend
+  then resolves that name against the type it actually got.
 - Existing `subOptions` (`issue-import`, `status-sync`) are cosmetic
   copy only for `kind: 'import'` entries right now — they aren't read
   by any backend code (unlike a `kind: 'notify'` integration's
@@ -633,6 +639,45 @@ Finally, flip `comingSoon: false` on Linear's catalog entry (Step 1)
 once everything above is wired and manually verified — this one flag
 unlocks the toggle/Connect UI exactly as described in guide 1 Step 7.
 
+## How an imported issue becomes a real Orbit issue
+
+`ImportOrchestratorService` gives every imported issue the same shape a
+hand-created one has, so it behaves identically in the list, on the
+board and on its detail view (see
+[`../issue-types/README.md`](../issue-types/README.md)):
+
+- **Issue type.** Resolved in three steps: a configured `issue_type`
+  mapping wins first, then a direct name match (a Jira "Bug" is Orbit's
+  "Bug" with nothing configured), and finally
+  `IssueTypeService::defaultIssueType()`. An issue never lands without
+  a type.
+- **Workflow status.** Because each type owns its own workflow, the
+  status is resolved *against the type the issue just got*: if the
+  mapped value names a status of that workflow it is used directly
+  (a Jira "Code Review" mapped to "In Review" lands on Bug's own "In
+  Review"), otherwise the legacy `open`/`in_progress`/`closed` value is
+  resolved by category through
+  `IssueTypeService::resolveWorkflowStatusForLegacyValue()`. The legacy
+  `issues.status` column is kept in sync from whichever status wins.
+- **Labels.** Mapped through `IntegrationFieldMappingType::LABEL`, then
+  filtered to labels the project actually has — a mapping pointing at a
+  deleted label is dropped rather than written.
+- **Hierarchy.** Remote systems don't obey this project's type rules: a
+  Jira sub-task can hang off an issue whose Orbit type allows no
+  children yet. Dropping those links would silently flatten the import,
+  so the parent's type is **widened** instead
+  (`IssueTypeService::allowChildType()` flips `allows_children` on and,
+  for a type with a restricted allowed-children set, adds the child's
+  type to it). Widening only ever adds, and leaves an empty — meaning
+  unrestricted — set alone. Structural invariants (same project, no
+  self-parenting, no cycles) are still enforced, and a link breaking one
+  is reported in the run's errors rather than written.
+
+The practical upshot: after importing a Jira project whose epics
+contain stories, that project's Epic type genuinely lists Story as an
+allowed child, and a user can build the same structure by hand
+afterwards.
+
 ## Tests
 
 Every Pest feature test in this codebase lives flat under `tests/Feature/`
@@ -649,7 +694,14 @@ for any future source:
   arrives before its parent in the same run *and* when the parent was
   imported in a previous run; counts a per-issue failure (forced via
   the issues table's date-order trigger) without aborting the rest of
-  the run; asserts `IssuesImported` fires exactly once with the final
+  the run; gives an imported issue the type matching its remote type
+  name, prefers a configured `issue_type` mapping over that name, and
+  falls back to the default type for an unknown one; lands every issue
+  on a workflow status belonging to its own type, whether the mapping
+  names that status directly or only the legacy category; widens a
+  parent type so an imported hierarchy survives, without ever removing
+  a child type the project already allowed; asserts `IssuesImported`
+  fires exactly once with the final
   result (`Event::fake()` + `Event::assertDispatchedTimes()`); and
   asserts `onProgress` is called with the running totals after every
   processed issue.

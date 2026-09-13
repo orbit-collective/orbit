@@ -8,6 +8,8 @@ import {
     IntegrationId,
     INTEGRATIONS,
 } from '@/types/Integrations';
+import { IssueType } from '@/types/IssueTypes';
+import { ProjectLabel } from '@/types/Labels';
 import {
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
@@ -32,6 +34,8 @@ interface WorkspaceSettingsIntegrationsTabProps {
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
     jiraSettings?: ImportIntegrationSettings | null;
     jiraImportProgress?: IntegrationImportProgress | null;
+    issueTypes?: IssueType[];
+    labels?: ProjectLabel[];
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -72,6 +76,8 @@ export default function WorkspaceSettingsIntegrationsTab({
     integrationSettings = {},
     jiraSettings = null,
     jiraImportProgress = null,
+    issueTypes = [],
+    labels = [],
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsIntegrationsTabProps) {
@@ -451,6 +457,8 @@ export default function WorkspaceSettingsIntegrationsTab({
                 importSettings={
                     openIntegration?.id === 'jira' ? jiraSettings : null
                 }
+                issueTypes={issueTypes}
+                labels={labels}
                 onToggle={(checked) => {
                     if (!openIntegration) return;
 
