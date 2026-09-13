@@ -94,6 +94,7 @@ class ProjectController extends Controller
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
             'roles' => $this->mapRoleNames($this->roleService->getRoles($project)),
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
+            'nextIssueId' => $this->issueService->peekNextIssueId(),
         ]);
     }
 

@@ -278,6 +278,10 @@ export interface FilterDropdownProps {
 export interface InlineSelectDropdownOption {
     value: string;
     label: string;
+    /** lucide-react icon name, rendered before the label when present. */
+    icon?: string;
+    /** Tints the option's icon, on both the trigger and the panel rows. */
+    color?: string;
 }
 export interface InlineSelectDropdownProps {
     /** Header text shown at the top of the floating panel, e.g. "Map to". */
@@ -584,6 +588,7 @@ export interface IssueTableProps {
     project?: Project;
     bare?: boolean;
     issueTypes?: IssueType[];
+    nextIssueId?: number | null;
 }
 export interface NewProjectModalProps {
     isOpen: boolean;

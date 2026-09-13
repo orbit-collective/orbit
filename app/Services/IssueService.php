@@ -115,6 +115,16 @@ class IssueService
         return $this->issueRepository->getAllForUser($userId);
     }
 
+    /**
+     * Best-effort preview of the id the next created issue will get, so the
+     * inline quick-add row can show it instead of a blank cell. Only a hint -
+     * a concurrent create wins the actual id, and nothing depends on it.
+     */
+    public function peekNextIssueId(): int
+    {
+        return $this->issueRepository->maxId() + 1;
+    }
+
     public function getIssueWithRelations(int $id): Issue
     {
         return $this->issueRepository->findWithRelations($id);

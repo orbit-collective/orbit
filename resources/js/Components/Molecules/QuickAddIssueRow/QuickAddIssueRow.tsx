@@ -1,4 +1,6 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
+import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
+import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import { IssueType } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
@@ -17,6 +19,10 @@ export interface QuickAddIssueRowHandle {
 const cellBase =
     'px-3 py-2 border-b border-[var(--border-color)] align-middle text-[12px] font-normal';
 
+const mutedCell = (
+    <span className="text-[var(--text-muted-color)]">&mdash;</span>
+);
+
 interface QuickAddIssueRowProps {
     colSpan: number;
     enabledColumns: Record<string, boolean>;
@@ -25,13 +31,15 @@ interface QuickAddIssueRowProps {
     isSubmitting?: boolean;
     label?: string;
     indent?: number;
+    nextIssueId?: number | null;
 }
 
 /**
  * Jira-style inline "quick add": collapsed to a plain "+ New issue" link by
  * default, expands into a real-looking table row (matching ListRow's cell
- * layout) with only the title and issue type editable - everything else is
- * filled in later from the issue detail view, which is unchanged.
+ * layout) with only the title and issue type editable - the other cells
+ * preview the defaults the issue will be created with, and are filled in
+ * afterwards from the issue detail view, which is unchanged.
  */
 export const QuickAddIssueRow = forwardRef<
     QuickAddIssueRowHandle,
@@ -46,19 +54,27 @@ export const QuickAddIssueRow = forwardRef<
             isSubmitting = false,
             label = 'New issue',
             indent = 0,
+            nextIssueId = null,
         },
         ref,
     ) => {
         const [isEditing, setIsEditing] = useState(false);
         const [title, setTitle] = useState('');
         const defaultTypeId =
-            issueTypes.find((t) => t.name === 'Task')?.id ??
+            issueTypes.find((type) => type.name === 'Task')?.id ??
             issueTypes[0]?.id ??
             null;
         const [issueTypeId, setIssueTypeId] = useState<number | null>(
             defaultTypeId,
         );
         const inputRef = useRef<HTMLInputElement>(null);
+
+        const selectedType =
+            issueTypes.find((type) => type.id === issueTypeId) ?? null;
+        const initialStatus =
+            selectedType?.statuses?.find((status) => status.isInitial) ??
+            selectedType?.statuses?.[0] ??
+            null;
 
         const reveal = () => {
             setIsEditing(true);
@@ -75,12 +91,16 @@ export const QuickAddIssueRow = forwardRef<
             setTitle('');
         };
 
+        const cancel = () => {
+            setTitle('');
+            setIsEditing(false);
+        };
+
         const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === 'Enter') {
                 submit();
             } else if (e.key === 'Escape') {
-                setTitle('');
-                setIsEditing(false);
+                cancel();
             }
         };
 
@@ -119,7 +139,7 @@ export const QuickAddIssueRow = forwardRef<
                             'w-[75px] font-mono text-[11px] text-[var(--text-muted-color)]',
                         )}
                     >
-                        —
+                        {nextIssueId !== null ? `#${nextIssueId}` : mutedCell}
                     </td>
                 )}
                 {enabledColumns.title && (
@@ -129,9 +149,6 @@ export const QuickAddIssueRow = forwardRef<
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            onBlur={() => {
-                                if (!title.trim()) setIsEditing(false);
-                            }}
                             disabled={isSubmitting}
                             placeholder="What needs to be done?"
                             style={{ marginLeft: paddingLeft - 12 }}
@@ -148,6 +165,8 @@ export const QuickAddIssueRow = forwardRef<
                                 options={issueTypes.map((type) => ({
                                     value: String(type.id),
                                     label: type.name,
+                                    icon: type.icon,
+                                    color: type.color,
                                 }))}
                                 value={
                                     issueTypeId !== null
@@ -159,70 +178,60 @@ export const QuickAddIssueRow = forwardRef<
                                 }
                             />
                         ) : (
-                            <span className="text-[var(--text-muted-color)]">
-                                —
-                            </span>
+                            mutedCell
                         )}
                     </td>
                 )}
                 {enabledColumns.status && (
                     <td className={cellBase}>
-                        <span className="text-[var(--text-muted-color)]">
-                            —
-                        </span>
+                        {initialStatus ? (
+                            <WorkflowStatusBadge status={initialStatus} />
+                        ) : (
+                            mutedCell
+                        )}
                     </td>
                 )}
                 {enabledColumns.assignee && (
                     <td className={cellBase}>
-                        <span className="text-[var(--text-muted-color)]">
-                            —
+                        <span className="flex items-center gap-1.5 text-[var(--text-muted-color)]">
+                            <Icon name="UserX" size={13} />
+                            Unassigned
                         </span>
                     </td>
                 )}
                 {enabledColumns.priority && (
                     <td className={cellBase}>
-                        <span className="text-[var(--text-muted-color)]">
-                            —
+                        <span className="flex items-center gap-1.5 text-[var(--text-color)]">
+                            <PriorityIcon priority="medium" tooltip={false} />
+                            Medium
                         </span>
                     </td>
                 )}
                 {enabledColumns.labels && (
-                    <td className={cellBase}>
-                        <span className="text-[var(--text-muted-color)]">
-                            —
-                        </span>
-                    </td>
+                    <td className={cellBase}>{mutedCell}</td>
                 )}
                 {enabledColumns.updated && (
-                    <td className={cellBase}>
-                        <span className="text-[var(--text-muted-color)]">
-                            —
-                        </span>
+                    <td
+                        className={cn(
+                            cellBase,
+                            'text-[var(--text-muted-color)]',
+                        )}
+                    >
+                        Just now
                     </td>
                 )}
                 {enabledColumns.start_date && (
-                    <td className={cellBase}>
-                        <span className="text-[var(--text-muted-color)]">
-                            —
-                        </span>
-                    </td>
+                    <td className={cellBase}>{mutedCell}</td>
                 )}
                 {enabledColumns.end_date && (
-                    <td className={cellBase}>
-                        <span className="text-[var(--text-muted-color)]">
-                            —
-                        </span>
-                    </td>
+                    <td className={cellBase}>{mutedCell}</td>
                 )}
                 <td className={cellBase} aria-hidden="true" />
                 <td className={cn(cellBase, 'w-[50px] text-right')}>
                     <button
                         type="button"
                         title="Cancel"
-                        onClick={() => {
-                            setTitle('');
-                            setIsEditing(false);
-                        }}
+                        onClick={cancel}
                         className="rounded p-1 text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
                     >
                         <Icon name="X" size={13} />

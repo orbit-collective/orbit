@@ -10,6 +10,7 @@ import { useIssueHierarchy } from '@/hooks/useIssueHierarchy';
 import { useTableResizing } from '@/hooks/useTableResizing';
 import { HeaderConfig, IssueTableProps } from '@/types/Components';
 import { Issue, Sorting, SortingColumn } from '@/types/Issues';
+import { IssueType } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
 import {
     DEFAULT_COLUMN_WIDTHS,
@@ -29,6 +30,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     project,
     bare = false,
     issueTypes = [],
+    nextIssueId = null,
 }) => {
     const { addAlert } = useAlert();
     const tableRef = useRef<HTMLTableElement>(null);
@@ -263,6 +265,20 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     const [isCreatingIssue, setIsCreatingIssue] = useState(false);
     const quickAddRef = useRef<QuickAddIssueRowHandle>(null);
 
+    const topLevelIssueTypes = issueTypes.filter((type) => type.isTopLevel);
+
+    /**
+     * An empty allowedChildTypeIds set means "unrestricted" on the backend
+     * (see IssueService::assertValidParent), so mirror that here rather than
+     * offering an empty picker.
+     */
+    const childIssueTypesFor = (parentType?: IssueType) => {
+        const allowed = parentType?.allowedChildTypeIds ?? [];
+        return allowed.length > 0
+            ? issueTypes.filter((type) => allowed.includes(type.id))
+            : issueTypes;
+    };
+
     useEffect(() => {
         const handler = () => quickAddRef.current?.open();
         window.addEventListener(QUICK_ADD_ISSUE_EVENT, handler);
@@ -351,7 +367,8 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                     ref={quickAddRef}
                                     colSpan={headers.length + 3}
                                     enabledColumns={enabledColumns}
-                                    issueTypes={issueTypes}
+                                    issueTypes={topLevelIssueTypes}
+                                    nextIssueId={nextIssueId}
                                     isSubmitting={isCreatingIssue}
                                     onSubmit={(title, issueTypeId) =>
                                         handleCreateIssue(title, issueTypeId)
@@ -400,7 +417,12 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                                         enabledColumns={
                                                             enabledColumns
                                                         }
-                                                        issueTypes={issueTypes}
+                                                        issueTypes={childIssueTypesFor(
+                                                            issue.issueType,
+                                                        )}
+                                                        nextIssueId={
+                                                            nextIssueId
+                                                        }
                                                         indent={depth + 1}
                                                         label="Add sub-issue"
                                                         isSubmitting={
