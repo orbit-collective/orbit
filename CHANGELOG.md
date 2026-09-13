@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.8.0](https://github.com/orbit-collective/orbit/compare/v0.7.6...v0.8.0) (2026-09-13)
+
+
+### Features
+
+* **activity-log:** render issue types and workflow statuses as badges ([8b28c71](https://github.com/orbit-collective/orbit/commit/8b28c7146025fbd4b5d954f861c83b4e76815e11))
+* **integrations:** make the Jira import understand issue types, workflows and labels ([e95ec83](https://github.com/orbit-collective/orbit/commit/e95ec83be1355923f1a5719cdf23505757cd7e3a))
+* **issue-types:** add create/edit inline editor with icon and color pickers ([6b487ea](https://github.com/orbit-collective/orbit/commit/6b487eae86e64a3542f323dbb4cadce498d19acd))
+* **issue-types:** add frontend types and issue type/workflow badges ([1a97459](https://github.com/orbit-collective/orbit/commit/1a974593bcb11301775f913eb4932a6ce1704097))
+* **issue-types:** add hierarchy validation for sub-issues under parent-capable types ([5f274e7](https://github.com/orbit-collective/orbit/commit/5f274e76c4a767717af0a3f37864d6ca68f014d5))
+* **issue-types:** add issue type and workflow schema foundation ([e884b3b](https://github.com/orbit-collective/orbit/commit/e884b3b6d9657290ccbdde42da1406e7b9db0db3))
+* **issue-types:** add issue type CRUD backend and settings routes ([33da159](https://github.com/orbit-collective/orbit/commit/33da1595b3aad8020864a2670f5ffccc07894b36))
+* **issue-types:** add Issue Types settings tab with catalog and delete ([4e32cda](https://github.com/orbit-collective/orbit/commit/4e32cda5a092b1887b41ace877869a35f343cb0f))
+* **issue-types:** add per-type custom fields stored on the issue ([5ea54ae](https://github.com/orbit-collective/orbit/commit/5ea54aec7ee96130dc9ed4d914f2160cda25e572))
+* **issue-types:** add required fields checklist and templates management ([8e9afea](https://github.com/orbit-collective/orbit/commit/8e9afea14185cd54e07abce05e9c5556eb237020))
+* **issue-types:** add restricted role types permission checkboxes ([18f215b](https://github.com/orbit-collective/orbit/commit/18f215b5ad622d0d5732844d3c19881f5550f60a))
+* **issue-types:** add type column and refactor column definitions into a registry ([ea92e95](https://github.com/orbit-collective/orbit/commit/ea92e95bd725d2883d8c3d1868e6fcc367ef20b4))
+* **issue-types:** add workflow status and transition CRUD backend ([9814bf8](https://github.com/orbit-collective/orbit/commit/9814bf8e48ee61a7f84006b70e51f0458b19108d))
+* **issue-types:** add workflow tab with status list and transition matrix ([f95fe79](https://github.com/orbit-collective/orbit/commit/f95fe79bf7f4ba224f70d9e3eb312ff8dcc191f6))
+* **issue-types:** enforce required fields and add issue templates ([8794da1](https://github.com/orbit-collective/orbit/commit/8794da15e2ed3e63a063bdd51ba99c4b7112b5cb))
+* **issue-types:** give each system type its own workflow, hierarchy, template and fields ([7f7317f](https://github.com/orbit-collective/orbit/commit/7f7317f98108c20a4775e7a3c1d4b7e24816a944))
+* **issue-types:** let a type be restricted to sub-issue use only ([108826d](https://github.com/orbit-collective/orbit/commit/108826d8da8aa63f50573274662751fb69cd28ab))
+* **issue-types:** let each type configure which specific types can be its sub-issues ([6703333](https://github.com/orbit-collective/orbit/commit/6703333d967bcd8a931ac9f8705376f130205554))
+* **issue-types:** manage custom fields in settings and fill them on an issue ([d0f99a1](https://github.com/orbit-collective/orbit/commit/d0f99a17c18bd15a321b0ab20fbcd734e302e57e))
+* **issue-types:** rebuild the fields modal with editing and a hint input ([334e937](https://github.com/orbit-collective/orbit/commit/334e93727092a8a2f900533660cfc4d028059e29))
+* **issue-types:** rebuild the templates modal with editing, drop the dead settings tabs ([00e6679](https://github.com/orbit-collective/orbit/commit/00e6679d2c4bf99e0b8a7e05c24e5bb81f91f6ce))
+* **issue-types:** render sub-issue hierarchy as a collapsible tree in the list ([d0d57dc](https://github.com/orbit-collective/orbit/commit/d0d57dcfe83bd2fd8eacaadf28b9d53820473568))
+* **issue-types:** replace the new-issue modal with an inline quick-add row ([2a12082](https://github.com/orbit-collective/orbit/commit/2a12082a9db2ddb774302dfba582034eff43164a))
+* **issue-types:** seed system issue types with default workflow and backfill existing issues ([a6b24ce](https://github.com/orbit-collective/orbit/commit/a6b24ceb8f712b1856844cec8ddadb537d855aef))
+* **issue-types:** show and create sub-issues from the issue detail view ([2f51c69](https://github.com/orbit-collective/orbit/commit/2f51c699640c9ac6b4e776725c4bc0349e648bd9))
+* **issue-types:** wire issue create/update to the issue type and workflow model ([da7ca42](https://github.com/orbit-collective/orbit/commit/da7ca427ef4cb8abcc1bc4ec91516dc8319e87d1))
+* **issues:** show the parent chain in the issue breadcrumb ([007574d](https://github.com/orbit-collective/orbit/commit/007574da76d3f35f53174e2d553746d720e3eb0c))
+* **workflow:** draw the workflow as a draggable flow and flag dead-end statuses ([26369f5](https://github.com/orbit-collective/orbit/commit/26369f5cc02a0aed20b967a1eecbb2ffe3561bc8))
+* **workflow:** let the starting status be chosen, and document the new type settings ([c1bc5f9](https://github.com/orbit-collective/orbit/commit/c1bc5f94a645f0d9535c5dc01a36bc2b10fdef5a))
+
+
+### Bug Fixes
+
+* **activity-log:** resolve issue type badges on the dashboard feed too ([4fc8fb3](https://github.com/orbit-collective/orbit/commit/4fc8fb34a3175c6a65843a8ffbb6afe2be7eecd5))
+* **issue-types:** add proper labels for issue type permissions in Roles & Permissions ([8511067](https://github.com/orbit-collective/orbit/commit/851106712be432ab3bccbde916d496c314cf1e0b))
+* **issue-types:** apply type templates on create and clear leftover stock statuses ([c19dec2](https://github.com/orbit-collective/orbit/commit/c19dec2b2449ba4fbf985a2b62a6ef4184a51d25))
+* **issue-types:** clear stale required flags and stamp top-level defaults on old projects ([3bd4c23](https://github.com/orbit-collective/orbit/commit/3bd4c23af2d8830c254f5730fd62ba9821013671))
+* **issue-types:** correct string interpolation in validation messages ([58ca54a](https://github.com/orbit-collective/orbit/commit/58ca54a10783bf46c2fe74cfe1494f049f0c509d))
+* **issue-types:** keep the issue date-order triggers when adding the type foreign keys ([2f64e6a](https://github.com/orbit-collective/orbit/commit/2f64e6a59a6f609ed28da4c553ea2ca75722b013))
+* **issue-types:** make custom workflow statuses selectable on an issue ([c7b666b](https://github.com/orbit-collective/orbit/commit/c7b666bcc5284a12473b5c546a0743fc009067df))
+* **issue-types:** make quick-add render as a real row with editable type ([77c8fd2](https://github.com/orbit-collective/orbit/commit/77c8fd28e9cb400fb74ef3c0aea50d5147c22d39))
+* **issue-types:** preview id and defaults in quick-add, show type icons, keep type selectable ([c758ee7](https://github.com/orbit-collective/orbit/commit/c758ee745db933bc0c0a6cdba580d71f20aa4f10))
+* **issue-types:** redesign workflow modal and replace native selects with app dropdown ([7279e07](https://github.com/orbit-collective/orbit/commit/7279e07305afe30dd24a4a8710a217799f456c20))
+* **issue-types:** serialize issue type and workflow status as camelCase for the UI ([92ed24b](https://github.com/orbit-collective/orbit/commit/92ed24b2c601703fcd8f79e287ac87d20e58030a))
+* **issue-types:** stop the defaults upgrade colliding on reused status names ([3eddc19](https://github.com/orbit-collective/orbit/commit/3eddc19b27c9be0d25c14a8fe74bab1196830b5a))
+* **issue-types:** turn the issue type create/edit editor into a proper modal ([b1d03c1](https://github.com/orbit-collective/orbit/commit/b1d03c119e1f6eaaca99f33e613e8db02e3239de))
+* **issues:** let the type and status badges own their hover highlight ([1708d16](https://github.com/orbit-collective/orbit/commit/1708d1624b4245d3c4ba6f9eb4119e1099739d19))
+* **issues:** tone down the sub-issue add row styling ([5fb6a89](https://github.com/orbit-collective/orbit/commit/5fb6a890f41d7d8151e4a8069e056eb7d25cffe2))
+
 ## [0.7.6](https://github.com/orbit-collective/orbit/compare/v0.7.5...v0.7.6) (2026-09-12)
 
 
