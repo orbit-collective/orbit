@@ -141,8 +141,8 @@ page-specific prop belongs in that page's own controller action's
   composed from Molecules, and the first tier that's allowed to call
   context hooks directly (`useAlert()`, `useAccent()`) and make
   `router.post(...)` calls of its own — `IssuePageHeader`,
-  `WorkspaceSettingsContent`, `NotificationsPopup` are all Organisms
-  for exactly this reason.
+  `WorkspaceSettingsIntegrationsTab`, `NotificationsPopup` are all
+  Organisms for exactly this reason.
 - **Pages** (`Pages/`) — one per Inertia page name, receiving the
   controller's props directly and composing Organisms (plus the
   occasional Molecule) into the actual screen. A Page is the only tier

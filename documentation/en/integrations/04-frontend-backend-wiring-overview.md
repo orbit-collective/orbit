@@ -8,10 +8,10 @@ somewhere else in the app reaching Discord.
 ## 1. Reading: how the Integrations tab gets its data
 
 ```
-GET /settings?tab=integrations&project=<id>
+GET /settings/integrations?project=<id>
         │
         ▼
-SettingsController::index()
+SettingsController::integrations()
   - resolves $selectedProject from ?project= (or the user's first project)
   - computes $hasIntegrationsAccess / $canUpdateIntegrations directly off
     Project::hasPermissionOrTier() (NOT via a Policy — Policies here are
@@ -25,15 +25,11 @@ SettingsController::index()
         │  integrationStatuses, integrationSettings,
         │  hasIntegrationsAccess, canUpdateIntegrations
         ▼
-resources/js/Pages/Settings/Index.tsx
-  - reads ?tab= from the URL, resolves the active SettingsTab
-  - isWorkspaceSettingsTabId(activeTab) → true for 'integrations'
-  - passes every one of the props above straight through, unmodified
-        │
-        ▼
-WorkspaceSettingsContent.tsx
-  - tabId === 'integrations' → renders WorkspaceSettingsIntegrationsTab
-    with the same props, again just forwarded
+resources/js/Pages/Settings/Integrations.tsx
+  - the Integrations tab's own page (one page per settings tab, see
+    ../settings-tabs/README.md)
+  - passes every one of the props above straight through, unmodified,
+    into WorkspaceSettingsIntegrationsTab, wrapped in SettingsLayout
         │
         ▼
 WorkspaceSettingsIntegrationsTab.tsx
@@ -153,8 +149,8 @@ register it for the same event classes in `AppServiceProvider::boot()`.
 - `resources/js/utils/integrationCategoryColors.ts` — category badge colors
 
 **Frontend — components:**
-- `resources/js/Pages/Settings/Index.tsx` — top-level prop threading
-- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsContent.tsx` — tab router
+- `resources/js/Pages/Settings/Integrations.tsx` — the tab's page: prop threading
+- `resources/js/Components/Organisms/SettingsLayout/SettingsLayout.tsx` — sidebar + heading chrome shared by every settings page
 - `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationsTab.tsx` — the tab: project picker, filters, grid, save handlers
 - `.../WorkspaceSettingsIntegrationCard.tsx` — one grid card
 - `.../WorkspaceSettingsIntegrationDetailModal.tsx` — the detail modal (webhook URL, options, connect button)
@@ -175,7 +171,7 @@ register it for the same event classes in `AppServiceProvider::boot()`.
 - `app/Policies/ProjectPolicy.php` — `viewIntegrations`/`updateIntegrations`
 - `app/Http/Controllers/SettingsController.php` — computes the UI-facing booleans
 - `app/Http/Controllers/ProjectIntegrationController.php` — authorizes + validates mutations
-- `routes/web.php` — `projects.integrations.update` / `projects.integrations.settings.update`
+- `routes/web.php` — `settings.integrations` (the page) plus `projects.integrations.update` / `projects.integrations.settings.update` (the mutations)
 
 **Backend — event-driven delivery:**
 - `app/Events/*.php` — the domain facts (`IssueAssigned`, `IssueUnassigned`, `IssueUpdated`, `CommentAdded`, ...)

@@ -1,6 +1,6 @@
 # Włącz placeholder zakładkę na żywo
 
-Przećwiczony przykład: zamiana **Export** (sekcja Account) z nieosiągalnego elementu nawigacji w prawdziwą zakładkę. Jej komponent, `AccountSettingsExportTab.tsx`, już istnieje i już renderuje pełne UI (dwie karty eksportu, wiersz usunięcia konta) — po prostu nigdy nie jest osiągalny, ponieważ jego wpis w rejestrze to `enabled: false`. To ten sam kształt "UI już istnieje, po prostu spraw, żeby był prawdziwy", jaki pokrywa [`../integrations/01-add-a-new-integration.md`](../integrations/01-add-a-new-integration.md) dla integracji z katalogu — przejdź od razu do tego kroku poniżej, który faktycznie dotyczy placeholder zakładki, nad którą pracujesz, jeśli jest dalej niż Export.
+Przećwiczony przykład: zamiana **Export** (sekcja Account) z nieosiągalnego elementu nawigacji w prawdziwą zakładkę. Jej komponent, `AccountSettingsExportTab.tsx`, już istnieje i już renderuje pełne UI (dwie karty eksportu, wiersz usunięcia konta) — po prostu nigdy nie jest osiągalny, ponieważ jego wpis w rejestrze to `enabled: false` i nie ma trasy. To ten sam kształt "UI już istnieje, po prostu spraw, żeby był prawdziwy", jaki pokrywa [`../integrations/01-add-a-new-integration.md`](../integrations/01-add-a-new-integration.md) dla integracji z katalogu — przejdź od razu do tego kroku poniżej, który faktycznie dotyczy placeholder zakładki, nad którą pracujesz, jeśli jest dalej niż Export.
 
 ## Krok 1 — Przełącz flagę
 
@@ -9,6 +9,7 @@ Plik: `resources/js/types/Settings.ts`
 ```ts
 {
     id: 'export',
+    path: '/settings/export',
     label: 'Export',
     icon: 'Download',
     section: 'account',
@@ -17,18 +18,71 @@ Plik: `resources/js/types/Settings.ts`
 },
 ```
 
-Ta jedna flaga wykonuje całą pracę "czy jest osiągalna" — sprawdzenie `isEnabledSettingsTabId()` w `Pages/Settings/Index.tsx` (zobacz sekcję architektury w [README](./README.md)) teraz pozwala `?tab=export` się rozstrzygnąć zamiast po cichu spaść z powrotem do `preferences`, a element nawigacji staje się klikalny zamiast wizualnie wyłączony. Ten element nawigacji nie jest osobnym komponentem ustawień — to główny `Sidebar` aplikacji (`resources/js/Components/Organisms/Sidebar/Sidebar.tsx`) sam renderuje sekcje Account/Workspace bezpośrednio z `SETTINGS_TABS`, gdy tylko aktualny URL znajduje się pod `/settings`, wliczając wyłączone zakładki (zobacz [`../architecture/03-frontend-architecture-and-atomic-design.md`](../architecture/03-frontend-architecture-and-atomic-design.md)). Żadna inna zmiana na froncie nie jest wymagana, żeby zakładka stała się *odwiedzalna* — kroki 2–3 dotyczą tego, żeby pokazywała coś prawdziwego, gdy już tam jesteś.
+Ta flaga jest tym, co czyni element nawigacji klikalnym: główny `Sidebar` aplikacji (`resources/js/Components/Organisms/Sidebar/Sidebar.tsx`) renderuje sekcje Account/Workspace bezpośrednio z `SETTINGS_TABS`, gdy tylko aktualny URL znajduje się pod `/settings`, linkując każdą włączoną zakładkę do jej `path` i renderując każdą wyłączoną jako bezwładny `div` z plakietką "Soon" (zobacz [`../architecture/03-frontend-architecture-and-atomic-design.md`](../architecture/03-frontend-architecture-and-atomic-design.md)). Samo przełączenie flagi już jednak nie wystarcza — bez kroków 2–4 link prowadzi teraz do URL-a, który zwraca 404.
 
-## Krok 2 — Przeprowadź do niej prawdziwe dane (nie zostawiaj jej statycznej)
+## Krok 2 — Dodaj trasę
 
-`AccountSettingsExportTab` dziś w ogóle nie przyjmuje żadnych propów — każdy string na niej to zakodowana na sztywno treść. Przed wypuszczeniem jej na żywo, przeprowadź jakiekolwiek prawdziwe dane, jakich zakładka faktycznie potrzebuje, w ten sam sposób, w jaki robi to już każda inna zakładka Account (`AccountSettingsProfileTab` przyjmuje `userName`/`userAvatar`, `AccountSettingsNotificationsTab` przyjmuje `notificationSettings` — zobacz [`../notifications/03-frontend-backend-wiring-overview.md`](../notifications/03-frontend-backend-wiring-overview.md) po pełną rundę tej ostatniej). Mały, konkretny przykład: pokazanie, na jaki adres zostanie wysłany eksport.
+Plik: `routes/web.php`
+
+```php
+Route::get('/settings/export', [SettingsController::class, 'export'])->name('settings.export');
+```
+
+Trzymaj ścieżkę identyczną z `path` z wpisu w rejestrze, a nazwę trasy w formie `settings.<id zakładki>` — ta konwencja pozwala kodowi backendu linkować do zakładki przez `route('settings.export')`, tak jak `ImportJiraIssuesJob` linkuje przez `route('settings.integrations', ['project' => ...])`.
+
+## Krok 3 — Dodaj akcję kontrolera
+
+Plik: `app/Http/Controllers/SettingsController.php`
+
+```php
+public function export(Request $request): Response
+{
+    return Inertia::render('Settings/Export', [
+        'projects' => $this->projects($request),
+        'exportRequests' => $this->exportService->getRequests($request->user()->id),
+    ]);
+}
+```
+
+Jedna akcja na zakładkę, każda zwracająca **tylko** te propy, które czyta UI tej zakładki. `projects` to wyjątek przekazywany przez każdą akcję — `Sidebar` potrzebuje go na każdej stronie ustawień. Cokolwiek działającego w kontekście projektu rozwija zamiast tego `$this->projectScope($projects, $selectedProject)` (zobacz akcje `labels()`/`members()`), co dostarcza razem `projects`, `memberProjects` i `selectedProjectId`. Powstrzymaj się od dodawania "przy okazji" propa, którego potrzebuje tylko inna zakładka — brak nadmiernego pobierania jest całym sensem podziału na zakładki.
+
+## Krok 4 — Dodaj stronę
+
+Nowy plik: `resources/js/Pages/Settings/Export.tsx`
+
+```tsx
+import AccountSettingsExportTab from '@/Components/Organisms/AccountSettingsContent/AccountSettingsExportTab';
+import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
+import { Project } from '@/types/Projects';
+
+interface SettingsExportProps {
+    projects?: Project[];
+    exportRequests?: ExportRequest[];
+}
+
+export default function SettingsExport({
+    projects = [],
+    exportRequests = [],
+}: SettingsExportProps) {
+    return (
+        <SettingsLayout tabId="export" projects={projects}>
+            <AccountSettingsExportTab exportRequests={exportRequests} />
+        </SettingsLayout>
+    );
+}
+```
+
+Strona jest celowo cienka: zadeklaruj propy, które wysyła kontroler, podaj je komponentowi zakładki i pozwól `SettingsLayout` narysować pasek boczny, breadcrumb, nagłówek i opis z wpisu w rejestrze dla danego `tabId`. Nazwa strony Inertii w `Inertia::render('Settings/Export', ...)` musi dokładnie odpowiadać ścieżce tego pliku pod `resources/js/Pages/`.
+
+## Krok 5 — Podłącz prawdziwe dane do komponentu zakładki (nie zostawiaj go statycznym)
+
+`AccountSettingsExportTab` dziś nie przyjmuje żadnych propów — każdy string na nim to zahardkodowana treść. Zanim wypuścisz go na żywo, przeprowadź przez niego prawdziwe dane, których zakładka faktycznie potrzebuje, tak jak robi to już każda inna zakładka Account (`AccountSettingsProfileTab` bierze `userName`/`userAvatar`, `AccountSettingsNotificationsTab` bierze `notificationSettings` — zobacz [`../notifications/03-frontend-backend-wiring-overview.md`](../notifications/03-frontend-backend-wiring-overview.md) po pełną podróż tego drugiego).
 
 Plik: `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsExportTab.tsx`
 
 ```tsx
 import Button from '@/Components/Atoms/Button/Button';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
-import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 
 interface AccountSettingsExportTabProps {
     userEmail?: string;
@@ -68,40 +122,11 @@ export default function AccountSettingsExportTab({
 }
 ```
 
-Plik: `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsContent.tsx`
-
-```tsx
-interface AccountSettingsContentProps {
-    tabId: AccountSettingsTabId;
-    userName?: string;
-    userAvatar?: string | null;
-    userEmail?: string;
-    sessions?: Session[];
-    notificationSettings?: NotificationSettings;
-}
-
-export default function AccountSettingsContent({
-    tabId,
-    userName,
-    userAvatar,
-    userEmail,
-    sessions = [],
-    notificationSettings,
-}: AccountSettingsContentProps) {
-    // ...existing tabId branches...
-
-    return <AccountSettingsExportTab userEmail={userEmail} />;
-}
-```
-
-Plik: `resources/js/Pages/Settings/Index.tsx` — dodaj `userEmail` do interfejsu propów i przekaż go dalej do `AccountSettingsContent` obok istniejących odczytów `userName`/`userAvatar` z `props.auth?.user?.email`.
-
-## Krok 3 — Podłącz backend, jeśli zakładka potrzebuje własnego
-
-Export nie potrzebuje dedykowanego propa `SettingsController` do tego kroku (`userEmail` przychodzi już ze współdzielonego propa `auth`, jaki dostaje każda strona — zobacz [`../architecture/03-frontend-architecture-and-atomic-design.md`](../architecture/03-frontend-architecture-and-atomic-design.md)), ale zakładka potrzebująca faktycznie nowych danych podąża dokładnie za istniejącym wzorcem `SettingsController::index()`: dodaj nowy klucz do tablicy propów `Inertia::render('Settings/Index', [...])`, obliczony z dowolnego Serwisu, jakiego potrzebuje prawdziwa funkcja zakładki, w ten sam sposób, w jaki już płyną `notificationSettings`/`sessions`/`integrationStatuses`. Zbudowanie samej faktycznej funkcji backendu "wygeneruj i wyślij mailem eksport" jest poza zakresem tego przewodnika — ten krok dotyczy tylko wzorca podłączania zakładki ustawień, nie funkcji stojącej za konkretnym placeholderem.
+Dane, które są już na współdzielonym propie `auth` (nazwa użytkownika, e-mail, awatar), nie potrzebują propa z kontrolera w ogóle — odczytaj je z `usePage<PageProps>()` na stronie, tak jak robi to `Pages/Settings/Profile.tsx` (zobacz [`../architecture/03-frontend-architecture-and-atomic-design.md`](../architecture/03-frontend-architecture-and-atomic-design.md)). Zbudowanie samej faktycznej funkcji backendu "wygeneruj i wyślij mailem eksport" jest poza zakresem tego przewodnika — kroki 2–5 to wzorzec podłączania zakładki ustawień, nie funkcja stojąca za konkretnym placeholderem.
 
 ## Testy
 
-- `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsExportTab.test.tsx` (stwórz, jeśli nie istnieje) — asercuj, że warunkowa treść z emailem renderuje się poprawnie z i bez propa `userEmail`.
-- `resources/js/Pages/Settings/Index.test.tsx` (jeśli istnieje) albo dowolny test pokrywający `isEnabledSettingsTabId` — dodaj przypadek asercujący, że `?tab=export` teraz rozstrzyga się do zakładki `export` zamiast spadać z powrotem do `preferences`.
-- `tests/Feature/SettingsControllerTest.php` — jeśli dodałeś nowy prop backendu w kroku 3, dodaj test asercujący, że jest obecny w odpowiedzi Inertii, na wzór istniejących tam testów asercujących propy.
+- `tests/Feature/SettingsControllerTest.php` — dodaj przypadek asercujący, że `GET /settings/export` zwraca komponent `Settings/Export` z propami z kroku 3, na wzór istniejących tam testów per-zakładka. Jeśli dane zakładki są zabezpieczone uprawnieniami, zaaseruj też kształt dla użytkownika bez dostępu, tak jak robią to przypadki dla labels/integrations.
+- `resources/js/Pages/Settings/Export.test.tsx` — nowy plik, na wzór dowolnego istniejącego testu strony (np. `Preferences.test.tsx`): zamockuj `SettingsLayout` i komponent zakładki, zaaseruj, że strona renderuje swoją zakładkę z właściwym `tabId` i przekazuje propy.
+- `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsExportTab.test.tsx` (utwórz, jeśli nie istnieje) — zaaseruj, że warunkowa treść z e-mailem renderuje się poprawnie z propem `userEmail` i bez niego.
+- `resources/js/Components/Organisms/Sidebar/Sidebar.test.tsx` — istniejący przypadek "renders disabled settings tabs without a link" liczy wyłączone zakładki; sprawdź, czy wciąż się broni, gdy jedna zakładka mniej jest wyłączona.

@@ -16,7 +16,7 @@ Nie ma kolumny `role` na `users` ani żadnego pojęcia administratora całej wit
 
 ## Większość zakładek ustawień Workspace to placeholdery
 
-`SETTINGS_TABS` w `resources/js/types/Settings.ts` wylicza Labels, Statuses, Priorities, Templates i Documents (sekcja Workspace) oraz Export (sekcja Account) z `enabled: false` — renderują się w nawigacji bocznej dla odkrywalności, ale sama zakładka jest nieosiągalna (zobacz sekcję architektury w [`../settings-tabs/README.md`](../settings-tabs/README.md) po dokładnie to, jak `enabled: false` jest egzekwowane). `AccountSettingsExportTab.tsx` już istnieje jako komponent i nawet się renderuje, jeśli dotrzesz do niego programowo — po prostu nigdy nie jest osiągalny przez normalną nawigację, ponieważ bramka włączonej zakładki żyje w `Pages/Settings/Index.tsx`, jeden poziom nad tym, gdzie ten komponent jest renderowany.
+`SETTINGS_TABS` w `resources/js/types/Settings.ts` wylicza Priorities i Documents (sekcja Workspace) oraz Export (sekcja Account) z `enabled: false` — renderują się w nawigacji bocznej dla odkrywalności, ale sama zakładka jest nieosiągalna (zobacz sekcję architektury w [`../settings-tabs/README.md`](../settings-tabs/README.md) po dokładnie to, jak `enabled: false` jest egzekwowane). `AccountSettingsExportTab.tsx` już istnieje jako komponent i nawet się renderuje, jeśli sam wstawisz go na stronę — po prostu nigdy nie jest osiągalny przez normalną nawigację, ponieważ wyłączona zakładka nie ma ani własnej trasy, ani własnej strony.
 
 ## 20 z 21 integracji w katalogu to "coming soon"
 

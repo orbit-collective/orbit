@@ -39,17 +39,16 @@ project in the system.
 
 ## Most Workspace settings tabs are placeholders
 
-`resources/js/types/Settings.ts`'s `SETTINGS_TABS` lists Labels,
-Statuses, Priorities, Templates, and Documents (Workspace section) and
-Export (Account section) with `enabled: false` — they render in the
-sidebar nav for discoverability, but the tab itself is unreachable
-(see [`../settings-tabs/README.md`](../settings-tabs/README.md)'s
+`resources/js/types/Settings.ts`'s `SETTINGS_TABS` lists Priorities
+and Documents (Workspace section) and Export (Account section) with
+`enabled: false` — they render in the sidebar nav for discoverability,
+but the tab itself is unreachable (see
+[`../settings-tabs/README.md`](../settings-tabs/README.md)'s
 architecture section for exactly how `enabled: false` is enforced).
 `AccountSettingsExportTab.tsx` already exists as a component and even
-renders if you reach it programmatically — it's just never reachable
-through normal navigation, since the enabled-tab gate lives in
-`Pages/Settings/Index.tsx`, one level above where that component is
-rendered.
+renders if you drop it into a page yourself — it's just never
+reachable through normal navigation, since a disabled tab has neither
+a route nor a page of its own.
 
 ## 20 of 21 catalog integrations are "coming soon"
 

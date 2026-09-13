@@ -51,7 +51,7 @@ public function update(UpdateNotificationSettingsRequest $request): RedirectResp
 
     return back()
         ->with('success', 'Notification settings updated successfully.')
-        ->with('action_url', route('settings').'?tab=notifications');
+        ->with('action_url', route('settings.notifications'));
 }
 ```
 
@@ -59,5 +59,5 @@ public function update(UpdateNotificationSettingsRequest $request): RedirectResp
 
 ## Testy
 
-- `tests/Feature/NotificationSettingControllerTest.php` — istniejący test `'an authenticated user can update their notification settings'` już asercuje `$response->assertSessionHas('success', '...')`; dodaj do niego `->assertSessionHas('action_url', route('settings').'?tab=notifications')` zamiast pisać nowy test — to nie jest nowe zachowanie warte własnego testu, tylko asercja dodana do istniejącego.
+- `tests/Feature/NotificationSettingControllerTest.php` — istniejący test `'an authenticated user can update their notification settings'` już asercuje `$response->assertSessionHas('success', '...')`; dodaj do niego `->assertSessionHas('action_url', route('settings.notifications'))` zamiast pisać nowy test — to nie jest nowe zachowanie warte własnego testu, tylko asercja dodana do istniejącego.
 - Żadne zmiany testów frontendowych nie są potrzebne konkretnie dla tego przewodnika — istniejące testy obsługi flash w `AlertContext.test.tsx` (np. `'surfaces a flash error from a subsequent Inertia visit'`) już pokrywają generyczny mechanizm, na którym to polega. Dodaj tu test frontendowy tylko wtedy, gdy wprowadzasz faktycznie nowy **klucz** flash (nie tylko nowe miejsce wywołania używające jednego z czterech już istniejących).

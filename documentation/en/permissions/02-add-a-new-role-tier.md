@@ -102,7 +102,7 @@ included:
 - `app/Policies/IssuePolicy.php` — `MODIFY_TIERS = [OWNER, ADMIN, MEMBER]`
 - `app/Policies/CommentPolicy.php` — `OWN_TIERS = [OWNER, ADMIN, MEMBER]`, `ANY_TIERS = [OWNER, ADMIN]`
 - `app/Policies/ProjectPolicy.php` — `updateDetails`, `inviteMembers`, `updateMemberRole`, `removeMember`, `viewIntegrations`, `updateIntegrations`
-- `app/Http/Controllers/SettingsController.php` — `$viewTiers` and the two inline tier arrays for `PROJECT_UPDATE`/`PROJECT_DELETE`
+- `app/Http/Controllers/SettingsController.php` — `VIEW_TIERS`, `CATALOG_VIEW_TIERS`, `MANAGE_TIERS` and the inline `[RoleType::OWNER]` array for `PROJECT_DELETE`
 
 For this worked example, Contributor gets issue/comment creation and
 its own edits, but not moderation or deletion, so:

@@ -130,22 +130,27 @@ Use Option B only when there's no instance yet to check against (e.g.
 File: `app/Http/Controllers/SettingsController.php`
 
 Compute the boolean **directly off the `Project` model**
-(`hasPermissionOrTier`/`hasPermission`) in `index()` — don't route
-through the Policy for these; Policies here are reserved for
-authorizing actual mutating requests (`$this->authorize(...)` in a
-controller action), while `SettingsController::index()` computes plain
-booleans for the UI to conditionally render:
+(`hasPermissionOrTier`/`hasPermission`) in the action for the tab that
+needs it — each settings tab has its own action (see
+[`../settings-tabs/README.md`](../settings-tabs/README.md)) — and
+don't route through the Policy for these; Policies here are reserved
+for authorizing actual mutating requests (`$this->authorize(...)` in a
+controller action), while `SettingsController` computes plain booleans
+for the UI to conditionally render:
 
 ```php
-$viewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-$hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, $viewTiers) ?? false;
+$hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, self::VIEW_TIERS) ?? false;
 $canUpdateIntegrations = $hasIntegrationsAccess
-    && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, self::MANAGE_TIERS);
 ```
 
-then add both to the `Inertia::render(...)` props array, and thread
-them through `Settings/Index.tsx` → `WorkspaceSettingsContent.tsx` →
-your tab component exactly the way `canUpdateIntegrations` already is
+`self::VIEW_TIERS` / `self::MANAGE_TIERS` are the shared tier
+constants on the Controller, and `can()` wraps the `MANAGE_TIERS`
+check for the common case. Add both booleans to that action's
+`Inertia::render(...)` props array — and only to that action's, so no
+other tab pays for them — then thread them through the tab's page
+(e.g. `Settings/Integrations.tsx`) into your tab component exactly the
+way `canUpdateIntegrations` already is
 (see [`../integrations/04-frontend-backend-wiring-overview.md`](../integrations/04-frontend-backend-wiring-overview.md)
 for the full prop-threading list).
 
@@ -237,7 +242,8 @@ php artisan tinker --execute="App\Models\Permission::where('key', 'like', 'proje
   without the integrations.update permission cannot toggle an
   integration" test for the shape to copy).
 - `tests/Feature/SettingsControllerTest.php` — add
-  `'settings page grants a[n] X access to Y'` tests asserting the new
+  `'settings page grants a[n] X access to Y'` tests hitting the tab's
+  own route (`/settings/<tab>`) and asserting the new
   boolean prop for Owner/Admin (true), a plain Member (view-only:
   view=true, update=false), and a Viewer with no synced system role
   (false) — see the three `*integrations*` tests already there for the

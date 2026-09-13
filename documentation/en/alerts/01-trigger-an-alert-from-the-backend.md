@@ -78,7 +78,7 @@ public function update(UpdateNotificationSettingsRequest $request): RedirectResp
 
     return back()
         ->with('success', 'Notification settings updated successfully.')
-        ->with('action_url', route('settings').'?tab=notifications');
+        ->with('action_url', route('settings.notifications'));
 }
 ```
 
@@ -96,7 +96,7 @@ one `action_url` shared by whichever single message key is present.
   existing `'an authenticated user can update their notification
   settings'` test already asserts
   `$response->assertSessionHas('success', '...')`; add
-  `->assertSessionHas('action_url', route('settings').'?tab=notifications')`
+  `->assertSessionHas('action_url', route('settings.notifications'))`
   to it rather than writing a new test — this isn't new behavior
   worth its own test, just an assertion added to the existing one.
 - No frontend test changes are needed for this guide specifically —
