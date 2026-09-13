@@ -519,11 +519,26 @@ describe('renderActivityLogBody issue types and workflow statuses', () => {
             </ProjectLabelsProvider>,
         );
 
-    test('badges the issue type behind a workflow message', () => {
-        renderBody('Added the "To Do" status to the "Epic" workflow');
+    test('badges the issue type behind a workflow message with its real icon and color', () => {
+        const { container } = renderBody(
+            'Added the "To Do" status to the "Epic" workflow',
+        );
 
         expect(screen.getByText('Epic')).toBeInTheDocument();
         expect(screen.getByText('To Do')).toBeInTheDocument();
+        // The type resolved, so it renders its lucide icon tinted with its
+        // own color rather than falling back to a plain text badge.
+        expect(
+            container.querySelector('svg[stroke="#a855f7"]'),
+        ).toBeInTheDocument();
+    });
+
+    test('tints a resolved workflow status with its own color', () => {
+        const { container } = renderBody('Removed the "To Do" status from the "Epic" workflow');
+
+        expect(
+            container.querySelector('[style*="rgb(148, 163, 184)"]'),
+        ).toBeInTheDocument();
     });
 
     test('badges both ends of a transition message', () => {

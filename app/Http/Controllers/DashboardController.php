@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ActivityLogService;
 use App\Services\IssueService;
+use App\Services\IssueTypeService;
 use App\Services\ProjectService;
 use App\Services\UserService;
 use Illuminate\Http\Request;
@@ -13,15 +14,22 @@ use Inertia\Response;
 class DashboardController extends Controller
 {
     protected IssueService $issueService;
+
     protected ProjectService $projectService;
+
     protected UserService $userService;
+
     protected ActivityLogService $activityLogService;
 
-    public function __construct(IssueService $issueService, ProjectService $projectService, UserService $userService, ActivityLogService $activityLogService) {
+    protected IssueTypeService $issueTypeService;
+
+    public function __construct(IssueService $issueService, ProjectService $projectService, UserService $userService, ActivityLogService $activityLogService, IssueTypeService $issueTypeService)
+    {
         $this->issueService = $issueService;
         $this->projectService = $projectService;
         $this->userService = $userService;
         $this->activityLogService = $activityLogService;
+        $this->issueTypeService = $issueTypeService;
     }
 
     /**
@@ -48,6 +56,7 @@ class DashboardController extends Controller
                 'userAvatar' => $entry->user?->avatar,
                 'createdAt' => $entry->created_at->toJSON(),
             ]),
+            'issueTypes' => $this->issueTypeService->getIssueTypesForProjects($projects->pluck('id')->all()),
         ]);
     }
 }

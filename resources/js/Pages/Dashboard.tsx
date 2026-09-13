@@ -8,6 +8,7 @@ import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import { Issue, ProductivityTrendProps } from '@/types/Issues';
+import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import { Link } from '@inertiajs/react';
@@ -19,12 +20,14 @@ export default function Dashboard({
     productivity_trend,
     activityLogs,
     users = [],
+    issueTypes = [],
 }: {
     issues: Issue[];
     projects: Project[];
     productivity_trend: ProductivityTrendProps[];
     activityLogs: ActivityLogEntry[];
     users?: AssignableUser[];
+    issueTypes?: IssueType[];
 }) {
     const stats = useMemo(() => {
         const total = issues.length;
@@ -111,6 +114,7 @@ export default function Dashboard({
                                     <ActivityLogs
                                         logs={activityLogs}
                                         users={users}
+                                        issueTypes={issueTypes}
                                     />
                                 </div>
                             </div>
