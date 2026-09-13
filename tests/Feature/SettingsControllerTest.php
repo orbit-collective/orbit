@@ -427,3 +427,53 @@ test('a member with a custom role granting only labels.delete can delete but not
         ->where('canDeleteLabels', true)
     );
 });
+
+test('the profile page renders with the sidebar projects', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    $response = $this->actingAs($user)->get('/settings/profile');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('Settings/Profile')
+        ->has('projects', 1)
+        ->missing('members')
+    );
+});
+
+test('the issue types page exposes the project catalog to an owner', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'owner']);
+
+    $response = $this->actingAs($user)->get('/settings/issue-types');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->component('Settings/IssueTypes')
+        ->where('hasIssueTypesAccess', true)
+        ->where('canCreateIssueTypes', true)
+        ->where('canUpdateIssueTypes', true)
+        ->where('canDeleteIssueTypes', true)
+        ->where('canUpdateWorkflow', true)
+        ->has('issueTypes')
+        ->has('labels')
+    );
+});
+
+test('the issue types page hides the catalog from a user outside the project', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/settings/issue-types');
+
+    $response->assertOk();
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('hasIssueTypesAccess', false)
+        ->where('issueTypes', [])
+        ->where('labels', [])
+        ->where('canCreateIssueTypes', false)
+        ->where('canUpdateWorkflow', false)
+    );
+});
