@@ -32,4 +32,15 @@ class WorkflowTransition extends Model
     {
         return $this->belongsTo(WorkflowStatus::class, 'to_status_id');
     }
+
+    /** Matches resources/js/types/Workflow.ts's WorkflowTransition. */
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'issueTypeId' => $this->issue_type_id,
+            'fromStatusId' => $this->from_status_id,
+            'toStatusId' => $this->to_status_id,
+        ];
+    }
 }

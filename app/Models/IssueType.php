@@ -76,4 +76,44 @@ class IssueType extends Model
             'child_issue_type_id',
         );
     }
+
+    /**
+     * The exact shape of resources/js/types/IssueTypes.ts's IssueType, so a
+     * type serializes identically whether it is sent as a top-level prop or
+     * nested inside an issue. Relation-backed keys are only present when the
+     * relation was eager-loaded, which is what makes the lighter payload on
+     * Projects/Show possible without a second mapping helper.
+     */
+    public function toArray(): array
+    {
+        $array = [
+            'id' => $this->id,
+            'name' => $this->name,
+            'icon' => $this->icon,
+            'color' => $this->color,
+            'description' => $this->description,
+            'isSystem' => $this->is_system,
+            'allowsChildren' => $this->allows_children,
+            'requiredFields' => $this->required_fields ?? [],
+            'restrictedRoleTypes' => $this->restricted_role_types ?? [],
+        ];
+
+        if ($this->relationLoaded('statuses')) {
+            $array['statuses'] = $this->statuses->toArray();
+        }
+
+        if ($this->relationLoaded('transitions')) {
+            $array['transitions'] = $this->transitions->toArray();
+        }
+
+        if ($this->relationLoaded('templates')) {
+            $array['templates'] = $this->templates->toArray();
+        }
+
+        if ($this->relationLoaded('allowedChildTypes')) {
+            $array['allowedChildTypeIds'] = $this->allowedChildTypes->pluck('id')->values()->all();
+        }
+
+        return $array;
+    }
 }

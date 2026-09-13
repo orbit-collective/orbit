@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
-use App\Models\IssueType;
 use App\Models\Label;
 use App\Models\Permission as PermissionModel;
 use App\Models\Project;
@@ -142,7 +141,7 @@ class SettingsController extends Controller
             'canUpdateLabels' => $canUpdateLabels,
             'canDeleteLabels' => $canDeleteLabels,
             'issueTypes' => $hasIssueTypesAccess
-                ? $this->mapIssueTypes($this->issueTypeService->getIssueTypes($selectedProject))
+                ? $this->issueTypeService->getIssueTypes($selectedProject)
                 : [],
             'hasIssueTypesAccess' => $hasIssueTypesAccess,
             'canCreateIssueTypes' => $canCreateIssueTypes,
@@ -216,44 +215,6 @@ class SettingsController extends Controller
             'color' => $label->color,
             'description' => $label->description,
             'isSystem' => $label->is_system,
-        ])->values()->all();
-    }
-
-    private function mapIssueTypes(Collection $issueTypes): array
-    {
-        return $issueTypes->map(fn (IssueType $issueType) => [
-            'id' => $issueType->id,
-            'name' => $issueType->name,
-            'icon' => $issueType->icon,
-            'color' => $issueType->color,
-            'description' => $issueType->description,
-            'isSystem' => $issueType->is_system,
-            'allowsChildren' => $issueType->allows_children,
-            'requiredFields' => $issueType->required_fields ?? [],
-            'restrictedRoleTypes' => $issueType->restricted_role_types ?? [],
-            'allowedChildTypeIds' => $issueType->allowedChildTypes()->pluck('issue_types.id')->values()->all(),
-            'statuses' => $issueType->statuses()->orderBy('sort_order')->get()->map(fn ($status) => [
-                'id' => $status->id,
-                'issueTypeId' => $status->issue_type_id,
-                'name' => $status->name,
-                'color' => $status->color,
-                'category' => $status->category->value,
-                'isInitial' => $status->is_initial,
-            ])->values()->all(),
-            'transitions' => $issueType->transitions()->get()->map(fn ($transition) => [
-                'id' => $transition->id,
-                'issueTypeId' => $transition->issue_type_id,
-                'fromStatusId' => $transition->from_status_id,
-                'toStatusId' => $transition->to_status_id,
-            ])->values()->all(),
-            'templates' => $issueType->templates()->orderBy('name')->get()->map(fn ($template) => [
-                'id' => $template->id,
-                'issueTypeId' => $template->issue_type_id,
-                'name' => $template->name,
-                'description' => $template->description,
-                'defaultPriority' => $template->default_priority,
-                'defaultLabels' => $template->default_labels ?? [],
-            ])->values()->all(),
         ])->values()->all();
     }
 
