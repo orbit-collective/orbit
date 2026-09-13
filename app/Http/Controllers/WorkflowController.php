@@ -52,6 +52,21 @@ class WorkflowController extends Controller
         return redirect()->back()->with('success', "The \"{$validated['name']}\" status has been updated.");
     }
 
+    public function reorderStatuses(Request $request, Project $project, IssueType $issueType): RedirectResponse
+    {
+        $this->ensureIssueTypeBelongsToProject($project, $issueType);
+        $this->authorize('updateWorkflow', $project);
+
+        $validated = $request->validate([
+            'status_ids' => ['required', 'array'],
+            'status_ids.*' => ['integer'],
+        ]);
+
+        $this->workflowService->reorderStatuses($issueType, $validated['status_ids']);
+
+        return redirect()->back()->with('success', 'Workflow order updated.');
+    }
+
     public function makeStatusInitial(Project $project, IssueType $issueType, WorkflowStatus $status): RedirectResponse
     {
         $this->ensureIssueTypeBelongsToProject($project, $issueType);

@@ -51,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/projects/{project}/issue-types/{issueType}', [IssueTypeController::class, 'destroy'])->name('projects.issue-types.destroy');
     Route::patch('/projects/{project}/issue-types/{issueType}/allowed-children', [IssueTypeController::class, 'updateAllowedChildren'])->name('projects.issue-types.allowed-children.update');
     Route::post('/projects/{project}/issue-types/{issueType}/statuses', [WorkflowController::class, 'storeStatus'])->name('projects.issue-types.statuses.store');
+    Route::patch('/projects/{project}/issue-types/{issueType}/statuses/reorder', [WorkflowController::class, 'reorderStatuses'])->name('projects.issue-types.statuses.reorder');
     Route::patch('/projects/{project}/issue-types/{issueType}/statuses/{status}', [WorkflowController::class, 'updateStatus'])->name('projects.issue-types.statuses.update');
     Route::patch('/projects/{project}/issue-types/{issueType}/statuses/{status}/initial', [WorkflowController::class, 'makeStatusInitial'])->name('projects.issue-types.statuses.initial');
     Route::delete('/projects/{project}/issue-types/{issueType}/statuses/{status}', [WorkflowController::class, 'destroyStatus'])->name('projects.issue-types.statuses.destroy');

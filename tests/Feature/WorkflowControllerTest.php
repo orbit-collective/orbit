@@ -186,3 +186,66 @@ test('a member cannot change which workflow status is the starting one', functio
     $response->assertForbidden();
     expect($status->refresh()->is_initial)->toBeFalse();
 });
+
+test('an admin can reorder the statuses of a workflow', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+    $first = WorkflowStatus::factory()->create([
+        'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'sort_order' => 0,
+    ]);
+    $second = WorkflowStatus::factory()->create([
+        'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::DONE, 'sort_order' => 1,
+    ]);
+
+    $response = $this->actingAs($admin)->patch(
+        "/projects/$project->id/issue-types/$issueType->id/statuses/reorder",
+        ['status_ids' => [$second->id, $first->id]],
+    );
+
+    $response->assertRedirect();
+    expect($second->refresh()->sort_order)->toBe(0)
+        ->and($first->refresh()->sort_order)->toBe(1);
+});
+
+test('reordering ignores status ids that belong to another issue type', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+    $otherType = $project->issueTypes()->create(['name' => 'Task', 'icon' => 'SquareCheck', 'color' => '#3b82f6']);
+    $own = WorkflowStatus::factory()->create([
+        'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'sort_order' => 5,
+    ]);
+    $foreign = WorkflowStatus::factory()->create([
+        'issue_type_id' => $otherType->id, 'category' => WorkflowStatusCategory::TODO, 'sort_order' => 9,
+    ]);
+
+    $response = $this->actingAs($admin)->patch(
+        "/projects/$project->id/issue-types/$issueType->id/statuses/reorder",
+        ['status_ids' => [$foreign->id, $own->id]],
+    );
+
+    $response->assertRedirect();
+    expect($own->refresh()->sort_order)->toBe(0)
+        ->and($foreign->refresh()->sort_order)->toBe(9);
+});
+
+test('a member cannot reorder a workflow', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+    $status = WorkflowStatus::factory()->create([
+        'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'sort_order' => 3,
+    ]);
+
+    $response = $this->actingAs($member)->patch(
+        "/projects/$project->id/issue-types/$issueType->id/statuses/reorder",
+        ['status_ids' => [$status->id]],
+    );
+
+    $response->assertForbidden();
+    expect($status->refresh()->sort_order)->toBe(3);
+});

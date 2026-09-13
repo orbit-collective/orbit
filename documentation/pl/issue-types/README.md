@@ -79,6 +79,13 @@ workflow ma `is_initial` — ten, w którym startują nowe issue; awans
 innego degraduje poprzedniego posiadacza flagi, czym zajmuje się
 `WorkflowService::setInitialStatus()` (route
 `projects.issue-types.statuses.initial`) wywoływany z modala workflow.
+Ten modal rysuje workflow jako uporządkowany przepływ przeciąganych
+kart — `WorkflowService::reorderStatuses()` (route
+`projects.issue-types.statuses.reorder`, zadeklarowany **przed** trasą
+`{status}`, żeby `reorder` nie został wzięty za id statusu) przepisuje
+`sort_order` na kolejność po upuszczeniu, a status, z którego nie
+wychodzi żadne przejście, dostaje chip „No transitions", dzięki czemu
+ślepy zaułek w grafie widać bez czytania macierzy poniżej.
 
 Status issue zmienia się, wysyłając **`workflow_status_id`** — to
 jedyny sposób, by dosięgnąć własnego statusu w rodzaju „In Review".

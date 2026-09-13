@@ -75,6 +75,13 @@ actually allows moving to. Exactly one status per workflow carries
 the previous holder, which is what
 `WorkflowService::setInitialStatus()` (route
 `projects.issue-types.statuses.initial`) does from the workflow modal.
+That modal draws the workflow as an ordered flow of draggable cards —
+`WorkflowService::reorderStatuses()` (route
+`projects.issue-types.statuses.reorder`, declared **before** the
+`{status}` route so `reorder` isn't swallowed as a status id) rewrites
+`sort_order` to the dropped order, and a status no transition leads out
+of is flagged with a "No transitions" chip so a dead end in the graph
+is visible without reading the matrix below it.
 
 An issue's status is changed by sending **`workflow_status_id`**, which
 is the only way to reach a custom status like "In Review" — the issue

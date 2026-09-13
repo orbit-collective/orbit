@@ -85,7 +85,7 @@ describe('WorkspaceSettingsWorkflowModal', () => {
 
         expect(screen.getAllByText('To Do').length).toBeGreaterThan(0);
         expect(screen.getAllByText('Done').length).toBeGreaterThan(0);
-        expect(screen.getByText('Initial')).toBeInTheDocument();
+        expect(screen.getByText('Start')).toBeInTheDocument();
     });
 
     test('renders the transition chips with the existing transition marked allowed', () => {
@@ -205,6 +205,36 @@ describe('WorkspaceSettingsWorkflowModal starting status', () => {
 
         expect(
             screen.queryByLabelText('Make To Do the starting status'),
+        ).not.toBeInTheDocument();
+    });
+});
+
+describe('WorkspaceSettingsWorkflowModal flow', () => {
+    test('flags a status that has no outgoing transitions', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        // The fixture only defines To Do -> Done, so Done is a dead end.
+        expect(screen.getAllByText('No transitions').length).toBeGreaterThan(0);
+    });
+
+    test('summarises how many transitions leave a status', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        expect(screen.getByText('1 transition')).toBeInTheDocument();
+    });
+
+    test('offers a drag handle per status when the workflow is editable', () => {
+        renderModal({ canUpdateWorkflow: true });
+
+        expect(screen.getByLabelText('Reorder To Do')).toBeInTheDocument();
+        expect(screen.getByLabelText('Reorder Done')).toBeInTheDocument();
+    });
+
+    test('offers no drag handles without permission to edit the workflow', () => {
+        renderModal({ canUpdateWorkflow: false });
+
+        expect(
+            screen.queryByLabelText('Reorder To Do'),
         ).not.toBeInTheDocument();
     });
 });
