@@ -6,6 +6,7 @@ import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPa
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useAlert } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
+import { ProjectLabel } from '@/types/Labels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
@@ -21,6 +22,7 @@ interface WorkspaceSettingsIssueTypesTabProps {
     memberProjects?: MemberProjectSummary[];
     selectedProjectId?: number | null;
     issueTypes?: IssueType[];
+    labels?: ProjectLabel[];
     hasIssueTypesAccess?: boolean;
     canCreateIssueTypes?: boolean;
     canUpdateIssueTypes?: boolean;
@@ -34,6 +36,7 @@ export default function WorkspaceSettingsIssueTypesTab({
     memberProjects = [],
     selectedProjectId = null,
     issueTypes = [],
+    labels = [],
     hasIssueTypesAccess = false,
     canCreateIssueTypes = false,
     canUpdateIssueTypes = false,
@@ -398,6 +401,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                           ) ?? templatesIssueType)
                         : null
                 }
+                labels={labels}
                 canManageTemplates={canUpdateIssueTypes}
             />
 
