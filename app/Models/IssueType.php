@@ -62,6 +62,11 @@ class IssueType extends Model
         return $this->hasMany(Issue::class);
     }
 
+    public function fields(): HasMany
+    {
+        return $this->hasMany(IssueTypeField::class);
+    }
+
     /**
      * The specific set of types that may be created as a sub-issue of this
      * one. An empty set means "unrestricted" - any type is allowed as a
@@ -111,6 +116,10 @@ class IssueType extends Model
 
         if ($this->relationLoaded('templates')) {
             $array['templates'] = $this->templates->toArray();
+        }
+
+        if ($this->relationLoaded('fields')) {
+            $array['fields'] = $this->fields->toArray();
         }
 
         if ($this->relationLoaded('allowedChildTypes')) {
