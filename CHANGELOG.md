@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.8.1](https://github.com/orbit-collective/orbit/compare/v0.8.0...v0.8.1) (2026-09-13)
+
+
+### Features
+
+* **qodana:** add new inspections for PHP code analysis ([4d28eb2](https://github.com/orbit-collective/orbit/commit/4d28eb222d6844be661626d5798eef60a501c779))
+
+
+### Bug Fixes
+
+* **qodana:** remove duplicate PhpUnhandledExceptionInspection entry ([35a904e](https://github.com/orbit-collective/orbit/commit/35a904ea4bc18da1e0d9400a5b24550d508bd488))
+
+
+### Miscellaneous Chores
+
+* release 0.8.1 ([66b32a9](https://github.com/orbit-collective/orbit/commit/66b32a9a98738e302ad117565f4ead9fe800b1fa))
+
 ## [0.8.0](https://github.com/orbit-collective/orbit/compare/v0.7.6...v0.8.0) (2026-09-13)
 
 
