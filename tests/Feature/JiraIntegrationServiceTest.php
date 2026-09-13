@@ -1,13 +1,13 @@
 <?php
 
 use App\Jobs\ImportJiraIssuesJob;
-use App\Models\ActivityLog;
 use App\Models\IntegrationFieldMapping;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
 use App\Services\Integrations\Jira\JiraIntegrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
@@ -102,6 +102,7 @@ test('getSettingsExtras returns live metadata, saved mappings, and the last impo
         '*/rest/api/3/status' => Http::response([['id' => '1', 'name' => 'To Do']], 200),
         '*/rest/api/3/priority' => Http::response([], 200),
         '*/rest/api/3/issuetype' => Http::response([], 200),
+        '*/rest/api/3/label*' => Http::response(['values' => [], 'isLast' => true], 200),
     ]);
 
     $projectIntegration = ProjectIntegration::query()->create([
@@ -125,7 +126,7 @@ test('getSettingsExtras returns live metadata, saved mappings, and the last impo
 });
 
 test('getSettingsExtras degrades to null mapping metadata when Jira is unreachable', function () {
-    Http::fake(fn () => throw new \Illuminate\Http\Client\ConnectionException('down'));
+    Http::fake(fn () => throw new ConnectionException('down'));
 
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,

@@ -7,13 +7,18 @@ use App\DataTransferObjects\ImportResultDTO;
 use App\Enums\IntegrationFieldMappingType;
 use App\Events\IssuesImported;
 use App\Models\Issue;
+use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
+use App\Models\WorkflowStatus;
 use App\Repositories\ExternalIssueLinkRepository;
 use App\Repositories\IssueRepository;
 use App\Services\IssueService;
+use App\Services\IssueTypeService;
 use App\Services\LabelService;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
@@ -31,6 +36,7 @@ class ImportOrchestratorService
         protected FieldMappingResolverService $fieldMappingResolverService,
         protected ExternalIssueLinkRepository $externalIssueLinkRepository,
         protected LabelService $labelService,
+        protected IssueTypeService $issueTypeService,
     ) {}
 
     /**
@@ -66,6 +72,14 @@ class ImportOrchestratorService
         $this->labelService->ensureSystemLabels($project);
         $validLabelNames = $this->labelService->getLabels($project)->pluck('name')->all();
 
+        // The project's own type catalog, resolved once: every imported issue
+        // needs a type (and through it a workflow status), and a remote type
+        // name that maps to nothing falls back to the project's default.
+        $issueTypes = $this->issueTypeService->getIssueTypes($project)->keyBy(
+            fn (IssueType $issueType) => mb_strtolower($issueType->name)
+        );
+        $defaultIssueType = $this->issueTypeService->defaultIssueType($project);
+
         /** @var array<string, array{issue: Issue, parentExternalId: ?string}> $importedItems keyed by externalId */
         $importedItems = [];
 
@@ -79,7 +93,9 @@ class ImportOrchestratorService
             }
 
             try {
-                $issueData = $this->mapIssueData($projectIntegration, $project, $externalIssue, $validLabelNames);
+                $issueData = $this->mapIssueData(
+                    $projectIntegration, $project, $externalIssue, $validLabelNames, $issueTypes, $defaultIssueType,
+                );
 
                 if ($existingLink) {
                     $issue = $this->issueService->syncImportedIssue($existingLink->issue, $issueData, $importedBy);
@@ -126,7 +142,7 @@ class ImportOrchestratorService
         // exists, since a paginated remote result can list a child before its
         // parent (e.g. a subtask before its epic) - also re-resolves a
         // synced issue's parent in case it was reparented in the source.
-        $this->resolveParents($projectIntegration, $importedItems);
+        $errors = [...$errors, ...$this->resolveParents($projectIntegration, $importedItems)];
 
         $result = new ImportResultDTO($imported, $updated, $skipped, $failed, $errors);
 
@@ -137,9 +153,16 @@ class ImportOrchestratorService
 
     /**
      * @param  list<string>  $validLabelNames
+     * @param  Collection<string, IssueType>  $issueTypes  keyed by lowercased name
      */
-    private function mapIssueData(ProjectIntegration $projectIntegration, Project $project, ExternalIssueDTO $externalIssue, array $validLabelNames): array
-    {
+    private function mapIssueData(
+        ProjectIntegration $projectIntegration,
+        Project $project,
+        ExternalIssueDTO $externalIssue,
+        array $validLabelNames,
+        Collection $issueTypes,
+        IssueType $defaultIssueType,
+    ): array {
         $data = [
             'title' => $externalIssue->title,
             'description' => $externalIssue->description,
@@ -148,10 +171,24 @@ class ImportOrchestratorService
             'end_date' => $externalIssue->endDate,
         ];
 
+        $issueType = $this->resolveIssueType($projectIntegration, $externalIssue, $issueTypes, $defaultIssueType);
+        $data['issue_type_id'] = $issueType->id;
+
         if ($externalIssue->externalStatus !== null) {
             $data['status'] = $this->fieldMappingResolverService->resolve(
                 $projectIntegration, IntegrationFieldMappingType::STATUS, $externalIssue->externalStatus,
             );
+        }
+
+        // Every issue lands on a real workflow status of its own type, so an
+        // imported issue behaves like one created in Orbit: the mapping may
+        // name a status of that workflow directly, otherwise the legacy
+        // open/in_progress/closed value is resolved by category.
+        $workflowStatus = $this->resolveWorkflowStatus($issueType, $data['status'] ?? null);
+
+        if ($workflowStatus) {
+            $data['workflow_status_id'] = $workflowStatus->id;
+            $data['status'] = $this->issueTypeService->legacyValueForWorkflowStatus($workflowStatus);
         }
 
         if ($externalIssue->externalPriority !== null) {
@@ -182,10 +219,62 @@ class ImportOrchestratorService
     }
 
     /**
-     * @param  array<string, array{issue: Issue, parentExternalId: ?string}>  $importedItems
+     * A remote type name maps to an Orbit type through a configured
+     * issue_type mapping first, then by matching the name directly (a Jira
+     * "Bug" is Orbit's "Bug" without anyone configuring anything), and
+     * finally by falling back to the project's default type.
+     *
+     * @param  Collection<string, IssueType>  $issueTypes
      */
-    private function resolveParents(ProjectIntegration $projectIntegration, array $importedItems): void
+    private function resolveIssueType(
+        ProjectIntegration $projectIntegration,
+        ExternalIssueDTO $externalIssue,
+        Collection $issueTypes,
+        IssueType $defaultIssueType,
+    ): IssueType {
+        if ($externalIssue->type === null) {
+            return $defaultIssueType;
+        }
+
+        $mapped = $this->fieldMappingResolverService->resolve(
+            $projectIntegration, IntegrationFieldMappingType::ISSUE_TYPE, $externalIssue->type,
+        );
+
+        return $issueTypes->get(mb_strtolower((string) $mapped))
+            ?? $issueTypes->get(mb_strtolower($externalIssue->type))
+            ?? $defaultIssueType;
+    }
+
+    private function resolveWorkflowStatus(IssueType $issueType, ?string $mappedStatus): ?WorkflowStatus
     {
+        if ($mappedStatus === null) {
+            return $issueType->statuses()->where('is_initial', true)->first();
+        }
+
+        $byName = $issueType->statuses()
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($mappedStatus)])
+            ->first();
+
+        return $byName ?? $this->issueTypeService->resolveWorkflowStatusForLegacyValue($issueType, $mappedStatus);
+    }
+
+    /**
+     * Remote hierarchies don't have to obey this project's type rules - a
+     * Jira sub-task can hang off an issue whose Orbit type allows no
+     * children yet. Dropping those links would silently flatten the import,
+     * so instead the parent's type is widened to accept the child's (see
+     * IssueTypeService::allowChildType), leaving the project able to
+     * reproduce the same structure by hand afterwards. Structural
+     * invariants - same project, no self-parenting, no cycles - are still
+     * enforced, and a link that breaks one is reported rather than written.
+     *
+     * @param  array<string, array{issue: Issue, parentExternalId: ?string}>  $importedItems
+     * @return list<string>
+     */
+    private function resolveParents(ProjectIntegration $projectIntegration, array $importedItems): array
+    {
+        $warnings = [];
+
         foreach ($importedItems as $item) {
             $parentExternalId = $item['parentExternalId'];
 
@@ -202,7 +291,26 @@ class ImportOrchestratorService
                 continue;
             }
 
+            if ($parentIssue->issueType && $item['issue']->issue_type_id) {
+                $this->issueTypeService->allowChildType($parentIssue->issueType, $item['issue']->issue_type_id);
+            }
+
+            try {
+                $this->issueService->assertValidParent(
+                    $parentIssue->project,
+                    $parentIssue->id,
+                    $item['issue']->issue_type_id,
+                    $item['issue']->id,
+                );
+            } catch (ValidationException $e) {
+                $warnings[] = '#'.$item['issue']->id.': '.collect($e->errors())->flatten()->first();
+
+                continue;
+            }
+
             $this->issueRepository->update($item['issue'], ['parent_id' => $parentIssue->id]);
         }
+
+        return $warnings;
     }
 }

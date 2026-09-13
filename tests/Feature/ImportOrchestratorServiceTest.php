@@ -10,6 +10,7 @@ use App\Models\ProjectIntegration;
 use App\Models\User;
 use App\Repositories\IntegrationFieldMappingRepository;
 use App\Services\Integrations\ImportOrchestratorService;
+use App\Services\IssueTypeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 
@@ -205,4 +206,152 @@ test('calls onProgress with running totals after every processed issue', functio
     );
 
     expect($calls)->toBe([[1, 0, 0, 0], [2, 0, 0, 0]]);
+});
+
+test('an imported issue is given the Orbit issue type matching its remote type name', function () {
+    $external = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'A crash', description: null,
+        externalStatus: null, externalPriority: null, type: 'Bug',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$external]);
+
+    $issue = $this->project->issues()->where('title', 'A crash')->first();
+    expect($issue->issueType->name)->toBe('Bug');
+});
+
+test('a configured issue type mapping wins over the matching name', function () {
+    app(IntegrationFieldMappingRepository::class)->upsert(
+        $this->projectIntegration, IntegrationFieldMappingType::ISSUE_TYPE, 'Story', 'Epic',
+    );
+    $external = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'Big thing', description: null,
+        externalStatus: null, externalPriority: null, type: 'Story',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$external]);
+
+    expect($this->project->issues()->first()->issueType->name)->toBe('Epic');
+});
+
+test('an unknown remote type falls back to the default issue type', function () {
+    $external = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'Odd one', description: null,
+        externalStatus: null, externalPriority: null, type: 'Nonsense',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$external]);
+
+    expect($this->project->issues()->first()->issueType->name)->toBe('Task');
+});
+
+test('an imported issue lands on a real workflow status of its own type', function () {
+    $external = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'A crash', description: null,
+        externalStatus: 'In Progress', externalPriority: null, type: 'Bug',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$external]);
+
+    $issue = $this->project->issues()->first();
+    expect($issue->workflowStatus)->not->toBeNull()
+        ->and($issue->workflowStatus->issue_type_id)->toBe($issue->issue_type_id);
+});
+
+test('a status mapping naming a workflow status of that type is used directly', function () {
+    app(IssueTypeService::class)->ensureSystemIssueTypes($this->project);
+    app(IntegrationFieldMappingRepository::class)->upsert(
+        $this->projectIntegration, IntegrationFieldMappingType::STATUS, 'Code Review', 'In Review',
+    );
+    $external = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'A crash', description: null,
+        externalStatus: 'Code Review', externalPriority: null, type: 'Bug',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$external]);
+
+    expect($this->project->issues()->first()->workflowStatus->name)->toBe('In Review');
+});
+
+test('a legacy status mapping still resolves by category within the type workflow', function () {
+    app(IntegrationFieldMappingRepository::class)->upsert(
+        $this->projectIntegration, IntegrationFieldMappingType::STATUS, 'Done', 'closed',
+    );
+    $external = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'A crash', description: null,
+        externalStatus: 'Done', externalPriority: null, type: 'Bug',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$external]);
+
+    $issue = $this->project->issues()->first();
+    expect($issue->workflowStatus->category->value)->toBe('done')
+        ->and($issue->status)->toBe('closed');
+});
+
+test('importing a hierarchy the project did not allow widens the parent type', function () {
+    app(IssueTypeService::class)->ensureSystemIssueTypes($this->project);
+    $bugType = $this->project->issueTypes()->where('name', 'Bug')->first();
+    expect($bugType->allows_children)->toBeFalse();
+
+    $parent = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'Parent bug', description: null,
+        externalStatus: null, externalPriority: null, type: 'Bug',
+    );
+    $child = new ExternalIssueDTO(
+        externalId: '2', externalKey: 'JIRA-2', title: 'Child chore', description: null,
+        externalStatus: null, externalPriority: null, type: 'Chore', parentExternalId: '1',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$parent, $child]);
+
+    $childIssue = $this->project->issues()->where('title', 'Child chore')->first();
+    $parentIssue = $this->project->issues()->where('title', 'Parent bug')->first();
+
+    // An empty allowed set already means "any type", so widening only has to
+    // flip allows_children - adding a single entry would narrow it instead.
+    expect($childIssue->parent_id)->toBe($parentIssue->id)
+        ->and($bugType->refresh()->allows_children)->toBeTrue()
+        ->and($bugType->allowedChildTypes()->count())->toBe(0);
+});
+
+test('importing a child a restricted parent type does not list adds it to the allowed set', function () {
+    app(IssueTypeService::class)->ensureSystemIssueTypes($this->project);
+    $storyType = $this->project->issueTypes()->where('name', 'Story')->first();
+    expect($storyType->allowedChildTypes()->pluck('name')->all())->not->toContain('Design');
+
+    $parent = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'A story', description: null,
+        externalStatus: null, externalPriority: null, type: 'Story',
+    );
+    $child = new ExternalIssueDTO(
+        externalId: '2', externalKey: 'JIRA-2', title: 'A mockup', description: null,
+        externalStatus: null, externalPriority: null, type: 'Design', parentExternalId: '1',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$parent, $child]);
+
+    expect($this->project->issues()->where('title', 'A mockup')->first()->parent_id)
+        ->toBe($this->project->issues()->where('title', 'A story')->first()->id)
+        ->and($storyType->refresh()->allowedChildTypes()->pluck('name')->all())->toContain('Design');
+});
+
+test('an import never removes a child type the project already allowed', function () {
+    app(IssueTypeService::class)->ensureSystemIssueTypes($this->project);
+    $epicType = $this->project->issueTypes()->where('name', 'Epic')->first();
+    $before = $epicType->allowedChildTypes()->pluck('name')->sort()->values()->all();
+
+    $parent = new ExternalIssueDTO(
+        externalId: '1', externalKey: 'JIRA-1', title: 'An epic', description: null,
+        externalStatus: null, externalPriority: null, type: 'Epic',
+    );
+    $child = new ExternalIssueDTO(
+        externalId: '2', externalKey: 'JIRA-2', title: 'A task', description: null,
+        externalStatus: null, externalPriority: null, type: 'Task', parentExternalId: '1',
+    );
+
+    $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$parent, $child]);
+
+    expect($epicType->refresh()->allowedChildTypes()->pluck('name')->sort()->values()->all())
+        ->toBe($before);
 });

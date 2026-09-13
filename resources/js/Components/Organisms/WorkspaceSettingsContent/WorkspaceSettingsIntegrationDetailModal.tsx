@@ -6,6 +6,8 @@ import Modal from '@/Components/Atoms/Modal/Modal';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import { IntegrationDefinition } from '@/types/Integrations';
+import { IssueType } from '@/types/IssueTypes';
+import { ProjectLabel } from '@/types/Labels';
 import {
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
@@ -22,6 +24,8 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     canUpdate: boolean;
     settings: ProjectIntegrationSettings | null;
     importSettings: ImportIntegrationSettings | null;
+    issueTypes?: IssueType[];
+    labels?: ProjectLabel[];
     onToggle: (enabled: boolean) => void;
     onSaveWebhookUrl: (webhookUrl: string) => void;
     onToggleOption: (optionId: string, checked: boolean) => void;
@@ -37,6 +41,8 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     canUpdate,
     settings,
     importSettings,
+    issueTypes = [],
+    labels = [],
     onToggle,
     onSaveWebhookUrl,
     onToggleOption,
@@ -265,6 +271,8 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         integration={integration}
                         canUpdate={canUpdate}
                         settings={importSettings}
+                        issueTypes={issueTypes}
+                        labels={labels}
                         onConnect={onConnectImport}
                         onSaveMappings={onSaveImportMappings}
                         onImport={onTriggerImport}

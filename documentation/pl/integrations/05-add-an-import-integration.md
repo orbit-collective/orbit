@@ -98,7 +98,7 @@ zachowując dokładnie ten sam kształt, jakiego używa Jira:
                 type: 'password',
             },
         ],
-        mappingTypes: ['status', 'priority', 'label'],
+        mappingTypes: ['issue_type', 'status', 'priority', 'label'],
     },
     comingSoon: true, // <- odwróć to w ostatnim kroku, gdy wszystko będzie podłączone
 },
@@ -111,15 +111,22 @@ Uwagi:
   trzech pól Jiry), a `WorkspaceSettingsImportPanel.tsx` renderuje tyle
   pól, ile tu wymienisz, bez żadnych dalszych zmian na froncie.
 - `importConfig.mappingTypes` decyduje, które tabele mapowań w panelu
-  się renderują. Tylko `status` i `priority` faktycznie pokazują dziś
-  tabelę, bo to dwa rodzaje metadanych zewnętrznych, jakie
-  `IntegrationImporter::fetchMappingMetadata()` może z góry enumerować
-  (zobacz Krok 3) — mapowania `label` stosują się automatycznie w
-  trakcie importu (niezmapowana zewnętrzna etykieta/komponent jest po
-  prostu pomijana, bo każdy projekt definiuje własną taksonomię
-  labeli zamiast sztywnego zbioru — zobacz
-  [`../labels/README.md`](../labels/README.md)), na razie nie ma dla
-  nich UI przed importem.
+  się renderują. Tabela ma wiersze tylko dla tych rodzajów metadanych
+  zewnętrznych, które `IntegrationImporter::fetchMappingMetadata()`
+  enumeruje (zobacz Krok 3): Jira zwraca `statuses`, `priorities`,
+  `issueTypes` i `labels`, więc mapują się wszystkie cztery. Źródło,
+  które nie potrafi wyliczyć swoich etykiet, po prostu nie pokazuje tam
+  wierszy, a niezmapowana zewnętrzna etykieta jest pomijana w trakcie
+  importu, bo każdy projekt definiuje własną taksonomię (zobacz
+  [`../labels/README.md`](../labels/README.md)).
+- **Docelowa** strona każdego wiersza mapowania to konfiguracja samego
+  projektu, do którego importujesz, a nie sztywny enum: jego typy
+  issue, statusy workflow definiowane przez te typy oraz jego etykiety
+  (zobacz [`../issue-types/README.md`](../issue-types/README.md)). Cel
+  statusu jest oferowany jako suma nazw statusów ze wszystkich typów,
+  ponieważ typ, na którym wyląduje issue, jest znany dopiero w trakcie
+  importu — backend rozwiązuje potem tę nazwę względem typu, który
+  faktycznie dostało.
 - Istniejące `subOptions` (`issue-import`, `status-sync`) to na razie
   czysto kosmetyczny opis dla wpisów `kind: 'import'` — nie są czytane
   przez żaden kod backendu (w przeciwieństwie do `subOptions` integracji
@@ -649,6 +656,47 @@ Na koniec odwróć `comingSoon: false` we wpisie katalogowym Lineara
 (Krok 1), gdy wszystko powyżej jest podłączone i ręcznie zweryfikowane
 — ta jedna flaga odblokowuje UI przełącznika/Connect dokładnie tak, jak
 opisano w przewodniku 1, Kroku 7.
+
+## Jak zaimportowane issue staje się pełnoprawnym issue w Orbicie
+
+`ImportOrchestratorService` nadaje każdemu zaimportowanemu issue taki
+sam kształt, jaki ma issue utworzone ręcznie, więc zachowuje się
+identycznie na liście, tablicy i w widoku szczegółów (zobacz
+[`../issue-types/README.md`](../issue-types/README.md)):
+
+- **Typ issue.** Rozwiązywany w trzech krokach: najpierw wygrywa
+  skonfigurowane mapowanie `issue_type`, potem bezpośrednie dopasowanie
+  nazwy („Bug" z Jiry to „Bug" w Orbicie bez żadnej konfiguracji), a na
+  końcu `IssueTypeService::defaultIssueType()`. Issue nigdy nie ląduje
+  bez typu.
+- **Status workflow.** Ponieważ każdy typ ma własny workflow, status
+  jest rozwiązywany *względem typu, który issue właśnie dostało*: jeśli
+  zmapowana wartość nazywa status tego workflow, jest używana wprost
+  („Code Review" z Jiry zmapowane na „In Review" ląduje na własnym „In
+  Review" typu Bug), w przeciwnym razie stara wartość
+  `open`/`in_progress`/`closed` jest rozwiązywana po kategorii przez
+  `IssueTypeService::resolveWorkflowStatusForLegacyValue()`. Stara
+  kolumna `issues.status` jest utrzymywana w spójności z tym, który
+  status wygrał.
+- **Etykiety.** Mapowane przez `IntegrationFieldMappingType::LABEL`, a
+  potem filtrowane do etykiet, które projekt faktycznie ma — mapowanie
+  wskazujące na usuniętą etykietę jest odrzucane, a nie zapisywane.
+- **Hierarchia.** Systemy zewnętrzne nie stosują się do reguł typów
+  tego projektu: sub-task z Jiry może wisieć pod issue, którego typ w
+  Orbicie nie dopuszcza jeszcze dzieci. Porzucenie takich powiązań po
+  cichu spłaszczyłoby import, więc zamiast tego typ rodzica jest
+  **poszerzany** (`IssueTypeService::allowChildType()` włącza
+  `allows_children`, a dla typu z zawężonym zbiorem dozwolonych dzieci
+  dokłada do niego typ dziecka). Poszerzanie tylko dodaje i nie rusza
+  pustego — czyli nieograniczonego — zbioru. Niezmienniki strukturalne
+  (ten sam projekt, brak samo-rodzicielstwa, brak cykli) są nadal
+  egzekwowane, a powiązanie łamiące któryś z nich trafia do błędów
+  przebiegu zamiast do bazy.
+
+Praktyczny skutek: po zaimportowaniu projektu z Jiry, w którym epiki
+zawierają story, typ Epic w tym projekcie faktycznie ma Story na liście
+dozwolonych dzieci, a użytkownik może potem zbudować taką samą
+strukturę ręcznie.
 
 ## Testy
 
