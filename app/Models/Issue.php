@@ -34,6 +34,7 @@ class Issue extends Model
         'user_id',
         'assignee_id',
         'labels',
+        'custom_fields',
         'start_date',
         'end_date',
     ];
@@ -42,6 +43,7 @@ class Issue extends Model
     {
         return [
             'labels' => 'array',
+            'custom_fields' => 'array',
             'tags' => 'array',
         ];
     }

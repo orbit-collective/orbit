@@ -31,6 +31,7 @@ class IssueTypeRepository
                 'statuses' => fn ($query) => $query->orderBy('sort_order'),
                 'transitions',
                 'templates' => fn ($query) => $query->orderBy('name'),
+                'fields' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'allowedChildTypes',
             ])
             ->orderBy('is_system', 'desc')->orderBy('sort_order')->orderBy('name')->get();

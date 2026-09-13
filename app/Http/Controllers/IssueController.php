@@ -8,6 +8,7 @@ use App\Models\IssueType;
 use App\Models\Label;
 use App\Models\Project;
 use App\Services\IssueService;
+use App\Services\IssueTypeFieldService;
 use App\Services\IssueTypeService;
 use App\Services\LabelService;
 use App\Services\ProjectService;
@@ -30,6 +31,7 @@ class IssueController extends Controller
         protected ProjectService $projectService,
         protected LabelService $labelService,
         protected IssueTypeService $issueTypeService,
+        protected IssueTypeFieldService $issueTypeFieldService,
         protected WorkflowService $workflowService
     ) {}
 
@@ -96,6 +98,7 @@ class IssueController extends Controller
                 'string',
                 Rule::exists('labels', 'name')->where('project_id', $issue->project_id),
             ],
+            'custom_fields' => 'sometimes|nullable|array',
             'start_date' => 'sometimes|nullable|date',
             'end_date' => 'sometimes|nullable|date|after_or_equal:start_date',
         ]);
@@ -169,6 +172,16 @@ class IssueController extends Controller
             }
         }
 
+        if ($issueType && array_key_exists('custom_fields', $data)) {
+            // Merged onto what the issue already holds so a partial save from
+            // the sidebar never wipes the fields it didn't send.
+            // array_replace, not array_merge: these keys are numeric field
+            // ids, and array_merge would renumber them.
+            $merged = array_replace($issue->custom_fields ?? [], $data['custom_fields'] ?? []);
+            $data['custom_fields'] = $this->issueTypeFieldService->sanitizeValues($issueType, $merged);
+            $this->issueTypeFieldService->assertRequiredFieldsSatisfied($issueType, $data['custom_fields']);
+        }
+
         if ($issueType) {
             $this->issueTypeService->assertRequiredFieldsSatisfied($issueType, $data, isCreate: false);
         }
@@ -208,6 +221,7 @@ class IssueController extends Controller
                 Rule::exists('project_user', 'user_id')->where('project_id', $request->input('project_id')),
             ],
             'labels' => 'nullable|array',
+            'custom_fields' => 'nullable|array',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
         ]);
@@ -251,6 +265,9 @@ class IssueController extends Controller
             }
         }
         unset($data['template_id']);
+
+        $data['custom_fields'] = $this->issueTypeFieldService->sanitizeValues($issueType, $data['custom_fields'] ?? []);
+        $this->issueTypeFieldService->assertRequiredFieldsSatisfied($issueType, $data['custom_fields']);
 
         $this->issueTypeService->assertRequiredFieldsSatisfied($issueType, $data, isCreate: true);
 
