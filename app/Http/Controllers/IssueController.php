@@ -111,6 +111,11 @@ class IssueController extends Controller
 
         $issueType = $issue->issueType;
 
+        // Captured before the type-change block below, which may derive a
+        // workflow_status_id of its own - only a status the caller actually
+        // asked for should be transition-checked.
+        $picksWorkflowStatus = array_key_exists('workflow_status_id', $data);
+
         if (array_key_exists('issue_type_id', $data)) {
             $newType = IssueType::query()->where('project_id', $issue->project_id)->find($data['issue_type_id']);
 
@@ -121,7 +126,7 @@ class IssueController extends Controller
                 // The old workflow_status_id almost certainly doesn't belong
                 // to the new type's workflow - reset to its initial status
                 // unless this same request also picks an explicit one below.
-                if (! array_key_exists('status', $data) && ! array_key_exists('workflow_status_id', $data)) {
+                if (! array_key_exists('status', $data) && ! $picksWorkflowStatus) {
                     $data['workflow_status_id'] = $newType->statuses()->where('is_initial', true)->first()?->id;
                 }
             } else {
@@ -132,7 +137,7 @@ class IssueController extends Controller
         // A picked workflow status wins over the legacy enum: the sidebar
         // sends workflow_status_id so a custom status ("In Review") is
         // selectable at all, and the old status column is derived from it.
-        if (array_key_exists('workflow_status_id', $data)) {
+        if ($picksWorkflowStatus) {
             $this->authorize('changeStatus', $issue);
 
             $newStatus = $issueType?->statuses()->find($data['workflow_status_id']);
@@ -143,7 +148,12 @@ class IssueController extends Controller
                 ]);
             }
 
-            $this->workflowService->assertTransitionAllowed($issueType, $issue->workflow_status_id, $newStatus->id);
+            // Moving to a different type means a different workflow, so the
+            // old status isn't a node in it and no transition could exist.
+            if ($issueType->id === $issue->issue_type_id) {
+                $this->workflowService->assertTransitionAllowed($issueType, $issue->workflow_status_id, $newStatus->id);
+            }
+
             $data['status'] = $this->issueTypeService->legacyValueForWorkflowStatus($newStatus);
         } elseif (array_key_exists('status', $data)) {
             $this->authorize('changeStatus', $issue);

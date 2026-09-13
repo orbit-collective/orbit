@@ -1,10 +1,10 @@
 <?php
 
 use App\Enums\WorkflowStatusCategory;
-use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkflowStatus;
+use App\Models\WorkflowTransition;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -119,7 +119,7 @@ test('an admin can add and remove a transition between two statuses', function (
     $storeResponse->assertRedirect();
     $this->assertDatabaseHas('workflow_transitions', ['issue_type_id' => $issueType->id, 'from_status_id' => $from->id, 'to_status_id' => $to->id]);
 
-    $transitionId = \App\Models\WorkflowTransition::query()->where('from_status_id', $from->id)->where('to_status_id', $to->id)->first()->id;
+    $transitionId = WorkflowTransition::query()->where('from_status_id', $from->id)->where('to_status_id', $to->id)->first()->id;
 
     $destroyResponse = $this->actingAs($admin)->delete("/projects/$project->id/issue-types/$issueType->id/transitions/$transitionId");
     $destroyResponse->assertRedirect();
@@ -151,4 +151,38 @@ test('guests cannot manage a project workflow', function () {
     $response = $this->delete("/projects/$project->id/issue-types/$issueType->id/statuses/$status->id");
 
     $response->assertRedirect(route('login'));
+});
+
+test('an admin can pick which workflow status new issues start in', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+    $first = WorkflowStatus::factory()->create([
+        'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'is_initial' => true,
+    ]);
+    $second = WorkflowStatus::factory()->create([
+        'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::IN_PROGRESS, 'is_initial' => false,
+    ]);
+
+    $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id/statuses/$second->id/initial");
+
+    $response->assertRedirect();
+    expect($second->refresh()->is_initial)->toBeTrue()
+        ->and($first->refresh()->is_initial)->toBeFalse();
+});
+
+test('a member cannot change which workflow status is the starting one', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+    $status = WorkflowStatus::factory()->create([
+        'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'is_initial' => false,
+    ]);
+
+    $response = $this->actingAs($member)->patch("/projects/$project->id/issue-types/$issueType->id/statuses/$status->id/initial");
+
+    $response->assertForbidden();
+    expect($status->refresh()->is_initial)->toBeFalse();
 });

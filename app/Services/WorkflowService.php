@@ -45,6 +45,25 @@ class WorkflowService
         return $status;
     }
 
+    /**
+     * Exactly one status per workflow is the one new issues start in, so
+     * promoting a status has to demote whichever one held the flag before.
+     */
+    public function setInitialStatus(IssueType $issueType, WorkflowStatus $status): WorkflowStatus
+    {
+        $issueType->statuses()
+            ->where('is_initial', true)
+            ->where('id', '!=', $status->id)
+            ->get()
+            ->each(fn (WorkflowStatus $other) => $this->workflowRepository->updateStatus($other, ['is_initial' => false]));
+
+        $status = $this->workflowRepository->updateStatus($status, ['is_initial' => true]);
+
+        $this->activityLogService->log($issueType->project_id, "Made \"$status->name\" the starting status of the \"$issueType->name\" workflow");
+
+        return $status;
+    }
+
     public function deleteStatus(IssueType $issueType, WorkflowStatus $status): void
     {
         if ($issueType->statuses()->count() <= 1) {

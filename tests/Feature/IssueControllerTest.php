@@ -684,3 +684,30 @@ test('a workflow status with no transition from the current one is rejected', fu
 
     $response->assertSessionHasErrors('status');
 });
+
+test('changing the issue type and picking a status of the new type in one request works', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $taskType = $project->issueTypes()->where('name', 'Task')->first();
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $bugDone = $bugType->statuses()->where('category', 'done')->first();
+    $issue = $project->issues()->create([
+        'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $taskType->id,
+        'workflow_status_id' => $taskType->statuses()->where('is_initial', true)->first()->id,
+        'priority' => 'low', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->patch("/issues/$issue->id", [
+        'issue_type_id' => $bugType->id,
+        'workflow_status_id' => $bugDone->id,
+    ]);
+
+    $response->assertRedirect()->assertSessionHasNoErrors();
+    $issue->refresh();
+    expect($issue->issue_type_id)->toBe($bugType->id)
+        ->and($issue->workflow_status_id)->toBe($bugDone->id)
+        ->and($issue->status)->toBe('closed');
+});

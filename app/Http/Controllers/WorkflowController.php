@@ -52,6 +52,17 @@ class WorkflowController extends Controller
         return redirect()->back()->with('success', "The \"{$validated['name']}\" status has been updated.");
     }
 
+    public function makeStatusInitial(Project $project, IssueType $issueType, WorkflowStatus $status): RedirectResponse
+    {
+        $this->ensureIssueTypeBelongsToProject($project, $issueType);
+        $this->ensureStatusBelongsToType($issueType, $status);
+        $this->authorize('updateWorkflow', $project);
+
+        $this->workflowService->setInitialStatus($issueType, $status);
+
+        return redirect()->back()->with('success', "New issues now start in \"$status->name\".");
+    }
+
     public function destroyStatus(Project $project, IssueType $issueType, WorkflowStatus $status): RedirectResponse
     {
         $this->ensureIssueTypeBelongsToProject($project, $issueType);
