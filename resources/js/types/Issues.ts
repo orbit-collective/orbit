@@ -65,6 +65,8 @@ export interface Issue {
     workflow_status_id?: number;
     issueType?: IssueType;
     workflowStatus?: WorkflowStatus;
+    children?: Issue[];
+    parent?: Issue;
     due_date?: string | number;
     start_date?: string;
     end_date?: string;

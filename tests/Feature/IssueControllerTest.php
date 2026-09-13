@@ -3,6 +3,7 @@
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\IssueTypeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -609,4 +610,77 @@ test('guests cannot bulk delete issues', function () {
     $response = $this->delete('/issues/bulk-destroy', ['ids' => [$issue->id]]);
 
     $response->assertRedirect(route('login'));
+});
+
+test('an issue can be moved to a custom workflow status by id', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $type = $project->issueTypes()->where('name', 'Task')->first();
+    $inReview = $type->statuses()->create([
+        'name' => 'In Review', 'color' => '#f59e0b',
+        'category' => 'in_progress', 'sort_order' => 5, 'is_initial' => false,
+    ]);
+    $initial = $type->statuses()->where('is_initial', true)->first();
+    $type->transitions()->create(['from_status_id' => $initial->id, 'to_status_id' => $inReview->id]);
+    $issue = $project->issues()->create([
+        'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $type->id, 'workflow_status_id' => $initial->id,
+        'priority' => 'low', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->patch("/issues/$issue->id", [
+        'workflow_status_id' => $inReview->id,
+    ]);
+
+    $response->assertRedirect();
+    $issue->refresh();
+    expect($issue->workflow_status_id)->toBe($inReview->id)
+        ->and($issue->status)->toBe('in_progress');
+});
+
+test('a workflow status from another issue type is rejected', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $taskType = $project->issueTypes()->where('name', 'Task')->first();
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $issue = $project->issues()->create([
+        'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $taskType->id,
+        'workflow_status_id' => $taskType->statuses()->where('is_initial', true)->first()->id,
+        'priority' => 'low', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->patch("/issues/$issue->id", [
+        'workflow_status_id' => $bugType->statuses()->first()->id,
+    ]);
+
+    $response->assertSessionHasErrors('workflow_status_id');
+});
+
+test('a workflow status with no transition from the current one is rejected', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $type = $project->issueTypes()->where('name', 'Task')->first();
+    $initial = $type->statuses()->where('is_initial', true)->first();
+    $unreachable = $type->statuses()->create([
+        'name' => 'Blocked', 'color' => '#ef4444',
+        'category' => 'todo', 'sort_order' => 9, 'is_initial' => false,
+    ]);
+    $issue = $project->issues()->create([
+        'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $type->id, 'workflow_status_id' => $initial->id,
+        'priority' => 'low', 'status' => 'open',
+    ]);
+
+    $response = $this->actingAs($member)->patch("/issues/$issue->id", [
+        'workflow_status_id' => $unreachable->id,
+    ]);
+
+    $response->assertSessionHasErrors('status');
 });

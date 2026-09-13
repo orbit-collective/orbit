@@ -535,3 +535,107 @@ describe('Issues/Show Page', () => {
         ).not.toBeInTheDocument();
     });
 });
+
+describe('Issues/Show workflow status', () => {
+    const taskType = {
+        id: 7,
+        name: 'Task',
+        icon: 'SquareCheck',
+        color: '#3b82f6',
+        description: null,
+        isSystem: true,
+        allowsChildren: false,
+        isTopLevel: true,
+        requiredFields: [],
+        restrictedRoleTypes: [],
+        statuses: [
+            {
+                id: 1,
+                issueTypeId: 7,
+                name: 'To Do',
+                color: '#94a3b8',
+                category: 'todo' as const,
+                isInitial: true,
+            },
+            {
+                id: 2,
+                issueTypeId: 7,
+                name: 'In Review',
+                color: '#f59e0b',
+                category: 'in_progress' as const,
+                isInitial: false,
+            },
+            {
+                id: 3,
+                issueTypeId: 7,
+                name: 'Blocked',
+                color: '#ef4444',
+                category: 'todo' as const,
+                isInitial: false,
+            },
+        ],
+        transitions: [
+            { id: 1, issueTypeId: 7, fromStatusId: 1, toStatusId: 2 },
+        ],
+    };
+
+    const workflowIssue = buildIssue({
+        issueType: taskType,
+        workflowStatus: taskType.statuses[0],
+    });
+
+    test("shows the issue type's current workflow status instead of the legacy enum", () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={workflowIssue}
+                users={users}
+                issueTypes={[taskType]}
+            />,
+        );
+
+        expect(screen.getByText('To Do')).toBeInTheDocument();
+    });
+
+    test('only offers statuses the workflow can transition to', async () => {
+        const user = userEvent.setup();
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={workflowIssue}
+                users={users}
+                issueTypes={[taskType]}
+            />,
+        );
+
+        await user.click(screen.getByText('To Do'));
+
+        expect(screen.getByText('In Review')).toBeInTheDocument();
+        expect(screen.queryByText('Blocked')).not.toBeInTheDocument();
+    });
+
+    test('picking a status patches workflow_status_id', async () => {
+        const user = userEvent.setup();
+        const { router } = await import('@inertiajs/react');
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={workflowIssue}
+                users={users}
+                issueTypes={[taskType]}
+            />,
+        );
+
+        await user.click(screen.getByText('To Do'));
+        await user.click(screen.getByText('In Review'));
+
+        expect(router.patch).toHaveBeenCalledWith(
+            expect.anything(),
+            { workflow_status_id: 2 },
+            expect.any(Object),
+        );
+    });
+});
