@@ -202,8 +202,16 @@ to `IssueTypeService::defaultIssueType()` when none is sent) and
 rest, or apply an
 `IssueTypeTemplate` (`name`, `description`, `default_priority`,
 `default_labels`, managed from **Settings → Issue Types → Manage
-templates**) via a `template_id` on that same create request, which
-prefills `description`/`labels` when they're otherwise empty.
+templates**). A template applies **without being asked for**: with no
+`template_id` on the request, `IssueTypeService::defaultTemplateFor()`
+supplies the type's own, which is the only way quick-add — it sends
+nothing but a title — would ever see one. An explicit `template_id`
+overrides it, and anything the request actually carries wins over the
+template. Retyping an issue that nobody has written up yet adopts the
+new type's template too; an issue with a description keeps it. Template
+labels are narrowed through `LabelService::filterToExisting()` first,
+since they arrive from the server and so bypass the request's
+`labels.*` existence rule.
 `resources/js/utils/quickAddIssueEvent.ts` is a tiny `window` event bus
 so `MainLayout`'s global "New issue" button/keyboard shortcuts can ask
 whichever `IssueTable` happens to be mounted to reveal and focus its

@@ -39,6 +39,23 @@ class LabelService
      * a system label an owner deliberately deleted the next time any issue
      * is created or edited.
      */
+    /**
+     * Narrows a list of label names to the ones this project actually has.
+     * A template may name a label the project has since deleted, and those
+     * names bypass the request's exists() rule by arriving from the server.
+     *
+     * @param  array<int, string>  $names
+     * @return array<int, string>
+     */
+    public function filterToExisting(Project $project, array $names): array
+    {
+        if ($names === []) {
+            return [];
+        }
+
+        return $project->labels()->whereIn('name', $names)->pluck('name')->values()->all();
+    }
+
     public function ensureSystemLabels(Project $project): void
     {
         if ($project->labels_seeded_at !== null) {

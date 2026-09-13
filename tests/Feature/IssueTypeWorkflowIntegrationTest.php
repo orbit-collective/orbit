@@ -185,8 +185,28 @@ test('creating an issue of a type with required fields rejects a request missing
         'issue_type_id' => $bugType->id,
     ]);
 
-    $response->assertSessionHasErrors(['description', 'assignee_id']);
+    // The Bug template supplies a description, so only the assignee is
+    // genuinely missing - see the next test for a type with no template.
+    $response->assertSessionHasErrors(['assignee_id']);
     $this->assertDatabaseMissing('issues', ['project_id' => $project->id, 'title' => 'Missing fields']);
+});
+
+test('a required description is still enforced for a type with no template', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
+    $customType = $project->issueTypes()->create([
+        'name' => 'Compliance', 'icon' => 'Scale', 'color' => '#0ea5e9',
+        'is_system' => false, 'required_fields' => ['description'],
+    ]);
+
+    $response = $this->actingAs($member)->post('/issues', [
+        'title' => 'No description', 'project_id' => $project->id,
+        'priority' => 'high', 'status' => 'open', 'issue_type_id' => $customType->id,
+    ]);
+
+    $response->assertSessionHasErrors(['description']);
 });
 
 test('creating an issue satisfying its type\'s required fields succeeds', function () {

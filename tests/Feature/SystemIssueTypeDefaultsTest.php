@@ -261,3 +261,68 @@ test('a custom type is never touched by the top-level repair', function () {
 
     expect($custom->refresh()->is_top_level)->toBeTrue();
 });
+
+test('the stock board left mixed into a type own workflow is cleaned out', function () {
+    $project = Project::factory()->create();
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $bug = $project->issueTypes()->where('name', 'Bug')->first();
+
+    // Reproduce the corruption the first, pre-transaction run left behind.
+    foreach ([['To Do', 'todo'], ['In Progress', 'in_progress'], ['Done', 'done']] as $index => [$name, $category]) {
+        $bug->statuses()->create([
+            'name' => $name, 'color' => '#94a3b8', 'category' => $category,
+            'sort_order' => 90 + $index, 'is_initial' => false,
+        ]);
+    }
+    $project->forceFill(['issue_type_defaults_version' => 3])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    expect($bug->statuses()->orderBy('sort_order')->pluck('name')->all())
+        ->toBe(['Reported', 'Triaged', 'Fixing', 'In Review', 'Fixed', "Won't Fix"]);
+});
+
+test('an issue parked on a leftover stock status is moved onto the catalog one', function () {
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'owner']);
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $bug = $project->issueTypes()->where('name', 'Bug')->first();
+    $leftover = $bug->statuses()->create([
+        'name' => 'In Progress', 'color' => '#94a3b8', 'category' => 'in_progress',
+        'sort_order' => 91, 'is_initial' => false,
+    ]);
+    $issue = $project->issues()->create([
+        'title' => 'Parked', 'project_id' => $project->id, 'user_id' => $user->id,
+        'issue_type_id' => $bug->id, 'workflow_status_id' => $leftover->id,
+        'priority' => 'low', 'status' => 'in_progress',
+    ]);
+    $project->forceFill(['issue_type_defaults_version' => 3])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    $moved = WorkflowStatus::find($issue->refresh()->workflow_status_id);
+    expect($moved)->not->toBeNull()
+        ->and($moved->name)->toBe('Fixing');
+});
+
+test('statuses a project added itself survive the cleanup', function () {
+    $project = Project::factory()->create();
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $epic = $project->issueTypes()->where('name', 'Epic')->first();
+    $custom = $epic->statuses()->create([
+        'name' => 'Parked', 'color' => '#78716c', 'category' => 'todo',
+        'sort_order' => 80, 'is_initial' => false,
+    ]);
+    $epic->statuses()->create([
+        'name' => 'To Do', 'color' => '#94a3b8', 'category' => 'todo',
+        'sort_order' => 90, 'is_initial' => false,
+    ]);
+    $project->forceFill(['issue_type_defaults_version' => 3])->save();
+
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project->refresh());
+
+    $names = $epic->statuses()->pluck('name')->all();
+    expect($names)->toContain('Parked')
+        ->and($names)->not->toContain('To Do');
+});
