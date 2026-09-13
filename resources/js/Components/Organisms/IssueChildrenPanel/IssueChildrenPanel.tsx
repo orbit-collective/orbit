@@ -3,6 +3,7 @@ import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
+import { useAlert } from '@/context/AlertContext';
 import { Issue } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
@@ -25,6 +26,7 @@ export default function IssueChildrenPanel({
     issue,
     issueTypes,
 }: IssueChildrenPanelProps) {
+    const { addAlert } = useAlert();
     const children = issue.children ?? [];
     const allowedIds = issue.issueType?.allowedChildTypeIds ?? [];
 
@@ -77,6 +79,12 @@ export default function IssueChildrenPanel({
             {
                 preserveScroll: true,
                 onSuccess: () => setTitle(''),
+                onError: (errors) =>
+                    addAlert(
+                        Object.values(errors)[0] ??
+                            'Could not create the sub-issue',
+                        'error',
+                    ),
                 onFinish: () => setIsSubmitting(false),
             },
         );

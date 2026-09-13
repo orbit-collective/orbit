@@ -849,3 +849,98 @@ describe('IssueTable Component', () => {
         ).toBeInTheDocument();
     });
 });
+
+describe('IssueTable sub-issue type picker', () => {
+    const epicLite = {
+        id: 1,
+        name: 'Epic',
+        icon: 'Zap',
+        color: '#a855f7',
+        description: null,
+        isSystem: true,
+        allowsChildren: true,
+        isTopLevel: true,
+        requiredFields: [],
+        restrictedRoleTypes: [],
+    };
+    // What the page prop carries: the same type, with the hierarchy relation.
+    const epicFull = { ...epicLite, allowedChildTypeIds: [2] };
+    const taskType = {
+        ...epicLite,
+        id: 2,
+        name: 'Task',
+        icon: 'SquareCheck',
+        allowsChildren: false,
+    };
+    const storyType = { ...taskType, id: 3, name: 'Story', icon: 'BookOpen' };
+
+    test("offers only the parent's allowed child types, not every project type", () => {
+        render(
+            <IssueTable
+                issues={[
+                    makeIssue({
+                        id: 'EPIC-1',
+                        title: 'Epic issue',
+                        // The listed issue carries the lightweight type, with
+                        // no allowedChildTypeIds on it at all.
+                        issueType: epicLite,
+                    }),
+                ]}
+                project={makeProject()}
+                issueTypes={[epicFull, taskType, storyType]}
+            />,
+        );
+
+        fireEvent.click(screen.getByText('Add sub-issue'));
+        fireEvent.click(screen.getByLabelText('Issue type'));
+
+        expect(screen.getAllByText('Task').length).toBeGreaterThan(1);
+        expect(screen.queryByText('Story')).not.toBeInTheDocument();
+    });
+
+    test('offers every type when the parent restricts nothing', () => {
+        render(
+            <IssueTable
+                issues={[
+                    makeIssue({
+                        id: 'EPIC-1',
+                        title: 'Epic issue',
+                        issueType: epicLite,
+                    }),
+                ]}
+                project={makeProject()}
+                issueTypes={[
+                    { ...epicFull, allowedChildTypeIds: [] },
+                    taskType,
+                    storyType,
+                ]}
+            />,
+        );
+
+        fireEvent.click(screen.getByText('Add sub-issue'));
+        fireEvent.click(screen.getByLabelText('Issue type'));
+
+        expect(screen.getByText('Story')).toBeInTheDocument();
+        expect(screen.getAllByText('Epic').length).toBeGreaterThan(0);
+    });
+
+    test('the top-level row offers only types that may start on their own', () => {
+        render(
+            <IssueTable
+                issues={[]}
+                project={makeProject()}
+                issueTypes={[
+                    epicFull,
+                    taskType,
+                    { ...storyType, isTopLevel: false },
+                ]}
+            />,
+        );
+
+        fireEvent.click(screen.getByText('New issue'));
+        fireEvent.click(screen.getByLabelText('Issue type'));
+
+        expect(screen.getByText('Epic')).toBeInTheDocument();
+        expect(screen.queryByText('Story')).not.toBeInTheDocument();
+    });
+});
