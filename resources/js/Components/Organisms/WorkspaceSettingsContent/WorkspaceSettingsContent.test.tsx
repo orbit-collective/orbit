@@ -95,25 +95,11 @@ describe('WorkspaceSettingsContent', () => {
         expect(screen.getByText('Bug')).toBeInTheDocument();
     });
 
-    test('renders statuses content', () => {
-        render(<WorkspaceSettingsContent tabId="statuses" />);
-
-        expect(screen.getByText('Workflow statuses')).toBeInTheDocument();
-        expect(screen.getByText('Status maintenance')).toBeInTheDocument();
-    });
-
     test('renders priorities content', () => {
         render(<WorkspaceSettingsContent tabId="priorities" />);
 
         expect(screen.getByText('Priority framework')).toBeInTheDocument();
         expect(screen.getByText('Default policy')).toBeInTheDocument();
-    });
-
-    test('renders templates content', () => {
-        render(<WorkspaceSettingsContent tabId="templates" />);
-
-        expect(screen.getByText('Issue templates')).toBeInTheDocument();
-        expect(screen.getByText('Quality controls')).toBeInTheDocument();
     });
 
     test('renders documents content', () => {

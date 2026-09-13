@@ -11,9 +11,7 @@ export type SettingsTabId =
     | 'export'
     | 'labels'
     | 'issue-types'
-    | 'statuses'
     | 'priorities'
-    | 'templates'
     | 'documents'
     | 'members'
     | 'roles-management';
@@ -92,27 +90,11 @@ export const SETTINGS_TABS: SettingsTab[] = [
         enabled: true,
     },
     {
-        id: 'statuses',
-        label: 'Statuses',
-        icon: 'ListTodo',
-        section: 'workspace',
-        description: 'Configure lifecycle statuses for work tracking.',
-        enabled: false,
-    },
-    {
         id: 'priorities',
         label: 'Priorities',
         icon: 'Flag',
         section: 'workspace',
         description: 'Standardize priority levels and urgency definitions.',
-        enabled: false,
-    },
-    {
-        id: 'templates',
-        label: 'Templates',
-        icon: 'FileText',
-        section: 'workspace',
-        description: 'Create reusable templates for consistent issue creation.',
         enabled: false,
     },
     {
@@ -194,9 +176,7 @@ export const isAccountSettingsTabId = (
 export const WORKSPACE_SETTINGS_TAB_IDS = [
     'labels',
     'issue-types',
-    'statuses',
     'priorities',
-    'templates',
     'documents',
     'members',
     'roles-management',

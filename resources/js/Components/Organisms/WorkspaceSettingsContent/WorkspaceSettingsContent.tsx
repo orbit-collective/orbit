@@ -21,8 +21,6 @@ import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
 import WorkspaceSettingsMembersTab from './WorkspaceSettingsMembersTab';
 import WorkspaceSettingsPrioritiesTab from './WorkspaceSettingsPrioritiesTab';
 import WorkspaceSettingsRolesTab from './WorkspaceSettingsRolesTab';
-import WorkspaceSettingsStatusesTab from './WorkspaceSettingsStatusesTab';
-import WorkspaceSettingsTemplatesTab from './WorkspaceSettingsTemplatesTab';
 
 interface WorkspaceSettingsContentProps {
     tabId: WorkspaceSettingsTabId;
@@ -115,6 +113,7 @@ export default function WorkspaceSettingsContent({
                 memberProjects={memberProjects}
                 selectedProjectId={selectedProjectId}
                 issueTypes={issueTypes}
+                labels={labels}
                 hasIssueTypesAccess={hasIssueTypesAccess}
                 canCreateIssueTypes={canCreateIssueTypes}
                 canUpdateIssueTypes={canUpdateIssueTypes}
@@ -124,16 +123,8 @@ export default function WorkspaceSettingsContent({
         );
     }
 
-    if (tabId === 'statuses') {
-        return <WorkspaceSettingsStatusesTab />;
-    }
-
     if (tabId === 'priorities') {
         return <WorkspaceSettingsPrioritiesTab />;
-    }
-
-    if (tabId === 'templates') {
-        return <WorkspaceSettingsTemplatesTab />;
     }
 
     if (tabId === 'documents') {
