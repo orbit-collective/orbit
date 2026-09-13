@@ -15,7 +15,7 @@ test('a user active within their session lifetime stays authenticated', function
 
     $response = $this->withSession(['last_activity_at' => now()->subMinutes(60)])
         ->actingAs($user)
-        ->get('/settings');
+        ->get('/settings/preferences');
 
     $response->assertOk();
     $this->assertAuthenticatedAs($user);
@@ -26,7 +26,7 @@ test('a user idle beyond their session lifetime is signed out', function () {
 
     $response = $this->withSession(['last_activity_at' => now()->subMinutes(90)])
         ->actingAs($user)
-        ->get('/settings');
+        ->get('/settings/preferences');
 
     $response->assertRedirect(route('login'));
     $response->assertSessionHas('warning', 'You have been signed out due to inactivity.');
@@ -38,7 +38,7 @@ test('a user idle for exactly their session lifetime is not yet signed out', fun
 
     $response = $this->withSession(['last_activity_at' => now()->subMinutes(30)])
         ->actingAs($user)
-        ->get('/settings');
+        ->get('/settings/preferences');
 
     $response->assertOk();
     $this->assertAuthenticatedAs($user);
@@ -47,7 +47,7 @@ test('a user idle for exactly their session lifetime is not yet signed out', fun
 test('the first authenticated request after login does not trigger a logout', function () {
     $user = User::factory()->create(['session_lifetime' => 60]);
 
-    $response = $this->actingAs($user)->get('/settings');
+    $response = $this->actingAs($user)->get('/settings/preferences');
 
     $response->assertOk();
     $this->assertAuthenticatedAs($user);
@@ -58,7 +58,7 @@ test('a successful request refreshes the idle activity timestamp', function () {
 
     $this->withSession(['last_activity_at' => now()->subMinutes(45)])
         ->actingAs($user)
-        ->get('/settings');
+        ->get('/settings/preferences');
 
     expect(session('last_activity_at'))
         ->not->toBeNull()
@@ -67,7 +67,7 @@ test('a successful request refreshes the idle activity timestamp', function () {
 });
 
 test('guests are unaffected by the session lifetime check', function () {
-    $response = $this->get('/settings');
+    $response = $this->get('/settings/preferences');
 
     $response->assertRedirect(route('login'));
 });

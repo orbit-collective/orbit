@@ -148,7 +148,7 @@ export default function WorkspaceSettingsIntegrationsTab({
 
     const switchProject = (projectId: number) => {
         router.get(
-            `/settings?tab=integrations&project=${projectId}`,
+            `/settings/integrations?project=${projectId}`,
             {},
             { preserveScroll: true, preserveState: true },
         );

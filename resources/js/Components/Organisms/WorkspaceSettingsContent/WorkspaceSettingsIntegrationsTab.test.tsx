@@ -119,7 +119,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         await userEvent.click(screen.getByText('Marketing'));
 
         expect(mockRouterGet).toHaveBeenCalledWith(
-            '/settings?tab=integrations&project=2',
+            '/settings/integrations?project=2',
             {},
             { preserveScroll: true, preserveState: true },
         );

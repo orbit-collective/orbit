@@ -8,6 +8,7 @@ use App\Models\Label;
 use App\Models\Permission as PermissionModel;
 use App\Models\Project;
 use App\Models\Role;
+use App\Models\User;
 use App\Services\Integrations\Jira\JiraIntegrationService;
 use App\Services\IssueTypeService;
 use App\Services\LabelService;
@@ -24,8 +25,32 @@ use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Every settings tab is its own page with its own route
+ * (`/settings/<tab>`, route name `settings.<tab>`) so that a request only
+ * ever computes and ships the props that one tab actually renders — the
+ * page previously served every tab's data on every visit. Shared shape:
+ * each method renders `Settings/<Page>` and always passes `projects`,
+ * which the Sidebar needs on every settings page; project-scoped tabs
+ * additionally pass `memberProjects`/`selectedProjectId` for the project
+ * switcher, resolved from the `?project=` query string.
+ */
 class SettingsController extends Controller
 {
+    /**
+     * Tiers that are allowed to view settings regardless of any explicit
+     * permission grant.
+     */
+    private const VIEW_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
+
+    /**
+     * Labels and issue types are readable a tier wider than the general
+     * settings tabs (see ProjectPolicy::viewLabels()).
+     */
+    private const CATALOG_VIEW_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
+
+    private const MANAGE_TIERS = [RoleType::OWNER, RoleType::ADMIN];
+
     public function __construct(
         protected UserService $userService,
         protected NotificationSettingService $notificationSettingService,
@@ -40,47 +65,96 @@ class SettingsController extends Controller
         protected IssueTypeService $issueTypeService,
     ) {}
 
-    public function index(Request $request): Response
+    public function preferences(Request $request): Response
+    {
+        return Inertia::render('Settings/Preferences', [
+            'projects' => $this->projects($request),
+        ]);
+    }
+
+    public function profile(Request $request): Response
+    {
+        return Inertia::render('Settings/Profile', [
+            'projects' => $this->projects($request),
+        ]);
+    }
+
+    public function notifications(Request $request): Response
+    {
+        return Inertia::render('Settings/Notifications', [
+            'projects' => $this->projects($request),
+            'notificationSettings' => $this->notificationSettingService->getAllSettings($request->user()->id),
+        ]);
+    }
+
+    public function securityAccess(Request $request): Response
+    {
+        return Inertia::render('Settings/SecurityAccess', [
+            'projects' => $this->projects($request),
+            'sessions' => $this->userService->getUserSessions($request->user()),
+        ]);
+    }
+
+    public function labels(Request $request): Response
     {
         $user = $request->user();
-        $projects = $this->projectService->getAllForUser($user->id);
+        $projects = $this->projects($request);
         $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
 
-        $viewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-        $hasSettingsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::SETTINGS_VIEW, $viewTiers) ?? false;
-        $hasRolesAccess = $hasSettingsAccess && $selectedProject->hasPermissionOrTier($user, PermissionEnum::ROLES_VIEW, $viewTiers);
-        $hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, $viewTiers) ?? false;
-        $canUpdateIntegrations = $hasIntegrationsAccess
-            && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
-        // Labels use their own tier list (adds VIEWER) since ProjectPolicy::viewLabels()
-        // grants view access a tier wider than the general $viewTiers above.
-        $labelViewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
-        $hasLabelsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_VIEW, $labelViewTiers) ?? false;
-        // Deliberately independent of $hasLabelsAccess: a custom role can be
-        // granted a mutation permission (e.g. labels.create) without also
-        // being granted labels.view, and that grant must still work.
-        $canCreateLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_CREATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
-        $canUpdateLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
-        $canDeleteLabels = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
-        // Same tier shape as labels above - issue types.view is granted to
-        // the same wider audience, mutations stay owner/admin-only.
-        $issueTypeViewTiers = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
-        $hasIssueTypesAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_VIEW, $issueTypeViewTiers) ?? false;
-        $canCreateIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_CREATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
-        $canUpdateIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_UPDATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
-        $canDeleteIssueTypes = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_DELETE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
-        $canUpdateWorkflow = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::WORKFLOW_UPDATE, [RoleType::OWNER, RoleType::ADMIN]) ?? false;
+        $hasLabelsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_VIEW, self::CATALOG_VIEW_TIERS) ?? false;
 
-        return Inertia::render('Settings/Index', [
-            'projects' => $projects,
-            'sessions' => $this->userService->getUserSessions($user),
-            'notificationSettings' => $this->notificationSettingService->getAllSettings($user->id),
-            'memberProjects' => $projects->map(fn (Project $project) => [
-                'id' => $project->id,
-                'name' => $project->name,
-                'color' => $project->color,
-            ])->values(),
-            'selectedProjectId' => $selectedProject?->id,
+        return Inertia::render('Settings/Labels', [
+            ...$this->projectScope($projects, $selectedProject),
+            'labels' => $hasLabelsAccess
+                ? $this->mapLabels($this->labelService->getLabels($selectedProject))
+                : [],
+            'hasLabelsAccess' => $hasLabelsAccess,
+            // Deliberately independent of $hasLabelsAccess: a custom role can be
+            // granted a mutation permission (e.g. labels.create) without also
+            // being granted labels.view, and that grant must still work.
+            'canCreateLabels' => $this->can($selectedProject, $user, PermissionEnum::LABELS_CREATE),
+            'canUpdateLabels' => $this->can($selectedProject, $user, PermissionEnum::LABELS_UPDATE),
+            'canDeleteLabels' => $this->can($selectedProject, $user, PermissionEnum::LABELS_DELETE),
+        ]);
+    }
+
+    public function issueTypes(Request $request): Response
+    {
+        $user = $request->user();
+        $projects = $this->projects($request);
+        $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
+
+        $hasIssueTypesAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_VIEW, self::CATALOG_VIEW_TIERS) ?? false;
+        $hasLabelsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_VIEW, self::CATALOG_VIEW_TIERS) ?? false;
+
+        return Inertia::render('Settings/IssueTypes', [
+            ...$this->projectScope($projects, $selectedProject),
+            'issueTypes' => $hasIssueTypesAccess
+                ? $this->issueTypeService->getIssueTypes($selectedProject)
+                : [],
+            // Issue type templates pick from the project's labels, so this
+            // tab needs the label catalog too.
+            'labels' => $hasLabelsAccess
+                ? $this->mapLabels($this->labelService->getLabels($selectedProject))
+                : [],
+            'hasIssueTypesAccess' => $hasIssueTypesAccess,
+            'canCreateIssueTypes' => $this->can($selectedProject, $user, PermissionEnum::ISSUE_TYPES_CREATE),
+            'canUpdateIssueTypes' => $this->can($selectedProject, $user, PermissionEnum::ISSUE_TYPES_UPDATE),
+            'canDeleteIssueTypes' => $this->can($selectedProject, $user, PermissionEnum::ISSUE_TYPES_DELETE),
+            'canUpdateWorkflow' => $this->can($selectedProject, $user, PermissionEnum::WORKFLOW_UPDATE),
+        ]);
+    }
+
+    public function members(Request $request): Response
+    {
+        $user = $request->user();
+        $projects = $this->projects($request);
+        $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
+
+        $hasRolesAccess = $this->hasRolesAccess($selectedProject, $user);
+
+        return Inertia::render('Settings/Members', [
+            ...$this->projectScope($projects, $selectedProject),
             'selectedProjectDetails' => $selectedProject ? [
                 'name' => $selectedProject->name,
                 'description' => $selectedProject->description,
@@ -93,6 +167,31 @@ class SettingsController extends Controller
             'pendingInvitations' => $selectedProject
                 ? $this->mapInvitations($this->projectInvitationService->getPending($selectedProject))
                 : [],
+            // Needed to render the role pickers on each member row.
+            'roles' => $hasRolesAccess
+                ? $this->mapRoles($this->roleService->getRoles($selectedProject)->loadMissing('members'))
+                : [],
+            'canAssignRoles' => $selectedProject
+                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_ASSIGN)
+                : false,
+            'canUpdateProjectDetails' => $this->can($selectedProject, $user, PermissionEnum::PROJECT_UPDATE),
+            'canDeleteProject' => $selectedProject
+                ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
+                : false,
+        ]);
+    }
+
+    public function rolesManagement(Request $request): Response
+    {
+        $user = $request->user();
+        $projects = $this->projects($request);
+        $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
+
+        $hasSettingsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::SETTINGS_VIEW, self::VIEW_TIERS) ?? false;
+        $hasRolesAccess = $this->hasRolesAccess($selectedProject, $user);
+
+        return Inertia::render('Settings/RolesManagement', [
+            ...$this->projectScope($projects, $selectedProject),
             'roles' => $hasRolesAccess
                 ? $this->mapRoles($this->roleService->getRoles($selectedProject)->loadMissing('members'))
                 : [],
@@ -103,12 +202,21 @@ class SettingsController extends Controller
             'canCreateRoles' => $hasRolesAccess && $selectedProject->hasPermission($user, PermissionEnum::ROLES_CREATE),
             'canUpdateRoles' => $hasRolesAccess && $selectedProject->hasPermission($user, PermissionEnum::ROLES_UPDATE),
             'canDeleteRoles' => $hasRolesAccess && $selectedProject->hasPermission($user, PermissionEnum::ROLES_DELETE),
-            'canAssignRoles' => $selectedProject
-                ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_ASSIGN)
-                : false,
-            'canUpdateProjectDetails' => $selectedProject
-                ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_UPDATE, [RoleType::OWNER, RoleType::ADMIN])
-                : false,
+        ]);
+    }
+
+    public function integrations(Request $request): Response
+    {
+        $user = $request->user();
+        $projects = $this->projects($request);
+        $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
+
+        $hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, self::VIEW_TIERS) ?? false;
+        $canUpdateIntegrations = $hasIntegrationsAccess
+            && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, self::MANAGE_TIERS);
+
+        return Inertia::render('Settings/Integrations', [
+            ...$this->projectScope($projects, $selectedProject),
             'integrationStatuses' => $hasIntegrationsAccess
                 ? $this->projectIntegrationService->getStatuses($selectedProject)
                 : [],
@@ -130,25 +238,47 @@ class SettingsController extends Controller
             'jiraImportProgress' => $canUpdateIntegrations
                 ? $this->jiraIntegrationService->getImportProgress($selectedProject)
                 : null,
-            'canDeleteProject' => $selectedProject
-                ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
-                : false,
-            'labels' => $hasLabelsAccess
-                ? $this->mapLabels($this->labelService->getLabels($selectedProject))
-                : [],
-            'hasLabelsAccess' => $hasLabelsAccess,
-            'canCreateLabels' => $canCreateLabels,
-            'canUpdateLabels' => $canUpdateLabels,
-            'canDeleteLabels' => $canDeleteLabels,
-            'issueTypes' => $hasIssueTypesAccess
+            // Only the import mapping UI reads these, and that is gated on
+            // being able to change the integration in the first place.
+            'issueTypes' => $canUpdateIntegrations
                 ? $this->issueTypeService->getIssueTypes($selectedProject)
                 : [],
-            'hasIssueTypesAccess' => $hasIssueTypesAccess,
-            'canCreateIssueTypes' => $canCreateIssueTypes,
-            'canUpdateIssueTypes' => $canUpdateIssueTypes,
-            'canDeleteIssueTypes' => $canDeleteIssueTypes,
-            'canUpdateWorkflow' => $canUpdateWorkflow,
+            'labels' => $canUpdateIntegrations
+                ? $this->mapLabels($this->labelService->getLabels($selectedProject))
+                : [],
         ]);
+    }
+
+    private function projects(Request $request): Collection
+    {
+        return $this->projectService->getAllForUser($request->user()->id);
+    }
+
+    /**
+     * Props every project-scoped tab needs for its project switcher.
+     */
+    private function projectScope(Collection $projects, ?Project $selectedProject): array
+    {
+        return [
+            'projects' => $projects,
+            'memberProjects' => $projects->map(fn (Project $project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'color' => $project->color,
+            ])->values(),
+            'selectedProjectId' => $selectedProject?->id,
+        ];
+    }
+
+    private function can(?Project $project, User $user, PermissionEnum $permission): bool
+    {
+        return $project?->hasPermissionOrTier($user, $permission, self::MANAGE_TIERS) ?? false;
+    }
+
+    private function hasRolesAccess(?Project $project, User $user): bool
+    {
+        return ($project?->hasPermissionOrTier($user, PermissionEnum::SETTINGS_VIEW, self::VIEW_TIERS) ?? false)
+            && $project->hasPermissionOrTier($user, PermissionEnum::ROLES_VIEW, self::VIEW_TIERS);
     }
 
     private function resolveSelectedProject(Collection $projects, ?string $projectId): ?Project

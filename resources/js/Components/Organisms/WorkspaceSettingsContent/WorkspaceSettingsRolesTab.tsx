@@ -40,7 +40,7 @@ export default function WorkspaceSettingsRolesTab({
 
     const switchProject = (projectId: number) => {
         router.get(
-            `/settings?tab=roles-management&project=${projectId}`,
+            `/settings/roles-management?project=${projectId}`,
             {},
             { preserveScroll: true, preserveState: true },
         );

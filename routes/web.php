@@ -80,7 +80,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/{notification}', [NotificationController::class, 'update'])->name('notifications.update');
     Route::post('/onboarding/complete', [UserController::class, 'completeOnboarding'])->name('onboarding.complete');
     Route::post('/onboarding/project/complete', [UserController::class, 'completeProjectOnboarding'])->name('onboarding.project.complete');
-    Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
+    // Each settings tab is its own page so a request only loads that tab's
+    // data; `/settings` itself just lands on the default tab.
+    Route::get('/settings', fn () => redirect()->route('settings.preferences'))->name('settings');
+    Route::get('/settings/preferences', [SettingsController::class, 'preferences'])->name('settings.preferences');
+    Route::get('/settings/profile', [SettingsController::class, 'profile'])->name('settings.profile');
+    Route::get('/settings/notifications', [SettingsController::class, 'notifications'])->name('settings.notifications');
+    Route::get('/settings/security-access', [SettingsController::class, 'securityAccess'])->name('settings.security-access');
+    Route::get('/settings/labels', [SettingsController::class, 'labels'])->name('settings.labels');
+    Route::get('/settings/issue-types', [SettingsController::class, 'issueTypes'])->name('settings.issue-types');
+    Route::get('/settings/members', [SettingsController::class, 'members'])->name('settings.members');
+    Route::get('/settings/roles-management', [SettingsController::class, 'rolesManagement'])->name('settings.roles-management');
+    Route::get('/settings/integrations', [SettingsController::class, 'integrations'])->name('settings.integrations');
 });
 
 Route::get('/invitations/{token}', [ProjectInvitationController::class, 'accept'])->name('invitations.accept');

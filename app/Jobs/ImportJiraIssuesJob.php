@@ -155,7 +155,7 @@ class ImportJiraIssuesJob implements ShouldQueue
             'error',
             'Jira import failed',
             "The Jira import for \"{$this->project->name}\" failed: {$exception->getMessage()}",
-            route('settings', ['tab' => 'integrations', 'project' => $this->project->id]),
+            route('settings.integrations', ['project' => $this->project->id]),
         );
     }
 

@@ -29,7 +29,7 @@ export function useMembersManagement({
 
     const switchProject = (projectId: number) => {
         router.get(
-            `/settings?tab=members&project=${projectId}`,
+            `/settings/members?project=${projectId}`,
             {},
             { preserveScroll: true, preserveState: true },
         );

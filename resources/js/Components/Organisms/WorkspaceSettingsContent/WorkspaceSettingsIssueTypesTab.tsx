@@ -64,7 +64,7 @@ export default function WorkspaceSettingsIssueTypesTab({
     const switchProject = (projectId: number) => {
         setEditorTarget(null);
         router.get(
-            `/settings?tab=issue-types&project=${projectId}`,
+            `/settings/issue-types?project=${projectId}`,
             {},
             { preserveScroll: true, preserveState: true },
         );
