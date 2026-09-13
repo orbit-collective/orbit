@@ -133,6 +133,19 @@ class IssueController extends Controller
                 if (! array_key_exists('status', $data) && ! $picksWorkflowStatus) {
                     $data['workflow_status_id'] = $newType->statuses()->where('is_initial', true)->first()?->id;
                 }
+
+                // Retyping an issue nobody has written up yet should hand it
+                // the new type's starting point; an issue with a description
+                // keeps whatever is already written.
+                $template = $this->issueTypeService->defaultTemplateFor($newType);
+
+                if ($template && ! array_key_exists('description', $data) && blank($issue->description)) {
+                    $data['description'] = $template->description;
+                }
+
+                if ($template && ! array_key_exists('labels', $data) && empty($issue->labels)) {
+                    $data['labels'] = $this->labelService->filterToExisting($issue->project, $template->default_labels ?? []);
+                }
             } else {
                 unset($data['issue_type_id']);
             }
@@ -256,13 +269,18 @@ class IssueController extends Controller
         $data['workflow_status_id'] = $this->issueTypeService
             ->resolveWorkflowStatusForLegacyValue($issueType, $data['status'])?->id;
 
-        if (! empty($data['template_id'])) {
-            $template = $issueType->templates()->find($data['template_id']);
+        // With no explicit template_id the type's own template still applies:
+        // that is the whole point of a per-type template, and quick-add (which
+        // only ever sends a title) would otherwise never see one.
+        $template = ! empty($data['template_id'])
+            ? $issueType->templates()->find($data['template_id'])
+            : $this->issueTypeService->defaultTemplateFor($issueType);
 
-            if ($template) {
-                $data['description'] = ($data['description'] ?? null) ?: $template->description;
-                $data['labels'] = ! empty($data['labels']) ? $data['labels'] : ($template->default_labels ?? []);
-            }
+        if ($template) {
+            $data['description'] = ($data['description'] ?? null) ?: $template->description;
+            $data['labels'] = ! empty($data['labels'])
+                ? $data['labels']
+                : $this->labelService->filterToExisting($project, $template->default_labels ?? []);
         }
         unset($data['template_id']);
 

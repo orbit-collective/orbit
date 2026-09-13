@@ -213,9 +213,16 @@ tylko dozwolone dzieci typu rodzica. Zatwierdzenie wysyła do
 `parent_id` dla sub-issue — otwórz issue później, żeby uzupełnić
 resztę, albo zastosować `IssueTypeTemplate` (`name`,
 `description`, `default_priority`, `default_labels`, zarządzany z
-**Ustawienia → Issue Types → Manage templates**) przez `template_id` w
-tym samym żądaniu tworzenia, co wypełnia z góry
-`description`/`labels`, gdy są akurat puste.
+**Ustawienia → Issue Types → Manage templates**). Szablon stosuje się
+**bez proszenia o niego**: gdy w żądaniu nie ma `template_id`,
+`IssueTypeService::defaultTemplateFor()` podaje szablon typu — i tylko
+dzięki temu quick-add, który wysyła wyłącznie tytuł, w ogóle go widzi.
+Jawny `template_id` ma pierwszeństwo, a to, co żądanie faktycznie
+niesie, wygrywa z szablonem. Zmiana typu issue, którego nikt jeszcze
+nie opisał, również zaciąga szablon nowego typu; issue z opisem go
+zachowuje. Etykiety szablonu przechodzą najpierw przez
+`LabelService::filterToExisting()`, bo przychodzą z serwera i omijają
+regułę `labels.*` z żądania.
 `resources/js/utils/quickAddIssueEvent.ts` to mała szyna zdarzeń
 `window`, dzięki której globalny przycisk/skróty klawiszowe "New issue"
 w `MainLayout` mogą poprosić dowolny zamontowany akurat `IssueTable`, by

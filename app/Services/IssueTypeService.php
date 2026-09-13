@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\WorkflowStatusCategory;
 use App\Models\Issue;
 use App\Models\IssueType;
+use App\Models\IssueTypeTemplate;
 use App\Models\Project;
 use App\Models\WorkflowStatus;
 use App\Repositories\IssueTypeRepository;
@@ -78,7 +79,7 @@ class IssueTypeService
      * stamped with an older version get the additions applied on their next
      * read - see applyTypeDefaults(), which only ever adds.
      */
-    public const int DEFAULTS_VERSION = 3;
+    public const int DEFAULTS_VERSION = 5;
 
     /** Maps the legacy issues.status enum value to a default-workflow status name, for the one-time backfill. */
     private const array LEGACY_STATUS_TO_DEFAULT_STATUS = [
@@ -155,6 +156,7 @@ class IssueTypeService
             }
 
             $this->applyStatusDefaults($issueType, $defaults['statuses'] ?? []);
+            $this->repairMixedWorkflow($issueType, $defaults['statuses'] ?? []);
             $this->applyFieldDefaults($issueType, $defaults['fields'] ?? []);
             $this->repairSeededRequiredFlags($issueType, $defaults['fields'] ?? []);
             $this->applyTemplateDefault($issueType, $defaults['template'] ?? null);
@@ -332,6 +334,110 @@ class IssueTypeService
     }
 
     /**
+     * Clears the stock To Do/In Progress/Done left mixed into a type's own
+     * workflow. The first, pre-transaction run of these defaults created the
+     * catalog statuses without ever removing the generic ones it replaced,
+     * leaving boards like "Reported > To Do > In Progress > Triaged > …" that
+     * offer both. Only runs when the type's whole catalog workflow is already
+     * present, and only removes the three stock names the catalog itself does
+     * not use, so statuses a project added are kept.
+     */
+    private function repairMixedWorkflow(IssueType $issueType, array $definitions): void
+    {
+        if ($definitions === []) {
+            return;
+        }
+
+        $catalogNames = array_column($definitions, 'name');
+        $leftoverNames = array_values(array_diff(
+            array_column(SystemIssueTypeDefaults::DEFAULT_STATUSES, 'name'),
+            $catalogNames,
+        ));
+
+        $statuses = $issueType->statuses()->get()->keyBy('name');
+
+        foreach ($catalogNames as $name) {
+            if (! $statuses->has($name)) {
+                return;
+            }
+        }
+
+        // A type whose board is exactly the catalog has nothing to clean out,
+        // but the same bad run left the order scrambled, so re-stamp it.
+        if ($leftoverNames === [] || $statuses->count() === count($catalogNames)) {
+            $this->stampCatalogOrder($issueType, $catalogNames, $statuses);
+
+            if ($leftoverNames === []) {
+                return;
+            }
+        }
+
+        // filter(), not only(): on an Eloquent collection only() matches
+        // model keys, not the names this collection is keyed by.
+        $leftovers = $statuses->filter(
+            fn (WorkflowStatus $status) => in_array($status->name, $leftoverNames, true)
+        );
+
+        if ($leftovers->isEmpty()) {
+            return;
+        }
+
+        $catalog = collect($catalogNames)->map(fn (string $name) => $statuses->get($name));
+
+        foreach ($leftovers as $leftover) {
+            $replacement = $catalog->firstWhere('category', $leftover->category) ?? $catalog->first();
+
+            Issue::query()
+                ->where('workflow_status_id', $leftover->id)
+                ->update(['workflow_status_id' => $replacement->id]);
+        }
+
+        $leftoverIds = $leftovers->pluck('id');
+
+        $issueType->transitions()
+            ->where(fn ($query) => $query->whereIn('from_status_id', $leftoverIds)->orWhereIn('to_status_id', $leftoverIds))
+            ->delete();
+
+        WorkflowStatus::query()->whereIn('id', $leftoverIds)->delete();
+
+        foreach ($catalog->values() as $index => $status) {
+            $this->workflowRepository->updateStatus($status, [
+                'sort_order' => $index,
+                'is_initial' => $index === 0,
+            ]);
+        }
+
+        foreach ($this->defaultTransitionPairs($definitions) as [$fromIndex, $toIndex]) {
+            $from = $catalog[$fromIndex];
+            $to = $catalog[$toIndex];
+
+            if (! $this->workflowRepository->transitionExists($issueType, $from->id, $to->id)) {
+                $this->workflowRepository->createTransition($issueType, $from, $to);
+            }
+        }
+    }
+
+    /**
+     * Puts the catalog statuses back in their canonical order.
+     *
+     * @param  array<int, string>  $catalogNames
+     * @param  Collection<string, WorkflowStatus>  $statuses
+     */
+    private function stampCatalogOrder(IssueType $issueType, array $catalogNames, Collection $statuses): void
+    {
+        foreach ($catalogNames as $index => $name) {
+            $status = $statuses->get($name);
+
+            if ($status && ($status->sort_order !== $index || $status->is_initial !== ($index === 0))) {
+                $this->workflowRepository->updateStatus($status, [
+                    'sort_order' => $index,
+                    'is_initial' => $index === 0,
+                ]);
+            }
+        }
+    }
+
+    /**
      * Stamps is_top_level from the starter catalog onto the system types of a
      * project seeded before that column existed - those all defaulted to
      * true, leaving every type in the "New issue" picker. Runs once, with the
@@ -414,6 +520,17 @@ class IssueTypeService
     public function getIssueTypesForProjects(array $projectIds): Collection
     {
         return $this->issueTypeRepository->getForProjects($projectIds);
+    }
+
+    /**
+     * The template a new issue of this type starts from when the request
+     * doesn't name one. Each system type ships exactly one; a project with
+     * several picks by name order, and the caller can always override with
+     * an explicit template_id.
+     */
+    public function defaultTemplateFor(IssueType $issueType): ?IssueTypeTemplate
+    {
+        return $issueType->templates()->orderBy('name')->first();
     }
 
     public function getIssueTypes(Project $project): Collection
