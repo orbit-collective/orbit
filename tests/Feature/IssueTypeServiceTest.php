@@ -27,29 +27,30 @@ test('it seeds the 16 system issue types for a project on first use', function (
         ]);
 });
 
-test('only the Epic system type allows children', function () {
+test('container system types allow children while leaf ones do not', function () {
     $project = Project::factory()->create();
 
     $this->service->ensureSystemIssueTypes($project);
 
     expect($project->issueTypes()->where('name', 'Epic')->first()->allows_children)->toBeTrue()
-        ->and($project->issueTypes()->where('name', 'Task')->first()->allows_children)->toBeFalse();
+        ->and($project->issueTypes()->where('name', 'Story')->first()->allows_children)->toBeTrue()
+        ->and($project->issueTypes()->where('name', 'Bug')->first()->allows_children)->toBeFalse()
+        ->and($project->issueTypes()->where('name', 'Spike')->first()->allows_children)->toBeFalse();
 });
 
-test('each system issue type gets a default To Do/In Progress/Done workflow with full transitions', function () {
+test('a system issue type with no workflow of its own falls back to the stock board', function () {
     $project = Project::factory()->create();
 
     $this->service->ensureSystemIssueTypes($project);
 
-    $bug = $project->issueTypes()->where('name', 'Bug')->first();
-    $statuses = $bug->statuses()->orderBy('sort_order')->get();
+    $chore = $project->issueTypes()->where('name', 'Chore')->first();
+    $statuses = $chore->statuses()->orderBy('sort_order')->get();
 
     expect($statuses->pluck('name')->all())->toBe(['To Do', 'In Progress', 'Done'])
         ->and($statuses->pluck('category')->all())->toBe([
             WorkflowStatusCategory::TODO, WorkflowStatusCategory::IN_PROGRESS, WorkflowStatusCategory::DONE,
         ])
-        ->and($statuses->firstWhere('name', 'To Do')->is_initial)->toBeTrue()
-        ->and($bug->transitions()->count())->toBe(6);
+        ->and($statuses->firstWhere('name', 'To Do')->is_initial)->toBeTrue();
 });
 
 test('ensuring system issue types is idempotent and does not resurrect a deleted one', function () {

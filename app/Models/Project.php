@@ -26,12 +26,14 @@ class Project extends Model
         'is_system',
         'labels_seeded_at',
         'issue_types_seeded_at',
+        'issue_type_defaults_version',
     ];
 
     protected $casts = [
         'columns' => 'array',
         'labels_seeded_at' => 'datetime',
         'issue_types_seeded_at' => 'datetime',
+        'issue_type_defaults_version' => 'integer',
     ];
 
     public function issues(): HasMany

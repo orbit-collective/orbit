@@ -5,6 +5,7 @@ use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkflowStatus;
+use App\Services\IssueTypeService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -166,7 +167,7 @@ test('an issue without start or end dates is allowed', function () {
 
 test('an issue serializes its type and workflow status under camelCase relation keys', function () {
     $project = Project::factory()->create();
-    app(App\Services\IssueTypeService::class)->ensureSystemIssueTypes($project);
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
     $issueType = $project->issueTypes()->where('name', 'Epic')->first();
     $issue = Issue::factory()->create([
         'project_id' => $project->id,

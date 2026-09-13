@@ -23,14 +23,14 @@ test('an admin can add a custom field to an issue type', function () {
     [$project, $admin, $type] = projectWithTypes();
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types/$type->id/fields", [
-        'label' => 'Steps to reproduce',
+        'label' => 'Repro notes',
         'type' => 'textarea',
         'is_required' => true,
     ]);
 
     $response->assertRedirect();
     $this->assertDatabaseHas('issue_type_fields', [
-        'issue_type_id' => $type->id, 'label' => 'Steps to reproduce', 'type' => 'textarea', 'is_required' => true,
+        'issue_type_id' => $type->id, 'label' => 'Repro notes', 'type' => 'textarea', 'is_required' => true,
     ]);
 });
 
@@ -38,30 +38,30 @@ test('a select field keeps only its non-empty unique options', function () {
     [$project, $admin, $type] = projectWithTypes();
 
     $this->actingAs($admin)->post("/projects/$project->id/issue-types/$type->id/fields", [
-        'label' => 'Severity',
+        'label' => 'Urgency',
         'type' => 'select',
         'options' => ['Low', 'High', 'Low', '  '],
     ])->assertSessionHasNoErrors();
 
-    expect($type->fields()->first()->options)->toBe(['Low', 'High']);
+    expect($type->fields()->where('label', 'Urgency')->first()->options)->toBe(['Low', 'High']);
 });
 
 test('a non-select field stores no options', function () {
     [$project, $admin, $type] = projectWithTypes();
 
     $this->actingAs($admin)->post("/projects/$project->id/issue-types/$type->id/fields", [
-        'label' => 'Notes', 'type' => 'text', 'options' => ['ignored'],
+        'label' => 'Scratch notes', 'type' => 'text', 'options' => ['ignored'],
     ]);
 
-    expect($type->fields()->first()->options)->toBe([]);
+    expect($type->fields()->where('label', 'Scratch notes')->first()->options)->toBe([]);
 });
 
 test('two fields on one issue type cannot share a label', function () {
     [$project, $admin, $type] = projectWithTypes();
-    IssueTypeField::factory()->create(['issue_type_id' => $type->id, 'label' => 'Severity']);
+    IssueTypeField::factory()->create(['issue_type_id' => $type->id, 'label' => 'Urgency']);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types/$type->id/fields", [
-        'label' => 'Severity', 'type' => 'text',
+        'label' => 'Urgency', 'type' => 'text',
     ]);
 
     $response->assertSessionHasErrors('label');
@@ -71,7 +71,7 @@ test('a member cannot manage custom fields', function () {
     [$project, $member, $type] = projectWithTypes('member');
 
     $response = $this->actingAs($member)->post("/projects/$project->id/issue-types/$type->id/fields", [
-        'label' => 'Severity', 'type' => 'text',
+        'label' => 'Urgency', 'type' => 'text',
     ]);
 
     $response->assertForbidden();
@@ -112,8 +112,8 @@ test('deleting an issue type cascades to its custom fields', function () {
 test('creating an issue stores only values for fields of its own type', function () {
     [$project, $admin, $bugType] = projectWithTypes();
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
-    $ownField = IssueTypeField::factory()->create(['issue_type_id' => $bugType->id, 'label' => 'Environment']);
-    $foreignField = IssueTypeField::factory()->create(['issue_type_id' => $taskType->id, 'label' => 'Effort']);
+    $ownField = IssueTypeField::factory()->create(['issue_type_id' => $bugType->id, 'label' => 'Host']);
+    $foreignField = IssueTypeField::factory()->create(['issue_type_id' => $taskType->id, 'label' => 'Effort estimate']);
 
     $this->actingAs($admin)->post('/issues', [
         'title' => 'A bug', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
@@ -128,7 +128,7 @@ test('creating an issue stores only values for fields of its own type', function
 test('a required custom field blocks creating an issue of that type', function () {
     [$project, $admin, $bugType] = projectWithTypes();
     IssueTypeField::factory()->create([
-        'issue_type_id' => $bugType->id, 'label' => 'Environment', 'is_required' => true,
+        'issue_type_id' => $bugType->id, 'label' => 'Host', 'is_required' => true,
     ]);
 
     $response = $this->actingAs($admin)->post('/issues', [
@@ -142,7 +142,7 @@ test('a required custom field blocks creating an issue of that type', function (
 test('a select field only accepts one of its configured options', function () {
     [$project, $admin, $bugType] = projectWithTypes();
     $field = IssueTypeField::factory()->create([
-        'issue_type_id' => $bugType->id, 'label' => 'Severity',
+        'issue_type_id' => $bugType->id, 'label' => 'Urgency',
         'type' => IssueFieldType::SELECT, 'options' => ['Low', 'High'],
     ]);
 
@@ -157,7 +157,7 @@ test('a select field only accepts one of its configured options', function () {
 
 test('updating an issue merges custom field values instead of replacing them', function () {
     [$project, $admin, $bugType] = projectWithTypes();
-    $one = IssueTypeField::factory()->create(['issue_type_id' => $bugType->id, 'label' => 'Environment']);
+    $one = IssueTypeField::factory()->create(['issue_type_id' => $bugType->id, 'label' => 'Host']);
     $two = IssueTypeField::factory()->create(['issue_type_id' => $bugType->id, 'label' => 'Browser']);
     $issue = $project->issues()->create([
         'title' => 'A bug', 'project_id' => $project->id, 'user_id' => $admin->id,
