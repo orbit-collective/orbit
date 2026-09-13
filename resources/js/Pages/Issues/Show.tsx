@@ -1,8 +1,10 @@
 import EditableSelect from '@/Components/Atoms/EditableSelect/EditableSelect';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import { StatusIcon } from '@/Components/Atoms/StatusIcon/StatusIcon';
+import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import Calendar from '@/Components/Molecules/Calendar/Calendar';
 import CommentForm from '@/Components/Molecules/CommentForm/CommentForm';
 import CommentList from '@/Components/Molecules/CommentList/CommentList';
@@ -30,6 +32,7 @@ export default function Show({
     issue,
     users,
     labels = [],
+    issueTypes = [],
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
@@ -72,7 +75,33 @@ export default function Show({
         });
     };
 
-    const statusOptions = STATUSES.map((status) => ({
+    const workflowStatuses = issue.issueType?.statuses ?? [];
+    const transitions = issue.issueType?.transitions ?? [];
+    const currentStatusId = issue.workflowStatus?.id ?? null;
+
+    /**
+     * Only statuses the workflow actually permits moving to from here, so
+     * the picker can't offer a transition the backend would reject. With no
+     * current status yet (a legacy issue), every status is reachable.
+     */
+    const reachableStatuses = workflowStatuses.filter(
+        (status) =>
+            currentStatusId === null ||
+            status.id === currentStatusId ||
+            transitions.some(
+                (transition) =>
+                    transition.fromStatusId === currentStatusId &&
+                    transition.toStatusId === status.id,
+            ),
+    );
+
+    const workflowStatusOptions = reachableStatuses.map((status) => ({
+        value: String(status.id),
+        searchLabel: status.name,
+        label: <WorkflowStatusBadge status={status} />,
+    }));
+
+    const legacyStatusOptions = STATUSES.map((status) => ({
         value: status,
         label: (
             <div className="flex items-center gap-2">
@@ -80,6 +109,12 @@ export default function Show({
                 <span className="capitalize">{formatStatusLabel(status)}</span>
             </div>
         ),
+    }));
+
+    const issueTypeOptions = issueTypes.map((type) => ({
+        value: String(type.id),
+        searchLabel: type.name,
+        label: <IssueTypeBadge issueType={type} />,
     }));
 
     const priorityOptions = PRIORITIES.map((priority) => ({
@@ -163,26 +198,92 @@ export default function Show({
                             </div>
 
                             <div className="sticky top-6 flex flex-col gap-3 self-start">
+                                {issueTypeOptions.length > 0 && (
+                                    <SidebarField label="Type">
+                                        <EditableSelect
+                                            value={
+                                                issue.issueType
+                                                    ? String(issue.issueType.id)
+                                                    : ''
+                                            }
+                                            options={issueTypeOptions}
+                                            header="Change issue type to..."
+                                            onSave={(value) =>
+                                                updateIssue({
+                                                    issue_type_id:
+                                                        Number(value),
+                                                })
+                                            }
+                                            renderValue={() =>
+                                                issue.issueType ? (
+                                                    <IssueTypeBadge
+                                                        issueType={
+                                                            issue.issueType
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <span className="text-sm text-[var(--text-gray-color)]">
+                                                        No type
+                                                    </span>
+                                                )
+                                            }
+                                        />
+                                    </SidebarField>
+                                )}
+
                                 <SidebarField label="Status">
-                                    <EditableSelect
-                                        value={issue.status}
-                                        options={statusOptions}
-                                        header="Change status to..."
-                                        onSave={(value) =>
-                                            updateIssue({ status: value })
-                                        }
-                                        renderValue={(value) => (
-                                            <div className="flex items-center gap-2">
-                                                <StatusIcon
-                                                    status={value}
-                                                    tooltip={false}
-                                                />
-                                                <span className="text-sm capitalize text-[var(--text-color)]">
-                                                    {formatStatusLabel(value)}
-                                                </span>
-                                            </div>
-                                        )}
-                                    />
+                                    {workflowStatusOptions.length > 0 ? (
+                                        <EditableSelect
+                                            value={
+                                                currentStatusId !== null
+                                                    ? String(currentStatusId)
+                                                    : ''
+                                            }
+                                            options={workflowStatusOptions}
+                                            header="Change status to..."
+                                            onSave={(value) =>
+                                                updateIssue({
+                                                    workflow_status_id:
+                                                        Number(value),
+                                                })
+                                            }
+                                            renderValue={() =>
+                                                issue.workflowStatus ? (
+                                                    <WorkflowStatusBadge
+                                                        status={
+                                                            issue.workflowStatus
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <span className="text-sm text-[var(--text-gray-color)]">
+                                                        No status
+                                                    </span>
+                                                )
+                                            }
+                                        />
+                                    ) : (
+                                        <EditableSelect
+                                            value={issue.status}
+                                            options={legacyStatusOptions}
+                                            header="Change status to..."
+                                            onSave={(value) =>
+                                                updateIssue({ status: value })
+                                            }
+                                            renderValue={(value) => (
+                                                <div className="flex items-center gap-2">
+                                                    <StatusIcon
+                                                        status={value}
+                                                        tooltip={false}
+                                                    />
+                                                    <span className="text-sm capitalize text-[var(--text-color)]">
+                                                        {formatStatusLabel(
+                                                            value,
+                                                        )}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        />
+                                    )}
                                 </SidebarField>
 
                                 <SidebarField label="Priority">

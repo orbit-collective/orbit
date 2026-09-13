@@ -151,6 +151,21 @@ class IssueTypeService
             ?? $issueType->statuses()->orderBy('sort_order')->first();
     }
 
+    /**
+     * The inverse of resolveWorkflowStatusForLegacyValue(): collapses a
+     * workflow status back onto the legacy issues.status enum by category,
+     * so the old column stays meaningful for board/filter code that still
+     * reads it while the workflow is the real source of truth.
+     */
+    public function legacyValueForWorkflowStatus(WorkflowStatus $status): string
+    {
+        return match ($status->category) {
+            WorkflowStatusCategory::TODO => 'open',
+            WorkflowStatusCategory::IN_PROGRESS => 'in_progress',
+            WorkflowStatusCategory::DONE => 'closed',
+        };
+    }
+
     public function createIssueType(Project $project, array $data): IssueType
     {
         $this->assertNameAvailable($project, $data['name']);

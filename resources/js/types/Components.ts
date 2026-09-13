@@ -552,6 +552,8 @@ export interface IssuePageProps {
     issue: Issue;
     users: AssignableUser[];
     labels?: ProjectLabel[];
+    issueTypes?: IssueType[];
+    nextIssueId?: number | null;
 }
 export interface IssuePageHeaderProps {
     project: Project;

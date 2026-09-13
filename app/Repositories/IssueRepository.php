@@ -33,7 +33,8 @@ class IssueRepository
         return Issue::query()
             ->with([
                 'creator', 'assignee', 'project', 'comments.user',
-                'issueType', 'workflowStatus', 'parent',
+                'issueType.statuses', 'issueType.transitions', 'issueType.allowedChildTypes',
+                'workflowStatus', 'parent',
                 'children' => fn ($query) => $query->with(['assignee', 'issueType', 'workflowStatus']),
             ])
             ->findOrFail($id);

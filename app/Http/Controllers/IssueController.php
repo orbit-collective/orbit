@@ -17,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -46,6 +47,8 @@ class IssueController extends Controller
             'issue' => $this->issueService->getIssueWithRelations($issue->id),
             'users' => $this->userService->getAssignableUsersForProject($project->id),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
+            'issueTypes' => $this->issueTypeService->getIssueTypes($project),
+            'nextIssueId' => $this->issueService->peekNextIssueId(),
         ]);
     }
 
@@ -79,6 +82,7 @@ class IssueController extends Controller
             'status' => ['sometimes', 'required', Rule::enum(IssueStatus::class)],
             'priority' => 'sometimes|required|string',
             'issue_type_id' => 'sometimes|required|integer',
+            'workflow_status_id' => 'sometimes|required|integer',
             'parent_id' => 'sometimes|nullable|integer',
             'assignee_id' => [
                 'sometimes',
@@ -117,7 +121,7 @@ class IssueController extends Controller
                 // The old workflow_status_id almost certainly doesn't belong
                 // to the new type's workflow - reset to its initial status
                 // unless this same request also picks an explicit one below.
-                if (! array_key_exists('status', $data)) {
+                if (! array_key_exists('status', $data) && ! array_key_exists('workflow_status_id', $data)) {
                     $data['workflow_status_id'] = $newType->statuses()->where('is_initial', true)->first()?->id;
                 }
             } else {
@@ -125,7 +129,23 @@ class IssueController extends Controller
             }
         }
 
-        if (array_key_exists('status', $data)) {
+        // A picked workflow status wins over the legacy enum: the sidebar
+        // sends workflow_status_id so a custom status ("In Review") is
+        // selectable at all, and the old status column is derived from it.
+        if (array_key_exists('workflow_status_id', $data)) {
+            $this->authorize('changeStatus', $issue);
+
+            $newStatus = $issueType?->statuses()->find($data['workflow_status_id']);
+
+            if (! $newStatus) {
+                throw ValidationException::withMessages([
+                    'workflow_status_id' => 'That status does not belong to this issue type\'s workflow.',
+                ]);
+            }
+
+            $this->workflowService->assertTransitionAllowed($issueType, $issue->workflow_status_id, $newStatus->id);
+            $data['status'] = $this->issueTypeService->legacyValueForWorkflowStatus($newStatus);
+        } elseif (array_key_exists('status', $data)) {
             $this->authorize('changeStatus', $issue);
 
             $newStatus = $issueType
