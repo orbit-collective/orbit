@@ -20,7 +20,7 @@ import {
     type DragEndEvent,
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
-import { Fragment, useState } from 'react';
+import { Fragment, ReactNode, useState } from 'react';
 
 interface WorkspaceSettingsWorkflowModalProps {
     isOpen: boolean;
@@ -44,7 +44,7 @@ const Chip = ({
     children,
     tone = 'muted',
 }: {
-    children: React.ReactNode;
+    children: ReactNode;
     tone?: 'muted' | 'warning' | 'accent';
 }) => (
     <span

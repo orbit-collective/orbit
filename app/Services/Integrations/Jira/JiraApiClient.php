@@ -49,6 +49,7 @@ class JiraApiClient
      * into the same {name: ...} shape every other metadata call yields.
      *
      * @return array<int, array{name: string}>
+     * @throws RequestException
      */
     public function getLabels(ProjectIntegration $projectIntegration, int $maxPages = 10): array
     {

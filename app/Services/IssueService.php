@@ -394,7 +394,7 @@ class IssueService
 
         if (! $parentType?->allows_children) {
             throw ValidationException::withMessages([
-                'parent_id' => "The \"{$parentType?->name}\" issue type does not allow sub-issues.",
+                'parent_id' => "The \"$parentType?->name\" issue type does not allow sub-issues.",
             ]);
         }
 
@@ -406,7 +406,7 @@ class IssueService
             ! $allowedChildTypeIds->contains($childIssueTypeId)
         ) {
             throw ValidationException::withMessages([
-                'parent_id' => "The \"{$parentType->name}\" issue type only accepts specific issue types as sub-issues.",
+                'parent_id' => "The \"$parentType->name\" issue type only accepts specific issue types as sub-issues.",
             ]);
         }
 
@@ -445,7 +445,7 @@ class IssueService
 
         if ($type && ! $type->is_top_level) {
             throw ValidationException::withMessages([
-                'issue_type_id' => "The \"{$type->name}\" issue type can only be created as a sub-issue.",
+                'issue_type_id' => "The \"$type->name\" issue type can only be created as a sub-issue.",
             ]);
         }
     }

@@ -356,10 +356,8 @@ class IssueTypeService
 
         $statuses = $issueType->statuses()->get()->keyBy('name');
 
-        foreach ($catalogNames as $name) {
-            if (! $statuses->has($name)) {
-                return;
-            }
+        if (array_any($catalogNames, fn($name) => !$statuses->has($name))) {
+            return;
         }
 
         // A type whose board is exactly the catalog has nothing to clean out,
