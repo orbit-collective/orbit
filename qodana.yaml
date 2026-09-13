@@ -34,6 +34,9 @@ exclude:
   - name: RegExpRedundantEscape
   - name: RegExpUnnecessaryNonCapturingGroup
   - name: PhpUnhandledExceptionInspection
+  - name: PhpUnhandledExceptionInspection
+  - name: PhpUnusedParameterInspection
+  - name: PhpPipeOperatorCanBeUsedInspection
 
 include:
   - name: PhpCSFixerValidationInspection
