@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/orbit-collective/orbit/compare/v0.8.1...v0.8.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* **layout:** update notification settings link to use named route ([2ef2599](https://github.com/orbit-collective/orbit/commit/2ef2599a7737c50d9dc67f7f06128019082915be))
+
 ## [0.8.1](https://github.com/orbit-collective/orbit/compare/v0.8.0...v0.8.1) (2026-09-13)
 
 
