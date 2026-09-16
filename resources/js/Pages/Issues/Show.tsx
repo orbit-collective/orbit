@@ -17,6 +17,7 @@ import IssueChildrenPanel from '@/Components/Organisms/IssueChildrenPanel/IssueC
 import IssuePageHeader from '@/Components/Organisms/IssuePageHeader/IssuePageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { IssuePageProps } from '@/types/Components';
 import { Comment, IssueLabel, IssuePriority, Status } from '@/types/Issues';
 import { formatStatusLabel } from '@/utils/text';
@@ -39,6 +40,7 @@ export default function Show({
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
+    const { uploadImage } = useImageUpload(project.id);
 
     const updateIssue = (data: Record<string, FormDataConvertible>) => {
         router.patch(route('issues.update', issue.id), data, {
@@ -195,6 +197,7 @@ export default function Show({
                                     onSave={(value) =>
                                         updateIssue({ description: value })
                                     }
+                                    onImageUpload={uploadImage}
                                     placeholder="Add a description..."
                                 />
 

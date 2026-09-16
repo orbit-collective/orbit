@@ -1,11 +1,20 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import {
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import EditableMarkdown from './EditableMarkdown';
 
+type PasteHandler = (view: unknown, event: ClipboardEvent) => boolean;
+
 type EditorOptions = {
     content: string;
     onBlur?: (args: { editor: FakeEditor }) => void;
+    editorProps?: { handlePaste?: PasteHandler };
 };
 
 class FakeEditor {
@@ -27,6 +36,23 @@ class FakeEditor {
         markdown: {
             getMarkdown: () => this.markdown,
         },
+    };
+    insertContentAt = vi.fn();
+    chain = () => ({
+        focus: () => ({
+            insertContentAt: (position: number, content: unknown) => {
+                this.insertContentAt(position, content);
+
+                return { run: () => true };
+            },
+        }),
+    });
+    state = {
+        selection: { to: 3 },
+        doc: { content: { size: 100 } },
+    };
+    view = {
+        posAtCoords: vi.fn(() => ({ pos: 7 })),
     };
 
     constructor(options: EditorOptions) {
@@ -62,23 +88,47 @@ vi.mock('tiptap-markdown', () => ({
     Markdown: { configure: () => ({}) },
 }));
 
-const setup = (value: string, onSave = vi.fn(), disabled = false) => {
+const setup = (
+    value: string,
+    onSave = vi.fn(),
+    disabled = false,
+    onImageUpload?: (file: File) => Promise<string>,
+) => {
     // Real TipTap memoizes a single Editor instance across re-renders, so the
     // mock must too — otherwise clicking (which triggers a state update and
     // therefore a re-render) would silently swap in a fresh, never-called
     // instance right after the click handler ran.
     const editor = new FakeEditor({ content: value });
+    let handlePaste: PasteHandler | undefined;
     mockUseEditor.mockImplementation((options: EditorOptions) => {
         editor.onBlur = options.onBlur;
+        handlePaste = options.editorProps?.handlePaste;
         return editor;
     });
 
     const utils = render(
-        <EditableMarkdown value={value} onSave={onSave} disabled={disabled} />,
+        <EditableMarkdown
+            value={value}
+            onSave={onSave}
+            disabled={disabled}
+            onImageUpload={onImageUpload}
+        />,
     );
 
-    return { ...utils, onSave, getEditor: () => editor };
+    return {
+        ...utils,
+        onSave,
+        getEditor: () => editor,
+        paste: (event: Partial<ClipboardEvent>) =>
+            handlePaste?.(null, event as ClipboardEvent) ?? false,
+    };
 };
+
+const imageFile = (name = 'shot.png') =>
+    new File(['x'], name, { type: 'image/png' });
+
+const transfer = (files: File[]) =>
+    ({ files, items: [] }) as unknown as DataTransfer;
 
 describe('EditableMarkdown Component', () => {
     test('renders the editor content initialized with the current value', () => {
@@ -142,6 +192,134 @@ describe('EditableMarkdown Component', () => {
         editor.onBlur?.({ editor });
 
         expect(onSave).not.toHaveBeenCalled();
+    });
+
+    test('pasting an image uploads it and inserts it at the caret', async () => {
+        const onImageUpload = vi.fn().mockResolvedValue('/storage/a.png');
+        const preventDefault = vi.fn();
+        const file = imageFile();
+        const { getEditor, paste } = setup(
+            'Text',
+            vi.fn(),
+            false,
+            onImageUpload,
+        );
+
+        const handled = paste({
+            preventDefault,
+            clipboardData: transfer([file]),
+        });
+
+        expect(handled).toBe(true);
+        expect(preventDefault).toHaveBeenCalled();
+        await waitFor(() =>
+            expect(getEditor().insertContentAt).toHaveBeenCalledWith(3, {
+                type: 'image',
+                attrs: { src: '/storage/a.png', alt: 'shot.png' },
+            }),
+        );
+    });
+
+    test('pasting is left to TipTap when there is no uploader or no image', () => {
+        const withoutUploader = setup('Text');
+
+        expect(
+            withoutUploader.paste({
+                preventDefault: vi.fn(),
+                clipboardData: transfer([imageFile()]),
+            }),
+        ).toBe(false);
+
+        cleanup();
+
+        const withUploader = setup('Text', vi.fn(), false, vi.fn());
+
+        expect(
+            withUploader.paste({
+                preventDefault: vi.fn(),
+                clipboardData: transfer([]),
+            }),
+        ).toBe(false);
+    });
+
+    test('a failed upload is swallowed and nothing is inserted', async () => {
+        const onImageUpload = vi.fn().mockRejectedValue(new Error('nope'));
+        const { getEditor, paste } = setup(
+            'Text',
+            vi.fn(),
+            false,
+            onImageUpload,
+        );
+
+        paste({
+            preventDefault: vi.fn(),
+            clipboardData: transfer([imageFile()]),
+        });
+
+        await waitFor(() => expect(onImageUpload).toHaveBeenCalled());
+        expect(getEditor().insertContentAt).not.toHaveBeenCalled();
+    });
+
+    test('dropping an image starts editing and inserts it at the drop position', async () => {
+        const onImageUpload = vi.fn().mockResolvedValue('/storage/b.png');
+        const { getEditor } = setup('Text', vi.fn(), false, onImageUpload);
+
+        fireEvent.drop(screen.getByTestId('editor-content'), {
+            dataTransfer: transfer([imageFile('dropped.png')]),
+        });
+
+        const editor = getEditor();
+        expect(editor.setEditable).toHaveBeenCalledWith(true);
+        await waitFor(() =>
+            expect(editor.insertContentAt).toHaveBeenCalledWith(7, {
+                type: 'image',
+                attrs: { src: '/storage/b.png', alt: 'dropped.png' },
+            }),
+        );
+    });
+
+    test('dropping an image while disabled does nothing', () => {
+        const onImageUpload = vi.fn();
+        const { getEditor } = setup('Text', vi.fn(), true, onImageUpload);
+
+        fireEvent.drop(screen.getByTestId('editor-content'), {
+            dataTransfer: transfer([imageFile()]),
+        });
+
+        expect(onImageUpload).not.toHaveBeenCalled();
+        expect(getEditor().setEditable).not.toHaveBeenCalled();
+    });
+
+    test('blurring while an upload is in flight does not end the edit', async () => {
+        let resolveUpload: (url: string) => void = () => {};
+        const onImageUpload = vi.fn(
+            () => new Promise<string>((resolve) => (resolveUpload = resolve)),
+        );
+        const onSave = vi.fn();
+        const { getEditor, paste } = setup(
+            'Text',
+            onSave,
+            false,
+            onImageUpload,
+        );
+        const editor = getEditor();
+
+        paste({
+            preventDefault: vi.fn(),
+            clipboardData: transfer([imageFile()]),
+        });
+        await screen.findByText('Uploading 1 image...');
+
+        editor.setContent('Changed');
+        editor.onBlur?.({ editor });
+
+        expect(onSave).not.toHaveBeenCalled();
+
+        resolveUpload('/storage/c.png');
+        await waitFor(() => expect(editor.insertContentAt).toHaveBeenCalled());
+
+        editor.onBlur?.({ editor });
+        expect(onSave).toHaveBeenCalledWith('Changed');
     });
 
     test('pressing Escape cancels the edit and reverts the content', () => {

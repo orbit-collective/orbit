@@ -1,6 +1,6 @@
 # Moderacja treści
 
-Każdy obraz, jaki użytkownik przesyła, jest sprawdzany, zanim zostanie zaakceptowany — dziś to dokładnie jeden punkt uploadu (awatary profilowe) — przez `NsfwDetectionService`, wspierany przez zewnętrzny serwis klasyfikacji obrazów ([nsfwjs](https://github.com/infinitered/nsfwjs), działający jako własny serwis Docker — zobacz [`../architecture/04-docker-doppler-and-deployment.md`](../architecture/04-docker-doppler-and-deployment.md)). Ta kategoria dokumentuje, jak działa samo sprawdzenie i jak dodać je do nowego punktu uploadu.
+Każdy obraz, jaki użytkownik przesyła, jest sprawdzany, zanim zostanie zaakceptowany — dziś to dwa punkty uploadu: awatary profilowe (`UserController::uploadAvatar()`) i załączniki obrazkowe wklejane albo upuszczane do edytora markdown (`AttachmentController::store()`, zobacz [`../rich-text-editor/02-add-image-paste-and-drop-uploads.md`](../rich-text-editor/02-add-image-paste-and-drop-uploads.md)) — przez `NsfwDetectionService`, wspierany przez zewnętrzny serwis klasyfikacji obrazów ([nsfwjs](https://github.com/infinitered/nsfwjs), działający jako własny serwis Docker — zobacz [`../architecture/04-docker-doppler-and-deployment.md`](../architecture/04-docker-doppler-and-deployment.md)). Ta kategoria dokumentuje, jak działa samo sprawdzenie i jak dodać je do nowego punktu uploadu.
 
 ## Przewodniki, w kolejności, w jakiej faktycznie będziesz ich potrzebować
 

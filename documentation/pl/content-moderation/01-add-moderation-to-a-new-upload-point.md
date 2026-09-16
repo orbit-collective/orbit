@@ -1,6 +1,6 @@
 # Dodaj moderację do nowego punktu uploadu
 
-Przećwiczony przykład: dodanie uploadu obrazu **okładki projektu** — funkcji, która jeszcze nie istnieje — z dokładnie tym samym sprawdzaniem NSFW, jakie `UserController::uploadAvatar()` już stosuje do zdjęć profilowych. Upload awatara to *jedyny* punkt uploadu w aplikacji dzisiaj; ten przewodnik to wzorzec dla drugiego.
+Przećwiczony przykład: dodanie uploadu obrazu **okładki projektu** — funkcji, która jeszcze nie istnieje — z dokładnie tym samym sprawdzaniem NSFW, jakie `UserController::uploadAvatar()` już stosuje do zdjęć profilowych. Ten sam wzorzec stosuje `AttachmentController::store()` przy uploadzie obrazów do markdownu (zobacz [`../rich-text-editor/02-add-image-paste-and-drop-uploads.md`](../rich-text-editor/02-add-image-paste-and-drop-uploads.md)); ten przewodnik to wzorzec dla każdego kolejnego.
 
 ## Krok 1 — Dodaj migrację + pole fillable
 

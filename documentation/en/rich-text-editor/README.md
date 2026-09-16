@@ -13,6 +13,15 @@ format, just a `TEXT` column holding whatever markdown Tiptap's
 1. **[Add a new Tiptap extension](./01-add-a-new-tiptap-extension.md)**
    — worked example adding text highlighting (`@tiptap/extension-highlight`,
    not currently installed) to the editor's extension list.
+2. **[Add image paste & drop uploads](./02-add-image-paste-and-drop-uploads.md)**
+   — the full pipeline behind pasting or dragging an image into an
+   issue description: the `attachments` table, repository, service and
+   JSON upload endpoint, the NSFW screening it shares with avatar
+   uploads, and the editor's paste/drop handlers.
+3. **[Add image uploads to another surface](./03-add-image-uploads-to-another-surface.md)**
+   — worked examples extending that pipeline to two surfaces that are
+   plain textareas rather than Tiptap: issue comments (including the
+   mention-range trap) and an issue type's template body.
 
 ## The architecture in one paragraph
 
@@ -38,3 +47,13 @@ handles markdown that's never editable at all (the integrations
 catalog's static `overview` field) — don't reach for Tiptap for
 read-only markdown display; it's a heavier tool for a job
 `react-markdown` already does.
+
+Images are the one thing that doesn't live in that `TEXT` column.
+Pasting or dropping one uploads it to `POST
+/projects/{project}/attachments`
+(`AttachmentController` → `AttachmentService` → `AttachmentRepository`,
+screened by `NsfwDetectionService` exactly like an avatar), and only
+the returned URL goes into the markdown as a plain `![alt](url)`.
+Attachments are owned by the **project**, not by the issue, comment
+or template that references them, which is what lets one endpoint
+serve every editing surface in the app.

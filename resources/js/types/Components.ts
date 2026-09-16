@@ -173,6 +173,8 @@ export interface EditableLabelListProps {
 export interface EditableMarkdownProps {
     value: string;
     onSave: (value: string) => void;
+    /** Resolves with the stored URL of an image pasted or dropped into the editor. Omit it to disable image uploads for this instance. */
+    onImageUpload?: (file: File) => Promise<string>;
     placeholder?: string;
     disabled?: boolean;
     className?: string;
