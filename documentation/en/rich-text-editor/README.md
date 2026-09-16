@@ -19,9 +19,10 @@ format, just a `TEXT` column holding whatever markdown Tiptap's
    JSON upload endpoint, the NSFW screening it shares with avatar
    uploads, and the editor's paste/drop handlers.
 3. **[Add image uploads to another surface](./03-add-image-uploads-to-another-surface.md)**
-   — worked examples extending that pipeline to two surfaces that are
-   plain textareas rather than Tiptap: issue comments (including the
-   mention-range trap) and an issue type's template body.
+   — how that pipeline reaches surfaces that are plain textareas
+   rather than Tiptap: issue comments as the built reference
+   (composing, editing, rendering, and the mention-range trap), then a
+   worked example for an issue type's template body.
 
 ## The architecture in one paragraph
 
@@ -56,4 +57,8 @@ screened by `NsfwDetectionService` exactly like an avatar), and only
 the returned URL goes into the markdown as a plain `![alt](url)`.
 Attachments are owned by the **project**, not by the issue, comment
 or template that references them, which is what lets one endpoint
-serve every editing surface in the app.
+serve every editing surface in the app. Issue descriptions get images
+for free through Tiptap's `Image` node; comments — plain textareas,
+not Tiptap — do the same work by hand with `insertMarkdownImage` and
+`splitMarkdownImages` in `resources/js/utils/imagePaste.ts`, which is
+what guide 3 walks through.

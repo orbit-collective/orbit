@@ -1,13 +1,14 @@
 # Add image uploads to another surface
 
-Two worked examples, neither built yet, of extending the upload
-pipeline from
+How the upload pipeline from
 [`02-add-image-paste-and-drop-uploads.md`](./02-add-image-paste-and-drop-uploads.md)
-to the app's other markdown-bearing fields: **Part A** an issue
-comment, **Part B** an issue type's template body.
+reaches the app's markdown fields that are **not** Tiptap: **Part A**
+issue comments, which is built and is the reference implementation to
+copy, and **Part B** an issue type's template body, which isn't built
+yet and is a worked example in Part A's exact shape.
 
-Read Part A first even if you only care about templates — it
-introduces the textarea helper Part B reuses.
+Read Part A first even if you only care about templates — every
+helper Part B uses comes from it.
 
 **No backend work is needed for either.** `POST
 /projects/{project}/attachments` is deliberately scoped to a project
@@ -17,23 +18,30 @@ rather than to an issue, so the same endpoint, the same
 adding a second controller or a `comment_id` column, stop — that is
 the design being worked around, not extended.
 
-## The one thing both parts have to deal with
+## The three jobs a non-Tiptap surface has to do itself
 
-Neither surface is Tiptap. Both the comment box
-(`resources/js/Components/Molecules/CommentForm/CommentForm.tsx`) and
-the template body
-(`resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsTemplatesModal.tsx`)
-are plain `TextArea` atoms holding markdown as a string. So there is
-no `insertContentAt` to call: the upload has to splice
-`![name](url)` into the string at the caret and then put the caret
-back after it — a `<textarea>` loses its selection the moment React
-re-renders it with a new `value`.
+Neither the comment box nor the template body is a Tiptap editor;
+both are plain `TextArea` atoms holding markdown as a string. So
+there is no `insertContentAt` to call and no `Image` node to render,
+and each surface needs all three of:
 
-## Step 1 — A splice helper for textareas
+1. **Splice** `![name](url)` into the string at the caret, then put
+   the caret back — a `<textarea>` loses its selection the moment
+   React re-renders it with a new `value`.
+2. **Do that for the edit path too**, not just for composing.
+3. **Render** the stored markdown as an actual image, or the reader
+   sees literal `![shot.png](/storage/…)` text.
+
+Part A does all three; miss the third and everything looks like it
+works until you reload.
+
+## Step 1 — The shared textarea helpers
 
 File: `resources/js/utils/imagePaste.ts`
 
-Add alongside the existing `extractImageFiles`:
+`extractImageFiles` (guide 02, step 9) already serves paste and drop.
+Two more helpers live next to it, and both surfaces use them
+unchanged:
 
 ```ts
 /**
@@ -58,44 +66,119 @@ export const insertMarkdownImage = (
 };
 ```
 
-Alt text is the original filename, the same choice
-`EditableMarkdown` makes when it builds an `image` node — so a
+Alt text is the original filename — the same choice
+`EditableMarkdown` makes when it builds an `image` node, so a
 screenshot pasted into a description and one pasted into a comment
 produce identical markdown.
 
-## Part A — Issue comments
+`length` exists for one caller only: `CommentForm`, which has to tell
+its mention bookkeeping how many characters appeared (step 3).
 
-### Step A1 — Accept an uploader in the comment form
+And, for rendering:
+
+```ts
+export interface MarkdownImageSegment {
+    type: 'text' | 'image';
+    /** The raw text, or - for an image - its alt text. */
+    value: string;
+    url?: string;
+}
+
+// Deliberately narrow: no whitespace in the URL and no nested brackets in the
+// alt text, so a line of prose that merely contains brackets and parentheses
+// is never mistaken for an image.
+const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
+
+/**
+ * Splits a markdown body into plain-text runs and the image links between
+ * them, so a renderer can turn `![alt](url)` into an actual `<img>` while
+ * leaving everything else (mentions included) to the existing text handling.
+ */
+export const splitMarkdownImages = (body: string): MarkdownImageSegment[] => {
+    if (!body) return [{ type: 'text', value: body }];
+
+    const segments: MarkdownImageSegment[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    MARKDOWN_IMAGE_PATTERN.lastIndex = 0;
+    while ((match = MARKDOWN_IMAGE_PATTERN.exec(body)) !== null) {
+        const [full, alt, url] = match;
+
+        if (match.index > lastIndex) {
+            segments.push({
+                type: 'text',
+                value: body.slice(lastIndex, match.index),
+            });
+        }
+
+        segments.push({ type: 'image', value: alt, url });
+
+        lastIndex = match.index + full.length;
+    }
+
+    if (lastIndex < body.length) {
+        segments.push({ type: 'text', value: body.slice(lastIndex) });
+    }
+
+    return segments;
+};
+```
+
+This is a deliberately tiny parser, not a markdown renderer: comments
+are otherwise plain text with mention tokens, and pulling in
+`react-markdown` for them would change how every existing comment
+renders. Anything that isn't an image link stays untouched text.
+
+## Part A — Issue comments (built)
+
+### Step 2 — Props and the `TextArea` atom
+
+`onImageUpload?: (file: File) => Promise<string>` is added, in
+`resources/js/types/Components.ts`, to `CommentFormProps`,
+`CommentListProps`, `CommentItemProps` and `EditableTextProps` —
+optional everywhere, so a surface that leaves it out simply has no
+uploads.
+
+`TextArea` is a controlled atom that forwards only the handlers it
+declares, so drop had to be added to it:
+
+```tsx
+onPaste,
+onCut,
+onBlur,
+onDrop,
+```
+
+...and passed through to the `<textarea>`. `onPaste` was already
+forwarded.
+
+### Step 3 — Composing a comment: insert, and keep the mention ranges honest
 
 File: `resources/js/Components/Molecules/CommentForm/CommentForm.tsx`
 
-Add `onImageUpload?: (file: File) => Promise<string>` to
-`CommentFormProps` in `resources/js/types/Components.ts` (exactly as
-`EditableMarkdownProps` declares it), then destructure it alongside
-`onSubmit`, `users` and `isSubmitting`.
-
-### Step A2 — Insert the upload result, and keep the mention ranges honest
-
 This is where a comment differs from every other surface, and it is
-the part that will silently corrupt data if you skip it.
+the part that silently corrupts data if you skip it.
 
 `CommentForm` tracks each `@mention` as a **character range** into
-the body (`mentionRanges`), and reconciles those ranges against every
-edit through `applyRangeEdit(prev, start, end, insertedLength)`.
-An insertion that doesn't go through that reconciliation shifts every
-mention that comes after it, and the ranges are what
-`tokenizeMentionRanges()` uses at submit time to turn display names
-back into user ids — so the comment would notify the wrong person,
-with nothing visibly wrong on screen.
+the body (`mentionRanges`) and reconciles those ranges against every
+edit through `applyRangeEdit(prev, start, end, insertedLength)`. The
+ranges are what `tokenizeMentionRanges()` uses at submit time to turn
+display names back into user ids, so an insertion that skips the
+reconciliation shifts every mention after it and the comment
+notifies the wrong person — with nothing visibly wrong on screen.
 
 There is a second trap in the same component: `handleChange` drops
 **all** tracked ranges whenever a change arrives without a captured
 edit range (see its comment about IME, drag-and-drop and undo). A
 programmatic `setBody()` never reaches `handleChange` at all, so the
-reconciliation has to be done here by hand:
+reconciliation is done by hand, inside the functional update:
 
 ```tsx
-const insertImage = async (file: File, range: { start: number; end: number }) => {
+const insertImage = async (
+    file: File,
+    range: { start: number; end: number },
+) => {
     if (!onImageUpload) return;
 
     const url = await onImageUpload(file);
@@ -117,11 +200,8 @@ const insertImage = async (file: File, range: { start: number; end: number }) =>
 `useEffect` watching `[body, pendingCaret]` re-focuses the textarea
 and restores the selection after the re-render.
 
-### Step A3 — Hook up paste and drop
-
-`CommentForm` already has an `onPaste` handler (`handlePaste`), whose
-only job today is `captureEditRange`. Extend it rather than adding a
-second one:
+The paste handler already existed (its only job was
+`captureEditRange`), so it is extended rather than duplicated:
 
 ```tsx
 const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -130,7 +210,8 @@ const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     if (onImageUpload && files.length > 0) {
         e.preventDefault();
 
-        const { selectionStart: start, selectionEnd: end } = e.currentTarget;
+        const { selectionStart: start, selectionEnd: end } =
+            e.currentTarget;
         // Consumed by the insertion below, not by handleChange - which never
         // runs for a paste we've prevented.
         editRangeRef.current = null;
@@ -152,54 +233,147 @@ const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
     const caret = e.currentTarget.selectionStart;
 
-    files.forEach((file) => void insertImage(file, { start: caret, end: caret }));
+    files.forEach(
+        (file) => void insertImage(file, { start: caret, end: caret }),
+    );
 };
 ```
 
-and add `onDrop={handleDrop}` to the `TextArea`. A drop onto a
-textarea does not move the caret first, so the insertion point is
-wherever the caret already was — unlike the Tiptap surface, there is
-no `posAtCoords()` equivalent worth reaching for.
+with `onDrop={handleDrop}` on the `TextArea`. Falling through to
+`captureEditRange` when there is no uploader or no image is what
+keeps an ordinary text paste behaving exactly as before.
 
-Note that `files.forEach` fires the uploads in parallel and each one
-splices independently. That is safe **only** because each
+A drop onto a textarea does not move the caret first, so the
+insertion point is wherever the caret already was — unlike the Tiptap
+surface, there is no `posAtCoords()` equivalent worth reaching for.
+
+`files.forEach` fires the uploads in parallel and each one splices
+independently. That is safe **only** because each
 `setBody`/`setMentionRanges` call is a functional update reading the
 latest state; never hoist `body` into the closure.
 
-### Step A4 — Pass the uploader from the page
+### Step 4 — Editing an existing comment
 
-File: `resources/js/Pages/Issues/Show.tsx`
+File: `resources/js/Components/Atoms/EditableText/EditableText.tsx`
 
-The page already calls `useImageUpload(project.id)` for the
-description (Step 11 of the previous guide), so the same
-`uploadImage` goes straight to both the new-comment form and the
-edit-a-comment form inside `CommentList`:
+An existing comment is edited through `EditableText` in `multiline`
+mode, so the upload support lives in that atom rather than in
+`CommentItem` — which also means any other multiline `EditableText`
+gets it by passing one prop.
 
 ```tsx
-<CommentList
-    comments={issue.comments || []}
-    users={users}
-    onEdit={editComment}
-    onDelete={deleteComment}
-    onImageUpload={uploadImage}
-/>
-<CommentForm onSubmit={addComment} users={users} onImageUpload={uploadImage} />
+const insertImage = async (
+    file: File,
+    range: { start: number; end: number },
+) => {
+    if (!onImageUpload) return;
+
+    pendingUploadsRef.current += 1;
+
+    try {
+        const url = await onImageUpload(file);
+
+        setDraft((current) => {
+            const result = insertMarkdownImage(current, range, file, url);
+
+            setPendingCaret(result.caret);
+
+            return result.body;
+        });
+    } catch {
+        // The uploader already reported the failure to the user.
+    } finally {
+        pendingUploadsRef.current = Math.max(
+            0,
+            pendingUploadsRef.current - 1,
+        );
+    }
+};
 ```
 
-`CommentList` passes it down to whatever it renders for an edit
-session; if that editing UI is a second `TextArea`, it needs the same
-Step A2/A3 treatment.
+`handlePaste`/`handleDrop` are the same shape as `CommentForm`'s,
+minus the mention bookkeeping, and are wired onto the multiline
+`TextArea` next to the existing `onBlur={commit}`.
 
-### Step A5 — Nothing to change on the backend
+**The gotcha, identical to the Tiptap one:** `EditableText` commits
+on blur. Losing focus mid-upload would run `commit()`, leave edit
+mode and save the draft as it was — and the image would then be
+spliced into a draft nobody is editing and never persisted. Hence:
 
-`CommentController::store()` keeps validating `body` as
+```tsx
+const commit = () => {
+    if (pendingUploadsRef.current > 0) return;
+
+    setIsEditing(false);
+    if (draft !== value) {
+        onSave(draft);
+    }
+};
+```
+
+A **ref**, not state, because `commit` is the handler the textarea
+already holds.
+
+`CommentList` and `CommentItem` do nothing but pass `onImageUpload`
+down — `Pages/Issues/Show.tsx` hands the same `uploadImage` from
+`useImageUpload(project.id)` to `CommentList` and `CommentForm` that
+it already gives the description editor.
+
+### Step 5 — Rendering the image in the posted comment
+
+File: `resources/js/Components/Molecules/CommentItem/CommentItem.tsx`
+
+Without this step everything above stores correctly and displays as
+literal `![shot.png](/storage/…)`. The body is rendered in two
+passes: images first, then the existing mention splitting over each
+text run between them.
+
+```tsx
+const renderBody = (value: string) =>
+    splitMarkdownImages(value).map((segment, index) =>
+        segment.type === 'image' ? (
+            // Stops the click from reaching EditableText's edit-on-click
+            // wrapper - clicking a picture opens it, it doesn't start an
+            // edit the way clicking the text around it does.
+            <a
+                key={index}
+                href={segment.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="my-1 block w-fit"
+            >
+                <img
+                    src={segment.url}
+                    alt={segment.value}
+                    className="max-h-80 max-w-full rounded-lg border border-[var(--border-color)]"
+                />
+            </a>
+        ) : (
+            renderText(segment.value, String(index))
+        ),
+    );
+```
+
+`renderText` is the previous `renderBody` body, unchanged except for
+a key prefix — mentions keep rendering exactly as they did, including
+inside the text that surrounds an image.
+
+The `stopPropagation` matters because the comment body *is* a click
+target: `EditableText` starts an edit when its display area is
+clicked, and without it a click on the picture would open the
+textarea instead of the image.
+
+### Step 6 — Nothing to change on the backend
+
+`CommentController::store()` and `update()` keep validating `body` as
 `required|string`; the image is already stored and the body just
 contains a markdown link to it. `App\Policies\CommentPolicy` is
 untouched too — the upload was authorized as "can view this project"
-when it happened, and posting the comment is authorized separately as
-it always was.
+when it happened, and posting or editing the comment is authorized
+separately as it always was.
 
-## Part B — Issue type templates
+## Part B — Issue type templates (not built)
 
 A template's `description` is the markdown a new issue of that type
 starts from (see
@@ -209,6 +383,10 @@ it — the attachment is written once and referenced from every one of
 those descriptions. That is fine by design: attachments are owned by
 the project, not by the issue, so no issue "owns" the file and
 deleting one issue can never break another's image.
+
+Note that the rendering half is already solved here: an issue
+description is displayed by `EditableMarkdown`, which renders images
+natively, so only the composing half (below) is missing.
 
 ### Step B1 — Upload from the modal
 
@@ -312,22 +490,44 @@ verbatim, image links and all.
 
 ## Tests
 
-- `resources/js/utils/imagePaste.test.ts` — add cases for
-  `insertMarkdownImage`: inserting at a collapsed caret, replacing a
-  selected range, and the reported `caret`/`length`.
+Part A's coverage already exists and is what a new surface should be
+modelled on:
+
+- `resources/js/utils/imagePaste.test.ts` — `insertMarkdownImage` at
+  a collapsed caret, over a selected range and on an empty body, plus
+  a round-trip asserting what it produces is what
+  `splitMarkdownImages` parses back; and `splitMarkdownImages`
+  itself: no image, empty body, text around an image, two consecutive
+  images with an empty alt, and the two negative cases that keep the
+  parser honest (a plain `[link](url)` and prose that merely contains
+  brackets).
 - `resources/js/Components/Molecules/CommentForm/CommentForm.test.tsx` —
-  pasting an image calls `onImageUpload` and puts `![name](url)` in
-  the submitted body; **and** a case that is the whole point of Step
-  A2: type a mention, move the caret before it, paste an image, then
-  submit, asserting `mentioned_user_ids` still carries that user's
-  id. Mirror the existing mention-tracking tests' setup.
-- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsTemplatesModal.test.tsx` —
-  pasting an image into the description posts a `description`
-  containing the markdown link; and that nothing is uploaded when
-  `canManageTemplates` is false.
-- `tests/Feature/CommentControllerTest.php` /
-  `tests/Feature/IssueTypeTemplateControllerTest.php` — add one case
-  each storing a body/description containing `![shot.png](/storage/…)`
-  and asserting it round-trips unchanged. There is nothing else to
-  test on the backend: no new route, no new validation, no new
-  service.
+  paste uploads and submits the markdown link; **the mention
+  regression**: with a mention already selected, paste an image
+  *before* it and assert the submitted body still carries
+  `@[Jane Cooper](1)` and `mentioned_user_ids` still carries that id;
+  drop at the caret; and paste left to the browser both when there is
+  no uploader and when the clipboard holds no image
+  (`defaultPrevented === false`).
+- `resources/js/Components/Atoms/EditableText/EditableText.test.tsx` —
+  paste at the caret, paste replacing a selection, drop, a failed
+  upload leaving the draft untouched, paste without an uploader, and
+  blur during an in-flight upload neither committing nor losing the
+  image.
+- `resources/js/Components/Molecules/CommentItem/CommentItem.test.tsx` —
+  a body with an image renders an `<img>` and not the literal
+  markdown, the image links to the file without starting an edit, and
+  mentions still render alongside it.
+- `resources/js/Components/Molecules/CommentList/CommentList.test.tsx` —
+  one integration case proving the prop actually reaches the edit
+  textarea, since `CommentList`/`CommentItem` only pass it through.
+- `tests/Feature/CommentControllerTest.php` — storing and editing a
+  body containing `![shot.png](/storage/…)` round-trips unchanged.
+  That is all the backend needs: no new route, no new validation, no
+  new service.
+
+For Part B, add the equivalents:
+`WorkspaceSettingsTemplatesModal.test.tsx` (pasting an image into the
+description posts a `description` containing the markdown link, and
+nothing is uploaded when `canManageTemplates` is false) and one
+round-trip case in `tests/Feature/IssueTypeTemplateControllerTest.php`.
