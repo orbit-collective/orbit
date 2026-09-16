@@ -82,12 +82,14 @@ export default function Show({
                 users={users}
             >
                 <div className={'flex h-full flex-col'}>
-                    <FilterBar
-                        queryParams={queryParams}
-                        project={project}
-                        savedFilters={savedFilters}
-                        users={users}
-                    />
+                    {selectedLook !== 'Activity' && (
+                        <FilterBar
+                            queryParams={queryParams}
+                            project={project}
+                            savedFilters={savedFilters}
+                            users={users}
+                        />
+                    )}
                     <div
                         className={
                             'relative flex flex-1 overflow-hidden border-t border-solid border-[var(--bg-light-color)]'
