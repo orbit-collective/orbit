@@ -65,9 +65,19 @@ const mockUseEditor = vi.hoisted(() => vi.fn());
 
 vi.mock('@tiptap/react', () => ({
     useEditor: (options: EditorOptions) => mockUseEditor(options),
+    // Stands in for the rendered document: text, plus an <img> for every
+    // markdown image link, which is what the real Image extension renders and
+    // what the click-to-open handler looks for.
     EditorContent: ({ editor }: { editor: FakeEditor | null }) => (
         <div data-testid="editor-content" data-editable={editor?.editable}>
             {editor?.markdown}
+            {[
+                ...(editor?.markdown ?? '').matchAll(
+                    /!\[([^\]]*)\]\(([^)\s]+)\)/g,
+                ),
+            ].map(([, alt, src], index) => (
+                <img key={index} src={src} alt={alt} />
+            ))}
         </div>
     ),
 }));
@@ -335,5 +345,43 @@ describe('EditableMarkdown Component', () => {
         expect(editor.setContent).toHaveBeenCalledWith('Original');
         expect(editor.setEditable).toHaveBeenCalledWith(false);
         expect(onSave).not.toHaveBeenCalled();
+    });
+});
+
+describe('EditableMarkdown image clicks', () => {
+    test('clicking a rendered image opens it in a new tab instead of editing', async () => {
+        const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+        const { getEditor } = setup('Look ![shot.png](/storage/a.png)');
+
+        await userEvent.click(screen.getByRole('img', { name: 'shot.png' }));
+
+        expect(openSpy).toHaveBeenCalledWith(
+            expect.stringContaining('/storage/a.png'),
+            '_blank',
+            'noopener,noreferrer',
+        );
+        expect(getEditor().setEditable).not.toHaveBeenCalled();
+    });
+
+    test('clicking the text around an image still starts editing', async () => {
+        const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+        const { getEditor } = setup('Look ![shot.png](/storage/a.png)');
+
+        await userEvent.click(screen.getByText(/Look/));
+
+        expect(openSpy).not.toHaveBeenCalled();
+        expect(getEditor().setEditable).toHaveBeenCalledWith(true);
+    });
+
+    test('clicking an image while editing does not open a tab', async () => {
+        const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+        setup('Look ![shot.png](/storage/a.png)');
+
+        await userEvent.click(screen.getByText(/Look/));
+        openSpy.mockClear();
+
+        await userEvent.click(screen.getByRole('img', { name: 'shot.png' }));
+
+        expect(openSpy).not.toHaveBeenCalled();
     });
 });

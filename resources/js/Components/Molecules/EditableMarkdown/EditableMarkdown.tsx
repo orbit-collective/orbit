@@ -150,6 +150,24 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     };
 
     /**
+     * Clicking a rendered image opens the file instead of starting an edit -
+     * the same behaviour a comment's images have. While editing it stays out
+     * of the way, so the image node can still be selected and deleted.
+     */
+    const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        const image = (event.target as HTMLElement).closest?.('img');
+
+        if (!isEditing && image?.src) {
+            event.preventDefault();
+            window.open(image.src, '_blank', 'noopener,noreferrer');
+
+            return;
+        }
+
+        startEditing();
+    };
+
+    /**
      * Drop is handled on the wrapper rather than through Tiptap's
      * `handleDrop`, because a file can be dropped onto the rendered
      * (non-editable) description too - that has to open the editor first.
@@ -175,7 +193,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
 
     return (
         <div
-            onClick={startEditing}
+            onClick={handleClick}
             onKeyDown={(e) => {
                 if (e.key === 'Escape') {
                     e.preventDefault();
