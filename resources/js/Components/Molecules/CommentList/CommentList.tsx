@@ -26,6 +26,7 @@ const CommentList: React.FC<CommentListProps> = ({
                     users={users}
                     onEdit={onEdit}
                     onDelete={onDelete}
+                    onImageUpload={onImageUpload}
                 />
             ))}
         </div>

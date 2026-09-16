@@ -12,6 +12,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     users = [],
     onEdit,
     onDelete,
+    onImageUpload,
 }) => {
     const renderText = (value: string, keyPrefix: string) =>
         splitMentionText(value, users).map((segment, index) =>
@@ -78,6 +79,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 <EditableText
                     value={comment.body}
                     onSave={(body) => onEdit?.(comment, body)}
+                    onImageUpload={onImageUpload}
                     multiline
                     disabled={!comment.can_edit}
                     displayClassName="whitespace-pre-wrap text-sm text-[var(--text-color)]"

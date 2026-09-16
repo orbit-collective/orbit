@@ -1,5 +1,5 @@
 import { Comment } from '@/types/Issues';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import CommentList from './CommentList';
@@ -67,5 +67,35 @@ describe('CommentList Component', () => {
         );
 
         expect(handleDelete).toHaveBeenCalledWith(comment);
+    });
+});
+
+describe('CommentList image uploads', () => {
+    test('an editable comment can have an image pasted into it', async () => {
+        const onImageUpload = vi.fn().mockResolvedValue('/storage/a.png');
+        const onEdit = vi.fn();
+
+        render(
+            <CommentList
+                comments={[makeComment({ body: 'Editable', can_edit: true })]}
+                onEdit={onEdit}
+                onImageUpload={onImageUpload}
+            />,
+        );
+
+        await userEvent.click(screen.getByText('Editable'));
+
+        const textarea = screen.getByRole('textbox');
+        fireEvent.paste(textarea, {
+            clipboardData: {
+                files: [new File(['x'], 'shot.png', { type: 'image/png' })],
+                items: [],
+            } as unknown as DataTransfer,
+        });
+
+        expect(onImageUpload).toHaveBeenCalledWith(expect.any(File));
+        await waitFor(() =>
+            expect(textarea).toHaveValue('Editable![shot.png](/storage/a.png)'),
+        );
     });
 });
