@@ -2,6 +2,7 @@ import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { CommentItemProps } from '@/types/Components';
+import { splitMarkdownImages } from '@/utils/imagePaste';
 import { splitMentionText } from '@/utils/mentions';
 import { formatTimeAgo } from '@/utils/time';
 import React from 'react';
@@ -12,11 +13,11 @@ const CommentItem: React.FC<CommentItemProps> = ({
     onEdit,
     onDelete,
 }) => {
-    const renderBody = (value: string) =>
+    const renderText = (value: string, keyPrefix: string) =>
         splitMentionText(value, users).map((segment, index) =>
             segment.type === 'mention' ? (
                 <span
-                    key={index}
+                    key={`${keyPrefix}-${index}`}
                     className="bg-[var(--accent-color)]/10 mx-0.5 inline-flex items-center gap-1 rounded px-1 align-middle font-medium text-[var(--accent-color)]"
                 >
                     <Avatar
@@ -27,7 +28,34 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     {segment.value}
                 </span>
             ) : (
-                <React.Fragment key={index}>{segment.value}</React.Fragment>
+                <React.Fragment key={`${keyPrefix}-${index}`}>
+                    {segment.value}
+                </React.Fragment>
+            ),
+        );
+
+    const renderBody = (value: string) =>
+        splitMarkdownImages(value).map((segment, index) =>
+            segment.type === 'image' ? (
+                // Stops the click from reaching EditableText's edit-on-click
+                // wrapper - clicking a picture opens it, it doesn't start an
+                // edit the way clicking the text around it does.
+                <a
+                    key={index}
+                    href={segment.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="my-1 block w-fit"
+                >
+                    <img
+                        src={segment.url}
+                        alt={segment.value}
+                        className="max-h-80 max-w-full rounded-lg border border-[var(--border-color)]"
+                    />
+                </a>
+            ) : (
+                renderText(segment.value, String(index))
             ),
         );
 

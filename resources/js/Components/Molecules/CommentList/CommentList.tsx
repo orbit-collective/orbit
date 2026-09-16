@@ -7,6 +7,7 @@ const CommentList: React.FC<CommentListProps> = ({
     users,
     onEdit,
     onDelete,
+    onImageUpload,
 }) => {
     if (comments.length === 0) {
         return (

@@ -218,10 +218,12 @@ export default function Show({
                                         users={users}
                                         onEdit={editComment}
                                         onDelete={deleteComment}
+                                        onImageUpload={uploadImage}
                                     />
                                     <CommentForm
                                         onSubmit={addComment}
                                         users={users}
+                                        onImageUpload={uploadImage}
                                     />
                                 </div>
                             </div>

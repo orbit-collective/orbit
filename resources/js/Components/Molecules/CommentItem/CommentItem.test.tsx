@@ -130,3 +130,57 @@ describe('CommentItem Component', () => {
         expect(handleEdit).toHaveBeenCalledWith(comment, 'Updated body');
     });
 });
+
+describe('CommentItem image rendering', () => {
+    test('renders a pasted markdown image as an image, not as text', () => {
+        render(
+            <CommentItem
+                comment={makeComment({
+                    body: 'Here it is ![shot.png](/storage/attachments/1/shot.png)',
+                })}
+            />,
+        );
+
+        const image = screen.getByRole('img', { name: 'shot.png' });
+        expect(image).toHaveAttribute('src', '/storage/attachments/1/shot.png');
+        expect(screen.getByText('Here it is')).toBeInTheDocument();
+        expect(screen.queryByText(/!\[shot\.png\]/)).not.toBeInTheDocument();
+    });
+
+    test('links the image to the full-size file without starting an edit', async () => {
+        const onEdit = vi.fn();
+        render(
+            <CommentItem
+                comment={makeComment({
+                    body: '![shot.png](/storage/a.png)',
+                    can_edit: true,
+                })}
+                onEdit={onEdit}
+            />,
+        );
+
+        const link = screen.getByRole('link');
+        expect(link).toHaveAttribute('href', '/storage/a.png');
+        expect(link).toHaveAttribute('target', '_blank');
+
+        await userEvent.click(screen.getByRole('img', { name: 'shot.png' }));
+
+        expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+
+    test('still renders mentions in the text around an image', () => {
+        render(
+            <CommentItem
+                comment={makeComment({
+                    body: '@[Jane Cooper](1) look ![shot.png](/storage/a.png)',
+                })}
+                users={[{ id: 1, name: 'Jane Cooper' }]}
+            />,
+        );
+
+        expect(screen.getByText('@Jane Cooper')).toBeInTheDocument();
+        expect(
+            screen.getByRole('img', { name: 'shot.png' }),
+        ).toBeInTheDocument();
+    });
+});

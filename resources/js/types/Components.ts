@@ -148,6 +148,7 @@ export interface TextAreaProps extends VariantProps<typeof textareaVariants> {
     onCut?: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
     onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
     ref?: React.Ref<HTMLTextAreaElement> | null;
+    onDrop?: (e: React.DragEvent<HTMLTextAreaElement>) => void;
 }
 export interface VisualCardProps {
     children: ReactNode;
@@ -587,11 +588,13 @@ export interface CommentListProps {
     users?: AssignableUser[];
     onEdit?: (comment: Comment, body: string) => void;
     onDelete?: (comment: Comment) => void;
+    onImageUpload?: (file: File) => Promise<string>;
 }
 export interface CommentFormProps {
     onSubmit: (body: string, mentionedUserIds: number[]) => void;
     users?: AssignableUser[];
     isSubmitting?: boolean;
+    onImageUpload?: (file: File) => Promise<string>;
 }
 export interface MentionSuggestionsProps {
     users: AssignableUser[];

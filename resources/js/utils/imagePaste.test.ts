@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { extractImageFiles } from './imagePaste';
+import { extractImageFiles, splitMarkdownImages } from './imagePaste';
 
 const imageFile = (name = 'shot.png', type = 'image/png') =>
     new File(['x'], name, { type });
@@ -75,6 +75,53 @@ describe('extractImageFiles', () => {
         expect(extractImageFiles(dataTransfer([first, second]))).toEqual([
             first,
             second,
+        ]);
+    });
+});
+
+describe('splitMarkdownImages', () => {
+    test('returns a single text segment for a body with no image', () => {
+        expect(splitMarkdownImages('Looks good to me')).toEqual([
+            { type: 'text', value: 'Looks good to me' },
+        ]);
+    });
+
+    test('keeps an empty body as one empty text segment', () => {
+        expect(splitMarkdownImages('')).toEqual([{ type: 'text', value: '' }]);
+    });
+
+    test('splits the text around an image link', () => {
+        expect(
+            splitMarkdownImages('Before ![shot.png](/storage/a.png) after'),
+        ).toEqual([
+            { type: 'text', value: 'Before ' },
+            { type: 'image', value: 'shot.png', url: '/storage/a.png' },
+            { type: 'text', value: ' after' },
+        ]);
+    });
+
+    test('handles consecutive images and an empty alt text', () => {
+        expect(
+            splitMarkdownImages('![](/storage/a.png)![b](/storage/b.png)'),
+        ).toEqual([
+            { type: 'image', value: '', url: '/storage/a.png' },
+            { type: 'image', value: 'b', url: '/storage/b.png' },
+        ]);
+    });
+
+    test('leaves a plain markdown link alone', () => {
+        const body = 'See [the docs](https://example.com) for details';
+
+        expect(splitMarkdownImages(body)).toEqual([
+            { type: 'text', value: body },
+        ]);
+    });
+
+    test('leaves prose that merely contains brackets alone', () => {
+        const body = 'Not an image! [see] (this) either';
+
+        expect(splitMarkdownImages(body)).toEqual([
+            { type: 'text', value: body },
         ]);
     });
 });
