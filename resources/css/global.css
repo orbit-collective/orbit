@@ -172,5 +172,4 @@ html, body, #app {
     cursor: zoom-in;
     border-radius: 0.5rem;
     border: 1px solid var(--border-color);
-    max-height: 20rem;
 }
