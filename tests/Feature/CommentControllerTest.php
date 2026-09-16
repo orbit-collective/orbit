@@ -303,3 +303,35 @@ test('guests cannot edit a comment', function () {
 
     $response->assertRedirect(route('login'));
 });
+
+test('a comment body carrying a markdown image link round-trips unchanged', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $body = "Repro: ![shot.png](/storage/attachments/$project->id/shot.png)";
+
+    $this->actingAs($member)
+        ->post("/issues/$issue->id/comments", ['body' => $body])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('comments', [
+        'issue_id' => $issue->id,
+        'body' => $body,
+    ]);
+});
+
+test('editing a comment keeps a markdown image link intact', function () {
+    $author = User::factory()->create();
+    $comment = Comment::factory()->create(['user_id' => $author->id, 'body' => 'No image yet']);
+    $comment->issue->project->users()->attach($author->id, ['role' => 'member']);
+
+    $body = 'Now with ![shot.png](/storage/attachments/1/shot.png) added';
+
+    $this->actingAs($author)
+        ->patch("/comments/$comment->id", ['body' => $body])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('comments', ['id' => $comment->id, 'body' => $body]);
+});

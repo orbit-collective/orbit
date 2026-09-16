@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { extractImageFiles, splitMarkdownImages } from './imagePaste';
+import {
+    extractImageFiles,
+    insertMarkdownImage,
+    splitMarkdownImages,
+} from './imagePaste';
 
 const imageFile = (name = 'shot.png', type = 'image/png') =>
     new File(['x'], name, { type });
@@ -122,6 +126,60 @@ describe('splitMarkdownImages', () => {
 
         expect(splitMarkdownImages(body)).toEqual([
             { type: 'text', value: body },
+        ]);
+    });
+});
+
+describe('insertMarkdownImage', () => {
+    const file = imageFile('shot.png');
+
+    test('inserts at a collapsed caret and reports where it ends', () => {
+        const result = insertMarkdownImage(
+            'Before after',
+            { start: 7, end: 7 },
+            file,
+            '/storage/a.png',
+        );
+
+        expect(result.body).toBe('Before ![shot.png](/storage/a.png)after');
+        expect(result.length).toBe('![shot.png](/storage/a.png)'.length);
+        expect(result.caret).toBe(7 + result.length);
+    });
+
+    test('replaces the selected range', () => {
+        const result = insertMarkdownImage(
+            'Replace me please',
+            { start: 8, end: 10 },
+            file,
+            '/storage/a.png',
+        );
+
+        expect(result.body).toBe('Replace ![shot.png](/storage/a.png) please');
+    });
+
+    test('works on an empty body', () => {
+        const result = insertMarkdownImage(
+            '',
+            { start: 0, end: 0 },
+            file,
+            '/storage/a.png',
+        );
+
+        expect(result.body).toBe('![shot.png](/storage/a.png)');
+        expect(result.caret).toBe(result.body.length);
+    });
+
+    test('round-trips through splitMarkdownImages', () => {
+        const { body } = insertMarkdownImage(
+            'See: ',
+            { start: 5, end: 5 },
+            file,
+            '/storage/a.png',
+        );
+
+        expect(splitMarkdownImages(body)).toEqual([
+            { type: 'text', value: 'See: ' },
+            { type: 'image', value: 'shot.png', url: '/storage/a.png' },
         ]);
     });
 });
