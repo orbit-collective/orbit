@@ -76,3 +76,42 @@ test('guests cannot manage issue type templates', function () {
 
     $response->assertRedirect(route('login'));
 });
+
+test('a template description carrying a markdown image link round-trips unchanged', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+
+    $description = "Repro: ![shot.png](/storage/attachments/$project->id/shot.png)";
+
+    $this->actingAs($admin)->post("/projects/$project->id/issue-types/$issueType->id/templates", [
+        'name' => 'Standard',
+        'description' => $description,
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('issue_type_templates', [
+        'issue_type_id' => $issueType->id,
+        'description' => $description,
+    ]);
+});
+
+test('updating a template keeps a markdown image link intact', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+    $template = $issueType->templates()->create(['name' => 'Standard', 'description' => 'No image yet']);
+
+    $description = 'Now with ![shot.png](/storage/attachments/1/shot.png) added';
+
+    $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id/templates/$template->id", [
+        'name' => 'Standard',
+        'description' => $description,
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('issue_type_templates', [
+        'id' => $template->id,
+        'description' => $description,
+    ]);
+});
