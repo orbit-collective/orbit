@@ -1,7 +1,13 @@
 import { AlertProvider } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsTemplatesModal from './WorkspaceSettingsTemplatesModal';
 
@@ -12,6 +18,15 @@ vi.stubGlobal(
             `/${name}/${(params ?? []).join('/')}`,
     ),
 );
+
+const uploadImageMock = vi.hoisted(() => vi.fn());
+
+vi.mock('@/hooks/useImageUpload', () => ({
+    useImageUpload: () => ({
+        uploadImage: uploadImageMock,
+        isUploading: false,
+    }),
+}));
 
 const routerMock = vi.hoisted(() => ({
     post: vi.fn(),
@@ -247,5 +262,117 @@ describe('WorkspaceSettingsTemplatesModal', () => {
                 'This project has no labels yet.',
             ),
         ).toBeInTheDocument();
+    });
+});
+
+const descriptionField = () =>
+    screen.getByPlaceholderText(
+        'Description every new issue of this type starts from',
+    ) as HTMLTextAreaElement;
+
+const transfer = (files: File[]) =>
+    ({ files, items: [] }) as unknown as DataTransfer;
+
+const imageFile = (name = 'shot.png') =>
+    new File(['x'], name, { type: 'image/png' });
+
+describe('WorkspaceSettingsTemplatesModal image uploads', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    test('pasting an image into the description stores the markdown link', async () => {
+        uploadImageMock.mockResolvedValue('/storage/attachments/1/shot.png');
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.click(screen.getByText('New template'));
+        fireEvent.change(screen.getByPlaceholderText('Template name'), {
+            target: { value: 'Quick Report' },
+        });
+
+        const description = descriptionField();
+        fireEvent.change(description, { target: { value: 'Repro: ' } });
+        description.setSelectionRange(7, 7);
+        fireEvent.paste(description, {
+            clipboardData: transfer([imageFile()]),
+        });
+
+        expect(uploadImageMock).toHaveBeenCalledWith(expect.any(File));
+        await waitFor(() =>
+            expect(description).toHaveValue(
+                'Repro: ![shot.png](/storage/attachments/1/shot.png)',
+            ),
+        );
+
+        fireEvent.click(screen.getByText('Add template'));
+
+        expect(routerMock.post).toHaveBeenCalledWith(
+            expect.stringContaining('issue-types.templates.store'),
+            expect.objectContaining({
+                description:
+                    'Repro: ![shot.png](/storage/attachments/1/shot.png)',
+            }),
+            expect.any(Object),
+        );
+    });
+
+    test('dropping an image inserts it at the caret', async () => {
+        uploadImageMock.mockResolvedValue('/storage/b.png');
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.click(screen.getByText('New template'));
+
+        const description = descriptionField();
+        fireEvent.change(description, { target: { value: 'End' } });
+        description.setSelectionRange(0, 0);
+        fireEvent.drop(description, {
+            dataTransfer: transfer([imageFile('dropped.png')]),
+        });
+
+        await waitFor(() =>
+            expect(description).toHaveValue(
+                '![dropped.png](/storage/b.png)End',
+            ),
+        );
+    });
+
+    test('a failed upload leaves the description untouched', async () => {
+        uploadImageMock.mockRejectedValue(new Error('nope'));
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.click(screen.getByText('New template'));
+
+        const description = descriptionField();
+        fireEvent.change(description, { target: { value: 'Repro' } });
+        fireEvent.paste(description, {
+            clipboardData: transfer([imageFile()]),
+        });
+
+        await waitFor(() => expect(uploadImageMock).toHaveBeenCalled());
+        expect(description).toHaveValue('Repro');
+    });
+
+    test('a paste carrying no image is left to the browser', () => {
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.click(screen.getByText('New template'));
+
+        const event = new Event('paste', { bubbles: true, cancelable: true });
+        Object.defineProperty(event, 'clipboardData', {
+            value: transfer([]),
+        });
+        fireEvent(descriptionField(), event);
+
+        expect(event.defaultPrevented).toBe(false);
+        expect(uploadImageMock).not.toHaveBeenCalled();
+    });
+
+    test('without permission there is no description field to paste into', () => {
+        renderModal({ canManageTemplates: false });
+
+        expect(
+            screen.queryByPlaceholderText(
+                'Description every new issue of this type starts from',
+            ),
+        ).not.toBeInTheDocument();
+        expect(uploadImageMock).not.toHaveBeenCalled();
     });
 });

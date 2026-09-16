@@ -7,11 +7,13 @@ import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/In
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { IssueType, IssueTypeTemplate } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { cn } from '@/utils/cn';
+import { extractImageFiles, insertMarkdownImage } from '@/utils/imagePaste';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 interface WorkspaceSettingsTemplatesModalProps {
     isOpen: boolean;
@@ -40,6 +42,8 @@ export default function WorkspaceSettingsTemplatesModal({
     canManageTemplates = false,
 }: WorkspaceSettingsTemplatesModalProps) {
     const { addAlert } = useAlert();
+    const { uploadImage } = useImageUpload(projectId);
+    const descriptionRef = useRef<HTMLTextAreaElement>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [isComposing, setIsComposing] = useState(false);
     const [name, setName] = useState('');
@@ -74,6 +78,62 @@ export default function WorkspaceSettingsTemplatesModal({
         setDescription(template.description ?? '');
         setDefaultPriority(template.defaultPriority);
         setDefaultLabels(template.defaultLabels ?? []);
+    };
+
+    const insertImage = async (
+        file: File,
+        range: { start: number; end: number },
+    ) => {
+        try {
+            const url = await uploadImage(file);
+
+            setDescription((current) => {
+                const result = insertMarkdownImage(current, range, file, url);
+
+                // This component has no pendingCaret effect the way CommentForm
+                // does, and needs none for a single field - the textarea is
+                // still mounted, it just lost its selection to the re-render.
+                requestAnimationFrame(() => {
+                    descriptionRef.current?.focus();
+                    descriptionRef.current?.setSelectionRange(
+                        result.caret,
+                        result.caret,
+                    );
+                });
+
+                return result.body;
+            });
+        } catch {
+            // The uploader already reported the failure to the user.
+        }
+    };
+
+    const handleDescriptionPaste = (
+        e: React.ClipboardEvent<HTMLTextAreaElement>,
+    ) => {
+        const files = extractImageFiles(e.clipboardData);
+
+        if (files.length === 0) return;
+
+        e.preventDefault();
+
+        const { selectionStart: start, selectionEnd: end } = e.currentTarget;
+
+        files.forEach((file) => void insertImage(file, { start, end }));
+    };
+
+    const handleDescriptionDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
+        const files = extractImageFiles(e.dataTransfer);
+
+        if (files.length === 0) return;
+
+        e.preventDefault();
+
+        const caret = e.currentTarget.selectionStart;
+
+        files.forEach(
+            (file) => void insertImage(file, { start: caret, end: caret }),
+        );
     };
 
     const toggleLabel = (label: string) =>
@@ -288,8 +348,11 @@ export default function WorkspaceSettingsTemplatesModal({
                                 variant="modal"
                             />
                             <TextArea
+                                ref={descriptionRef}
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
+                                onPaste={handleDescriptionPaste}
+                                onDrop={handleDescriptionDrop}
                                 placeholder="Description every new issue of this type starts from"
                                 variant="modal"
                                 className="min-h-[120px] font-mono text-xs"
