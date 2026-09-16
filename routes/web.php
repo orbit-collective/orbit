@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IssueController;
@@ -44,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/projects/{project}/roles/{role}', [RoleController::class, 'update'])->name('projects.roles.update');
     Route::patch('/projects/{project}/roles/{role}/permissions', [RoleController::class, 'syncPermissions'])->name('projects.roles.permissions.update');
     Route::delete('/projects/{project}/roles/{role}', [RoleController::class, 'destroy'])->name('projects.roles.destroy');
+    Route::post('/projects/{project}/attachments', [AttachmentController::class, 'store'])->name('projects.attachments.store');
     Route::post('/projects/{project}/labels', [LabelController::class, 'store'])->name('projects.labels.store');
     Route::patch('/projects/{project}/labels/{label}', [LabelController::class, 'update'])->name('projects.labels.update');
     Route::delete('/projects/{project}/labels/{label}', [LabelController::class, 'destroy'])->name('projects.labels.destroy');

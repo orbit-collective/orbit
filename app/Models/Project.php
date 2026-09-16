@@ -74,6 +74,11 @@ class Project extends Model
         return $this->hasMany(Label::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class);
+    }
+
     public function issueTypes(): HasMany
     {
         return $this->hasMany(IssueType::class);

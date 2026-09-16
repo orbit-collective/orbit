@@ -1,8 +1,11 @@
 # Content moderation
 
 Every image a user uploads is screened before it's accepted —
-today, that's exactly one upload point (profile avatars) — via
-`NsfwDetectionService`, backed by an external image-classification
+today that's two upload points, profile avatars
+(`UserController::uploadAvatar()`) and markdown image attachments
+pasted or dropped into an editor (`AttachmentController::store()`, see
+[`../rich-text-editor/02-add-image-paste-and-drop-uploads.md`](../rich-text-editor/02-add-image-paste-and-drop-uploads.md))
+— via `NsfwDetectionService`, backed by an external image-classification
 service ([nsfwjs](https://github.com/infinitered/nsfwjs), running as
 its own Docker service — see
 [`../architecture/04-docker-doppler-and-deployment.md`](../architecture/04-docker-doppler-and-deployment.md)).

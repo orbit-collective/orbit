@@ -26,8 +26,13 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Attachment uploads are the one web route answered with JSON rather
+        // than an Inertia redirect (the Tiptap paste/drop handler needs the
+        // stored URL back), so its failures - validation, a policy denial, a
+        // moderation rejection - have to come back as JSON too.
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*')
+                || $request->is('projects/*/attachments'),
         );
 
         // Inertia's client shows a full-page reload of Laravel's own 403 HTML

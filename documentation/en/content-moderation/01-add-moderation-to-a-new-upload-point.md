@@ -3,8 +3,10 @@
 Worked example: adding a project **cover image** upload — a feature
 that doesn't exist yet — with the exact same NSFW screening
 `UserController::uploadAvatar()` already applies to profile photos.
-Avatar upload is the *only* upload point in the app today; this guide
-is the pattern for a second one.
+The same pattern is what `AttachmentController::store()` follows for
+markdown image uploads (see
+[`../rich-text-editor/02-add-image-paste-and-drop-uploads.md`](../rich-text-editor/02-add-image-paste-and-drop-uploads.md));
+this guide is the pattern for any further one.
 
 ## Step 1 — Add the migration + fillable field
 
