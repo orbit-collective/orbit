@@ -20,9 +20,9 @@ format, just a `TEXT` column holding whatever markdown Tiptap's
    uploads, and the editor's paste/drop handlers.
 3. **[Add image uploads to another surface](./03-add-image-uploads-to-another-surface.md)**
    — how that pipeline reaches surfaces that are plain textareas
-   rather than Tiptap: issue comments as the built reference
-   (composing, editing, rendering, and the mention-range trap), then a
-   worked example for an issue type's template body.
+   rather than Tiptap: issue comments (composing, editing, rendering,
+   and the mention-range trap) and an issue type's template body —
+   the two shapes any further surface will take.
 
 ## The architecture in one paragraph
 

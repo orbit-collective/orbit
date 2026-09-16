@@ -553,6 +553,55 @@ registered. `tiptap-markdown` serializes that node to
 `![alt](url)`, so the saved column stays plain markdown and the
 alt text is the original filename.
 
+### Clicking a rendered image opens it
+
+The wrapper's click handler is also what makes a stored image
+behave like one — without this, clicking a screenshot in a
+description opens the editor on top of it:
+
+```tsx
+/**
+ * Clicking a rendered image opens the file instead of starting an edit -
+ * the same behaviour a comment's images have. While editing it stays out
+ * of the way, so the image node can still be selected and deleted.
+ */
+const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const image = (event.target as HTMLElement).closest?.('img');
+
+    if (!isEditing && image?.src) {
+        event.preventDefault();
+        window.open(image.src, '_blank', 'noopener,noreferrer');
+
+        return;
+    }
+
+    startEditing();
+};
+```
+
+wired as `onClick={handleClick}` in place of the bare
+`onClick={startEditing}`. The `!isEditing` guard is the whole
+subtlety: while editing, a click has to reach ProseMirror so the
+image node can be selected and deleted, and opening a tab on every
+click would make the image impossible to remove.
+
+The affordance goes in `resources/css/global.css`, since the wrapper
+advertises click-to-edit with a text cursor:
+
+```css
+.tiptap img {
+    cursor: zoom-in;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    max-height: 20rem;
+}
+```
+
+Comments reach the same behaviour differently — their images are
+real `<a target="_blank">` elements with `stopPropagation`, because
+there the body is rendered by React rather than by ProseMirror (see
+[`03-add-image-uploads-to-another-surface.md`](./03-add-image-uploads-to-another-surface.md)).
+
 ### The gotcha: blur must not end the edit mid-upload
 
 `EditableMarkdown` commits on blur. Clicking away — or just the focus
@@ -642,4 +691,9 @@ the editor needs the uploader.
   or without an image returns `false`, a failed upload inserts
   nothing, drop starts editing and inserts at the drop position, drop
   while `disabled` does nothing, and blur during an in-flight upload
-  does not call `onSave`.
+  does not call `onSave`. For the click behaviour the mock
+  `EditorContent` also renders an `<img>` per markdown image link
+  (standing in for the real `Image` extension's output), which lets
+  three more cases assert that clicking an image calls `window.open`
+  and does not start an edit, that clicking the text still does start
+  one, and that clicking an image while editing opens nothing.
