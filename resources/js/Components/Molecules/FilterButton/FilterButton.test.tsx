@@ -72,7 +72,7 @@ describe('FilterButton Component', () => {
 
         expect(screen.getByRole('button')).toHaveClass(
             'border-solid',
-            'border-purple-500/30',
+            'border-[var(--accent-color-opacity)]',
         );
         expect(screen.getByText('Open')).toHaveClass(
             'text-[var(--accent-color)]',
