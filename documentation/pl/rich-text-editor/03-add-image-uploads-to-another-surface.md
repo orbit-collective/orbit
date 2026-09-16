@@ -1,20 +1,26 @@
 # Dodaj upload obrazów do kolejnej powierzchni
 
-Dwa przećwiczone przykłady, żaden jeszcze niezbudowany, rozszerzenia pipeline'u uploadu z [`02-add-image-paste-and-drop-uploads.md`](./02-add-image-paste-and-drop-uploads.md) na pozostałe pola aplikacji niosące markdown: **Część A** komentarz do issue, **Część B** treść szablonu typu issue.
+Jak pipeline uploadu z [`02-add-image-paste-and-drop-uploads.md`](./02-add-image-paste-and-drop-uploads.md) dociera do tych pól markdown w aplikacji, które **nie** są Tiptapem: **Część A** to komentarze do issue — zbudowane i będące wzorcową implementacją do skopiowania — a **Część B** to treść szablonu typu issue, jeszcze niezbudowana, opisana jako przećwiczony przykład w dokładnie takim kształcie jak Część A.
 
-Przeczytaj najpierw Część A, nawet jeśli interesują cię tylko szablony — to ona wprowadza helper do textarei, który Część B wykorzystuje ponownie.
+Przeczytaj najpierw Część A, nawet jeśli interesują cię tylko szablony — wszystkie helpery, których używa Część B, pochodzą właśnie stamtąd.
 
 **Żadna praca na backendzie nie jest potrzebna w obu przypadkach.** `POST /projects/{project}/attachments` jest celowo przypisany do projektu, a nie do issue, więc ten sam endpoint, ten sam `AttachmentService`, to samo sprawdzanie NSFW i ten sam hook `useImageUpload` obsługują każdą powierzchnię. Jeśli łapiesz się na dodawaniu drugiego kontrolera albo kolumny `comment_id`, zatrzymaj się — to jest obchodzenie tego projektu, a nie jego rozszerzanie.
 
-## Jedna rzecz, z którą obie części muszą sobie poradzić
+## Trzy zadania, które powierzchnia spoza Tiptapa musi wykonać sama
 
-Żadna z tych powierzchni nie jest Tiptapem. I pole komentarza (`resources/js/Components/Molecules/CommentForm/CommentForm.tsx`), i treść szablonu (`resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsTemplatesModal.tsx`) to zwykłe atomy `TextArea` trzymające markdown jako string. Nie ma więc żadnego `insertContentAt` do wywołania: upload musi wkleić `![name](url)` do stringa w miejscu kursora, a potem przywrócić kursor za nim — `<textarea>` traci zaznaczenie w momencie, w którym React przerenderuje ją z nowym `value`.
+Ani pole komentarza, ani treść szablonu nie są edytorem Tiptap; oba to zwykłe atomy `TextArea` trzymające markdown jako string. Nie ma więc żadnego `insertContentAt` do wywołania ani węzła `Image` do wyrenderowania, a każda taka powierzchnia potrzebuje wszystkich trzech rzeczy:
 
-## Krok 1 — Helper wklejający do textarei
+1. **Wklejenia** `![name](url)` do stringa w miejscu kursora i przywrócenia kursora — `<textarea>` traci zaznaczenie w momencie, w którym React przerenderuje ją z nowym `value`.
+2. **Zrobienia tego samego także na ścieżce edycji**, nie tylko przy pisaniu nowej treści.
+3. **Wyrenderowania** zapisanego markdownu jako prawdziwy obraz — inaczej czytelnik widzi dosłowny tekst `![shot.png](/storage/…)`.
+
+Część A robi wszystkie trzy; pomiń trzecią, a wszystko wygląda na działające aż do przeładowania strony.
+
+## Krok 1 — Współdzielone helpery dla textarei
 
 Plik: `resources/js/utils/imagePaste.ts`
 
-Dodaj obok istniejącego `extractImageFiles`:
+`extractImageFiles` (przewodnik 02, krok 9) obsługuje już wklejanie i upuszczanie. Obok niego mieszkają dwa kolejne helpery, których obie powierzchnie używają bez zmian:
 
 ```ts
 /**
@@ -39,26 +45,95 @@ export const insertMarkdownImage = (
 };
 ```
 
-Tekstem alternatywnym jest oryginalna nazwa pliku — ten sam wybór, którego dokonuje `EditableMarkdown`, budując węzeł `image` — więc zrzut ekranu wklejony do opisu i ten wklejony do komentarza dają identyczny markdown.
+Tekstem alternatywnym jest oryginalna nazwa pliku — ten sam wybór, którego dokonuje `EditableMarkdown`, budując węzeł `image`, więc zrzut ekranu wklejony do opisu i ten wklejony do komentarza dają identyczny markdown.
 
-## Część A — Komentarze do issue
+`length` istnieje dla jednego jedynego wywołującego: `CommentForm`, który musi powiedzieć swojemu śledzeniu wzmianek, ile znaków przybyło (krok 3).
 
-### Krok A1 — Przyjmij uploader w formularzu komentarza
+I, na potrzeby renderowania:
+
+```ts
+export interface MarkdownImageSegment {
+    type: 'text' | 'image';
+    /** The raw text, or - for an image - its alt text. */
+    value: string;
+    url?: string;
+}
+
+// Deliberately narrow: no whitespace in the URL and no nested brackets in the
+// alt text, so a line of prose that merely contains brackets and parentheses
+// is never mistaken for an image.
+const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
+
+/**
+ * Splits a markdown body into plain-text runs and the image links between
+ * them, so a renderer can turn `![alt](url)` into an actual `<img>` while
+ * leaving everything else (mentions included) to the existing text handling.
+ */
+export const splitMarkdownImages = (body: string): MarkdownImageSegment[] => {
+    if (!body) return [{ type: 'text', value: body }];
+
+    const segments: MarkdownImageSegment[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    MARKDOWN_IMAGE_PATTERN.lastIndex = 0;
+    while ((match = MARKDOWN_IMAGE_PATTERN.exec(body)) !== null) {
+        const [full, alt, url] = match;
+
+        if (match.index > lastIndex) {
+            segments.push({
+                type: 'text',
+                value: body.slice(lastIndex, match.index),
+            });
+        }
+
+        segments.push({ type: 'image', value: alt, url });
+
+        lastIndex = match.index + full.length;
+    }
+
+    if (lastIndex < body.length) {
+        segments.push({ type: 'text', value: body.slice(lastIndex) });
+    }
+
+    return segments;
+};
+```
+
+To celowo malutki parser, a nie renderer markdownu: komentarze poza tym są zwykłym tekstem z tokenami wzmianek, a wciągnięcie do nich `react-markdown` zmieniłoby sposób renderowania każdego istniejącego komentarza. Wszystko, co nie jest linkiem do obrazu, zostaje nietkniętym tekstem.
+
+## Część A — Komentarze do issue (zbudowane)
+
+### Krok 2 — Propsy i atom `TextArea`
+
+`onImageUpload?: (file: File) => Promise<string>` jest dodany, w `resources/js/types/Components.ts`, do `CommentFormProps`, `CommentListProps`, `CommentItemProps` i `EditableTextProps` — wszędzie opcjonalny, więc powierzchnia, która go pominie, po prostu nie ma uploadów.
+
+`TextArea` to kontrolowany atom przekazujący dalej wyłącznie zadeklarowane przez siebie handlery, więc trzeba było dołożyć do niego upuszczanie:
+
+```tsx
+onPaste,
+onCut,
+onBlur,
+onDrop,
+```
+
+...i przekazać je do `<textarea>`. `onPaste` był już przekazywany.
+
+### Krok 3 — Pisanie komentarza: wstaw i utrzymaj zakresy wzmianek w zgodzie z treścią
 
 Plik: `resources/js/Components/Molecules/CommentForm/CommentForm.tsx`
 
-Dodaj `onImageUpload?: (file: File) => Promise<string>` do `CommentFormProps` w `resources/js/types/Components.ts` (dokładnie tak, jak deklaruje to `EditableMarkdownProps`), a potem wyciągnij go z propsów obok `onSubmit`, `users` i `isSubmitting`.
+To miejsce, w którym komentarz różni się od każdej innej powierzchni, i część, która po cichu psuje dane, jeśli ją pominiesz.
 
-### Krok A2 — Wstaw wynik uploadu i utrzymaj zakresy wzmianek w zgodzie z treścią
+`CommentForm` śledzi każdą wzmiankę `@mention` jako **zakres znaków** w treści (`mentionRanges`) i uzgadnia te zakresy z każdą edycją przez `applyRangeEdit(prev, start, end, insertedLength)`. To właśnie zakresy są tym, czego `tokenizeMentionRanges()` używa przy wysyłce, żeby zamienić wyświetlane nazwy z powrotem na id użytkowników, więc wstawienie pomijające uzgodnienie przesuwa każdą wzmiankę znajdującą się za nim i komentarz powiadamia niewłaściwą osobę — bez niczego widocznie nie tak na ekranie.
 
-To miejsce, w którym komentarz różni się od każdej innej powierzchni, i część, która po cichu zepsuje dane, jeśli ją pominiesz.
-
-`CommentForm` śledzi każdą wzmiankę `@mention` jako **zakres znaków** w treści (`mentionRanges`) i uzgadnia te zakresy z każdą edycją przez `applyRangeEdit(prev, start, end, insertedLength)`. Wstawienie, które nie przechodzi przez to uzgodnienie, przesuwa każdą wzmiankę znajdującą się za nim, a to właśnie zakresy są tym, czego `tokenizeMentionRanges()` używa przy wysyłce, żeby zamienić wyświetlane nazwy z powrotem na id użytkowników — komentarz powiadomiłby więc niewłaściwą osobę, i to bez niczego widocznie nie tak na ekranie.
-
-W tym samym komponencie czai się druga pułapka: `handleChange` porzuca **wszystkie** śledzone zakresy, kiedy zmiana przychodzi bez przechwyconego zakresu edycji (zobacz jego komentarz o IME, przeciąganiu i cofaniu). Programowe `setBody()` w ogóle nie dociera do `handleChange`, więc uzgodnienie trzeba tu wykonać ręcznie:
+W tym samym komponencie czai się druga pułapka: `handleChange` porzuca **wszystkie** śledzone zakresy, kiedy zmiana przychodzi bez przechwyconego zakresu edycji (zobacz jego komentarz o IME, przeciąganiu i cofaniu). Programowe `setBody()` w ogóle nie dociera do `handleChange`, więc uzgodnienie wykonywane jest ręcznie, wewnątrz aktualizacji funkcyjnej:
 
 ```tsx
-const insertImage = async (file: File, range: { start: number; end: number }) => {
+const insertImage = async (
+    file: File,
+    range: { start: number; end: number },
+) => {
     if (!onImageUpload) return;
 
     const url = await onImageUpload(file);
@@ -78,9 +153,7 @@ const insertImage = async (file: File, range: { start: number; end: number }) =>
 
 `setPendingCaret` to istniejący już mechanizm komponentu — `useEffect` obserwujący `[body, pendingCaret]` przywraca fokus na textareę i odtwarza zaznaczenie po przerenderowaniu.
 
-### Krok A3 — Podłącz wklejanie i upuszczanie
-
-`CommentForm` ma już handler `onPaste` (`handlePaste`), którego jedynym zadaniem jest dziś `captureEditRange`. Rozszerz go, zamiast dodawać drugi:
+Handler wklejania już istniał (jego jedynym zadaniem było `captureEditRange`), więc jest rozszerzany, a nie dublowany:
 
 ```tsx
 const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -89,7 +162,8 @@ const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     if (onImageUpload && files.length > 0) {
         e.preventDefault();
 
-        const { selectionStart: start, selectionEnd: end } = e.currentTarget;
+        const { selectionStart: start, selectionEnd: end } =
+            e.currentTarget;
         // Consumed by the insertion below, not by handleChange - which never
         // runs for a paste we've prevented.
         editRangeRef.current = null;
@@ -111,40 +185,119 @@ const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
     const caret = e.currentTarget.selectionStart;
 
-    files.forEach((file) => void insertImage(file, { start: caret, end: caret }));
+    files.forEach(
+        (file) => void insertImage(file, { start: caret, end: caret }),
+    );
 };
 ```
 
-i dodaj `onDrop={handleDrop}` do `TextArea`. Upuszczenie na textareę nie przesuwa najpierw kursora, więc punktem wstawienia jest miejsce, w którym kursor już był — w odróżnieniu od powierzchni Tiptapa nie ma tu odpowiednika `posAtCoords()`, po który warto by sięgać.
+wraz z `onDrop={handleDrop}` na `TextArea`. Przejście do `captureEditRange`, gdy nie ma uploadera albo obrazu, jest tym, co sprawia, że zwykłe wklejenie tekstu zachowuje się dokładnie jak wcześniej.
 
-Zwróć uwagę, że `files.forEach` odpala uploady równolegle i każdy wkleja się niezależnie. Jest to bezpieczne **tylko** dlatego, że każde wywołanie `setBody`/`setMentionRanges` to aktualizacja funkcyjna czytająca najświeższy stan; nigdy nie wciągaj `body` do domknięcia.
+Upuszczenie na textareę nie przesuwa najpierw kursora, więc punktem wstawienia jest miejsce, w którym kursor już był — w odróżnieniu od powierzchni Tiptapa nie ma tu odpowiednika `posAtCoords()`, po który warto by sięgać.
 
-### Krok A4 — Przekaż uploader ze strony
+`files.forEach` odpala uploady równolegle i każdy wkleja się niezależnie. Jest to bezpieczne **tylko** dlatego, że każde wywołanie `setBody`/`setMentionRanges` to aktualizacja funkcyjna czytająca najświeższy stan; nigdy nie wciągaj `body` do domknięcia.
 
-Plik: `resources/js/Pages/Issues/Show.tsx`
+### Krok 4 — Edycja istniejącego komentarza
 
-Strona woła już `useImageUpload(project.id)` na potrzeby opisu (krok 11 poprzedniego przewodnika), więc ten sam `uploadImage` idzie prosto i do formularza nowego komentarza, i do formularza edycji komentarza wewnątrz `CommentList`:
+Plik: `resources/js/Components/Atoms/EditableText/EditableText.tsx`
+
+Istniejący komentarz edytuje się przez `EditableText` w trybie `multiline`, więc obsługa uploadu mieszka w tym atomie, a nie w `CommentItem` — co oznacza też, że każdy inny wielolinijkowy `EditableText` dostaje ją po przekazaniu jednego propa.
 
 ```tsx
-<CommentList
-    comments={issue.comments || []}
-    users={users}
-    onEdit={editComment}
-    onDelete={deleteComment}
-    onImageUpload={uploadImage}
-/>
-<CommentForm onSubmit={addComment} users={users} onImageUpload={uploadImage} />
+const insertImage = async (
+    file: File,
+    range: { start: number; end: number },
+) => {
+    if (!onImageUpload) return;
+
+    pendingUploadsRef.current += 1;
+
+    try {
+        const url = await onImageUpload(file);
+
+        setDraft((current) => {
+            const result = insertMarkdownImage(current, range, file, url);
+
+            setPendingCaret(result.caret);
+
+            return result.body;
+        });
+    } catch {
+        // The uploader already reported the failure to the user.
+    } finally {
+        pendingUploadsRef.current = Math.max(
+            0,
+            pendingUploadsRef.current - 1,
+        );
+    }
+};
 ```
 
-`CommentList` przekazuje go dalej do tego, co renderuje przy edycji; jeśli tym UI edycji jest druga `TextArea`, potrzebuje takiego samego potraktowania jak w krokach A2/A3.
+`handlePaste`/`handleDrop` mają ten sam kształt co w `CommentForm`, tyle że bez księgowania wzmianek, i są podpięte na wielolinijkowej `TextArea` obok istniejącego `onBlur={commit}`.
 
-### Krok A5 — Na backendzie nie ma nic do zmiany
+**Pułapka, identyczna jak ta w Tiptapie:** `EditableText` zatwierdza przy blurze. Utrata fokusu w trakcie uploadu uruchomiłaby `commit()`, wyszła z trybu edycji i zapisała draft w stanie sprzed wstawienia — a obraz zostałby potem wklejony do drafta, którego nikt nie edytuje, i nigdy nie zapisany. Stąd:
 
-`CommentController::store()` dalej waliduje `body` jako `required|string`; obraz jest już zapisany, a treść zawiera po prostu link markdown do niego. `App\Policies\CommentPolicy` też pozostaje nietknięta — upload został autoryzowany jako „może oglądać ten projekt" w momencie, w którym się wydarzył, a dodanie komentarza jest autoryzowane osobno, tak jak zawsze.
+```tsx
+const commit = () => {
+    if (pendingUploadsRef.current > 0) return;
 
-## Część B — Szablony typów issue
+    setIsEditing(false);
+    if (draft !== value) {
+        onSave(draft);
+    }
+};
+```
+
+**Ref**, a nie stan, bo `commit` to handler, który textarea już trzyma.
+
+`CommentList` i `CommentItem` nie robią nic poza przekazaniem `onImageUpload` w dół — `Pages/Issues/Show.tsx` podaje `CommentList` i `CommentForm` ten sam `uploadImage` z `useImageUpload(project.id)`, który daje już edytorowi opisu.
+
+### Krok 5 — Renderowanie obrazu w opublikowanym komentarzu
+
+Plik: `resources/js/Components/Molecules/CommentItem/CommentItem.tsx`
+
+Bez tego kroku wszystko powyżej zapisuje się poprawnie i wyświetla jako dosłowne `![shot.png](/storage/…)`. Treść renderowana jest w dwóch przebiegach: najpierw obrazy, potem istniejące dzielenie wzmianek na każdym fragmencie tekstu pomiędzy nimi.
+
+```tsx
+const renderBody = (value: string) =>
+    splitMarkdownImages(value).map((segment, index) =>
+        segment.type === 'image' ? (
+            // Stops the click from reaching EditableText's edit-on-click
+            // wrapper - clicking a picture opens it, it doesn't start an
+            // edit the way clicking the text around it does.
+            <a
+                key={index}
+                href={segment.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="my-1 block w-fit"
+            >
+                <img
+                    src={segment.url}
+                    alt={segment.value}
+                    className="max-h-80 max-w-full rounded-lg border border-[var(--border-color)]"
+                />
+            </a>
+        ) : (
+            renderText(segment.value, String(index))
+        ),
+    );
+```
+
+`renderText` to poprzednia zawartość `renderBody`, niezmieniona poza prefiksem klucza — wzmianki renderują się dokładnie tak jak wcześniej, również w tekście otaczającym obraz.
+
+`stopPropagation` ma znaczenie, bo treść komentarza *jest* celem kliknięcia: `EditableText` rozpoczyna edycję po kliknięciu w obszar wyświetlania, a bez tego kliknięcie w obrazek otworzyłoby textareę zamiast obrazu.
+
+### Krok 6 — Na backendzie nie ma nic do zmiany
+
+`CommentController::store()` i `update()` dalej walidują `body` jako `required|string`; obraz jest już zapisany, a treść zawiera po prostu link markdown do niego. `App\Policies\CommentPolicy` też pozostaje nietknięta — upload został autoryzowany jako „może oglądać ten projekt" w momencie, w którym się wydarzył, a dodanie albo edycja komentarza są autoryzowane osobno, tak jak zawsze.
+
+## Część B — Szablony typów issue (niezbudowane)
 
 `description` szablonu to markdown, od którego zaczyna nowe issue danego typu (zobacz [`../issue-types/README.md`](../issue-types/README.md)), co oznacza, że obraz wklejony do szablonu pojawia się w każdym issue z niego utworzonym — załącznik jest zapisany raz i referowany z każdego z tych opisów. I tak ma być: załączniki należą do projektu, a nie do issue, więc żadne issue nie „posiada" pliku i usunięcie jednego nigdy nie zepsuje obrazka w innym.
+
+Zwróć uwagę, że połowa z renderowaniem jest tu już rozwiązana: opis issue wyświetla `EditableMarkdown`, który renderuje obrazy natywnie, więc brakuje wyłącznie połowy z pisaniem (poniżej).
 
 ### Krok B1 — Upload z modala
 
@@ -231,7 +384,13 @@ Modal renderuje formularz tylko wtedy, gdy `canManageTemplates` jest prawdą, co
 
 ## Testy
 
-- `resources/js/utils/imagePaste.test.ts` — dodaj przypadki dla `insertMarkdownImage`: wstawienie przy zwiniętym kursorze, zastąpienie zaznaczonego zakresu oraz zwracane `caret`/`length`.
-- `resources/js/Components/Molecules/CommentForm/CommentForm.test.tsx` — wklejenie obrazu wywołuje `onImageUpload` i wstawia `![name](url)` do wysyłanej treści; **oraz** przypadek, który jest całym sensem kroku A2: wpisz wzmiankę, przesuń kursor przed nią, wklej obraz, wyślij i asercuj, że `mentioned_user_ids` dalej niesie id tego użytkownika. Wzoruj się na konfiguracji istniejących testów śledzenia wzmianek.
-- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsTemplatesModal.test.tsx` — wklejenie obrazu do opisu wysyła `description` zawierający link markdown; oraz to, że przy `canManageTemplates` równym fałsz nic nie jest wysyłane.
-- `tests/Feature/CommentControllerTest.php` / `tests/Feature/IssueTypeTemplateControllerTest.php` — dodaj po jednym przypadku zapisującym treść/opis zawierający `![shot.png](/storage/…)` i asercującym, że przechodzi w obie strony bez zmian. Na backendzie nie ma nic więcej do przetestowania: żadnego nowego routingu, żadnej nowej walidacji, żadnego nowego serwisu.
+Pokrycie Części A już istnieje i to na nim należy wzorować nową powierzchnię:
+
+- `resources/js/utils/imagePaste.test.ts` — `insertMarkdownImage` przy zwiniętym kursorze, na zaznaczonym zakresie i na pustej treści, plus round-trip asercujący, że to, co produkuje, `splitMarkdownImages` parsuje z powrotem; oraz sam `splitMarkdownImages`: brak obrazu, pusta treść, tekst dookoła obrazu, dwa obrazy pod rząd z pustym altem i dwa przypadki negatywne trzymające parser w ryzach (zwykły `[link](url)` i proza, która jedynie zawiera nawiasy).
+- `resources/js/Components/Molecules/CommentForm/CommentForm.test.tsx` — wklejenie uploaduje i wysyła link markdown; **regresja wzmianek**: mając już wybraną wzmiankę, wklej obraz *przed* nią i asercuj, że wysyłana treść dalej niesie `@[Jane Cooper](1)`, a `mentioned_user_ids` dalej niesie to id; upuszczenie w kursorze; oraz wklejenie zostawione przeglądarce zarówno wtedy, gdy nie ma uploadera, jak i wtedy, gdy w schowku nie ma obrazu (`defaultPrevented === false`).
+- `resources/js/Components/Atoms/EditableText/EditableText.test.tsx` — wklejenie w kursorze, wklejenie zastępujące zaznaczenie, upuszczenie, nieudany upload zostawiający draft nietknięty, wklejenie bez uploadera oraz blur w trakcie trwającego uploadu, który ani nie zatwierdza, ani nie gubi obrazu.
+- `resources/js/Components/Molecules/CommentItem/CommentItem.test.tsx` — treść z obrazem renderuje `<img>`, a nie dosłowny markdown, obraz linkuje do pliku bez rozpoczynania edycji, a wzmianki dalej renderują się obok niego.
+- `resources/js/Components/Molecules/CommentList/CommentList.test.tsx` — jeden przypadek integracyjny dowodzący, że prop faktycznie dociera do textarei edycji, skoro `CommentList`/`CommentItem` tylko go przekazują.
+- `tests/Feature/CommentControllerTest.php` — zapis i edycja treści zawierającej `![shot.png](/storage/…)` przechodzą w obie strony bez zmian. To wszystko, czego potrzebuje backend: żadnego nowego routingu, żadnej nowej walidacji, żadnego nowego serwisu.
+
+Dla Części B dodaj odpowiedniki: `WorkspaceSettingsTemplatesModal.test.tsx` (wklejenie obrazu do opisu wysyła `description` zawierający link markdown, a przy `canManageTemplates` równym fałsz nic nie jest wysyłane) oraz jeden przypadek round-trip w `tests/Feature/IssueTypeTemplateControllerTest.php`.
