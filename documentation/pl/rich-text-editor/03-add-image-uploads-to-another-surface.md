@@ -1,8 +1,8 @@
 # Dodaj upload obrazów do kolejnej powierzchni
 
-Jak pipeline uploadu z [`02-add-image-paste-and-drop-uploads.md`](./02-add-image-paste-and-drop-uploads.md) dociera do tych pól markdown w aplikacji, które **nie** są Tiptapem: **Część A** to komentarze do issue — zbudowane i będące wzorcową implementacją do skopiowania — a **Część B** to treść szablonu typu issue, jeszcze niezbudowana, opisana jako przećwiczony przykład w dokładnie takim kształcie jak Część A.
+Jak pipeline uploadu z [`02-add-image-paste-and-drop-uploads.md`](./02-add-image-paste-and-drop-uploads.md) dociera do tych pól markdown w aplikacji, które **nie** są Tiptapem: **Część A** to komentarze do issue, a **Część B** treść szablonu typu issue. Obie są zbudowane; razem stanowią dwa kształty, jakie przyjmie każda kolejna powierzchnia — ten, który musi sam wyrenderować markdown (komentarze), i ten, w którym renderowanie jest już czyimś innym zmartwieniem (szablony).
 
-Przeczytaj najpierw Część A, nawet jeśli interesują cię tylko szablony — wszystkie helpery, których używa Część B, pochodzą właśnie stamtąd.
+Przeczytaj najpierw Część A, nawet jeśli interesują cię tylko szablony — wszystkie helpery, których używa Część B, pochodzą właśnie stamtąd, a obie różnią się dokładnie tym, co wylicza początek Części B.
 
 **Żadna praca na backendzie nie jest potrzebna w obu przypadkach.** `POST /projects/{project}/attachments` jest celowo przypisany do projektu, a nie do issue, więc ten sam endpoint, ten sam `AttachmentService`, to samo sprawdzanie NSFW i ten sam hook `useImageUpload` obsługują każdą powierzchnię. Jeśli łapiesz się na dodawaniu drugiego kontrolera albo kolumny `comment_id`, zatrzymaj się — to jest obchodzenie tego projektu, a nie jego rozszerzanie.
 
@@ -14,7 +14,7 @@ Ani pole komentarza, ani treść szablonu nie są edytorem Tiptap; oba to zwykł
 2. **Zrobienia tego samego także na ścieżce edycji**, nie tylko przy pisaniu nowej treści.
 3. **Wyrenderowania** zapisanego markdownu jako prawdziwy obraz — inaczej czytelnik widzi dosłowny tekst `![shot.png](/storage/…)`.
 
-Część A robi wszystkie trzy; pomiń trzecią, a wszystko wygląda na działające aż do przeładowania strony.
+Część A robi wszystkie trzy; pomiń trzecią, a wszystko wygląda na działające aż do przeładowania strony. Część B robi tylko dwie pierwsze — z powodu podanego na jej początku.
 
 ## Krok 1 — Współdzielone helpery dla textarei
 
@@ -293,17 +293,20 @@ const renderBody = (value: string) =>
 
 `CommentController::store()` i `update()` dalej walidują `body` jako `required|string`; obraz jest już zapisany, a treść zawiera po prostu link markdown do niego. `App\Policies\CommentPolicy` też pozostaje nietknięta — upload został autoryzowany jako „może oglądać ten projekt" w momencie, w którym się wydarzył, a dodanie albo edycja komentarza są autoryzowane osobno, tak jak zawsze.
 
-## Część B — Szablony typów issue (niezbudowane)
+## Część B — Szablony typów issue (zbudowane)
 
 `description` szablonu to markdown, od którego zaczyna nowe issue danego typu (zobacz [`../issue-types/README.md`](../issue-types/README.md)), co oznacza, że obraz wklejony do szablonu pojawia się w każdym issue z niego utworzonym — załącznik jest zapisany raz i referowany z każdego z tych opisów. I tak ma być: załączniki należą do projektu, a nie do issue, więc żadne issue nie „posiada" pliku i usunięcie jednego nigdy nie zepsuje obrazka w innym.
 
-Zwróć uwagę, że połowa z renderowaniem jest tu już rozwiązana: opis issue wyświetla `EditableMarkdown`, który renderuje obrazy natywnie, więc brakuje wyłącznie połowy z pisaniem (poniżej).
+Dwie rzeczy czynią z tego prostszą z dwóch powierzchni i na nie właśnie warto patrzeć, oceniając kolejną:
+
+- **Renderowanie jest czyimś innym zmartwieniem.** Treść szablonu jest wyświetlana dopiero po skopiowaniu do opisu issue, a ten renderuje `EditableMarkdown` — Tiptap rysuje obraz natywnie. Nic tutaj nie potrzebuje `splitMarkdownImages`.
+- **Nie ma wzmianek**, więc nie ma księgowania zakresów: wklejenie to zwykłe `setDescription`.
 
 ### Krok B1 — Upload z modala
 
 Plik: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsTemplatesModal.tsx`
 
-Modal dostaje już `projectId` i używa już `useAlert`, więc hook wchodzi wprost:
+Modal dostaje już `projectId` i używa już `useAlert`, więc hook wchodzi wprost — zwróć uwagę, że oba trafiają ponad wczesny return `if (!issueType) return null;`, tak jak każdy inny hook w tym komponencie:
 
 ```tsx
 const { uploadImage } = useImageUpload(projectId);
@@ -315,22 +318,37 @@ const descriptionRef = useRef<HTMLTextAreaElement>(null);
 ### Krok B2 — Wklejanie i upuszczanie na textarei opisu
 
 ```tsx
-const insertImage = async (file: File, range: { start: number; end: number }) => {
-    const url = await uploadImage(file);
+const insertImage = async (
+    file: File,
+    range: { start: number; end: number },
+) => {
+    try {
+        const url = await uploadImage(file);
 
-    setDescription((current) => {
-        const result = insertMarkdownImage(current, range, file, url);
+        setDescription((current) => {
+            const result = insertMarkdownImage(current, range, file, url);
 
-        requestAnimationFrame(() => {
-            descriptionRef.current?.focus();
-            descriptionRef.current?.setSelectionRange(result.caret, result.caret);
+            // This component has no pendingCaret effect the way CommentForm
+            // does, and needs none for a single field - the textarea is
+            // still mounted, it just lost its selection to the re-render.
+            requestAnimationFrame(() => {
+                descriptionRef.current?.focus();
+                descriptionRef.current?.setSelectionRange(
+                    result.caret,
+                    result.caret,
+                );
+            });
+
+            return result.body;
         });
-
-        return result.body;
-    });
+    } catch {
+        // The uploader already reported the failure to the user.
+    }
 };
 
-const handleDescriptionPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+const handleDescriptionPaste = (
+    e: React.ClipboardEvent<HTMLTextAreaElement>,
+) => {
     const files = extractImageFiles(e.clipboardData);
 
     if (files.length === 0) return;
@@ -351,7 +369,9 @@ const handleDescriptionDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
     const caret = e.currentTarget.selectionStart;
 
-    files.forEach((file) => void insertImage(file, { start: caret, end: caret }));
+    files.forEach(
+        (file) => void insertImage(file, { start: caret, end: caret }),
+    );
 };
 ```
 
@@ -372,7 +392,9 @@ i na istniejącym polu opisu:
 
 `requestAnimationFrame` zastępuje tu efekt `pendingCaret` z `CommentForm` — ten komponent nie ma takiego mechanizmu i nie potrzebuje ogólnego rozwiązania dla jednego pola.
 
-`uploadImage` sam już pokazuje toast i rzuca dalej przy błędzie, więc pozostawienie promisy `insertImage` bez `await` (`void`) jest celowe: odrzucony upload trafia do użytkownika i nie wstawia niczego.
+`uploadImage` sam już pokazuje toast i rzuca dalej przy błędzie, więc tutejszy `catch` jest celowo pusty, a promisa `insertImage` zostaje bez `await` (`void`): odrzucony upload został już pokazany użytkownikowi, a opis zostaje dokładnie taki, jaki był.
+
+Nie ma tu żadnej ochrony przed blurem, w odróżnieniu od tej w `EditableText`: ten formularz zapisuje się jawnym przyciskiem „Add template"/„Save", więc utrata fokusu w trakcie uploadu niczego nie zatwierdza.
 
 ### Krok B3 — Zabezpiecz to istniejącym uprawnieniem
 
@@ -393,4 +415,7 @@ Pokrycie Części A już istnieje i to na nim należy wzorować nową powierzchn
 - `resources/js/Components/Molecules/CommentList/CommentList.test.tsx` — jeden przypadek integracyjny dowodzący, że prop faktycznie dociera do textarei edycji, skoro `CommentList`/`CommentItem` tylko go przekazują.
 - `tests/Feature/CommentControllerTest.php` — zapis i edycja treści zawierającej `![shot.png](/storage/…)` przechodzą w obie strony bez zmian. To wszystko, czego potrzebuje backend: żadnego nowego routingu, żadnej nowej walidacji, żadnego nowego serwisu.
 
-Dla Części B dodaj odpowiedniki: `WorkspaceSettingsTemplatesModal.test.tsx` (wklejenie obrazu do opisu wysyła `description` zawierający link markdown, a przy `canManageTemplates` równym fałsz nic nie jest wysyłane) oraz jeden przypadek round-trip w `tests/Feature/IssueTypeTemplateControllerTest.php`.
+Odpowiedniki dla Części B, chudsze, bo nie ma tu renderowania ani księgowania wzmianek do obrony:
+
+- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsTemplatesModal.test.tsx` — zamockuj `@/hooks/useImageUpload` (prawdziwy woła `axios` i `route()`), a potem asercuj: wklejenie wstawia link markdown *i* `router.post` dostaje ten `description`; upuszczenie wstawia w kursorze; nieudany upload zostawia opis nietknięty; wklejenie bez obrazu zostaje zostawione przeglądarce; a dla bramki uprawnień — że przy `canManageTemplates: false` nie renderuje się żadne pole opisu.
+- `tests/Feature/IssueTypeTemplateControllerTest.php` — utworzenie i aktualizacja szablonu, którego `description` zawiera `![shot.png](/storage/…)`, przechodzą w obie strony bez zmian.

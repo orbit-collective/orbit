@@ -6,7 +6,7 @@ Opisy issues (i, w trybie tylko-do-odczytu/wyłączonym, treść `overview` kata
 
 1. **[Dodaj nowe rozszerzenie Tiptap](./01-add-a-new-tiptap-extension.md)** — przećwiczony przykład dodania podświetlania tekstu (`@tiptap/extension-highlight`, dziś niezainstalowanego) do listy rozszerzeń edytora.
 2. **[Dodaj upload obrazów przez wklejenie i przeciągnięcie](./02-add-image-paste-and-drop-uploads.md)** — cały pipeline stojący za wklejeniem albo przeciągnięciem obrazu do opisu issue: tabela `attachments`, repozytorium, serwis i JSON-owy endpoint uploadu, sprawdzanie NSFW współdzielone z uploadem awatarów oraz obsługa wklejania/upuszczania w edytorze.
-3. **[Dodaj upload obrazów do kolejnej powierzchni](./03-add-image-uploads-to-another-surface.md)** — jak ten pipeline dociera do powierzchni będących zwykłymi textareami, a nie Tiptapem: komentarze do issue jako zbudowany punkt odniesienia (pisanie, edycja, renderowanie i pułapka zakresów wzmianek), a potem przećwiczony przykład dla treści szablonu typu issue.
+3. **[Dodaj upload obrazów do kolejnej powierzchni](./03-add-image-uploads-to-another-surface.md)** — jak ten pipeline dociera do powierzchni będących zwykłymi textareami, a nie Tiptapem: komentarze do issue (pisanie, edycja, renderowanie i pułapka zakresów wzmianek) oraz treść szablonu typu issue — dwa kształty, jakie przyjmie każda kolejna powierzchnia.
 
 ## Architektura w jednym akapicie
 

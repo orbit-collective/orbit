@@ -453,6 +453,45 @@ const insertImages = async (files: File[], at?: number) => {
 
 `insertContentAt` z `{ type: 'image' }` potrzebuje rozszerzenia `Image`, które i tak jest już na liście rozszerzeń; nic nowego nie jest rejestrowane. `tiptap-markdown` serializuje ten węzeł do `![alt](url)`, więc zapisana kolumna pozostaje zwykłym markdownem, a tekstem alternatywnym jest oryginalna nazwa pliku.
 
+### Kliknięcie wyrenderowanego obrazu otwiera go
+
+Handler kliknięcia na wrapperze jest też tym, co sprawia, że zapisany obraz zachowuje się jak obraz — bez tego kliknięcie zrzutu ekranu w opisie otwiera edytor na wierzchu:
+
+```tsx
+/**
+ * Clicking a rendered image opens the file instead of starting an edit -
+ * the same behaviour a comment's images have. While editing it stays out
+ * of the way, so the image node can still be selected and deleted.
+ */
+const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const image = (event.target as HTMLElement).closest?.('img');
+
+    if (!isEditing && image?.src) {
+        event.preventDefault();
+        window.open(image.src, '_blank', 'noopener,noreferrer');
+
+        return;
+    }
+
+    startEditing();
+};
+```
+
+podpięty jako `onClick={handleClick}` w miejsce gołego `onClick={startEditing}`. Cała subtelność siedzi w warunku `!isEditing`: podczas edycji kliknięcie musi dotrzeć do ProseMirror, żeby dało się zaznaczyć i usunąć węzeł obrazu, a otwieranie karty przy każdym kliknięciu uczyniłoby obraz niemożliwym do usunięcia.
+
+Afordancja ląduje w `resources/css/global.css`, bo wrapper reklamuje edycję po kliknięciu kursorem tekstowym:
+
+```css
+.tiptap img {
+    cursor: zoom-in;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    max-height: 20rem;
+}
+```
+
+Komentarze dochodzą do tego samego zachowania inaczej — ich obrazy to prawdziwe elementy `<a target="_blank">` ze `stopPropagation`, bo tam treść renderuje React, a nie ProseMirror (zobacz [`03-add-image-uploads-to-another-surface.md`](./03-add-image-uploads-to-another-surface.md)).
+
 ### Pułapka: blur nie może zakończyć edycji w trakcie uploadu
 
 `EditableMarkdown` zatwierdza przy blurze. Kliknięcie obok — albo samo przetasowanie fokusu, które wywołuje przeglądarkowe okno wyboru pliku — w trakcie trwającego uploadu uruchomiłoby `commit()`, ustawiło `editable: false` i zapisało, a obraz zostałby potem wstawiony do edytora, którego nikt nie edytuje, i nigdy nie zapisany. Stąd ref, czytany przez oba wyjścia:
@@ -500,4 +539,4 @@ To całe podłączenie na poziomie strony: hook potrzebuje id projektu, edytor p
 - `tests/Feature/Models/AttachmentTest.php` — relacje `project`/`user` oraz to, że usunięcie projektu kaskadowo usuwa jego załączniki.
 - `resources/js/utils/imagePaste.test.ts` — same `files`, same `items`, prawdziwe upuszczenie wielu plików zwracające każdy obraz, odrzucanie nie-obrazów i elementów niebędących plikami oraz — regresja, która ma tu znaczenie — ten sam obraz podany przez `files` *i* `items` jako dwa różne obiekty `File` wracający pojedynczo.
 - `resources/js/hooks/useImageUpload.test.ts` — zamockuj `axios` i `@/context/AlertContext`; asercuj, że `FormData` niesie `file`, że flaga `isUploading` przełącza się wokół żądania i że każdy kształt błędu (`errors.file[0]`, `message`, nie-HTTP) daje właściwy toast.
-- `resources/js/Components/Molecules/EditableMarkdown/EditableMarkdown.test.tsx` — istniejący `FakeEditor` potrzebuje `chain().focus().insertContentAt()`, `state.selection`/`state.doc` i atrapy `view.posAtCoords()`, a mock `useEditor` musi przechwycić `options.editorProps.handlePaste`. Pokryj: wklejenie wstawia w miejscu kursora, wklejenie bez uploadera albo bez obrazu zwraca `false`, nieudany upload nie wstawia nic, upuszczenie zaczyna edycję i wstawia w miejscu upuszczenia, upuszczenie przy `disabled` nie robi nic, a blur w trakcie trwającego uploadu nie wywołuje `onSave`.
+- `resources/js/Components/Molecules/EditableMarkdown/EditableMarkdown.test.tsx` — istniejący `FakeEditor` potrzebuje `chain().focus().insertContentAt()`, `state.selection`/`state.doc` i atrapy `view.posAtCoords()`, a mock `useEditor` musi przechwycić `options.editorProps.handlePaste`. Pokryj: wklejenie wstawia w miejscu kursora, wklejenie bez uploadera albo bez obrazu zwraca `false`, nieudany upload nie wstawia nic, upuszczenie zaczyna edycję i wstawia w miejscu upuszczenia, upuszczenie przy `disabled` nie robi nic, a blur w trakcie trwającego uploadu nie wywołuje `onSave`. Na potrzeby zachowania kliknięcia mockowy `EditorContent` renderuje dodatkowo `<img>` dla każdego linku markdown do obrazu (zastępując wyjście prawdziwego rozszerzenia `Image`), co pozwala trzem kolejnym przypadkom asercować, że kliknięcie obrazu woła `window.open` i nie zaczyna edycji, że kliknięcie tekstu dalej ją zaczyna, a kliknięcie obrazu w trakcie edycji nie otwiera niczego.
