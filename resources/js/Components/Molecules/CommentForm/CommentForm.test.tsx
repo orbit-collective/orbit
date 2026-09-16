@@ -1,5 +1,5 @@
 import { AssignableUser } from '@/types/Users';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import CommentForm from './CommentForm';
@@ -251,5 +251,139 @@ describe('CommentForm Component', () => {
         );
 
         expect(screen.queryByText('Jane Cooper')).not.toBeInTheDocument();
+    });
+});
+
+const imageFile = (name = 'shot.png') =>
+    new File(['x'], name, { type: 'image/png' });
+
+const transfer = (files: File[]) =>
+    ({ files, items: [] }) as unknown as DataTransfer;
+
+describe('CommentForm image uploads', () => {
+    test('pasting an image uploads it and submits the markdown link', async () => {
+        const onImageUpload = vi.fn().mockResolvedValue('/storage/a.png');
+        const handleSubmit = vi.fn();
+        render(
+            <CommentForm
+                onSubmit={handleSubmit}
+                onImageUpload={onImageUpload}
+            />,
+        );
+
+        const textarea = screen.getByPlaceholderText(
+            'Leave a comment...',
+        ) as HTMLTextAreaElement;
+
+        await userEvent.type(textarea, 'Look: ');
+        fireEvent.paste(textarea, { clipboardData: transfer([imageFile()]) });
+
+        expect(onImageUpload).toHaveBeenCalledWith(expect.any(File));
+        await waitFor(() =>
+            expect(textarea).toHaveValue('Look: ![shot.png](/storage/a.png)'),
+        );
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith(
+            'Look: ![shot.png](/storage/a.png)',
+            [],
+        );
+    });
+
+    test('pasting an image before an existing mention keeps that mention intact', async () => {
+        // Regression test: the insertion happens outside handleChange, so it
+        // has to reconcile the tracked mention ranges itself via
+        // applyRangeEdit - otherwise every mention after the pasted image
+        // keeps a stale offset and the comment notifies the wrong person.
+        const onImageUpload = vi.fn().mockResolvedValue('/storage/a.png');
+        const handleSubmit = vi.fn();
+        render(
+            <CommentForm
+                onSubmit={handleSubmit}
+                users={users}
+                onImageUpload={onImageUpload}
+            />,
+        );
+
+        const textarea = screen.getByPlaceholderText(
+            'Leave a comment...',
+        ) as HTMLTextAreaElement;
+
+        await userEvent.type(textarea, '@jane');
+        await userEvent.click(screen.getByText('Jane Cooper'));
+        expect(textarea).toHaveValue('@Jane Cooper ');
+
+        textarea.focus();
+        textarea.setSelectionRange(0, 0);
+        fireEvent.paste(textarea, { clipboardData: transfer([imageFile()]) });
+
+        await waitFor(() =>
+            expect(textarea).toHaveValue(
+                '![shot.png](/storage/a.png)@Jane Cooper ',
+            ),
+        );
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith(
+            '![shot.png](/storage/a.png)@[Jane Cooper](1) ',
+            [1],
+        );
+    });
+
+    test('dropping an image inserts it at the caret', async () => {
+        const onImageUpload = vi.fn().mockResolvedValue('/storage/b.png');
+        render(
+            <CommentForm onSubmit={vi.fn()} onImageUpload={onImageUpload} />,
+        );
+
+        const textarea = screen.getByPlaceholderText(
+            'Leave a comment...',
+        ) as HTMLTextAreaElement;
+
+        await userEvent.type(textarea, 'End');
+        textarea.setSelectionRange(0, 0);
+        fireEvent.drop(textarea, {
+            dataTransfer: transfer([imageFile('dropped.png')]),
+        });
+
+        await waitFor(() =>
+            expect(textarea).toHaveValue('![dropped.png](/storage/b.png)End'),
+        );
+    });
+
+    test('a paste is left to the browser when there is no uploader', () => {
+        render(<CommentForm onSubmit={vi.fn()} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        const event = new Event('paste', { bubbles: true, cancelable: true });
+        Object.defineProperty(event, 'clipboardData', {
+            value: transfer([imageFile()]),
+        });
+        fireEvent(textarea, event);
+
+        expect(event.defaultPrevented).toBe(false);
+    });
+
+    test('a paste carrying no image is left to the browser', () => {
+        const onImageUpload = vi.fn();
+        render(
+            <CommentForm onSubmit={vi.fn()} onImageUpload={onImageUpload} />,
+        );
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        const event = new Event('paste', { bubbles: true, cancelable: true });
+        Object.defineProperty(event, 'clipboardData', {
+            value: transfer([]),
+        });
+        fireEvent(textarea, event);
+
+        expect(event.defaultPrevented).toBe(false);
+        expect(onImageUpload).not.toHaveBeenCalled();
     });
 });
