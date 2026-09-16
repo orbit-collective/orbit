@@ -164,3 +164,13 @@ html, body, #app {
 .tiptap ul[data-type='taskList'] li > div {
     flex: 1;
 }
+
+/* Images in a description open in a new tab on click (see
+   EditableMarkdown's handleClick) - the cursor has to say so, since the
+   surrounding wrapper advertises click-to-edit with a text cursor. */
+.tiptap img {
+    cursor: zoom-in;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    max-height: 20rem;
+}
