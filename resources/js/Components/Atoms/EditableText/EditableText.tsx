@@ -2,6 +2,7 @@ import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import { EditableTextProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { extractImageFiles, insertMarkdownImage } from '@/utils/imagePaste';
 import React, { useEffect, useRef, useState } from 'react';
 
 const EditableText: React.FC<EditableTextProps> = ({
@@ -15,11 +16,17 @@ const EditableText: React.FC<EditableTextProps> = ({
     inputClassName,
     disabled = false,
     renderDisplay,
+    onImageUpload,
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [draft, setDraft] = useState(value);
+    const [pendingCaret, setPendingCaret] = useState<number | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    // Read by commit(), which fires on blur: losing focus mid-upload must not
+    // end the edit, or the image would be spliced into a draft that is no
+    // longer on screen and never saved.
+    const pendingUploadsRef = useRef(0);
 
     useEffect(() => {
         if (!isEditing) return;
@@ -29,6 +36,14 @@ const EditableText: React.FC<EditableTextProps> = ({
         el?.setSelectionRange(el.value.length, el.value.length);
     }, [isEditing, multiline]);
 
+    useEffect(() => {
+        if (pendingCaret === null || !textareaRef.current) return;
+
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(pendingCaret, pendingCaret);
+        setPendingCaret(null);
+    }, [draft, pendingCaret]);
+
     const startEditing = () => {
         if (disabled) return;
         setDraft(value);
@@ -36,10 +51,66 @@ const EditableText: React.FC<EditableTextProps> = ({
     };
 
     const commit = () => {
+        if (pendingUploadsRef.current > 0) return;
+
         setIsEditing(false);
         if (draft !== value) {
             onSave(draft);
         }
+    };
+
+    const insertImage = async (
+        file: File,
+        range: { start: number; end: number },
+    ) => {
+        if (!onImageUpload) return;
+
+        pendingUploadsRef.current += 1;
+
+        try {
+            const url = await onImageUpload(file);
+
+            setDraft((current) => {
+                const result = insertMarkdownImage(current, range, file, url);
+
+                setPendingCaret(result.caret);
+
+                return result.body;
+            });
+        } catch {
+            // The uploader already reported the failure to the user.
+        } finally {
+            pendingUploadsRef.current = Math.max(
+                0,
+                pendingUploadsRef.current - 1,
+            );
+        }
+    };
+
+    const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const files = extractImageFiles(e.clipboardData);
+
+        if (!onImageUpload || files.length === 0) return;
+
+        e.preventDefault();
+
+        const { selectionStart: start, selectionEnd: end } = e.currentTarget;
+
+        files.forEach((file) => void insertImage(file, { start, end }));
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
+        const files = extractImageFiles(e.dataTransfer);
+
+        if (!onImageUpload || files.length === 0) return;
+
+        e.preventDefault();
+
+        const caret = e.currentTarget.selectionStart;
+
+        files.forEach(
+            (file) => void insertImage(file, { start: caret, end: caret }),
+        );
     };
 
     const cancel = () => {
@@ -56,6 +127,8 @@ const EditableText: React.FC<EditableTextProps> = ({
                     onChange={(e) => setDraft(e.target.value)}
                     placeholder={placeholder}
                     className={inputClassName}
+                    onPaste={handlePaste}
+                    onDrop={handleDrop}
                     onBlur={commit}
                     onKeyDown={(e) => {
                         if (e.key === 'Escape') {

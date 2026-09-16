@@ -165,6 +165,8 @@ export interface EditableTextProps {
     inputClassName?: string;
     disabled?: boolean;
     renderDisplay?: (value: string) => ReactNode;
+    /** Resolves with the stored URL of an image pasted or dropped while editing. Multiline only; omit it to disable image uploads for this instance. */
+    onImageUpload?: (file: File) => Promise<string>;
 }
 export interface EditableLabelListProps {
     labels: IssueLabel[];
@@ -582,6 +584,7 @@ export interface CommentItemProps {
     users?: AssignableUser[];
     onEdit?: (comment: Comment, body: string) => void;
     onDelete?: (comment: Comment) => void;
+    onImageUpload?: (file: File) => Promise<string>;
 }
 export interface CommentListProps {
     comments: Comment[];
