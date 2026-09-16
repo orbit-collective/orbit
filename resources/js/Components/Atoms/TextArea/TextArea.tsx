@@ -34,6 +34,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             onPaste,
             onCut,
             onBlur,
+            onDrop,
         },
         ref,
     ) => {
@@ -57,6 +58,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
                 onCut={onCut}
                 onBlur={onBlur}
                 ref={ref}
+                onDrop={onDrop}
             ></textarea>
         );
     },

@@ -4,6 +4,7 @@ import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/Mentio
 import { CommentFormProps } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
 import { getCaretCoordinates } from '@/utils/caretPosition';
+import { extractImageFiles, insertMarkdownImage } from '@/utils/imagePaste';
 import {
     applyRangeEdit,
     filterUsersByMention,
@@ -24,6 +25,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
     onSubmit,
     users = [],
     isSubmitting = false,
+    onImageUpload,
 }) => {
     const [body, setBody] = useState('');
     // Tracked by character range, not by name - see applyRangeEdit. This is
@@ -203,8 +205,58 @@ const CommentForm: React.FC<CommentFormProps> = ({
         }
     };
 
+    const insertImage = async (
+        file: File,
+        range: { start: number; end: number },
+    ) => {
+        if (!onImageUpload) return;
+
+        const url = await onImageUpload(file);
+
+        setBody((current) => {
+            const result = insertMarkdownImage(current, range, file, url);
+
+            setMentionRanges((prev) =>
+                applyRangeEdit(prev, range.start, range.end, result.length),
+            );
+            setPendingCaret(result.caret);
+
+            return result.body;
+        });
+    };
+
     const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const files = extractImageFiles(e.clipboardData);
+
+        if (onImageUpload && files.length > 0) {
+            e.preventDefault();
+
+            const { selectionStart: start, selectionEnd: end } =
+                e.currentTarget;
+            // Consumed by the insertion below, not by handleChange - which never
+            // runs for a paste we've prevented.
+            editRangeRef.current = null;
+
+            files.forEach((file) => void insertImage(file, { start, end }));
+
+            return;
+        }
+
         captureEditRange(e.currentTarget);
+    };
+
+    const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
+        const files = extractImageFiles(e.dataTransfer);
+
+        if (!onImageUpload || files.length === 0) return;
+
+        e.preventDefault();
+
+        const caret = e.currentTarget.selectionStart;
+
+        files.forEach(
+            (file) => void insertImage(file, { start: caret, end: caret }),
+        );
     };
 
     const handleCut = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -249,6 +301,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 placeholder="Leave a comment..."
                 className="min-h-[60px] resize-none border-none bg-transparent p-0 text-sm focus:border-none"
                 isDisabled={isSubmitting}
+                onDrop={handleDrop}
             />
             <div className="flex justify-end">
                 <IconButton
