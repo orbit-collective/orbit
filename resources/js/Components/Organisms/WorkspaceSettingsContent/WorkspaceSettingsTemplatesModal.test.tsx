@@ -334,6 +334,31 @@ describe('WorkspaceSettingsTemplatesModal image uploads', () => {
         );
     });
 
+    test('pasting several images at once keeps them in order', async () => {
+        uploadImageMock
+            .mockResolvedValueOnce('/storage/1.png')
+            .mockResolvedValueOnce('/storage/2.png');
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.click(screen.getByText('New template'));
+
+        const description = descriptionField();
+        fireEvent.change(description, { target: { value: 'Both: ' } });
+        description.setSelectionRange(6, 6);
+        fireEvent.paste(description, {
+            clipboardData: transfer([
+                imageFile('one.png'),
+                imageFile('two.png'),
+            ]),
+        });
+
+        await waitFor(() =>
+            expect(description).toHaveValue(
+                'Both: ![one.png](/storage/1.png)![two.png](/storage/2.png)',
+            ),
+        );
+    });
+
     test('a failed upload leaves the description untouched', async () => {
         uploadImageMock.mockRejectedValue(new Error('nope'));
         renderModal({ canManageTemplates: true });

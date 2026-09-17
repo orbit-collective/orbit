@@ -209,6 +209,28 @@ describe('EditableText image uploads', () => {
         );
     });
 
+    test('pasting several images at once keeps them in order', async () => {
+        const onImageUpload = vi
+            .fn()
+            .mockResolvedValueOnce('/storage/1.png')
+            .mockResolvedValueOnce('/storage/2.png');
+        const { textarea } = await startMultilineEdit('Both:', onImageUpload);
+
+        (textarea as HTMLTextAreaElement).setSelectionRange(5, 5);
+        fireEvent.paste(textarea, {
+            clipboardData: transfer([
+                imageFile('one.png'),
+                imageFile('two.png'),
+            ]),
+        });
+
+        await waitFor(() =>
+            expect(textarea).toHaveValue(
+                'Both:![one.png](/storage/1.png)![two.png](/storage/2.png)',
+            ),
+        );
+    });
+
     test('dropping an image inserts it at the caret', async () => {
         const onImageUpload = vi.fn().mockResolvedValue('/storage/b.png');
         const { textarea } = await startMultilineEdit('Body', onImageUpload);

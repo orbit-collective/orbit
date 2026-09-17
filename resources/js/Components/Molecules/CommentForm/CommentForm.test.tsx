@@ -336,6 +336,96 @@ describe('CommentForm image uploads', () => {
         );
     });
 
+    test('pasting several images at once keeps them in order', async () => {
+        // Regression test: a batch used to upload in parallel with every file
+        // splicing into the original range, which inserted them backwards and,
+        // over a selection, let a later file cut through the markdown of an
+        // earlier one.
+        const onImageUpload = vi
+            .fn()
+            .mockResolvedValueOnce('/storage/1.png')
+            .mockResolvedValueOnce('/storage/2.png');
+        const handleSubmit = vi.fn();
+        render(
+            <CommentForm
+                onSubmit={handleSubmit}
+                onImageUpload={onImageUpload}
+            />,
+        );
+
+        const textarea = screen.getByPlaceholderText(
+            'Leave a comment...',
+        ) as HTMLTextAreaElement;
+
+        await userEvent.type(textarea, 'Both: ');
+        fireEvent.paste(textarea, {
+            clipboardData: transfer([
+                imageFile('one.png'),
+                imageFile('two.png'),
+            ]),
+        });
+
+        await waitFor(() =>
+            expect(textarea).toHaveValue(
+                'Both: ![one.png](/storage/1.png)![two.png](/storage/2.png)',
+            ),
+        );
+    });
+
+    test('pasting several images over a selection replaces it once', async () => {
+        const onImageUpload = vi
+            .fn()
+            .mockResolvedValueOnce('/storage/1.png')
+            .mockResolvedValueOnce('/storage/2.png');
+        render(
+            <CommentForm onSubmit={vi.fn()} onImageUpload={onImageUpload} />,
+        );
+
+        const textarea = screen.getByPlaceholderText(
+            'Leave a comment...',
+        ) as HTMLTextAreaElement;
+
+        await userEvent.type(textarea, 'drop me tail');
+        textarea.setSelectionRange(0, 8);
+        fireEvent.paste(textarea, {
+            clipboardData: transfer([
+                imageFile('one.png'),
+                imageFile('two.png'),
+            ]),
+        });
+
+        await waitFor(() =>
+            expect(textarea).toHaveValue(
+                '![one.png](/storage/1.png)![two.png](/storage/2.png)tail',
+            ),
+        );
+    });
+
+    test('a failed upload does not stop the rest of the batch', async () => {
+        const onImageUpload = vi
+            .fn()
+            .mockRejectedValueOnce(new Error('nope'))
+            .mockResolvedValueOnce('/storage/2.png');
+        render(
+            <CommentForm onSubmit={vi.fn()} onImageUpload={onImageUpload} />,
+        );
+
+        const textarea = screen.getByPlaceholderText(
+            'Leave a comment...',
+        ) as HTMLTextAreaElement;
+
+        fireEvent.paste(textarea, {
+            clipboardData: transfer([
+                imageFile('one.png'),
+                imageFile('two.png'),
+            ]),
+        });
+
+        await waitFor(() =>
+            expect(textarea).toHaveValue('![two.png](/storage/2.png)'),
+        );
+    });
+
     test('dropping an image inserts it at the caret', async () => {
         const onImageUpload = vi.fn().mockResolvedValue('/storage/b.png');
         render(

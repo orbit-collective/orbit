@@ -11,7 +11,11 @@ import { useImageUpload } from '@/hooks/useImageUpload';
 import { IssueType, IssueTypeTemplate } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { cn } from '@/utils/cn';
-import { extractImageFiles, insertMarkdownImage } from '@/utils/imagePaste';
+import {
+    extractImageFiles,
+    insertMarkdownImage,
+    nextImageRange,
+} from '@/utils/imagePaste';
 import { router } from '@inertiajs/react';
 import { useRef, useState } from 'react';
 
@@ -80,31 +84,45 @@ export default function WorkspaceSettingsTemplatesModal({
         setDefaultLabels(template.defaultLabels ?? []);
     };
 
-    const insertImage = async (
-        file: File,
+    /**
+     * Uploads a batch one at a time and moves the insertion point past each
+     * image as it lands, so several files pasted at once keep their order
+     * instead of every one of them splicing into the original range.
+     */
+    const insertImages = async (
+        files: File[],
         range: { start: number; end: number },
     ) => {
-        try {
-            const url = await uploadImage(file);
+        let target = range;
 
-            setDescription((current) => {
-                const result = insertMarkdownImage(current, range, file, url);
+        for (const file of files) {
+            const at = target;
 
-                // This component has no pendingCaret effect the way CommentForm
-                // does, and needs none for a single field - the textarea is
-                // still mounted, it just lost its selection to the re-render.
-                requestAnimationFrame(() => {
-                    descriptionRef.current?.focus();
-                    descriptionRef.current?.setSelectionRange(
-                        result.caret,
-                        result.caret,
-                    );
+            try {
+                const url = await uploadImage(file);
+
+                setDescription((current) => {
+                    const result = insertMarkdownImage(current, at, file, url);
+
+                    // This component has no pendingCaret effect the way
+                    // CommentForm does, and needs none for a single field - the
+                    // textarea is still mounted, it just lost its selection to
+                    // the re-render.
+                    requestAnimationFrame(() => {
+                        descriptionRef.current?.focus();
+                        descriptionRef.current?.setSelectionRange(
+                            result.caret,
+                            result.caret,
+                        );
+                    });
+
+                    return result.body;
                 });
 
-                return result.body;
-            });
-        } catch {
-            // The uploader already reported the failure to the user.
+                target = nextImageRange(at, file, url);
+            } catch {
+                // The uploader already reported the failure to the user.
+            }
         }
     };
 
@@ -119,7 +137,7 @@ export default function WorkspaceSettingsTemplatesModal({
 
         const { selectionStart: start, selectionEnd: end } = e.currentTarget;
 
-        files.forEach((file) => void insertImage(file, { start, end }));
+        void insertImages(files, { start, end });
     };
 
     const handleDescriptionDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
@@ -131,9 +149,7 @@ export default function WorkspaceSettingsTemplatesModal({
 
         const caret = e.currentTarget.selectionStart;
 
-        files.forEach(
-            (file) => void insertImage(file, { start: caret, end: caret }),
-        );
+        void insertImages(files, { start: caret, end: caret });
     };
 
     const toggleLabel = (label: string) =>

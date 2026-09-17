@@ -4,7 +4,11 @@ import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/Mentio
 import { CommentFormProps } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
 import { getCaretCoordinates } from '@/utils/caretPosition';
-import { extractImageFiles, insertMarkdownImage } from '@/utils/imagePaste';
+import {
+    extractImageFiles,
+    insertMarkdownImage,
+    nextImageRange,
+} from '@/utils/imagePaste';
 import {
     applyRangeEdit,
     filterUsersByMention,
@@ -205,24 +209,42 @@ const CommentForm: React.FC<CommentFormProps> = ({
         }
     };
 
-    const insertImage = async (
-        file: File,
+    /**
+     * Uploads a batch one at a time and moves the insertion point past each
+     * image as it lands, so several files pasted at once keep their order
+     * instead of every one of them splicing into the original range.
+     */
+    const insertImages = async (
+        files: File[],
         range: { start: number; end: number },
     ) => {
         if (!onImageUpload) return;
 
-        const url = await onImageUpload(file);
+        let target = range;
 
-        setBody((current) => {
-            const result = insertMarkdownImage(current, range, file, url);
+        for (const file of files) {
+            const at = target;
 
-            setMentionRanges((prev) =>
-                applyRangeEdit(prev, range.start, range.end, result.length),
-            );
-            setPendingCaret(result.caret);
+            try {
+                const url = await onImageUpload(file);
 
-            return result.body;
-        });
+                setBody((current) => {
+                    const result = insertMarkdownImage(current, at, file, url);
+
+                    setMentionRanges((prev) =>
+                        applyRangeEdit(prev, at.start, at.end, result.length),
+                    );
+                    setPendingCaret(result.caret);
+
+                    return result.body;
+                });
+
+                target = nextImageRange(at, file, url);
+            } catch {
+                // The uploader already reported the failure to the user; the
+                // remaining files in this batch still get their turn.
+            }
+        }
     };
 
     const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -237,7 +259,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
             // runs for a paste we've prevented.
             editRangeRef.current = null;
 
-            files.forEach((file) => void insertImage(file, { start, end }));
+            void insertImages(files, { start, end });
 
             return;
         }
@@ -254,9 +276,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
         const caret = e.currentTarget.selectionStart;
 
-        files.forEach(
-            (file) => void insertImage(file, { start: caret, end: caret }),
-        );
+        void insertImages(files, { start: caret, end: caret });
     };
 
     const handleCut = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {

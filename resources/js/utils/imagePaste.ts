@@ -31,19 +31,44 @@ export const extractImageFiles = (
  * a textarea drops its selection as soon as React re-renders it with a new
  * value.
  */
+/**
+ * The markdown an uploaded image is represented by. Exported so a caller
+ * inserting several images in a row can work out where the next one goes
+ * without having to read the body back out of React state first.
+ */
+export const markdownImage = (file: File, url: string): string =>
+    `![${file.name}](${url})`;
+
 export const insertMarkdownImage = (
     body: string,
     range: { start: number; end: number },
     file: File,
     url: string,
 ): { body: string; caret: number; length: number } => {
-    const snippet = `![${file.name}](${url})`;
+    const snippet = markdownImage(file, url);
 
     return {
         body: body.slice(0, range.start) + snippet + body.slice(range.end),
         caret: range.start + snippet.length,
         length: snippet.length,
     };
+};
+
+/**
+ * Where the next image of a batch has to land: a collapsed point right after
+ * the one just inserted. Uploading a batch in parallel and reusing the
+ * original range for every file inserts them in reverse order, and - when the
+ * range covered a selection - lets a later insertion cut through the markdown
+ * an earlier one already wrote.
+ */
+export const nextImageRange = (
+    range: { start: number; end: number },
+    file: File,
+    url: string,
+): { start: number; end: number } => {
+    const caret = range.start + markdownImage(file, url).length;
+
+    return { start: caret, end: caret };
 };
 
 export interface MarkdownImageSegment {
