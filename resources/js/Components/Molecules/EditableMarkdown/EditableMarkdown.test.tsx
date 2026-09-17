@@ -230,6 +230,28 @@ describe('EditableMarkdown Component', () => {
         );
     });
 
+    test('a filename that would break the markdown link is sanitized', async () => {
+        const onImageUpload = vi.fn().mockResolvedValue('/storage/a.png');
+        const { getEditor, paste } = setup(
+            'Text',
+            vi.fn(),
+            false,
+            onImageUpload,
+        );
+
+        paste({
+            preventDefault: vi.fn(),
+            clipboardData: transfer([imageFile('screen](old).png')]),
+        });
+
+        await waitFor(() =>
+            expect(getEditor().insertContentAt).toHaveBeenCalledWith(3, {
+                type: 'image',
+                attrs: { src: '/storage/a.png', alt: 'screenold.png' },
+            }),
+        );
+    });
+
     test('pasting is left to TipTap when there is no uploader or no image', () => {
         const withoutUploader = setup('Text');
 

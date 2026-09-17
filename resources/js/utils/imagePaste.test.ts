@@ -3,6 +3,7 @@ import {
     extractImageFiles,
     insertMarkdownImage,
     markdownImage,
+    markdownImageAlt,
     nextImageRange,
     splitMarkdownImages,
 } from './imagePaste';
@@ -224,6 +225,55 @@ describe('nextImageRange', () => {
 
         expect(body).toBe(
             'Start ![one.png](/storage/1.png)![two.png](/storage/2.png)',
+        );
+    });
+});
+
+describe('markdownImageAlt', () => {
+    test('leaves an ordinary filename alone', () => {
+        expect(markdownImageAlt('shot.png')).toBe('shot.png');
+    });
+
+    test('drops the characters that would close the link early', () => {
+        expect(markdownImageAlt('screen](old).png')).toBe('screenold.png');
+        expect(markdownImageAlt('back\\slash.png')).toBe('backslash.png');
+    });
+
+    test('collapses whitespace and newlines', () => {
+        expect(markdownImageAlt(' two   words\n.png ')).toBe('two words .png');
+    });
+
+    test('falls back to a generic alt when nothing usable is left', () => {
+        expect(markdownImageAlt('[]()')).toBe('image');
+    });
+
+    test('a hostile filename still produces a parseable image link', () => {
+        const file = new File(['x'], 'screen](/evil.com).png', {
+            type: 'image/png',
+        });
+
+        const { body } = insertMarkdownImage(
+            '',
+            { start: 0, end: 0 },
+            file,
+            '/storage/a.png',
+        );
+
+        expect(body).toBe('![screen/evil.com.png](/storage/a.png)');
+        expect(splitMarkdownImages(body)).toEqual([
+            {
+                type: 'image',
+                value: 'screen/evil.com.png',
+                url: '/storage/a.png',
+            },
+        ]);
+    });
+
+    test('markdownImage builds the snippet from the sanitized alt', () => {
+        const file = new File(['x'], 'a[b].png', { type: 'image/png' });
+
+        expect(markdownImage(file, '/storage/a.png')).toBe(
+            '![ab.png](/storage/a.png)',
         );
     });
 });
