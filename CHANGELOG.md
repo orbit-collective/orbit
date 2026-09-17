@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.8.3](https://github.com/orbit-collective/orbit/compare/v0.8.2...v0.8.3) (2026-09-17)
+
+
+### Features
+
+* **attachments:** add image upload functionality for projects ([a10ab5e](https://github.com/orbit-collective/orbit/commit/a10ab5ec1087b16c67fdfa2afffa84b2cf0d74f6))
+* **comments:** add image upload and rendering in comments ([c432acf](https://github.com/orbit-collective/orbit/commit/c432acfa348295b035cd6613b20beab2bc7de0a2))
+* **comments:** add image upload support for issue comments ([eb60b54](https://github.com/orbit-collective/orbit/commit/eb60b5406d71c05c66b191a027594e337e5a26e6))
+* **comments:** enable image uploads in editable comments ([3bf43b8](https://github.com/orbit-collective/orbit/commit/3bf43b8913a26f5591f3658b3d14a2eb24825b8f))
+* **editable-markdown:** enable image click to open in new tab ([3519318](https://github.com/orbit-collective/orbit/commit/3519318a946fe805c58cae920ac60b4cfb3c2f9a))
+* **image-handling:** enable click to open rendered images ([29c8ea6](https://github.com/orbit-collective/orbit/commit/29c8ea633f7aa8f72628e76807b11c75281bf4ba))
+* **Show:** conditionally render FilterBar based on selectedLook ([921f305](https://github.com/orbit-collective/orbit/commit/921f3057785629f22f65641435ec754bfaacdf93))
+
+
+### Bug Fixes
+
+* **attachments:** delete the stored file when its insert fails ([bbfb8b7](https://github.com/orbit-collective/orbit/commit/bbfb8b708021535d1a8718f84dff5dfe176e8b81))
+* **attachments:** gate uploads behind a write permission ([ed9adae](https://github.com/orbit-collective/orbit/commit/ed9adae18480e6575ef00287339f35d41426265d))
+* **image-handling:** insert a batch of pasted images in order ([73234e7](https://github.com/orbit-collective/orbit/commit/73234e7f40f8fe69856f4c51b150866dd5bcfd0e))
+* **image-handling:** sanitize the filename used as image alt text ([1b0df96](https://github.com/orbit-collective/orbit/commit/1b0df9668295ce85d39f5fee0588bd3adfd20f4a))
+* **projects:** purge attachment files when a project is deleted ([700d5f7](https://github.com/orbit-collective/orbit/commit/700d5f7a4f9165ba76d3aaac071067e6cd816544))
+
+
+### Miscellaneous Chores
+
+* release 0.8.3 ([9004946](https://github.com/orbit-collective/orbit/commit/90049469adc30c4b865fc9c2744a937d9acc879b))
+
 ## [0.8.2](https://github.com/orbit-collective/orbit/compare/v0.8.1...v0.8.2) (2026-09-14)
 
 
