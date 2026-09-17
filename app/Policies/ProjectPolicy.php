@@ -19,6 +19,31 @@ class ProjectPolicy
         return $this->view($user, $project);
     }
 
+    /**
+     * Uploading an image is not a tier of its own: the endpoint serves issue
+     * descriptions, comments and issue type templates alike, so it admits
+     * anyone who can write to at least one of those. Plain project visibility
+     * is not enough - a Viewer has nowhere in the UI to paste an image and
+     * must not be able to spend the project's storage from a console either.
+     */
+    public function uploadAttachments(User $user, Project $project): bool
+    {
+        $writeGates = [
+            Permission::ISSUES_CREATE,
+            Permission::ISSUES_UPDATE,
+            Permission::COMMENTS_CREATE,
+            Permission::ISSUE_TYPES_UPDATE,
+        ];
+
+        foreach ($writeGates as $permission) {
+            if ($project->hasPermissionOrTier($user, $permission, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function updateDetails(User $user, Project $project): bool
     {
         return $project->hasPermissionOrTier($user, Permission::PROJECT_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);

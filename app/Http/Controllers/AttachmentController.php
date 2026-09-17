@@ -24,7 +24,7 @@ class AttachmentController extends Controller
      */
     public function store(Request $request, Project $project, NsfwDetectionService $nsfwDetection): JsonResponse
     {
-        $this->authorize('view', $project);
+        $this->authorize('uploadAttachments', $project);
 
         $request->validate([
             'file' => [
