@@ -25,7 +25,7 @@ Schema::create('attachments', function (Blueprint $table) {
 });
 ```
 
-Załącznik jest przypisany do **projektu**, a nie do issue, komentarza czy szablonu, z którego akurat jest referowany. To celowe: treść markdown to wolny tekst, który można skopiować z issue do komentarza, więc nie ma wiarygodnego właściciela, na którym dałoby się oprzeć klucz obcy. Projekt to granica uprawnień, która faktycznie ma znaczenie — to względem niego autoryzowany jest endpoint uploadu — i to on sprawia, że `cascadeOnDelete()` jest poprawne: usunięcie projektu zabiera ze sobą jego uploady.
+Załącznik jest przypisany do **projektu**, a nie do issue, komentarza czy szablonu, z którego akurat jest referowany. To celowe: treść markdown to wolny tekst, który można skopiować z issue do komentarza, więc nie ma wiarygodnego właściciela, na którym dałoby się oprzeć klucz obcy. Projekt to granica uprawnień, która faktycznie ma znaczenie — to względem niego autoryzowany jest endpoint uploadu — i to on sprawia, że `cascadeOnDelete()` jest poprawne: usunięcie projektu zabiera ze sobą jego uploady. Kaskada czyści jednak tylko wiersze: kaskada w bazie nigdy nie uruchamia usunięcia przez Eloquent, więc `ProjectService::deleteProject()` musi dodatkowo wyczyścić pliki projektu przez `Storage::disk('public')->deleteDirectory("attachments/$projectId")` — inaczej zostają na publicznym dysku bez niczego, co je opisuje.
 
 `disk` i `path` są zapisywane obok `url`, żeby plik dało się usunąć (albo później przenieść na inny dysk) bez parsowania publicznego URL-a z powrotem na ścieżkę w storage, tak jak musi to robić `UserService::updateProfile()` z awatarami.
 
@@ -130,15 +130,24 @@ class AttachmentService
     {
         $path = $file->store("attachments/{$project->id}", 'public');
 
-        return $this->attachmentRepository->create($project, [
-            'user_id' => $uploader->id,
-            'disk' => 'public',
-            'path' => $path,
-            'url' => Storage::url($path),
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-        ]);
+        try {
+            return $this->attachmentRepository->create($project, [
+                'user_id' => $uploader->id,
+                'disk' => 'public',
+                'path' => $path,
+                'url' => Storage::url($path),
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+            ]);
+        } catch (Throwable $e) {
+            // The file is written before the row exists, so a failed insert
+            // would otherwise leave an untracked file on a public disk with
+            // nothing left pointing at it.
+            Storage::disk('public')->delete($path);
+
+            throw $e;
+        }
     }
 
     public function delete(Attachment $attachment): void
@@ -430,7 +439,10 @@ const insertImages = async (files: File[], at?: number) => {
                 .focus()
                 .insertContentAt(target, {
                     type: 'image',
-                    attrs: { src: url, alt: file.name },
+                    // Serialized back out as `![alt](src)`, so the alt has
+                    // to survive the round trip the same way a textarea
+                    // surface's does.
+                    attrs: { src: url, alt: markdownImageAlt(file.name) },
                 })
                 .run();
 
@@ -451,7 +463,7 @@ const insertImages = async (files: File[], at?: number) => {
 };
 ```
 
-`insertContentAt` z `{ type: 'image' }` potrzebuje rozszerzenia `Image`, które i tak jest już na liście rozszerzeń; nic nowego nie jest rejestrowane. `tiptap-markdown` serializuje ten węzeł do `![alt](url)`, więc zapisana kolumna pozostaje zwykłym markdownem, a tekstem alternatywnym jest oryginalna nazwa pliku.
+`insertContentAt` z `{ type: 'image' }` potrzebuje rozszerzenia `Image`, które i tak jest już na liście rozszerzeń; nic nowego nie jest rejestrowane. `tiptap-markdown` serializuje ten węzeł do `![alt](url)`, więc zapisana kolumna pozostaje zwykłym markdownem, a tekstem alternatywnym jest oryginalna nazwa pliku — wcześniej przepuszczona przez `markdownImageAlt()`, bo nazwa w rodzaju `screen](old).png` zamknęłaby inaczej link przedwcześnie i zostawiła treść, która nie parsuje się już jako obraz.
 
 ### Kliknięcie wyrenderowanego obrazu otwiera go
 

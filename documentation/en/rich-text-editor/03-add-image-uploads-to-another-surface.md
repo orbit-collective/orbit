@@ -69,13 +69,41 @@ export const insertMarkdownImage = (
 };
 ```
 
-Alt text is the original filename — the same choice
-`EditableMarkdown` makes when it builds an `image` node, so a
-screenshot pasted into a description and one pasted into a comment
-produce identical markdown.
+Alt text is the original filename, put through `markdownImageAlt()`,
+which drops the brackets, parentheses and backslashes that would
+close the link early — a file named `screen](old).png` would
+otherwise produce a body that no longer parses as an image at all.
+`EditableMarkdown` runs the same function over the `alt` attribute of
+its image node, so a screenshot pasted into a description and one
+pasted into a comment produce identical markdown.
 
 `length` exists for one caller only: `CommentForm`, which has to tell
 its mention bookkeeping how many characters appeared (step 3).
+
+The third helper is what makes a multi-file paste come out in order:
+
+```ts
+/**
+ * Where the next image of a batch has to land: a collapsed point right after
+ * the one just inserted. Uploading a batch in parallel and reusing the
+ * original range for every file inserts them in reverse order, and - when the
+ * range covered a selection - lets a later insertion cut through the markdown
+ * an earlier one already wrote.
+ */
+export const nextImageRange = (
+    range: { start: number; end: number },
+    file: File,
+    url: string,
+): { start: number; end: number } => {
+    const caret = range.start + markdownImage(file, url).length;
+
+    return { start: caret, end: caret };
+};
+```
+
+It works out the next insertion point from the snippet rather than
+from the new body, which is what lets the caller advance without
+reading state back out of React.
 
 And, for rendering:
 
@@ -178,24 +206,42 @@ programmatic `setBody()` never reaches `handleChange` at all, so the
 reconciliation is done by hand, inside the functional update:
 
 ```tsx
-const insertImage = async (
-    file: File,
+/**
+ * Uploads a batch one at a time and moves the insertion point past each
+ * image as it lands, so several files pasted at once keep their order
+ * instead of every one of them splicing into the original range.
+ */
+const insertImages = async (
+    files: File[],
     range: { start: number; end: number },
 ) => {
     if (!onImageUpload) return;
 
-    const url = await onImageUpload(file);
+    let target = range;
 
-    setBody((current) => {
-        const result = insertMarkdownImage(current, range, file, url);
+    for (const file of files) {
+        const at = target;
 
-        setMentionRanges((prev) =>
-            applyRangeEdit(prev, range.start, range.end, result.length),
-        );
-        setPendingCaret(result.caret);
+        try {
+            const url = await onImageUpload(file);
 
-        return result.body;
-    });
+            setBody((current) => {
+                const result = insertMarkdownImage(current, at, file, url);
+
+                setMentionRanges((prev) =>
+                    applyRangeEdit(prev, at.start, at.end, result.length),
+                );
+                setPendingCaret(result.caret);
+
+                return result.body;
+            });
+
+            target = nextImageRange(at, file, url);
+        } catch {
+            // The uploader already reported the failure to the user; the
+            // remaining files in this batch still get their turn.
+        }
+    }
 };
 ```
 
@@ -219,7 +265,7 @@ const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
         // runs for a paste we've prevented.
         editRangeRef.current = null;
 
-        files.forEach((file) => void insertImage(file, { start, end }));
+        void insertImages(files, { start, end });
 
         return;
     }
@@ -236,9 +282,7 @@ const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
     const caret = e.currentTarget.selectionStart;
 
-    files.forEach(
-        (file) => void insertImage(file, { start: caret, end: caret }),
-    );
+    void insertImages(files, { start: caret, end: caret });
 };
 ```
 
@@ -250,10 +294,17 @@ A drop onto a textarea does not move the caret first, so the
 insertion point is wherever the caret already was — unlike the Tiptap
 surface, there is no `posAtCoords()` equivalent worth reaching for.
 
-`files.forEach` fires the uploads in parallel and each one splices
-independently. That is safe **only** because each
-`setBody`/`setMentionRanges` call is a functional update reading the
-latest state; never hoist `body` into the closure.
+**Upload the batch sequentially, not with `files.forEach`.** Firing
+the uploads in parallel and letting each one splice independently
+looks fine — every `setBody`/`setMentionRanges` call is a functional
+update reading the latest state — but the *range* each one captured
+is the original. Two pasted images then both insert at the same
+point, so they land in reverse order, and over a selection the second
+one cuts through the markdown the first already wrote. Awaiting each
+file in turn and advancing through `nextImageRange()` is what keeps
+them in order. Still never hoist `body` into the closure: the splice
+has to read the latest state, since the user can type between
+uploads.
 
 ### Step 4 — Editing an existing comment
 
@@ -265,38 +316,48 @@ mode, so the upload support lives in that atom rather than in
 gets it by passing one prop.
 
 ```tsx
-const insertImage = async (
-    file: File,
+const insertImages = async (
+    files: File[],
     range: { start: number; end: number },
 ) => {
     if (!onImageUpload) return;
 
-    pendingUploadsRef.current += 1;
+    pendingUploadsRef.current += files.length;
 
-    try {
-        const url = await onImageUpload(file);
+    let target = range;
 
-        setDraft((current) => {
-            const result = insertMarkdownImage(current, range, file, url);
+    for (const file of files) {
+        const at = target;
 
-            setPendingCaret(result.caret);
+        try {
+            const url = await onImageUpload(file);
 
-            return result.body;
-        });
-    } catch {
-        // The uploader already reported the failure to the user.
-    } finally {
-        pendingUploadsRef.current = Math.max(
-            0,
-            pendingUploadsRef.current - 1,
-        );
+            setDraft((current) => {
+                const result = insertMarkdownImage(current, at, file, url);
+
+                setPendingCaret(result.caret);
+
+                return result.body;
+            });
+
+            target = nextImageRange(at, file, url);
+        } catch {
+            // The uploader already reported the failure to the user.
+        } finally {
+            pendingUploadsRef.current = Math.max(
+                0,
+                pendingUploadsRef.current - 1,
+            );
+        }
     }
 };
 ```
 
 `handlePaste`/`handleDrop` are the same shape as `CommentForm`'s,
 minus the mention bookkeeping, and are wired onto the multiline
-`TextArea` next to the existing `onBlur={commit}`.
+`TextArea` next to the existing `onBlur={commit}`. Note the counter
+is raised by the whole batch up front, so the blur guard below holds
+for the entire sequence rather than only for the file in flight.
 
 **The gotcha, identical to the Tiptap one:** `EditableText` commits
 on blur. Losing focus mid-upload would run `commit()`, leave edit
@@ -418,31 +479,40 @@ splice.
 ### Step B2 — Paste and drop on the description textarea
 
 ```tsx
-const insertImage = async (
-    file: File,
+const insertImages = async (
+    files: File[],
     range: { start: number; end: number },
 ) => {
-    try {
-        const url = await uploadImage(file);
+    let target = range;
 
-        setDescription((current) => {
-            const result = insertMarkdownImage(current, range, file, url);
+    for (const file of files) {
+        const at = target;
 
-            // This component has no pendingCaret effect the way CommentForm
-            // does, and needs none for a single field - the textarea is
-            // still mounted, it just lost its selection to the re-render.
-            requestAnimationFrame(() => {
-                descriptionRef.current?.focus();
-                descriptionRef.current?.setSelectionRange(
-                    result.caret,
-                    result.caret,
-                );
+        try {
+            const url = await uploadImage(file);
+
+            setDescription((current) => {
+                const result = insertMarkdownImage(current, at, file, url);
+
+                // This component has no pendingCaret effect the way
+                // CommentForm does, and needs none for a single field - the
+                // textarea is still mounted, it just lost its selection to
+                // the re-render.
+                requestAnimationFrame(() => {
+                    descriptionRef.current?.focus();
+                    descriptionRef.current?.setSelectionRange(
+                        result.caret,
+                        result.caret,
+                    );
+                });
+
+                return result.body;
             });
 
-            return result.body;
-        });
-    } catch {
-        // The uploader already reported the failure to the user.
+            target = nextImageRange(at, file, url);
+        } catch {
+            // The uploader already reported the failure to the user.
+        }
     }
 };
 
@@ -457,7 +527,7 @@ const handleDescriptionPaste = (
 
     const { selectionStart: start, selectionEnd: end } = e.currentTarget;
 
-    files.forEach((file) => void insertImage(file, { start, end }));
+    void insertImages(files, { start, end });
 };
 
 const handleDescriptionDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
@@ -469,9 +539,7 @@ const handleDescriptionDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
     const caret = e.currentTarget.selectionStart;
 
-    files.forEach(
-        (file) => void insertImage(file, { start: caret, end: caret }),
-    );
+    void insertImages(files, { start: caret, end: caret });
 };
 ```
 
@@ -495,9 +563,10 @@ The `requestAnimationFrame` stands in for `CommentForm`'s
 doesn't need a general one for a single field.
 
 `uploadImage` already toasts and re-throws on failure, so the
-`catch` here is empty on purpose and `insertImage`'s promise is left
+`catch` here is empty on purpose and `insertImages`'s promise is left
 unawaited (`void`): a rejected upload has already been surfaced to
-the user, and the description is left exactly as it was.
+the user, the description is left exactly as it was, and the rest of
+the batch still gets its turn.
 
 There is no blur guard here, unlike `EditableText`'s: this form is
 saved by an explicit "Add template"/"Save" button, so losing focus
@@ -529,18 +598,23 @@ modelled on:
 - `resources/js/utils/imagePaste.test.ts` — `insertMarkdownImage` at
   a collapsed caret, over a selected range and on an empty body, plus
   a round-trip asserting what it produces is what
-  `splitMarkdownImages` parses back; and `splitMarkdownImages`
-  itself: no image, empty body, text around an image, two consecutive
-  images with an empty alt, and the two negative cases that keep the
-  parser honest (a plain `[link](url)` and prose that merely contains
-  brackets).
+  `splitMarkdownImages` parses back; `markdownImageAlt` dropping the
+  link-breaking characters and falling back to `image` when nothing
+  usable is left; `nextImageRange` agreeing with the caret
+  `insertMarkdownImage` reports and chaining a batch in order; and
+  `splitMarkdownImages` itself: no image, empty body, text around an
+  image, two consecutive images with an empty alt, and the two
+  negative cases that keep the parser honest (a plain `[link](url)`
+  and prose that merely contains brackets).
 - `resources/js/Components/Molecules/CommentForm/CommentForm.test.tsx` —
   paste uploads and submits the markdown link; **the mention
   regression**: with a mention already selected, paste an image
   *before* it and assert the submitted body still carries
   `@[Jane Cooper](1)` and `mentioned_user_ids` still carries that id;
-  drop at the caret; and paste left to the browser both when there is
-  no uploader and when the clipboard holds no image
+  drop at the caret; pasting two images at once landing in order, over
+  a selection replacing it exactly once, and a failed first upload not
+  stopping the second; and paste left to the browser both when there
+  is no uploader and when the clipboard holds no image
   (`defaultPrevented === false`).
 - `resources/js/Components/Atoms/EditableText/EditableText.test.tsx` —
   paste at the caret, paste replacing a selection, drop, a failed
