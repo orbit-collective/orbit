@@ -3,6 +3,7 @@
 use App\Models\Attachment;
 use App\Models\Project;
 use App\Models\User;
+use App\Repositories\AttachmentRepository;
 use App\Services\AttachmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -49,4 +50,21 @@ test('delete removes both the stored file and the record', function () {
 
     Storage::disk('public')->assertMissing($attachment->path);
     expect(Attachment::query()->count())->toBe(0);
+});
+
+test('a failed insert removes the file it had already stored', function () {
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+
+    $repository = Mockery::mock(AttachmentRepository::class);
+    $repository->shouldReceive('create')->once()->andThrow(new RuntimeException('insert failed'));
+    $service = new AttachmentService($repository);
+
+    expect(fn () => $service->storeImage(
+        $project,
+        UploadedFile::fake()->create('shot.png', 10, 'image/png'),
+        $user,
+    ))->toThrow(RuntimeException::class);
+
+    expect(Storage::disk('public')->allFiles())->toBeEmpty();
 });
