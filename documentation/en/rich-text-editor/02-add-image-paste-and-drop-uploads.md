@@ -220,7 +220,7 @@ class AttachmentController extends Controller
      */
     public function store(Request $request, Project $project, NsfwDetectionService $nsfwDetection): JsonResponse
     {
-        $this->authorize('view', $project);
+        $this->authorize('uploadAttachments', $project);
 
         $request->validate([
             'file' => [
@@ -265,11 +265,15 @@ class AttachmentController extends Controller
 
 Three things worth copying verbatim into any future upload point:
 
-- **`$this->authorize('view', $project)`** — uploading is gated on
-  project membership, not on an issue/comment permission. The same
-  endpoint serves descriptions, comments and templates, and each of
-  those surfaces is already gated by its own policy before the editor
-  is even editable.
+- **`$this->authorize('uploadAttachments', $project)`** — uploading is
+  not gated on a single surface's permission, because one endpoint
+  serves descriptions, comments and templates. `ProjectPolicy::uploadAttachments()`
+  admits anyone who passes at least one of those surfaces' write gates
+  (`issues.create`, `issues.update`, `comments.create`,
+  `projects.issue_types.update`), which is deliberately broader than
+  any one of them and still narrower than membership: a read-only
+  Viewer has nowhere to paste an image and must not be able to spend
+  the project's storage from a console either.
 - **The NSFW block** is the exact `try`/`catch` shape
   `UserController::uploadAvatar()` uses, with the same two distinct
   messages (service unreachable vs. image actually rejected), and it
@@ -678,7 +682,10 @@ the editor needs the uploader.
   (`422`, nothing stored, nothing on disk), a classifier failure
   (`503`, nothing stored), a non-image (`422` with
   `assertJsonValidationErrors('file')`), a non-member (`403`) and a
-  guest (`401`). Note two testing quirks: post files with
+  guest (`401`), a read-only Viewer (`403`), a project admin, and a
+  Viewer whose custom role grants `comments.create` (allowed, which is
+  what keeps the gate about write access rather than about tier). Note
+  two testing quirks: post files with
   `$this->post($uri, $data, ['Accept' => 'application/json',
   'X-Requested-With' => 'XMLHttpRequest'])` rather than `postJson()`
   (which cannot carry an `UploadedFile`), and build fixtures with

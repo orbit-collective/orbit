@@ -182,7 +182,7 @@ class AttachmentController extends Controller
      */
     public function store(Request $request, Project $project, NsfwDetectionService $nsfwDetection): JsonResponse
     {
-        $this->authorize('view', $project);
+        $this->authorize('uploadAttachments', $project);
 
         $request->validate([
             'file' => [
@@ -227,7 +227,7 @@ class AttachmentController extends Controller
 
 Trzy rzeczy warte przepisania dosłownie do każdego przyszłego punktu uploadu:
 
-- **`$this->authorize('view', $project)`** — upload jest bramkowany członkostwem w projekcie, a nie uprawnieniem do issue/komentarza. Ten sam endpoint obsługuje opisy, komentarze i szablony, a każda z tych powierzchni jest już bramkowana własną polityką, jeszcze zanim edytor w ogóle stanie się edytowalny.
+- **`$this->authorize('uploadAttachments', $project)`** — upload nie jest bramkowany uprawnieniem jednej powierzchni, bo jeden endpoint obsługuje opisy, komentarze i szablony. `ProjectPolicy::uploadAttachments()` wpuszcza każdego, kto przechodzi przynajmniej jedną z bram zapisu tych powierzchni (`issues.create`, `issues.update`, `comments.create`, `projects.issue_types.update`) — celowo szerzej niż którakolwiek z nich z osobna i wciąż węziej niż samo członkostwo: Viewer tylko do odczytu nie ma gdzie wkleić obrazu i nie może też wydawać przestrzeni projektu z poziomu konsoli.
 - **Blok NSFW** to dokładnie ten sam kształt `try`/`catch`, którego używa `UserController::uploadAvatar()`, z tymi samymi dwoma osobnymi komunikatami (serwis nieosiągalny vs. obraz faktycznie odrzucony), i wywołuje `validate()` zamiast reimplementować `classify()`/`isUnsafe()`. Zobacz [`../content-moderation/01-add-moderation-to-a-new-upload-point.md`](../content-moderation/01-add-moderation-to-a-new-upload-point.md) — zawodzi **w stronę bezpieczną** (fail-closed): jeśli klasyfikator nie działa, nic nie zostaje zapisane.
 - **Serwis jest wywoływany dopiero po przejściu obu bramek**, więc odrzucony obraz nigdy nie trafia na dysk.
 
@@ -545,7 +545,7 @@ To całe podłączenie na poziomie strony: hook potrzebuje id projektu, edytor p
 
 ## Testy
 
-- `tests/Feature/AttachmentControllerTest.php` — wstrzyknij do kontenera `Mockery::mock(NsfwDetectionService::class)` przez `app()->instance(...)` i pokryj: upload przez członka (asercje `201`, URL `/storage/attachments/{project}/…`, wiersz w bazie i `Storage::disk('public')->assertExists()`), niebezpieczny obraz (`422`, nic nie zapisane, nic na dysku), awarię klasyfikatora (`503`, nic nie zapisane), plik niebędący obrazem (`422` z `assertJsonValidationErrors('file')`), osobę spoza projektu (`403`) i gościa (`401`). Zwróć uwagę na dwa testowe smaczki: pliki wysyłaj przez `$this->post($uri, $data, ['Accept' => 'application/json', 'X-Requested-With' => 'XMLHttpRequest'])`, a nie `postJson()` (który nie uniesie `UploadedFile`), a fikstury buduj przez `UploadedFile::fake()->create('shot.png', 100, 'image/png')`, a nie `->image()`, które wymaga rozszerzenia GD.
+- `tests/Feature/AttachmentControllerTest.php` — wstrzyknij do kontenera `Mockery::mock(NsfwDetectionService::class)` przez `app()->instance(...)` i pokryj: upload przez członka (asercje `201`, URL `/storage/attachments/{project}/…`, wiersz w bazie i `Storage::disk('public')->assertExists()`), niebezpieczny obraz (`422`, nic nie zapisane, nic na dysku), awarię klasyfikatora (`503`, nic nie zapisane), plik niebędący obrazem (`422` z `assertJsonValidationErrors('file')`), osobę spoza projektu (`403`) gościa (`401`), Viewera tylko do odczytu (`403`), admina projektu oraz Viewera, któremu własna rola przyznaje `comments.create` (przechodzi — i to właśnie trzyma tę bramę przy prawie zapisu, a nie przy tierze). Zwróć uwagę na dwa testowe smaczki: pliki wysyłaj przez `$this->post($uri, $data, ['Accept' => 'application/json', 'X-Requested-With' => 'XMLHttpRequest'])`, a nie `postJson()` (który nie uniesie `UploadedFile`), a fikstury buduj przez `UploadedFile::fake()->create('shot.png', 100, 'image/png')`, a nie `->image()`, które wymaga rozszerzenia GD.
 - `tests/Feature/AttachmentServiceTest.php` — pod `Storage::fake('public')` asercuj, że `storeImage()` zapisuje pod `attachments/{project}/`, zapamiętuje dysk/url/oryginalną nazwę, a `delete()` usuwa i plik, i wiersz.
 - `tests/Feature/AttachmentRepositoryTest.php` — zakres `create()`, `findForProject()` zwracające `null` dla załącznika innego projektu, `getForProject()` sortujące od najnowszych, `delete()`.
 - `tests/Feature/Models/AttachmentTest.php` — relacje `project`/`user` oraz to, że usunięcie projektu kaskadowo usuwa jego załączniki.

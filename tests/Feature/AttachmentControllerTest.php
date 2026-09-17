@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Attachment;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\User;
 use App\Services\NsfwDetectionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -98,6 +100,56 @@ test('a non image upload is rejected by validation', function () {
 
     $response->assertStatus(422);
     $response->assertJsonValidationErrors('file');
+});
+
+test('a read only viewer cannot upload', function () {
+    Storage::fake('public');
+    fakeNsfw(true);
+
+    $project = Project::factory()->create();
+    $viewer = User::factory()->create();
+    $project->users()->attach($viewer->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($viewer)->post("/projects/$project->id/attachments", [
+        'file' => UploadedFile::fake()->create('shot.png', 100, 'image/png'),
+    ]);
+
+    $response->assertForbidden();
+    $this->assertDatabaseCount('attachments', 0);
+    expect(Storage::disk('public')->allFiles())->toBeEmpty();
+});
+
+test('a project admin can upload', function () {
+    Storage::fake('public');
+    fakeNsfw(true);
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    $project->users()->attach($admin->id, ['role' => 'admin']);
+
+    $this->actingAs($admin)->post("/projects/$project->id/attachments", [
+        'file' => UploadedFile::fake()->create('shot.png', 100, 'image/png'),
+    ])->assertCreated();
+});
+
+test('a viewer with a custom role granting comments.create can upload', function () {
+    Storage::fake('public');
+    fakeNsfw(true);
+
+    $project = Project::factory()->create();
+    $viewer = User::factory()->create();
+    $project->users()->attach($viewer->id, ['role' => 'viewer']);
+
+    $permission = Permission::where('key', 'comments.create')->first();
+    $grantingRole = $project->roles()->create(['name' => 'Commenter', 'slug' => 'commenter', 'role' => 'custom']);
+    $grantingRole->permissions()->attach($permission);
+
+    $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $viewer->id)->first();
+    $projectUser->roles()->attach($grantingRole->id);
+
+    $this->actingAs($viewer)->post("/projects/$project->id/attachments", [
+        'file' => UploadedFile::fake()->create('shot.png', 100, 'image/png'),
+    ])->assertCreated();
 });
 
 test('a user who is not a project member cannot upload', function () {
