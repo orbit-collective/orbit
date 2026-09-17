@@ -8,6 +8,7 @@ use App\Services\ActivityLogService;
 use App\Services\ProjectService;
 use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -56,4 +57,19 @@ test('it delegates checking for existing projects to the repository', function (
         ->andReturn(true);
 
     expect($this->service->hasAnyProjectsForUser(5))->toBeTrue();
+});
+
+test('deleting a project removes its uploaded attachment files', function () {
+    Storage::fake('public');
+
+    $project = new Project(['id' => 7, 'name' => 'Doomed']);
+    Storage::disk('public')->put('attachments/7/shot.png', 'x');
+    Storage::disk('public')->put('attachments/8/other.png', 'x');
+
+    $this->projectRepository->shouldReceive('delete')->once()->with($project);
+
+    $this->service->deleteProject($project);
+
+    Storage::disk('public')->assertMissing('attachments/7/shot.png');
+    Storage::disk('public')->assertExists('attachments/8/other.png');
 });

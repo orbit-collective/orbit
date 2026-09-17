@@ -6,6 +6,7 @@ use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Repositories\ProjectRepository;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProjectService
@@ -65,6 +66,14 @@ class ProjectService
 
     public function deleteProject(Project $project): void
     {
+        $projectId = $project->id;
+
         $this->projectRepository->delete($project);
+
+        // The attachments table cascades on the foreign key, which never runs
+        // an Eloquent delete and so never reaches AttachmentService::delete().
+        // Without this the uploaded files stay on the public disk, reachable,
+        // after the project and every row describing them are gone.
+        Storage::disk('public')->deleteDirectory("attachments/$projectId");
     }
 }
