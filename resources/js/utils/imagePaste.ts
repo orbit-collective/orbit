@@ -32,12 +32,28 @@ export const extractImageFiles = (
  * value.
  */
 /**
+ * A filename made safe to sit inside `![...]`.
+ *
+ * Alt text is cosmetic here - it is only ever the name of the uploaded file -
+ * so the brackets, parentheses and backslashes that would close the markdown
+ * link early are dropped rather than backslash-escaped: an escaped `\]` would
+ * still have to be understood by both `tiptap-markdown` and
+ * `splitMarkdownImages` to survive, and neither gains anything from carrying
+ * it.
+ */
+export const markdownImageAlt = (name: string): string =>
+    name
+        .replace(/[[\]()\\]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim() || 'image';
+
+/**
  * The markdown an uploaded image is represented by. Exported so a caller
  * inserting several images in a row can work out where the next one goes
  * without having to read the body back out of React state first.
  */
 export const markdownImage = (file: File, url: string): string =>
-    `![${file.name}](${url})`;
+    `![${markdownImageAlt(file.name)}](${url})`;
 
 export const insertMarkdownImage = (
     body: string,

@@ -1,6 +1,6 @@
 import { EditableMarkdownProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { extractImageFiles } from '@/utils/imagePaste';
+import { extractImageFiles, markdownImageAlt } from '@/utils/imagePaste';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TableKit } from '@tiptap/extension-table';
@@ -101,7 +101,10 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                     .focus()
                     .insertContentAt(target, {
                         type: 'image',
-                        attrs: { src: url, alt: file.name },
+                        // Serialized back out as `![alt](src)`, so the alt has
+                        // to survive the round trip the same way a textarea
+                        // surface's does.
+                        attrs: { src: url, alt: markdownImageAlt(file.name) },
                     })
                     .run();
 
