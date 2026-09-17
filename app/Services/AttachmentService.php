@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\AttachmentRepository;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class AttachmentService
 {
@@ -23,15 +24,24 @@ class AttachmentService
     {
         $path = $file->store("attachments/{$project->id}", 'public');
 
-        return $this->attachmentRepository->create($project, [
-            'user_id' => $uploader->id,
-            'disk' => 'public',
-            'path' => $path,
-            'url' => Storage::url($path),
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-        ]);
+        try {
+            return $this->attachmentRepository->create($project, [
+                'user_id' => $uploader->id,
+                'disk' => 'public',
+                'path' => $path,
+                'url' => Storage::url($path),
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+            ]);
+        } catch (Throwable $e) {
+            // The file is written before the row exists, so a failed insert
+            // would otherwise leave an untracked file on a public disk with
+            // nothing left pointing at it.
+            Storage::disk('public')->delete($path);
+
+            throw $e;
+        }
     }
 
     public function delete(Attachment $attachment): void
