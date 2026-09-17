@@ -45,9 +45,32 @@ export const insertMarkdownImage = (
 };
 ```
 
-Tekstem alternatywnym jest oryginalna nazwa pliku — ten sam wybór, którego dokonuje `EditableMarkdown`, budując węzeł `image`, więc zrzut ekranu wklejony do opisu i ten wklejony do komentarza dają identyczny markdown.
+Tekstem alternatywnym jest oryginalna nazwa pliku przepuszczona przez `markdownImageAlt()`, które usuwa nawiasy kwadratowe, okrągłe i odwrotne ukośniki zamykające link przedwcześnie — plik o nazwie `screen](old).png` dawałby inaczej treść, która w ogóle nie parsuje się już jako obraz. `EditableMarkdown` przepuszcza przez tę samą funkcję atrybut `alt` swojego węzła obrazu, więc zrzut ekranu wklejony do opisu i ten wklejony do komentarza dają identyczny markdown.
 
 `length` istnieje dla jednego jedynego wywołującego: `CommentForm`, który musi powiedzieć swojemu śledzeniu wzmianek, ile znaków przybyło (krok 3).
+
+Trzeci helper jest tym, co sprawia, że wklejenie wielu plików wychodzi w odpowiedniej kolejności:
+
+```ts
+/**
+ * Where the next image of a batch has to land: a collapsed point right after
+ * the one just inserted. Uploading a batch in parallel and reusing the
+ * original range for every file inserts them in reverse order, and - when the
+ * range covered a selection - lets a later insertion cut through the markdown
+ * an earlier one already wrote.
+ */
+export const nextImageRange = (
+    range: { start: number; end: number },
+    file: File,
+    url: string,
+): { start: number; end: number } => {
+    const caret = range.start + markdownImage(file, url).length;
+
+    return { start: caret, end: caret };
+};
+```
+
+Wylicza kolejny punkt wstawienia ze snippetu, a nie z nowej treści, i to właśnie pozwala wywołującemu przesuwać się naprzód bez odczytywania stanu z powrotem z Reacta.
 
 I, na potrzeby renderowania:
 
@@ -130,24 +153,42 @@ To miejsce, w którym komentarz różni się od każdej innej powierzchni, i cz�
 W tym samym komponencie czai się druga pułapka: `handleChange` porzuca **wszystkie** śledzone zakresy, kiedy zmiana przychodzi bez przechwyconego zakresu edycji (zobacz jego komentarz o IME, przeciąganiu i cofaniu). Programowe `setBody()` w ogóle nie dociera do `handleChange`, więc uzgodnienie wykonywane jest ręcznie, wewnątrz aktualizacji funkcyjnej:
 
 ```tsx
-const insertImage = async (
-    file: File,
+/**
+ * Uploads a batch one at a time and moves the insertion point past each
+ * image as it lands, so several files pasted at once keep their order
+ * instead of every one of them splicing into the original range.
+ */
+const insertImages = async (
+    files: File[],
     range: { start: number; end: number },
 ) => {
     if (!onImageUpload) return;
 
-    const url = await onImageUpload(file);
+    let target = range;
 
-    setBody((current) => {
-        const result = insertMarkdownImage(current, range, file, url);
+    for (const file of files) {
+        const at = target;
 
-        setMentionRanges((prev) =>
-            applyRangeEdit(prev, range.start, range.end, result.length),
-        );
-        setPendingCaret(result.caret);
+        try {
+            const url = await onImageUpload(file);
 
-        return result.body;
-    });
+            setBody((current) => {
+                const result = insertMarkdownImage(current, at, file, url);
+
+                setMentionRanges((prev) =>
+                    applyRangeEdit(prev, at.start, at.end, result.length),
+                );
+                setPendingCaret(result.caret);
+
+                return result.body;
+            });
+
+            target = nextImageRange(at, file, url);
+        } catch {
+            // The uploader already reported the failure to the user; the
+            // remaining files in this batch still get their turn.
+        }
+    }
 };
 ```
 
@@ -168,7 +209,7 @@ const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
         // runs for a paste we've prevented.
         editRangeRef.current = null;
 
-        files.forEach((file) => void insertImage(file, { start, end }));
+        void insertImages(files, { start, end });
 
         return;
     }
@@ -185,9 +226,7 @@ const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
     const caret = e.currentTarget.selectionStart;
 
-    files.forEach(
-        (file) => void insertImage(file, { start: caret, end: caret }),
-    );
+    void insertImages(files, { start: caret, end: caret });
 };
 ```
 
@@ -195,7 +234,7 @@ wraz z `onDrop={handleDrop}` na `TextArea`. Przejście do `captureEditRange`, gd
 
 Upuszczenie na textareę nie przesuwa najpierw kursora, więc punktem wstawienia jest miejsce, w którym kursor już był — w odróżnieniu od powierzchni Tiptapa nie ma tu odpowiednika `posAtCoords()`, po który warto by sięgać.
 
-`files.forEach` odpala uploady równolegle i każdy wkleja się niezależnie. Jest to bezpieczne **tylko** dlatego, że każde wywołanie `setBody`/`setMentionRanges` to aktualizacja funkcyjna czytająca najświeższy stan; nigdy nie wciągaj `body` do domknięcia.
+**Wysyłaj wsad sekwencyjnie, a nie przez `files.forEach`.** Odpalenie uploadów równolegle i pozwolenie każdemu wkleić się niezależnie wygląda w porządku — każde wywołanie `setBody`/`setMentionRanges` to aktualizacja funkcyjna czytająca najświeższy stan — ale *zakres* przechwycony przez każdy z nich jest ten pierwotny. Dwa wklejone obrazy wstawiają się więc w tym samym punkcie, czyli lądują w odwrotnej kolejności, a na zaznaczeniu drugi przecina markdown, który zapisał już pierwszy. Oczekiwanie na każdy plik po kolei i przesuwanie się przez `nextImageRange()` jest tym, co utrzymuje ich kolejność. Nadal nigdy nie wciągaj `body` do domknięcia: wklejenie musi czytać najświeższy stan, bo użytkownik może pisać między uploadami.
 
 ### Krok 4 — Edycja istniejącego komentarza
 
@@ -204,36 +243,44 @@ Plik: `resources/js/Components/Atoms/EditableText/EditableText.tsx`
 Istniejący komentarz edytuje się przez `EditableText` w trybie `multiline`, więc obsługa uploadu mieszka w tym atomie, a nie w `CommentItem` — co oznacza też, że każdy inny wielolinijkowy `EditableText` dostaje ją po przekazaniu jednego propa.
 
 ```tsx
-const insertImage = async (
-    file: File,
+const insertImages = async (
+    files: File[],
     range: { start: number; end: number },
 ) => {
     if (!onImageUpload) return;
 
-    pendingUploadsRef.current += 1;
+    pendingUploadsRef.current += files.length;
 
-    try {
-        const url = await onImageUpload(file);
+    let target = range;
 
-        setDraft((current) => {
-            const result = insertMarkdownImage(current, range, file, url);
+    for (const file of files) {
+        const at = target;
 
-            setPendingCaret(result.caret);
+        try {
+            const url = await onImageUpload(file);
 
-            return result.body;
-        });
-    } catch {
-        // The uploader already reported the failure to the user.
-    } finally {
-        pendingUploadsRef.current = Math.max(
-            0,
-            pendingUploadsRef.current - 1,
-        );
+            setDraft((current) => {
+                const result = insertMarkdownImage(current, at, file, url);
+
+                setPendingCaret(result.caret);
+
+                return result.body;
+            });
+
+            target = nextImageRange(at, file, url);
+        } catch {
+            // The uploader already reported the failure to the user.
+        } finally {
+            pendingUploadsRef.current = Math.max(
+                0,
+                pendingUploadsRef.current - 1,
+            );
+        }
     }
 };
 ```
 
-`handlePaste`/`handleDrop` mają ten sam kształt co w `CommentForm`, tyle że bez księgowania wzmianek, i są podpięte na wielolinijkowej `TextArea` obok istniejącego `onBlur={commit}`.
+`handlePaste`/`handleDrop` mają ten sam kształt co w `CommentForm`, tyle że bez księgowania wzmianek, i są podpięte na wielolinijkowej `TextArea` obok istniejącego `onBlur={commit}`. Zwróć uwagę, że licznik jest podnoszony z góry o cały wsad, więc ochrona przed blurem poniżej obowiązuje przez całą sekwencję, a nie tylko dla pliku aktualnie w locie.
 
 **Pułapka, identyczna jak ta w Tiptapie:** `EditableText` zatwierdza przy blurze. Utrata fokusu w trakcie uploadu uruchomiłaby `commit()`, wyszła z trybu edycji i zapisała draft w stanie sprzed wstawienia — a obraz zostałby potem wklejony do drafta, którego nikt nie edytuje, i nigdy nie zapisany. Stąd:
 
@@ -318,31 +365,40 @@ const descriptionRef = useRef<HTMLTextAreaElement>(null);
 ### Krok B2 — Wklejanie i upuszczanie na textarei opisu
 
 ```tsx
-const insertImage = async (
-    file: File,
+const insertImages = async (
+    files: File[],
     range: { start: number; end: number },
 ) => {
-    try {
-        const url = await uploadImage(file);
+    let target = range;
 
-        setDescription((current) => {
-            const result = insertMarkdownImage(current, range, file, url);
+    for (const file of files) {
+        const at = target;
 
-            // This component has no pendingCaret effect the way CommentForm
-            // does, and needs none for a single field - the textarea is
-            // still mounted, it just lost its selection to the re-render.
-            requestAnimationFrame(() => {
-                descriptionRef.current?.focus();
-                descriptionRef.current?.setSelectionRange(
-                    result.caret,
-                    result.caret,
-                );
+        try {
+            const url = await uploadImage(file);
+
+            setDescription((current) => {
+                const result = insertMarkdownImage(current, at, file, url);
+
+                // This component has no pendingCaret effect the way
+                // CommentForm does, and needs none for a single field - the
+                // textarea is still mounted, it just lost its selection to
+                // the re-render.
+                requestAnimationFrame(() => {
+                    descriptionRef.current?.focus();
+                    descriptionRef.current?.setSelectionRange(
+                        result.caret,
+                        result.caret,
+                    );
+                });
+
+                return result.body;
             });
 
-            return result.body;
-        });
-    } catch {
-        // The uploader already reported the failure to the user.
+            target = nextImageRange(at, file, url);
+        } catch {
+            // The uploader already reported the failure to the user.
+        }
     }
 };
 
@@ -357,7 +413,7 @@ const handleDescriptionPaste = (
 
     const { selectionStart: start, selectionEnd: end } = e.currentTarget;
 
-    files.forEach((file) => void insertImage(file, { start, end }));
+    void insertImages(files, { start, end });
 };
 
 const handleDescriptionDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
@@ -369,9 +425,7 @@ const handleDescriptionDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
 
     const caret = e.currentTarget.selectionStart;
 
-    files.forEach(
-        (file) => void insertImage(file, { start: caret, end: caret }),
-    );
+    void insertImages(files, { start: caret, end: caret });
 };
 ```
 
@@ -392,7 +446,7 @@ i na istniejącym polu opisu:
 
 `requestAnimationFrame` zastępuje tu efekt `pendingCaret` z `CommentForm` — ten komponent nie ma takiego mechanizmu i nie potrzebuje ogólnego rozwiązania dla jednego pola.
 
-`uploadImage` sam już pokazuje toast i rzuca dalej przy błędzie, więc tutejszy `catch` jest celowo pusty, a promisa `insertImage` zostaje bez `await` (`void`): odrzucony upload został już pokazany użytkownikowi, a opis zostaje dokładnie taki, jaki był.
+`uploadImage` sam już pokazuje toast i rzuca dalej przy błędzie, więc tutejszy `catch` jest celowo pusty, a promisa `insertImages` zostaje bez `await` (`void`): odrzucony upload został już pokazany użytkownikowi, opis zostaje dokładnie taki, jaki był, a reszta wsadu i tak dostaje swoją kolej.
 
 Nie ma tu żadnej ochrony przed blurem, w odróżnieniu od tej w `EditableText`: ten formularz zapisuje się jawnym przyciskiem „Add template"/„Save", więc utrata fokusu w trakcie uploadu niczego nie zatwierdza.
 
@@ -408,8 +462,8 @@ Modal renderuje formularz tylko wtedy, gdy `canManageTemplates` jest prawdą, co
 
 Pokrycie Części A już istnieje i to na nim należy wzorować nową powierzchnię:
 
-- `resources/js/utils/imagePaste.test.ts` — `insertMarkdownImage` przy zwiniętym kursorze, na zaznaczonym zakresie i na pustej treści, plus round-trip asercujący, że to, co produkuje, `splitMarkdownImages` parsuje z powrotem; oraz sam `splitMarkdownImages`: brak obrazu, pusta treść, tekst dookoła obrazu, dwa obrazy pod rząd z pustym altem i dwa przypadki negatywne trzymające parser w ryzach (zwykły `[link](url)` i proza, która jedynie zawiera nawiasy).
-- `resources/js/Components/Molecules/CommentForm/CommentForm.test.tsx` — wklejenie uploaduje i wysyła link markdown; **regresja wzmianek**: mając już wybraną wzmiankę, wklej obraz *przed* nią i asercuj, że wysyłana treść dalej niesie `@[Jane Cooper](1)`, a `mentioned_user_ids` dalej niesie to id; upuszczenie w kursorze; oraz wklejenie zostawione przeglądarce zarówno wtedy, gdy nie ma uploadera, jak i wtedy, gdy w schowku nie ma obrazu (`defaultPrevented === false`).
+- `resources/js/utils/imagePaste.test.ts` — `insertMarkdownImage` przy zwiniętym kursorze, na zaznaczonym zakresie i na pustej treści, plus round-trip asercujący, że to, co produkuje, `splitMarkdownImages` parsuje z powrotem; `markdownImageAlt` usuwające znaki łamiące link i spadające na `image`, gdy nie zostaje nic użytecznego; `nextImageRange` zgodne z kursorem raportowanym przez `insertMarkdownImage` i sklejające wsad w kolejności; oraz sam `splitMarkdownImages`: brak obrazu, pusta treść, tekst dookoła obrazu, dwa obrazy pod rząd z pustym altem i dwa przypadki negatywne trzymające parser w ryzach (zwykły `[link](url)` i proza, która jedynie zawiera nawiasy).
+- `resources/js/Components/Molecules/CommentForm/CommentForm.test.tsx` — wklejenie uploaduje i wysyła link markdown; **regresja wzmianek**: mając już wybraną wzmiankę, wklej obraz *przed* nią i asercuj, że wysyłana treść dalej niesie `@[Jane Cooper](1)`, a `mentioned_user_ids` dalej niesie to id; upuszczenie w kursorze; wklejenie dwóch obrazów naraz lądujące w kolejności, na zaznaczeniu zastępujące je dokładnie raz, oraz nieudany pierwszy upload niezatrzymujący drugiego; a także wklejenie zostawione przeglądarce zarówno wtedy, gdy nie ma uploadera, jak i wtedy, gdy w schowku nie ma obrazu (`defaultPrevented === false`).
 - `resources/js/Components/Atoms/EditableText/EditableText.test.tsx` — wklejenie w kursorze, wklejenie zastępujące zaznaczenie, upuszczenie, nieudany upload zostawiający draft nietknięty, wklejenie bez uploadera oraz blur w trakcie trwającego uploadu, który ani nie zatwierdza, ani nie gubi obrazu.
 - `resources/js/Components/Molecules/CommentItem/CommentItem.test.tsx` — treść z obrazem renderuje `<img>`, a nie dosłowny markdown, obraz linkuje do pliku bez rozpoczynania edycji, a wzmianki dalej renderują się obok niego.
 - `resources/js/Components/Molecules/CommentList/CommentList.test.tsx` — jeden przypadek integracyjny dowodzący, że prop faktycznie dociera do textarei edycji, skoro `CommentList`/`CommentItem` tylko go przekazują.

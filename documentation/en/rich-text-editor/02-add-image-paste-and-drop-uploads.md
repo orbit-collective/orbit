@@ -44,7 +44,12 @@ and a comment, so there is no reliable owner to hang a foreign key
 off. The project is the permission boundary that actually matters —
 it is what the upload endpoint authorizes against — and it is what
 makes `cascadeOnDelete()` correct: deleting a project takes its
-uploads with it.
+uploads with it. The cascade only clears the rows, though: a database
+cascade never runs an Eloquent delete, so
+`ProjectService::deleteProject()` also has to purge the project's
+files with
+`Storage::disk('public')->deleteDirectory("attachments/$projectId")`,
+or they stay on a public disk with nothing describing them.
 
 `disk` and `path` are stored next to `url` so a file can still be
 deleted (or moved to another disk later) without parsing the public
@@ -156,15 +161,24 @@ class AttachmentService
     {
         $path = $file->store("attachments/{$project->id}", 'public');
 
-        return $this->attachmentRepository->create($project, [
-            'user_id' => $uploader->id,
-            'disk' => 'public',
-            'path' => $path,
-            'url' => Storage::url($path),
-            'original_name' => $file->getClientOriginalName(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-        ]);
+        try {
+            return $this->attachmentRepository->create($project, [
+                'user_id' => $uploader->id,
+                'disk' => 'public',
+                'path' => $path,
+                'url' => Storage::url($path),
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+            ]);
+        } catch (Throwable $e) {
+            // The file is written before the row exists, so a failed insert
+            // would otherwise leave an untracked file on a public disk with
+            // nothing left pointing at it.
+            Storage::disk('public')->delete($path);
+
+            throw $e;
+        }
     }
 
     public function delete(Attachment $attachment): void
@@ -526,7 +540,10 @@ const insertImages = async (files: File[], at?: number) => {
                 .focus()
                 .insertContentAt(target, {
                     type: 'image',
-                    attrs: { src: url, alt: file.name },
+                    // Serialized back out as `![alt](src)`, so the alt has
+                    // to survive the round trip the same way a textarea
+                    // surface's does.
+                    attrs: { src: url, alt: markdownImageAlt(file.name) },
                 })
                 .run();
 
@@ -550,8 +567,10 @@ const insertImages = async (files: File[], at?: number) => {
 `insertContentAt` with `{ type: 'image' }` needs the `Image`
 extension that is already in the extension list; nothing new is
 registered. `tiptap-markdown` serializes that node to
-`![alt](url)`, so the saved column stays plain markdown and the
-alt text is the original filename.
+`![alt](url)`, so the saved column stays plain markdown and the alt
+text is the original filename — put through `markdownImageAlt()`
+first, since a name like `screen](old).png` would otherwise close the
+link early and leave a body that no longer parses as an image.
 
 ### Clicking a rendered image opens it
 
