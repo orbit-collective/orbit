@@ -2,6 +2,8 @@ import { describe, expect, test } from 'vitest';
 import {
     extractImageFiles,
     insertMarkdownImage,
+    markdownImage,
+    nextImageRange,
     splitMarkdownImages,
 } from './imagePaste';
 
@@ -181,5 +183,47 @@ describe('insertMarkdownImage', () => {
             { type: 'text', value: 'See: ' },
             { type: 'image', value: 'shot.png', url: '/storage/a.png' },
         ]);
+    });
+});
+
+describe('nextImageRange', () => {
+    const file = imageFile('shot.png');
+
+    test('collapses to a point right after the image just inserted', () => {
+        const range = { start: 4, end: 9 };
+        const url = '/storage/a.png';
+
+        const next = nextImageRange(range, file, url);
+        const caret = 4 + markdownImage(file, url).length;
+
+        expect(next).toEqual({ start: caret, end: caret });
+    });
+
+    test('agrees with the caret insertMarkdownImage reports', () => {
+        const range = { start: 3, end: 3 };
+        const url = '/storage/a.png';
+
+        const result = insertMarkdownImage('Body', range, file, url);
+
+        expect(nextImageRange(range, file, url).start).toBe(result.caret);
+    });
+
+    test('chaining it inserts a batch in order', () => {
+        const first = imageFile('one.png');
+        const second = imageFile('two.png');
+        let body = 'Start ';
+        let range = { start: 6, end: 6 };
+
+        for (const [file, url] of [
+            [first, '/storage/1.png'],
+            [second, '/storage/2.png'],
+        ] as const) {
+            body = insertMarkdownImage(body, range, file, url).body;
+            range = nextImageRange(range, file, url);
+        }
+
+        expect(body).toBe(
+            'Start ![one.png](/storage/1.png)![two.png](/storage/2.png)',
+        );
     });
 });
