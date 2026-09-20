@@ -58,6 +58,16 @@ class IssueRepository
     }
 
     /**
+     * Scoped by project_id at the query level (not "find then compare") so a
+     * caller can never accidentally resolve an issue belonging to a
+     * different project just by getting the scoping check wrong.
+     */
+    public function findForProject(int $id, int $projectId): ?Issue
+    {
+        return Issue::query()->where('project_id', $projectId)->find($id);
+    }
+
+    /**
      * Bulk-create primitive: loops the existing store() per row rather than a
      * raw insert(), so Eloquent casts/model events still run per issue (e.g.
      * the labels enum-array cast) - correctness over a single fast query.
