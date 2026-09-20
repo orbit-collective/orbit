@@ -40,4 +40,8 @@ return [
         'url' => env('NSFW_SERVICE_URL', 'http://nsfwjs:3333'),
         'threshold' => (float) env('NSFW_THRESHOLD', 0.70),
     ],
+
+    'orbit_api' => [
+        'url' => env('ORBIT_API_URL', 'https://api.orbit-dev.app'),
+    ],
 ];
