@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\IssueStatus;
+use App\Models\ExternalIssueLink;
 use App\Models\Issue;
 use App\Models\IssueType;
 use App\Models\Label;
@@ -43,15 +44,18 @@ class IssueController extends Controller
 
         $this->authorize('view', $issue);
 
+        $issueWithRelations = $this->issueService->getIssueWithRelations($issue->id);
+
         return Inertia::render('Issues/Show', [
             'project' => $project,
             'projects' => $this->projectService->getAllForUser($request->user()->id),
-            'issue' => $this->issueService->getIssueWithRelations($issue->id),
+            'issue' => $issueWithRelations,
             'users' => $this->userService->getAssignableUsersForProject($project->id),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
             'nextIssueId' => $this->issueService->peekNextIssueId(),
             'ancestors' => $this->issueService->ancestorsOf($issue)->values(),
+            'linkedPullRequests' => $this->mapLinkedPullRequests($issueWithRelations->externalLinks),
         ]);
     }
 
@@ -64,6 +68,21 @@ class IssueController extends Controller
             'description' => $label->description,
             'isSystem' => $label->is_system,
         ])->values()->all();
+    }
+
+    /**
+     * @return array<int, array{label: string, url: string}>
+     */
+    private function mapLinkedPullRequests(Collection $externalLinks): array
+    {
+        return $externalLinks
+            ->where('external_type', 'github_pull_request')
+            ->map(fn (ExternalIssueLink $link) => [
+                'label' => str_replace('#', ' #', $link->external_key),
+                'url' => $link->external_url,
+            ])
+            ->values()
+            ->all();
     }
 
     public function update(Request $request, Issue $issue): RedirectResponse

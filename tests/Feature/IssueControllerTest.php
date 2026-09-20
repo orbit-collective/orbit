@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\ExternalIssueLink;
 use App\Models\Issue;
 use App\Models\Project;
+use App\Models\ProjectIntegration;
 use App\Models\User;
 use App\Services\IssueTypeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,6 +42,43 @@ test('an issue detail page can be viewed', function () {
     expect($page['component'])->toBe('Issues/Show')
         ->and($page['props']['issue']['id'])->toBe($issue->id)
         ->and($page['props'])->toHaveKeys(['project', 'projects', 'users']);
+});
+
+test('a linked github pull request is exposed as a friendly label and url', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_repository_owner' => 'orbit-collective',
+        'github_repository_name' => 'orbit',
+    ]);
+
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '4580098240',
+        'external_key' => 'orbit-collective/orbit#283',
+        'external_url' => 'https://github.com/orbit-collective/orbit/pull/283',
+        'external_type' => 'github_pull_request',
+    ]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    $response->assertOk();
+    $page = json_decode($response->getContent(), true);
+
+    expect($page['props']['linkedPullRequests'])->toBe([
+        ['label' => 'orbit-collective/orbit #283', 'url' => 'https://github.com/orbit-collective/orbit/pull/283'],
+    ]);
 });
 
 test('guests cannot view an issue detail page', function () {

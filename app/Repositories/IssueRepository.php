@@ -35,7 +35,7 @@ class IssueRepository
                 'creator', 'assignee', 'project', 'comments.user',
                 'issueType.statuses', 'issueType.transitions', 'issueType.allowedChildTypes',
                 'issueType.fields' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-                'workflowStatus', 'parent',
+                'workflowStatus', 'parent', 'externalLinks',
                 'children' => fn ($query) => $query->with(['assignee', 'issueType', 'workflowStatus']),
             ])
             ->findOrFail($id);

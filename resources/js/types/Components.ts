@@ -15,6 +15,7 @@ import {
     IssueLabel,
     IssuePageLooks,
     IssuePriority,
+    LinkedPullRequest,
     ProductivityTrendProps,
     Sorting,
     SortingColumn,
@@ -572,6 +573,7 @@ export interface IssuePageProps {
     issueTypes?: IssueType[];
     nextIssueId?: number | null;
     ancestors?: Issue[];
+    linkedPullRequests?: LinkedPullRequest[];
 }
 export interface IssuePageHeaderProps {
     project: Project;

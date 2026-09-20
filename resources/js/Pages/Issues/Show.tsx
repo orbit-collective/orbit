@@ -11,6 +11,7 @@ import CommentList from '@/Components/Molecules/CommentList/CommentList';
 import EditableLabelList from '@/Components/Molecules/EditableLabelList/EditableLabelList';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import IssueCustomField from '@/Components/Molecules/IssueCustomField/IssueCustomField';
+import LinkedPullRequest from '@/Components/Molecules/LinkedPullRequest/LinkedPullRequest';
 import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import IssueChildrenPanel from '@/Components/Organisms/IssueChildrenPanel/IssueChildrenPanel';
@@ -37,6 +38,7 @@ export default function Show({
     labels = [],
     issueTypes = [],
     ancestors = [],
+    linkedPullRequests = [],
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
@@ -423,6 +425,19 @@ export default function Show({
                                         {project.name}
                                     </Link>
                                 </SidebarField>
+
+                                {linkedPullRequests.length > 0 && (
+                                    <SidebarField label="GitHub">
+                                        <div className="flex flex-col items-start gap-1">
+                                            {linkedPullRequests.map((pr) => (
+                                                <LinkedPullRequest
+                                                    key={pr.url}
+                                                    pullRequest={pr}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SidebarField>
+                                )}
 
                                 <SidebarField label="Dates">
                                     <div className="flex items-center gap-1">
