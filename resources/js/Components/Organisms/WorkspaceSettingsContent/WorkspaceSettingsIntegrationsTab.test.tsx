@@ -290,6 +290,74 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         ).not.toBeInTheDocument();
     });
 
+    describe('GitHub connect flow', () => {
+        test('opens a blank tab synchronously, then navigates it to the install url once the request succeeds', async () => {
+            const fakeTab = { location: { href: '' }, close: vi.fn() };
+            const openSpy = vi
+                .spyOn(window, 'open')
+                .mockReturnValue(fakeTab as unknown as Window);
+
+            renderTab({
+                memberProjects: [projectA],
+                selectedProjectId: projectA.id,
+                hasIntegrationsAccess: true,
+                canUpdateIntegrations: true,
+                githubConnectStatus: {
+                    status: 'not_connected',
+                    installUrl:
+                        'https://github.com/apps/orbit/installations/new?state=xyz',
+                    repository: null,
+                    connectedAt: null,
+                },
+            });
+
+            const toggles = screen.getAllByRole('button', { name: '' });
+            await userEvent.click(toggles[5]);
+
+            // window.open must be called before router.post resolves - not
+            // after - or the browser treats it as an unrelated popup and
+            // blocks it.
+            expect(openSpy).toHaveBeenCalledWith(
+                '',
+                '_blank',
+                'noopener,noreferrer',
+            );
+            expect(mockRouterPost).toHaveBeenCalledWith(
+                '/projects.integrations.github.connect/1',
+                {},
+                expect.objectContaining({ preserveScroll: true }),
+            );
+            expect(fakeTab.location.href).toBe(
+                'https://github.com/apps/orbit/installations/new?state=xyz',
+            );
+
+            openSpy.mockRestore();
+        });
+
+        test('shows an error and never sends the request when the popup is blocked', async () => {
+            const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+
+            renderTab({
+                memberProjects: [projectA],
+                selectedProjectId: projectA.id,
+                hasIntegrationsAccess: true,
+                canUpdateIntegrations: true,
+            });
+
+            const toggles = screen.getAllByRole('button', { name: '' });
+            await userEvent.click(toggles[5]);
+
+            expect(
+                await screen.findByText(
+                    /Your browser blocked the GitHub install tab/,
+                ),
+            ).toBeInTheDocument();
+            expect(mockRouterPost).not.toHaveBeenCalled();
+
+            openSpy.mockRestore();
+        });
+    });
+
     describe('Jira import live progress toast', () => {
         const jiraSettings = {
             hasCredentials: true,

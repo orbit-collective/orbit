@@ -397,6 +397,21 @@ export default function WorkspaceSettingsIntegrationsTab({
     const connectGithub = () => {
         if (!selectedProject) return;
 
+        // Opened synchronously, still inside the click handler, so it's tied
+        // to the user gesture and not blocked as a popup - the install URL
+        // isn't known yet at this point, only after the POST below resolves,
+        // so this tab starts blank and gets navigated once it is.
+        const installTab = window.open('', '_blank', 'noopener,noreferrer');
+
+        if (!installTab) {
+            addAlert(
+                'Your browser blocked the GitHub install tab. Allow pop-ups for this site and try again.',
+                'error',
+            );
+
+            return;
+        }
+
         router.post(
             route('projects.integrations.github.connect', [selectedProject.id]),
             {},
@@ -407,16 +422,15 @@ export default function WorkspaceSettingsIntegrationsTab({
                     const installUrl = githubStatusRef.current?.installUrl;
 
                     if (installUrl) {
-                        window.open(
-                            installUrl,
-                            '_blank',
-                            'noopener,noreferrer',
-                        );
+                        installTab.location.href = installUrl;
+                    } else {
+                        installTab.close();
                     }
 
                     startGithubPolling();
                 },
                 onError: () => {
+                    installTab.close();
                     addAlert('Failed to connect to GitHub.', 'error');
                 },
             },
