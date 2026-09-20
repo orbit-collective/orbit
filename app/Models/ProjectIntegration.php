@@ -16,6 +16,7 @@ class ProjectIntegration extends Model
         'options',
         'credentials',
         'github_connection_id',
+        'github_install_url',
         'github_relay_token',
         'github_status',
         'github_installation_id',
