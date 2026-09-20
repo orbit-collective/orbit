@@ -9,6 +9,7 @@ use App\Models\Permission as PermissionModel;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Integrations\Github\GithubIntegrationService;
 use App\Services\Integrations\Jira\JiraIntegrationService;
 use App\Services\IssueTypeService;
 use App\Services\LabelService;
@@ -61,6 +62,7 @@ class SettingsController extends Controller
         protected PermissionService $permissionService,
         protected ProjectIntegrationService $projectIntegrationService,
         protected JiraIntegrationService $jiraIntegrationService,
+        protected GithubIntegrationService $githubIntegrationService,
         protected LabelService $labelService,
         protected IssueTypeService $issueTypeService,
     ) {}
@@ -237,6 +239,11 @@ class SettingsController extends Controller
             // why it must not also re-fetch Jira's live mapping metadata).
             'jiraImportProgress' => $canUpdateIntegrations
                 ? $this->jiraIntegrationService->getImportProgress($selectedProject)
+                : null,
+            // Gated on view access (not update) since a read-only viewer is
+            // still allowed to see which repository is connected.
+            'githubConnectStatus' => $hasIntegrationsAccess
+                ? $this->githubIntegrationService->getConnectStatus($selectedProject)
                 : null,
             // Only the import mapping UI reads these, and that is gated on
             // being able to change the integration in the first place.
