@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.9.0](https://github.com/orbit-collective/orbit/compare/v0.8.3...v0.9.0) (2026-09-20)
+
+
+### Features
+
+* **env:** add ORBIT_API_URL configuration ([ea284a7](https://github.com/orbit-collective/orbit/commit/ea284a7a8dacf90464c95dd5f48ee54d50a5162c))
+* **github:** add connect UI ([7219dd0](https://github.com/orbit-collective/orbit/commit/7219dd04c6a2fc9c1ba57d56635cb4c8cdf7ba69))
+* **github:** add connection service ([a59747e](https://github.com/orbit-collective/orbit/commit/a59747ec7cef7912ff974363187f0631839bcfb5))
+* **github:** add local connection storage ([53a9569](https://github.com/orbit-collective/orbit/commit/53a95691346337126663ec91a5eecfcd8b61d90a))
+* **github:** add relay api client ([0470988](https://github.com/orbit-collective/orbit/commit/0470988471dc6f87c9a2f9d8ca2ebf8dc513cba1))
+* **github:** expose connect status to settings ([85b882b](https://github.com/orbit-collective/orbit/commit/85b882b846bcc55b90fc967e606369502b4ed86a))
+* **github:** parse issue markers ([f599410](https://github.com/orbit-collective/orbit/commit/f5994106f873240d1d27450a0316baa10821c77d))
+* **github:** poll relay events ([368fdd8](https://github.com/orbit-collective/orbit/commit/368fdd8f47e36a71eeb07eb212aad5633bb36c6d))
+* **github:** process relay events ([c04af79](https://github.com/orbit-collective/orbit/commit/c04af79e0e0d8d6bd9c808a9d20d0dc217a3d480))
+* **github:** resolve linked issues ([7bdf8c9](https://github.com/orbit-collective/orbit/commit/7bdf8c98b33bd02a3c2dd2655f92f26a954fdf43))
+* **github:** run the scheduler in its own docker compose service ([fa93f64](https://github.com/orbit-collective/orbit/commit/fa93f64399891f28db2eeca59365a3cd8796f07e))
+* **github:** show linked pull requests ([37d85a2](https://github.com/orbit-collective/orbit/commit/37d85a2bb070bb1b8ed68d79101406d774dd3b12))
+* **github:** wire connect and disconnect routes ([0aaa8e5](https://github.com/orbit-collective/orbit/commit/0aaa8e5545deabb11bba26ab81638f197b8ec10c))
+
+
+### Bug Fixes
+
+* **github:** default ORBIT_API_URL in docker-compose when unset ([352b0c5](https://github.com/orbit-collective/orbit/commit/352b0c52a20e7ca4db2e6a9c79d66404d05912af))
+* **github:** open install tab synchronously to avoid popup blocking ([63d2561](https://github.com/orbit-collective/orbit/commit/63d2561c77180b0e3b0977938a02f6f0c63557fc))
+
 ## [0.8.3](https://github.com/orbit-collective/orbit/compare/v0.8.2...v0.8.3) (2026-09-17)
 
 
