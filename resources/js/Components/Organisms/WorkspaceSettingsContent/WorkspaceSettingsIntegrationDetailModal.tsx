@@ -9,12 +9,14 @@ import { IntegrationDefinition } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import {
+    GithubConnectStatus,
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
     ProjectIntegrationSettings,
 } from '@/types/ProjectIntegrations';
 import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
 import { useEffect, useState } from 'react';
+import WorkspaceSettingsGithubConnectPanel from './WorkspaceSettingsGithubConnectPanel';
 import WorkspaceSettingsImportPanel from './WorkspaceSettingsImportPanel';
 import WorkspaceSettingsIntegrationPreview from './WorkspaceSettingsIntegrationPreview';
 
@@ -24,6 +26,7 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     canUpdate: boolean;
     settings: ProjectIntegrationSettings | null;
     importSettings: ImportIntegrationSettings | null;
+    githubStatus: GithubConnectStatus | null;
     issueTypes?: IssueType[];
     labels?: ProjectLabel[];
     onToggle: (enabled: boolean) => void;
@@ -32,6 +35,8 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     onConnectImport: (credentials: Record<string, string>) => void;
     onSaveImportMappings: (mappings: IntegrationFieldMappingDraft[]) => void;
     onTriggerImport: (projectKey: string, syncExisting: boolean) => void;
+    onConnectGithub: () => void;
+    onDisconnectGithub: () => void;
     onClose: () => void;
 }
 
@@ -41,6 +46,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     canUpdate,
     settings,
     importSettings,
+    githubStatus,
     issueTypes = [],
     labels = [],
     onToggle,
@@ -49,6 +55,8 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     onConnectImport,
     onSaveImportMappings,
     onTriggerImport,
+    onConnectGithub,
+    onDisconnectGithub,
     onClose,
 }: WorkspaceSettingsIntegrationDetailModalProps) {
     const [webhookUrlDraft, setWebhookUrlDraft] = useState(
@@ -74,6 +82,10 @@ export default function WorkspaceSettingsIntegrationDetailModal({
             : enabled
               ? 'Connected'
               : 'Connect';
+    // 'github' has no generic enabled/disabled boolean to toggle from here -
+    // connecting/disconnecting is a real GitHub App installation flow, owned
+    // entirely by the panel below. The header just reflects that status.
+    const githubConnected = githubStatus?.status === 'connected';
 
     return (
         <Modal isOpen={!!integration} onClose={onClose} size="md">
@@ -121,6 +133,16 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--bg-light-color)] px-3 py-1.5 text-sm text-[var(--text-gray-color)]">
                             <Icon name="Lock" size={14} />
                             Coming soon
+                        </span>
+                    ) : integration.kind === 'github' ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--bg-light-color)] px-3 py-1.5 text-sm text-[var(--text-gray-color)]">
+                            <Icon
+                                name={
+                                    githubConnected ? 'CircleCheck' : 'Circle'
+                                }
+                                size={14}
+                            />
+                            {githubConnected ? 'Connected' : 'Not connected'}
                         </span>
                     ) : canUpdate ? (
                         <button
@@ -276,6 +298,15 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         onConnect={onConnectImport}
                         onSaveMappings={onSaveImportMappings}
                         onImport={onTriggerImport}
+                    />
+                )}
+
+                {showConfiguration && integration.kind === 'github' && (
+                    <WorkspaceSettingsGithubConnectPanel
+                        canUpdate={canUpdate}
+                        status={githubStatus}
+                        onConnect={onConnectGithub}
+                        onDisconnect={onDisconnectGithub}
                     />
                 )}
             </div>

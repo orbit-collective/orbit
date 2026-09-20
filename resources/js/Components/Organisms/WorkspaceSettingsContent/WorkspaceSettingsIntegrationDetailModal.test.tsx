@@ -41,6 +41,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -62,6 +65,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -98,6 +104,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -121,6 +130,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -142,6 +154,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -165,6 +180,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -191,6 +209,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -214,6 +235,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -250,6 +274,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -276,6 +303,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -297,6 +327,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -319,6 +352,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -346,6 +382,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={noop}
             />,
         );
@@ -369,6 +408,9 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 onConnectImport={noop}
                 onSaveImportMappings={noop}
                 onTriggerImport={noop}
+                githubStatus={null}
+                onConnectGithub={noop}
+                onDisconnectGithub={noop}
                 onClose={onClose}
             />,
         );

@@ -11,6 +11,7 @@ import {
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import {
+    GithubConnectStatus,
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
     IntegrationImportProgress,
@@ -34,6 +35,7 @@ interface WorkspaceSettingsIntegrationsTabProps {
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
     jiraSettings?: ImportIntegrationSettings | null;
     jiraImportProgress?: IntegrationImportProgress | null;
+    githubConnectStatus?: GithubConnectStatus | null;
     issueTypes?: IssueType[];
     labels?: ProjectLabel[];
     hasIntegrationsAccess?: boolean;
@@ -53,6 +55,10 @@ const IMPORT_ROUTE_NAMES: Partial<
 
 /** How often the "Importing…" toast polls jiraImportProgress while a run is in flight. */
 const IMPORT_POLL_INTERVAL_MS = 1500;
+
+/** How often the GitHub panel polls for a pending connection to finish, and for how long before giving up. */
+const GITHUB_POLL_INTERVAL_MS = 2000;
+const GITHUB_POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
 function describeImportCounts(progress: {
     imported: number;
@@ -76,6 +82,7 @@ export default function WorkspaceSettingsIntegrationsTab({
     integrationSettings = {},
     jiraSettings = null,
     jiraImportProgress = null,
+    githubConnectStatus = null,
     issueTypes = [],
     labels = [],
     hasIntegrationsAccess = false,
@@ -141,6 +148,61 @@ export default function WorkspaceSettingsIntegrationsTab({
             );
         }
     }, [jiraImportProgress, addAlert, removeAlert, updateAlert]);
+
+    // Always holds the latest githubConnectStatus, readable from inside a
+    // router.post onSuccess callback: that callback closes over the props
+    // from the render it was created in (the click), but Inertia has
+    // already swapped in fresh page props (and thus re-run this render,
+    // updating this ref) by the time onSuccess actually fires.
+    const githubStatusRef = useRef(githubConnectStatus);
+    githubStatusRef.current = githubConnectStatus;
+
+    const githubPollTimerRef = useRef<ReturnType<typeof setInterval> | null>(
+        null,
+    );
+    const githubPollDeadlineRef = useRef<number | null>(null);
+
+    const stopGithubPolling = () => {
+        if (githubPollTimerRef.current !== null) {
+            clearInterval(githubPollTimerRef.current);
+            githubPollTimerRef.current = null;
+        }
+    };
+
+    useEffect(() => stopGithubPolling, []);
+
+    const startGithubPolling = () => {
+        stopGithubPolling();
+        githubPollDeadlineRef.current = Date.now() + GITHUB_POLL_TIMEOUT_MS;
+
+        githubPollTimerRef.current = setInterval(() => {
+            if (
+                githubPollDeadlineRef.current !== null &&
+                Date.now() > githubPollDeadlineRef.current
+            ) {
+                stopGithubPolling();
+
+                return;
+            }
+
+            // 'flash' included for the same reason as the Jira import poll
+            // above - see that call's comment.
+            router.reload({ only: ['githubConnectStatus', 'flash'] });
+        }, GITHUB_POLL_INTERVAL_MS);
+    };
+
+    // Resumes polling on a fresh page load if a connection was left
+    // "pending" (e.g. the user navigated away and came back), and stops it
+    // once the status leaves "pending" either way.
+    useEffect(() => {
+        if (githubConnectStatus?.status === 'pending') {
+            if (githubPollTimerRef.current === null) {
+                startGithubPolling();
+            }
+        } else {
+            stopGithubPolling();
+        }
+    }, [githubConnectStatus?.status]);
 
     const selectedProject =
         memberProjects.find((project) => project.id === selectedProjectId) ??
@@ -332,6 +394,55 @@ export default function WorkspaceSettingsIntegrationsTab({
         );
     };
 
+    const connectGithub = () => {
+        if (!selectedProject) return;
+
+        router.post(
+            route('projects.integrations.github.connect', [selectedProject.id]),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    const installUrl = githubStatusRef.current?.installUrl;
+
+                    if (installUrl) {
+                        window.open(
+                            installUrl,
+                            '_blank',
+                            'noopener,noreferrer',
+                        );
+                    }
+
+                    startGithubPolling();
+                },
+                onError: () => {
+                    addAlert('Failed to connect to GitHub.', 'error');
+                },
+            },
+        );
+    };
+
+    const disconnectGithub = () => {
+        if (!selectedProject) return;
+
+        stopGithubPolling();
+
+        router.post(
+            route('projects.integrations.github.disconnect', [
+                selectedProject.id,
+            ]),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => {
+                    addAlert('Failed to disconnect GitHub.', 'error');
+                },
+            },
+        );
+    };
+
     if (!selectedProject || !hasIntegrationsAccess) {
         return (
             <SettingsPanel
@@ -431,10 +542,18 @@ export default function WorkspaceSettingsIntegrationsTab({
                     <WorkspaceSettingsIntegrationCard
                         key={integration.id}
                         integration={integration}
-                        enabled={integrationStatuses[integration.id] ?? false}
+                        enabled={
+                            integration.id === 'github'
+                                ? githubConnectStatus?.status === 'connected'
+                                : (integrationStatuses[integration.id] ?? false)
+                        }
                         canUpdate={canUpdateIntegrations}
                         onToggle={(checked) =>
-                            toggleIntegration(integration.id, checked)
+                            integration.id === 'github'
+                                ? checked
+                                    ? connectGithub()
+                                    : disconnectGithub()
+                                : toggleIntegration(integration.id, checked)
                         }
                         onOpen={() => setOpenIntegrationId(integration.id)}
                     />
@@ -445,7 +564,9 @@ export default function WorkspaceSettingsIntegrationsTab({
                 integration={openIntegration}
                 enabled={
                     openIntegration
-                        ? (integrationStatuses[openIntegration.id] ?? false)
+                        ? openIntegration.id === 'github'
+                            ? githubConnectStatus?.status === 'connected'
+                            : (integrationStatuses[openIntegration.id] ?? false)
                         : false
                 }
                 canUpdate={canUpdateIntegrations}
@@ -456,6 +577,11 @@ export default function WorkspaceSettingsIntegrationsTab({
                 }
                 importSettings={
                     openIntegration?.id === 'jira' ? jiraSettings : null
+                }
+                githubStatus={
+                    openIntegration?.id === 'github'
+                        ? githubConnectStatus
+                        : null
                 }
                 issueTypes={issueTypes}
                 labels={labels}
@@ -493,6 +619,8 @@ export default function WorkspaceSettingsIntegrationsTab({
 
                     triggerImport(openIntegration.id, projectKey, syncExisting);
                 }}
+                onConnectGithub={connectGithub}
+                onDisconnectGithub={disconnectGithub}
                 onClose={() => setOpenIntegrationId(null)}
             />
         </div>
