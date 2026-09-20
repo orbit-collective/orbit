@@ -3,6 +3,7 @@ import WorkspaceSettingsIntegrationsTab from '@/Components/Organisms/WorkspaceSe
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import {
+    GithubConnectStatus,
     ImportIntegrationSettings,
     IntegrationImportProgress,
     ProjectIntegrationSettings,
@@ -18,6 +19,7 @@ interface SettingsIntegrationsProps {
     integrationSettings?: Record<string, ProjectIntegrationSettings>;
     jiraSettings?: ImportIntegrationSettings | null;
     jiraImportProgress?: IntegrationImportProgress | null;
+    githubConnectStatus?: GithubConnectStatus | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
     issueTypes?: IssueType[];
@@ -32,6 +34,7 @@ export default function SettingsIntegrations({
     integrationSettings = {},
     jiraSettings = null,
     jiraImportProgress = null,
+    githubConnectStatus = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
     issueTypes = [],
@@ -46,6 +49,7 @@ export default function SettingsIntegrations({
                 integrationSettings={integrationSettings}
                 jiraSettings={jiraSettings}
                 jiraImportProgress={jiraImportProgress}
+                githubConnectStatus={githubConnectStatus}
                 hasIntegrationsAccess={hasIntegrationsAccess}
                 canUpdateIntegrations={canUpdateIntegrations}
                 issueTypes={issueTypes}

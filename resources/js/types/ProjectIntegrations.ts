@@ -78,3 +78,20 @@ export interface IntegrationImportProgress {
     skipped: number;
     failed: number;
 }
+
+export type GithubConnectionStatus =
+    'not_connected' | 'pending' | 'connected' | 'revoked';
+
+/**
+ * The settings-page prop for the 'github' kind integration (see
+ * IntegrationKind in Integrations.ts) — polled the same way as
+ * IntegrationImportProgress while a connection is pending. `installUrl` is
+ * only ever present while `status` is 'pending' (orbit-api only hands it
+ * out once, at connection creation).
+ */
+export interface GithubConnectStatus {
+    status: GithubConnectionStatus;
+    installUrl: string | null;
+    repository: { owner: string; name: string } | null;
+    connectedAt: string | null;
+}

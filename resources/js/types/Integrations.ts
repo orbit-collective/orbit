@@ -50,8 +50,10 @@ export interface IntegrationPreviewSample {
  * 'import' integrations (Jira, ...) pull issues in from the remote system
  * instead, configured with credentials + field mappings — a structurally
  * different settings panel (see WorkspaceSettingsImportPanel).
+ * 'github' is a GitHub App installation flow (no fields to fill in) — see
+ * WorkspaceSettingsGithubConnectPanel.
  */
-export type IntegrationKind = 'notify' | 'import';
+export type IntegrationKind = 'notify' | 'import' | 'github';
 
 export interface IntegrationImportCredentialField {
     id: string;
@@ -274,30 +276,17 @@ export const INTEGRATIONS: IntegrationDefinition[] = [
         accentClassName: 'bg-white/10',
         websiteUrl: 'https://github.com',
         description:
-            'Sync pull requests, commits, and linked issue activity automatically.',
+            'Link a pull request to an Orbit issue and get a bot comment confirming it.',
         overview:
-            'Connect a GitHub repository to link commits and pull requests to Orbit issues, and automatically transition issue status based on merge activity.\n\n**What you get:**\n- Automatic issue linking from commit messages and PR descriptions\n- Status transitions when a linked PR merges\n- A synced activity trail between GitHub and Orbit',
+            "Connect a GitHub repository to link a pull request to an Orbit issue: add a hidden `<!-- orbit-issue:ID -->` marker to the pull request's description, and Orbit links it automatically and replies with a confirmation comment.\n\n**What you get:**\n- Automatic linking from a pull request to the Orbit issue it references\n- A bot comment confirming the link on the pull request\n- The linked pull request shown on the Orbit issue",
         previewSamples: [
             {
-                title: 'PR #42 merged — issue #12 marked as done',
+                title: 'PR #283 linked to issue #12',
                 time: 'Just now',
             },
-            { title: 'Commit a1b2c3d references issue #87', time: '5m ago' },
         ],
-        subOptions: [
-            {
-                id: 'link-commits',
-                title: 'Link commits',
-                description: 'Detect issue references in commit messages.',
-            },
-            {
-                id: 'auto-close',
-                title: 'Auto-close issues',
-                description: 'Mark issues as done when their linked PR merges.',
-            },
-        ],
-        kind: 'notify',
-        comingSoon: true,
+        kind: 'github',
+        comingSoon: false,
     },
     {
         id: 'gitlab',
