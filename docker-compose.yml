@@ -73,7 +73,7 @@ services:
             NSFW_SERVICE_URL: http://nsfwjs:3333
             NSFW_THRESHOLD: ${NSFW_THRESHOLD}
 
-            ORBIT_API_URL: ${ORBIT_API_URL}
+            ORBIT_API_URL: ${ORBIT_API_URL:-https://api.orbit-dev.app}
 
         volumes:
             - .:/app
@@ -162,7 +162,7 @@ services:
             NSFW_SERVICE_URL: http://nsfwjs:3333
             NSFW_THRESHOLD: ${NSFW_THRESHOLD}
 
-            ORBIT_API_URL: ${ORBIT_API_URL}
+            ORBIT_API_URL: ${ORBIT_API_URL:-https://api.orbit-dev.app}
 
         volumes:
             - .:/app
