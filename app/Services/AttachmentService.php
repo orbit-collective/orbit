@@ -22,7 +22,7 @@ class AttachmentService
      */
     public function storeImage(Project $project, UploadedFile $file, User $uploader): Attachment
     {
-        $path = $file->store("attachments/{$project->id}", 'public');
+        $path = $file->store("attachments/$project->id", 'public');
 
         try {
             return $this->attachmentRepository->create($project, [
