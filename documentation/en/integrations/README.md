@@ -1,15 +1,18 @@
 # Integrations
 
-Orbit lets a project connect third-party tools, along two separate
-axes: **notify** integrations (Discord today; Slack, GitHub, and others
-are shown in the catalog as "coming soon") push Orbit activity out via
-a webhook, and **import** integrations (Jira today; Linear, Asana,
-Trello are catalog-only stubs) pull issues/epics/subtasks in from a
-remote system on request. This category documents the whole system:
-the frontend catalog, the per-project settings persisted in the
-database, the event-driven pipeline that turns "something happened in
-Orbit" into "a message landed in Discord", and the pull-based pipeline
-that turns "a user clicked Import" into "Jira's issues exist in Orbit".
+Orbit lets a project connect third-party tools, along three separate
+axes: **notify** integrations (Discord today; Slack and others are
+shown in the catalog as "coming soon") push Orbit activity out via a
+webhook, **import** integrations (Jira today; Linear, Asana, Trello are
+catalog-only stubs) pull issues/epics/subtasks in from a remote system
+on request, and **github** — the one integration of this kind — links
+a pull request to an Orbit issue through a GitHub App installation.
+This category documents the whole system: the frontend catalog, the
+per-project settings persisted in the database, the event-driven
+pipeline that turns "something happened in Orbit" into "a message
+landed in Discord", the pull-based pipeline that turns "a user clicked
+Import" into "Jira's issues exist in Orbit", and the relay-based
+pipeline that links a GitHub pull request to an Orbit issue.
 
 ## Guides, in the order you'd actually need them
 
@@ -30,6 +33,10 @@ that turns "a user clicked Import" into "Jira's issues exist in Orbit".
    — turn a "coming soon" catalog entry into a real, working **import**
    integration (using Linear as the worked example, built from Jira's
    already-complete implementation).
+6. **[The GitHub integration](./06-github-integration.md)** — how the
+   actual, already-wired-up **github**-kind integration works:
+   architecture (via the `orbit-api` relay), connecting a project, the
+   `<!-- orbit-issue:ID -->` marker syntax, and troubleshooting.
 
 Need to gate a new integration ability behind its own permission? See
 [`../permissions/01-add-a-new-permission.md`](../permissions/01-add-a-new-permission.md)
@@ -41,7 +48,7 @@ guide isn't repeated here since it applies to any `projects.*`/
 
 The frontend has a **static catalog** (`resources/js/types/Integrations.ts`)
 of every integration Orbit could ever support — name, icon, category,
-description, sub-options, and a `kind: 'notify' | 'import'`
+description, sub-options, and a `kind: 'notify' | 'import' | 'github'`
 discriminator — regardless of whether it's actually wired up yet
 (`comingSoon: true/false`). Per-project state (is it enabled, its
 webhook URL/credentials, which sub-options are on) lives in one
@@ -59,6 +66,12 @@ source-agnostic `ExternalIssueDTO`, and hands every DTO to the shared
 `ImportOrchestratorService`, which handles dedup (`external_issue_links`),
 field mapping (`integration_field_mappings`), and hierarchy
 (`Issue::parent_id`) the same way regardless of which remote system
-produced the DTO. Adding an integration, a new kind of event, or a new
-importer never requires touching the other axis's plumbing — see the
+produced the DTO. The **github** kind is a third, self-contained shape:
+a GitHub App installation is proxied through the public `orbit-api`
+relay (see [guide 06](./06-github-integration.md)) rather than a
+webhook or a pull-based import, so it gets its own settings panel
+(`WorkspaceSettingsGithubConnectPanel`) and its own scheduled poller
+(`PollGithubRelayEvents`) instead of reusing the notify/import
+pipelines. Adding an integration, a new kind of event, or a new
+importer never requires touching the other axes' plumbing — see the
 guides for exactly where each new piece plugs in.
