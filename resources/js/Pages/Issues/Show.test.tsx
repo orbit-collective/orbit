@@ -121,6 +121,42 @@ describe('Issues/Show Page', () => {
         expect(screen.getByText(/2026-01-31/)).toBeInTheDocument();
     });
 
+    test('renders a linked pull request when one is present', () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue()}
+                users={users}
+                linkedPullRequests={[
+                    {
+                        label: 'orbit-collective/orbit #283',
+                        url: 'https://github.com/orbit-collective/orbit/pull/283',
+                    },
+                ]}
+            />,
+        );
+
+        const link = screen.getByText('orbit-collective/orbit #283');
+        expect(link.closest('a')).toHaveAttribute(
+            'href',
+            'https://github.com/orbit-collective/orbit/pull/283',
+        );
+    });
+
+    test('renders no GitHub field when there is no linked pull request', () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue()}
+                users={users}
+            />,
+        );
+
+        expect(screen.queryByText('GitHub')).not.toBeInTheDocument();
+    });
+
     test('renders placeholders in the Dates field when neither date is set', () => {
         render(
             <Show

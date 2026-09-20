@@ -117,3 +117,9 @@ export type SortingColumn =
     | 'updated'
     | 'start_date'
     | 'end_date';
+
+/** A GitHub pull request linked to this issue via the `<!-- orbit-issue:ID -->` marker. */
+export interface LinkedPullRequest {
+    label: string;
+    url: string;
+}
