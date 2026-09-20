@@ -30,4 +30,24 @@ class ExternalIssueLinkRepository
 
         return $externalIssueLink;
     }
+
+    /**
+     * Idempotent by (project_integration_id, external_id) — matches the
+     * table's own unique constraint, so reprocessing the same relay event
+     * never creates a duplicate link.
+     */
+    public function upsertFor(ProjectIntegration $projectIntegration, string $externalId, array $attributes): ExternalIssueLink
+    {
+        $existing = $this->findFor($projectIntegration, $externalId);
+
+        if ($existing) {
+            return $this->touch($existing, $attributes);
+        }
+
+        return $this->create([
+            ...$attributes,
+            'project_integration_id' => $projectIntegration->id,
+            'external_id' => $externalId,
+        ]);
+    }
 }
