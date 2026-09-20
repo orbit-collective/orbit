@@ -18,7 +18,7 @@ class GithubCommentFormatter
         return <<<MARKDOWN
         Synced with Orbit
 
-        This pull request is linked to **#{$issue->id} — {$title}** in **{$project->name}**.
+        This pull request is linked to **#$issue->id — {$title}** in **$project->name**.
         MARKDOWN;
     }
 }

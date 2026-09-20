@@ -67,7 +67,7 @@ class OrbitRelayClient
     public function ackEvent(string $relayToken, string $eventId): void
     {
         $this->request(
-            fn () => $this->authenticatedClient($relayToken)->post("/v1/github/events/{$eventId}/ack"),
+            fn () => $this->authenticatedClient($relayToken)->post("/v1/github/events/$eventId/ack"),
             'POST /v1/github/events/:eventId/ack',
         );
     }

@@ -17,7 +17,7 @@ import {
     nextImageRange,
 } from '@/utils/imagePaste';
 import { router } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 interface WorkspaceSettingsTemplatesModalProps {
     isOpen: boolean;

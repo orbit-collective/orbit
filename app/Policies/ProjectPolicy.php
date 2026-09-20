@@ -35,13 +35,8 @@ class ProjectPolicy
             Permission::ISSUE_TYPES_UPDATE,
         ];
 
-        foreach ($writeGates as $permission) {
-            if ($project->hasPermissionOrTier($user, $permission, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER])) {
-                return true;
-            }
-        }
+        return array_any($writeGates, fn($permission) => $project->hasPermissionOrTier($user, $permission, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]));
 
-        return false;
     }
 
     public function updateDetails(User $user, Project $project): bool
