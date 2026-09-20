@@ -30,4 +30,16 @@ class ProjectIntegrationRepository
             $attributes,
         );
     }
+
+    /**
+     * Every project's connected GitHub integration, across all projects —
+     * what the relay-event poller iterates each tick.
+     */
+    public function getConnectedGithubIntegrations(): Collection
+    {
+        return ProjectIntegration::query()
+            ->where('integration', 'github')
+            ->where('github_status', 'connected')
+            ->get();
+    }
 }
