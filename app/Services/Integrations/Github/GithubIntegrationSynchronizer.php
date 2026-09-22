@@ -55,8 +55,27 @@ class GithubIntegrationSynchronizer
     {
         $projectIntegration->update(['github_last_sync_attempt_at' => now()]);
 
+        $relayToken = $projectIntegration->resolveGithubRelayToken();
+
+        if ($relayToken === null) {
+            $error = new GithubSyncError(
+                GithubIntegrationErrorClassifier::TOKEN_UNREADABLE_CODE,
+                GithubIntegrationErrorClassifier::TOKEN_UNREADABLE_MESSAGE,
+                isTransient: false,
+            );
+
+            Log::warning('Failed to sync a GitHub integration: local relay token is unreadable', [
+                'projectIntegrationId' => $projectIntegration->id,
+                'projectId' => $projectIntegration->project_id,
+            ]);
+
+            $this->recordFailure($projectIntegration, $error);
+
+            return GithubSyncResult::failure($error);
+        }
+
         try {
-            $events = $this->relayClient->listEvents($projectIntegration->github_relay_token);
+            $events = $this->relayClient->listEvents($relayToken);
         } catch (Throwable $exception) {
             $error = $this->errorClassifier->classify($exception);
 
@@ -91,7 +110,7 @@ class GithubIntegrationSynchronizer
             }
 
             try {
-                $this->relayClient->ackEvent($projectIntegration->github_relay_token, $event->id);
+                $this->relayClient->ackEvent($relayToken, $event->id);
             } catch (OrbitRelayApiException $exception) {
                 if (in_array($exception->errorCode, ['EVENT_EXPIRED', 'EVENT_NOT_FOUND'], true)) {
                     continue;

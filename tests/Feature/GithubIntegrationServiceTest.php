@@ -4,6 +4,7 @@ use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Services\Integrations\Github\GithubIntegrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
@@ -218,4 +219,65 @@ test('retrySync is a no-op when nothing is connected', function () {
     $this->service->retrySync($this->project);
 
     expect(ProjectIntegration::query()->where('project_id', $this->project->id)->count())->toBe(0);
+});
+
+test('getConnectStatus never throws for a corrupted relay token and reports error health', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+        'github_repository_owner' => 'orbit-collective',
+        'github_repository_name' => 'orbit',
+    ]);
+
+    DB::table('project_integrations')->where('id', $projectIntegration->id)->update([
+        'github_relay_token' => 'not-a-valid-encrypted-payload',
+    ]);
+
+    $status = $this->service->getConnectStatus($this->project);
+
+    expect($status['health'])->toBe('error')
+        ->and($status['errorMessage'])->toBe('Orbit could not read its stored GitHub connection details. Reconnect to restore access.')
+        ->and($status['status'])->toBe('connected')
+        ->and($status['repository'])->toBe(['owner' => 'orbit-collective', 'name' => 'orbit']);
+
+    $projectIntegration->refresh();
+    expect($projectIntegration->github_last_error_code)->toBe('LOCAL_TOKEN_UNREADABLE');
+});
+
+test('disconnect never throws for a corrupted relay token and still marks it revoked', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    DB::table('project_integrations')->where('id', $projectIntegration->id)->update([
+        'github_relay_token' => 'not-a-valid-encrypted-payload',
+    ]);
+
+    $this->service->disconnect($this->project);
+
+    $projectIntegration->refresh();
+    expect($projectIntegration->github_status)->toBe('revoked');
+});
+
+test('rotateToken throws a validation exception (not a decrypt exception) for a corrupted relay token', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    DB::table('project_integrations')->where('id', $projectIntegration->id)->update([
+        'github_relay_token' => 'not-a-valid-encrypted-payload',
+    ]);
+
+    expect(fn () => $this->service->rotateToken($this->project))->toThrow(ValidationException::class);
 });

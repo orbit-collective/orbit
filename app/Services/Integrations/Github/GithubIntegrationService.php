@@ -69,17 +69,24 @@ class GithubIntegrationService
     {
         $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
 
-        if (! $projectIntegration || ! $projectIntegration->github_relay_token || $projectIntegration->github_status === 'revoked') {
+        if (! $projectIntegration || $projectIntegration->github_status === 'revoked') {
             return;
         }
 
-        try {
-            $this->relayClient->revoke($projectIntegration->github_relay_token);
-        } catch (OrbitRelayApiException) {
-            // Revoking is best-effort against orbit-api: even if the relay
-            // is unreachable, Orbit Local must still stop trusting this
-            // connection locally (see MVP spec — disconnect never needs to
-            // guarantee the remote side also tore down).
+        // A relay token that's missing or unreadable means there's nothing
+        // to revoke remotely — still proceed to mark it revoked locally
+        // below, exactly like a best-effort remote revoke that failed.
+        $relayToken = $projectIntegration->resolveGithubRelayToken();
+
+        if ($relayToken) {
+            try {
+                $this->relayClient->revoke($relayToken);
+            } catch (OrbitRelayApiException) {
+                // Revoking is best-effort against orbit-api: even if the relay
+                // is unreachable, Orbit Local must still stop trusting this
+                // connection locally (see MVP spec — disconnect never needs to
+                // guarantee the remote side also tore down).
+            }
         }
 
         $projectIntegration->update([
@@ -107,7 +114,7 @@ class GithubIntegrationService
     {
         $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
 
-        if (! $projectIntegration || ! $projectIntegration->github_relay_token) {
+        if (! $projectIntegration || $projectIntegration->getRawOriginal('github_relay_token') === null) {
             return [
                 'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'connectedAt' => null,
                 'health' => null, 'lastSuccessfulSyncAt' => null, 'lastSyncAttemptAt' => null, 'lastFailedSyncAt' => null,
@@ -115,7 +122,22 @@ class GithubIntegrationService
             ];
         }
 
-        if ($projectIntegration->github_status === 'pending') {
+        if ($projectIntegration->hasUnreadableGithubRelayToken()) {
+            // A token is stored but can no longer be decrypted (e.g. the
+            // app key changed since it was written) — surface this as an
+            // ordinary "error" health state (same UI path as an invalid
+            // relay token reported by orbit-api) instead of ever letting
+            // the DecryptException reach the caller uncaught. Recorded once
+            // so it's visible everywhere health is read, not just here.
+            if ($projectIntegration->github_last_error_code !== GithubIntegrationErrorClassifier::TOKEN_UNREADABLE_CODE) {
+                $projectIntegration->update([
+                    'github_last_error_code' => GithubIntegrationErrorClassifier::TOKEN_UNREADABLE_CODE,
+                    'github_last_error_message' => GithubIntegrationErrorClassifier::TOKEN_UNREADABLE_MESSAGE,
+                    'github_last_failed_sync_at' => now(),
+                    'github_consecutive_failures' => $projectIntegration->github_consecutive_failures + 1,
+                ]);
+            }
+        } elseif ($projectIntegration->github_status === 'pending') {
             $this->syncFromRelay($projectIntegration);
         }
 
@@ -142,14 +164,15 @@ class GithubIntegrationService
     public function rotateToken(Project $project): void
     {
         $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
+        $relayToken = $projectIntegration?->resolveGithubRelayToken();
 
-        if (! $projectIntegration || ! $projectIntegration->github_relay_token || $projectIntegration->github_status !== 'connected') {
+        if (! $projectIntegration || ! $relayToken || $projectIntegration->github_status !== 'connected') {
             throw ValidationException::withMessages([
                 'integration' => 'GitHub is not connected for this project.',
             ]);
         }
 
-        $newToken = $this->relayClient->rotateToken($projectIntegration->github_relay_token);
+        $newToken = $this->relayClient->rotateToken($relayToken);
 
         // A single column update is already atomic at the database level —
         // there is no intermediate state where both the old and new token
@@ -177,8 +200,14 @@ class GithubIntegrationService
 
     private function syncFromRelay(ProjectIntegration $projectIntegration): void
     {
+        $relayToken = $projectIntegration->resolveGithubRelayToken();
+
+        if (! $relayToken) {
+            return;
+        }
+
         try {
-            $connection = $this->relayClient->getConnection($projectIntegration->github_relay_token);
+            $connection = $this->relayClient->getConnection($relayToken);
         } catch (Throwable) {
             // Transient orbit-api failure: leave the row as-is, the next
             // poll tick will try again.

@@ -4,6 +4,7 @@ use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
@@ -143,4 +144,24 @@ test('the settings page never exposes the relay token to the frontend', function
 
     $response->assertOk();
     $response->assertDontSee('orb_local_super_secret_token', false);
+});
+
+test('the settings page loads instead of 500ing when the stored relay token cannot be decrypted', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+        'github_repository_owner' => 'orbit-collective',
+        'github_repository_name' => 'orbit',
+    ]);
+
+    DB::table('project_integrations')->where('id', $projectIntegration->id)->update([
+        'github_relay_token' => 'not-a-valid-encrypted-payload',
+    ]);
+
+    $response = $this->actingAs($this->admin)->get("/settings/integrations?project={$this->project->id}");
+
+    $response->assertOk();
 });
