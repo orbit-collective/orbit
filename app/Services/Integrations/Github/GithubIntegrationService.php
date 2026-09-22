@@ -24,6 +24,7 @@ class GithubIntegrationService
         protected ProjectIntegrationRepository $projectIntegrationRepository,
         protected OrbitRelayClient $relayClient,
         protected GithubIntegrationSynchronizer $synchronizer,
+        protected GithubIntegrationHealthService $healthService,
         protected ActivityLogService $activityLogService,
     ) {}
 
@@ -94,15 +95,24 @@ class GithubIntegrationService
      * starting an installation. Reads only the local DB row unless still
      * "pending", in which case it checks orbit-api once per call — cheap
      * enough for a ~2s poll, and stops mattering once connected/revoked.
+     * Health and the other reliability fields are always read from the
+     * local row too - never a fresh orbit-api call - to avoid hammering the
+     * relay just because a settings page is open (see
+     * GithubIntegrationSynchronizer for the only place that actually talks
+     * to orbit-api on a schedule).
      *
-     * @return array{status: string, installUrl: ?string, repository: ?array{owner: string, name: string}, connectedAt: ?string}
+     * @return array{status: string, installUrl: ?string, repository: ?array{owner: string, name: string}, connectedAt: ?string, health: ?string, lastSuccessfulSyncAt: ?string, lastSyncAttemptAt: ?string, lastFailedSyncAt: ?string, errorMessage: ?string, pendingEventCount: ?int, pendingEventCountCapped: bool}
      */
     public function getConnectStatus(Project $project): array
     {
         $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
 
         if (! $projectIntegration || ! $projectIntegration->github_relay_token) {
-            return ['status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'connectedAt' => null];
+            return [
+                'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'connectedAt' => null,
+                'health' => null, 'lastSuccessfulSyncAt' => null, 'lastSyncAttemptAt' => null, 'lastFailedSyncAt' => null,
+                'errorMessage' => null, 'pendingEventCount' => null, 'pendingEventCountCapped' => false,
+            ];
         }
 
         if ($projectIntegration->github_status === 'pending') {
@@ -116,6 +126,13 @@ class GithubIntegrationService
                 ? ['owner' => $projectIntegration->github_repository_owner, 'name' => $projectIntegration->github_repository_name]
                 : null,
             'connectedAt' => $projectIntegration->github_connected_at?->toIso8601String(),
+            'health' => $this->healthService->determine($projectIntegration)?->value,
+            'lastSuccessfulSyncAt' => $projectIntegration->github_last_synced_at?->toIso8601String(),
+            'lastSyncAttemptAt' => $projectIntegration->github_last_sync_attempt_at?->toIso8601String(),
+            'lastFailedSyncAt' => $projectIntegration->github_last_failed_sync_at?->toIso8601String(),
+            'errorMessage' => $projectIntegration->github_last_error_message,
+            'pendingEventCount' => $projectIntegration->github_pending_event_count,
+            'pendingEventCountCapped' => $projectIntegration->github_pending_event_count === OrbitRelayClient::EVENTS_PAGE_LIMIT,
         ];
     }
 

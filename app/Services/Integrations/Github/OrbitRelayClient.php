@@ -22,6 +22,14 @@ use Illuminate\Support\Facades\Log;
 class OrbitRelayClient
 {
     /**
+     * The fixed page size orbit-api's GET /v1/github/events returns (it does
+     * not paginate beyond this). A pending-event count that equals this
+     * exact number cannot be presented as an exact total - see
+     * GithubIntegrationService::getConnectStatus()'s pendingEventCountCapped.
+     */
+    public const int EVENTS_PAGE_LIMIT = 50;
+
+    /**
      * @return array{connection: GithubConnectionDTO, token: string, installUrl: string}
      */
     public function createConnection(): array
