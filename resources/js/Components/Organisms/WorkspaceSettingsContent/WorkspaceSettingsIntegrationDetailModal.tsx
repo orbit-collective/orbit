@@ -37,6 +37,7 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     onTriggerImport: (projectKey: string, syncExisting: boolean) => void;
     onConnectGithub: () => void;
     onDisconnectGithub: () => void;
+    onRetryGithub: () => void;
     onClose: () => void;
 }
 
@@ -57,6 +58,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     onTriggerImport,
     onConnectGithub,
     onDisconnectGithub,
+    onRetryGithub,
     onClose,
 }: WorkspaceSettingsIntegrationDetailModalProps) {
     const [webhookUrlDraft, setWebhookUrlDraft] = useState(
@@ -307,6 +309,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         status={githubStatus}
                         onConnect={onConnectGithub}
                         onDisconnect={onDisconnectGithub}
+                        onRetry={onRetryGithub}
                     />
                 )}
             </div>

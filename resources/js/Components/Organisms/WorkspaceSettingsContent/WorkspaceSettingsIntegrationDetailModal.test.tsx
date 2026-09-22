@@ -44,6 +44,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -68,6 +69,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -107,6 +109,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -133,6 +136,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -157,6 +161,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -183,6 +188,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -212,6 +218,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -238,6 +245,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -277,6 +285,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -306,6 +315,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -330,6 +340,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -355,6 +366,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -385,6 +397,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={noop}
             />,
         );
@@ -411,6 +424,7 @@ describe('WorkspaceSettingsIntegrationDetailModal', () => {
                 githubStatus={null}
                 onConnectGithub={noop}
                 onDisconnectGithub={noop}
+                onRetryGithub={noop}
                 onClose={onClose}
             />,
         );

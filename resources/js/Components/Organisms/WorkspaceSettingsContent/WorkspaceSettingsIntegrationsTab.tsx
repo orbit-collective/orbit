@@ -457,6 +457,22 @@ export default function WorkspaceSettingsIntegrationsTab({
         );
     };
 
+    const retryGithub = () => {
+        if (!selectedProject) return;
+
+        router.post(
+            route('projects.integrations.github.retry', [selectedProject.id]),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () => {
+                    addAlert('Failed to retry the GitHub sync.', 'error');
+                },
+            },
+        );
+    };
+
     if (!selectedProject || !hasIntegrationsAccess) {
         return (
             <SettingsPanel
@@ -635,6 +651,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                 }}
                 onConnectGithub={connectGithub}
                 onDisconnectGithub={disconnectGithub}
+                onRetryGithub={retryGithub}
                 onClose={() => setOpenIntegrationId(null)}
             />
         </div>
