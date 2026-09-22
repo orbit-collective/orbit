@@ -120,6 +120,58 @@ event in that case: it stays pending and is retried on the next poll.
 There is no separate retry-queue infrastructure; the relay's own
 pending state is the retry mechanism.
 
+## Reliability and health
+
+Every sync — scheduled or manual — goes through one shared
+`GithubIntegrationSynchronizer::sync()`, which records what happened
+on the project's `project_integrations` row: `github_last_sync_attempt_at`
+(every attempt), `github_last_synced_at` (last fully successful cycle),
+`github_last_failed_sync_at`/`github_last_error_code`/`github_last_error_message`
+(the last failure, if any), and `github_consecutive_failures`.
+`GithubIntegrationHealthService` derives one of four states from those
+signals — it's never stored itself, so it can't drift out of sync with
+the data behind it:
+
+| Health | Meaning | Shown when |
+| --- | --- | --- |
+| **Healthy** | Connected, last sync succeeded. | `connected`, zero consecutive failures. |
+| **Degraded** | Connected, but the last sync failed transiently (network, orbit-api unavailable, a temporary GitHub error). | `connected`, at least one consecutive failure, no permanent error code. |
+| **Error** | Connected locally, but the relay token or connection itself is unusable (e.g. `INVALID_RELAY_TOKEN`). | `connected`, last error is a permanent, token/connection-level code. |
+| **Revoked** | The connection was explicitly revoked, locally or by orbit-api. | connection status is `revoked`. |
+
+There's no numeric health score and no time-based staleness check —
+purely the connection status, the last error code, and the failure
+count already being tracked.
+
+**Retry sync** (shown for a degraded integration) runs the exact same
+synchronizer the scheduler uses, via `POST .../integrations/github/retry`
+— there's no separate manual-sync code path. Concurrent syncs for the
+same integration are prevented with a short-lived
+`Cache::lock("github-sync:{id}", 55)`; if a scheduled poll and a manual
+retry land at the same time, the second one is skipped rather than
+running twice.
+
+**Reconnect** (shown for an error or revoked integration) reuses the
+same connect flow as the initial setup — it always requests a brand
+new orbit-api connection and clears every reliability field, so a
+previous connection's failure history never carries over. If orbit-api
+reports `CONNECTION_REVOKED` during a sync, Orbit Local marks the
+connection revoked itself (not just displays an error) — the scheduler
+then stops polling it automatically, since it only syncs `connected`
+integrations.
+
+A **temporary orbit-api outage** never acknowledges the in-flight
+relay event (unchanged from the MVP's ack semantics) and never touches
+GitHub App access — once orbit-api is reachable again, the next
+scheduled sync (or a manual retry) picks the pending event back up and
+health returns to Healthy.
+
+A **stale relay event** — acknowledging succeeds locally but orbit-api
+reports `EVENT_EXPIRED` or `EVENT_NOT_FOUND` after the PR was already
+linked and the comment already requested — is treated as a completed
+outcome, not a failure: the actual work already happened, only the
+relay's own pending record expired or vanished first.
+
 ## MVP limitations
 
 - Only `pull_request.opened` is handled — edits, closes, merges,
@@ -140,20 +192,34 @@ never completed, or completed with zero or more than one repository
 selected (orbit-api requires exactly one). Reopen the install page
 from the integration panel and try again.
 
-**Connection shows "revoked" and won't reconnect** — click **Connect
-with GitHub** again; this always requests a brand-new orbit-api
-connection rather than trying to resume the old one.
+**Connection shows "revoked" and won't reconnect** — click
+**Reconnect**; this always requests a brand-new orbit-api connection
+rather than trying to resume the old one.
 
 **A PR isn't getting linked** — check the marker is exactly
 `<!-- orbit-issue:ID -->` with a numeric id, appears exactly once in
 the PR description, and that the issue id belongs to the same Orbit
 project as the connected repository. Also confirm the connection's
-status is `connected`, not `pending`.
+status is `connected`, not `pending`, and check the health pill and
+diagnostics panel for a recorded error before assuming the marker is
+the problem.
 
-**Events not processing** — confirm the scheduler is actually running
-(`composer dev`'s queue/schedule processes, or your production cron
-entry for `php artisan schedule:run`); `PollGithubRelayEvents` only
-runs once a minute if something is invoking Laravel's scheduler.
+**Integration shows Degraded** — a transient failure on the last sync
+(orbit-api unreachable, a temporary GitHub error). Check the error
+message and the diagnostics panel's "Last attempt"/"Last successful
+sync" timestamps, then either wait for the next scheduled sync or
+click **Retry sync**.
+
+**Integration shows "Needs attention" (Error)** — the relay token or
+connection itself is no longer usable (a permanent error, e.g. an
+invalid token). Retrying won't help; click **Reconnect**.
+
+**Events not processing at all** — confirm something is actually
+invoking Laravel's scheduler: the Docker Compose stack has a dedicated
+`scheduler` service running `php artisan schedule:work`
+(`docker-compose.yml`), or in a non-Docker deployment, a cron entry
+calling `php artisan schedule:run` every minute. `PollGithubRelayEvents`
+never runs on its own without one of these.
 
 ## Security notes
 

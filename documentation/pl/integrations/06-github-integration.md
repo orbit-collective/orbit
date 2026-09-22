@@ -125,6 +125,59 @@ przypadku eventu: pozostaje on oczekujący i zostanie ponowiony przy
 kolejnym odpytaniu. Nie ma osobnej infrastruktury kolejki ponowień —
 mechanizmem ponawiania jest sam stan "oczekujący" po stronie relay.
 
+## Niezawodność i stan zdrowia
+
+Każda synchronizacja — zaplanowana czy ręczna — przechodzi przez jeden
+wspólny `GithubIntegrationSynchronizer::sync()`, który zapisuje wynik w
+wierszu `project_integrations` danego projektu: `github_last_sync_attempt_at`
+(każda próba), `github_last_synced_at` (ostatni w pełni udany cykl),
+`github_last_failed_sync_at`/`github_last_error_code`/`github_last_error_message`
+(ostatni błąd, jeśli wystąpił) oraz `github_consecutive_failures`.
+`GithubIntegrationHealthService` wylicza na tej podstawie jeden z
+czterech stanów — sam nigdy nie jest zapisywany, więc nie może
+rozjechać się z danymi, na których się opiera:
+
+| Stan | Znaczenie | Kiedy widoczny |
+| --- | --- | --- |
+| **Healthy** | Połączone, ostatnia synchronizacja się powiodła. | `connected`, zero kolejnych błędów. |
+| **Degraded** | Połączone, ale ostatnia synchronizacja zawiodła przejściowo (sieć, niedostępność orbit-api, chwilowy błąd GitHuba). | `connected`, co najmniej jeden kolejny błąd, brak trwałego kodu błędu. |
+| **Error** | Połączone lokalnie, ale sam token relay albo połączenie jest nieużywalne (np. `INVALID_RELAY_TOKEN`). | `connected`, ostatni błąd to trwały kod na poziomie tokenu/połączenia. |
+| **Revoked** | Połączenie zostało jawnie unieważnione, lokalnie albo przez orbit-api. | status połączenia to `revoked`. |
+
+Nie ma numerycznego wyniku "zdrowia" ani heurystyki opartej na czasie —
+wyłącznie status połączenia, ostatni kod błędu i licznik błędów, które
+i tak są już śledzone.
+
+**Retry sync** (widoczne dla integracji w stanie degraded) uruchamia
+dokładnie ten sam synchronizator, którego używa scheduler, poprzez
+`POST .../integrations/github/retry` — nie ma osobnej ścieżki kodu dla
+ręcznej synchronizacji. Równoczesne synchronizacje tej samej integracji
+są blokowane krótkotrwałym `Cache::lock("github-sync:{id}", 55)`; jeśli
+zaplanowany poll i ręczny retry trafią w ten sam moment, drugi z nich
+zostaje pominięty zamiast uruchamiać się podwójnie.
+
+**Reconnect** (widoczne dla integracji w stanie error albo revoked)
+korzysta z tego samego flow co pierwsze połączenie — zawsze prosi o
+zupełnie nowe połączenie w orbit-api i czyści każde pole niezawodności,
+więc historia błędów poprzedniego połączenia nigdy się nie przenosi.
+Jeśli orbit-api zgłosi `CONNECTION_REVOKED` podczas synchronizacji,
+Orbit Local sam oznacza połączenie jako unieważnione (nie tylko
+wyświetla błąd) — scheduler przestaje wtedy automatycznie je odpytywać,
+ponieważ synchronizuje wyłącznie integracje `connected`.
+
+**Przejściowa niedostępność orbit-api** nigdy nie potwierdza (ACK)
+eventu relay będącego w trakcie przetwarzania (bez zmian względem
+semantyki ACK z MVP) i nigdy nie dotyka dostępu GitHub App — gdy
+orbit-api znów będzie dostępne, kolejna zaplanowana synchronizacja (lub
+ręczny retry) podejmie oczekujący event na nowo, a stan zdrowia wróci
+do Healthy.
+
+**Nieaktualny event relay** — potwierdzenie (ACK) udaje się lokalnie,
+ale orbit-api zgłasza `EVENT_EXPIRED` albo `EVENT_NOT_FOUND` już po
+tym, jak PR został powiązany, a komentarz zażądany — jest traktowane
+jako zakończony wynik, a nie błąd: faktyczna praca już się wydarzyła,
+tylko własny rekord orbit-api wygasł albo zniknął pierwszy.
+
 ## Ograniczenia MVP
 
 - Obsługiwany jest wyłącznie `pull_request.opened` — edycje,
@@ -146,20 +199,33 @@ wybranym repozytorium (orbit-api wymaga dokładnie jednego). Otwórz
 ponownie stronę instalacji z panelu integracji i spróbuj jeszcze raz.
 
 **Połączenie pokazuje "revoked" i nie da się połączyć ponownie** —
-kliknij ponownie **Connect with GitHub**; zawsze tworzy to zupełnie
-nowe połączenie w orbit-api zamiast próbować wznowić stare.
+kliknij **Reconnect**; zawsze tworzy to zupełnie nowe połączenie w
+orbit-api zamiast próbować wznowić stare.
 
 **PR nie zostaje powiązany** — sprawdź, czy znacznik ma dokładnie
 postać `<!-- orbit-issue:ID -->` z numerycznym id, występuje dokładnie
 raz w opisie PR-a, a identyfikator issue należy do tego samego
 projektu w Orbicie, co połączone repozytorium. Sprawdź też, czy status
-połączenia to `connected`, a nie `pending`.
+połączenia to `connected`, a nie `pending`, oraz sprawdź plakietkę
+zdrowia i panel diagnostyczny pod kątem zapisanego błędu, zanim
+uznasz, że problemem jest sam znacznik.
 
-**Eventy się nie przetwarzają** — upewnij się, że scheduler faktycznie
-działa (procesy queue/schedule z `composer dev` albo wpis crona w
-produkcji dla `php artisan schedule:run`); `PollGithubRelayEvents`
-uruchamia się raz na minutę tylko wtedy, gdy coś wywołuje scheduler
-Laravela.
+**Integracja pokazuje Degraded** — przejściowy błąd ostatniej
+synchronizacji (niedostępność orbit-api, chwilowy błąd GitHuba).
+Sprawdź komunikat błędu i znaczniki czasu "Last attempt"/"Last
+successful sync" w panelu diagnostycznym, a następnie albo poczekaj na
+kolejną zaplanowaną synchronizację, albo kliknij **Retry sync**.
+
+**Integracja pokazuje "Needs attention" (Error)** — sam token relay
+albo połączenie jest już nieużywalne (trwały błąd, np. nieprawidłowy
+token). Ponawianie nic tu nie da; kliknij **Reconnect**.
+
+**Eventy w ogóle się nie przetwarzają** — upewnij się, że coś faktycznie
+wywołuje scheduler Laravela: stos Docker Compose ma dedykowany serwis
+`scheduler` uruchamiający `php artisan schedule:work`
+(`docker-compose.yml`), a w wdrożeniu bez Dockera — wpis crona
+wywołujący `php artisan schedule:run` co minutę. `PollGithubRelayEvents`
+nigdy nie uruchamia się samo bez jednego z nich.
 
 ## Uwagi bezpieczeństwa
 
