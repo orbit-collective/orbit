@@ -123,7 +123,7 @@ class OrbitRelayClient
         } catch (ConnectionException $exception) {
             Log::warning('Orbit relay API request failed to connect', ['path' => $path]);
 
-            throw new OrbitRelayApiException("Orbit relay API request failed to connect: {$path}", previous: $exception);
+            throw new OrbitRelayApiException("Orbit relay API request failed to connect: $path", previous: $exception);
         }
 
         $body = $response->json() ?? [];

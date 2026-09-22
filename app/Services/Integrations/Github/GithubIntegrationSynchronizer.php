@@ -24,7 +24,16 @@ use Throwable;
  */
 class GithubIntegrationSynchronizer
 {
-    private const int LOCK_SECONDS = 55;
+    /**
+     * Held for the whole cycle, not just a nominal "this should be quick"
+     * window: a cycle can fetch up to OrbitRelayClient::EVENTS_PAGE_LIMIT
+     * events, each needing up to two relay requests (comment + ack) at the
+     * client's own 10s timeout - a pathological worst case is close to 17
+     * minutes. The lease has to outlive that worst case, or a slow cycle's
+     * lock can expire mid-run and let a second cycle (the next scheduled
+     * poll, or a manual retry) start concurrently against the same events.
+     */
+    private const int LOCK_SECONDS = 1200;
 
     public function __construct(
         protected OrbitRelayClient $relayClient,
@@ -38,7 +47,7 @@ class GithubIntegrationSynchronizer
             return GithubSyncResult::skipped();
         }
 
-        $lock = Cache::lock("github-sync:{$projectIntegration->id}", self::LOCK_SECONDS);
+        $lock = Cache::lock("github-sync:$projectIntegration->id", self::LOCK_SECONDS);
 
         if (! $lock->get()) {
             return GithubSyncResult::locked();
@@ -91,6 +100,7 @@ class GithubIntegrationSynchronizer
         }
 
         $lastError = null;
+        $resolvedCount = 0;
 
         foreach ($events as $event) {
             try {
@@ -106,6 +116,17 @@ class GithubIntegrationSynchronizer
                     'errorCode' => $lastError->code,
                 ]);
 
+                // A permanent error here is connection-level (an invalid
+                // token, a revoked connection, ...), never specific to this
+                // one event - every remaining event in this batch would
+                // fail identically, and continuing would let a later
+                // transient failure overwrite this one, masking e.g. a
+                // revoked connection as merely "degraded" (see
+                // recordFailure() below, which keys off $lastError->code).
+                if (! $lastError->isTransient) {
+                    break;
+                }
+
                 continue;
             }
 
@@ -113,6 +134,8 @@ class GithubIntegrationSynchronizer
                 $this->relayClient->ackEvent($relayToken, $event->id);
             } catch (OrbitRelayApiException $exception) {
                 if (in_array($exception->errorCode, ['EVENT_EXPIRED', 'EVENT_NOT_FOUND'], true)) {
+                    $resolvedCount++;
+
                     continue;
                 }
 
@@ -125,6 +148,12 @@ class GithubIntegrationSynchronizer
                     'deliveryId' => $event->deliveryId,
                     'errorCode' => $lastError->code,
                 ]);
+
+                if (! $lastError->isTransient) {
+                    break;
+                }
+
+                continue;
             } catch (Throwable $exception) {
                 $lastError = $this->errorClassifier->classify($exception);
 
@@ -135,10 +164,17 @@ class GithubIntegrationSynchronizer
                     'deliveryId' => $event->deliveryId,
                     'errorCode' => $lastError->code,
                 ]);
+
+                continue;
             }
+
+            $resolvedCount++;
         }
 
-        $projectIntegration->update(['github_pending_event_count' => count($events)]);
+        // Events already acked (or stale-acked, above) are no longer
+        // sitting at orbit-api - only the remainder (failed, or never
+        // attempted because of an early break) is still genuinely pending.
+        $projectIntegration->update(['github_pending_event_count' => count($events) - $resolvedCount]);
 
         if ($lastError === null) {
             $this->recordSuccess($projectIntegration);
