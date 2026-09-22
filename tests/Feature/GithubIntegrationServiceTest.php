@@ -1,9 +1,11 @@
 <?php
 
+use App\Jobs\SyncGithubIntegrationJob;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Services\Integrations\Github\GithubIntegrationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
@@ -195,8 +197,10 @@ test('rotateToken throws when nothing is connected', function () {
     $this->service->rotateToken($this->project);
 })->throws(ValidationException::class);
 
-test('retrySync delegates to the shared synchronizer', function () {
-    ProjectIntegration::query()->create([
+test('retrySync queues a sync job for the integration, rather than running inline', function () {
+    Bus::fake();
+
+    $projectIntegration = ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
         'integration' => 'github',
         'enabled' => true,
@@ -206,13 +210,14 @@ test('retrySync delegates to the shared synchronizer', function () {
         'github_last_error_code' => 'INTERNAL_SERVER_ERROR',
     ]);
 
-    Http::fake(['*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => []]], 200)]);
-
     $this->service->retrySync($this->project);
 
-    $projectIntegration = ProjectIntegration::query()->where('project_id', $this->project->id)->first();
-    expect($projectIntegration->github_consecutive_failures)->toBe(0)
-        ->and($projectIntegration->github_last_error_code)->toBeNull();
+    Bus::assertDispatched(SyncGithubIntegrationJob::class, fn ($job) => $job->projectIntegration->is($projectIntegration));
+
+    // Dispatching alone must not run the sync synchronously - the whole
+    // point is that the triggering web request returns immediately.
+    $projectIntegration->refresh();
+    expect($projectIntegration->github_consecutive_failures)->toBe(3);
 });
 
 test('retrySync is a no-op when nothing is connected', function () {

@@ -1,9 +1,11 @@
 <?php
 
+use App\Jobs\SyncGithubIntegrationJob;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
@@ -89,7 +91,9 @@ test('a member without the integrations.update permission cannot disconnect GitH
 });
 
 test('an admin can retry a degraded sync', function () {
-    ProjectIntegration::query()->create([
+    Bus::fake();
+
+    $projectIntegration = ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
         'integration' => 'github',
         'enabled' => true,
@@ -99,16 +103,10 @@ test('an admin can retry a degraded sync', function () {
         'github_last_error_code' => 'INTERNAL_SERVER_ERROR',
     ]);
 
-    Http::fake(['*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => []]], 200)]);
-
     $response = $this->actingAs($this->admin)->post("/projects/{$this->project->id}/integrations/github/retry");
 
     $response->assertRedirect();
-    $this->assertDatabaseHas('project_integrations', [
-        'project_id' => $this->project->id,
-        'integration' => 'github',
-        'github_consecutive_failures' => 0,
-    ]);
+    Bus::assertDispatched(SyncGithubIntegrationJob::class, fn ($job) => $job->projectIntegration->is($projectIntegration));
 });
 
 test('a member without the integrations.update permission cannot retry a sync', function () {

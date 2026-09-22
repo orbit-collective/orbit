@@ -2,6 +2,7 @@
 
 namespace App\Services\Integrations\Github;
 
+use App\Jobs\SyncGithubIntegrationJob;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Repositories\ProjectIntegrationRepository;
@@ -23,7 +24,6 @@ class GithubIntegrationService
     public function __construct(
         protected ProjectIntegrationRepository $projectIntegrationRepository,
         protected OrbitRelayClient $relayClient,
-        protected GithubIntegrationSynchronizer $synchronizer,
         protected GithubIntegrationHealthService $healthService,
         protected ActivityLogService $activityLogService,
     ) {}
@@ -181,11 +181,13 @@ class GithubIntegrationService
     }
 
     /**
-     * Manually runs one sync cycle for this project's GitHub integration -
-     * the exact same GithubIntegrationSynchronizer the scheduler uses (see
-     * PollGithubRelayEvents), so there's no separate "retry" code path to
-     * keep correct. A no-op if nothing is connected, or if a sync for this
-     * integration is already in progress (the synchronizer's own lock).
+     * Queues one sync cycle for this project's GitHub integration - the
+     * exact same GithubIntegrationSynchronizer the scheduler uses (see
+     * PollGithubRelayEvents), via SyncGithubIntegrationJob, so there's no
+     * separate "retry" sync logic to keep correct. Queued rather than run
+     * inline so the triggering web request returns immediately instead of
+     * blocking on up to 50 sequential relay requests. A no-op if nothing is
+     * connected.
      */
     public function retrySync(Project $project): void
     {
@@ -195,7 +197,7 @@ class GithubIntegrationService
             return;
         }
 
-        $this->synchronizer->sync($projectIntegration);
+        SyncGithubIntegrationJob::dispatch($projectIntegration);
     }
 
     private function syncFromRelay(ProjectIntegration $projectIntegration): void
