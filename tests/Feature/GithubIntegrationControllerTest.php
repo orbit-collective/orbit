@@ -87,6 +87,46 @@ test('a member without the integrations.update permission cannot disconnect GitH
     $response->assertForbidden();
 });
 
+test('an admin can retry a degraded sync', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+        'github_consecutive_failures' => 2,
+        'github_last_error_code' => 'INTERNAL_SERVER_ERROR',
+    ]);
+
+    Http::fake(['*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => []]], 200)]);
+
+    $response = $this->actingAs($this->admin)->post("/projects/{$this->project->id}/integrations/github/retry");
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('project_integrations', [
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'github_consecutive_failures' => 0,
+    ]);
+});
+
+test('a member without the integrations.update permission cannot retry a sync', function () {
+    $member = User::factory()->create();
+    $this->project->users()->attach($member->id, ['role' => 'member']);
+
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    $response = $this->actingAs($member)->post("/projects/{$this->project->id}/integrations/github/retry");
+
+    $response->assertForbidden();
+});
+
 test('the settings page never exposes the relay token to the frontend', function () {
     Http::fake(['*/v1/github/connections' => Http::response([
         'success' => true,

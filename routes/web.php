@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects/{project}/integrations/jira/import', [JiraIntegrationController::class, 'import'])->name('projects.integrations.jira.import');
     Route::post('/projects/{project}/integrations/github/connect', [GithubIntegrationController::class, 'connect'])->name('projects.integrations.github.connect');
     Route::post('/projects/{project}/integrations/github/disconnect', [GithubIntegrationController::class, 'disconnect'])->name('projects.integrations.github.disconnect');
+    Route::post('/projects/{project}/integrations/github/retry', [GithubIntegrationController::class, 'retry'])->name('projects.integrations.github.retry');
     Route::post('/projects/{project}/invitations', [ProjectInvitationController::class, 'store'])->name('projects.invitations.store');
     Route::delete('/projects/{project}/invitations/{invitation}', [ProjectInvitationController::class, 'destroy'])->name('projects.invitations.destroy');
     Route::post('/invitations/accept', [ProjectInvitationController::class, 'acceptManual'])->name('invitations.accept-manual');

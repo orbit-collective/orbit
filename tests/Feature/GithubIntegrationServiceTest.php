@@ -140,3 +140,29 @@ test('rotateToken replaces the stored token without ever persisting both', funct
 test('rotateToken throws when nothing is connected', function () {
     $this->service->rotateToken($this->project);
 })->throws(ValidationException::class);
+
+test('retrySync delegates to the shared synchronizer', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+        'github_consecutive_failures' => 3,
+        'github_last_error_code' => 'INTERNAL_SERVER_ERROR',
+    ]);
+
+    Http::fake(['*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => []]], 200)]);
+
+    $this->service->retrySync($this->project);
+
+    $projectIntegration = ProjectIntegration::query()->where('project_id', $this->project->id)->first();
+    expect($projectIntegration->github_consecutive_failures)->toBe(0)
+        ->and($projectIntegration->github_last_error_code)->toBeNull();
+});
+
+test('retrySync is a no-op when nothing is connected', function () {
+    $this->service->retrySync($this->project);
+
+    expect(ProjectIntegration::query()->where('project_id', $this->project->id)->count())->toBe(0);
+});
