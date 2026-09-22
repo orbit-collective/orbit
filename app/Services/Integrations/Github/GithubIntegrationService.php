@@ -48,6 +48,15 @@ class GithubIntegrationService
             'github_repository_name' => null,
             'github_connected_at' => null,
             'github_revoked_at' => null,
+            // A reconnect starts clean - a previous (possibly broken)
+            // connection's failure history has nothing to do with this one.
+            'github_last_synced_at' => null,
+            'github_last_sync_attempt_at' => null,
+            'github_last_failed_sync_at' => null,
+            'github_last_error_code' => null,
+            'github_last_error_message' => null,
+            'github_consecutive_failures' => 0,
+            'github_pending_event_count' => null,
         ]);
 
         $this->activityLogService->log($project->id, 'Started connecting the "github" integration');

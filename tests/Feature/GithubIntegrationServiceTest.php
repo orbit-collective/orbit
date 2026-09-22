@@ -36,6 +36,36 @@ test('connect creates a pending integration with the relay token and install url
     ]);
 });
 
+test('connect (reconnect) clears any leftover failure state from a previous connection', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_old',
+        'github_status' => 'error',
+        'github_consecutive_failures' => 4,
+        'github_last_error_code' => 'INVALID_RELAY_TOKEN',
+        'github_last_error_message' => 'Orbit no longer has access to this GitHub connection.',
+        'github_last_failed_sync_at' => now(),
+    ]);
+
+    Http::fake(['*/v1/github/connections' => Http::response([
+        'success' => true,
+        'data' => [
+            'connection' => ['id' => 'conn_2', 'status' => 'pending', 'installationId' => null, 'repository' => null, 'createdAt' => 'now', 'connectedAt' => null, 'revokedAt' => null],
+            'token' => 'orb_local_new',
+            'installUrl' => 'https://github.com/apps/orbit/installations/new?state=abc',
+        ],
+    ], 201)]);
+
+    $projectIntegration = $this->service->connect($this->project);
+
+    expect($projectIntegration->github_consecutive_failures)->toBe(0)
+        ->and($projectIntegration->github_last_error_code)->toBeNull()
+        ->and($projectIntegration->github_last_error_message)->toBeNull()
+        ->and($projectIntegration->github_last_failed_sync_at)->toBeNull();
+});
+
 test('getConnectStatus reports not_connected when no integration exists', function () {
     expect($this->service->getConnectStatus($this->project))->toBe([
         'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'connectedAt' => null,
