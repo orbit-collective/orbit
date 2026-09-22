@@ -308,6 +308,13 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
                         'https://github.com/apps/orbit/installations/new?state=xyz',
                     repository: null,
                     connectedAt: null,
+                    health: null,
+                    lastSuccessfulSyncAt: null,
+                    lastSyncAttemptAt: null,
+                    lastFailedSyncAt: null,
+                    errorMessage: null,
+                    pendingEventCount: null,
+                    pendingEventCountCapped: false,
                 },
             });
 

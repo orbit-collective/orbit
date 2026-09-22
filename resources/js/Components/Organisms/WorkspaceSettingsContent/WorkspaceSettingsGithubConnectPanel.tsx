@@ -1,10 +1,94 @@
-import { GithubConnectStatus } from '@/types/ProjectIntegrations';
+import {
+    GithubConnectStatus,
+    GithubIntegrationHealth,
+} from '@/types/ProjectIntegrations';
+import { formatTimeAgo } from '@/utils/time';
 
 interface WorkspaceSettingsGithubConnectPanelProps {
     canUpdate: boolean;
     status: GithubConnectStatus | null;
     onConnect: () => void;
     onDisconnect: () => void;
+    onRetry: () => void;
+}
+
+const HEALTH_LABELS: Record<Exclude<GithubIntegrationHealth, null>, string> = {
+    healthy: 'Healthy',
+    degraded: 'Degraded',
+    error: 'Needs attention',
+    revoked: 'Disconnected',
+};
+
+const HEALTH_COLOR_CLASSES: Record<
+    Exclude<GithubIntegrationHealth, null>,
+    string
+> = {
+    healthy: 'bg-[var(--success-color)]/15 text-[var(--success-color)]',
+    degraded: 'bg-[var(--warning-color)]/15 text-[var(--warning-color)]',
+    error: 'bg-[var(--error-color)]/15 text-[var(--error-color)]',
+    revoked: 'bg-[var(--pending-color)]/15 text-[var(--pending-color)]',
+};
+
+function HealthPill({ health }: { health: GithubIntegrationHealth }) {
+    if (!health) return null;
+
+    return (
+        <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${HEALTH_COLOR_CLASSES[health]}`}
+        >
+            {HEALTH_LABELS[health]}
+        </span>
+    );
+}
+
+function GithubDiagnostics({ status }: { status: GithubConnectStatus }) {
+    return (
+        <details className="rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm">
+            <summary className="cursor-pointer font-medium text-[var(--text-color)]">
+                Diagnostics
+            </summary>
+            <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-[var(--text-gray-color)]">
+                <dt>Connection status</dt>
+                <dd>{status.status}</dd>
+                <dt>Health</dt>
+                <dd>{status.health ?? '—'}</dd>
+                {status.repository && (
+                    <>
+                        <dt>Repository</dt>
+                        <dd>
+                            {status.repository.owner}/{status.repository.name}
+                        </dd>
+                    </>
+                )}
+                <dt>Last successful sync</dt>
+                <dd>
+                    {status.lastSuccessfulSyncAt
+                        ? `${formatTimeAgo(status.lastSuccessfulSyncAt)} ago`
+                        : '—'}
+                </dd>
+                <dt>Last sync attempt</dt>
+                <dd>
+                    {status.lastSyncAttemptAt
+                        ? `${formatTimeAgo(status.lastSyncAttemptAt)} ago`
+                        : '—'}
+                </dd>
+                <dt>Last failure</dt>
+                <dd>
+                    {status.lastFailedSyncAt
+                        ? `${formatTimeAgo(status.lastFailedSyncAt)} ago`
+                        : '—'}
+                </dd>
+                <dt>Pending events</dt>
+                <dd>
+                    {status.pendingEventCount === null
+                        ? '—'
+                        : status.pendingEventCountCapped
+                          ? `${status.pendingEventCount}+`
+                          : status.pendingEventCount}
+                </dd>
+            </dl>
+        </details>
+    );
 }
 
 /**
@@ -13,14 +97,23 @@ interface WorkspaceSettingsGithubConnectPanelProps {
  * like an 'import' integration or a webhook URL like a 'notify' one. There
  * are no fields to fill in - "Connect with GitHub" opens the GitHub App
  * install page, and the connected repository is shown read-only afterward.
+ *
+ * Once connected, this also surfaces operational health (see
+ * GithubIntegrationHealthService on the backend): a degraded sync offers
+ * "Retry sync" (the same GithubIntegrationSynchronizer the scheduler uses),
+ * while a permanent error (e.g. an invalid token) or a revoked connection
+ * offers "Reconnect" instead - retrying with a broken token would just fail
+ * again, only a fresh connection helps.
  */
 export default function WorkspaceSettingsGithubConnectPanel({
     canUpdate,
     status,
     onConnect,
     onDisconnect,
+    onRetry,
 }: WorkspaceSettingsGithubConnectPanelProps) {
     const state = status?.status ?? 'not_connected';
+    const health = status?.health ?? null;
 
     return (
         <section className="mt-6">
@@ -29,24 +122,95 @@ export default function WorkspaceSettingsGithubConnectPanel({
             </h3>
 
             {state === 'connected' && status?.repository ? (
-                <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-[var(--border-color)] px-4 py-3">
-                    <div>
-                        <p className="text-sm font-medium text-[var(--text-color)]">
-                            {status.repository.owner}/{status.repository.name}
-                        </p>
-                        <p className="mt-0.5 text-sm text-[var(--text-gray-color)]">
-                            Pull requests with an{' '}
-                            <code>{'<!-- orbit-issue:ID -->'}</code> marker in
-                            their description will be linked automatically.
-                        </p>
+                <div className="mt-3 space-y-3">
+                    <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border-color)] px-4 py-3">
+                        <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-medium text-[var(--text-color)]">
+                                    {status.repository.owner}/
+                                    {status.repository.name}
+                                </p>
+                                <HealthPill health={health} />
+                            </div>
+                            {health === 'healthy' && (
+                                <p className="mt-0.5 text-sm text-[var(--text-gray-color)]">
+                                    Pull requests with an{' '}
+                                    <code>{'<!-- orbit-issue:ID -->'}</code>{' '}
+                                    marker in their description will be linked
+                                    automatically.
+                                </p>
+                            )}
+                            {(health === 'degraded' || health === 'error') &&
+                                status.errorMessage && (
+                                    <p className="mt-0.5 text-sm text-[var(--error-color)]">
+                                        {status.errorMessage}
+                                    </p>
+                                )}
+                            {health === 'healthy' &&
+                                status.lastSuccessfulSyncAt && (
+                                    <p className="mt-1 text-xs text-[var(--text-gray-color)]">
+                                        Last synced:{' '}
+                                        {formatTimeAgo(
+                                            status.lastSuccessfulSyncAt,
+                                        )}{' '}
+                                        ago
+                                    </p>
+                                )}
+                            {health === 'degraded' && (
+                                <p className="mt-1 text-xs text-[var(--text-gray-color)]">
+                                    {status.lastSuccessfulSyncAt &&
+                                        `Last successful sync: ${formatTimeAgo(status.lastSuccessfulSyncAt)} ago`}
+                                    {status.lastSyncAttemptAt &&
+                                        ` · Last attempt: ${formatTimeAgo(status.lastSyncAttemptAt)} ago`}
+                                </p>
+                            )}
+                        </div>
+                        {canUpdate && (
+                            <div className="flex shrink-0 items-center gap-2">
+                                {health === 'degraded' && (
+                                    <button
+                                        type="button"
+                                        onClick={onRetry}
+                                        className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-2 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                                    >
+                                        Retry sync
+                                    </button>
+                                )}
+                                {health === 'error' && (
+                                    <button
+                                        type="button"
+                                        onClick={onConnect}
+                                        className="rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                                    >
+                                        Reconnect
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={onDisconnect}
+                                    className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-2 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                                >
+                                    Disconnect
+                                </button>
+                            </div>
+                        )}
                     </div>
+                    <GithubDiagnostics status={status} />
+                </div>
+            ) : state === 'revoked' ? (
+                <div className="mt-3 space-y-3">
+                    <p className="text-sm text-[var(--text-gray-color)]">
+                        {canUpdate
+                            ? 'The GitHub connection was disconnected. Reconnect to resume linking pull requests.'
+                            : 'The GitHub connection was disconnected.'}
+                    </p>
                     {canUpdate && (
                         <button
                             type="button"
-                            onClick={onDisconnect}
-                            className="shrink-0 rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-2 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                            onClick={onConnect}
+                            className="rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                         >
-                            Disconnect
+                            Reconnect
                         </button>
                     )}
                 </div>

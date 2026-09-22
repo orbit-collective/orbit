@@ -83,15 +83,32 @@ export type GithubConnectionStatus =
     'not_connected' | 'pending' | 'connected' | 'revoked';
 
 /**
+ * Operational health, distinct from GithubConnectionStatus above (see
+ * GithubIntegrationHealthService on the backend). Only meaningful once
+ * `status` is 'connected' or 'revoked' — null while pending/not connected.
+ */
+export type GithubIntegrationHealth =
+    'healthy' | 'degraded' | 'error' | 'revoked' | null;
+
+/**
  * The settings-page prop for the 'github' kind integration (see
  * IntegrationKind in Integrations.ts) — polled the same way as
  * IntegrationImportProgress while a connection is pending. `installUrl` is
  * only ever present while `status` is 'pending' (orbit-api only hands it
- * out once, at connection creation).
+ * out once, at connection creation). The reliability fields always reflect
+ * the last scheduled sync or manual retry — see the "Retry sync" action.
  */
 export interface GithubConnectStatus {
     status: GithubConnectionStatus;
     installUrl: string | null;
     repository: { owner: string; name: string } | null;
     connectedAt: string | null;
+    health: GithubIntegrationHealth;
+    lastSuccessfulSyncAt: string | null;
+    lastSyncAttemptAt: string | null;
+    lastFailedSyncAt: string | null;
+    errorMessage: string | null;
+    pendingEventCount: number | null;
+    /** True when pendingEventCount hit orbit-api's page size - show "N+", not an exact count. */
+    pendingEventCountCapped: boolean;
 }

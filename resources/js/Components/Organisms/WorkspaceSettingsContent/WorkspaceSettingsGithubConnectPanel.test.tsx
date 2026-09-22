@@ -8,21 +8,52 @@ const notConnected: GithubConnectStatus = {
     installUrl: null,
     repository: null,
     connectedAt: null,
+    health: null,
+    lastSuccessfulSyncAt: null,
+    lastSyncAttemptAt: null,
+    lastFailedSyncAt: null,
+    errorMessage: null,
+    pendingEventCount: null,
+    pendingEventCountCapped: false,
 };
 
 const pending: GithubConnectStatus = {
+    ...notConnected,
     status: 'pending',
     installUrl: 'https://github.com/apps/orbit/installations/new?state=xyz',
-    repository: null,
-    connectedAt: null,
 };
 
-const connected: GithubConnectStatus = {
+const healthy: GithubConnectStatus = {
+    ...notConnected,
     status: 'connected',
-    installUrl: null,
     repository: { owner: 'orbit-collective', name: 'orbit' },
     connectedAt: '2026-09-20T00:00:00Z',
+    health: 'healthy',
+    lastSuccessfulSyncAt: new Date(Date.now() - 2 * 60_000).toISOString(),
 };
+
+const degraded: GithubConnectStatus = {
+    ...healthy,
+    health: 'degraded',
+    errorMessage: 'Orbit could not reach the GitHub relay service.',
+    lastFailedSyncAt: new Date(Date.now() - 60_000).toISOString(),
+    lastSyncAttemptAt: new Date(Date.now() - 60_000).toISOString(),
+    pendingEventCount: 3,
+};
+
+const errorState: GithubConnectStatus = {
+    ...healthy,
+    health: 'error',
+    errorMessage: 'Orbit no longer has access to this GitHub connection.',
+};
+
+const revoked: GithubConnectStatus = {
+    ...notConnected,
+    status: 'revoked',
+    health: 'revoked',
+};
+
+const noop = () => {};
 
 describe('WorkspaceSettingsGithubConnectPanel', () => {
     test('shows a Connect with GitHub button when not connected', () => {
@@ -30,8 +61,9 @@ describe('WorkspaceSettingsGithubConnectPanel', () => {
             <WorkspaceSettingsGithubConnectPanel
                 canUpdate
                 status={notConnected}
-                onConnect={() => {}}
-                onDisconnect={() => {}}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
             />,
         );
 
@@ -48,7 +80,8 @@ describe('WorkspaceSettingsGithubConnectPanel', () => {
                 canUpdate
                 status={notConnected}
                 onConnect={onConnect}
-                onDisconnect={() => {}}
+                onDisconnect={noop}
+                onRetry={noop}
             />,
         );
 
@@ -64,8 +97,9 @@ describe('WorkspaceSettingsGithubConnectPanel', () => {
             <WorkspaceSettingsGithubConnectPanel
                 canUpdate
                 status={pending}
-                onConnect={() => {}}
-                onDisconnect={() => {}}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
             />,
         );
 
@@ -75,32 +109,129 @@ describe('WorkspaceSettingsGithubConnectPanel', () => {
         expect(screen.getByText(/Waiting for/)).toBeInTheDocument();
     });
 
-    test('shows the connected repository and a disconnect action', () => {
+    test('shows the connected repository, a Healthy pill, and a disconnect action', () => {
         const onDisconnect = vi.fn();
 
         render(
             <WorkspaceSettingsGithubConnectPanel
                 canUpdate
-                status={connected}
-                onConnect={() => {}}
+                status={healthy}
+                onConnect={noop}
                 onDisconnect={onDisconnect}
+                onRetry={noop}
             />,
         );
 
-        expect(screen.getByText('orbit-collective/orbit')).toBeInTheDocument();
+        expect(
+            screen.getAllByText('orbit-collective/orbit').length,
+        ).toBeGreaterThan(0);
+        expect(screen.getByText('Healthy')).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Retry sync' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Reconnect' }),
+        ).not.toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
 
         expect(onDisconnect).toHaveBeenCalledTimes(1);
     });
 
+    test('a degraded integration shows the safe error message and a Retry sync action', () => {
+        const onRetry = vi.fn();
+
+        render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={degraded}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={onRetry}
+            />,
+        );
+
+        expect(screen.getByText('Degraded')).toBeInTheDocument();
+        expect(
+            screen.getByText('Orbit could not reach the GitHub relay service.'),
+        ).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Retry sync' }));
+
+        expect(onRetry).toHaveBeenCalledTimes(1);
+    });
+
+    test('an integration in an error state shows a Reconnect action instead of Retry sync', () => {
+        const onConnect = vi.fn();
+
+        render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={errorState}
+                onConnect={onConnect}
+                onDisconnect={noop}
+                onRetry={noop}
+            />,
+        );
+
+        expect(screen.getByText('Needs attention')).toBeInTheDocument();
+        expect(
+            screen.getByText(
+                'Orbit no longer has access to this GitHub connection.',
+            ),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Retry sync' }),
+        ).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Reconnect' }));
+
+        expect(onConnect).toHaveBeenCalledTimes(1);
+    });
+
+    test('a revoked connection shows a Reconnect action and no Disconnect button', () => {
+        render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={revoked}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
+            />,
+        );
+
+        expect(
+            screen.getByRole('button', { name: 'Reconnect' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Disconnect' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('the diagnostics section lists the pending event count with a "+" when capped', () => {
+        render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={degraded}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
+            />,
+        );
+
+        fireEvent.click(screen.getByText('Diagnostics'));
+
+        expect(screen.getByText('3')).toBeInTheDocument();
+    });
+
     test('hides the disconnect button for a read-only viewer', () => {
         render(
             <WorkspaceSettingsGithubConnectPanel
                 canUpdate={false}
-                status={connected}
-                onConnect={() => {}}
-                onDisconnect={() => {}}
+                status={healthy}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
             />,
         );
 
@@ -114,8 +245,9 @@ describe('WorkspaceSettingsGithubConnectPanel', () => {
             <WorkspaceSettingsGithubConnectPanel
                 canUpdate={false}
                 status={notConnected}
-                onConnect={() => {}}
-                onDisconnect={() => {}}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
             />,
         );
 
