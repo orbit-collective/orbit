@@ -25,6 +25,12 @@ class ProjectIntegration extends Model
         'github_repository_name',
         'github_connected_at',
         'github_last_synced_at',
+        'github_last_sync_attempt_at',
+        'github_last_failed_sync_at',
+        'github_last_error_code',
+        'github_last_error_message',
+        'github_consecutive_failures',
+        'github_pending_event_count',
         'github_revoked_at',
     ];
 
@@ -41,6 +47,11 @@ class ProjectIntegration extends Model
      * github_relay_token is the orbit-api relay bearer token for this
      * project's GitHub connection — encrypted at rest for the same reason as
      * webhook_url, and never manually added to a service's Inertia payload.
+     *
+     * github_last_synced_at is the last *successful* sync (the whole cycle
+     * completed with zero failures) — see GithubIntegrationSynchronizer.
+     * github_last_sync_attempt_at is updated on every attempt regardless of
+     * outcome, so a caller can tell "still trying" from "gave up".
      */
     protected $casts = [
         'enabled' => 'boolean',
@@ -52,6 +63,10 @@ class ProjectIntegration extends Model
         'github_repository_id' => 'integer',
         'github_connected_at' => 'datetime',
         'github_last_synced_at' => 'datetime',
+        'github_last_sync_attempt_at' => 'datetime',
+        'github_last_failed_sync_at' => 'datetime',
+        'github_consecutive_failures' => 'integer',
+        'github_pending_event_count' => 'integer',
         'github_revoked_at' => 'datetime',
     ];
 
