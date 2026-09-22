@@ -69,7 +69,30 @@ test('connect (reconnect) clears any leftover failure state from a previous conn
 test('getConnectStatus reports not_connected when no integration exists', function () {
     expect($this->service->getConnectStatus($this->project))->toBe([
         'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'connectedAt' => null,
+        'health' => null, 'lastSuccessfulSyncAt' => null, 'lastSyncAttemptAt' => null, 'lastFailedSyncAt' => null,
+        'errorMessage' => null, 'pendingEventCount' => null, 'pendingEventCountCapped' => false,
     ]);
+});
+
+test('getConnectStatus reports the derived health and reliability metadata', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+        'github_consecutive_failures' => 2,
+        'github_last_error_code' => 'INTERNAL_SERVER_ERROR',
+        'github_last_error_message' => 'The GitHub integration encountered a temporary synchronization error.',
+        'github_pending_event_count' => 50,
+    ]);
+
+    $status = $this->service->getConnectStatus($this->project);
+
+    expect($status['health'])->toBe('degraded')
+        ->and($status['errorMessage'])->toBe('The GitHub integration encountered a temporary synchronization error.')
+        ->and($status['pendingEventCount'])->toBe(50)
+        ->and($status['pendingEventCountCapped'])->toBeTrue();
 });
 
 test('getConnectStatus syncs a pending connection to connected and clears the install url', function () {
