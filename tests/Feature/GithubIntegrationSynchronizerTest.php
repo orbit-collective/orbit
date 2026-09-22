@@ -7,6 +7,7 @@ use App\Models\ProjectIntegration;
 use App\Services\Integrations\Github\GithubIntegrationSynchronizer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
@@ -176,4 +177,25 @@ test('the failure count keeps incrementing across repeated failures', function (
     $pi->refresh();
 
     expect($pi->github_consecutive_failures)->toBe(2);
+});
+
+test('a corrupted relay token never throws and is recorded without any http request', function () {
+    $project = Project::factory()->create();
+    $pi = makeConnectedGithubIntegration($project);
+
+    DB::table('project_integrations')->where('id', $pi->id)->update([
+        'github_relay_token' => 'not-a-valid-encrypted-payload',
+    ]);
+    $pi->refresh();
+
+    $result = $this->synchronizer->sync($pi);
+
+    expect($result->succeeded)->toBeFalse()
+        ->and($result->error->code)->toBe('LOCAL_TOKEN_UNREADABLE');
+
+    $pi->refresh();
+    expect($pi->github_last_error_code)->toBe('LOCAL_TOKEN_UNREADABLE')
+        ->and($pi->github_consecutive_failures)->toBe(1);
+
+    Http::assertNothingSent();
 });

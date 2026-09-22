@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -83,5 +84,34 @@ class ProjectIntegration extends Model
     public function fieldMappings(): HasMany
     {
         return $this->hasMany(IntegrationFieldMapping::class);
+    }
+
+    /**
+     * True when a github_relay_token is stored but can no longer be
+     * decrypted with the app's current key (e.g. the key changed since it
+     * was written). Checks the raw column, never the encrypted cast, so it
+     * can never itself throw.
+     */
+    public function hasUnreadableGithubRelayToken(): bool
+    {
+        return $this->getRawOriginal('github_relay_token') !== null
+            && $this->resolveGithubRelayToken() === null;
+    }
+
+    /**
+     * Safe accessor for github_relay_token: every other direct access to
+     * this attribute risks an uncaught DecryptException (and, before this
+     * existed, did exactly that — crashing the whole Integrations settings
+     * page) if the stored ciphertext can't be decrypted with the current
+     * app key. Everywhere that needs the token should go through this
+     * instead of the raw property.
+     */
+    public function resolveGithubRelayToken(): ?string
+    {
+        try {
+            return $this->github_relay_token;
+        } catch (DecryptException) {
+            return null;
+        }
     }
 }

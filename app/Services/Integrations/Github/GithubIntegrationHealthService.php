@@ -19,6 +19,7 @@ class GithubIntegrationHealthService
         'INVALID_AUTHORIZATION',
         'CONNECTION_NOT_CONNECTED',
         'INCOMPLETE_CONNECTION',
+        GithubIntegrationErrorClassifier::TOKEN_UNREADABLE_CODE,
     ];
 
     /**
