@@ -23,6 +23,7 @@ class GithubIntegrationService
     public function __construct(
         protected ProjectIntegrationRepository $projectIntegrationRepository,
         protected OrbitRelayClient $relayClient,
+        protected GithubIntegrationSynchronizer $synchronizer,
         protected ActivityLogService $activityLogService,
     ) {}
 
@@ -128,6 +129,24 @@ class GithubIntegrationService
         // there is no intermediate state where both the old and new token
         // are persisted together.
         $projectIntegration->update(['github_relay_token' => $newToken]);
+    }
+
+    /**
+     * Manually runs one sync cycle for this project's GitHub integration -
+     * the exact same GithubIntegrationSynchronizer the scheduler uses (see
+     * PollGithubRelayEvents), so there's no separate "retry" code path to
+     * keep correct. A no-op if nothing is connected, or if a sync for this
+     * integration is already in progress (the synchronizer's own lock).
+     */
+    public function retrySync(Project $project): void
+    {
+        $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
+
+        if (! $projectIntegration) {
+            return;
+        }
+
+        $this->synchronizer->sync($projectIntegration);
     }
 
     private function syncFromRelay(ProjectIntegration $projectIntegration): void

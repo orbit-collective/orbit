@@ -29,4 +29,13 @@ class GithubIntegrationController extends Controller
 
         return redirect()->back()->with('success', 'Disconnected GitHub.');
     }
+
+    public function retry(Project $project): RedirectResponse
+    {
+        $this->authorize('updateIntegrations', $project);
+
+        $this->githubIntegrationService->retrySync($project);
+
+        return redirect()->back();
+    }
 }
