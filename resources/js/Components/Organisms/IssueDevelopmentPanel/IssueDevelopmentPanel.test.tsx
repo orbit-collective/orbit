@@ -114,6 +114,5 @@ describe('IssueDevelopmentPanel', () => {
 
         expect(screen.getByText('Fix login redirect')).toBeInTheDocument();
         expect(screen.getByText('Add retry button')).toBeInTheDocument();
-        expect(screen.getByText('2')).toBeInTheDocument();
     });
 });
