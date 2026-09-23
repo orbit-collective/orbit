@@ -130,21 +130,32 @@ describe('Issues/Show Page', () => {
                 users={users}
                 linkedPullRequests={[
                     {
-                        label: 'orbit-collective/orbit #283',
+                        provider: 'github',
+                        number: 283,
+                        title: 'Fix login redirect',
+                        repositoryOwner: 'orbit-collective',
+                        repositoryName: 'orbit',
                         url: 'https://github.com/orbit-collective/orbit/pull/283',
+                        sourceBranch: 'fix/login-redirect',
+                        targetBranch: 'master',
+                        status: 'open',
+                        draft: false,
                     },
                 ]}
             />,
         );
 
-        const link = screen.getByText('orbit-collective/orbit #283');
+        const link = screen.getByText('Fix login redirect');
         expect(link.closest('a')).toHaveAttribute(
             'href',
             'https://github.com/orbit-collective/orbit/pull/283',
         );
+        expect(
+            screen.getByText(/orbit-collective\/orbit #283/),
+        ).toBeInTheDocument();
     });
 
-    test('renders no GitHub field when there is no linked pull request', () => {
+    test('renders no Development panel when there is no linked pull request', () => {
         render(
             <Show
                 project={project}
@@ -154,7 +165,7 @@ describe('Issues/Show Page', () => {
             />,
         );
 
-        expect(screen.queryByText('GitHub')).not.toBeInTheDocument();
+        expect(screen.queryByText('Development')).not.toBeInTheDocument();
     });
 
     test('renders placeholders in the Dates field when neither date is set', () => {

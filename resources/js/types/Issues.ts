@@ -118,8 +118,20 @@ export type SortingColumn =
     | 'start_date'
     | 'end_date';
 
-/** A GitHub pull request linked to this issue via the `<!-- orbit-issue:ID -->` marker. */
+/**
+ * A GitHub pull request linked to this issue via the
+ * `<!-- orbit-issue:ID -->` marker. Metadata fields are nullable because a
+ * link created before v0.9.2 never captured them and is never backfilled.
+ */
 export interface LinkedPullRequest {
-    label: string;
+    provider: 'github';
+    number: number;
+    title: string | null;
+    repositoryOwner: string;
+    repositoryName: string;
     url: string;
+    sourceBranch: string | null;
+    targetBranch: string | null;
+    status: 'open' | null;
+    draft: boolean | null;
 }
