@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.9.1](https://github.com/orbit-collective/orbit/compare/v0.9.0...v0.9.1) (2026-09-23)
+
+
+### Features
+
+* **github:** add reliability schema ([9621c93](https://github.com/orbit-collective/orbit/commit/9621c93fc859da079fc9d965a43f2d031bc2e9d5))
+* **github:** add retry action ([adf9148](https://github.com/orbit-collective/orbit/commit/adf91483f47093297e3ceae7987eb9c006a0f5d9))
+* **github:** add shared synchronizer ([526d4c7](https://github.com/orbit-collective/orbit/commit/526d4c794fb8d593a56664f86a9c3979de51c0e5))
+* **github:** classify sync errors ([d9671aa](https://github.com/orbit-collective/orbit/commit/d9671aa166b20d2b2df373ce725f1fb2785c6d82))
+* **github:** derive integration health ([a2eda9e](https://github.com/orbit-collective/orbit/commit/a2eda9edf6322cadd5993e527c400cd4c439d0ec))
+* **github:** expose health metadata to status ([fedc140](https://github.com/orbit-collective/orbit/commit/fedc140e110161c2cdcc65983a473ff86afbc83c))
+* **github:** improve integration status ui ([0d7fb43](https://github.com/orbit-collective/orbit/commit/0d7fb4304bb3429e3cf233f9c7e1cfd8c9d20c2f))
+* **github:** reset state on reconnect ([c16dff4](https://github.com/orbit-collective/orbit/commit/c16dff4b5050801c8b4c17ab18b59eba1f5e51c0))
+
+
+### Bug Fixes
+
+* **github:** harden sync recovery against lock races and masked errors ([ae43a40](https://github.com/orbit-collective/orbit/commit/ae43a40a1e1ea70da9b32499023cdadd54209b6f))
+* **github:** never crash on an undecryptable relay token ([d78e7d1](https://github.com/orbit-collective/orbit/commit/d78e7d1f2b2a6665a7bd3593a9876e0fd44dca59))
+* **github:** queue manual retry instead of blocking ([c9f0962](https://github.com/orbit-collective/orbit/commit/c9f0962337762e9e628e9e267ab47831b660e609))
+
+
+### Miscellaneous Chores
+
+* release 0.9.1 ([3dd1c74](https://github.com/orbit-collective/orbit/commit/3dd1c741d7d7de5523d09e4567a5910bde2a4a2d))
+
 ## [0.9.0](https://github.com/orbit-collective/orbit/compare/v0.8.3...v0.9.0) (2026-09-20)
 
 
