@@ -59,6 +59,17 @@ GitHuba — sprawia, że ponowne połączenie tego samego PR-a (np. przy
 ponowionym evencie relay) jest idempotentne zamiast tworzyć duplikat
 wiersza.
 
+Ten sam wiersz przechowuje też tytuł PR-a, branch źródłowy/docelowy,
+`status` i flagę `draft`, przechwycone raz z payloadu webhooka
+`opened` (`pull_request_title`, `source_branch`, `target_branch`,
+`status`, `draft` — wszystkie nullable). Powiązanie utworzone przed
+dodaniem tych kolumn po prostu ma w nich nulle; panel Development na
+stronie issue (`IssueDevelopmentPanel`) renderuje się mimo brakujących
+pól zamiast rzucać błąd, a nic nie uzupełnia starych wierszy danymi z
+GitHuba. Ponowne przetworzenie eventu nigdy nie nadpisuje już
+zapisanych metadanych nullem — zobacz filtrowanie nulli w
+`GithubRelayEventProcessor::process()` przed wywołaniem `upsertFor()`.
+
 ## Zmienne środowiskowe
 
 ```
@@ -182,6 +193,10 @@ tylko własny rekord orbit-api wygasł albo zniknął pierwszy.
 
 - Obsługiwany jest wyłącznie `pull_request.opened` — edycje,
   zamknięcia, merge'e, review'y i CI/check runs nie są synchronizowane.
+  `status`/`draft` w panelu Development odzwierciedlają stan PR-a
+  *w momencie otwarcia* — PR później zamknięty, zmergowany albo
+  oznaczony jako gotowy do review nie zaktualizuje się tutaj
+  (planowane w przyszłym wydaniu, nie w v0.9.2).
 - Jedno połączenie z GitHubem na projekt w Orbicie, jedno repozytorium
   na połączenie i jedno issue w Orbicie na pull request.
 - Brak automatyzacji statusu: powiązanie PR-a nigdy nie zmienia statusu

@@ -57,6 +57,17 @@ GitHub's own numeric pull request id — is what makes relinking the
 same PR (e.g. on a retried relay event) idempotent instead of creating
 a duplicate row.
 
+That same row also carries the PR's title, source/target branch,
+`status`, and `draft` flag, captured once from the `opened` webhook
+payload (`pull_request_title`, `source_branch`, `target_branch`,
+`status`, `draft` — all nullable). A link created before these columns
+existed simply has nulls in them; the issue page's Development panel
+(`IssueDevelopmentPanel`) renders around missing fields rather than
+erroring, and nothing backfills old rows from GitHub. Reprocessing an
+event never overwrites already-stored metadata with a null — see
+`GithubRelayEventProcessor::process()`'s null-filtering before the
+`upsertFor()` call.
+
 ## Environment
 
 ```
@@ -175,7 +186,10 @@ relay's own pending record expired or vanished first.
 ## MVP limitations
 
 - Only `pull_request.opened` is handled — edits, closes, merges,
-  reviews, and CI/check runs are not synced.
+  reviews, and CI/check runs are not synced. The Development panel's
+  `status`/`draft` reflect the PR's state *at open time* only; a PR
+  later closed, merged, or marked ready for review will not update
+  here (planned for a future release, not v0.9.2).
 - One GitHub connection per Orbit project, one repository per
   connection, and one Orbit issue per pull request.
 - No status automation: linking a PR never transitions the issue's
