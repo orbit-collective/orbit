@@ -60,13 +60,24 @@ class GithubRelayEventProcessor
 
         // Idempotent by (project_integration_id, external_id) - reprocessing
         // the same event (e.g. after a comment-request failure) updates
-        // this row in place rather than creating a duplicate link.
+        // this row in place rather than creating a duplicate link. Metadata
+        // fields are filtered to non-null so a legacy/minimal relay event
+        // never wipes out metadata a previous, richer event already stored.
+        $metadata = array_filter([
+            'pull_request_title' => $event->pullRequestTitle,
+            'source_branch' => $event->pullRequestSourceBranch,
+            'target_branch' => $event->pullRequestTargetBranch,
+            'draft' => $event->pullRequestDraft,
+        ], fn ($value) => $value !== null);
+
         $this->externalIssueLinkRepository->upsertFor($projectIntegration, (string) $event->pullRequestId, [
             'issue_id' => $issue->id,
             'external_key' => "$projectIntegration->github_repository_owner/$projectIntegration->github_repository_name#$event->pullRequestNumber",
             'external_url' => $event->pullRequestUrl,
             'external_type' => 'github_pull_request',
+            'status' => 'open',
             'last_synced_at' => now(),
+            ...$metadata,
         ]);
 
         // orbit-api itself dedupes comment creation by eventId, so

@@ -13,8 +13,16 @@ use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
-function makeRelayEvent(string $body, int $pullRequestId = 4580098240, int $pullRequestNumber = 283, string $eventId = 'evt_1'): GithubRelayEventDTO
-{
+function makeRelayEvent(
+    string $body,
+    int $pullRequestId = 4580098240,
+    int $pullRequestNumber = 283,
+    string $eventId = 'evt_1',
+    ?string $title = 'Fix login redirect',
+    ?string $sourceBranch = 'fix/login-redirect',
+    ?string $targetBranch = 'master',
+    ?bool $draft = false,
+): GithubRelayEventDTO {
     return new GithubRelayEventDTO(
         id: $eventId,
         type: 'pull_request',
@@ -25,6 +33,10 @@ function makeRelayEvent(string $body, int $pullRequestId = 4580098240, int $pull
         pullRequestNumber: $pullRequestNumber,
         pullRequestUrl: 'https://github.com/orbit-collective/orbit/pull/283',
         pullRequestBody: $body,
+        pullRequestTitle: $title,
+        pullRequestSourceBranch: $sourceBranch,
+        pullRequestTargetBranch: $targetBranch,
+        pullRequestDraft: $draft,
         createdAt: now()->toIso8601String(),
     );
 }
@@ -138,8 +150,67 @@ test('an unsupported event action is skipped', function () {
         pullRequestNumber: 1,
         pullRequestUrl: 'https://github.com/o/r/pull/1',
         pullRequestBody: '',
+        pullRequestTitle: null,
+        pullRequestSourceBranch: null,
+        pullRequestTargetBranch: null,
+        pullRequestDraft: null,
         createdAt: now()->toIso8601String(),
     );
 
     expect($this->processor->process($event, $this->projectIntegration))->toBe(GithubRelayEventOutcome::Skipped);
+});
+
+test('the happy path persists pull request title, branches, status and draft state', function () {
+    fakeSuccessfulComment();
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+
+    $this->processor->process(makeRelayEvent("<!-- orbit-issue:{$issue->id} -->"), $this->projectIntegration);
+
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'issue_id' => $issue->id,
+        'pull_request_title' => 'Fix login redirect',
+        'source_branch' => 'fix/login-redirect',
+        'target_branch' => 'master',
+        'status' => 'open',
+        'draft' => 0,
+    ]);
+});
+
+test('reprocessing with null metadata does not erase previously stored metadata', function () {
+    fakeSuccessfulComment();
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+
+    $this->processor->process(makeRelayEvent("<!-- orbit-issue:{$issue->id} -->"), $this->projectIntegration);
+    $this->processor->process(
+        makeRelayEvent("<!-- orbit-issue:{$issue->id} -->", title: null, sourceBranch: null, targetBranch: null, draft: null),
+        $this->projectIntegration,
+    );
+
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'issue_id' => $issue->id,
+        'pull_request_title' => 'Fix login redirect',
+        'source_branch' => 'fix/login-redirect',
+        'target_branch' => 'master',
+        'draft' => 0,
+    ]);
+});
+
+test('a minimal legacy-shaped event without metadata still creates the core link', function () {
+    fakeSuccessfulComment();
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent("<!-- orbit-issue:{$issue->id} -->", title: null, sourceBranch: null, targetBranch: null, draft: null),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Linked);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'issue_id' => $issue->id,
+        'status' => 'open',
+        'pull_request_title' => null,
+    ]);
 });
