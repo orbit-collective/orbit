@@ -54,7 +54,30 @@ test('listEvents maps every event in the response', function () {
     $events = $this->client->listEvents('orb_local_abc');
 
     expect($events)->toHaveCount(1)
-        ->and($events[0]->pullRequestNumber)->toBe(283);
+        ->and($events[0]->pullRequestNumber)->toBe(283)
+        ->and($events[0]->pullRequestTitle)->toBeNull()
+        ->and($events[0]->pullRequestSourceBranch)->toBeNull()
+        ->and($events[0]->pullRequestTargetBranch)->toBeNull()
+        ->and($events[0]->pullRequestDraft)->toBeNull();
+});
+
+test('listEvents maps pull request title, branches, and draft state when present', function () {
+    Http::fake(['*/v1/github/events' => Http::response([
+        'success' => true,
+        'data' => ['events' => [
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => [
+                'id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->',
+                'title' => 'Fix login redirect', 'sourceBranch' => 'fix/login-redirect', 'targetBranch' => 'master', 'draft' => true,
+            ], 'createdAt' => 'now'],
+        ]],
+    ], 200)]);
+
+    $events = $this->client->listEvents('orb_local_abc');
+
+    expect($events[0]->pullRequestTitle)->toBe('Fix login redirect')
+        ->and($events[0]->pullRequestSourceBranch)->toBe('fix/login-redirect')
+        ->and($events[0]->pullRequestTargetBranch)->toBe('master')
+        ->and($events[0]->pullRequestDraft)->toBeTrue();
 });
 
 test('createComment sends eventId, pullRequestNumber, and body', function () {
