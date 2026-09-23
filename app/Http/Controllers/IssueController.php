@@ -71,16 +71,31 @@ class IssueController extends Controller
     }
 
     /**
-     * @return array<int, array{label: string, url: string}>
+     * @return array<int, array{provider: string, number: int, title: ?string, repositoryOwner: string, repositoryName: string, url: string, sourceBranch: ?string, targetBranch: ?string, status: ?string, draft: ?bool}>
      */
     private function mapLinkedPullRequests(Collection $externalLinks): array
     {
         return $externalLinks
             ->where('external_type', 'github_pull_request')
-            ->map(fn (ExternalIssueLink $link) => [
-                'label' => str_replace('#', ' #', $link->external_key),
-                'url' => $link->external_url,
-            ])
+            ->map(function (ExternalIssueLink $link) {
+                // external_key is always "owner/name#number" - see
+                // GithubRelayEventProcessor, which is the only writer.
+                [$repository, $number] = explode('#', $link->external_key);
+                [$owner, $name] = explode('/', $repository);
+
+                return [
+                    'provider' => 'github',
+                    'number' => (int) $number,
+                    'title' => $link->pull_request_title,
+                    'repositoryOwner' => $owner,
+                    'repositoryName' => $name,
+                    'url' => $link->external_url,
+                    'sourceBranch' => $link->source_branch,
+                    'targetBranch' => $link->target_branch,
+                    'status' => $link->status,
+                    'draft' => $link->draft,
+                ];
+            })
             ->values()
             ->all();
     }

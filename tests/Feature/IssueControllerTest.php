@@ -44,7 +44,60 @@ test('an issue detail page can be viewed', function () {
         ->and($page['props'])->toHaveKeys(['project', 'projects', 'users']);
 });
 
-test('a linked github pull request is exposed as a friendly label and url', function () {
+test('a linked github pull request is exposed with its rich development metadata', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_repository_owner' => 'orbit-collective',
+        'github_repository_name' => 'orbit',
+    ]);
+
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '4580098240',
+        'external_key' => 'orbit-collective/orbit#283',
+        'external_url' => 'https://github.com/orbit-collective/orbit/pull/283',
+        'external_type' => 'github_pull_request',
+        'pull_request_title' => 'Fix login redirect',
+        'source_branch' => 'fix/login-redirect',
+        'target_branch' => 'master',
+        'status' => 'open',
+        'draft' => false,
+    ]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    $response->assertOk();
+    $page = json_decode($response->getContent(), true);
+
+    expect($page['props']['linkedPullRequests'])->toBe([
+        [
+            'provider' => 'github',
+            'number' => 283,
+            'title' => 'Fix login redirect',
+            'repositoryOwner' => 'orbit-collective',
+            'repositoryName' => 'orbit',
+            'url' => 'https://github.com/orbit-collective/orbit/pull/283',
+            'sourceBranch' => 'fix/login-redirect',
+            'targetBranch' => 'master',
+            'status' => 'open',
+            'draft' => false,
+        ],
+    ]);
+});
+
+test('a legacy linked pull request without metadata renders gracefully with nulls', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $user = actingAsProjectMember($project);
@@ -77,7 +130,18 @@ test('a linked github pull request is exposed as a friendly label and url', func
     $page = json_decode($response->getContent(), true);
 
     expect($page['props']['linkedPullRequests'])->toBe([
-        ['label' => 'orbit-collective/orbit #283', 'url' => 'https://github.com/orbit-collective/orbit/pull/283'],
+        [
+            'provider' => 'github',
+            'number' => 283,
+            'title' => null,
+            'repositoryOwner' => 'orbit-collective',
+            'repositoryName' => 'orbit',
+            'url' => 'https://github.com/orbit-collective/orbit/pull/283',
+            'sourceBranch' => null,
+            'targetBranch' => null,
+            'status' => null,
+            'draft' => null,
+        ],
     ]);
 });
 
