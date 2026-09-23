@@ -14,11 +14,17 @@ class ExternalIssueLink extends Model
         'external_key',
         'external_url',
         'external_type',
+        'pull_request_title',
+        'source_branch',
+        'target_branch',
+        'status',
+        'draft',
         'last_synced_at',
     ];
 
     protected $casts = [
         'last_synced_at' => 'datetime',
+        'draft' => 'boolean',
     ];
 
     public function issue(): BelongsTo
