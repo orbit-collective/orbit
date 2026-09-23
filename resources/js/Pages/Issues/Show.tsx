@@ -211,10 +211,6 @@ export default function Show({
                                     />
                                 )}
 
-                                <IssueDevelopmentPanel
-                                    pullRequests={linkedPullRequests}
-                                />
-
                                 <div className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
                                     <span className="text-sm font-medium text-[var(--text-color)]">
                                         Activity
@@ -429,6 +425,14 @@ export default function Show({
                                         {project.name}
                                     </Link>
                                 </SidebarField>
+
+                                {linkedPullRequests.length > 0 && (
+                                    <SidebarField label="Development">
+                                        <IssueDevelopmentPanel
+                                            pullRequests={linkedPullRequests}
+                                        />
+                                    </SidebarField>
+                                )}
 
                                 <SidebarField label="Dates">
                                     <div className="flex items-center gap-1">
