@@ -19,18 +19,23 @@ domyślnie `api.orbit-dev.app`) istnieje po to, żeby połączyć tę lukę:
 GitHub  --webhook-->  orbit-api  <--poll--  Orbit Local  --żądanie komentarza-->  orbit-api  --API GitHub App-->  GitHub
 ```
 
-1. GitHub wysyła webhook `pull_request` do orbit-api, gdy PR zostaje otwarty.
+1. GitHub wysyła webhook `pull_request` do orbit-api dla wspieranej
+   akcji — `opened`, `reopened`, `closed` albo `synchronize`.
 2. orbit-api weryfikuje podpis webhooka i zapisuje go jako oczekujący
    "event relay", przypisany do połączenia danego projektu.
 3. Orbit Local odpytuje orbit-api raz na minutę (`PollGithubRelayEvents`,
    zaplanowane w `routes/console.php`) o oczekujące eventy.
-4. Dla każdego eventu Orbit Local parsuje treść PR-a w poszukiwaniu
+4. Dla eventu `opened` Orbit Local parsuje treść PR-a w poszukiwaniu
    znacznika `<!-- orbit-issue:ID -->`, rozwiązuje issue i zapisuje
-   powiązanie.
-5. Orbit Local prosi orbit-api o dodanie komentarza potwierdzającego
-   na PR-ze, używając tokenu instalacji GitHub App należącego do
-   orbit-api — Orbit Local nigdy sam nie posiada tokenu GitHuba ani
-   klucza prywatnego GitHub App.
+   powiązanie. Dla `reopened`/`closed`/`synchronize` Orbit Local
+   zamiast tego szuka *istniejącego* powiązania po własnych, stabilnych
+   identyfikatorach GitHuba (zobacz
+   [Synchronizacja cyklu życia pull requesta](#synchronizacja-cyklu-%C5%BCycia-pull-requesta)
+   poniżej) i nigdy nie parsuje znacznika ponownie.
+5. Tylko `opened` wywołuje komentarz potwierdzający na PR-ze, przy
+   użyciu tokenu instalacji GitHub App należącego do orbit-api — Orbit
+   Local nigdy sam nie posiada tokenu GitHuba ani klucza prywatnego
+   GitHub App i nigdy nie publikuje komentarza dla eventu cyklu życia.
 6. Orbit Local potwierdza (ACK) event, co usuwa go z kolejki oczekujących.
 
 Autorytatywnym źródłem kontraktu API jest sam kod orbit-api; ten
@@ -60,15 +65,15 @@ ponowionym evencie relay) jest idempotentne zamiast tworzyć duplikat
 wiersza.
 
 Ten sam wiersz przechowuje też tytuł PR-a, branch źródłowy/docelowy,
-`status` i flagę `draft`, przechwycone raz z payloadu webhooka
-`opened` (`pull_request_title`, `source_branch`, `target_branch`,
-`status`, `draft` — wszystkie nullable). Powiązanie utworzone przed
-dodaniem tych kolumn po prostu ma w nich nulle; panel Development na
-stronie issue (`IssueDevelopmentPanel`) renderuje się mimo brakujących
-pól zamiast rzucać błąd, a nic nie uzupełnia starych wierszy danymi z
-GitHuba. Ponowne przetworzenie eventu nigdy nie nadpisuje już
-zapisanych metadanych nullem — zobacz filtrowanie nulli w
-`GithubRelayEventProcessor::process()` przed wywołaniem `upsertFor()`.
+`status` i flagę `draft` (`pull_request_title`, `source_branch`,
+`target_branch`, `status`, `draft` — wszystkie nullable), a od v0.9.3
+także `github_updated_at` i `merged_at` (również nullable). Powiązanie
+utworzone przed dodaniem tych kolumn po prostu ma w nich nulle; panel
+Development na stronie issue (`IssueDevelopmentPanel`) renderuje się
+mimo brakujących pól zamiast rzucać błąd, a nic nie uzupełnia starych
+wierszy danymi z GitHuba. Ponowne przetworzenie eventu nigdy nie
+nadpisuje już zapisanych metadanych nullem — zobacz filtrowanie nulli
+w `GithubRelayEventProcessor` przed wywołaniem `upsertFor()`/`touch()`.
 
 ## Zmienne środowiskowe
 
@@ -122,19 +127,72 @@ Nie ma żadnego fallbacku: brak parsowania tytułu, brancha czy
 wiadomości commitów. Zobacz
 `App\Services\Integrations\Github\GithubMarkerParser`.
 
+Znacznik służy wyłącznie do *pierwszego* powiązania, przy `opened`.
+Event `reopened`/`closed`/`synchronize` nigdy nie parsuje go ponownie
+— zobacz następną sekcję.
+
+## Synchronizacja cyklu życia pull requesta
+
+Po powiązaniu pull requesta Orbit Local utrzymuje jego `status`
+aktualny, reagując na kolejne eventy webhooka, nigdy nie dotykając
+przy tym ponownie znacznika:
+
+| Akcja GitHuba | Wynikowy `status` | Uwagi |
+| --- | --- | --- |
+| `reopened` | `open` | |
+| `closed`, `merged: false` | `closed` | GitHub używa `closed` zarówno dla zwykłego zamknięcia, jak i mergea; to własne pole `merged` z payloadu (nigdy nazwy branchy, commity ani znaczniki czasu) decyduje, o który przypadek chodzi. |
+| `closed`, `merged: true` | `merged` | `merged_at` jest zapisywane, jeśli GitHub je dostarcza. |
+| `synchronize` | bez zmian | Do brancha PR-a zostały wypchnięte nowe commity. Odświeżany jest tylko tytuł/branche/draft — żadna lista ani liczba commitów nie jest zapisywana. |
+
+Wyszukiwanie odbywa się po własnych, stabilnych identyfikatorach
+GitHuba — połączeniu (które implikuje repozytorium) plus numerycznym
+id pull requesta — nigdy przez ponowne parsowanie treści PR-a, tytułu,
+nazwy brancha czy samego numeru PR-a. Event cyklu życia dla pull
+requesta, którego Orbit nigdy nie powiązał (nigdy nie przetworzono dla
+niego eventu `opened`, albo jego znacznik się nie rozwiązał), zostaje
+potwierdzony (ACK) i zignorowany: nigdy nie wyzwala powiązania opartego
+o znacznik ani nie tworzy nowego powiązania. Zobacz
+`GithubRelayEventProcessor::handleLifecycleEvent()`.
+
+Event cyklu życia nigdy nie publikuje ani nie edytuje komentarza bota,
+nigdy nie tworzy nowego powiązania pull requesta i nigdy nie zmienia
+własnego statusu workflow powiązanego issue w Orbicie — to wydanie
+dotyczy wyłącznie synchronizacji. Automatyczne zmiany statusu issue w
+Orbicie na podstawie stanu pull requesta to świadomy brak celu tego
+wydania.
+
+**Ochrona przed nieaktualnymi eventami.** GitHub nie gwarantuje
+kolejności dostarczania webhooków. Każdy event relay niesie własny
+`updated_at` pull requesta z GitHuba (zapisywany lokalnie jako
+`github_updated_at`); nadchodzący event cyklu życia, którego
+`updated_at` jest starsze niż aktualnie zapisane na powiązaniu, jest
+ignorowany (potwierdzany, ale nie stosowany), zamiast cofać nowszy
+stan — np. event `synchronize`, który dotrze już po zmergowaniu pull
+requesta, nie przełącza statusu z powrotem na `open`. Powiązanie bez
+`github_updated_at` (utworzone przed v0.9.3 albo nigdy jeszcze nie
+zsynchronizowane w cyklu życia) nie ma z czym porównać, więc pierwszy
+event cyklu życia dla niego zawsze jest stosowany.
+
+Stan jest tu **eventually consistent**, nie w czasie rzeczywistym:
+odzwierciedla ostatni event relay, który Orbit Local odpytał i
+przetworzył, a nie żywy stan na GitHubie w chwili, gdy patrzysz na
+issue.
+
 ## Semantyka potwierdzania (ACK)
 
 Event zostaje potwierdzony (usunięty z kolejki oczekujących), gdy
 `GithubRelayEventProcessor::process()` zwróci wynik bez rzucenia
-wyjątku — obejmuje to zarówno udane powiązanie, jak i każdy z
-powyższych trwale-nieprawidłowych przypadków (brak znacznika,
-niejednoznaczność, brak issue, zły projekt, nieobsługiwany
-event/akcja). Błąd **przejściowy** — niedostępne orbit-api, nieudane
-żądanie komentarza, błąd bazy danych — powoduje, że `process()` rzuca
-wyjątek, a `PollGithubRelayEvents` celowo nie potwierdza w takim
-przypadku eventu: pozostaje on oczekujący i zostanie ponowiony przy
-kolejnym odpytaniu. Nie ma osobnej infrastruktury kolejki ponowień —
-mechanizmem ponawiania jest sam stan "oczekujący" po stronie relay.
+wyjątku — obejmuje to udane powiązanie, udaną synchronizację cyklu
+życia, jak i każdy z trwale-nieprawidłowych przypadków (brak
+znacznika, niejednoznaczność, brak issue, zły projekt, nieobsługiwany
+event/akcja, event cyklu życia dla niepowiązanego PR-a albo nieaktualny
+event cyklu życia). Błąd **przejściowy** — niedostępne orbit-api,
+nieudane żądanie komentarza, błąd bazy danych — powoduje, że
+`process()` rzuca wyjątek, a `PollGithubRelayEvents` celowo nie
+potwierdza w takim przypadku eventu: pozostaje on oczekujący i zostanie
+ponowiony przy kolejnym odpytaniu. Nie ma osobnej infrastruktury
+kolejki ponowień — mechanizmem ponawiania jest sam stan "oczekujący"
+po stronie relay.
 
 ## Niezawodność i stan zdrowia
 
@@ -191,18 +249,30 @@ tylko własny rekord orbit-api wygasł albo zniknął pierwszy.
 
 ## Ograniczenia MVP
 
-- Obsługiwany jest wyłącznie `pull_request.opened` — edycje,
-  zamknięcia, merge'e, review'y i CI/check runs nie są synchronizowane.
-  `status`/`draft` w panelu Development odzwierciedlają stan PR-a
-  *w momencie otwarcia* — PR później zamknięty, zmergowany albo
-  oznaczony jako gotowy do review nie zaktualizuje się tutaj
-  (planowane w przyszłym wydaniu, nie w v0.9.2).
+- Obsługiwane są wyłącznie `pull_request.opened`, `reopened`, `closed`
+  i `synchronize` — `edited` (w tym sama edycja tytułu), review'y,
+  requested reviewers, etykiety, przypisania i CI/check runs nie są
+  synchronizowane. Tytuł/branche PR-a odświeżają się tylko okazjonalnie,
+  jako efekt uboczny eventu cyklu życia, który już je niesie, a nie
+  natychmiast, gdy ktoś edytuje sam tytuł na GitHubie.
 - Jedno połączenie z GitHubem na projekt w Orbicie, jedno repozytorium
   na połączenie i jedno issue w Orbicie na pull request.
-- Brak automatyzacji statusu: powiązanie PR-a nigdy nie zmienia statusu
-  issue ani go nie zamyka.
+- Brak automatyzacji statusu: cykl życia pull requesta (otwarcie,
+  zmergowanie, zamknięcie, ponowne otwarcie) nigdy nie zmienia
+  własnego statusu workflow powiązanego issue w Orbicie ani go nie
+  zamyka — zobacz
+  [Synchronizacja cyklu życia pull requesta](#synchronizacja-cyklu-%C5%BCycia-pull-requesta).
+  Tego typu automatyzacja ma pojawić się później jako część Workspace
+  Automation, nie w tym wydaniu.
+- Brak śledzenia na poziomie commitów: `synchronize` odświeża tylko
+  istniejący snapshot metadanych, nigdy listę ani liczbę commitów.
 - Brak synchronizacji komentarzy w żadną stronę poza pojedynczym
-  komentarzem potwierdzającym, który orbit-api publikuje raz.
+  komentarzem potwierdzającym, który orbit-api publikuje raz przy
+  `opened` — event cyklu życia nigdy nie publikuje ani nie edytuje
+  komentarza.
+- Brak pełnej historii cyklu życia: przechowywany i pokazywany jest
+  tylko aktualnie znany stan pull requesta, a nie oś czasu przeszłych
+  przejść.
 - Rozłączenie w Orbicie nie odinstalowuje GitHub App z GitHuba — tylko
   sprawia, że Orbit Local przestaje ufać temu połączeniu.
 
