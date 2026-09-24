@@ -253,3 +253,18 @@ nigdy nie uruchamia się samo bez jednego z nich.
   użyciu jego własnego tokenu instalacji GitHub App.
 - `github_relay_token` jest szyfrowany at rest i nigdy nie jest
   logowany ani wysyłany na frontend.
+- **Granica zaufania:** każdy członek projektu w Orbicie widzi
+  metadane powiązanego pull requesta (tytuł, branch źródłowy/docelowy,
+  status) na stronie issue, niezależnie od tego, czy ta konkretna
+  osoba ma dostęp do repozytorium na GitHubie. Instalacja GitHub App
+  jest per-projekt, nie per-użytkownik — Orbit Local nie ma pojęcia o
+  indywidualnej tożsamości ani uprawnieniach danego użytkownika na
+  GitHubie, więc nie może sprawdzić "czy ten konkretny użytkownik
+  Orbita ma dostęp do tego repo na GitHubie" przed wyrenderowaniem
+  panelu Development. Tak było już od MVP dla samego labela/URL-a PR-a
+  — teraz to samo dotyczy bogatszych metadanych dodanych dla panelu
+  Development. Autoryzacja per-użytkownik wymagałaby GitHub OAuth dla
+  każdego użytkownika Orbita, co jest planowane na przyszłe wydanie,
+  ale jeszcze nie istnieje — do tego czasu traktuj podłączenie
+  prywatnego repozytorium do projektu w Orbicie jako udostępnienie
+  metadanych powiązanych PR-ów całemu zespołowi projektu.
