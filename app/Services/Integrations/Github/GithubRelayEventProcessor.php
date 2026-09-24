@@ -76,9 +76,7 @@ class GithubRelayEventProcessor
 
         // Idempotent by (project_integration_id, external_id) - reprocessing
         // the same event (e.g. after a comment-request failure) updates
-        // this row in place rather than creating a duplicate link. Metadata
-        // fields are filtered to non-null so a legacy/minimal relay event
-        // never wipes out metadata a previous, richer event already stored.
+        // this row in place rather than creating a duplicate link.
         $existingLink = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
 
         $attributes = [
@@ -87,19 +85,18 @@ class GithubRelayEventProcessor
             'external_url' => $event->pullRequestUrl,
             'external_type' => 'github_pull_request',
             'last_synced_at' => now(),
-            ...$this->nonNullMetadata($event),
         ];
 
         // A retried `opened` event (after a transient ack/comment failure)
-        // must never downgrade a link that a later lifecycle event has
-        // already advanced past `open` - only set status/timestamp when
-        // creating the link for the first time, or when this replay isn't
-        // older than what's already stored.
-        if (! $existingLink || ! $this->isStale($existingLink, $event)) {
+        // must never undo a link that a later lifecycle event has already
+        // advanced past `open` - neither its status/timestamp nor its
+        // title/branches/draft, which could otherwise regress to this
+        // older event's data even while status itself stays untouched.
+        if (! $existingLink || $this->isApplicable($existingLink, $event)) {
             $attributes = [...$attributes, ...array_filter([
                 'status' => 'open',
                 'github_updated_at' => $event->pullRequestUpdatedAt,
-            ], fn ($value) => $value !== null)];
+            ], fn ($value) => $value !== null), ...$this->nonNullMetadata($event)];
         }
 
         $this->externalIssueLinkRepository->upsertFor($projectIntegration, (string) $event->pullRequestId, $attributes);
@@ -132,8 +129,8 @@ class GithubRelayEventProcessor
             return GithubRelayEventOutcome::Skipped;
         }
 
-        if ($this->isStale($link, $event)) {
-            Log::info('Ignoring a stale GitHub pull request lifecycle event', [
+        if (! $this->isApplicable($link, $event)) {
+            Log::info('Ignoring a stale or duplicate GitHub pull request lifecycle event', [
                 'projectIntegrationId' => $projectIntegration->id,
                 'pullRequestId' => $event->pullRequestId,
                 'action' => $event->action,
@@ -187,19 +184,27 @@ class GithubRelayEventProcessor
     }
 
     /**
-     * A lifecycle event is stale when GitHub's own last-updated timestamp on
-     * the incoming event is older than the one already stored on the link -
-     * this protects against out-of-order delivery (e.g. a `synchronize`
-     * arriving after the `closed`/merged event for the same PR) reverting a
-     * newer state. With no timestamp on either side to compare, the update
-     * is applied optimistically rather than permanently blocked.
+     * Whether an event's data should be written onto an existing link,
+     * given what's already stored. Used both to gate a lifecycle update
+     * (reopened/closed/synchronize) and to protect against a retried
+     * `opened` event undoing something a lifecycle event already applied.
+     *
+     * - With a GitHub-provided timestamp on both sides, the event must be
+     *   strictly newer than what's stored. Equal timestamps are treated as
+     *   *not* applicable - deterministic: whichever event was applied first
+     *   wins a tie rather than letting arrival order flip the result, and
+     *   it also makes reprocessing the exact same event a safe no-op.
+     * - With no timestamp on one or both sides to compare, a link that
+     *   hasn't been advanced past its initial `open` state has nothing to
+     *   protect, so the event is still let through; a link already
+     *   `closed`/`merged` is left alone rather than guessed at.
      */
-    private function isStale(ExternalIssueLink $link, GithubRelayEventDTO $event): bool
+    private function isApplicable(ExternalIssueLink $link, GithubRelayEventDTO $event): bool
     {
-        if ($event->pullRequestUpdatedAt === null || $link->github_updated_at === null) {
-            return false;
+        if ($event->pullRequestUpdatedAt !== null && $link->github_updated_at !== null) {
+            return Carbon::parse($event->pullRequestUpdatedAt)->gt($link->github_updated_at);
         }
 
-        return Carbon::parse($event->pullRequestUpdatedAt)->lt($link->github_updated_at);
+        return $link->status === null || $link->status === 'open';
     }
 }
