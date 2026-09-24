@@ -84,6 +84,32 @@ describe('IssueDevelopmentPanel', () => {
         expect(screen.getByText('Draft')).toBeInTheDocument();
     });
 
+    test('shows a Merged badge when the pull request has been merged', () => {
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[
+                    buildPullRequest({ status: 'merged', draft: false }),
+                ]}
+            />,
+        );
+
+        expect(screen.getByText('Merged')).toBeInTheDocument();
+        expect(screen.queryByText('Open')).not.toBeInTheDocument();
+    });
+
+    test('shows a Closed badge when the pull request was closed without merging', () => {
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[
+                    buildPullRequest({ status: 'closed', draft: false }),
+                ]}
+            />,
+        );
+
+        expect(screen.getByText('Closed')).toBeInTheDocument();
+        expect(screen.queryByText('Open')).not.toBeInTheDocument();
+    });
+
     test('omits the status badge for a legacy link with no status or draft state', () => {
         render(
             <IssueDevelopmentPanel
