@@ -21,6 +21,18 @@ use Illuminate\Support\Facades\Log;
  */
 class AutomationDispatcher
 {
+    /**
+     * Set for the duration of an action's own execution. A trigger fired by
+     * app code from inside an automation action (e.g. ChangeStatusAction
+     * calling IssueService::updateIssue(), which could itself fire
+     * IssueStatusChanged) is dropped rather than dispatched again - the
+     * loop-prevention this codebase doesn't have yet otherwise. Depth is not
+     * tracked because it doesn't need to be: one level of suppression is
+     * enough to make A-triggers-B-triggers-A impossible, since the inner
+     * dispatch() call simply never runs.
+     */
+    private static bool $executing = false;
+
     public function __construct(
         protected AutomationRuleRepository $ruleRepository,
         protected AutomationConditionEvaluator $conditionEvaluator,
@@ -32,28 +44,43 @@ class AutomationDispatcher
      */
     public function dispatch(AutomationTriggerType $trigger, Issue $issue, array $context, string $idempotencyKey): void
     {
-        $rules = $this->ruleRepository->findEnabledForProjectAndTrigger($issue->project, $trigger);
-
-        foreach ($rules as $rule) {
-            if (! $this->conditionEvaluator->matches($rule->conditions ?? [], $context)) {
-                continue;
-            }
-
-            if (! $this->claimExecution($rule, $idempotencyKey)) {
-                continue;
-            }
-
-            foreach ($rule->actions as $action) {
-                $this->actionResolver
-                    ->resolve(AutomationActionType::from($action->type))
-                    ->handle($issue, $action->params ?? []);
-            }
-
-            Log::info('Automation rule executed', [
-                'automationRuleId' => $rule->id,
+        if (self::$executing) {
+            Log::info('Ignoring a trigger fired from inside an automation action', [
                 'issueId' => $issue->id,
                 'trigger' => $trigger->value,
             ]);
+
+            return;
+        }
+
+        $rules = $this->ruleRepository->findEnabledForProjectAndTrigger($issue->project, $trigger);
+
+        self::$executing = true;
+
+        try {
+            foreach ($rules as $rule) {
+                if (! $this->conditionEvaluator->matches($rule->conditions ?? [], $context)) {
+                    continue;
+                }
+
+                if (! $this->claimExecution($rule, $idempotencyKey)) {
+                    continue;
+                }
+
+                foreach ($rule->actions as $action) {
+                    $this->actionResolver
+                        ->resolve(AutomationActionType::from($action->type))
+                        ->handle($issue, $action->params ?? []);
+                }
+
+                Log::info('Automation rule executed', [
+                    'automationRuleId' => $rule->id,
+                    'issueId' => $issue->id,
+                    'trigger' => $trigger->value,
+                ]);
+            }
+        } finally {
+            self::$executing = false;
         }
     }
 

@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Repositories\IssueRepository;
 use App\Services\ActivityLogService;
+use App\Services\Automation\AutomationDispatcher;
 use App\Services\IssueService;
 use App\Services\UserService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,7 +22,7 @@ beforeEach(function () {
     $this->activityLogService = Mockery::mock(ActivityLogService::class);
     $this->userService = Mockery::mock(UserService::class);
     $this->userService->shouldReceive('getUserById')->andReturnUsing(fn ($id) => User::find($id));
-    $this->service = new IssueService($this->issueRepository, $this->activityLogService, $this->userService);
+    $this->service = new IssueService($this->issueRepository, $this->activityLogService, $this->userService, app(AutomationDispatcher::class));
     Event::fake();
 });
 

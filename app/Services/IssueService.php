@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AutomationTriggerType;
 use App\Events\IssueAssigned;
 use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
@@ -11,9 +12,11 @@ use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\IssueRepository;
+use App\Services\Automation\AutomationDispatcher;
 use BackedEnum;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class IssueService
@@ -37,6 +40,7 @@ class IssueService
         protected IssueRepository $issueRepository,
         protected ActivityLogService $activityLogService,
         protected UserService $userService,
+        protected AutomationDispatcher $automationDispatcher,
     ) {}
 
     public function createIssue(array $data): Issue
@@ -179,6 +183,15 @@ class IssueService
         );
 
         $this->notifyIssueUpdate($issue, $actor, $changes);
+
+        if (isset($changes['status'])) {
+            $this->automationDispatcher->dispatch(
+                AutomationTriggerType::IssueStatusChanged,
+                $issue,
+                ['issue' => ['id' => $issue->id, 'status' => $changes['status']['new'], 'previousStatus' => $changes['status']['old']]],
+                (string) Str::uuid(),
+            );
+        }
 
         return $issue;
     }
