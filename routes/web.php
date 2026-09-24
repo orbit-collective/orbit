@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IssueController;
@@ -53,6 +54,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects/{project}/issue-types', [IssueTypeController::class, 'store'])->name('projects.issue-types.store');
     Route::patch('/projects/{project}/issue-types/{issueType}', [IssueTypeController::class, 'update'])->name('projects.issue-types.update');
     Route::delete('/projects/{project}/issue-types/{issueType}', [IssueTypeController::class, 'destroy'])->name('projects.issue-types.destroy');
+    Route::post('/projects/{project}/automation-rules', [AutomationController::class, 'store'])->name('projects.automation-rules.store');
+    Route::patch('/projects/{project}/automation-rules/{automationRule}', [AutomationController::class, 'update'])->name('projects.automation-rules.update');
+    Route::delete('/projects/{project}/automation-rules/{automationRule}', [AutomationController::class, 'destroy'])->name('projects.automation-rules.destroy');
     Route::patch('/projects/{project}/issue-types/{issueType}/allowed-children', [IssueTypeController::class, 'updateAllowedChildren'])->name('projects.issue-types.allowed-children.update');
     Route::post('/projects/{project}/issue-types/{issueType}/statuses', [WorkflowController::class, 'storeStatus'])->name('projects.issue-types.statuses.store');
     Route::patch('/projects/{project}/issue-types/{issueType}/statuses/reorder', [WorkflowController::class, 'reorderStatuses'])->name('projects.issue-types.statuses.reorder');
@@ -98,6 +102,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/members', [SettingsController::class, 'members'])->name('settings.members');
     Route::get('/settings/roles-management', [SettingsController::class, 'rolesManagement'])->name('settings.roles-management');
     Route::get('/settings/integrations', [SettingsController::class, 'integrations'])->name('settings.integrations');
+    Route::get('/settings/automation', [SettingsController::class, 'automation'])->name('settings.automation');
 });
 
 Route::get('/invitations/{token}', [ProjectInvitationController::class, 'accept'])->name('invitations.accept');
