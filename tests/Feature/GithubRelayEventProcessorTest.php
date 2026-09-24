@@ -322,8 +322,86 @@ test('a synchronize event refreshes metadata without creating a new relation or 
         'project_integration_id' => $this->projectIntegration->id,
         'external_id' => '4580098240',
         'pull_request_title' => 'Fix login redirect properly',
+        // linkPullRequest() starts the link at 'closed' - synchronize must
+        // never touch status, only refresh metadata.
+        'status' => 'closed',
     ]);
     Http::assertNotSent(fn ($request) => str_contains($request->url(), '/v1/github/comments'));
+});
+
+test('a synchronize event does not reopen a merged pull request', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+    ExternalIssueLink::query()
+        ->where('project_integration_id', $this->projectIntegration->id)
+        ->where('external_id', '4580098240')
+        ->update(['status' => 'merged']);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'synchronize', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'merged',
+    ]);
+});
+
+test('a retried opened event does not overwrite a newer merged status', function () {
+    fakeSuccessfulComment();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+
+    ExternalIssueLink::query()
+        ->where('project_integration_id', $this->projectIntegration->id)
+        ->where('external_id', '4580098240')
+        ->update([
+            'status' => 'merged',
+            'github_updated_at' => '2026-09-24T15:05:00Z',
+        ]);
+
+    // The opened event's own timestamp reflects when the PR was originally
+    // opened, well before the merge that already advanced the link.
+    $outcome = $this->processor->process(
+        makeRelayEvent(
+            "<!-- orbit-issue:{$issue->id} -->",
+            action: 'opened',
+            updatedAt: '2026-09-24T15:00:00Z',
+        ),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Linked);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'merged',
+    ]);
+});
+
+test('a lifecycle event with a missing timestamp does not erase previously stored timestamps', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+    ExternalIssueLink::query()
+        ->where('project_integration_id', $this->projectIntegration->id)
+        ->where('external_id', '4580098240')
+        ->update([
+            'status' => 'merged',
+            'github_updated_at' => '2026-09-24T15:05:00Z',
+            'merged_at' => '2026-09-24T15:05:00Z',
+        ]);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'synchronize', updatedAt: null, mergedAt: null),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    $link = ExternalIssueLink::query()->where('external_id', '4580098240')->first();
+    expect($link->github_updated_at)->not->toBeNull()
+        ->and($link->merged_at)->not->toBeNull();
 });
 
 test('a lifecycle event for an unlinked pull request is skipped without creating a relation', function () {
