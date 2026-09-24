@@ -1,6 +1,9 @@
 <?php
 
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
+use App\Enums\AutomationTriggerType;
+use App\Models\AutomationRule;
+use App\Models\AutomationRuleExecution;
 use App\Models\ExternalIssueLink;
 use App\Models\Issue;
 use App\Models\Project;
@@ -571,4 +574,153 @@ test('a stale lifecycle event does not revert a newer merged status', function (
         'status' => 'merged',
     ]);
     expect($issue)->not->toBeNull();
+});
+
+function makeGithubTriggerRule(Project $project, AutomationTriggerType $trigger): AutomationRule
+{
+    $rule = AutomationRule::query()->create([
+        'project_id' => $project->id,
+        'name' => 'Test rule',
+        'trigger_type' => $trigger->value,
+        'conditions' => [],
+        'enabled' => true,
+    ]);
+
+    $rule->actions()->create([
+        'type' => 'change_priority',
+        'params' => ['priority' => 'high'],
+        'sort_order' => 0,
+    ]);
+
+    return $rule;
+}
+
+test('a successful opened link fires the pull request opened trigger', function () {
+    fakeSuccessfulComment();
+    $issue = Issue::factory()->create(['project_id' => $this->project->id, 'priority' => 'low']);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestOpened);
+
+    $this->processor->process(makeRelayEvent("<!-- orbit-issue:{$issue->id} -->"), $this->projectIntegration);
+
+    expect($issue->fresh()->priority)->toBe('high');
+});
+
+test('a merged pull request fires the merged trigger, not the closed trigger', function () {
+    Http::fake();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+    $issue->update(['priority' => 'low']);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestMerged);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestClosed);
+
+    $this->processor->process(
+        makeRelayEvent('', action: 'closed', state: 'closed', merged: true, mergedAt: '2026-09-24T01:00:00Z', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($issue->fresh()->priority)->toBe('high');
+    expect(AutomationRuleExecution::query()->count())->toBe(1);
+});
+
+test('a closed unmerged pull request fires the closed trigger, not the merged trigger', function () {
+    Http::fake();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+    $issue->update(['priority' => 'low']);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestMerged);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestClosed);
+
+    $this->processor->process(
+        makeRelayEvent('', action: 'closed', state: 'closed', merged: false, updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($issue->fresh()->priority)->toBe('high');
+    expect(AutomationRuleExecution::query()->count())->toBe(1);
+});
+
+test('a reopened pull request fires the reopened trigger', function () {
+    Http::fake();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+    $issue->update(['priority' => 'low']);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestReopened);
+
+    $this->processor->process(
+        makeRelayEvent('', action: 'reopened', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($issue->fresh()->priority)->toBe('high');
+});
+
+test('a synchronize event fires the synchronized trigger', function () {
+    Http::fake();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+    $issue->update(['priority' => 'low']);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestSynchronized);
+
+    $this->processor->process(
+        makeRelayEvent('', action: 'synchronize', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($issue->fresh()->priority)->toBe('high');
+});
+
+test('a skipped stale lifecycle event never fires a trigger', function () {
+    Http::fake();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+    $issue->update(['priority' => 'low']);
+    ExternalIssueLink::query()
+        ->where('project_integration_id', $this->projectIntegration->id)
+        ->where('external_id', '4580098240')
+        ->update(['status' => 'merged', 'github_updated_at' => '2026-09-24T15:05:00Z']);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestSynchronized);
+
+    $this->processor->process(
+        makeRelayEvent('', action: 'synchronize', updatedAt: '2026-09-24T15:02:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($issue->fresh()->priority)->toBe('low');
+    expect(AutomationRuleExecution::query()->count())->toBe(0);
+});
+
+test('an unlinked lifecycle event never fires a trigger', function () {
+    Http::fake();
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestClosed);
+
+    $this->processor->process(
+        makeRelayEvent('', pullRequestId: 999999, action: 'closed', state: 'closed', merged: false),
+        $this->projectIntegration,
+    );
+
+    expect(AutomationRuleExecution::query()->count())->toBe(0);
+});
+
+test('duplicate relay event delivery does not fire the trigger twice', function () {
+    Http::fake();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+    $issue->update(['priority' => 'low']);
+    makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestReopened);
+
+    $event = makeRelayEvent('', action: 'reopened', updatedAt: '2026-09-24T00:00:00Z');
+    $this->processor->process($event, $this->projectIntegration);
+    $issue->update(['priority' => 'low']);
+    $this->processor->process($event, $this->projectIntegration);
+
+    expect(AutomationRuleExecution::query()->count())->toBe(1);
+});
+
+test('a disabled automation rule does not execute even though the trigger fires', function () {
+    Http::fake();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+    $issue->update(['priority' => 'low']);
+    $rule = makeGithubTriggerRule($this->project, AutomationTriggerType::GithubPullRequestReopened);
+    $rule->update(['enabled' => false]);
+
+    $this->processor->process(
+        makeRelayEvent('', action: 'reopened', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($issue->fresh()->priority)->toBe('low');
 });

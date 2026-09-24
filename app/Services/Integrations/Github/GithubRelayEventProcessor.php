@@ -3,9 +3,12 @@
 namespace App\Services\Integrations\Github;
 
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
+use App\Enums\AutomationTriggerType;
 use App\Models\ExternalIssueLink;
+use App\Models\Issue;
 use App\Models\ProjectIntegration;
 use App\Repositories\ExternalIssueLinkRepository;
+use App\Services\Automation\AutomationDispatcher;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -33,6 +36,8 @@ class GithubRelayEventProcessor
         protected ExternalIssueLinkRepository $externalIssueLinkRepository,
         protected GithubCommentFormatter $commentFormatter,
         protected OrbitRelayClient $relayClient,
+        protected AutomationDispatcher $automationDispatcher,
+        protected GithubAutomationContextBuilder $automationContextBuilder,
     ) {}
 
     /**
@@ -110,6 +115,8 @@ class GithubRelayEventProcessor
             $this->commentFormatter->format($issue, $issue->project),
         );
 
+        $this->fireTrigger(AutomationTriggerType::GithubPullRequestOpened, $issue, $projectIntegration, $event);
+
         return GithubRelayEventOutcome::Linked;
     }
 
@@ -152,7 +159,35 @@ class GithubRelayEventProcessor
             ...$this->nonNullMetadata($event),
         ], fn ($value) => $value !== null) + ['last_synced_at' => now()]);
 
+        $trigger = $this->resolveLifecycleTrigger($event);
+
+        if ($trigger && $link->issue) {
+            $this->fireTrigger($trigger, $link->issue, $projectIntegration, $event);
+        }
+
         return GithubRelayEventOutcome::Synced;
+    }
+
+    private function resolveLifecycleTrigger(GithubRelayEventDTO $event): ?AutomationTriggerType
+    {
+        return match ($event->action) {
+            'reopened' => AutomationTriggerType::GithubPullRequestReopened,
+            'closed' => $event->pullRequestMerged === true
+                ? AutomationTriggerType::GithubPullRequestMerged
+                : AutomationTriggerType::GithubPullRequestClosed,
+            'synchronize' => AutomationTriggerType::GithubPullRequestSynchronized,
+            default => null,
+        };
+    }
+
+    private function fireTrigger(AutomationTriggerType $trigger, Issue $issue, ProjectIntegration $projectIntegration, GithubRelayEventDTO $event): void
+    {
+        $this->automationDispatcher->dispatch(
+            $trigger,
+            $issue,
+            $this->automationContextBuilder->build($issue, $projectIntegration, $event),
+            $event->id,
+        );
     }
 
     /**
