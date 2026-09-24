@@ -29,9 +29,12 @@ test('pull request metadata is nullable and draft casts to boolean', function ()
         'target_branch' => 'master',
         'status' => 'open',
         'draft' => true,
+        'github_updated_at' => '2026-09-24T00:00:00Z',
+        'merged_at' => null,
     ]);
 
-    expect($link->fresh()->draft)->toBeTrue();
+    expect($link->fresh()->draft)->toBeTrue()
+        ->and($link->fresh()->github_updated_at)->not->toBeNull();
 
     $legacyLink = ExternalIssueLink::query()->create([
         'issue_id' => $issue->id,
@@ -48,5 +51,7 @@ test('pull request metadata is nullable and draft casts to boolean', function ()
         ->and($legacyLink->source_branch)->toBeNull()
         ->and($legacyLink->target_branch)->toBeNull()
         ->and($legacyLink->status)->toBeNull()
-        ->and($legacyLink->draft)->toBeNull();
+        ->and($legacyLink->draft)->toBeNull()
+        ->and($legacyLink->github_updated_at)->toBeNull()
+        ->and($legacyLink->merged_at)->toBeNull();
 });

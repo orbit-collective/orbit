@@ -19,12 +19,16 @@ class ExternalIssueLink extends Model
         'target_branch',
         'status',
         'draft',
+        'github_updated_at',
+        'merged_at',
         'last_synced_at',
     ];
 
     protected $casts = [
         'last_synced_at' => 'datetime',
         'draft' => 'boolean',
+        'github_updated_at' => 'datetime',
+        'merged_at' => 'datetime',
     ];
 
     public function issue(): BelongsTo
