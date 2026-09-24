@@ -97,6 +97,43 @@ test('a linked github pull request is exposed with its rich development metadata
     ]);
 });
 
+test('a merged or closed pull request status passes through unchanged', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_repository_owner' => 'orbit-collective',
+        'github_repository_name' => 'orbit',
+    ]);
+
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '4580098240',
+        'external_key' => 'orbit-collective/orbit#283',
+        'external_url' => 'https://github.com/orbit-collective/orbit/pull/283',
+        'external_type' => 'github_pull_request',
+        'status' => 'merged',
+        'merged_at' => now(),
+    ]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    $response->assertOk();
+    $page = json_decode($response->getContent(), true);
+
+    expect($page['props']['linkedPullRequests'][0]['status'])->toBe('merged');
+});
+
 test('a legacy linked pull request without metadata renders gracefully with nulls', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);

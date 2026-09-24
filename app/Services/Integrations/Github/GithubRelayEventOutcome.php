@@ -15,4 +15,7 @@ enum GithubRelayEventOutcome
 
     /** The PR was linked (or re-linked, idempotently) and the bot comment was requested. */
     case Linked;
+
+    /** A lifecycle event (reopened/closed/synchronize) updated an existing link's state - never posts a comment. */
+    case Synced;
 }
