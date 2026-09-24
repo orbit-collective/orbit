@@ -189,22 +189,28 @@ class GithubRelayEventProcessor
      * (reopened/closed/synchronize) and to protect against a retried
      * `opened` event undoing something a lifecycle event already applied.
      *
-     * - With a GitHub-provided timestamp on both sides, the event must be
-     *   strictly newer than what's stored. Equal timestamps are treated as
-     *   *not* applicable - deterministic: whichever event was applied first
-     *   wins a tie rather than letting arrival order flip the result, and
-     *   it also makes reprocessing the exact same event a safe no-op.
-     * - With no timestamp on one or both sides to compare, a link that
-     *   hasn't been advanced past its initial `open` state has nothing to
-     *   protect, so the event is still let through; a link already
+     * - With a GitHub-provided timestamp on the incoming event, it's applied
+     *   whenever the link has no stored timestamp to compare against yet
+     *   (nothing reliable to protect), or when it's strictly newer than what
+     *   is stored. Equal timestamps are treated as *not* applicable -
+     *   deterministic: whichever event was applied first wins a tie rather
+     *   than letting arrival order flip the result, and it also makes
+     *   reprocessing the exact same event a safe no-op.
+     * - With no timestamp on the incoming event, there's no way to prove
+     *   it's current, so it's only let through when the link hasn't already
+     *   been advanced past its initial `open` state; a link already
      *   `closed`/`merged` is left alone rather than guessed at.
      */
     private function isApplicable(ExternalIssueLink $link, GithubRelayEventDTO $event): bool
     {
-        if ($event->pullRequestUpdatedAt !== null && $link->github_updated_at !== null) {
-            return Carbon::parse($event->pullRequestUpdatedAt)->gt($link->github_updated_at);
+        if ($event->pullRequestUpdatedAt === null) {
+            return $link->status === null || $link->status === 'open';
         }
 
-        return $link->status === null || $link->status === 'open';
+        if ($link->github_updated_at === null) {
+            return true;
+        }
+
+        return Carbon::parse($event->pullRequestUpdatedAt)->gt($link->github_updated_at);
     }
 }
