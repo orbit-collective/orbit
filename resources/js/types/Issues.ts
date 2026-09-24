@@ -132,6 +132,6 @@ export interface LinkedPullRequest {
     url: string;
     sourceBranch: string | null;
     targetBranch: string | null;
-    status: 'open' | null;
+    status: 'open' | 'closed' | 'merged' | null;
     draft: boolean | null;
 }
