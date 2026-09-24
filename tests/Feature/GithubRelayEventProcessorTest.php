@@ -22,11 +22,16 @@ function makeRelayEvent(
     ?string $sourceBranch = 'fix/login-redirect',
     ?string $targetBranch = 'master',
     ?bool $draft = false,
+    string $action = 'opened',
+    ?string $state = 'open',
+    ?bool $merged = false,
+    ?string $mergedAt = null,
+    ?string $updatedAt = '2026-09-24T00:00:00Z',
 ): GithubRelayEventDTO {
     return new GithubRelayEventDTO(
         id: $eventId,
         type: 'pull_request',
-        action: 'opened',
+        action: $action,
         deliveryId: 'delivery_1',
         repositoryId: 1274545725,
         pullRequestId: $pullRequestId,
@@ -37,6 +42,10 @@ function makeRelayEvent(
         pullRequestSourceBranch: $sourceBranch,
         pullRequestTargetBranch: $targetBranch,
         pullRequestDraft: $draft,
+        pullRequestState: $state,
+        pullRequestMerged: $merged,
+        pullRequestMergedAt: $mergedAt,
+        pullRequestUpdatedAt: $updatedAt,
         createdAt: now()->toIso8601String(),
     );
 }
@@ -143,7 +152,7 @@ test('an unsupported event action is skipped', function () {
     $event = new GithubRelayEventDTO(
         id: 'evt_1',
         type: 'pull_request',
-        action: 'closed',
+        action: 'edited',
         deliveryId: 'delivery_1',
         repositoryId: 1,
         pullRequestId: 1,
@@ -154,6 +163,10 @@ test('an unsupported event action is skipped', function () {
         pullRequestSourceBranch: null,
         pullRequestTargetBranch: null,
         pullRequestDraft: null,
+        pullRequestState: null,
+        pullRequestMerged: null,
+        pullRequestMergedAt: null,
+        pullRequestUpdatedAt: null,
         createdAt: now()->toIso8601String(),
     );
 
@@ -213,4 +226,159 @@ test('a minimal legacy-shaped event without metadata still creates the core link
         'status' => 'open',
         'pull_request_title' => null,
     ]);
+});
+
+function linkPullRequest(ProjectIntegration $projectIntegration, Project $project): Issue
+{
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '4580098240',
+        'external_key' => 'orbit-collective/orbit#283',
+        'external_url' => 'https://github.com/orbit-collective/orbit/pull/283',
+        'external_type' => 'github_pull_request',
+        'pull_request_title' => 'Fix login redirect',
+        'source_branch' => 'fix/login-redirect',
+        'target_branch' => 'master',
+        'status' => 'closed',
+        'draft' => false,
+        'github_updated_at' => '2026-09-20T00:00:00Z',
+    ]);
+
+    return $issue;
+}
+
+test('a reopened pull request updates a linked relation to open without a new comment', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'reopened', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'open',
+    ]);
+    expect(ExternalIssueLink::query()->count())->toBe(1);
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '/v1/github/comments'));
+});
+
+test('a closed unmerged pull request updates a linked relation to closed', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'closed', state: 'closed', merged: false, updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'closed',
+    ]);
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '/v1/github/comments'));
+});
+
+test('a merged pull request updates a linked relation to merged', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'closed', state: 'closed', merged: true, mergedAt: '2026-09-24T01:00:00Z', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'merged',
+    ]);
+    $link = ExternalIssueLink::query()->where('external_id', '4580098240')->first();
+    expect($link->merged_at)->not->toBeNull();
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '/v1/github/comments'));
+});
+
+test('a synchronize event refreshes metadata without creating a new relation or comment', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'synchronize', title: 'Fix login redirect properly', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    expect(ExternalIssueLink::query()->count())->toBe(1);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'pull_request_title' => 'Fix login redirect properly',
+    ]);
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '/v1/github/comments'));
+});
+
+test('a lifecycle event for an unlinked pull request is skipped without creating a relation', function () {
+    Http::fake();
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', pullRequestId: 999999, action: 'closed', state: 'closed', merged: false),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
+    expect(ExternalIssueLink::query()->count())->toBe(0);
+    Http::assertNothingSent();
+});
+
+test('processing the same lifecycle event twice is idempotent', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $event = makeRelayEvent('', action: 'closed', state: 'closed', merged: true, mergedAt: '2026-09-24T01:00:00Z', updatedAt: '2026-09-24T00:00:00Z');
+
+    $this->processor->process($event, $this->projectIntegration);
+    $outcome = $this->processor->process($event, $this->projectIntegration);
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    expect(ExternalIssueLink::query()->count())->toBe(1);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'merged',
+    ]);
+});
+
+test('a stale lifecycle event does not revert a newer merged status', function () {
+    Http::fake();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+
+    ExternalIssueLink::query()
+        ->where('project_integration_id', $this->projectIntegration->id)
+        ->where('external_id', '4580098240')
+        ->update([
+            'status' => 'merged',
+            'github_updated_at' => '2026-09-24T15:05:00Z',
+        ]);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'synchronize', updatedAt: '2026-09-24T15:02:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'merged',
+    ]);
+    expect($issue)->not->toBeNull();
 });

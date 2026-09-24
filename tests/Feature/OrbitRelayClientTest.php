@@ -58,7 +58,11 @@ test('listEvents maps every event in the response', function () {
         ->and($events[0]->pullRequestTitle)->toBeNull()
         ->and($events[0]->pullRequestSourceBranch)->toBeNull()
         ->and($events[0]->pullRequestTargetBranch)->toBeNull()
-        ->and($events[0]->pullRequestDraft)->toBeNull();
+        ->and($events[0]->pullRequestDraft)->toBeNull()
+        ->and($events[0]->pullRequestState)->toBeNull()
+        ->and($events[0]->pullRequestMerged)->toBeNull()
+        ->and($events[0]->pullRequestMergedAt)->toBeNull()
+        ->and($events[0]->pullRequestUpdatedAt)->toBeNull();
 });
 
 test('listEvents maps pull request title, branches, and draft state when present', function () {
@@ -68,6 +72,7 @@ test('listEvents maps pull request title, branches, and draft state when present
             ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => [
                 'id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->',
                 'title' => 'Fix login redirect', 'sourceBranch' => 'fix/login-redirect', 'targetBranch' => 'master', 'draft' => true,
+                'state' => 'open', 'merged' => false, 'mergedAt' => null, 'updatedAt' => '2026-09-24T00:00:00Z',
             ], 'createdAt' => 'now'],
         ]],
     ], 200)]);
@@ -77,7 +82,28 @@ test('listEvents maps pull request title, branches, and draft state when present
     expect($events[0]->pullRequestTitle)->toBe('Fix login redirect')
         ->and($events[0]->pullRequestSourceBranch)->toBe('fix/login-redirect')
         ->and($events[0]->pullRequestTargetBranch)->toBe('master')
-        ->and($events[0]->pullRequestDraft)->toBeTrue();
+        ->and($events[0]->pullRequestDraft)->toBeTrue()
+        ->and($events[0]->pullRequestState)->toBe('open')
+        ->and($events[0]->pullRequestMerged)->toBeFalse()
+        ->and($events[0]->pullRequestUpdatedAt)->toBe('2026-09-24T00:00:00Z');
+});
+
+test('listEvents maps merged state and merged timestamp for a closed action', function () {
+    Http::fake(['*/v1/github/events' => Http::response([
+        'success' => true,
+        'data' => ['events' => [
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'closed', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => [
+                'id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->',
+                'state' => 'closed', 'merged' => true, 'mergedAt' => '2026-09-24T01:00:00Z', 'updatedAt' => '2026-09-24T01:00:00Z',
+            ], 'createdAt' => 'now'],
+        ]],
+    ], 200)]);
+
+    $events = $this->client->listEvents('orb_local_abc');
+
+    expect($events[0]->action)->toBe('closed')
+        ->and($events[0]->pullRequestMerged)->toBeTrue()
+        ->and($events[0]->pullRequestMergedAt)->toBe('2026-09-24T01:00:00Z');
 });
 
 test('createComment sends eventId, pullRequestNumber, and body', function () {
