@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.9.3](https://github.com/orbit-collective/orbit/compare/v0.9.2...v0.9.3) (2026-09-24)
+
+
+### Features
+
+* **github:** add lifecycle schema ([2a8393c](https://github.com/orbit-collective/orbit/commit/2a8393c127d1462e2ce8fbd36f07bf51c4030ac9))
+* **github:** parse lifecycle relay fields ([dff7d74](https://github.com/orbit-collective/orbit/commit/dff7d7480c5ff5270a1997a6e93ba561391962e0))
+* **github:** sync pull request state ([e1771e4](https://github.com/orbit-collective/orbit/commit/e1771e4d006a6a1e502f653af977ebbd9f848348))
+* **github:** update development status badges ([d7ea468](https://github.com/orbit-collective/orbit/commit/d7ea46825af8860eb1ac4a1f40dbffe9c0751eaa))
+
+
+### Bug Fixes
+
+* **github:** guard opened-replay metadata and tie-break stale checks ([04d4208](https://github.com/orbit-collective/orbit/commit/04d4208866a2160073523c9f13aa8204a18d7270))
+* **github:** let a timestamped event apply without a stored baseline ([1ae62f9](https://github.com/orbit-collective/orbit/commit/1ae62f9fd6902e2d8800ba2b64ba2c93240fb241))
+* **github:** preserve newer lifecycle state on replays and stale writes ([d4161e2](https://github.com/orbit-collective/orbit/commit/d4161e20b0027a7bb2c09ec3f839b450803976f3))
+
+
+### Miscellaneous Chores
+
+* release 0.9.3 ([13dea06](https://github.com/orbit-collective/orbit/commit/13dea06821abeabd4286a19253e0b7a403c7fc8d))
+
 ## [0.9.2](https://github.com/orbit-collective/orbit/compare/v0.9.1...v0.9.2) (2026-09-24)
 
 
