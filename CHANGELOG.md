@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.9.2](https://github.com/orbit-collective/orbit/compare/v0.9.1...v0.9.2) (2026-09-24)
+
+
+### Features
+
+* **github:** add development panel to the issue page ([a9b7011](https://github.com/orbit-collective/orbit/commit/a9b701171f027f054b46ac357fb6d9983b311e58))
+* **github:** add pull request metadata schema ([93d7212](https://github.com/orbit-collective/orbit/commit/93d7212bc1199cea7e7247e73a0f6cad6d279e01))
+* **github:** expose development data on the issue page ([f928476](https://github.com/orbit-collective/orbit/commit/f928476678213547751c3dbabcee2cb75b1cb37e))
+* **github:** parse richer relay event fields ([58ac51a](https://github.com/orbit-collective/orbit/commit/58ac51afa181eb35b52059f92b58cccccd48de2d))
+
+
+### Bug Fixes
+
+* **github:** harden pull request key parsing and document trust boundary ([b29c255](https://github.com/orbit-collective/orbit/commit/b29c25532350a5ff96c8306bd751a3a3e15ae9dd))
+
+
+### Miscellaneous Chores
+
+* release 0.9.2 ([eaf723f](https://github.com/orbit-collective/orbit/commit/eaf723fdbb780bdbb18c7843d1671f5a500ee7f4))
+
 ## [0.9.1](https://github.com/orbit-collective/orbit/compare/v0.9.0...v0.9.1) (2026-09-23)
 
 
