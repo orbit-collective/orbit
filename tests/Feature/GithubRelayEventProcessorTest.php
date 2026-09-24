@@ -458,6 +458,34 @@ test('equal timestamps do not let an out-of-order lifecycle event overwrite the 
     ]);
 });
 
+test('a timestamped reopened event still applies when the link has no stored timestamp', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    // The closed event that set this link's status never carried a
+    // timestamp, so the link has a status but no baseline to compare
+    // against - a later, genuinely timestamped event must not be
+    // permanently locked out by that missing baseline.
+    ExternalIssueLink::query()
+        ->where('project_integration_id', $this->projectIntegration->id)
+        ->where('external_id', '4580098240')
+        ->update(['status' => 'closed', 'github_updated_at' => null]);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'reopened', updatedAt: '2026-09-24T15:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'open',
+    ]);
+    $link = ExternalIssueLink::query()->where('external_id', '4580098240')->first();
+    expect($link->github_updated_at)->not->toBeNull();
+});
+
 test('a lifecycle event with a missing timestamp does not erase previously stored timestamps', function () {
     Http::fake();
     linkPullRequest($this->projectIntegration, $this->project);
