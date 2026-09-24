@@ -381,6 +381,83 @@ test('a retried opened event does not overwrite a newer merged status', function
     ]);
 });
 
+test('a stale retried opened event does not overwrite newer metadata', function () {
+    fakeSuccessfulComment();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+
+    // A synchronize event already refreshed the title/branches while the
+    // PR stayed open, moving the link's timestamp ahead of the original
+    // opened event's.
+    $this->processor->process(
+        makeRelayEvent('', action: 'synchronize', title: 'Fix login redirect properly', updatedAt: '2026-09-24T15:10:00Z'),
+        $this->projectIntegration,
+    );
+
+    $outcome = $this->processor->process(
+        makeRelayEvent(
+            "<!-- orbit-issue:{$issue->id} -->",
+            action: 'opened',
+            title: 'Fix login redirect',
+            updatedAt: '2026-09-24T15:00:00Z',
+        ),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Linked);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'pull_request_title' => 'Fix login redirect properly',
+    ]);
+});
+
+test('a retried opened event without a timestamp does not reopen a closed pull request', function () {
+    fakeSuccessfulComment();
+    $issue = linkPullRequest($this->projectIntegration, $this->project);
+
+    ExternalIssueLink::query()
+        ->where('project_integration_id', $this->projectIntegration->id)
+        ->where('external_id', '4580098240')
+        ->update(['status' => 'closed', 'github_updated_at' => '2026-09-24T15:05:00Z']);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent("<!-- orbit-issue:{$issue->id} -->", action: 'opened', updatedAt: null),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Linked);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'closed',
+    ]);
+});
+
+test('equal timestamps do not let an out-of-order lifecycle event overwrite the applied one', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $this->processor->process(
+        makeRelayEvent('', action: 'closed', state: 'closed', merged: true, mergedAt: '2026-09-24T15:00:00Z', updatedAt: '2026-09-24T15:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    // A reopened event sharing the exact same GitHub timestamp arrives
+    // after the merge was already applied - there's no way to prove it's
+    // older, but ties must not be allowed to flip an already-applied state.
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'reopened', updatedAt: '2026-09-24T15:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'merged',
+    ]);
+});
+
 test('a lifecycle event with a missing timestamp does not erase previously stored timestamps', function () {
     Http::fake();
     linkPullRequest($this->projectIntegration, $this->project);
@@ -398,9 +475,13 @@ test('a lifecycle event with a missing timestamp does not erase previously store
         $this->projectIntegration,
     );
 
-    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    // With no timestamp on the incoming event and the link already past
+    // 'open', the event is skipped entirely rather than guessed at - so
+    // nothing about the link, timestamps included, is touched.
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
     $link = ExternalIssueLink::query()->where('external_id', '4580098240')->first();
-    expect($link->github_updated_at)->not->toBeNull()
+    expect($link->status)->toBe('merged')
+        ->and($link->github_updated_at)->not->toBeNull()
         ->and($link->merged_at)->not->toBeNull();
 });
 
@@ -426,7 +507,10 @@ test('processing the same lifecycle event twice is idempotent', function () {
     $this->processor->process($event, $this->projectIntegration);
     $outcome = $this->processor->process($event, $this->projectIntegration);
 
-    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    // The second pass carries the exact same GitHub timestamp as what's
+    // now stored, so it's treated as a tied/duplicate delivery and skipped
+    // - still a safe, ack-able outcome, and the resulting state is correct.
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
     expect(ExternalIssueLink::query()->count())->toBe(1);
     $this->assertDatabaseHas('external_issue_links', [
         'project_integration_id' => $this->projectIntegration->id,
