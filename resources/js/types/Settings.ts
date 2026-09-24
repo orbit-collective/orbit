@@ -8,6 +8,7 @@ export type SettingsTabId =
     | 'notifications'
     | 'security-access'
     | 'integrations'
+    | 'automation'
     | 'export'
     | 'labels'
     | 'issue-types'
@@ -147,6 +148,15 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Plug',
         section: 'workspace',
         description: 'Connect third-party tools and external workflows.',
+        enabled: true,
+    },
+    {
+        id: 'automation',
+        path: '/settings/automation',
+        label: 'Automation',
+        icon: 'Zap',
+        section: 'workspace',
+        description: 'Automatically act on issue and pull request events.',
         enabled: true,
     },
 ];
