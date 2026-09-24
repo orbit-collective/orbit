@@ -79,15 +79,30 @@ class GithubRelayEventProcessor
         // this row in place rather than creating a duplicate link. Metadata
         // fields are filtered to non-null so a legacy/minimal relay event
         // never wipes out metadata a previous, richer event already stored.
-        $this->externalIssueLinkRepository->upsertFor($projectIntegration, (string) $event->pullRequestId, [
+        $existingLink = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
+
+        $attributes = [
             'issue_id' => $issue->id,
             'external_key' => "$projectIntegration->github_repository_owner/$projectIntegration->github_repository_name#$event->pullRequestNumber",
             'external_url' => $event->pullRequestUrl,
             'external_type' => 'github_pull_request',
-            'status' => 'open',
             'last_synced_at' => now(),
             ...$this->nonNullMetadata($event),
-        ]);
+        ];
+
+        // A retried `opened` event (after a transient ack/comment failure)
+        // must never downgrade a link that a later lifecycle event has
+        // already advanced past `open` - only set status/timestamp when
+        // creating the link for the first time, or when this replay isn't
+        // older than what's already stored.
+        if (! $existingLink || ! $this->isStale($existingLink, $event)) {
+            $attributes = [...$attributes, ...array_filter([
+                'status' => 'open',
+                'github_updated_at' => $event->pullRequestUpdatedAt,
+            ], fn ($value) => $value !== null)];
+        }
+
+        $this->externalIssueLinkRepository->upsertFor($projectIntegration, (string) $event->pullRequestId, $attributes);
 
         // orbit-api itself dedupes comment creation by eventId, so
         // reprocessing an already-commented event is a no-op there too.
@@ -127,13 +142,18 @@ class GithubRelayEventProcessor
             return GithubRelayEventOutcome::Skipped;
         }
 
-        $this->externalIssueLinkRepository->touch($link, [
+        // status/github_updated_at/merged_at are filtered to non-null
+        // alongside the metadata fields: resolveStatus() returns null for
+        // `synchronize` (status is deliberately left unchanged - see the
+        // MVP spec's "synchronize" behavior), and a lifecycle event that
+        // omits a timestamp must never blank out one already stored, or the
+        // stale-event guard above would stop protecting this link.
+        $this->externalIssueLinkRepository->touch($link, array_filter([
             'status' => $this->resolveStatus($event),
-            'last_synced_at' => now(),
             'github_updated_at' => $event->pullRequestUpdatedAt,
             'merged_at' => $event->pullRequestMergedAt,
             ...$this->nonNullMetadata($event),
-        ]);
+        ], fn ($value) => $value !== null) + ['last_synced_at' => now()]);
 
         return GithubRelayEventOutcome::Synced;
     }
@@ -151,13 +171,19 @@ class GithubRelayEventProcessor
         ], fn ($value) => $value !== null);
     }
 
-    private function resolveStatus(GithubRelayEventDTO $event): string
+    /**
+     * `synchronize` intentionally returns null (no status change - new
+     * commits don't imply an open/closed/merged transition on their own);
+     * `handleLifecycleEvent()` filters nulls before persisting, so this
+     * simply omits `status` from that update entirely.
+     */
+    private function resolveStatus(GithubRelayEventDTO $event): ?string
     {
-        if ($event->action === 'closed') {
-            return $event->pullRequestMerged === true ? 'merged' : 'closed';
-        }
-
-        return 'open';
+        return match ($event->action) {
+            'closed' => $event->pullRequestMerged === true ? 'merged' : 'closed',
+            'reopened' => 'open',
+            default => null,
+        };
     }
 
     /**
