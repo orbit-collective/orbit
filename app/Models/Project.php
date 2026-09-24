@@ -41,6 +41,11 @@ class Project extends Model
         return $this->hasMany(Issue::class);
     }
 
+    public function automationRules(): HasMany
+    {
+        return $this->hasMany(AutomationRule::class);
+    }
+
     public function savedFilters(): HasMany
     {
         return $this->hasMany(SavedFilter::class);
