@@ -27,6 +27,9 @@ enum Permission: string
     case INTEGRATIONS_VIEW = 'projects.integrations.view';
     case INTEGRATIONS_UPDATE = 'projects.integrations.update';
 
+    case AUTOMATION_VIEW = 'projects.automation.view';
+    case AUTOMATION_UPDATE = 'projects.automation.update';
+
     case LABELS_VIEW = 'projects.labels.view';
     case LABELS_CREATE = 'projects.labels.create';
     case LABELS_UPDATE = 'projects.labels.update';
