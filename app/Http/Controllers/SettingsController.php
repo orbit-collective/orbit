@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AutomationActionType;
+use App\Enums\AutomationTriggerType;
 use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
+use App\Models\AutomationAction;
+use App\Models\AutomationRule;
 use App\Models\Label;
 use App\Models\Permission as PermissionModel;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use App\Services\Automation\AutomationRuleService;
 use App\Services\Integrations\Github\GithubIntegrationService;
 use App\Services\Integrations\Jira\JiraIntegrationService;
 use App\Services\IssueTypeService;
@@ -65,6 +71,7 @@ class SettingsController extends Controller
         protected GithubIntegrationService $githubIntegrationService,
         protected LabelService $labelService,
         protected IssueTypeService $issueTypeService,
+        protected AutomationRuleService $automationRuleService,
     ) {}
 
     public function preferences(Request $request): Response
@@ -254,6 +261,60 @@ class SettingsController extends Controller
                 ? $this->mapLabels($this->labelService->getLabels($selectedProject))
                 : [],
         ]);
+    }
+
+    public function automation(Request $request): Response
+    {
+        $user = $request->user();
+        $projects = $this->projects($request);
+        $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
+
+        $hasAutomationAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::AUTOMATION_VIEW, self::VIEW_TIERS) ?? false;
+        $canUpdateAutomation = $hasAutomationAccess
+            && $selectedProject->hasPermissionOrTier($user, PermissionEnum::AUTOMATION_UPDATE, self::MANAGE_TIERS);
+
+        return Inertia::render('Settings/Automation', [
+            ...$this->projectScope($projects, $selectedProject),
+            'automationRules' => $hasAutomationAccess
+                ? $this->mapAutomationRules($this->automationRuleService->getForProject($selectedProject))
+                : [],
+            'triggerTypes' => $this->mapAutomationTriggerTypes(),
+            'actionTypes' => $this->mapAutomationActionTypes(),
+            'hasAutomationAccess' => $hasAutomationAccess,
+            'canUpdateAutomation' => $canUpdateAutomation,
+        ]);
+    }
+
+    private function mapAutomationRules(EloquentCollection $rules): array
+    {
+        return $rules->map(fn (AutomationRule $rule) => [
+            'id' => $rule->id,
+            'name' => $rule->name,
+            'triggerType' => $rule->trigger_type,
+            'conditions' => $rule->conditions ?? [],
+            'enabled' => $rule->enabled,
+            'actions' => $rule->actions->map(fn (AutomationAction $action) => [
+                'id' => $action->id,
+                'type' => $action->type,
+                'params' => $action->params ?? [],
+            ])->values(),
+        ])->values()->all();
+    }
+
+    private function mapAutomationTriggerTypes(): array
+    {
+        return array_map(
+            fn (AutomationTriggerType $trigger) => ['value' => $trigger->value, 'label' => $trigger->label()],
+            AutomationTriggerType::cases(),
+        );
+    }
+
+    private function mapAutomationActionTypes(): array
+    {
+        return array_map(
+            fn (AutomationActionType $action) => ['value' => $action->value, 'label' => $action->label()],
+            AutomationActionType::cases(),
+        );
     }
 
     private function projects(Request $request): Collection
