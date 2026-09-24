@@ -246,3 +246,17 @@ never runs on its own without one of these.
   token.
 - `github_relay_token` is encrypted at rest and is never logged or
   sent to the frontend.
+- **Trust boundary:** any Orbit member of the connected project can see
+  the linked pull request's metadata (title, source/target branch,
+  status) on the issue page, regardless of whether that individual has
+  GitHub access to the repository. The GitHub App installation is
+  per-project, not per-user - Orbit Local has no notion of an
+  individual's own GitHub identity or permissions, so it cannot check
+  "does this specific Orbit user have GitHub access to this repo"
+  before rendering the Development panel. This has been true since the
+  MVP for the bare PR label/URL and simply extends to the richer
+  metadata added for the Development panel. Per-user authorization
+  would require GitHub OAuth per Orbit user, which is planned for a
+  future release but does not exist yet - until then, treat connecting
+  a private repository to an Orbit project as making that repository's
+  linked-PR metadata visible to the whole project team.

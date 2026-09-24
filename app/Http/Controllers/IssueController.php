@@ -79,9 +79,11 @@ class IssueController extends Controller
             ->where('external_type', 'github_pull_request')
             ->map(function (ExternalIssueLink $link) {
                 // external_key is always "owner/name#number" - see
-                // GithubRelayEventProcessor, which is the only writer.
-                [$repository, $number] = explode('#', $link->external_key);
-                [$owner, $name] = explode('/', $repository);
+                // GithubRelayEventProcessor, which is the only writer - but
+                // parsed defensively in case a row was ever created outside
+                // that path (a manual seeder, a future importer).
+                [$repository, $number] = array_pad(explode('#', $link->external_key ?? ''), 2, '');
+                [$owner, $name] = array_pad(explode('/', $repository), 2, '');
 
                 return [
                     'provider' => 'github',

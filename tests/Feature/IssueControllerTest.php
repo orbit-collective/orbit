@@ -145,6 +145,54 @@ test('a legacy linked pull request without metadata renders gracefully with null
     ]);
 });
 
+test('a malformed external_key does not crash the issue page', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_repository_owner' => 'orbit-collective',
+        'github_repository_name' => 'orbit',
+    ]);
+
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '4580098240',
+        'external_key' => 'not-the-expected-format',
+        'external_url' => 'https://github.com/orbit-collective/orbit/pull/283',
+        'external_type' => 'github_pull_request',
+    ]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    $response->assertOk();
+    $page = json_decode($response->getContent(), true);
+
+    expect($page['props']['linkedPullRequests'])->toBe([
+        [
+            'provider' => 'github',
+            'number' => 0,
+            'title' => null,
+            'repositoryOwner' => 'not-the-expected-format',
+            'repositoryName' => '',
+            'url' => 'https://github.com/orbit-collective/orbit/pull/283',
+            'sourceBranch' => null,
+            'targetBranch' => null,
+            'status' => null,
+            'draft' => null,
+        ],
+    ]);
+});
+
 test('guests cannot view an issue detail page', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
