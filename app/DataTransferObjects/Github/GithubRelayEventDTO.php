@@ -23,6 +23,10 @@ final readonly class GithubRelayEventDTO
         public ?string $pullRequestSourceBranch,
         public ?string $pullRequestTargetBranch,
         public ?bool $pullRequestDraft,
+        public ?string $pullRequestState,
+        public ?bool $pullRequestMerged,
+        public ?string $pullRequestMergedAt,
+        public ?string $pullRequestUpdatedAt,
         public string $createdAt,
     ) {}
 
@@ -42,6 +46,10 @@ final readonly class GithubRelayEventDTO
             pullRequestSourceBranch: $data['pullRequest']['sourceBranch'] ?? null,
             pullRequestTargetBranch: $data['pullRequest']['targetBranch'] ?? null,
             pullRequestDraft: $data['pullRequest']['draft'] ?? null,
+            pullRequestState: $data['pullRequest']['state'] ?? null,
+            pullRequestMerged: $data['pullRequest']['merged'] ?? null,
+            pullRequestMergedAt: $data['pullRequest']['mergedAt'] ?? null,
+            pullRequestUpdatedAt: $data['pullRequest']['updatedAt'] ?? null,
             createdAt: $data['createdAt'],
         );
     }
