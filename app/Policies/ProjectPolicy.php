@@ -82,6 +82,16 @@ class ProjectPolicy
         return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
     }
 
+    public function viewAutomation(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::AUTOMATION_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]);
+    }
+
+    public function updateAutomation(User $user, Project $project): bool
+    {
+        return $project->hasPermissionOrTier($user, Permission::AUTOMATION_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    }
+
     public function viewLabels(User $user, Project $project): bool
     {
         return $project->hasPermissionOrTier($user, Permission::LABELS_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER]);
