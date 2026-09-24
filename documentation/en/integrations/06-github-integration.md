@@ -19,17 +19,22 @@ by default) exists to bridge that gap:
 GitHub  --webhook-->  orbit-api  <--poll--  Orbit Local  --comment request-->  orbit-api  --GitHub App API-->  GitHub
 ```
 
-1. GitHub sends a `pull_request` webhook to orbit-api when a PR is opened.
+1. GitHub sends a `pull_request` webhook to orbit-api for a supported
+   action — `opened`, `reopened`, `closed`, or `synchronize`.
 2. orbit-api verifies the webhook signature and stores it as a pending
    "relay event", scoped to the project's connection.
 3. Orbit Local polls orbit-api once a minute (`PollGithubRelayEvents`,
    scheduled in `routes/console.php`) for pending events.
-4. For each event, Orbit Local parses the PR body for an
+4. For an `opened` event, Orbit Local parses the PR body for an
    `<!-- orbit-issue:ID -->` marker, resolves the issue, and persists
-   the link.
-5. Orbit Local asks orbit-api to post a confirmation comment on the PR,
-   using orbit-api's GitHub App installation token — Orbit Local never
-   holds a GitHub token or the GitHub App's private key itself.
+   the link. For `reopened`/`closed`/`synchronize`, Orbit Local looks
+   up the *existing* link by GitHub's own stable identifiers instead
+   (see [Pull request lifecycle synchronization](#pull-request-lifecycle-synchronization)
+   below) and never re-parses the marker.
+5. Only `opened` triggers a confirmation comment on the PR, via
+   orbit-api's GitHub App installation token — Orbit Local never holds
+   a GitHub token or the GitHub App's private key itself, and never
+   posts a comment for a lifecycle event.
 6. Orbit Local acknowledges the event, which removes it from the
    pending queue.
 
@@ -58,15 +63,15 @@ same PR (e.g. on a retried relay event) idempotent instead of creating
 a duplicate row.
 
 That same row also carries the PR's title, source/target branch,
-`status`, and `draft` flag, captured once from the `opened` webhook
-payload (`pull_request_title`, `source_branch`, `target_branch`,
-`status`, `draft` — all nullable). A link created before these columns
-existed simply has nulls in them; the issue page's Development panel
-(`IssueDevelopmentPanel`) renders around missing fields rather than
-erroring, and nothing backfills old rows from GitHub. Reprocessing an
-event never overwrites already-stored metadata with a null — see
-`GithubRelayEventProcessor::process()`'s null-filtering before the
-`upsertFor()` call.
+`status`, and `draft` flag (`pull_request_title`, `source_branch`,
+`target_branch`, `status`, `draft` — all nullable), plus `github_updated_at`
+and `merged_at` (v0.9.3, also nullable). A link created before these
+columns existed simply has nulls in them; the issue page's Development
+panel (`IssueDevelopmentPanel`) renders around missing fields rather
+than erroring, and nothing backfills old rows from GitHub. Reprocessing
+an event never overwrites already-stored metadata with a null — see
+`GithubRelayEventProcessor`'s null-filtering before the `upsertFor()`/
+`touch()` calls.
 
 ## Environment
 
@@ -118,18 +123,66 @@ hidden marker in the PR's description:
 There is no fallback: no title, branch, or commit-message parsing.
 See `App\Services\Integrations\Github\GithubMarkerParser`.
 
+The marker is only used for the *initial* link, on `opened`. A
+`reopened`/`closed`/`synchronize` event never re-parses it — see the
+next section.
+
+## Pull request lifecycle synchronization
+
+Once a pull request is linked, Orbit Local keeps its `status` current
+by reacting to further webhook events, without ever touching the
+marker again:
+
+| GitHub action | Resulting `status` | Notes |
+| --- | --- | --- |
+| `reopened` | `open` | |
+| `closed`, `merged: false` | `closed` | GitHub uses `closed` for both a plain close and a merge; the payload's own `merged` field (never branch names, commits, or timestamps) decides which. |
+| `closed`, `merged: true` | `merged` | `merged_at` is stored if GitHub provides it. |
+| `synchronize` | unchanged | New commits were pushed to the PR's branch. Only refreshes title/branches/draft — no commit list or count is stored. |
+
+Lookup is by GitHub's own stable identifiers — the connection (which
+implies the repository) plus the pull request's numeric id — never by
+re-parsing the PR body, title, branch name, or PR number in isolation.
+A lifecycle event for a pull request Orbit never linked (no `opened`
+event was ever processed for it, or its marker didn't resolve) is
+acknowledged and ignored: it never triggers marker-based linking
+itself, and never creates a new link. See
+`GithubRelayEventProcessor::handleLifecycleEvent()`.
+
+A lifecycle event never posts or edits a bot comment, never creates a
+new pull request link, and never changes the linked Orbit issue's own
+workflow status — this release is synchronization only. Automatic
+Orbit issue status changes based on pull request state are a
+deliberate non-goal of this release.
+
+**Stale-event protection.** GitHub does not guarantee webhook delivery
+order. Each relay event carries the pull request's own `updated_at`
+from GitHub (persisted locally as `github_updated_at`); an incoming
+lifecycle event whose `updated_at` is older than the link's currently
+stored one is ignored (acknowledged, not applied) rather than
+reverting a newer state — e.g. a `synchronize` event that arrives
+after the pull request has already been merged does not flip the
+status back to `open`. A link with no `github_updated_at` yet (created
+before v0.9.3, or never lifecycle-synced) has nothing to compare
+against, so the first lifecycle event for it is always applied.
+
+State here is **eventually consistent**, not real-time: it reflects
+the last relay event Orbit Local has polled and processed, not
+GitHub's live state at the moment you look at the issue.
+
 ## Acknowledgement semantics
 
 An event is acknowledged (removed from the pending queue) once
 `GithubRelayEventProcessor::process()` returns without throwing — this
-covers both a successful link *and* every permanently-invalid case
-above (no marker, ambiguous, issue missing, wrong project, unsupported
-event/action). A **transient** failure — orbit-api unreachable, the
-comment request failing, a database error — makes `process()` throw,
-and `PollGithubRelayEvents` deliberately does not acknowledge the
-event in that case: it stays pending and is retried on the next poll.
-There is no separate retry-queue infrastructure; the relay's own
-pending state is the retry mechanism.
+covers a successful link, a successful lifecycle sync, and every
+permanently-invalid case (no marker, ambiguous, issue missing, wrong
+project, unsupported event/action, an unlinked lifecycle event, or a
+stale lifecycle event). A **transient** failure — orbit-api
+unreachable, the comment request failing, a database error — makes
+`process()` throw, and `PollGithubRelayEvents` deliberately does not
+acknowledge the event in that case: it stays pending and is retried on
+the next poll. There is no separate retry-queue infrastructure; the
+relay's own pending state is the retry mechanism.
 
 ## Reliability and health
 
@@ -185,17 +238,27 @@ relay's own pending record expired or vanished first.
 
 ## MVP limitations
 
-- Only `pull_request.opened` is handled — edits, closes, merges,
-  reviews, and CI/check runs are not synced. The Development panel's
-  `status`/`draft` reflect the PR's state *at open time* only; a PR
-  later closed, merged, or marked ready for review will not update
-  here (planned for a future release, not v0.9.2).
+- Only `pull_request.opened`, `reopened`, `closed`, and `synchronize`
+  are handled — `edited` (including a title-only edit), reviews,
+  requested reviewers, labels, assignees, and CI/check runs are not
+  synced. A PR's title/branches only refresh opportunistically as a
+  side effect of a lifecycle event that already carries them, not
+  immediately when someone edits just the title on GitHub.
 - One GitHub connection per Orbit project, one repository per
   connection, and one Orbit issue per pull request.
-- No status automation: linking a PR never transitions the issue's
-  status or closes it.
+- No status automation: a pull request's lifecycle (opened, merged,
+  closed, reopened) never transitions the linked Orbit issue's own
+  workflow status or closes it — see
+  [Pull request lifecycle synchronization](#pull-request-lifecycle-synchronization).
+  That kind of automation is expected to arrive later as part of
+  Workspace Automation, not this release.
+- No commit-level tracking: `synchronize` only refreshes the existing
+  metadata snapshot, never a commit list or count.
 - No comment sync in either direction beyond the single confirmation
-  comment orbit-api posts once.
+  comment orbit-api posts once on `opened` — a lifecycle event never
+  posts or edits a comment.
+- No full lifecycle history: only the pull request's current known
+  state is stored and shown, not a timeline of past transitions.
 - Disconnecting in Orbit does not uninstall the GitHub App from
   GitHub — it only stops Orbit Local from trusting that connection.
 
