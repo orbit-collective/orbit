@@ -230,6 +230,130 @@ test('a malformed external_key does not crash the issue page', function () {
     ]);
 });
 
+test('an issue with pull requests from two different repositories shows both, with no duplicates', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_repository_owner' => 'orbit-collective',
+        'github_repository_name' => 'orbit',
+    ]);
+
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '1111',
+        'external_key' => 'orbit-collective/orbit#10',
+        'external_url' => 'https://github.com/orbit-collective/orbit/pull/10',
+        'external_type' => 'github_pull_request',
+        'status' => 'open',
+    ]);
+
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '2222',
+        'external_key' => 'orbit-collective/orbit-api#42',
+        'external_url' => 'https://github.com/orbit-collective/orbit-api/pull/42',
+        'external_type' => 'github_pull_request',
+        'status' => 'open',
+    ]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    $response->assertOk();
+    $page = json_decode($response->getContent(), true);
+
+    expect($page['props']['linkedPullRequests'])->toHaveCount(2);
+
+    $keys = collect($page['props']['linkedPullRequests'])
+        ->map(fn ($pr) => "{$pr['repositoryOwner']}/{$pr['repositoryName']}#{$pr['number']}")
+        ->sort()
+        ->values()
+        ->all();
+
+    expect($keys)->toBe(['orbit-collective/orbit#10', 'orbit-collective/orbit-api#42']);
+});
+
+test('a lifecycle sync for one pull request never touches another pull request on the same issue', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_repository_owner' => 'orbit-collective',
+        'github_repository_name' => 'orbit',
+    ]);
+
+    $projectIntegration->githubRepositories()->create([
+        'repository_id' => 1,
+        'owner' => 'orbit-collective',
+        'name' => 'orbit',
+    ]);
+
+    ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '1111',
+        'external_key' => 'orbit-collective/orbit#10',
+        'external_url' => 'https://github.com/orbit-collective/orbit/pull/10',
+        'external_type' => 'github_pull_request',
+        'status' => 'open',
+    ]);
+
+    $otherLink = ExternalIssueLink::query()->create([
+        'issue_id' => $issue->id,
+        'project_integration_id' => $projectIntegration->id,
+        'external_id' => '2222',
+        'external_key' => 'orbit-collective/orbit-api#42',
+        'external_url' => 'https://github.com/orbit-collective/orbit-api/pull/42',
+        'external_type' => 'github_pull_request',
+        'status' => 'open',
+    ]);
+
+    $event = new App\DataTransferObjects\Github\GithubRelayEventDTO(
+        id: 'evt_1',
+        type: 'pull_request',
+        action: 'closed',
+        deliveryId: 'delivery_1',
+        repositoryId: 1,
+        pullRequestId: 1111,
+        pullRequestNumber: 10,
+        pullRequestUrl: 'https://github.com/orbit-collective/orbit/pull/10',
+        pullRequestBody: '',
+        pullRequestTitle: null,
+        pullRequestSourceBranch: null,
+        pullRequestTargetBranch: null,
+        pullRequestDraft: null,
+        pullRequestState: 'closed',
+        pullRequestMerged: false,
+        pullRequestMergedAt: null,
+        pullRequestUpdatedAt: now()->toIso8601String(),
+        createdAt: now()->toIso8601String(),
+    );
+
+    app(App\Services\Integrations\Github\GithubRelayEventProcessor::class)->process($event, $projectIntegration);
+
+    $otherLink->refresh();
+
+    expect($otherLink->status)->toBe('open');
+    $this->assertDatabaseHas('external_issue_links', [
+        'external_id' => '1111',
+        'status' => 'closed',
+    ]);
+});
+
 test('guests cannot view an issue detail page', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
