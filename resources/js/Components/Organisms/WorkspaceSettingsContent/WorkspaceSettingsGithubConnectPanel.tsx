@@ -1,8 +1,10 @@
 import {
+    GithubConnectedRepository,
     GithubConnectStatus,
     GithubIntegrationHealth,
 } from '@/types/ProjectIntegrations';
 import { formatTimeAgo } from '@/utils/time';
+import { useState } from 'react';
 
 interface WorkspaceSettingsGithubConnectPanelProps {
     canUpdate: boolean;
@@ -10,6 +12,12 @@ interface WorkspaceSettingsGithubConnectPanelProps {
     onConnect: () => void;
     onDisconnect: () => void;
     onRetry: () => void;
+    /** Fetches the installation's not-yet-connected repositories on demand - see WorkspaceSettingsIntegrationsTab. */
+    onOpenRepositoryPicker?: () => void;
+    availableRepositories?: GithubConnectedRepository[] | null;
+    isLoadingAvailableRepositories?: boolean;
+    onAddRepository?: (repositoryId: number) => void;
+    onRemoveRepository?: (repositoryId: number) => void;
 }
 
 const HEALTH_LABELS: Record<Exclude<GithubIntegrationHealth, null>, string> = {
@@ -91,6 +99,114 @@ function GithubDiagnostics({ status }: { status: GithubConnectStatus }) {
     );
 }
 
+function ConnectedRepositories({
+    canUpdate,
+    repositories,
+    availableRepositories,
+    isLoadingAvailableRepositories,
+    onOpenRepositoryPicker,
+    onAddRepository,
+    onRemoveRepository,
+}: {
+    canUpdate: boolean;
+    repositories: GithubConnectedRepository[];
+    availableRepositories?: GithubConnectedRepository[] | null;
+    isLoadingAvailableRepositories?: boolean;
+    onOpenRepositoryPicker?: () => void;
+    onAddRepository?: (repositoryId: number) => void;
+    onRemoveRepository?: (repositoryId: number) => void;
+}) {
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+    return (
+        <div className="rounded-xl border border-[var(--border-color)] px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
+                <p className="text-sm font-medium text-[var(--text-color)]">
+                    Connected repositories
+                </p>
+                {canUpdate && onAddRepository && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const next = !isPickerOpen;
+
+                            setIsPickerOpen(next);
+
+                            if (next) onOpenRepositoryPicker?.();
+                        }}
+                        className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                    >
+                        {isPickerOpen ? 'Close' : 'Add repository'}
+                    </button>
+                )}
+            </div>
+
+            {repositories.length === 0 ? (
+                <p className="mt-2 text-sm text-[var(--text-gray-color)]">
+                    No repositories connected.
+                </p>
+            ) : (
+                <ul className="mt-2 space-y-1">
+                    {repositories.map((repository) => (
+                        <li
+                            key={repository.id}
+                            className="flex items-center justify-between gap-4 text-sm"
+                        >
+                            <span className="text-[var(--text-color)]">
+                                {repository.owner}/{repository.name}
+                            </span>
+                            {canUpdate && onRemoveRepository && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        onRemoveRepository(repository.id)
+                                    }
+                                    className="text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                >
+                                    Remove
+                                </button>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            {isPickerOpen && canUpdate && (
+                <div className="mt-3 border-t border-[var(--border-color)] pt-3">
+                    {isLoadingAvailableRepositories ? (
+                        <p className="text-sm text-[var(--text-gray-color)]">
+                            Loading…
+                        </p>
+                    ) : !availableRepositories ||
+                      availableRepositories.length === 0 ? (
+                        <p className="text-sm text-[var(--text-gray-color)]">
+                            No other repositories are accessible to this
+                            installation.
+                        </p>
+                    ) : (
+                        <ul className="space-y-1">
+                            {availableRepositories.map((repository) => (
+                                <li key={repository.id}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            onAddRepository?.(repository.id);
+                                            setIsPickerOpen(false);
+                                        }}
+                                        className="w-full rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                                    >
+                                        {repository.owner}/{repository.name}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
 /**
  * The settings panel for the 'github' kind integration (see IntegrationKind
  * in Integrations.ts): a GitHub App installation flow, not a credential form
@@ -111,6 +227,11 @@ export default function WorkspaceSettingsGithubConnectPanel({
     onConnect,
     onDisconnect,
     onRetry,
+    onOpenRepositoryPicker,
+    availableRepositories,
+    isLoadingAvailableRepositories,
+    onAddRepository,
+    onRemoveRepository,
 }: WorkspaceSettingsGithubConnectPanelProps) {
     const state = status?.status ?? 'not_connected';
     const health = status?.health ?? null;
@@ -195,6 +316,17 @@ export default function WorkspaceSettingsGithubConnectPanel({
                             </div>
                         )}
                     </div>
+                    <ConnectedRepositories
+                        canUpdate={canUpdate}
+                        repositories={status.repositories}
+                        availableRepositories={availableRepositories}
+                        isLoadingAvailableRepositories={
+                            isLoadingAvailableRepositories
+                        }
+                        onOpenRepositoryPicker={onOpenRepositoryPicker}
+                        onAddRepository={onAddRepository}
+                        onRemoveRepository={onRemoveRepository}
+                    />
                     <GithubDiagnostics status={status} />
                 </div>
             ) : state === 'revoked' ? (

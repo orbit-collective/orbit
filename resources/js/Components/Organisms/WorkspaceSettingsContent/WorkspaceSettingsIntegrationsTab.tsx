@@ -11,6 +11,7 @@ import {
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import {
+    GithubConnectedRepository,
     GithubConnectStatus,
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
@@ -473,6 +474,83 @@ export default function WorkspaceSettingsIntegrationsTab({
         );
     };
 
+    const [availableGithubRepositories, setAvailableGithubRepositories] =
+        useState<GithubConnectedRepository[] | null>(null);
+    const [
+        isLoadingAvailableGithubRepositories,
+        setIsLoadingAvailableGithubRepositories,
+    ] = useState(false);
+
+    const openGithubRepositoryPicker = async () => {
+        if (!selectedProject) return;
+
+        setIsLoadingAvailableGithubRepositories(true);
+
+        try {
+            const response = await fetch(
+                route('projects.integrations.github.repositories.available', [
+                    selectedProject.id,
+                ]),
+                { headers: { Accept: 'application/json' } },
+            );
+
+            if (!response.ok) throw new Error('request failed');
+
+            const data: { repositories: GithubConnectedRepository[] } =
+                await response.json();
+
+            setAvailableGithubRepositories(data.repositories);
+        } catch {
+            addAlert('Failed to load available repositories.', 'error');
+            setAvailableGithubRepositories([]);
+        } finally {
+            setIsLoadingAvailableGithubRepositories(false);
+        }
+    };
+
+    const addGithubRepository = (repositoryId: number) => {
+        if (!selectedProject) return;
+
+        router.post(
+            route('projects.integrations.github.repositories.store', [
+                selectedProject.id,
+            ]),
+            { repository_id: repositoryId },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    addAlert('Repository connected.', 'success');
+                    setAvailableGithubRepositories(null);
+                },
+                onError: () => {
+                    addAlert('Failed to connect the repository.', 'error');
+                },
+            },
+        );
+    };
+
+    const removeGithubRepository = (repositoryId: number) => {
+        if (!selectedProject) return;
+
+        router.delete(
+            route('projects.integrations.github.repositories.destroy', [
+                selectedProject.id,
+                repositoryId,
+            ]),
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    addAlert('Repository disconnected.', 'success');
+                },
+                onError: () => {
+                    addAlert('Failed to disconnect the repository.', 'error');
+                },
+            },
+        );
+    };
+
     if (!selectedProject || !hasIntegrationsAccess) {
         return (
             <SettingsPanel
@@ -652,6 +730,13 @@ export default function WorkspaceSettingsIntegrationsTab({
                 onConnectGithub={connectGithub}
                 onDisconnectGithub={disconnectGithub}
                 onRetryGithub={retryGithub}
+                onOpenGithubRepositoryPicker={openGithubRepositoryPicker}
+                availableGithubRepositories={availableGithubRepositories}
+                isLoadingAvailableGithubRepositories={
+                    isLoadingAvailableGithubRepositories
+                }
+                onAddGithubRepository={addGithubRepository}
+                onRemoveGithubRepository={removeGithubRepository}
                 onClose={() => setOpenIntegrationId(null)}
             />
         </div>
