@@ -14,7 +14,7 @@ uses(RefreshDatabase::class);
 
 function makeConnectedGithubIntegration(Project $project, array $overrides = []): ProjectIntegration
 {
-    return ProjectIntegration::query()->create([
+    $projectIntegration = ProjectIntegration::query()->create([
         'project_id' => $project->id,
         'integration' => 'github',
         'enabled' => true,
@@ -24,6 +24,14 @@ function makeConnectedGithubIntegration(Project $project, array $overrides = [])
         'github_repository_name' => 'orbit',
         ...$overrides,
     ]);
+
+    $projectIntegration->githubRepositories()->create([
+        'repository_id' => 1,
+        'owner' => 'orbit-collective',
+        'name' => 'orbit',
+    ]);
+
+    return $projectIntegration;
 }
 
 beforeEach(function () {
@@ -37,7 +45,7 @@ test('a fully successful cycle records the success metadata and resets the failu
 
     Http::fake([
         '*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => [
-            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
         ]]], 200),
         '*/v1/github/comments' => Http::response(['success' => true, 'data' => ['duplicate' => false, 'comment' => ['id' => 1, 'url' => 'https://x']]], 201),
         '*/v1/github/events/evt_1/ack' => Http::response(['success' => true, 'data' => ['acknowledged' => true, 'eventId' => 'evt_1']], 200),
@@ -97,7 +105,7 @@ test('a stale ack (EVENT_EXPIRED) after successful processing still counts as a 
 
     Http::fake([
         '*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => [
-            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
         ]]], 200),
         '*/v1/github/comments' => Http::response(['success' => true, 'data' => ['duplicate' => false, 'comment' => ['id' => 1, 'url' => 'https://x']]], 201),
         '*/v1/github/events/evt_1/ack' => Http::response(['success' => false, 'error' => ['code' => 'EVENT_EXPIRED', 'message' => 'expired']], 410),
@@ -119,7 +127,7 @@ test('a genuine ack failure (not expiry) is recorded as a failure', function () 
 
     Http::fake([
         '*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => [
-            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
         ]]], 200),
         '*/v1/github/comments' => Http::response(['success' => true, 'data' => ['duplicate' => false, 'comment' => ['id' => 1, 'url' => 'https://x']]], 201),
         '*/v1/github/events/evt_1/ack' => Http::response(['success' => false, 'error' => ['code' => 'INTERNAL_SERVER_ERROR', 'message' => 'boom']], 500),
@@ -189,8 +197,8 @@ test('a permanent error on an earlier event is not masked by a later transient f
 
     Http::fake([
         '*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => [
-            ['id' => 'evt_a', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issueA->id} -->"], 'createdAt' => 'now'],
-            ['id' => 'evt_b', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd2', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 11, 'number' => 284, 'url' => 'https://github.com/o/r/pull/284', 'body' => "<!-- orbit-issue:{$issueB->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_a', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issueA->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_b', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd2', 'repository' => ['id' => 1], 'pullRequestId' => 11, 'pullRequestNumber' => 284, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/284', 'body' => "<!-- orbit-issue:{$issueB->id} -->"], 'createdAt' => 'now'],
         ]]], 200),
         '*/v1/github/comments' => Http::response(['success' => false, 'error' => ['code' => 'CONNECTION_REVOKED', 'message' => 'revoked']], 401),
     ]);
@@ -218,8 +226,8 @@ test('the pending event count reflects only the events not yet resolved this cyc
 
     Http::fake([
         '*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => [
-            ['id' => 'evt_a', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issueA->id} -->"], 'createdAt' => 'now'],
-            ['id' => 'evt_b', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd2', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 11, 'number' => 284, 'url' => 'https://github.com/o/r/pull/284', 'body' => "<!-- orbit-issue:{$issueB->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_a', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issueA->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_b', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd2', 'repository' => ['id' => 1], 'pullRequestId' => 11, 'pullRequestNumber' => 284, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/284', 'body' => "<!-- orbit-issue:{$issueB->id} -->"], 'createdAt' => 'now'],
         ]]], 200),
         '*/v1/github/comments' => function ($request) {
             $body = json_decode((string) $request->body(), true);

@@ -48,7 +48,7 @@ test('listEvents maps every event in the response', function () {
     Http::fake(['*/v1/github/events' => Http::response([
         'success' => true,
         'data' => ['events' => [
-            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->'], 'createdAt' => 'now'],
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->'], 'createdAt' => 'now'],
         ]],
     ], 200)]);
 
@@ -70,8 +70,7 @@ test('listEvents maps pull request title, branches, and draft state when present
     Http::fake(['*/v1/github/events' => Http::response([
         'success' => true,
         'data' => ['events' => [
-            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => [
-                'id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->',
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->',
                 'title' => 'Fix login redirect', 'sourceBranch' => 'fix/login-redirect', 'targetBranch' => 'master', 'draft' => true,
                 'state' => 'open', 'merged' => false, 'mergedAt' => null, 'updatedAt' => '2026-09-24T00:00:00Z',
             ], 'createdAt' => 'now'],
@@ -93,8 +92,7 @@ test('listEvents maps merged state and merged timestamp for a closed action', fu
     Http::fake(['*/v1/github/events' => Http::response([
         'success' => true,
         'data' => ['events' => [
-            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'closed', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => [
-                'id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->',
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'closed', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => '<!-- orbit-issue:1 -->',
                 'state' => 'closed', 'merged' => true, 'mergedAt' => '2026-09-24T01:00:00Z', 'updatedAt' => '2026-09-24T01:00:00Z',
             ], 'createdAt' => 'now'],
         ]],

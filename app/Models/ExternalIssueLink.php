@@ -21,6 +21,8 @@ class ExternalIssueLink extends Model
         'draft',
         'github_updated_at',
         'merged_at',
+        'check_status',
+        'review_status',
         'last_synced_at',
     ];
 

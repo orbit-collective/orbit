@@ -340,6 +340,9 @@ test('a lifecycle sync for one pull request never touches another pull request o
         pullRequestMerged: false,
         pullRequestMergedAt: null,
         pullRequestUpdatedAt: now()->toIso8601String(),
+        checkStatus: null,
+        reviewState: null,
+        reviewerLogin: null,
         createdAt: now()->toIso8601String(),
     );
 

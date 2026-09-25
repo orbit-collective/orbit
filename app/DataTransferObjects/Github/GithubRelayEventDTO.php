@@ -3,9 +3,12 @@
 namespace App\DataTransferObjects\Github;
 
 /**
- * Maps orbit-api's GitHubRelayEventDto. `pullRequestBody` is always a string
- * (orbit-api coerces a null GitHub webhook body to "" at ingestion), never
- * null, but the local marker parser still tolerates null/empty defensively.
+ * Maps orbit-api's GitHubRelayEventDto. The `pullRequest*` metadata fields
+ * are only ever populated for `type: "pull_request"` events - a
+ * `check_suite`/`pull_request_review` event only carries the PR identity
+ * (repositoryId/pullRequestId/pullRequestNumber) plus its own
+ * checkStatus/reviewState/reviewerLogin (see GithubRelayEventProcessor,
+ * which is the only reader of those).
  */
 final readonly class GithubRelayEventDTO
 {
@@ -17,8 +20,8 @@ final readonly class GithubRelayEventDTO
         public int $repositoryId,
         public int $pullRequestId,
         public int $pullRequestNumber,
-        public string $pullRequestUrl,
-        public string $pullRequestBody,
+        public ?string $pullRequestUrl,
+        public ?string $pullRequestBody,
         public ?string $pullRequestTitle,
         public ?string $pullRequestSourceBranch,
         public ?string $pullRequestTargetBranch,
@@ -27,6 +30,9 @@ final readonly class GithubRelayEventDTO
         public ?bool $pullRequestMerged,
         public ?string $pullRequestMergedAt,
         public ?string $pullRequestUpdatedAt,
+        public ?string $checkStatus,
+        public ?string $reviewState,
+        public ?string $reviewerLogin,
         public string $createdAt,
     ) {}
 
@@ -38,10 +44,10 @@ final readonly class GithubRelayEventDTO
             action: $data['action'],
             deliveryId: $data['deliveryId'],
             repositoryId: $data['repository']['id'],
-            pullRequestId: $data['pullRequest']['id'],
-            pullRequestNumber: $data['pullRequest']['number'],
-            pullRequestUrl: $data['pullRequest']['url'],
-            pullRequestBody: $data['pullRequest']['body'] ?? '',
+            pullRequestId: $data['pullRequestId'],
+            pullRequestNumber: $data['pullRequestNumber'],
+            pullRequestUrl: $data['pullRequest']['url'] ?? null,
+            pullRequestBody: $data['pullRequest']['body'] ?? null,
             pullRequestTitle: $data['pullRequest']['title'] ?? null,
             pullRequestSourceBranch: $data['pullRequest']['sourceBranch'] ?? null,
             pullRequestTargetBranch: $data['pullRequest']['targetBranch'] ?? null,
@@ -50,6 +56,9 @@ final readonly class GithubRelayEventDTO
             pullRequestMerged: $data['pullRequest']['merged'] ?? null,
             pullRequestMergedAt: $data['pullRequest']['mergedAt'] ?? null,
             pullRequestUpdatedAt: $data['pullRequest']['updatedAt'] ?? null,
+            checkStatus: $data['check']['status'] ?? null,
+            reviewState: $data['review']['state'] ?? null,
+            reviewerLogin: $data['review']['reviewerLogin'] ?? null,
             createdAt: $data['createdAt'],
         );
     }
