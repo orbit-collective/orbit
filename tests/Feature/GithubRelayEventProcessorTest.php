@@ -30,13 +30,14 @@ function makeRelayEvent(
     ?bool $merged = false,
     ?string $mergedAt = null,
     ?string $updatedAt = '2026-09-24T00:00:00Z',
+    int $repositoryId = 1274545725,
 ): GithubRelayEventDTO {
     return new GithubRelayEventDTO(
         id: $eventId,
         type: 'pull_request',
         action: $action,
         deliveryId: 'delivery_1',
-        repositoryId: 1274545725,
+        repositoryId: $repositoryId,
         pullRequestId: $pullRequestId,
         pullRequestNumber: $pullRequestNumber,
         pullRequestUrl: 'https://github.com/orbit-collective/orbit/pull/283',
@@ -64,6 +65,11 @@ beforeEach(function () {
         'github_status' => 'connected',
         'github_repository_owner' => 'orbit-collective',
         'github_repository_name' => 'orbit',
+    ]);
+    $this->projectIntegration->githubRepositories()->create([
+        'repository_id' => 1274545725,
+        'owner' => 'orbit-collective',
+        'name' => 'orbit',
     ]);
 });
 
@@ -723,4 +729,55 @@ test('a disabled automation rule does not execute even though the trigger fires'
     );
 
     expect($issue->fresh()->priority)->toBe('low');
+});
+
+test('an opened event for a repository not connected to this project is skipped', function () {
+    fakeSuccessfulComment();
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+
+    $outcome = $this->processor->process(
+        makeRelayEvent("<!-- orbit-issue:{$issue->id} -->", repositoryId: 999999999),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
+    expect(ExternalIssueLink::query()->count())->toBe(0);
+});
+
+test('an opened event resolves the external_key from the matching repository, not the integration scalar columns', function () {
+    fakeSuccessfulComment();
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+    $this->projectIntegration->githubRepositories()->create([
+        'repository_id' => 555,
+        'owner' => 'orbit-collective',
+        'name' => 'orbit-api',
+    ]);
+
+    $this->processor->process(
+        makeRelayEvent("<!-- orbit-issue:{$issue->id} -->", pullRequestId: 7777, pullRequestNumber: 51, repositoryId: 555),
+        $this->projectIntegration,
+    );
+
+    $this->assertDatabaseHas('external_issue_links', [
+        'external_id' => '7777',
+        'external_key' => 'orbit-collective/orbit-api#51',
+    ]);
+});
+
+test('a lifecycle event for a repository removed since the link was created is skipped', function () {
+    Http::fake();
+    linkPullRequest($this->projectIntegration, $this->project);
+    $this->projectIntegration->githubRepositories()->delete();
+
+    $outcome = $this->processor->process(
+        makeRelayEvent('', action: 'reopened', updatedAt: '2026-09-24T00:00:00Z'),
+        $this->projectIntegration,
+    );
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
+    $this->assertDatabaseHas('external_issue_links', [
+        'project_integration_id' => $this->projectIntegration->id,
+        'external_id' => '4580098240',
+        'status' => 'closed',
+    ]);
 });

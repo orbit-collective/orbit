@@ -5,9 +5,11 @@ namespace App\Services\Integrations\Github;
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
 use App\Enums\AutomationTriggerType;
 use App\Models\ExternalIssueLink;
+use App\Models\GithubRepository;
 use App\Models\Issue;
 use App\Models\ProjectIntegration;
 use App\Repositories\ExternalIssueLinkRepository;
+use App\Repositories\GithubRepositoryRepository;
 use App\Services\Automation\AutomationDispatcher;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -38,6 +40,7 @@ class GithubRelayEventProcessor
         protected OrbitRelayClient $relayClient,
         protected AutomationDispatcher $automationDispatcher,
         protected GithubAutomationContextBuilder $automationContextBuilder,
+        protected GithubRepositoryRepository $githubRepositoryRepository,
     ) {}
 
     /**
@@ -79,6 +82,17 @@ class GithubRelayEventProcessor
             return GithubRelayEventOutcome::Skipped;
         }
 
+        // A repository removed from this project (or never added, e.g. an
+        // installation covering repos beyond what was actually connected)
+        // must not create a link - resolving owner/name per event, rather
+        // than trusting the integration's own single scalar columns, is
+        // what makes multiple repositories per project safe.
+        $repository = $this->githubRepositoryRepository->findByRepositoryId($projectIntegration, $event->repositoryId);
+
+        if (! $repository) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
         // Idempotent by (project_integration_id, external_id) - reprocessing
         // the same event (e.g. after a comment-request failure) updates
         // this row in place rather than creating a duplicate link.
@@ -86,7 +100,7 @@ class GithubRelayEventProcessor
 
         $attributes = [
             'issue_id' => $issue->id,
-            'external_key' => "$projectIntegration->github_repository_owner/$projectIntegration->github_repository_name#$event->pullRequestNumber",
+            'external_key' => "$repository->owner/$repository->name#$event->pullRequestNumber",
             'external_url' => $event->pullRequestUrl,
             'external_type' => 'github_pull_request',
             'last_synced_at' => now(),
@@ -115,7 +129,7 @@ class GithubRelayEventProcessor
             $this->commentFormatter->format($issue, $issue->project),
         );
 
-        $this->fireTrigger(AutomationTriggerType::GithubPullRequestOpened, $issue, $projectIntegration, $event);
+        $this->fireTrigger(AutomationTriggerType::GithubPullRequestOpened, $issue, $projectIntegration, $event, $repository);
 
         return GithubRelayEventOutcome::Linked;
     }
@@ -133,6 +147,15 @@ class GithubRelayEventProcessor
         $link = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
 
         if (! $link) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
+        // A repository disconnected after the link was created stops
+        // receiving lifecycle updates too - historical data on the link
+        // itself is untouched, only new syncing stops (see Part 12).
+        $repository = $this->githubRepositoryRepository->findByRepositoryId($projectIntegration, $event->repositoryId);
+
+        if (! $repository) {
             return GithubRelayEventOutcome::Skipped;
         }
 
@@ -162,7 +185,7 @@ class GithubRelayEventProcessor
         $trigger = $this->resolveLifecycleTrigger($event);
 
         if ($trigger && $link->issue) {
-            $this->fireTrigger($trigger, $link->issue, $projectIntegration, $event);
+            $this->fireTrigger($trigger, $link->issue, $projectIntegration, $event, $repository);
         }
 
         return GithubRelayEventOutcome::Synced;
@@ -180,12 +203,12 @@ class GithubRelayEventProcessor
         };
     }
 
-    private function fireTrigger(AutomationTriggerType $trigger, Issue $issue, ProjectIntegration $projectIntegration, GithubRelayEventDTO $event): void
+    private function fireTrigger(AutomationTriggerType $trigger, Issue $issue, ProjectIntegration $projectIntegration, GithubRelayEventDTO $event, GithubRepository $repository): void
     {
         $this->automationDispatcher->dispatch(
             $trigger,
             $issue,
-            $this->automationContextBuilder->build($issue, $projectIntegration, $event),
+            $this->automationContextBuilder->build($issue, $projectIntegration, $event, $repository),
             $event->id,
         );
     }

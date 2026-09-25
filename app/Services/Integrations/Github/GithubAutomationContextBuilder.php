@@ -3,6 +3,7 @@
 namespace App\Services\Integrations\Github;
 
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
+use App\Models\GithubRepository;
 use App\Models\Issue;
 use App\Models\ProjectIntegration;
 
@@ -16,7 +17,7 @@ class GithubAutomationContextBuilder
     /**
      * @return array<string, mixed>
      */
-    public function build(Issue $issue, ProjectIntegration $projectIntegration, GithubRelayEventDTO $event): array
+    public function build(Issue $issue, ProjectIntegration $projectIntegration, GithubRelayEventDTO $event, GithubRepository $repository): array
     {
         return [
             'project' => [
@@ -29,8 +30,8 @@ class GithubAutomationContextBuilder
                 'status' => $issue->status,
             ],
             'repository' => [
-                'owner' => $projectIntegration->github_repository_owner,
-                'name' => $projectIntegration->github_repository_name,
+                'owner' => $repository->owner,
+                'name' => $repository->name,
             ],
             'pullRequest' => [
                 'number' => $event->pullRequestNumber,
