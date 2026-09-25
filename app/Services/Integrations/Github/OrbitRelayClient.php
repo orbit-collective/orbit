@@ -5,6 +5,7 @@ namespace App\Services\Integrations\Github;
 use App\DataTransferObjects\Github\GithubCommentResultDTO;
 use App\DataTransferObjects\Github\GithubConnectionDTO;
 use App\DataTransferObjects\Github\GithubCreatedBranchDTO;
+use App\DataTransferObjects\Github\GithubCreatedPullRequestDTO;
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
 use App\DataTransferObjects\Github\GithubRepositoryDTO;
 use Illuminate\Http\Client\ConnectionException;
@@ -171,6 +172,22 @@ class OrbitRelayClient
         );
 
         return GithubCreatedBranchDTO::fromResponse($data);
+    }
+
+    public function createPullRequest(string $relayToken, int $repositoryId, string $title, string $head, string $base, string $body): GithubCreatedPullRequestDTO
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->post('/v1/github/pull-requests', [
+                'repositoryId' => $repositoryId,
+                'title' => $title,
+                'head' => $head,
+                'base' => $base,
+                'body' => $body,
+            ]),
+            'POST /v1/github/pull-requests',
+        );
+
+        return GithubCreatedPullRequestDTO::fromResponse($data);
     }
 
     public function removeRepository(string $relayToken, int $repositoryId): void

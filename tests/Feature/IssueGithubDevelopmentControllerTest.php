@@ -54,6 +54,53 @@ test('a non-member cannot create a branch', function () {
     $response->assertForbidden();
 });
 
+test('a project member can create a pull request for an issue', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake(['*/v1/github/pull-requests' => Http::response([
+        'success' => true,
+        'data' => ['number' => 51, 'url' => 'https://github.com/orbit-collective/orbit/pull/51', 'title' => 'Fix login'],
+    ], 201)]);
+
+    $response = $this->actingAs($this->member)->post("/issues/{$this->issue->id}/github/pull-requests", [
+        'repository_id' => 1,
+        'title' => 'Fix login',
+        'head' => 'fix/login',
+        'base' => 'main',
+    ]);
+
+    $response->assertRedirect();
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), '/v1/github/pull-requests')
+            && str_contains($request['body'], "<!-- orbit-issue:{$this->issue->id} -->");
+    });
+});
+
+test('creating a pull request requires a title, head, and base', function () {
+    $response = $this->actingAs($this->member)->post("/issues/{$this->issue->id}/github/pull-requests", [
+        'repository_id' => 1,
+    ]);
+
+    $response->assertSessionHasErrors(['title', 'head', 'base']);
+});
+
+test('a non-member cannot create a pull request', function () {
+    $response = $this->actingAs(User::factory()->create())->post("/issues/{$this->issue->id}/github/pull-requests", [
+        'repository_id' => 1,
+        'title' => 'Fix login',
+        'head' => 'fix/login',
+        'base' => 'main',
+    ]);
+
+    $response->assertForbidden();
+});
+
 test('a failed relay call surfaces a validation error instead of a 500', function () {
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
