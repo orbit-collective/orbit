@@ -93,6 +93,8 @@ test('a linked github pull request is exposed with its rich development metadata
             'targetBranch' => 'master',
             'status' => 'open',
             'draft' => false,
+            'checkStatus' => null,
+            'reviewStatus' => null,
         ],
     ]);
 });
@@ -178,6 +180,8 @@ test('a legacy linked pull request without metadata renders gracefully with null
             'targetBranch' => null,
             'status' => null,
             'draft' => null,
+            'checkStatus' => null,
+            'reviewStatus' => null,
         ],
     ]);
 });
@@ -226,6 +230,8 @@ test('a malformed external_key does not crash the issue page', function () {
             'targetBranch' => null,
             'status' => null,
             'draft' => null,
+            'checkStatus' => null,
+            'reviewStatus' => null,
         ],
     ]);
 });

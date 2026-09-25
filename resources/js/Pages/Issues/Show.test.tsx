@@ -140,6 +140,8 @@ describe('Issues/Show Page', () => {
                         targetBranch: 'master',
                         status: 'open',
                         draft: false,
+                        checkStatus: null,
+                        reviewStatus: null,
                     },
                 ]}
             />,

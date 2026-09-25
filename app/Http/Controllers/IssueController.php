@@ -100,7 +100,7 @@ class IssueController extends Controller
     }
 
     /**
-     * @return array<int, array{provider: string, number: int, title: ?string, repositoryOwner: string, repositoryName: string, url: string, sourceBranch: ?string, targetBranch: ?string, status: ?string, draft: ?bool}>
+     * @return array<int, array{provider: string, number: int, title: ?string, repositoryOwner: string, repositoryName: string, url: string, sourceBranch: ?string, targetBranch: ?string, status: ?string, draft: ?bool, checkStatus: ?string, reviewStatus: ?string}>
      */
     private function mapLinkedPullRequests(Collection $externalLinks): array
     {
@@ -125,6 +125,8 @@ class IssueController extends Controller
                     'targetBranch' => $link->target_branch,
                     'status' => $link->status,
                     'draft' => $link->draft,
+                    'checkStatus' => $link->check_status,
+                    'reviewStatus' => $link->review_status,
                 ];
             })
             ->values()

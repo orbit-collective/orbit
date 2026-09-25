@@ -50,6 +50,27 @@ function pullRequestBadge(pr: LinkedPullRequest) {
     return null;
 }
 
+/** Hidden entirely when null - never fabricated for a legacy/unsynced link (same convention as the status badge). */
+function checkStatusBadge(pr: LinkedPullRequest) {
+    if (pr.checkStatus === 'passed')
+        return { label: 'CI passed', tone: 'merged' as const };
+    if (pr.checkStatus === 'failed')
+        return { label: 'CI failed', tone: 'closed' as const };
+    if (pr.checkStatus === 'pending')
+        return { label: 'CI pending', tone: 'neutral' as const };
+    return null;
+}
+
+function reviewStatusBadge(pr: LinkedPullRequest) {
+    if (pr.reviewStatus === 'approved')
+        return { label: 'Approved', tone: 'merged' as const };
+    if (pr.reviewStatus === 'changes_requested')
+        return { label: 'Changes requested', tone: 'closed' as const };
+    if (pr.reviewStatus === 'commented')
+        return { label: 'Commented', tone: 'neutral' as const };
+    return null;
+}
+
 function RepositoryPicker({
     repositories,
     value,
@@ -208,7 +229,10 @@ function CreatePullRequestForm({
  * name/url - status/draft/branches/title render as their empty-state
  * fallback rather than being fabricated. Since v0.9.3, reopened/closed/
  * synchronize webhook events keep status current, so the badge can show
- * Open, Draft, Closed, or Merged. Since v0.9.4, a project with at least one
+ * Open, Draft, Closed, or Merged. Since v0.9.4, a link also gets compact
+ * CI check and review badges when GitHub has reported them (hidden
+ * entirely when null, same "never fabricate" convention as the status
+ * badge), and a project with at least one
  * connected repository also gets "Create branch"/"Create pull request"
  * actions - only "Open pull request" (the link itself) plus these two, no
  * merge/approve/close from Orbit.
@@ -233,6 +257,8 @@ export default function IssueDevelopmentPanel({
         <div className="flex w-full flex-col gap-2">
             {pullRequests.map((pr) => {
                 const badge = pullRequestBadge(pr);
+                const checkBadge = checkStatusBadge(pr);
+                const reviewBadge = reviewStatusBadge(pr);
 
                 return (
                     <a
@@ -273,6 +299,29 @@ export default function IssueDevelopmentPanel({
                             >
                                 {pr.sourceBranch} → {pr.targetBranch}
                             </span>
+                        )}
+
+                        {(checkBadge || reviewBadge) && (
+                            <div className="flex items-center gap-1.5">
+                                {checkBadge && (
+                                    <span
+                                        className={badgeVariants({
+                                            tone: checkBadge.tone,
+                                        })}
+                                    >
+                                        {checkBadge.label}
+                                    </span>
+                                )}
+                                {reviewBadge && (
+                                    <span
+                                        className={badgeVariants({
+                                            tone: reviewBadge.tone,
+                                        })}
+                                    >
+                                        {reviewBadge.label}
+                                    </span>
+                                )}
+                            </div>
                         )}
                     </a>
                 );
