@@ -71,7 +71,7 @@ test('connect (reconnect) clears any leftover failure state from a previous conn
 
 test('getConnectStatus reports not_connected when no integration exists', function () {
     expect($this->service->getConnectStatus($this->project))->toBe([
-        'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'connectedAt' => null,
+        'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'repositories' => [], 'connectedAt' => null,
         'health' => null, 'lastSuccessfulSyncAt' => null, 'lastSyncAttemptAt' => null, 'lastFailedSyncAt' => null,
         'errorMessage' => null, 'pendingEventCount' => null, 'pendingEventCountCapped' => false,
     ]);
@@ -285,4 +285,115 @@ test('rotateToken throws a validation exception (not a decrypt exception) for a 
     ]);
 
     expect(fn () => $this->service->rotateToken($this->project))->toThrow(ValidationException::class);
+});
+
+test('getConnectStatus reconciles the local repository table when a pending connection becomes connected', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_connection_id' => 'conn_1',
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'pending',
+    ]);
+
+    Http::fake(['*/v1/github/connections/me' => Http::response([
+        'success' => true,
+        'data' => ['id' => 'conn_1', 'status' => 'connected', 'installationId' => 163077216, 'repositories' => [
+            ['id' => 1, 'owner' => 'orbit-collective', 'name' => 'orbit'],
+            ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+        ], 'createdAt' => 'now', 'connectedAt' => '2026-09-20T00:00:00Z', 'revokedAt' => null],
+    ], 200)]);
+
+    $status = $this->service->getConnectStatus($this->project);
+
+    expect($status['repositories'])->toHaveCount(2);
+    $this->assertDatabaseHas('github_repositories', ['repository_id' => 1, 'name' => 'orbit']);
+    $this->assertDatabaseHas('github_repositories', ['repository_id' => 2, 'name' => 'orbit-api']);
+});
+
+test('syncRepositories reconciles the local table from orbit-api', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+    $this->app->make(\App\Repositories\GithubRepositoryRepository::class)
+        ->create($projectIntegration, 1, 'orbit-collective', 'orbit');
+
+    Http::fake(['*/v1/github/repositories' => Http::response([
+        'success' => true,
+        'data' => ['repositories' => [
+            ['id' => 1, 'owner' => 'orbit-collective', 'name' => 'orbit'],
+            ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+        ]],
+    ], 200)]);
+
+    $this->service->syncRepositories($this->project);
+
+    $this->assertDatabaseHas('github_repositories', ['repository_id' => 2, 'name' => 'orbit-api']);
+    expect(\App\Models\GithubRepository::query()->count())->toBe(2);
+});
+
+test('addRepository persists the repository orbit-api confirms', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake(['*/v1/github/repositories' => Http::response([
+        'success' => true,
+        'data' => ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+    ], 201)]);
+
+    $this->service->addRepository($this->project, 2);
+
+    $this->assertDatabaseHas('github_repositories', ['repository_id' => 2, 'name' => 'orbit-api']);
+});
+
+test('addRepository throws a validation exception when nothing is connected', function () {
+    expect(fn () => $this->service->addRepository($this->project, 2))->toThrow(ValidationException::class);
+});
+
+test('removeRepository deletes the local mapping and asks orbit-api to remove it', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+    $this->app->make(\App\Repositories\GithubRepositoryRepository::class)
+        ->create($projectIntegration, 2, 'orbit-collective', 'orbit-api');
+
+    Http::fake(['*/v1/github/repositories/2' => Http::response([
+        'success' => true,
+        'data' => ['removed' => true, 'repositoryId' => 2],
+    ], 200)]);
+
+    $this->service->removeRepository($this->project, 2);
+
+    $this->assertDatabaseMissing('github_repositories', ['repository_id' => 2]);
+    Http::assertSent(fn ($request) => $request->method() === 'DELETE' && str_contains($request->url(), '/v1/github/repositories/2'));
+});
+
+test('removeRepository is a no-op for a repository that is not connected', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake();
+
+    $this->service->removeRepository($this->project, 999);
+
+    Http::assertNothingSent();
 });
