@@ -7,6 +7,7 @@ const notConnected: GithubConnectStatus = {
     status: 'not_connected',
     installUrl: null,
     repository: null,
+    repositories: [],
     connectedAt: null,
     health: null,
     lastSuccessfulSyncAt: null,
@@ -27,6 +28,7 @@ const healthy: GithubConnectStatus = {
     ...notConnected,
     status: 'connected',
     repository: { owner: 'orbit-collective', name: 'orbit' },
+    repositories: [{ id: 1, owner: 'orbit-collective', name: 'orbit' }],
     connectedAt: '2026-09-20T00:00:00Z',
     health: 'healthy',
     lastSuccessfulSyncAt: new Date(Date.now() - 2 * 60_000).toISOString(),
@@ -238,6 +240,79 @@ describe('WorkspaceSettingsGithubConnectPanel', () => {
         expect(
             screen.queryByRole('button', { name: 'Disconnect' }),
         ).not.toBeInTheDocument();
+    });
+
+    test('lists connected repositories and removes one', () => {
+        const onRemoveRepository = vi.fn();
+        const multiRepo: GithubConnectStatus = {
+            ...healthy,
+            repositories: [
+                { id: 1, owner: 'orbit-collective', name: 'orbit' },
+                { id: 2, owner: 'orbit-collective', name: 'orbit-api' },
+            ],
+        };
+
+        render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={multiRepo}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
+                onRemoveRepository={onRemoveRepository}
+            />,
+        );
+
+        expect(
+            screen.getByText('orbit-collective/orbit-api'),
+        ).toBeInTheDocument();
+
+        fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[1]);
+
+        expect(onRemoveRepository).toHaveBeenCalledWith(2);
+    });
+
+    test('opens the repository picker, fetches available repositories, and adds one', () => {
+        const onOpenRepositoryPicker = vi.fn();
+        const onAddRepository = vi.fn();
+
+        const { rerender } = render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={healthy}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
+                onOpenRepositoryPicker={onOpenRepositoryPicker}
+                onAddRepository={onAddRepository}
+                availableRepositories={null}
+                isLoadingAvailableRepositories={false}
+            />,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Add repository' }));
+
+        expect(onOpenRepositoryPicker).toHaveBeenCalledTimes(1);
+
+        rerender(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={healthy}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
+                onOpenRepositoryPicker={onOpenRepositoryPicker}
+                onAddRepository={onAddRepository}
+                availableRepositories={[
+                    { id: 2, owner: 'orbit-collective', name: 'orbit-api' },
+                ]}
+                isLoadingAvailableRepositories={false}
+            />,
+        );
+
+        fireEvent.click(screen.getByText('orbit-collective/orbit-api'));
+
+        expect(onAddRepository).toHaveBeenCalledWith(2);
     });
 
     test('shows a static status line instead of a button for a read-only viewer', () => {

@@ -9,6 +9,7 @@ import { IntegrationDefinition } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import {
+    GithubConnectedRepository,
     GithubConnectStatus,
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
@@ -38,6 +39,11 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     onConnectGithub: () => void;
     onDisconnectGithub: () => void;
     onRetryGithub: () => void;
+    onOpenGithubRepositoryPicker?: () => void;
+    availableGithubRepositories?: GithubConnectedRepository[] | null;
+    isLoadingAvailableGithubRepositories?: boolean;
+    onAddGithubRepository?: (repositoryId: number) => void;
+    onRemoveGithubRepository?: (repositoryId: number) => void;
     onClose: () => void;
 }
 
@@ -59,6 +65,11 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     onConnectGithub,
     onDisconnectGithub,
     onRetryGithub,
+    onOpenGithubRepositoryPicker,
+    availableGithubRepositories,
+    isLoadingAvailableGithubRepositories,
+    onAddGithubRepository,
+    onRemoveGithubRepository,
     onClose,
 }: WorkspaceSettingsIntegrationDetailModalProps) {
     const [webhookUrlDraft, setWebhookUrlDraft] = useState(
@@ -310,6 +321,13 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         onConnect={onConnectGithub}
                         onDisconnect={onDisconnectGithub}
                         onRetry={onRetryGithub}
+                        onOpenRepositoryPicker={onOpenGithubRepositoryPicker}
+                        availableRepositories={availableGithubRepositories}
+                        isLoadingAvailableRepositories={
+                            isLoadingAvailableGithubRepositories
+                        }
+                        onAddRepository={onAddGithubRepository}
+                        onRemoveRepository={onRemoveGithubRepository}
                     />
                 )}
             </div>

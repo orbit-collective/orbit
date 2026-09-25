@@ -307,6 +307,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
                     installUrl:
                         'https://github.com/apps/orbit/installations/new?state=xyz',
                     repository: null,
+                    repositories: [],
                     connectedAt: null,
                     health: null,
                     lastSuccessfulSyncAt: null,

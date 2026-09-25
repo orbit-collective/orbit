@@ -98,10 +98,17 @@ export type GithubIntegrationHealth =
  * out once, at connection creation). The reliability fields always reflect
  * the last scheduled sync or manual retry — see the "Retry sync" action.
  */
+export interface GithubConnectedRepository {
+    id: number;
+    owner: string;
+    name: string;
+}
+
 export interface GithubConnectStatus {
     status: GithubConnectionStatus;
     installUrl: string | null;
     repository: { owner: string; name: string } | null;
+    repositories: GithubConnectedRepository[];
     connectedAt: string | null;
     health: GithubIntegrationHealth;
     lastSuccessfulSyncAt: string | null;
