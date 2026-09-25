@@ -354,6 +354,57 @@ test('a lifecycle sync for one pull request never touches another pull request o
     ]);
 });
 
+test('the issue page exposes connected github repositories and a default branch name', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Fix login redirect']);
+    $user = actingAsProjectMember($project);
+
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_status' => 'connected',
+    ]);
+    $projectIntegration->githubRepositories()->create([
+        'repository_id' => 1,
+        'owner' => 'orbit-collective',
+        'name' => 'orbit',
+    ]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    $response->assertOk();
+    $page = json_decode($response->getContent(), true);
+
+    expect($page['props']['githubRepositories'])->toBe([
+        ['id' => 1, 'owner' => 'orbit-collective', 'name' => 'orbit'],
+    ]);
+    expect($page['props']['githubDefaultBranchName'])->toBe("{$issue->id}-fix-login-redirect");
+});
+
+test('the issue page exposes no github repositories when nothing is connected', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    $response->assertOk();
+    $page = json_decode($response->getContent(), true);
+
+    expect($page['props']['githubRepositories'])->toBe([]);
+});
+
 test('guests cannot view an issue detail page', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);

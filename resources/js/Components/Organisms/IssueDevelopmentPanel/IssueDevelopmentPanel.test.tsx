@@ -1,7 +1,13 @@
-import { LinkedPullRequest } from '@/types/Issues';
-import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { GithubDevelopmentRepository, LinkedPullRequest } from '@/types/Issues';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import IssueDevelopmentPanel from './IssueDevelopmentPanel';
+
+const repository: GithubDevelopmentRepository = {
+    id: 1,
+    owner: 'orbit-collective',
+    name: 'orbit',
+};
 
 const buildPullRequest = (
     overrides: Partial<LinkedPullRequest> = {},
@@ -140,5 +146,140 @@ describe('IssueDevelopmentPanel', () => {
 
         expect(screen.getByText('Fix login redirect')).toBeInTheDocument();
         expect(screen.getByText('Add retry button')).toBeInTheDocument();
+    });
+
+    test('shows an empty-state affordance with no linked pull requests but a connected repository', () => {
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[]}
+                repositories={[repository]}
+                onCreateBranch={() => {}}
+                onCreatePullRequest={() => {}}
+            />,
+        );
+
+        expect(
+            screen.getByText('No linked pull requests yet.'),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Create branch' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Create pull request' }),
+        ).toBeInTheDocument();
+    });
+
+    test('renders nothing when there are no pull requests and no connected repositories', () => {
+        const { container } = render(
+            <IssueDevelopmentPanel pullRequests={[]} repositories={[]} />,
+        );
+
+        expect(container).toBeEmptyDOMElement();
+    });
+
+    test('creates a branch with the prefilled default name', () => {
+        const onCreateBranch = vi.fn();
+
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[]}
+                repositories={[repository]}
+                defaultBranchName="1234-fix-login"
+                onCreateBranch={onCreateBranch}
+            />,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Create branch' }));
+
+        const input = screen.getByPlaceholderText('branch-name');
+        expect(input).toHaveValue('1234-fix-login');
+
+        fireEvent.click(screen.getByRole('button', { name: 'Create branch' }));
+
+        expect(onCreateBranch).toHaveBeenCalledWith({
+            repositoryId: 1,
+            name: '1234-fix-login',
+        });
+    });
+
+    test('cancelling the create-branch form returns to the action row', () => {
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[]}
+                repositories={[repository]}
+                onCreateBranch={() => {}}
+            />,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Create branch' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+        expect(
+            screen.getByRole('button', { name: 'Create branch' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByPlaceholderText('branch-name'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('creates a pull request with title, head, and a default base branch', () => {
+        const onCreatePullRequest = vi.fn();
+
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[]}
+                repositories={[repository]}
+                defaultBranchName="1234-fix-login"
+                onCreatePullRequest={onCreatePullRequest}
+            />,
+        );
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Create pull request' }),
+        );
+
+        fireEvent.change(screen.getByPlaceholderText('Pull request title'), {
+            target: { value: 'Fix login redirect' },
+        });
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Create pull request' }),
+        );
+
+        expect(onCreatePullRequest).toHaveBeenCalledWith({
+            repositoryId: 1,
+            title: 'Fix login redirect',
+            head: '1234-fix-login',
+            base: 'main',
+        });
+    });
+
+    test('shows a repository picker only when more than one repository is connected', () => {
+        const secondRepository: GithubDevelopmentRepository = {
+            id: 2,
+            owner: 'orbit-collective',
+            name: 'orbit-api',
+        };
+
+        const { rerender } = render(
+            <IssueDevelopmentPanel
+                pullRequests={[]}
+                repositories={[repository]}
+                onCreateBranch={() => {}}
+            />,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Create branch' }));
+        expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+
+        rerender(
+            <IssueDevelopmentPanel
+                pullRequests={[]}
+                repositories={[repository, secondRepository]}
+                onCreateBranch={() => {}}
+            />,
+        );
+
+        expect(screen.getByRole('combobox')).toBeInTheDocument();
     });
 });
