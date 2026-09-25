@@ -5,6 +5,7 @@ namespace App\Services\Integrations\Github;
 use App\Jobs\SyncGithubIntegrationJob;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
+use App\Repositories\GithubRepositoryRepository;
 use App\Repositories\ProjectIntegrationRepository;
 use App\Services\ActivityLogService;
 use Illuminate\Validation\ValidationException;
@@ -26,6 +27,7 @@ class GithubIntegrationService
         protected OrbitRelayClient $relayClient,
         protected GithubIntegrationHealthService $healthService,
         protected ActivityLogService $activityLogService,
+        protected GithubRepositoryRepository $githubRepositoryRepository,
     ) {}
 
     /**
@@ -108,7 +110,7 @@ class GithubIntegrationService
      * GithubIntegrationSynchronizer for the only place that actually talks
      * to orbit-api on a schedule).
      *
-     * @return array{status: string, installUrl: ?string, repository: ?array{owner: string, name: string}, connectedAt: ?string, health: ?string, lastSuccessfulSyncAt: ?string, lastSyncAttemptAt: ?string, lastFailedSyncAt: ?string, errorMessage: ?string, pendingEventCount: ?int, pendingEventCountCapped: bool}
+     * @return array{status: string, installUrl: ?string, repository: ?array{owner: string, name: string}, repositories: array<int, array{id: int, owner: string, name: string}>, connectedAt: ?string, health: ?string, lastSuccessfulSyncAt: ?string, lastSyncAttemptAt: ?string, lastFailedSyncAt: ?string, errorMessage: ?string, pendingEventCount: ?int, pendingEventCountCapped: bool}
      */
     public function getConnectStatus(Project $project): array
     {
@@ -116,7 +118,7 @@ class GithubIntegrationService
 
         if (! $projectIntegration || $projectIntegration->getRawOriginal('github_relay_token') === null) {
             return [
-                'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'connectedAt' => null,
+                'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'repositories' => [], 'connectedAt' => null,
                 'health' => null, 'lastSuccessfulSyncAt' => null, 'lastSyncAttemptAt' => null, 'lastFailedSyncAt' => null,
                 'errorMessage' => null, 'pendingEventCount' => null, 'pendingEventCountCapped' => false,
             ];
@@ -147,6 +149,14 @@ class GithubIntegrationService
             'repository' => $projectIntegration->github_repository_owner
                 ? ['owner' => $projectIntegration->github_repository_owner, 'name' => $projectIntegration->github_repository_name]
                 : null,
+            'repositories' => $this->githubRepositoryRepository->getForIntegration($projectIntegration)
+                ->map(fn ($repository) => [
+                    'id' => $repository->repository_id,
+                    'owner' => $repository->owner,
+                    'name' => $repository->name,
+                ])
+                ->values()
+                ->all(),
             'connectedAt' => $projectIntegration->github_connected_at?->toIso8601String(),
             'health' => $this->healthService->determine($projectIntegration)?->value,
             'lastSuccessfulSyncAt' => $projectIntegration->github_last_synced_at?->toIso8601String(),
@@ -231,6 +241,89 @@ class GithubIntegrationService
             'github_install_url' => null,
         ]);
 
+        $this->githubRepositoryRepository->syncForIntegration($projectIntegration, array_map(
+            fn ($repository) => ['id' => $repository->id, 'owner' => $repository->owner, 'name' => $repository->name],
+            $connection->repositories,
+        ));
+
         $this->activityLogService->log($projectIntegration->project_id, 'Connected the "github" integration');
+    }
+
+    /**
+     * Re-fetches this project's repository list from orbit-api and
+     * reconciles the local table to match exactly (add missing, remove
+     * anything no longer returned) - used by the "Manage repositories"
+     * settings action. A no-op if nothing is connected.
+     */
+    public function syncRepositories(Project $project): void
+    {
+        $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
+        $relayToken = $projectIntegration?->resolveGithubRelayToken();
+
+        if (! $projectIntegration || ! $relayToken || $projectIntegration->github_status !== 'connected') {
+            return;
+        }
+
+        $repositories = $this->relayClient->listRepositories($relayToken);
+
+        $this->githubRepositoryRepository->syncForIntegration($projectIntegration, array_map(
+            fn ($repository) => ['id' => $repository->id, 'owner' => $repository->owner, 'name' => $repository->name],
+            $repositories,
+        ));
+    }
+
+    /**
+     * @throws ValidationException if there is nothing connected to add a repository to
+     * @throws OrbitRelayApiException if orbit-api rejects the repository (e.g. GITHUB_REPOSITORY_NOT_ALLOWED)
+     */
+    public function addRepository(Project $project, int $repositoryId): void
+    {
+        $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
+        $relayToken = $projectIntegration?->resolveGithubRelayToken();
+
+        if (! $projectIntegration || ! $relayToken || $projectIntegration->github_status !== 'connected') {
+            throw ValidationException::withMessages([
+                'integration' => 'GitHub is not connected for this project.',
+            ]);
+        }
+
+        $repository = $this->relayClient->addRepository($relayToken, $repositoryId);
+
+        $this->githubRepositoryRepository->syncForIntegration($projectIntegration, [
+            ...$this->githubRepositoryRepository->getForIntegration($projectIntegration)
+                ->map(fn ($existing) => ['id' => $existing->repository_id, 'owner' => $existing->owner, 'name' => $existing->name])
+                ->all(),
+            ['id' => $repository->id, 'owner' => $repository->owner, 'name' => $repository->name],
+        ]);
+
+        $this->activityLogService->log($project->id, "Connected the \"$repository->owner/$repository->name\" repository");
+    }
+
+    /**
+     * Only removes the local mapping and asks orbit-api to stop routing
+     * webhook events for it - every ExternalIssueLink already created from
+     * this repository's events is left untouched, matching the "no
+     * historical data lost" requirement for repository removal.
+     */
+    public function removeRepository(Project $project, int $repositoryId): void
+    {
+        $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
+        $relayToken = $projectIntegration?->resolveGithubRelayToken();
+
+        if (! $projectIntegration || ! $relayToken) {
+            return;
+        }
+
+        $githubRepository = $this->githubRepositoryRepository->findByRepositoryId($projectIntegration, $repositoryId);
+
+        if (! $githubRepository) {
+            return;
+        }
+
+        $this->relayClient->removeRepository($relayToken, $repositoryId);
+
+        $this->activityLogService->log($project->id, "Disconnected the \"$githubRepository->owner/$githubRepository->name\" repository");
+
+        $this->githubRepositoryRepository->delete($githubRepository);
     }
 }
