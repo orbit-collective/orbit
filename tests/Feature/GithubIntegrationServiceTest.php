@@ -111,7 +111,7 @@ test('getConnectStatus syncs a pending connection to connected and clears the in
 
     Http::fake(['*/v1/github/connections/me' => Http::response([
         'success' => true,
-        'data' => ['id' => 'conn_1', 'status' => 'connected', 'installationId' => 163077216, 'repository' => ['id' => 1274545725, 'owner' => 'orbit-collective', 'name' => 'orbit'], 'createdAt' => 'now', 'connectedAt' => '2026-09-20T00:00:00Z', 'revokedAt' => null],
+        'data' => ['id' => 'conn_1', 'status' => 'connected', 'installationId' => 163077216, 'repositories' => [['id' => 1274545725, 'owner' => 'orbit-collective', 'name' => 'orbit']], 'createdAt' => 'now', 'connectedAt' => '2026-09-20T00:00:00Z', 'revokedAt' => null],
     ], 200)]);
 
     $status = $this->service->getConnectStatus($this->project);
