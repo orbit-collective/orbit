@@ -4,6 +4,7 @@ namespace App\Services\Integrations\Github;
 
 use App\DataTransferObjects\Github\GithubCommentResultDTO;
 use App\DataTransferObjects\Github\GithubConnectionDTO;
+use App\DataTransferObjects\Github\GithubCreatedBranchDTO;
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
 use App\DataTransferObjects\Github\GithubRepositoryDTO;
 use Illuminate\Http\Client\ConnectionException;
@@ -156,6 +157,20 @@ class OrbitRelayClient
         );
 
         return GithubRepositoryDTO::fromResponse($data);
+    }
+
+    public function createBranch(string $relayToken, int $repositoryId, string $name, ?string $baseBranch = null): GithubCreatedBranchDTO
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->post('/v1/github/branches', array_filter([
+                'repositoryId' => $repositoryId,
+                'name' => $name,
+                'baseBranch' => $baseBranch,
+            ], fn ($value) => $value !== null)),
+            'POST /v1/github/branches',
+        );
+
+        return GithubCreatedBranchDTO::fromResponse($data);
     }
 
     public function removeRepository(string $relayToken, int $repositoryId): void
