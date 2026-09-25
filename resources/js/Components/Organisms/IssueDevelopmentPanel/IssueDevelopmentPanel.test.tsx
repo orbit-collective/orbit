@@ -22,6 +22,8 @@ const buildPullRequest = (
     targetBranch: 'master',
     status: 'open',
     draft: false,
+    checkStatus: null,
+    reviewStatus: null,
     ...overrides,
 });
 
@@ -146,6 +148,46 @@ describe('IssueDevelopmentPanel', () => {
 
         expect(screen.getByText('Fix login redirect')).toBeInTheDocument();
         expect(screen.getByText('Add retry button')).toBeInTheDocument();
+    });
+
+    test('shows a CI passed and Approved badge when both are reported', () => {
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[
+                    buildPullRequest({
+                        checkStatus: 'passed',
+                        reviewStatus: 'approved',
+                    }),
+                ]}
+            />,
+        );
+
+        expect(screen.getByText('CI passed')).toBeInTheDocument();
+        expect(screen.getByText('Approved')).toBeInTheDocument();
+    });
+
+    test('shows CI failed and Changes requested badges', () => {
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[
+                    buildPullRequest({
+                        checkStatus: 'failed',
+                        reviewStatus: 'changes_requested',
+                    }),
+                ]}
+            />,
+        );
+
+        expect(screen.getByText('CI failed')).toBeInTheDocument();
+        expect(screen.getByText('Changes requested')).toBeInTheDocument();
+    });
+
+    test('hides CI and review badges when neither has been reported', () => {
+        render(<IssueDevelopmentPanel pullRequests={[buildPullRequest()]} />);
+
+        expect(screen.queryByText(/CI /)).not.toBeInTheDocument();
+        expect(screen.queryByText('Approved')).not.toBeInTheDocument();
+        expect(screen.queryByText('Changes requested')).not.toBeInTheDocument();
     });
 
     test('shows an empty-state affordance with no linked pull requests but a connected repository', () => {

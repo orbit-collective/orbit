@@ -134,6 +134,8 @@ export interface LinkedPullRequest {
     targetBranch: string | null;
     status: 'open' | 'closed' | 'merged' | null;
     draft: boolean | null;
+    checkStatus: 'pending' | 'passed' | 'failed' | null;
+    reviewStatus: 'approved' | 'changes_requested' | 'commented' | null;
 }
 
 export interface GithubDevelopmentRepository {
