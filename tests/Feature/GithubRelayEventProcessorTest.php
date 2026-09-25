@@ -50,6 +50,63 @@ function makeRelayEvent(
         pullRequestMerged: $merged,
         pullRequestMergedAt: $mergedAt,
         pullRequestUpdatedAt: $updatedAt,
+        checkStatus: null,
+        reviewState: null,
+        reviewerLogin: null,
+        createdAt: now()->toIso8601String(),
+    );
+}
+
+function makeCheckSuiteEvent(int $pullRequestId, ?string $checkStatus, int $repositoryId = 1274545725): GithubRelayEventDTO
+{
+    return new GithubRelayEventDTO(
+        id: 'evt_check_'.$pullRequestId,
+        type: 'check_suite',
+        action: 'completed',
+        deliveryId: 'delivery_check_'.$pullRequestId,
+        repositoryId: $repositoryId,
+        pullRequestId: $pullRequestId,
+        pullRequestNumber: 283,
+        pullRequestUrl: null,
+        pullRequestBody: null,
+        pullRequestTitle: null,
+        pullRequestSourceBranch: null,
+        pullRequestTargetBranch: null,
+        pullRequestDraft: null,
+        pullRequestState: null,
+        pullRequestMerged: null,
+        pullRequestMergedAt: null,
+        pullRequestUpdatedAt: null,
+        checkStatus: $checkStatus,
+        reviewState: null,
+        reviewerLogin: null,
+        createdAt: now()->toIso8601String(),
+    );
+}
+
+function makeReviewEvent(int $pullRequestId, ?string $reviewState, int $repositoryId = 1274545725): GithubRelayEventDTO
+{
+    return new GithubRelayEventDTO(
+        id: 'evt_review_'.$pullRequestId.'_'.uniqid(),
+        type: 'pull_request_review',
+        action: 'submitted',
+        deliveryId: 'delivery_review_'.uniqid(),
+        repositoryId: $repositoryId,
+        pullRequestId: $pullRequestId,
+        pullRequestNumber: 283,
+        pullRequestUrl: null,
+        pullRequestBody: null,
+        pullRequestTitle: null,
+        pullRequestSourceBranch: null,
+        pullRequestTargetBranch: null,
+        pullRequestDraft: null,
+        pullRequestState: null,
+        pullRequestMerged: null,
+        pullRequestMergedAt: null,
+        pullRequestUpdatedAt: null,
+        checkStatus: null,
+        reviewState: $reviewState,
+        reviewerLogin: 'octocat',
         createdAt: now()->toIso8601String(),
     );
 }
@@ -193,6 +250,9 @@ test('an unsupported event action is skipped', function () {
         pullRequestMerged: null,
         pullRequestMergedAt: null,
         pullRequestUpdatedAt: null,
+        checkStatus: null,
+        reviewState: null,
+        reviewerLogin: null,
         createdAt: now()->toIso8601String(),
     );
 
@@ -797,4 +857,75 @@ test('a lifecycle event for a repository removed since the link was created is s
         'external_id' => '4580098240',
         'status' => 'closed',
     ]);
+});
+
+test('a completed check_suite updates the linked pull request check_status', function () {
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $outcome = $this->processor->process(makeCheckSuiteEvent(4580098240, 'passed'), $this->projectIntegration);
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    $this->assertDatabaseHas('external_issue_links', [
+        'external_id' => '4580098240',
+        'check_status' => 'passed',
+    ]);
+});
+
+test('a check_suite for an unlinked pull request is skipped without creating a link', function () {
+    $outcome = $this->processor->process(makeCheckSuiteEvent(999999, 'passed'), $this->projectIntegration);
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
+    expect(ExternalIssueLink::query()->count())->toBe(0);
+});
+
+test('a check_suite for a repository removed since the link was created is skipped', function () {
+    linkPullRequest($this->projectIntegration, $this->project);
+    $this->projectIntegration->githubRepositories()->delete();
+
+    $outcome = $this->processor->process(makeCheckSuiteEvent(4580098240, 'passed'), $this->projectIntegration);
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
+});
+
+test('a submitted review updates the linked pull request review_status', function () {
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $outcome = $this->processor->process(makeReviewEvent(4580098240, 'approved'), $this->projectIntegration);
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Synced);
+    $this->assertDatabaseHas('external_issue_links', [
+        'external_id' => '4580098240',
+        'review_status' => 'approved',
+    ]);
+});
+
+test('changes_requested always wins over a later approval', function () {
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $this->processor->process(makeReviewEvent(4580098240, 'changes_requested'), $this->projectIntegration);
+    $this->processor->process(makeReviewEvent(4580098240, 'approved'), $this->projectIntegration);
+
+    $this->assertDatabaseHas('external_issue_links', [
+        'external_id' => '4580098240',
+        'review_status' => 'changes_requested',
+    ]);
+});
+
+test('an approval upgrades a lesser commented state', function () {
+    linkPullRequest($this->projectIntegration, $this->project);
+
+    $this->processor->process(makeReviewEvent(4580098240, 'commented'), $this->projectIntegration);
+    $this->processor->process(makeReviewEvent(4580098240, 'approved'), $this->projectIntegration);
+
+    $this->assertDatabaseHas('external_issue_links', [
+        'external_id' => '4580098240',
+        'review_status' => 'approved',
+    ]);
+});
+
+test('a review for an unlinked pull request is skipped without creating a link', function () {
+    $outcome = $this->processor->process(makeReviewEvent(999999, 'approved'), $this->projectIntegration);
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Skipped);
+    expect(ExternalIssueLink::query()->count())->toBe(0);
 });

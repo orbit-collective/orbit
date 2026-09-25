@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
-function connectedGithubIntegration(Project $project, string $token = 'orb_local_secret'): ProjectIntegration
+function connectedGithubIntegration(Project $project, string $token = 'orb_local_secret', int $repositoryId = 1): ProjectIntegration
 {
-    return ProjectIntegration::query()->create([
+    $projectIntegration = ProjectIntegration::query()->create([
         'project_id' => $project->id,
         'integration' => 'github',
         'enabled' => true,
@@ -20,6 +20,14 @@ function connectedGithubIntegration(Project $project, string $token = 'orb_local
         'github_repository_owner' => 'orbit-collective',
         'github_repository_name' => 'orbit',
     ]);
+
+    $projectIntegration->githubRepositories()->create([
+        'repository_id' => $repositoryId,
+        'owner' => 'orbit-collective',
+        'name' => 'orbit',
+    ]);
+
+    return $projectIntegration;
 }
 
 test('a linked event is acked after processing succeeds', function () {
@@ -29,7 +37,7 @@ test('a linked event is acked after processing succeeds', function () {
 
     Http::fake([
         '*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => [
-            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
         ]]], 200),
         '*/v1/github/comments' => Http::response(['success' => true, 'data' => ['duplicate' => false, 'comment' => ['id' => 1, 'url' => 'https://x']]], 201),
         '*/v1/github/events/evt_1/ack' => Http::response(['success' => true, 'data' => ['acknowledged' => true, 'eventId' => 'evt_1']], 200),
@@ -48,7 +56,7 @@ test('a transient comment failure leaves the event unacked', function () {
 
     Http::fake([
         '*/v1/github/events' => Http::response(['success' => true, 'data' => ['events' => [
-            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequest' => ['id' => 10, 'number' => 283, 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
+            ['id' => 'evt_1', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd1', 'repository' => ['id' => 1], 'pullRequestId' => 10, 'pullRequestNumber' => 283, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/283', 'body' => "<!-- orbit-issue:{$issue->id} -->"], 'createdAt' => 'now'],
         ]]], 200),
         '*/v1/github/comments' => Http::response(['success' => false, 'error' => ['code' => 'INTERNAL_SERVER_ERROR', 'message' => 'boom']], 500),
     ]);
@@ -63,7 +71,7 @@ test('a project whose events endpoint is unreachable does not stop the others', 
     $projectB = Project::factory()->create();
     $issueB = Issue::factory()->create(['project_id' => $projectB->id]);
     connectedGithubIntegration($projectA, 'orb_local_a');
-    connectedGithubIntegration($projectB, 'orb_local_b');
+    connectedGithubIntegration($projectB, 'orb_local_b', 2);
 
     Http::fake([
         '*/v1/github/events' => function ($request) use ($issueB) {
@@ -72,7 +80,7 @@ test('a project whose events endpoint is unreachable does not stop the others', 
             }
 
             return Http::response(['success' => true, 'data' => ['events' => [
-                ['id' => 'evt_b', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd2', 'repository' => ['id' => 2], 'pullRequest' => ['id' => 20, 'number' => 5, 'url' => 'https://github.com/o/r/pull/5', 'body' => "<!-- orbit-issue:{$issueB->id} -->"], 'createdAt' => 'now'],
+                ['id' => 'evt_b', 'type' => 'pull_request', 'action' => 'opened', 'deliveryId' => 'd2', 'repository' => ['id' => 2], 'pullRequestId' => 20, 'pullRequestNumber' => 5, 'pullRequest' => [ 'url' => 'https://github.com/o/r/pull/5', 'body' => "<!-- orbit-issue:{$issueB->id} -->"], 'createdAt' => 'now'],
             ]]], 200);
         },
         '*/v1/github/comments' => Http::response(['success' => true, 'data' => ['duplicate' => false, 'comment' => ['id' => 1, 'url' => 'https://x']]], 201),

@@ -48,13 +48,14 @@ class GithubRelayEventProcessor
      */
     public function process(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
     {
-        if ($event->type !== 'pull_request') {
-            return GithubRelayEventOutcome::Skipped;
-        }
-
-        return match ($event->action) {
-            'opened' => $this->handleOpened($event, $projectIntegration),
-            'reopened', 'closed', 'synchronize' => $this->handleLifecycleEvent($event, $projectIntegration),
+        return match ($event->type) {
+            'pull_request' => match ($event->action) {
+                'opened' => $this->handleOpened($event, $projectIntegration),
+                'reopened', 'closed', 'synchronize' => $this->handleLifecycleEvent($event, $projectIntegration),
+                default => GithubRelayEventOutcome::Skipped,
+            },
+            'check_suite' => $this->handleCheckSuite($event, $projectIntegration),
+            'pull_request_review' => $this->handleReviewSubmitted($event, $projectIntegration),
             default => GithubRelayEventOutcome::Skipped,
         };
     }
@@ -232,6 +233,91 @@ class GithubRelayEventProcessor
      * `handleLifecycleEvent()` filters nulls before persisting, so this
      * simply omits `status` from that update entirely.
      */
+    /**
+     * Precedence order (most to least significant) for the aggregate
+     * `review_status` a link stores - a definitive decision always beats a
+     * lesser one regardless of arrival order (deliberately never
+     * timestamp-based, see the class docblock's "worse always wins" note).
+     */
+    private const array REVIEW_STATE_PRECEDENCE = [
+        'none' => 0,
+        'commented' => 1,
+        'approved' => 2,
+        'changes_requested' => 3,
+    ];
+
+    /**
+     * Updates an existing link's `check_status` from a `check_suite`
+     * webhook. Never fires an automation trigger or posts a comment (not
+     * requested - see the plan's Part F/G), and never creates a link on its
+     * own - a check_suite for a PR Orbit never linked (no marker, wrong
+     * project) is simply skipped, same as any other unlinked lifecycle
+     * event.
+     */
+    private function handleCheckSuite(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
+    {
+        $link = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
+
+        if (! $link) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
+        $repository = $this->githubRepositoryRepository->findByRepositoryId($projectIntegration, $event->repositoryId);
+
+        if (! $repository) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
+        if ($event->checkStatus === null) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
+        $this->externalIssueLinkRepository->touch($link, [
+            'check_status' => $event->checkStatus,
+            'last_synced_at' => now(),
+        ]);
+
+        return GithubRelayEventOutcome::Synced;
+    }
+
+    /**
+     * Updates an existing link's `review_status` from a `pull_request_review`
+     * webhook, applying it only when it's at least as significant as
+     * whatever is already stored (see REVIEW_STATE_PRECEDENCE).
+     */
+    private function handleReviewSubmitted(GithubRelayEventDTO $event, ProjectIntegration $projectIntegration): GithubRelayEventOutcome
+    {
+        $link = $this->externalIssueLinkRepository->findFor($projectIntegration, (string) $event->pullRequestId);
+
+        if (! $link) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
+        $repository = $this->githubRepositoryRepository->findByRepositoryId($projectIntegration, $event->repositoryId);
+
+        if (! $repository) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
+        if ($event->reviewState === null) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
+        $currentPrecedence = self::REVIEW_STATE_PRECEDENCE[$link->review_status] ?? 0;
+        $incomingPrecedence = self::REVIEW_STATE_PRECEDENCE[$event->reviewState] ?? 0;
+
+        if ($incomingPrecedence < $currentPrecedence) {
+            return GithubRelayEventOutcome::Skipped;
+        }
+
+        $this->externalIssueLinkRepository->touch($link, [
+            'review_status' => $event->reviewState,
+            'last_synced_at' => now(),
+        ]);
+
+        return GithubRelayEventOutcome::Synced;
+    }
+
     private function resolveStatus(GithubRelayEventDTO $event): ?string
     {
         return match ($event->action) {
