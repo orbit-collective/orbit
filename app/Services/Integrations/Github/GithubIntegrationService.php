@@ -273,6 +273,28 @@ class GithubIntegrationService
     }
 
     /**
+     * The installation's own repositories not yet connected - what the "Add
+     * repository" picker offers, fetched on demand rather than on every
+     * settings page load. Returns an empty list if nothing is connected.
+     *
+     * @return array<int, array{id: int, owner: string, name: string}>
+     */
+    public function availableRepositories(Project $project): array
+    {
+        $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
+        $relayToken = $projectIntegration?->resolveGithubRelayToken();
+
+        if (! $projectIntegration || ! $relayToken || $projectIntegration->github_status !== 'connected') {
+            return [];
+        }
+
+        return array_map(
+            fn ($repository) => ['id' => $repository->id, 'owner' => $repository->owner, 'name' => $repository->name],
+            $this->relayClient->listAvailableRepositories($relayToken),
+        );
+    }
+
+    /**
      * @throws ValidationException if there is nothing connected to add a repository to
      * @throws OrbitRelayApiException if orbit-api rejects the repository (e.g. GITHUB_REPOSITORY_NOT_ALLOWED)
      */

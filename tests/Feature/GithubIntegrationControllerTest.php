@@ -251,3 +251,39 @@ test('an admin can trigger a repository sync', function () {
     $response->assertRedirect();
     $this->assertDatabaseHas('github_repositories', ['project_integration_id' => $projectIntegration->id, 'repository_id' => 1]);
 });
+
+test('an admin can fetch the repositories available to add', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake(['*/v1/github/repositories' => Http::response([
+        'success' => true,
+        'data' => [
+            'repositories' => [],
+            'available' => [
+                ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+            ],
+        ],
+    ], 200)]);
+
+    $response = $this->actingAs($this->admin)->get("/projects/{$this->project->id}/integrations/github/repositories/available");
+
+    $response->assertOk();
+    $response->assertJson(['repositories' => [
+        ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+    ]]);
+});
+
+test('a member without the integrations.update permission cannot fetch available repositories', function () {
+    $member = User::factory()->create();
+    $this->project->users()->attach($member->id, ['role' => 'member']);
+
+    $response = $this->actingAs($member)->get("/projects/{$this->project->id}/integrations/github/repositories/available");
+
+    $response->assertForbidden();
+});
