@@ -122,3 +122,55 @@ test('a failed relay call surfaces a validation error instead of a 500', functio
 
     $response->assertSessionHasErrors(['branch']);
 });
+
+test('a repository not connected to this project is rejected without ever reaching GitHub, for branch creation', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    // Simulates orbit-api's own authorization rejecting a repository id
+    // that belongs to another connection entirely - the frontend can send
+    // any integer here, but only orbit-api's RepositoryService actually
+    // decides what this connection's token is allowed to touch.
+    Http::fake(['*/v1/github/branches' => Http::response([
+        'success' => false,
+        'error' => ['code' => 'GITHUB_REPOSITORY_NOT_ALLOWED', 'message' => 'This repository is not connected to this project.'],
+    ], 403)]);
+
+    $response = $this->actingAs($this->member)->post("/issues/{$this->issue->id}/github/branches", [
+        'repository_id' => 999999,
+        'name' => '1234-fix-login',
+    ]);
+
+    $response->assertSessionHasErrors(['branch']);
+    expect(session('errors')->get('branch')[0])->toBe('That repository is not connected to this project.');
+});
+
+test('a repository not connected to this project is rejected without ever reaching GitHub, for pull request creation', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake(['*/v1/github/pull-requests' => Http::response([
+        'success' => false,
+        'error' => ['code' => 'GITHUB_REPOSITORY_NOT_ALLOWED', 'message' => 'This repository is not connected to this project.'],
+    ], 403)]);
+
+    $response = $this->actingAs($this->member)->post("/issues/{$this->issue->id}/github/pull-requests", [
+        'repository_id' => 999999,
+        'title' => 'Fix login',
+        'head' => 'fix/login',
+        'base' => 'main',
+    ]);
+
+    $response->assertSessionHasErrors(['pullRequest']);
+    expect(session('errors')->get('pullRequest')[0])->toBe('That repository is not connected to this project.');
+});
