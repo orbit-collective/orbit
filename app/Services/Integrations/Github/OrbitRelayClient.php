@@ -5,6 +5,7 @@ namespace App\Services\Integrations\Github;
 use App\DataTransferObjects\Github\GithubCommentResultDTO;
 use App\DataTransferObjects\Github\GithubConnectionDTO;
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
+use App\DataTransferObjects\Github\GithubRepositoryDTO;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
@@ -109,6 +110,42 @@ class OrbitRelayClient
         $this->request(
             fn () => $this->authenticatedClient($relayToken)->post('/v1/github/connections/revoke'),
             'POST /v1/github/connections/revoke',
+        );
+    }
+
+    /**
+     * @return GithubRepositoryDTO[]
+     */
+    public function listRepositories(string $relayToken): array
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/repositories'),
+            'GET /v1/github/repositories',
+        );
+
+        return array_map(
+            fn (array $repository) => GithubRepositoryDTO::fromResponse($repository),
+            $data['repositories'],
+        );
+    }
+
+    public function addRepository(string $relayToken, int $repositoryId): GithubRepositoryDTO
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->post('/v1/github/repositories', [
+                'repositoryId' => $repositoryId,
+            ]),
+            'POST /v1/github/repositories',
+        );
+
+        return GithubRepositoryDTO::fromResponse($data);
+    }
+
+    public function removeRepository(string $relayToken, int $repositoryId): void
+    {
+        $this->request(
+            fn () => $this->authenticatedClient($relayToken)->delete("/v1/github/repositories/$repositoryId"),
+            'DELETE /v1/github/repositories/:repositoryId',
         );
     }
 

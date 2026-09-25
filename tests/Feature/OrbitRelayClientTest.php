@@ -14,7 +14,7 @@ test('createConnection sends no auth header and returns the mapped connection/to
     Http::fake(['*/v1/github/connections' => Http::response([
         'success' => true,
         'data' => [
-            'connection' => ['id' => 'conn_1', 'status' => 'pending', 'installationId' => null, 'repository' => null, 'createdAt' => 'now', 'connectedAt' => null, 'revokedAt' => null],
+            'connection' => ['id' => 'conn_1', 'status' => 'pending', 'installationId' => null, 'repositories' => [], 'createdAt' => 'now', 'connectedAt' => null, 'revokedAt' => null],
             'token' => 'orb_local_abc',
             'installUrl' => 'https://github.com/apps/orbit/installations/new?state=xyz',
         ],
@@ -32,13 +32,14 @@ test('createConnection sends no auth header and returns the mapped connection/to
 test('getConnection sends the Bearer token and maps the response', function () {
     Http::fake(['*/v1/github/connections/me' => Http::response([
         'success' => true,
-        'data' => ['id' => 'conn_1', 'status' => 'connected', 'installationId' => 163077216, 'repository' => ['id' => 1, 'owner' => 'orbit-collective', 'name' => 'orbit'], 'createdAt' => 'now', 'connectedAt' => 'now', 'revokedAt' => null],
+        'data' => ['id' => 'conn_1', 'status' => 'connected', 'installationId' => 163077216, 'repositories' => [['id' => 1, 'owner' => 'orbit-collective', 'name' => 'orbit']], 'createdAt' => 'now', 'connectedAt' => 'now', 'revokedAt' => null],
     ], 200)]);
 
     $connection = $this->client->getConnection('orb_local_abc');
 
     expect($connection->status)->toBe('connected')
-        ->and($connection->repositoryOwner)->toBe('orbit-collective');
+        ->and($connection->repositoryOwner)->toBe('orbit-collective')
+        ->and($connection->repositories)->toHaveCount(1);
 
     Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Bearer orb_local_abc'));
 });
@@ -104,6 +105,44 @@ test('listEvents maps merged state and merged timestamp for a closed action', fu
     expect($events[0]->action)->toBe('closed')
         ->and($events[0]->pullRequestMerged)->toBeTrue()
         ->and($events[0]->pullRequestMergedAt)->toBe('2026-09-24T01:00:00Z');
+});
+
+test('listRepositories maps every repository in the response', function () {
+    Http::fake(['*/v1/github/repositories' => Http::response([
+        'success' => true,
+        'data' => ['repositories' => [
+            ['id' => 1, 'owner' => 'orbit-collective', 'name' => 'orbit'],
+            ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+        ]],
+    ], 200)]);
+
+    $repositories = $this->client->listRepositories('orb_local_abc');
+
+    expect($repositories)->toHaveCount(2)
+        ->and($repositories[1]->name)->toBe('orbit-api');
+});
+
+test('addRepository sends the repositoryId and returns the mapped repository', function () {
+    Http::fake(['*/v1/github/repositories' => Http::response([
+        'success' => true,
+        'data' => ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+    ], 201)]);
+
+    $repository = $this->client->addRepository('orb_local_abc', 2);
+
+    expect($repository->name)->toBe('orbit-api');
+    Http::assertSent(fn ($request) => $request['repositoryId'] === 2);
+});
+
+test('removeRepository sends a DELETE request for the given repository id', function () {
+    Http::fake(['*/v1/github/repositories/2' => Http::response([
+        'success' => true,
+        'data' => ['removed' => true, 'repositoryId' => 2],
+    ], 200)]);
+
+    $this->client->removeRepository('orb_local_abc', 2);
+
+    Http::assertSent(fn ($request) => $request->method() === 'DELETE' && str_contains($request->url(), '/v1/github/repositories/2'));
 });
 
 test('createComment sends eventId, pullRequestNumber, and body', function () {
