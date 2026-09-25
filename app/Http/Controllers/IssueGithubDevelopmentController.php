@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Issue;
 use App\Services\Integrations\Github\GithubBranchService;
+use App\Services\Integrations\Github\GithubPullRequestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,7 @@ class IssueGithubDevelopmentController extends Controller
 {
     public function __construct(
         protected GithubBranchService $branchService,
+        protected GithubPullRequestService $pullRequestService,
     ) {}
 
     public function createBranch(Request $request, Issue $issue): RedirectResponse
@@ -38,5 +40,30 @@ class IssueGithubDevelopmentController extends Controller
         );
 
         return redirect()->back()->with('success', "Created branch \"$branch->name\".");
+    }
+
+    public function createPullRequest(Request $request, Issue $issue): RedirectResponse
+    {
+        $this->authorize('update', $issue);
+
+        $data = $request->validate([
+            'repository_id' => 'required|integer|min:1',
+            'title' => 'required|string|max:256',
+            'head' => 'required|string',
+            'base' => 'required|string',
+            'body' => 'sometimes|nullable|string',
+        ]);
+
+        $pullRequest = $this->pullRequestService->create(
+            $issue->project,
+            $issue,
+            $data['repository_id'],
+            $data['title'],
+            $data['head'],
+            $data['base'],
+            $data['body'] ?? '',
+        );
+
+        return redirect()->back()->with('success', "Created pull request #$pullRequest->number.");
     }
 }

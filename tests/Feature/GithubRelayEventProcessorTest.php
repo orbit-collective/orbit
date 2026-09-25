@@ -157,6 +157,23 @@ test('reprocessing the same event is idempotent and does not duplicate the link'
     expect(ExternalIssueLink::query()->count())->toBe(1);
 });
 
+test('the opened webhook for a feature-created pull request creates exactly one link and one comment', function () {
+    fakeSuccessfulComment();
+    $issue = Issue::factory()->create(['project_id' => $this->project->id]);
+
+    // Simulates a PR created via Orbit's own "Create pull request" action
+    // (see GithubPullRequestService) - it never writes ExternalIssueLink
+    // itself, so the canonical `opened` webhook below is what actually
+    // creates the link, exactly like an externally-created PR would.
+    $event = makeRelayEvent("<!-- orbit-issue:{$issue->id} -->");
+
+    $outcome = $this->processor->process($event, $this->projectIntegration);
+
+    expect($outcome)->toBe(GithubRelayEventOutcome::Linked);
+    expect(ExternalIssueLink::query()->count())->toBe(1);
+    Http::assertSentCount(1);
+});
+
 test('an unsupported event action is skipped', function () {
     $event = new GithubRelayEventDTO(
         id: 'evt_1',
