@@ -163,3 +163,91 @@ test('the settings page loads instead of 500ing when the stored relay token cann
 
     $response->assertOk();
 });
+
+test('an admin can add a repository', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake(['*/v1/github/repositories' => Http::response([
+        'success' => true,
+        'data' => ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+    ], 201)]);
+
+    $response = $this->actingAs($this->admin)->post("/projects/{$this->project->id}/integrations/github/repositories", [
+        'repository_id' => 2,
+    ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('github_repositories', ['repository_id' => 2, 'name' => 'orbit-api']);
+});
+
+test('a member cannot add a repository', function () {
+    $member = User::factory()->create();
+    $this->project->users()->attach($member->id, ['role' => 'member']);
+
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake();
+
+    $response = $this->actingAs($member)->post("/projects/{$this->project->id}/integrations/github/repositories", [
+        'repository_id' => 2,
+    ]);
+
+    $response->assertForbidden();
+    Http::assertNothingSent();
+});
+
+test('an admin can remove a repository', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+    app(\App\Repositories\GithubRepositoryRepository::class)
+        ->create($projectIntegration, 2, 'orbit-collective', 'orbit-api');
+
+    Http::fake(['*/v1/github/repositories/2' => Http::response([
+        'success' => true,
+        'data' => ['removed' => true, 'repositoryId' => 2],
+    ], 200)]);
+
+    $response = $this->actingAs($this->admin)->delete("/projects/{$this->project->id}/integrations/github/repositories/2");
+
+    $response->assertRedirect();
+    $this->assertDatabaseMissing('github_repositories', ['repository_id' => 2]);
+});
+
+test('an admin can trigger a repository sync', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake(['*/v1/github/repositories' => Http::response([
+        'success' => true,
+        'data' => ['repositories' => [
+            ['id' => 1, 'owner' => 'orbit-collective', 'name' => 'orbit'],
+        ]],
+    ], 200)]);
+
+    $response = $this->actingAs($this->admin)->post("/projects/{$this->project->id}/integrations/github/repositories/sync");
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('github_repositories', ['project_integration_id' => $projectIntegration->id, 'repository_id' => 1]);
+});
