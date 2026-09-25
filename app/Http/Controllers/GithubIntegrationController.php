@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Services\Integrations\Github\GithubIntegrationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -47,6 +48,15 @@ class GithubIntegrationController extends Controller
         $this->githubIntegrationService->syncRepositories($project);
 
         return redirect()->back();
+    }
+
+    public function availableRepositories(Project $project): JsonResponse
+    {
+        $this->authorize('updateIntegrations', $project);
+
+        return response()->json([
+            'repositories' => $this->githubIntegrationService->availableRepositories($project),
+        ]);
     }
 
     public function addRepository(Request $request, Project $project): RedirectResponse

@@ -80,6 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects/{project}/integrations/github/disconnect', [GithubIntegrationController::class, 'disconnect'])->name('projects.integrations.github.disconnect');
     Route::post('/projects/{project}/integrations/github/retry', [GithubIntegrationController::class, 'retry'])->name('projects.integrations.github.retry');
     Route::post('/projects/{project}/integrations/github/repositories/sync', [GithubIntegrationController::class, 'syncRepositories'])->name('projects.integrations.github.repositories.sync');
+    Route::get('/projects/{project}/integrations/github/repositories/available', [GithubIntegrationController::class, 'availableRepositories'])->name('projects.integrations.github.repositories.available');
     Route::post('/projects/{project}/integrations/github/repositories', [GithubIntegrationController::class, 'addRepository'])->name('projects.integrations.github.repositories.store');
     Route::delete('/projects/{project}/integrations/github/repositories/{repositoryId}', [GithubIntegrationController::class, 'removeRepository'])->name('projects.integrations.github.repositories.destroy');
     Route::post('/projects/{project}/invitations', [ProjectInvitationController::class, 'store'])->name('projects.invitations.store');

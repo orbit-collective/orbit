@@ -129,6 +129,23 @@ class OrbitRelayClient
         );
     }
 
+    /**
+     * @return GithubRepositoryDTO[] the installation's own repositories not
+     *                                 yet connected to this project.
+     */
+    public function listAvailableRepositories(string $relayToken): array
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/repositories'),
+            'GET /v1/github/repositories',
+        );
+
+        return array_map(
+            fn (array $repository) => GithubRepositoryDTO::fromResponse($repository),
+            $data['available'] ?? [],
+        );
+    }
+
     public function addRepository(string $relayToken, int $repositoryId): GithubRepositoryDTO
     {
         $data = $this->request(

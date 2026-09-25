@@ -337,6 +337,36 @@ test('syncRepositories reconciles the local table from orbit-api', function () {
     expect(\App\Models\GithubRepository::query()->count())->toBe(2);
 });
 
+test('availableRepositories returns the installation repositories orbit-api reports as not yet connected', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    Http::fake(['*/v1/github/repositories' => Http::response([
+        'success' => true,
+        'data' => [
+            'repositories' => [],
+            'available' => [
+                ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+            ],
+        ],
+    ], 200)]);
+
+    $available = $this->service->availableRepositories($this->project);
+
+    expect($available)->toEqual([
+        ['id' => 2, 'owner' => 'orbit-collective', 'name' => 'orbit-api'],
+    ]);
+});
+
+test('availableRepositories returns an empty list when nothing is connected', function () {
+    expect($this->service->availableRepositories($this->project))->toEqual([]);
+});
+
 test('addRepository persists the repository orbit-api confirms', function () {
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
