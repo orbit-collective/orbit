@@ -135,3 +135,9 @@ export interface LinkedPullRequest {
     status: 'open' | 'closed' | 'merged' | null;
     draft: boolean | null;
 }
+
+export interface GithubDevelopmentRepository {
+    id: number;
+    owner: string;
+    name: string;
+}

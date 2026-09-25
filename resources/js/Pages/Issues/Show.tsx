@@ -17,6 +17,7 @@ import IssueChildrenPanel from '@/Components/Organisms/IssueChildrenPanel/IssueC
 import IssueDevelopmentPanel from '@/Components/Organisms/IssueDevelopmentPanel/IssueDevelopmentPanel';
 import IssuePageHeader from '@/Components/Organisms/IssuePageHeader/IssuePageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
+import { useAlert } from '@/context/AlertContext';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { IssuePageProps } from '@/types/Components';
@@ -39,10 +40,64 @@ export default function Show({
     issueTypes = [],
     ancestors = [],
     linkedPullRequests = [],
+    githubRepositories = [],
+    githubDefaultBranchName = '',
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
     const { uploadImage } = useImageUpload(project.id);
+    const { addAlert } = useAlert();
+
+    const createGithubBranch = (input: {
+        repositoryId: number;
+        name: string;
+        baseBranch?: string;
+    }) => {
+        router.post(
+            route('issues.github.branches.store', issue.id),
+            {
+                repository_id: input.repositoryId,
+                name: input.name,
+                base_branch: input.baseBranch,
+            },
+            {
+                preserveScroll: true,
+                onError: (errors) => {
+                    addAlert(
+                        errors.branch ?? 'Failed to create the branch.',
+                        'error',
+                    );
+                },
+            },
+        );
+    };
+
+    const createGithubPullRequest = (input: {
+        repositoryId: number;
+        title: string;
+        head: string;
+        base: string;
+    }) => {
+        router.post(
+            route('issues.github.pull-requests.store', issue.id),
+            {
+                repository_id: input.repositoryId,
+                title: input.title,
+                head: input.head,
+                base: input.base,
+            },
+            {
+                preserveScroll: true,
+                onError: (errors) => {
+                    addAlert(
+                        errors.pullRequest ??
+                            'Failed to create the pull request.',
+                        'error',
+                    );
+                },
+            },
+        );
+    };
 
     const updateIssue = (data: Record<string, FormDataConvertible>) => {
         router.patch(route('issues.update', issue.id), data, {
@@ -426,10 +481,19 @@ export default function Show({
                                     </Link>
                                 </SidebarField>
 
-                                {linkedPullRequests.length > 0 && (
+                                {(linkedPullRequests.length > 0 ||
+                                    githubRepositories.length > 0) && (
                                     <SidebarField label="Development">
                                         <IssueDevelopmentPanel
                                             pullRequests={linkedPullRequests}
+                                            repositories={githubRepositories}
+                                            defaultBranchName={
+                                                githubDefaultBranchName
+                                            }
+                                            onCreateBranch={createGithubBranch}
+                                            onCreatePullRequest={
+                                                createGithubPullRequest
+                                            }
                                         />
                                     </SidebarField>
                                 )}

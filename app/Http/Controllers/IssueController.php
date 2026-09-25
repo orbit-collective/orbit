@@ -8,6 +8,9 @@ use App\Models\Issue;
 use App\Models\IssueType;
 use App\Models\Label;
 use App\Models\Project;
+use App\Repositories\GithubRepositoryRepository;
+use App\Repositories\ProjectIntegrationRepository;
+use App\Services\Integrations\Github\GithubBranchService;
 use App\Services\IssueService;
 use App\Services\IssueTypeFieldService;
 use App\Services\IssueTypeService;
@@ -33,7 +36,10 @@ class IssueController extends Controller
         protected LabelService $labelService,
         protected IssueTypeService $issueTypeService,
         protected IssueTypeFieldService $issueTypeFieldService,
-        protected WorkflowService $workflowService
+        protected WorkflowService $workflowService,
+        protected ProjectIntegrationRepository $projectIntegrationRepository,
+        protected GithubRepositoryRepository $githubRepositoryRepository,
+        protected GithubBranchService $githubBranchService,
     ) {}
 
     public function show(Request $request, Project $project, Issue $issue): Response
@@ -56,7 +62,30 @@ class IssueController extends Controller
             'nextIssueId' => $this->issueService->peekNextIssueId(),
             'ancestors' => $this->issueService->ancestorsOf($issue)->values(),
             'linkedPullRequests' => $this->mapLinkedPullRequests($issueWithRelations->externalLinks),
+            'githubRepositories' => $this->mapGithubRepositories($project),
+            'githubDefaultBranchName' => $this->githubBranchService->defaultBranchName($issue),
         ]);
+    }
+
+    /**
+     * @return array<int, array{id: int, owner: string, name: string}>
+     */
+    private function mapGithubRepositories(Project $project): array
+    {
+        $projectIntegration = $this->projectIntegrationRepository->findForProject($project, 'github');
+
+        if (! $projectIntegration || $projectIntegration->github_status !== 'connected') {
+            return [];
+        }
+
+        return $this->githubRepositoryRepository->getForIntegration($projectIntegration)
+            ->map(fn ($repository) => [
+                'id' => $repository->repository_id,
+                'owner' => $repository->owner,
+                'name' => $repository->name,
+            ])
+            ->values()
+            ->all();
     }
 
     private function mapLabels(Collection $labels): array

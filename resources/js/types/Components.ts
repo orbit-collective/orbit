@@ -11,6 +11,7 @@ import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 import { AlertItem } from '@/types/Alert';
 import {
     Comment,
+    GithubDevelopmentRepository,
     Issue,
     IssueLabel,
     IssuePageLooks,
@@ -574,6 +575,8 @@ export interface IssuePageProps {
     nextIssueId?: number | null;
     ancestors?: Issue[];
     linkedPullRequests?: LinkedPullRequest[];
+    githubRepositories?: GithubDevelopmentRepository[];
+    githubDefaultBranchName?: string;
 }
 export interface IssuePageHeaderProps {
     project: Project;
