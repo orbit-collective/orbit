@@ -35,7 +35,7 @@
                                  strips data: URIs (base64-embedded images) entirely, and no mail
                                  client can reach a "localhost" URL. --}}
                             <img
-                                src="https://i.postimg.cc/8cRbPR75/mail-banner.jpg"
+                                src="https://i.ibb.co/N268fhjQ/defaultbanner.jpg"
                                 alt="Orbit"
                                 width="600"
                                 style="display:block; width:100%; max-width:600px; height:auto; border:0;"
