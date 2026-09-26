@@ -27,7 +27,9 @@ describe('getActivityLogVisual', () => {
             getActivityLogVisual('Enabled the "Merge to done" automation rule'),
         ).toEqual({ icon: 'ToggleRight', color: 'success' });
         expect(
-            getActivityLogVisual('Disabled the "Merge to done" automation rule'),
+            getActivityLogVisual(
+                'Disabled the "Merge to done" automation rule',
+            ),
         ).toEqual({ icon: 'ToggleLeft', color: 'warning' });
     });
 
