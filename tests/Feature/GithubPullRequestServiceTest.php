@@ -46,7 +46,7 @@ test('create always appends the orbit-issue marker to the body', function () {
     expect($pullRequest->number)->toBe(51);
 });
 
-test('create appends the marker even when no body is given', function () {
+test('create uses the repository\'s pull request template when no body is given', function () {
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
         'integration' => 'github',
@@ -56,13 +56,76 @@ test('create appends the marker even when no body is given', function () {
     ]);
 
     $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('getPullRequestTemplate')
+        ->once()
+        ->with('orb_local_secret', 1)
+        ->andReturn("## Summary\n");
     $relayClient->shouldReceive('createPullRequest')
         ->once()
-        ->with('orb_local_secret', 1, 'Fix login', 'fix/login', 'main', "\n\n<!-- orbit-issue:{$this->issue->id} -->")
+        ->with('orb_local_secret', 1, 'Fix login', 'fix/login', 'main', "## Summary\n\n<!-- orbit-issue:{$this->issue->id} -->")
         ->andReturn(new GithubCreatedPullRequestDTO(51, 'https://github.com/orbit-collective/orbit/pull/51', 'Fix login'));
     $this->app->instance(OrbitRelayClient::class, $relayClient);
 
     app(GithubPullRequestService::class)->create($this->project, $this->issue, 1, 'Fix login', 'fix/login', 'main');
+});
+
+test('create falls back to a note when the repository has no pull request template', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('getPullRequestTemplate')->once()->andReturn(null);
+    $relayClient->shouldReceive('createPullRequest')
+        ->once()
+        ->with('orb_local_secret', 1, 'Fix login', 'fix/login', 'main', "No pull request template found in this repository. This pull request was created by Orbit.\n\n<!-- orbit-issue:{$this->issue->id} -->")
+        ->andReturn(new GithubCreatedPullRequestDTO(51, 'https://github.com/orbit-collective/orbit/pull/51', 'Fix login'));
+    $this->app->instance(OrbitRelayClient::class, $relayClient);
+
+    app(GithubPullRequestService::class)->create($this->project, $this->issue, 1, 'Fix login', 'fix/login', 'main');
+});
+
+test('create falls back to the no-template note when the template lookup itself fails transiently', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('getPullRequestTemplate')->once()->andThrow(new OrbitRelayApiException('boom', 'INTERNAL_SERVER_ERROR'));
+    $relayClient->shouldReceive('createPullRequest')
+        ->once()
+        ->with('orb_local_secret', 1, 'Fix login', 'fix/login', 'main', "No pull request template found in this repository. This pull request was created by Orbit.\n\n<!-- orbit-issue:{$this->issue->id} -->")
+        ->andReturn(new GithubCreatedPullRequestDTO(51, 'https://github.com/orbit-collective/orbit/pull/51', 'Fix login'));
+    $this->app->instance(OrbitRelayClient::class, $relayClient);
+
+    app(GithubPullRequestService::class)->create($this->project, $this->issue, 1, 'Fix login', 'fix/login', 'main');
+});
+
+test('create does not look up a template when a body is already given', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldNotReceive('getPullRequestTemplate');
+    $relayClient->shouldReceive('createPullRequest')
+        ->once()
+        ->andReturn(new GithubCreatedPullRequestDTO(51, 'https://github.com/orbit-collective/orbit/pull/51', 'Fix login'));
+    $this->app->instance(OrbitRelayClient::class, $relayClient);
+
+    app(GithubPullRequestService::class)->create($this->project, $this->issue, 1, 'Fix login', 'fix/login', 'main', 'Fixes the redirect loop.');
 });
 
 test('create throws a validation exception when nothing is connected', function () {
@@ -80,6 +143,7 @@ test('create translates a relay error into a clean validation message', function
     ]);
 
     $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('getPullRequestTemplate')->andReturn(null);
     $relayClient->shouldReceive('createPullRequest')
         ->andThrow(new OrbitRelayApiException('failed', 'GITHUB_REPOSITORY_NOT_ALLOWED'));
     $this->app->instance(OrbitRelayClient::class, $relayClient);
@@ -102,6 +166,7 @@ test('create surfaces orbit-api\'s own message for an unmapped GITHUB_PULL_REQUE
     ]);
 
     $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('getPullRequestTemplate')->andReturn(null);
     $relayClient->shouldReceive('createPullRequest')
         ->andThrow(new OrbitRelayApiException('A pull request already exists for orbit-collective:fix/login.', 'GITHUB_PULL_REQUEST_REJECTED'));
     $this->app->instance(OrbitRelayClient::class, $relayClient);
@@ -124,6 +189,7 @@ test('create falls back to a generic message for a raw GITHUB_API_ERROR', functi
     ]);
 
     $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('getPullRequestTemplate')->andReturn(null);
     $relayClient->shouldReceive('createPullRequest')
         ->andThrow(new OrbitRelayApiException('GitHub API request failed.', 'GITHUB_API_ERROR'));
     $this->app->instance(OrbitRelayClient::class, $relayClient);
