@@ -39,15 +39,15 @@ export default function SettingsLayout({
             <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
                 <main
                     className={cn(
-                        'flex-1',
-                        fullBleed ? 'flex min-h-0 flex-col' : 'overflow-y-auto',
+                        'flex-1 overflow-y-auto',
+                        fullBleed && 'flex min-h-0 flex-col',
                     )}
                 >
                     <div
                         className={cn(
                             'mx-auto flex w-full flex-col gap-6 px-4 sm:px-6',
                             fullBleed
-                                ? 'min-h-0 flex-1 pb-6 pt-6'
+                                ? 'min-h-0 flex-1 pb-6 pt-6 md:min-h-[36rem]'
                                 : 'max-w-3xl gap-8 pb-16 pt-8 lg:px-10 lg:pt-10',
                         )}
                     >

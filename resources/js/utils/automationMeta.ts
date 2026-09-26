@@ -63,3 +63,55 @@ export function triggerMeta(type: string): AutomationNodeMeta {
 export function actionMeta(type: string): AutomationNodeMeta {
     return ACTION_META[type] ?? FALLBACK_META;
 }
+
+export interface ConditionFieldOption {
+    value: string;
+    label: string;
+}
+
+/**
+ * The context Issue.status_changed itself builds (see
+ * IssueService::updateIssue()'s dispatch() call) - only the fields it
+ * actually passes, nothing else.
+ */
+const ISSUE_STATUS_CHANGED_FIELDS: ConditionFieldOption[] = [
+    { value: 'issue.id', label: 'Issue ID' },
+    { value: 'issue.status', label: 'Issue status (new)' },
+    { value: 'issue.previousStatus', label: 'Issue status (previous)' },
+];
+
+/**
+ * The context every github.pull_request.* trigger shares - built once by
+ * GithubAutomationContextBuilder::build() and reused by every GitHub call
+ * site, so this single list covers all five GitHub trigger types.
+ */
+const GITHUB_PULL_REQUEST_FIELDS: ConditionFieldOption[] = [
+    { value: 'issue.id', label: 'Issue ID' },
+    { value: 'issue.title', label: 'Issue title' },
+    { value: 'issue.status', label: 'Issue status' },
+    { value: 'project.id', label: 'Project ID' },
+    { value: 'project.name', label: 'Project name' },
+    { value: 'repository.owner', label: 'Repository owner' },
+    { value: 'repository.name', label: 'Repository name' },
+    { value: 'pullRequest.number', label: 'Pull request number' },
+    { value: 'pullRequest.title', label: 'Pull request title' },
+    { value: 'pullRequest.url', label: 'Pull request URL' },
+    { value: 'pullRequest.sourceBranch', label: 'Pull request source branch' },
+    { value: 'pullRequest.targetBranch', label: 'Pull request target branch' },
+    { value: 'pullRequest.state', label: 'Pull request state' },
+];
+
+/**
+ * Every field a condition can actually reference for the given trigger -
+ * lets the rule builder offer a dropdown instead of asking someone to guess
+ * (and correctly spell) a dotted context path like `pullRequest.title`. Kept
+ * here, next to the icon metadata, since both describe the same trigger
+ * types and tend to change together when a new trigger is added.
+ */
+export function conditionFieldsForTrigger(
+    triggerType: string,
+): ConditionFieldOption[] {
+    return triggerType === 'issue.status_changed'
+        ? ISSUE_STATUS_CHANGED_FIELDS
+        : GITHUB_PULL_REQUEST_FIELDS;
+}

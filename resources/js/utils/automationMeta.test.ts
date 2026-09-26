@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { actionMeta, triggerMeta } from './automationMeta';
+import {
+    actionMeta,
+    conditionFieldsForTrigger,
+    triggerMeta,
+} from './automationMeta';
 
 describe('automationMeta', () => {
     test('returns known metadata for a real trigger type', () => {
@@ -28,5 +32,24 @@ describe('automationMeta', () => {
             icon: 'Zap',
             color: 'var(--text-gray-color)',
         });
+    });
+
+    test('returns issue-only fields for the issue.status_changed trigger', () => {
+        const fields = conditionFieldsForTrigger('issue.status_changed');
+
+        expect(fields.map((f) => f.value)).toEqual([
+            'issue.id',
+            'issue.status',
+            'issue.previousStatus',
+        ]);
+    });
+
+    test('returns the full pull request context for every GitHub trigger', () => {
+        const merged = conditionFieldsForTrigger('github.pull_request.merged');
+        const opened = conditionFieldsForTrigger('github.pull_request.opened');
+
+        expect(merged).toEqual(opened);
+        expect(merged.map((f) => f.value)).toContain('pullRequest.title');
+        expect(merged.map((f) => f.value)).toContain('repository.owner');
     });
 });
