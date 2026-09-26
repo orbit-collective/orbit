@@ -577,6 +577,7 @@ export interface IssuePageProps {
     linkedPullRequests?: LinkedPullRequest[];
     githubRepositories?: GithubDevelopmentRepository[];
     githubDefaultBranchName?: string;
+    canCreateGithubDevelopment?: boolean;
 }
 export interface IssuePageHeaderProps {
     project: Project;

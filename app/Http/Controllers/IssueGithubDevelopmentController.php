@@ -23,7 +23,7 @@ class IssueGithubDevelopmentController extends Controller
 
     public function createBranch(Request $request, Issue $issue): RedirectResponse
     {
-        $this->authorize('update', $issue);
+        $this->authorize('createGithubDevelopment', $issue);
 
         $data = $request->validate([
             'repository_id' => 'required|integer|min:1',
@@ -44,7 +44,7 @@ class IssueGithubDevelopmentController extends Controller
 
     public function createPullRequest(Request $request, Issue $issue): RedirectResponse
     {
-        $this->authorize('update', $issue);
+        $this->authorize('createGithubDevelopment', $issue);
 
         $data = $request->validate([
             'repository_id' => 'required|integer|min:1',

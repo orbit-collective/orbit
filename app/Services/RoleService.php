@@ -39,6 +39,7 @@ class RoleService
         Permission::SETTINGS_VIEW,
         Permission::INTEGRATIONS_VIEW,
         Permission::AUTOMATION_VIEW,
+        Permission::GITHUB_DEVELOPMENT_CREATE,
         Permission::LABELS_VIEW,
         Permission::ISSUE_TYPES_VIEW,
         Permission::ISSUES_VIEW,

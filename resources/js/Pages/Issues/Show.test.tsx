@@ -157,6 +157,48 @@ describe('Issues/Show Page', () => {
         ).toBeInTheDocument();
     });
 
+    test('shows create-branch/create-pull-request actions only when permitted', () => {
+        const { rerender } = render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue()}
+                users={users}
+                githubRepositories={[
+                    { id: 1, owner: 'orbit-collective', name: 'orbit' },
+                ]}
+                canCreateGithubDevelopment={false}
+            />,
+        );
+
+        expect(
+            screen.queryByRole('button', { name: 'Create branch' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Create pull request' }),
+        ).not.toBeInTheDocument();
+
+        rerender(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue()}
+                users={users}
+                githubRepositories={[
+                    { id: 1, owner: 'orbit-collective', name: 'orbit' },
+                ]}
+                canCreateGithubDevelopment
+            />,
+        );
+
+        expect(
+            screen.getByRole('button', { name: 'Create branch' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Create pull request' }),
+        ).toBeInTheDocument();
+    });
+
     test('renders no Development panel when there is no linked pull request', () => {
         render(
             <Show

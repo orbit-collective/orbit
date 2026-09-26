@@ -68,4 +68,14 @@ class IssuePolicy
     {
         return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_CHANGE_LABELS, self::MODIFY_TIERS);
     }
+
+    /**
+     * Creating a branch or pull request from this issue - deliberately a
+     * separate ability from update(), since it triggers real GitHub App API
+     * calls (via orbit-api) rather than just editing the issue itself.
+     */
+    public function createGithubDevelopment(User $user, Issue $issue): bool
+    {
+        return $issue->project->hasPermissionOrTier($user, Permission::GITHUB_DEVELOPMENT_CREATE, self::MODIFY_TIERS);
+    }
 }

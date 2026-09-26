@@ -64,6 +64,7 @@ class IssueController extends Controller
             'linkedPullRequests' => $this->mapLinkedPullRequests($issueWithRelations->externalLinks),
             'githubRepositories' => $this->mapGithubRepositories($project),
             'githubDefaultBranchName' => $this->githubBranchService->defaultBranchName($issue),
+            'canCreateGithubDevelopment' => $request->user()->can('createGithubDevelopment', $issue),
         ]);
     }
 
