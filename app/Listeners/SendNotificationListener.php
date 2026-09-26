@@ -101,42 +101,42 @@ class SendNotificationListener
     }
 
     /**
-     * Notifies the actor about their own change, and — only when the assignee didn't
-     * just change (that's handled by IssueAssigned/IssueUnassigned instead) — notifies
-     * the current assignee too, since the change affects their work.
+     * Notifies the actor about their own change (skipped entirely when
+     * there is no actor - an automation-triggered change has no one to
+     * tell "you updated this"), and — only when the assignee didn't just
+     * change (that's handled by IssueAssigned/IssueUnassigned instead) —
+     * notifies the current assignee too, since the change affects their
+     * work, regardless of whether a person or an automation rule made it.
      */
     private function handleIssueUpdated(IssueUpdated $event): void
     {
         $issue = $event->issue;
         $actor = $event->actor;
-
-        if (! $actor) {
-            return;
-        }
-
         $changes = $event->changes;
         $actionUrl = $this->buildActionUrl($issue);
 
-        foreach ($this->groupChangesByNotificationType($changes) as [$type, $groupChanges]) {
-            $this->notificationService->notify(
-                $actor->id,
-                $type,
-                'info',
-                $this->updateSubject($issue, $type),
-                "You updated \"$issue->title\" (#$issue->id): {$this->summarize($groupChanges)}.",
-                $actionUrl
-            );
+        if ($actor) {
+            foreach ($this->groupChangesByNotificationType($changes) as [$type, $groupChanges]) {
+                $this->notificationService->notify(
+                    $actor->id,
+                    $type,
+                    'info',
+                    $this->updateSubject($issue, $type),
+                    "You updated \"$issue->title\" (#$issue->id): {$this->summarize($groupChanges)}.",
+                    $actionUrl
+                );
+            }
         }
 
         if (array_key_exists('assignee_id', $changes)) {
             return;
         }
 
-        if (! $issue->assignee_id || $issue->assignee_id === $actor->id) {
+        if (! $issue->assignee_id || $issue->assignee_id === $actor?->id) {
             return;
         }
 
-        $actorName = $actor->name ?? 'Someone';
+        $actorName = $actor?->name ?? 'An automation rule';
 
         foreach ($this->groupChangesByNotificationType($changes) as [$type, $groupChanges]) {
             $this->notificationService->notify(

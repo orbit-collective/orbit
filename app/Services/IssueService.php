@@ -336,16 +336,19 @@ class IssueService
     }
 
     /**
-     * Fires the events that describe an issue update: IssueUpdated always
-     * (if there's an actor), and IssueAssigned/IssueUnassigned when the
+     * Fires the events that describe an issue update: IssueUpdated always -
+     * $actor is null when the change came from an automation action rather
+     * than a logged-in request (see ChangeStatusAction and friends, which
+     * all route through this same updateIssue() call), and
+     * SendNotificationListener still notifies the assignee in that case,
+     * just skipping the "you updated your own issue" half that only makes
+     * sense with a real actor - and IssueAssigned/IssueUnassigned when the
      * assignee changed. The listener decides who gets notified about what —
      * this method just reports the facts.
      */
     private function notifyIssueUpdate(Issue $issue, ?User $actor, array $changes): void
     {
-        if ($actor) {
-            event(new IssueUpdated($issue, $actor, $changes));
-        }
+        event(new IssueUpdated($issue, $actor, $changes));
 
         $assigneeChange = $changes['assignee_id'] ?? null;
 

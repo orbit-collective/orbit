@@ -218,11 +218,32 @@ test('IssueUpdated does not notify the assignee track when the assignee just cha
     ]));
 });
 
-test('IssueUpdated does nothing when there is no actor', function () {
+test('IssueUpdated does nothing when there is no actor and no assignee', function () {
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
 
     $this->notificationService->shouldNotReceive('notify');
+
+    $this->listener->handle(new IssueUpdated($issue, null, [
+        'status' => ['old' => 'open', 'new' => 'closed', 'text' => 'status changed'],
+    ]));
+});
+
+test('IssueUpdated still notifies the assignee when there is no actor, e.g. an automation-triggered change', function () {
+    $assignee = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['id' => 18, 'project_id' => $project->id, 'assignee_id' => $assignee->id]);
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with(
+            $assignee->id,
+            NotificationType::IssueStatusChanged,
+            'info',
+            'Issue #18 status changed',
+            Mockery::on(fn ($m) => str_contains($m, 'An automation rule updated') && str_contains($m, 'assigned to you')),
+            Mockery::any()
+        );
 
     $this->listener->handle(new IssueUpdated($issue, null, [
         'status' => ['old' => 'open', 'new' => 'closed', 'text' => 'status changed'],

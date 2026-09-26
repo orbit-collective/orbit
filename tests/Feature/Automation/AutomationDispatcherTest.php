@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\AutomationTriggerType;
+use App\Enums\Notifications\NotificationType;
 use App\Models\AutomationRule;
 use App\Models\AutomationRuleExecution;
 use App\Models\Issue;
 use App\Models\Project;
+use App\Models\User;
 use App\Services\Automation\AutomationDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -52,6 +54,22 @@ test('a rule execution is written to the activity log', function () {
     $this->assertDatabaseHas('activity_logs', [
         'project_id' => $issue->project_id,
         'body' => "The \"Test rule\" automation rule ran on issue #$issue->id \"$issue->title\"",
+    ]);
+});
+
+test('a rule execution notifies the issue assignee, even with no authenticated actor', function () {
+    $assignee = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['priority' => 'low', 'project_id' => $project->id, 'assignee_id' => $assignee->id]);
+    makeAutomationRule($project, AutomationTriggerType::GithubPullRequestMerged);
+
+    expect(auth()->check())->toBeFalse();
+
+    $this->dispatcher->dispatch(AutomationTriggerType::GithubPullRequestMerged, $issue, [], 'evt_1');
+
+    $this->assertDatabaseHas('notifications', [
+        'user_id' => $assignee->id,
+        'notification_type' => NotificationType::IssuePriorityChanged->value,
     ]);
 });
 
