@@ -38,6 +38,59 @@ test('ChangeStatusAction is a no-op when the status does not belong to the issue
     expect($issue->fresh()->workflow_status_id)->toBeNull();
 });
 
+test('ChangeStatusAction resolves a category to the issue type\'s own matching status', function () {
+    $issueType = IssueType::factory()->create();
+    WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id, 'category' => 'todo', 'sort_order' => 0]);
+    $doneStatus = WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id, 'category' => 'done', 'sort_order' => 1]);
+    $issue = Issue::factory()->create(['project_id' => $issueType->project_id, 'issue_type_id' => $issueType->id]);
+
+    app(ChangeStatusAction::class)->handle($issue, ['category' => 'done']);
+
+    expect($issue->fresh()->workflow_status_id)->toBe($doneStatus->id);
+});
+
+test('ChangeStatusAction picks the earliest-sorted status when several share a category', function () {
+    $issueType = IssueType::factory()->create();
+    $laterDone = WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id, 'category' => 'done', 'sort_order' => 2]);
+    $earlierDone = WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id, 'category' => 'done', 'sort_order' => 1]);
+    $issue = Issue::factory()->create(['project_id' => $issueType->project_id, 'issue_type_id' => $issueType->id]);
+
+    app(ChangeStatusAction::class)->handle($issue, ['category' => 'done']);
+
+    expect($issue->fresh()->workflow_status_id)->toBe($earlierDone->id)
+        ->and($issue->fresh()->workflow_status_id)->not->toBe($laterDone->id);
+});
+
+test('ChangeStatusAction is a no-op when the issue type has no status in that category', function () {
+    $issueType = IssueType::factory()->create();
+    WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id, 'category' => 'todo']);
+    $issue = Issue::factory()->create(['project_id' => $issueType->project_id, 'issue_type_id' => $issueType->id, 'workflow_status_id' => null]);
+
+    app(ChangeStatusAction::class)->handle($issue, ['category' => 'done']);
+
+    expect($issue->fresh()->workflow_status_id)->toBeNull();
+});
+
+test('ChangeStatusAction is a no-op for an invalid category value', function () {
+    $issueType = IssueType::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $issueType->project_id, 'issue_type_id' => $issueType->id, 'workflow_status_id' => null]);
+
+    app(ChangeStatusAction::class)->handle($issue, ['category' => 'not-a-real-category']);
+
+    expect($issue->fresh()->workflow_status_id)->toBeNull();
+});
+
+test('ChangeStatusAction prefers an explicit workflow_status_id over category when both are given', function () {
+    $issueType = IssueType::factory()->create();
+    $explicitStatus = WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id, 'category' => 'todo']);
+    WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id, 'category' => 'done']);
+    $issue = Issue::factory()->create(['project_id' => $issueType->project_id, 'issue_type_id' => $issueType->id]);
+
+    app(ChangeStatusAction::class)->handle($issue, ['workflow_status_id' => $explicitStatus->id, 'category' => 'done']);
+
+    expect($issue->fresh()->workflow_status_id)->toBe($explicitStatus->id);
+});
+
 test('ChangePriorityAction updates priority', function () {
     $issue = Issue::factory()->create(['priority' => 'low']);
 

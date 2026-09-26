@@ -125,6 +125,26 @@ test('getConnectStatus syncs a pending connection to connected and clears the in
         ->and($projectIntegration->github_install_url)->toBeNull();
 });
 
+test('getConnectStatus seeds the default automation rules once a pending connection becomes connected', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_connection_id' => 'conn_1',
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'pending',
+    ]);
+
+    Http::fake(['*/v1/github/connections/me' => Http::response([
+        'success' => true,
+        'data' => ['id' => 'conn_1', 'status' => 'connected', 'installationId' => 163077216, 'repositories' => [['id' => 1274545725, 'owner' => 'orbit-collective', 'name' => 'orbit']], 'createdAt' => 'now', 'connectedAt' => '2026-09-20T00:00:00Z', 'revokedAt' => null],
+    ], 200)]);
+
+    $this->service->getConnectStatus($this->project);
+
+    expect($this->project->automationRules()->count())->toBe(2);
+});
+
 test('getConnectStatus leaves a pending connection untouched when orbit-api is unreachable', function () {
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,

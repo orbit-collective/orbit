@@ -8,6 +8,7 @@ use App\Models\ProjectIntegration;
 use App\Repositories\GithubRepositoryRepository;
 use App\Repositories\ProjectIntegrationRepository;
 use App\Services\ActivityLogService;
+use App\Services\Automation\AutomationDefaultsService;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -28,6 +29,7 @@ class GithubIntegrationService
         protected GithubIntegrationHealthService $healthService,
         protected ActivityLogService $activityLogService,
         protected GithubRepositoryRepository $githubRepositoryRepository,
+        protected AutomationDefaultsService $automationDefaultsService,
     ) {}
 
     /**
@@ -247,6 +249,8 @@ class GithubIntegrationService
         ));
 
         $this->activityLogService->log($projectIntegration->project_id, 'Connected the "github" integration');
+
+        $this->automationDefaultsService->seedGithubDefaultsForProject($projectIntegration->project);
     }
 
     /**
