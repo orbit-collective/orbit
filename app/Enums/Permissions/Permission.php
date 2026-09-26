@@ -30,6 +30,9 @@ enum Permission: string
     case AUTOMATION_VIEW = 'projects.automation.view';
     case AUTOMATION_UPDATE = 'projects.automation.update';
 
+    /** Creating a branch or pull request from an issue's Development panel - separate from ISSUES_UPDATE since it triggers real GitHub App API calls, not just an Orbit-side edit. */
+    case GITHUB_DEVELOPMENT_CREATE = 'projects.github.development.create';
+
     case LABELS_VIEW = 'projects.labels.view';
     case LABELS_CREATE = 'projects.labels.create';
     case LABELS_UPDATE = 'projects.labels.update';

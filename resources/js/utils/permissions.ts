@@ -75,6 +75,20 @@ const PERMISSION_META: Record<string, PermissionMeta> = {
         description:
             'Connect, configure, or disconnect third-party integrations.',
     },
+    'projects.automation.view': {
+        label: 'View automation rules',
+        description: "See the project's Settings → Automation rules.",
+    },
+    'projects.automation.update': {
+        label: 'Manage automation rules',
+        description:
+            'Create, edit, enable/disable, or delete automation rules.',
+    },
+    'projects.github.development.create': {
+        label: 'Create branches & pull requests',
+        description:
+            "Create a GitHub branch or pull request from an issue's Development panel.",
+    },
     'projects.issue_types.view': {
         label: 'View issue types',
         description: "See the project's issue type catalog.",

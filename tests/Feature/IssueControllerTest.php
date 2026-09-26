@@ -414,6 +414,29 @@ test('the issue page exposes no github repositories when nothing is connected', 
     expect($page['props']['githubRepositories'])->toBe([]);
 });
 
+test('a project member can create github branches/pull requests, a viewer cannot', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $member = actingAsProjectMember($project, 'member');
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($member)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    expect($response->json('props.canCreateGithubDevelopment'))->toBeTrue();
+
+    $viewer = actingAsProjectMember($project, 'viewer');
+
+    $response = $this->actingAs($viewer)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    expect($response->json('props.canCreateGithubDevelopment'))->toBeFalse();
+});
+
 test('guests cannot view an issue detail page', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);

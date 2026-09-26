@@ -101,6 +101,32 @@ test('a non-member cannot create a pull request', function () {
     $response->assertForbidden();
 });
 
+test('a viewer cannot create a branch', function () {
+    $viewer = User::factory()->create();
+    $this->project->users()->attach($viewer->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($viewer)->post("/issues/{$this->issue->id}/github/branches", [
+        'repository_id' => 1,
+        'name' => '1234-fix-login',
+    ]);
+
+    $response->assertForbidden();
+});
+
+test('a viewer cannot create a pull request', function () {
+    $viewer = User::factory()->create();
+    $this->project->users()->attach($viewer->id, ['role' => 'viewer']);
+
+    $response = $this->actingAs($viewer)->post("/issues/{$this->issue->id}/github/pull-requests", [
+        'repository_id' => 1,
+        'title' => 'Fix login',
+        'head' => 'fix/login',
+        'base' => 'main',
+    ]);
+
+    $response->assertForbidden();
+});
+
 test('a failed relay call surfaces a validation error instead of a 500', function () {
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,

@@ -42,6 +42,7 @@ export default function Show({
     linkedPullRequests = [],
     githubRepositories = [],
     githubDefaultBranchName = '',
+    canCreateGithubDevelopment = false,
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
@@ -490,9 +491,15 @@ export default function Show({
                                             defaultBranchName={
                                                 githubDefaultBranchName
                                             }
-                                            onCreateBranch={createGithubBranch}
+                                            onCreateBranch={
+                                                canCreateGithubDevelopment
+                                                    ? createGithubBranch
+                                                    : undefined
+                                            }
                                             onCreatePullRequest={
-                                                createGithubPullRequest
+                                                canCreateGithubDevelopment
+                                                    ? createGithubPullRequest
+                                                    : undefined
                                             }
                                         />
                                     </SidebarField>
