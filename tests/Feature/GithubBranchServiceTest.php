@@ -70,3 +70,47 @@ test('create translates a GITHUB_BRANCH_ALREADY_EXISTS relay error into a clean 
         expect($exception->errors()['branch'][0])->toBe('A branch with that name already exists.');
     }
 });
+
+test('create surfaces orbit-api\'s own message for an unmapped GITHUB_BRANCH_REJECTED error', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('createBranch')
+        ->andThrow(new OrbitRelayApiException('Resource not accessible by integration', 'GITHUB_BRANCH_REJECTED'));
+    $this->app->instance(OrbitRelayClient::class, $relayClient);
+
+    try {
+        app(GithubBranchService::class)->create($this->project, $this->issue, 1, '1234-fix-login');
+        $this->fail('Expected a ValidationException.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['branch'][0])->toBe('Resource not accessible by integration');
+    }
+});
+
+test('create falls back to a generic message for a raw GITHUB_API_ERROR', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('createBranch')
+        ->andThrow(new OrbitRelayApiException('GitHub API request failed.', 'GITHUB_API_ERROR'));
+    $this->app->instance(OrbitRelayClient::class, $relayClient);
+
+    try {
+        app(GithubBranchService::class)->create($this->project, $this->issue, 1, '1234-fix-login');
+        $this->fail('Expected a ValidationException.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['branch'][0])->toBe('Failed to create the branch.');
+    }
+});
