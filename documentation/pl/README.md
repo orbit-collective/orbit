@@ -117,6 +117,10 @@ documentation/
     project-onboarding/
       README.md              <- indeks tej kategorii
       01-add-a-welcome-tour-slide.md
+    automation/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-trigger-type.md
+      02-add-a-new-action-type.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
