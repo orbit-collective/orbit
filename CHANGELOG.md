@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.9.4](https://github.com/orbit-collective/orbit/compare/v0.9.3...v0.9.4) (2026-09-26)
+
+
+### Features
+
+* **automation:** add action handlers wrapping existing services ([bb32f1f](https://github.com/orbit-collective/orbit/commit/bb32f1fadc4ccef5d1ac0b1a84fff246dbd2c66c))
+* **automation:** add automation permissions and policy checks ([42cd3bf](https://github.com/orbit-collective/orbit/commit/42cd3bfb66651b07456222ebbfc0a1c012031958))
+* **automation:** add automation settings tab UI ([7e56bef](https://github.com/orbit-collective/orbit/commit/7e56befeff832f56a0a3f44a1fd6f84b13758796))
+* **automation:** add flat AND condition evaluator ([39a6b3c](https://github.com/orbit-collective/orbit/commit/39a6b3cba54928bf35f9a7c8e75369823fea3f17))
+* **automation:** add rule repository and dispatcher ([662e9ea](https://github.com/orbit-collective/orbit/commit/662e9ea2e6a6fecc8f95b40e1470af2be752fd7a))
+* **automation:** add rule/action/execution models and enums ([00d4528](https://github.com/orbit-collective/orbit/commit/00d452830d601d146bcdedcd37794f94f900c648))
+* **automation:** add settings CRUD controller and routes ([8190976](https://github.com/orbit-collective/orbit/commit/8190976de20938329f31ce3313a6b13b463ec2bc))
+* **automation:** add workspace automation schema ([a237f8f](https://github.com/orbit-collective/orbit/commit/a237f8f5d8bbbe65cbfe4e141d7673c325c0429f))
+* **automation:** auto-seed default rules on GitHub connect ([add1678](https://github.com/orbit-collective/orbit/commit/add16781437e382512b6fe69d7561c59ae8e9976))
+* **automation:** fire issue status changed trigger ([c0e441c](https://github.com/orbit-collective/orbit/commit/c0e441cd5610587dececd79f77f7bc2d9f6e06cc))
+* **automation:** log rule create/update/delete/execution to the activity log ([6735414](https://github.com/orbit-collective/orbit/commit/67354147b9d5726519540df3e3b1cbb30c019c4d))
+* **automation:** redesign settings/automation as a connected node flow ([0b02132](https://github.com/orbit-collective/orbit/commit/0b02132c002140a9a7de6db3e6680f9f559ee476))
+* **automation:** replace button element with custom Button component ([476bc29](https://github.com/orbit-collective/orbit/commit/476bc2902c75df8de1ac620641a512a97e1e9cc2))
+* **automation:** replace input element with custom Input component ([1a1d853](https://github.com/orbit-collective/orbit/commit/1a1d8536d4208c3e7e3fd9847bd0a5f1c1b6b380))
+* **github:** add connected repositories settings UI ([5e3ce57](https://github.com/orbit-collective/orbit/commit/5e3ce5723d0eb22e0b09189f0dcf3dc74662d24e))
+* **github:** add create branch/pull request UI to the Development panel ([0cabe45](https://github.com/orbit-collective/orbit/commit/0cabe45f0d44341ebf056a96b2ddde267ce13f85))
+* **github:** add repository list/add/remove relay client methods ([c55b4fe](https://github.com/orbit-collective/orbit/commit/c55b4fe7b554a92da2d219b24d19da1a457015cf))
+* **github:** add repository management endpoints and routes ([221c445](https://github.com/orbit-collective/orbit/commit/221c445679a0df9776a65379c19d75124506bf29))
+* **github:** add repository model with backfill migration ([39f87bd](https://github.com/orbit-collective/orbit/commit/39f87bda93e41e8073632f2ee7a1938108d4b5c3))
+* **github:** create a branch from an Orbit issue ([dab089e](https://github.com/orbit-collective/orbit/commit/dab089ec5ab4b9f1a913cd327a42f855ca232a7e))
+* **github:** create a pull request from an Orbit issue ([3d3385b](https://github.com/orbit-collective/orbit/commit/3d3385b9d0eb9601258a89c3905d66639085fd8f))
+* **github:** fetch repositories available to connect ([58d687f](https://github.com/orbit-collective/orbit/commit/58d687f2841bd16c7f894caabdd0cd941b57506b))
+* **github:** fill a created pull request's body from its repository template ([078ff1b](https://github.com/orbit-collective/orbit/commit/078ff1badd388c97fd5e7709c8939d73aee52db2))
+* **github:** fire automation triggers on lifecycle events ([981f622](https://github.com/orbit-collective/orbit/commit/981f622451712085d65865a627598c6a28ea3a55))
+* **github:** show CI check and review status badges ([e1806bd](https://github.com/orbit-collective/orbit/commit/e1806bd582609fdbf8a7f666d365db0e3e254464))
+* **github:** sync CI check status and review status from webhooks ([cba51da](https://github.com/orbit-collective/orbit/commit/cba51da8ecb3f4009f863c302136d2feb57ef3fa))
+* **github:** sync, add, and remove connected repositories ([14e38ad](https://github.com/orbit-collective/orbit/commit/14e38adec6ae3bb0badddd38a120b000a5025bf7))
+* **permissions:** add a dedicated permission for creating GitHub branches/PRs ([5b0ba05](https://github.com/orbit-collective/orbit/commit/5b0ba05817f469ec9cb65039d6c39bda419f4841))
+
+
+### Bug Fixes
+
+* **automation:** condition field picker and responsive flow layout ([29b06a0](https://github.com/orbit-collective/orbit/commit/29b06a041220a7e29f1a12bc9838ee352254614d))
+* **automation:** let the Automation tab fill the full settings panel ([7ff4ba8](https://github.com/orbit-collective/orbit/commit/7ff4ba88c17dd19da2c55d673ab431266b5c1f20))
+* **github:** resolve repository per relay event ([b10c3f2](https://github.com/orbit-collective/orbit/commit/b10c3f2cbd4171b3d662f25734a8344c93db44b7))
+* **github:** surface orbit-api's specific error message on branch/PR failure ([4dc9cc5](https://github.com/orbit-collective/orbit/commit/4dc9cc5a18071a61bfdb42ba79209034e18165f4))
+* **layout:** update image source for mail banner ([52069b3](https://github.com/orbit-collective/orbit/commit/52069b344b705bdaa6614e67b8cecc5f807050b7))
+* **notifications:** notify the assignee for automation-triggered issue changes ([c0a916d](https://github.com/orbit-collective/orbit/commit/c0a916de858720793235cee9472b7aeb0fba414d))
+
+
+### Miscellaneous Chores
+
+* release 0.9.4 ([7ce1db8](https://github.com/orbit-collective/orbit/commit/7ce1db825a1e0d221ef57572906c90105d27573f))
+
 ## [0.9.3](https://github.com/orbit-collective/orbit/compare/v0.9.2...v0.9.3) (2026-09-24)
 
 
