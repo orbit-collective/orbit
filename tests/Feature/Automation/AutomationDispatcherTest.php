@@ -43,6 +43,29 @@ test('a matching rule runs its actions once', function () {
     expect(AutomationRuleExecution::query()->count())->toBe(1);
 });
 
+test('a rule execution is written to the activity log', function () {
+    $issue = Issue::factory()->create(['priority' => 'low']);
+    makeAutomationRule($issue->project, AutomationTriggerType::GithubPullRequestMerged);
+
+    $this->dispatcher->dispatch(AutomationTriggerType::GithubPullRequestMerged, $issue, [], 'evt_1');
+
+    $this->assertDatabaseHas('activity_logs', [
+        'project_id' => $issue->project_id,
+        'body' => "The \"Test rule\" automation rule ran on issue #$issue->id \"$issue->title\"",
+    ]);
+});
+
+test('a rule that never matches never logs an execution', function () {
+    $issue = Issue::factory()->create(['priority' => 'low']);
+    makeAutomationRule($issue->project, AutomationTriggerType::GithubPullRequestMerged, [
+        ['field' => 'pullRequest.title', 'operator' => 'equals', 'value' => 'Specific title'],
+    ]);
+
+    $this->dispatcher->dispatch(AutomationTriggerType::GithubPullRequestMerged, $issue, ['pullRequest' => ['title' => 'Other']], 'evt_1');
+
+    $this->assertDatabaseMissing('activity_logs', ['project_id' => $issue->project_id]);
+});
+
 test('conditions that do not match prevent execution', function () {
     $issue = Issue::factory()->create(['priority' => 'low']);
     makeAutomationRule($issue->project, AutomationTriggerType::GithubPullRequestMerged, [

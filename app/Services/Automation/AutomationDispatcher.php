@@ -8,6 +8,7 @@ use App\Models\AutomationRule;
 use App\Models\AutomationRuleExecution;
 use App\Models\Issue;
 use App\Repositories\AutomationRuleRepository;
+use App\Services\ActivityLogService;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 
@@ -37,6 +38,7 @@ class AutomationDispatcher
         protected AutomationRuleRepository $ruleRepository,
         protected AutomationConditionEvaluator $conditionEvaluator,
         protected AutomationActionResolver $actionResolver,
+        protected ActivityLogService $activityLogService,
     ) {}
 
     /**
@@ -78,6 +80,11 @@ class AutomationDispatcher
                     'issueId' => $issue->id,
                     'trigger' => $trigger->value,
                 ]);
+
+                $this->activityLogService->log(
+                    $issue->project_id,
+                    "The \"$rule->name\" automation rule ran on issue #$issue->id \"$issue->title\""
+                );
             }
         } finally {
             self::$executing = false;
