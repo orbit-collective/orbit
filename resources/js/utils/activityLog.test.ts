@@ -14,6 +14,23 @@ describe('getActivityLogVisual', () => {
         });
     });
 
+    test('gives automation rule executions a distinct icon', () => {
+        expect(
+            getActivityLogVisual(
+                'The "Merge to done" automation rule ran on issue #42 "Fix login"',
+            ),
+        ).toEqual({ icon: 'Zap', color: 'accent' });
+    });
+
+    test('gives enabling/disabling an automation rule distinct icons', () => {
+        expect(
+            getActivityLogVisual('Enabled the "Merge to done" automation rule'),
+        ).toEqual({ icon: 'ToggleRight', color: 'success' });
+        expect(
+            getActivityLogVisual('Disabled the "Merge to done" automation rule'),
+        ).toEqual({ icon: 'ToggleLeft', color: 'warning' });
+    });
+
     test('falls back to the default visual when nothing matches', () => {
         expect(getActivityLogVisual('Did something unusual')).toEqual({
             icon: 'Activity',

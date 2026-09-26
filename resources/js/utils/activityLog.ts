@@ -33,6 +33,18 @@ const RULES: { pattern: RegExp; visual: ActivityLogVisual }[] = [
     },
     { pattern: /integration/i, visual: { icon: 'Plug', color: 'info' } },
     {
+        pattern: /automation rule ran/i,
+        visual: { icon: 'Zap', color: 'accent' },
+    },
+    {
+        pattern: /^enabled/i,
+        visual: { icon: 'ToggleRight', color: 'success' },
+    },
+    {
+        pattern: /^disabled/i,
+        visual: { icon: 'ToggleLeft', color: 'warning' },
+    },
+    {
         pattern: /^(updated|changed)/i,
         visual: { icon: 'Pencil', color: 'info' },
     },
