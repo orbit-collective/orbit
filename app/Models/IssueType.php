@@ -26,6 +26,15 @@ class IssueType extends Model
         'required_fields',
         'restricted_role_types',
         'sort_order',
+        'from_status_id',
+        'to_status_id',
+        'label',
+        'type',
+        'options',
+        'placeholder',
+        'is_required',
+        'default_priority',
+        'default_labels',
     ];
 
     protected $casts = [

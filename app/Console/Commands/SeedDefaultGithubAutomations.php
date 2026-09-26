@@ -32,11 +32,11 @@ class SeedDefaultGithubAutomations extends Command
             $totalCreated += $created;
 
             if ($created > 0) {
-                $this->info("Project {$projectIntegration->project_id}: created {$created} rule(s).");
+                $this->info("Project $projectIntegration->project_id: created $created rule(s).");
             }
         }
 
-        $this->info("Done. {$totalCreated} rule(s) created across {$connectedIntegrations->count()} connected project(s).");
+        $this->info("Done. $totalCreated rule(s) created across {$connectedIntegrations->count()} connected project(s).");
 
         return self::SUCCESS;
     }

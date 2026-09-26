@@ -72,7 +72,7 @@ class GrantPermissionsToExistingRoles extends Command
             }
         });
 
-        $this->info("Granted ".implode(', ', $keys)." to {$rolesGranted} existing role(s).");
+        $this->info("Granted ".implode(', ', $keys)." to $rolesGranted existing role(s).");
 
         return self::SUCCESS;
     }

@@ -15,13 +15,8 @@ class AutomationConditionEvaluator
      */
     public function matches(array $conditions, array $context): bool
     {
-        foreach ($conditions as $condition) {
-            if (! $this->conditionMatches($condition, $context)) {
-                return false;
-            }
-        }
+        return array_all($conditions, fn($condition) => $this->conditionMatches($condition, $context));
 
-        return true;
     }
 
     private function conditionMatches(array $condition, array $context): bool

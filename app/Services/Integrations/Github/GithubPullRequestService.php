@@ -62,7 +62,7 @@ class GithubPullRequestService
             }
         }
 
-        $bodyWithMarker = trim($resolvedBody)."\n\n<!-- orbit-issue:{$issue->id} -->";
+        $bodyWithMarker = trim($resolvedBody)."\n\n<!-- orbit-issue:$issue->id -->";
 
         try {
             return $this->relayClient->createPullRequest($relayToken, $repositoryId, $title, $head, $base, $bodyWithMarker);

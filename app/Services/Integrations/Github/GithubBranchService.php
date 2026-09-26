@@ -37,7 +37,7 @@ class GithubBranchService
     {
         $slug = Str::slug($issue->title);
 
-        return Str::limit("{$issue->id}-{$slug}", 60, '');
+        return Str::limit("$issue->id-$slug", 60, '');
     }
 
     /**
