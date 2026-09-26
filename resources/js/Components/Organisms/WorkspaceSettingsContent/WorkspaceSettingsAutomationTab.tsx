@@ -1,3 +1,4 @@
+import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
@@ -615,7 +616,7 @@ export default function WorkspaceSettingsAutomationTab({
                                         )}
                                         {canUpdateAutomation &&
                                             draft.id !== null && (
-                                                <button
+                                                <Button
                                                     type="button"
                                                     onClick={() => {
                                                         const rule =
@@ -627,10 +628,10 @@ export default function WorkspaceSettingsAutomationTab({
                                                         if (rule)
                                                             deleteRule(rule);
                                                     }}
-                                                    className="text-xs font-medium text-[var(--error-color)] hover:underline"
+                                                    className="rounded-lg bg-[var(--error-color)] px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:bg-[var(--error-color)] hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
                                                 >
                                                     Delete
-                                                </button>
+                                                </Button>
                                             )}
                                         {canUpdateAutomation && (
                                             <button
