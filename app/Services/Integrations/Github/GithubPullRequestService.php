@@ -14,9 +14,16 @@ use Illuminate\Validation\ValidationException;
  * same contract GithubMarkerParser already parses on the way back in via
  * the `opened` webhook, which is the sole writer of the resulting link
  * (see GithubRelayEventProcessor - nothing here creates that link itself).
+ * When no body is given, the repository's own pull request template is
+ * used instead of leaving the description blank (see
+ * OrbitRelayClient::getPullRequestTemplate()) - falling back to an
+ * explicit note when the repository has no template, rather than silently
+ * shipping a description that's just the invisible marker.
  */
 class GithubPullRequestService
 {
+    private const string NO_TEMPLATE_FOUND_NOTE = 'No pull request template found in this repository. This pull request was created by Orbit.';
+
     private const array ERROR_MESSAGES = [
         'GITHUB_REPOSITORY_NOT_ALLOWED' => 'That repository is not connected to this project.',
         'CONNECTION_NOT_CONNECTED' => 'GitHub is not connected for this project.',
@@ -41,7 +48,21 @@ class GithubPullRequestService
             ]);
         }
 
-        $bodyWithMarker = trim($body)."\n\n<!-- orbit-issue:{$issue->id} -->";
+        $resolvedBody = trim($body);
+
+        if ($resolvedBody === '') {
+            // A failure to fetch the template (transient orbit-api issue) is
+            // never allowed to block creating the pull request itself - it
+            // just falls back to the same note a genuinely missing template
+            // gets.
+            try {
+                $resolvedBody = $this->relayClient->getPullRequestTemplate($relayToken, $repositoryId) ?? self::NO_TEMPLATE_FOUND_NOTE;
+            } catch (OrbitRelayApiException) {
+                $resolvedBody = self::NO_TEMPLATE_FOUND_NOTE;
+            }
+        }
+
+        $bodyWithMarker = trim($resolvedBody)."\n\n<!-- orbit-issue:{$issue->id} -->";
 
         try {
             return $this->relayClient->createPullRequest($relayToken, $repositoryId, $title, $head, $base, $bodyWithMarker);

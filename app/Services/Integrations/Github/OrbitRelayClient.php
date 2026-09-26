@@ -190,6 +190,22 @@ class OrbitRelayClient
         return GithubCreatedPullRequestDTO::fromResponse($data);
     }
 
+    /**
+     * @return string|null the repository's own pull request template
+     *                       content, or null if it has none.
+     */
+    public function getPullRequestTemplate(string $relayToken, int $repositoryId): ?string
+    {
+        $data = $this->request(
+            fn () => $this->authenticatedClient($relayToken)->get('/v1/github/pull-request-template', [
+                'repositoryId' => $repositoryId,
+            ]),
+            'GET /v1/github/pull-request-template',
+        );
+
+        return $data['template'] ?? null;
+    }
+
     public function removeRepository(string $relayToken, int $repositoryId): void
     {
         $this->request(
