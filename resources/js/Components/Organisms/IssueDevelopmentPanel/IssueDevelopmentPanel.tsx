@@ -328,7 +328,7 @@ export default function IssueDevelopmentPanel({
             })}
 
             {canCreate && openForm === null && (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-start gap-2">
                     {pullRequests.length === 0 && (
                         <span className="text-[11px] text-[var(--text-gray-color)]">
                             No linked pull requests yet.
