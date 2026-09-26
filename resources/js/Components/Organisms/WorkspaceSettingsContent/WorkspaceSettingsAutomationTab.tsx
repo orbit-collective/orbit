@@ -27,6 +27,7 @@ import {
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
+import Input from '@/Components/Atoms/Input/Input';
 
 interface WorkspaceSettingsAutomationTabProps {
     memberProjects?: MemberProjectSummary[];
@@ -580,7 +581,7 @@ export default function WorkspaceSettingsAutomationTab({
                                             className="shrink-0 text-[var(--text-muted-color)]"
                                         />
                                         {canUpdateAutomation ? (
-                                            <input
+                                            <Input
                                                 value={draft.name}
                                                 onChange={(e) =>
                                                     updateDraft({
@@ -588,7 +589,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                     })
                                                 }
                                                 placeholder="Untitled rule"
-                                                className="min-w-0 flex-1 truncate rounded-md bg-transparent px-1 py-0.5 font-medium text-[var(--text-color)] outline-none focus:bg-[var(--bg-light-color)]"
+                                                className="bg-transparent"
                                             />
                                         ) : (
                                             <span className="truncate font-medium text-[var(--text-color)]">
