@@ -1,7 +1,7 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { cn } from '@/utils/cn';
 import { icons } from 'lucide-react';
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
 export interface AutomationFlowNodeProps {
     icon: keyof typeof icons;

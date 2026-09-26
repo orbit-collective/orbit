@@ -48,15 +48,15 @@ class SettingsController extends Controller
      * Tiers that are allowed to view settings regardless of any explicit
      * permission grant.
      */
-    private const VIEW_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
+    private const array VIEW_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
 
     /**
      * Labels and issue types are readable a tier wider than the general
      * settings tabs (see ProjectPolicy::viewLabels()).
      */
-    private const CATALOG_VIEW_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
+    private const array CATALOG_VIEW_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
 
-    private const MANAGE_TIERS = [RoleType::OWNER, RoleType::ADMIN];
+    private const array MANAGE_TIERS = [RoleType::OWNER, RoleType::ADMIN];
 
     public function __construct(
         protected UserService $userService,

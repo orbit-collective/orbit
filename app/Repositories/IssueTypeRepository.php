@@ -34,7 +34,7 @@ class IssueTypeRepository
                 'fields' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
                 'allowedChildTypes',
             ])
-            ->orderBy('is_system', 'desc')->orderBy('sort_order')->orderBy('name')->get();
+            ->orderByDesc('is_system')->orderBy('sort_order')->orderBy('name')->get();
     }
 
     public function findForProject(Project $project, string $name): ?IssueType

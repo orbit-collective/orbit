@@ -33,6 +33,13 @@ class ProjectIntegration extends Model
         'github_consecutive_failures',
         'github_pending_event_count',
         'github_revoked_at',
+        'repository_id',
+        'owner',
+        'name',
+        'mapping_type',
+        'orbit_value',
+        'external_value',
+        'external_label',
     ];
 
     /**

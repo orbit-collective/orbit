@@ -14,6 +14,9 @@ class AutomationRule extends Model
         'trigger_type',
         'conditions',
         'enabled',
+        'type',
+        'params',
+        'sort_order',
     ];
 
     protected $casts = [

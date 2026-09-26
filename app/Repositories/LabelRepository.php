@@ -10,7 +10,7 @@ class LabelRepository
 {
     public function getForProject(Project $project): Collection
     {
-        return $project->labels()->orderBy('is_system', 'desc')->orderBy('name')->get();
+        return $project->labels()->orderByDesc('is_system')->orderBy('name')->get();
     }
 
     public function findForProject(Project $project, string $name): ?Label
