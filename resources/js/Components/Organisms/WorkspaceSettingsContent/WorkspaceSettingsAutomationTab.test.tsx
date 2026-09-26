@@ -284,4 +284,39 @@ describe('WorkspaceSettingsAutomationTab', () => {
         expect(screen.queryByText('1 condition')).not.toBeInTheDocument();
         expect(screen.getByText('+ Add condition')).toBeInTheDocument();
     });
+
+    test('condition field is a dropdown of real context fields, not free text', async () => {
+        const user = userEvent.setup();
+        renderTab({
+            memberProjects: [project],
+            selectedProjectId: 1,
+            automationRules: [rule],
+            triggerTypes,
+            actionTypes,
+            hasAutomationAccess: true,
+            canUpdateAutomation: true,
+        });
+
+        await user.click(screen.getByText('Merge to done'));
+        await user.click(screen.getByText('+ Add condition'));
+
+        expect(
+            screen.queryByPlaceholderText('Field (e.g. pullRequest.title)'),
+        ).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Field' }));
+        await user.click(screen.getByText('Pull request title'));
+
+        await user.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects/1/automation-rules/1',
+            expect.objectContaining({
+                conditions: [
+                    expect.objectContaining({ field: 'pullRequest.title' }),
+                ],
+            }),
+            expect.anything(),
+        );
+    });
 });

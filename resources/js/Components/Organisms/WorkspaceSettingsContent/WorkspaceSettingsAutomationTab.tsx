@@ -1,4 +1,5 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
+import Input from '@/Components/Atoms/Input/Input';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import AutomationFlowNode from '@/Components/Molecules/AutomationFlowNode/AutomationFlowNode';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
@@ -13,7 +14,11 @@ import {
     AutomationRule,
 } from '@/types/Automation';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { actionMeta, triggerMeta } from '@/utils/automationMeta';
+import {
+    actionMeta,
+    conditionFieldsForTrigger,
+    triggerMeta,
+} from '@/utils/automationMeta';
 import { cn } from '@/utils/cn';
 import {
     DndContext,
@@ -27,7 +32,6 @@ import {
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
-import Input from '@/Components/Atoms/Input/Input';
 
 interface WorkspaceSettingsAutomationTabProps {
     memberProjects?: MemberProjectSummary[];
@@ -492,8 +496,8 @@ export default function WorkspaceSettingsAutomationTab({
                     <></>
                 </SettingsPanel>
             ) : (
-                <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-[var(--border-color)]">
-                    <div className="flex w-64 shrink-0 flex-col overflow-y-auto border-r border-[var(--border-color)]">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] lg:flex-row">
+                    <div className="flex max-h-56 shrink-0 flex-col overflow-y-auto border-b border-[var(--border-color)] lg:h-auto lg:max-h-none lg:w-64 lg:border-b-0 lg:border-r">
                         <div className="flex items-center justify-between gap-2 px-4 py-3.5">
                             <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted-color)]">
                                 Rules
@@ -570,8 +574,8 @@ export default function WorkspaceSettingsAutomationTab({
                             </div>
                         ) : (
                             <>
-                                <div className="flex items-center justify-between gap-3 border-b border-[var(--border-color)] px-4 py-3">
-                                    <div className="flex min-w-0 items-center gap-2 text-sm">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-color)] px-4 py-3 sm:flex-nowrap sm:gap-3">
+                                    <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                                         <span className="text-[var(--text-gray-color)]">
                                             Automation
                                         </span>
@@ -641,9 +645,9 @@ export default function WorkspaceSettingsAutomationTab({
                                     </div>
                                 </div>
 
-                                <div className="flex min-h-0 flex-1">
+                                <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
                                     <div
-                                        className="min-w-0 flex-1 overflow-y-auto px-6 py-5"
+                                        className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:overflow-y-auto"
                                         style={{
                                             backgroundImage:
                                                 'radial-gradient(var(--border-color) 1px, transparent 1px)',
@@ -806,7 +810,7 @@ export default function WorkspaceSettingsAutomationTab({
                                     </div>
 
                                     {selectedNode && (
-                                        <div className="w-72 shrink-0 overflow-y-auto border-l border-[var(--border-color)] px-4 py-4">
+                                        <div className="w-full shrink-0 border-t border-[var(--border-color)] px-4 py-4 lg:w-72 lg:overflow-y-auto lg:border-l lg:border-t-0">
                                             {selectedNode.kind ===
                                                 'trigger' && (
                                                 <div className="flex flex-col gap-3">
@@ -846,27 +850,31 @@ export default function WorkspaceSettingsAutomationTab({
                                                                 key={index}
                                                                 className="flex flex-col gap-1.5 rounded-lg border border-[var(--border-color)] p-2"
                                                             >
-                                                                <input
+                                                                <InlineSelectDropdown
+                                                                    label="Field"
+                                                                    placeholder="Choose a field"
+                                                                    options={conditionFieldsForTrigger(
+                                                                        draft.triggerType,
+                                                                    )}
                                                                     value={
-                                                                        condition.field
+                                                                        condition.field ||
+                                                                        null
                                                                     }
                                                                     disabled={
                                                                         !canUpdateAutomation
                                                                     }
                                                                     onChange={(
-                                                                        e,
+                                                                        value,
                                                                     ) =>
                                                                         updateCondition(
                                                                             index,
                                                                             {
-                                                                                field: e
-                                                                                    .target
-                                                                                    .value,
+                                                                                field:
+                                                                                    value ??
+                                                                                    '',
                                                                             },
                                                                         )
                                                                     }
-                                                                    placeholder="Field (e.g. pullRequest.title)"
-                                                                    className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)]"
                                                                 />
                                                                 <InlineSelectDropdown
                                                                     label="Operator"
