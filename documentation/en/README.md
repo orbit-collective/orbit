@@ -103,6 +103,10 @@ documentation/
     project-onboarding/
       README.md              <- index for this category
       01-add-a-welcome-tour-slide.md
+    automation/
+      README.md              <- index for this category
+      01-add-a-new-trigger-type.md
+      02-add-a-new-action-type.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above

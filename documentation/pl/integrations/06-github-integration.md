@@ -86,6 +86,26 @@ Ustawiane w `.env`/`.env.example` i odczytywane przez
 zaszywaj tego URL-a na sztywno w serwisie. Wskaż tutaj self-hostowaną
 instancję orbit-api, jeśli nie korzystasz z domyślnej.
 
+## Uprawnienia GitHub App
+
+Skonfigurowane raz na samej GitHub App (GitHub → Settings → Developer
+settings → GitHub Apps), nie per-projekt:
+
+| Uprawnienie | Dostęp | Do czego |
+| --- | --- | --- |
+| Metadata | Read-only | Wymagane przy każdym wywołaniu API. |
+| Pull requests | Read & write | Odczyt payloadów PR-ów, publikowanie komentarza potwierdzającego, tworzenie pull requesta. |
+| Issues | Read & write | Publikowanie komentarza potwierdzającego (API Issues GitHuba obejmuje też komentarze PR-ów). |
+| **Contents** | **Read & write** | **v0.9.4** — tworzenie brancha (`git/refs`, `git/ref/heads/*`). |
+| **Checks** | **Read-only** | **v0.9.4** — event webhooka `check_suite`. |
+
+Subskrybowane eventy webhooków: `pull_request`, a od **v0.9.4** także
+`check_suite` i `pull_request_review`. Instalacja utworzona przed
+v0.9.4 wymaga ręcznej aktualizacji uprawnień i subskrypcji eventów na
+GitHubie (właściciel organizacji/repozytorium zobaczy i musi
+zaakceptować prośbę o aktualizację uprawnień) — Orbit i orbit-api nie
+mogą same sobie przyznać szerszego dostępu.
+
 ## Łączenie projektu
 
 1. Ustawienia projektu → Integracje → GitHub → **Connect with GitHub**.
@@ -96,13 +116,56 @@ instancję orbit-api, jeśli nie korzystasz z domyślnej.
 3. Strona ustawień odpytuje w tle (`WorkspaceSettingsIntegrationsTab`,
    co ~2 sekundy, rezygnując po 5 minutach), dopóki połączenie jest w
    stanie `pending`.
-4. Gdy instalacja GitHub App zakończy się i wybrane zostanie dokładnie
-   jedno repozytorium, orbit-api oznacza połączenie jako `connected`;
-   kolejne odpytanie to wychwytuje i UI pokazuje połączone repozytorium.
+4. Gdy instalacja GitHub App zakończy się, orbit-api oznacza połączenie
+   jako `connected`; kolejne odpytanie to wychwytuje i UI pokazuje
+   każde repozytorium wybrane podczas instalacji.
 
 **Disconnect** unieważnia połączenie w orbit-api i oznacza lokalny
 wiersz jako `revoked` — nie odinstalowuje GitHub App z organizacji na
-GitHubie (zobacz [ograniczenia](#ograniczenia-mvp)).
+GitHubie (zobacz [ograniczenia](#czego-ta-integracja-nadal-nie-robi)).
+
+## Wiele repozytoriów na projekt (v0.9.4)
+
+Połączenie nie jest już ograniczone do jednego repozytorium. Model
+`GitHubConnectionRepository` w orbit-api przechowuje jeden rekord na
+repozytorium w ramach połączenia; Orbit Local odzwierciedla to w
+tabeli `github_repositories` (`project_integration_id`,
+`repository_id`, `owner`, `name`, unikalność na dwóch pierwszych) przez
+`GithubRepositoryRepository`. Lista "Connected repositories" w
+ustawieniach pozwala administratorowi projektu dodać dowolne
+repozytorium, do którego dostęp ma sama instalacja GitHub App
+(zwalidowane wobec `GitHubInstallationService.listRepositories()` w
+orbit-api — nigdy nie na słowo, na podstawie owner/name podanego przez
+wywołującego) albo usunąć już połączone.
+
+**Usunięcie repozytorium** kasuje wyłącznie mapowanie. Każdy
+`ExternalIssueLink` już utworzony z eventów tego repozytorium, oraz
+reprezentowane przez nie pull requesty, pozostają nietknięte — tylko
+*nowe* eventy webhooka dla niego przestają rozwiązywać się do
+powiązania, ponieważ `GithubRelayEventProcessor` rozwiązuje
+repozytorium per event (nigdy z własnych kolumn skalarnych integracji)
+i pomija wszystko, czego nie da się dopasować do aktualnie połączonego
+repozytorium.
+
+**Migracja z połączenia jednorepozytoryjnego.** Nic nie jest wymuszane.
+Jedyne repozytorium starego połączenia jest eksponowane leniwie:
+orbit-api syntetyzuje jeden wpis z pól legacy połączenia przy
+pierwszym odczycie i migruje go do prawdziwego rekordu per-repozytorium
+— czyszcząc pola legacy — przy pierwszym dodaniu/usunięciu
+repozytorium. Własna migracja Orbit Local uzupełnia
+`github_repositories` z kolumn skalarnych każdego istniejącego wiersza
+`project_integrations` w jednym przebiegu. Po żadnej ze stron nie jest
+wymagane ponowne połączenie.
+
+## Wiele pull requestów na issue
+
+Issue może mieć powiązane pull requesty z więcej niż jednego
+połączonego repozytorium naraz — unikalność `ExternalIssueLink` to
+`(project_integration_id, external_id)`, nigdy nie ograniczona do
+`issue_id`, więc nic w schemacie nie musiało się zmienić dla tej
+funkcji. Panel Development renderuje każdy powiązany pull request jako
+własny wiersz, z własnymi plakietkami; event cyklu życia albo CI/review
+dla jednego pull requesta dotyka wyłącznie jego własnego wiersza.
 
 ## Składnia znacznika
 
@@ -130,6 +193,73 @@ wiadomości commitów. Zobacz
 Znacznik służy wyłącznie do *pierwszego* powiązania, przy `opened`.
 Event `reopened`/`closed`/`synchronize` nigdy nie parsuje go ponownie
 — zobacz następną sekcję.
+
+## Tworzenie brancha lub pull requesta z Orbita (v0.9.4)
+
+Panel Development na stronie issue oferuje akcje **Create branch** i
+**Create pull request**, gdy połączone jest co najmniej jedno
+repozytorium — to jedyne dwie akcje zapisu, jakie ta integracja
+wykonuje wobec GitHuba (żadnego mergowania/zatwierdzania/zamykania z
+Orbita). Obie przechodzą przez API Git Data/pulls orbit-api przy użyciu
+jego własnego tokenu instalacji GitHub App; Orbit Local nigdy nie
+rozmawia bezpośrednio z GitHubem i nigdy nie widzi tokenu.
+
+- **Create branch** (`POST /v1/github/branches`) domyślnie ustawia
+  nazwę na `{id-issue}-{zslugowany-tytuł}` (edytowalną) a branch
+  bazowy na domyślny branch repozytorium. orbit-api rozwiązuje
+  aktualny SHA brancha bazowego i tworzy ref — nigdy nie wymusza
+  aktualizacji istniejącego brancha; własny błąd GitHuba 422
+  "Reference already exists" jest mapowany na czysty błąd
+  `GITHUB_BRANCH_ALREADY_EXISTS`.
+- **Create pull request** (`POST /v1/github/pull-requests`) zawsze
+  dołącza kanoniczny znacznik `<!-- orbit-issue:ID -->` do treści po
+  stronie serwera — nie ma sposobu na utworzenie pull requesta z
+  Orbita bez niego. Samo utworzenie pull requesta **nie** zapisuje
+  `ExternalIssueLink` — odpowiedź niesie wyłącznie bezpieczne
+  metadane (url, number, title) do toasta. Powiązanie tworzy ten sam
+  kanoniczny webhook `opened`, przez który przechodzi każdy pull
+  request utworzony na zewnątrz (zobacz [Składnię znacznika](#składnia-znacznika)),
+  więc istnieje tylko jedna ścieżka kodu, która kiedykolwiek tworzy
+  powiązanie, nigdy dwie rywalizujące o to.
+
+Obie akcje walidują podany identyfikator repozytorium wobec repozytoriów
+*należących do danego połączenia* zanim cokolwiek zrobią — repozytorium
+należące do innego połączenia, albo nigdy niepołączone, jest odrzucane
+z `GITHUB_REPOSITORY_NOT_ALLOWED`, niezależnie od tego, co wyśle
+frontend.
+
+## Status CI i review (v0.9.4)
+
+Przekazywane są przez relay jeszcze dwa typy eventów webhooka, wyłącznie
+jako sygnały do odczytu pokazywane w panelu Development — żaden z nich
+nigdy nie wyzwala triggera Workspace Automation ani nie publikuje
+komentarza:
+
+- **`check_suite`** (subskrybowane akcje samego suite'a: `completed`/
+  `requested`/`rerequested`) aktualizuje `check_status` powiązania na
+  `pending`, `passed` albo `failed`, zredukowane z własnej pary
+  `status`/`conclusion` GitHuba (`GitHubWebhookService.mapCheckStatus()`
+  w orbit-api). Używany jest wyłącznie pierwszy powiązany pull request
+  z suite'a — suite obejmujący kilka otwartych PR-ów na tym samym
+  commicie jest na tyle rzadki, że fan-out do wielu eventów relay nie
+  jest wart złamania niezmiennika "jeden event na dostawę", na którym
+  polega każdy inny typ eventu.
+- **`pull_request_review`** (wyłącznie `action: submitted`) aktualizuje
+  `review_status` powiązania na `approved`, `changes_requested` albo
+  `commented`. **Stały priorytet** — `changes_requested` > `approved` >
+  `commented` — decyduje, czy nadchodzący review faktycznie nadpisuje
+  to, co jest zapisane: mniej znaczący stan jest po prostu odrzucany,
+  więc decydujący review nie może zostać po cichu wyparty przez
+  późniejszy, mniej definitywny. To celowo nie jest oparte na znaczniku
+  czasu, w przeciwieństwie do synchronizacji cyklu życia PR-a — review'y
+  nie mają tak niezawodnego sygnału kolejności, jaki daje własne
+  `updated_at` PR-a.
+
+Oba są całkowicie ignorowane dla pull requesta, którego Orbit nigdy nie
+powiązał, albo dla repozytorium usuniętego już z projektu — ta sama
+zasada co dla eventu cyklu życia. Żaden z nich nie pojawia się w panelu
+Development, dopóki GitHub faktycznie go nie zgłosi: żadna plakietka
+nigdy nie jest fabrykowana dla powiązania legacy albo niezsynchronizowanego.
 
 ## Synchronizacja cyklu życia pull requesta
 
@@ -247,32 +377,38 @@ tym, jak PR został powiązany, a komentarz zażądany — jest traktowane
 jako zakończony wynik, a nie błąd: faktyczna praca już się wydarzyła,
 tylko własny rekord orbit-api wygasł albo zniknął pierwszy.
 
-## Ograniczenia MVP
+## Czego ta integracja nadal nie robi
 
-- Obsługiwane są wyłącznie `pull_request.opened`, `reopened`, `closed`
-  i `synchronize` — `edited` (w tym sama edycja tytułu), review'y,
-  requested reviewers, etykiety, przypisania i CI/check runs nie są
-  synchronizowane. Tytuł/branche PR-a odświeżają się tylko okazjonalnie,
-  jako efekt uboczny eventu cyklu życia, który już je niesie, a nie
-  natychmiast, gdy ktoś edytuje sam tytuł na GitHubie.
-- Jedno połączenie z GitHubem na projekt w Orbicie, jedno repozytorium
-  na połączenie i jedno issue w Orbicie na pull request.
-- Brak automatyzacji statusu: cykl życia pull requesta (otwarcie,
-  zmergowanie, zamknięcie, ponowne otwarcie) nigdy nie zmienia
-  własnego statusu workflow powiązanego issue w Orbicie ani go nie
-  zamyka — zobacz
-  [Synchronizacja cyklu życia pull requesta](#synchronizacja-cyklu-%C5%BCycia-pull-requesta).
-  Tego typu automatyzacja ma pojawić się później jako część Workspace
-  Automation, nie w tym wydaniu.
+- Obsługiwane są wyłącznie `pull_request.opened`/`reopened`/`closed`/
+  `synchronize`, `check_suite` i `pull_request_review.submitted` —
+  `pull_request.edited` (w tym sama edycja tytułu), requested
+  reviewers, etykiety, przypisania i pojedyncze check runy (tylko
+  agregat na poziomie suite'a) nie są synchronizowane. Tytuł/branche
+  PR-a odświeżają się tylko okazjonalnie, jako efekt uboczny eventu
+  cyklu życia, który już je niesie, a nie natychmiast, gdy ktoś
+  edytuje sam tytuł na GitHubie.
+- Jedno połączenie z GitHubem na projekt w Orbicie i jedno issue w
+  Orbicie na pull request — projekt może mieć teraz wiele
+  repozytoriów, a issue wiele pull requestów, zobacz wyżej.
+- Workspace Automation (Ustawienia → Automation) może reagować na
+  otwarcie/ponowne otwarcie/zamknięcie/zmergowanie/synchronizację pull
+  requesta i zmieniać status/priorytet/przypisaną osobę/etykiety
+  powiązanego issue albo wysyłać powiadomienie — ale to
+  ogólnoprzeznaczeniowy silnik reguł, który projekt konfiguruje sam,
+  nie wbudowane, zaszyte na sztywno mapowanie statusów. Nic nie zmienia
+  statusu issue automatycznie, dopóki nie istnieje dla tego reguła.
 - Brak śledzenia na poziomie commitów: `synchronize` odświeża tylko
   istniejący snapshot metadanych, nigdy listę ani liczbę commitów.
 - Brak synchronizacji komentarzy w żadną stronę poza pojedynczym
   komentarzem potwierdzającym, który orbit-api publikuje raz przy
   `opened` — event cyklu życia nigdy nie publikuje ani nie edytuje
   komentarza.
-- Brak pełnej historii cyklu życia: przechowywany i pokazywany jest
-  tylko aktualnie znany stan pull requesta, a nie oś czasu przeszłych
-  przejść.
+- Brak pełnej historii cyklu życia/review'ów/checków: przechowywany i
+  pokazywany jest tylko aktualnie znany stan każdego pull requesta, a
+  nie oś czasu przeszłych przejść, review'ów czy check runów.
+- Brak mergowania/zatwierdzania/zamykania z Orbita — **Create
+  branch**/**Create pull request** to jedyne akcje zapisu, jakie ta
+  integracja wykonuje wobec GitHuba.
 - Rozłączenie w Orbicie nie odinstalowuje GitHub App z GitHuba — tylko
   sprawia, że Orbit Local przestaje ufać temu połączeniu.
 
@@ -338,3 +474,13 @@ nigdy nie uruchamia się samo bez jednego z nich.
   ale jeszcze nie istnieje — do tego czasu traktuj podłączenie
   prywatnego repozytorium do projektu w Orbicie jako udostępnienie
   metadanych powiązanych PR-ów całemu zespołowi projektu.
+- **v0.9.4:** tworzenie brancha albo pull requesta, a także
+  dodawanie/usuwanie połączonego repozytorium, zawsze walidują podany
+  identyfikator repozytorium wobec repozytoriów *należących do danego
+  połączenia* w orbit-api, zanim cokolwiek zrobią — nigdy na słowo, na
+  podstawie owner/name albo identyfikatora repozytorium podanego przez
+  wywołującego. Utworzenie brancha/pull requesta wymaga wyłącznie
+  uprawnienia do edycji samego issue (tego samego, którego wymaga
+  edycja dowolnego innego pola issue); zarządzanie połączonymi
+  repozytoriami wymaga uprawnienia `integrations.update`, tak samo jak
+  łączenie/rozłączanie samego GitHuba.

@@ -84,6 +84,26 @@ Set in `.env`/`.env.example` and read via `config('services.orbit_api.url')`
 this at a self-hosted orbit-api instance if you're not using the
 default one.
 
+## GitHub App permissions
+
+Configured once on the GitHub App itself (GitHub → Settings → Developer
+settings → GitHub Apps), not per-project:
+
+| Permission | Access | Used for |
+| --- | --- | --- |
+| Metadata | Read-only | Every API call requires it. |
+| Pull requests | Read & write | Reading PR payloads, posting the confirmation comment, creating a pull request. |
+| Issues | Read & write | Posting the confirmation comment (GitHub's Issues API also covers PR comments). |
+| **Contents** | **Read & write** | **v0.9.4** — creating a branch (`git/refs`, `git/ref/heads/*`). |
+| **Checks** | **Read-only** | **v0.9.4** — the `check_suite` webhook event. |
+
+Subscribed webhook events: `pull_request`, plus **v0.9.4**'s
+`check_suite` and `pull_request_review`. An installation created
+before v0.9.4 needs its permissions and event subscriptions updated
+manually on GitHub (the org/repo owner will see and needs to accept a
+permission-update prompt) — Orbit and orbit-api cannot grant
+themselves broader access.
+
 ## Connecting a project
 
 1. Project Settings → Integrations → GitHub → **Connect with GitHub**.
@@ -94,14 +114,53 @@ default one.
 3. The settings page polls (`WorkspaceSettingsIntegrationsTab`, every
    ~2 seconds, giving up after 5 minutes) while the connection is
    `pending`.
-4. Once the GitHub App installation completes and exactly one
-   repository has been selected, orbit-api marks the connection
-   `connected`; the next poll picks that up and the UI shows the
-   connected repository.
+4. Once the GitHub App installation completes, orbit-api marks the
+   connection `connected`; the next poll picks that up and the UI
+   shows every repository selected during installation.
 
 **Disconnect** revokes the connection with orbit-api and marks the
 local row `revoked` — it does not uninstall the GitHub App from the
 GitHub organization (see [limitations](#mvp-limitations)).
+
+## Multiple repositories per project (v0.9.4)
+
+A connection is no longer limited to a single repository. orbit-api's
+`GitHubConnectionRepository` stores one record per repository under a
+connection; Orbit Local mirrors it in a `github_repositories` table
+(`project_integration_id`, `repository_id`, `owner`, `name`, unique on
+the first two) via `GithubRepositoryRepository`. The Settings panel's
+"Connected repositories" list lets a project admin add any repository
+the GitHub App installation itself has access to (validated against
+`GitHubInstallationService.listRepositories()` on orbit-api — never a
+caller-supplied owner/name taken on faith) or remove one already
+connected.
+
+**Removing a repository** only deletes the mapping. Every
+`ExternalIssueLink` already created from that repository's events, and
+the pull requests they represent, are left untouched — only *new*
+webhook events for it stop resolving to a link, since
+`GithubRelayEventProcessor` resolves the repository per event (never
+from the integration's own scalar columns) and skips anything it
+can't match to a currently-connected repository.
+
+**Migration from a single-repository connection.** Nothing is forced.
+An old connection's single repository is exposed lazily: orbit-api
+synthesizes one entry from the connection's legacy fields the first
+time it's read, and migrates it into a real per-repository record —
+clearing the legacy fields — the first time a repository is
+added/removed. Orbit Local's own migration backfills `github_repositories`
+from each existing `project_integrations` row's scalar columns in one
+pass. No reconnect is required either side.
+
+## Multiple pull requests per issue
+
+An issue can have pull requests linked from more than one connected
+repository at once — `ExternalIssueLink`'s uniqueness is
+`(project_integration_id, external_id)`, never scoped to `issue_id`,
+so nothing about the schema changed for this. The Development panel
+renders every linked pull request as its own row, each with its own
+badges; a lifecycle or CI/review event for one pull request only ever
+touches its own row.
 
 ## Marker syntax
 
@@ -126,6 +185,67 @@ See `App\Services\Integrations\Github\GithubMarkerParser`.
 The marker is only used for the *initial* link, on `opened`. A
 `reopened`/`closed`/`synchronize` event never re-parses it — see the
 next section.
+
+## Creating a branch or pull request from Orbit (v0.9.4)
+
+The issue page's Development panel offers **Create branch** and
+**Create pull request** actions once at least one repository is
+connected — the only two write actions Orbit performs against GitHub
+(no merge/approve/close from Orbit). Both go through orbit-api's Git
+Data/pulls API using its own GitHub App installation token; Orbit
+Local never talks to GitHub directly and never sees a token.
+
+- **Create branch** (`POST /v1/github/branches`) defaults the name to
+  `{issue-id}-{slugified-title}` (editable) and the base branch to the
+  repository's own default branch. orbit-api resolves the base
+  branch's current SHA and creates the ref — it never force-updates an
+  existing branch; GitHub's own 422 "Reference already exists" is
+  mapped to a clean `GITHUB_BRANCH_ALREADY_EXISTS` error instead.
+- **Create pull request** (`POST /v1/github/pull-requests`) always
+  appends the canonical `<!-- orbit-issue:ID -->` marker to the body
+  server-side — there is no way to create a pull request from Orbit
+  without it. Creating the pull request does **not** itself write the
+  `ExternalIssueLink` — the response only carries safe metadata (url,
+  number, title) for a toast. The link is created by the same
+  canonical `opened` webhook every externally-created pull request
+  goes through (see [Marker syntax](#marker-syntax)), so there is only
+  one code path that ever creates a link, never two racing to do it.
+
+Both actions validate the given repository id against the
+*connection's own* repositories before doing anything — a repository
+belonging to another connection, or never connected at all, is
+rejected with `GITHUB_REPOSITORY_NOT_ALLOWED` regardless of what the
+frontend sends.
+
+## CI check and review status (v0.9.4)
+
+Two more webhook event types are relayed, purely as read-only
+signals shown on the Development panel — neither ever fires a
+Workspace Automation trigger or posts a comment:
+
+- **`check_suite`** (subscribes to the suite's own `completed`/
+  `requested`/`rerequested` actions) updates a link's `check_status`
+  to `pending`, `passed`, or `failed`, reduced from GitHub's own
+  `status`/`conclusion` pair (`GitHubWebhookService.mapCheckStatus()`
+  on orbit-api). Only the suite's first linked pull request is used —
+  a suite spanning several open PRs on the same commit is rare enough
+  that fanning out to multiple relay events isn't worth breaking the
+  one-event-per-delivery dedupe every other event type relies on.
+- **`pull_request_review`** (`action: submitted` only) updates a
+  link's `review_status` to `approved`, `changes_requested`, or
+  `commented`. A **fixed precedence** — `changes_requested` >
+  `approved` > `commented` — decides whether an incoming review
+  actually overwrites what's stored: a less-significant state is
+  simply dropped, so a decisive review can't be quietly displaced by a
+  later, less-definitive one. This is deliberately not
+  timestamp-based, unlike pull request lifecycle sync — reviews don't
+  have the same reliable ordering signal a PR's own `updated_at` does.
+
+Both are ignored entirely for a pull request Orbit never linked, or
+for a repository since removed from the project — same rule as a
+lifecycle event. Neither is exposed on the Development panel until
+GitHub actually reports it: no badge is ever fabricated for a legacy
+or unsynced link.
 
 ## Pull request lifecycle synchronization
 
@@ -236,29 +356,36 @@ linked and the comment already requested — is treated as a completed
 outcome, not a failure: the actual work already happened, only the
 relay's own pending record expired or vanished first.
 
-## MVP limitations
+## What this integration still doesn't do
 
-- Only `pull_request.opened`, `reopened`, `closed`, and `synchronize`
-  are handled — `edited` (including a title-only edit), reviews,
-  requested reviewers, labels, assignees, and CI/check runs are not
-  synced. A PR's title/branches only refresh opportunistically as a
-  side effect of a lifecycle event that already carries them, not
-  immediately when someone edits just the title on GitHub.
-- One GitHub connection per Orbit project, one repository per
-  connection, and one Orbit issue per pull request.
-- No status automation: a pull request's lifecycle (opened, merged,
-  closed, reopened) never transitions the linked Orbit issue's own
-  workflow status or closes it — see
-  [Pull request lifecycle synchronization](#pull-request-lifecycle-synchronization).
-  That kind of automation is expected to arrive later as part of
-  Workspace Automation, not this release.
+- Only `pull_request.opened`/`reopened`/`closed`/`synchronize`,
+  `check_suite`, and `pull_request_review.submitted` are handled —
+  `pull_request.edited` (including a title-only edit), requested
+  reviewers, labels, assignees, and individual check runs (only the
+  suite-level aggregate) are not synced. A PR's title/branches only
+  refresh opportunistically as a side effect of a lifecycle event that
+  already carries them, not immediately when someone edits just the
+  title on GitHub.
+- One GitHub connection per Orbit project, and one Orbit issue per
+  pull request — a project can now have multiple repositories, and an
+  issue can now have multiple pull requests, see above.
+- Workspace Automation (Settings → Automation) can react to a pull
+  request being opened/reopened/closed/merged/synchronized and change
+  the linked issue's status/priority/assignee/labels or send a
+  notification — but this is a general-purpose rule engine the project
+  configures itself, not a built-in, hardcoded status mapping. Nothing
+  changes an issue's status automatically unless a rule for it exists.
 - No commit-level tracking: `synchronize` only refreshes the existing
   metadata snapshot, never a commit list or count.
 - No comment sync in either direction beyond the single confirmation
   comment orbit-api posts once on `opened` — a lifecycle event never
   posts or edits a comment.
-- No full lifecycle history: only the pull request's current known
-  state is stored and shown, not a timeline of past transitions.
+- No full lifecycle/review/check history: only each pull request's
+  current known state is stored and shown, not a timeline of past
+  transitions, reviews, or check runs.
+- No merge/approve/close from Orbit — **Create branch**/**Create pull
+  request** are the only write actions this integration performs
+  against GitHub.
 - Disconnecting in Orbit does not uninstall the GitHub App from
   GitHub — it only stops Orbit Local from trusting that connection.
 
@@ -323,3 +450,12 @@ never runs on its own without one of these.
   future release but does not exist yet - until then, treat connecting
   a private repository to an Orbit project as making that repository's
   linked-PR metadata visible to the whole project team.
+- **v0.9.4:** creating a branch or pull request, and adding/removing a
+  connected repository, all validate the given repository id against
+  the *connection's own* repositories on orbit-api before doing
+  anything — never a caller-supplied owner/name or repository id taken
+  on faith. Creating a branch/pull request only requires the ability
+  to update the issue itself (the same permission editing any other
+  issue field requires); managing connected repositories requires the
+  `integrations.update` permission, same as connecting/disconnecting
+  GitHub itself.
