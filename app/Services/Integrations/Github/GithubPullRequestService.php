@@ -46,8 +46,14 @@ class GithubPullRequestService
         try {
             return $this->relayClient->createPullRequest($relayToken, $repositoryId, $title, $head, $base, $bodyWithMarker);
         } catch (OrbitRelayApiException $exception) {
+            // For most codes, orbit-api's own message is already a clean,
+            // safe, specific string (a fixed message, or GitHub's own public
+            // validation message forwarded via GITHUB_PULL_REQUEST_REJECTED)
+            // - only the generic transport-level fallback still needs a
+            // friendlier override.
             throw ValidationException::withMessages([
-                'pullRequest' => self::ERROR_MESSAGES[$exception->errorCode] ?? 'Failed to create the pull request.',
+                'pullRequest' => self::ERROR_MESSAGES[$exception->errorCode]
+                    ?? ($exception->errorCode === 'GITHUB_API_ERROR' ? 'Failed to create the pull request.' : $exception->getMessage()),
             ]);
         }
     }

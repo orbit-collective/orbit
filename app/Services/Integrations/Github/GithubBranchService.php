@@ -57,8 +57,14 @@ class GithubBranchService
         try {
             return $this->relayClient->createBranch($relayToken, $repositoryId, $name, $baseBranch);
         } catch (OrbitRelayApiException $exception) {
+            // For most codes, orbit-api's own message is already a clean,
+            // safe, specific string (a fixed message, or GitHub's own public
+            // validation message forwarded via GITHUB_BRANCH_REJECTED) - only
+            // the generic transport-level fallback still needs a friendlier
+            // override.
             throw ValidationException::withMessages([
-                'branch' => self::ERROR_MESSAGES[$exception->errorCode] ?? 'Failed to create the branch.',
+                'branch' => self::ERROR_MESSAGES[$exception->errorCode]
+                    ?? ($exception->errorCode === 'GITHUB_API_ERROR' ? 'Failed to create the branch.' : $exception->getMessage()),
             ]);
         }
     }

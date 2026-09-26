@@ -91,3 +91,47 @@ test('create translates a relay error into a clean validation message', function
         expect($exception->errors()['pullRequest'][0])->toBe('That repository is not connected to this project.');
     }
 });
+
+test('create surfaces orbit-api\'s own message for an unmapped GITHUB_PULL_REQUEST_REJECTED error', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('createPullRequest')
+        ->andThrow(new OrbitRelayApiException('A pull request already exists for orbit-collective:fix/login.', 'GITHUB_PULL_REQUEST_REJECTED'));
+    $this->app->instance(OrbitRelayClient::class, $relayClient);
+
+    try {
+        app(GithubPullRequestService::class)->create($this->project, $this->issue, 1, 'x', 'fix/login', 'main');
+        $this->fail('Expected a ValidationException.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['pullRequest'][0])->toBe('A pull request already exists for orbit-collective:fix/login.');
+    }
+});
+
+test('create falls back to a generic message for a raw GITHUB_API_ERROR', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    $relayClient = Mockery::mock(OrbitRelayClient::class);
+    $relayClient->shouldReceive('createPullRequest')
+        ->andThrow(new OrbitRelayApiException('GitHub API request failed.', 'GITHUB_API_ERROR'));
+    $this->app->instance(OrbitRelayClient::class, $relayClient);
+
+    try {
+        app(GithubPullRequestService::class)->create($this->project, $this->issue, 1, 'x', 'a', 'b');
+        $this->fail('Expected a ValidationException.');
+    } catch (ValidationException $exception) {
+        expect($exception->errors()['pullRequest'][0])->toBe('Failed to create the pull request.');
+    }
+});
