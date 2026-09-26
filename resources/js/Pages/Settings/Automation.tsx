@@ -26,7 +26,7 @@ export default function SettingsAutomation({
     canUpdateAutomation = false,
 }: SettingsAutomationProps) {
     return (
-        <SettingsLayout tabId="automation" projects={projects}>
+        <SettingsLayout tabId="automation" projects={projects} fullBleed>
             <WorkspaceSettingsAutomationTab
                 memberProjects={memberProjects}
                 selectedProjectId={selectedProjectId}

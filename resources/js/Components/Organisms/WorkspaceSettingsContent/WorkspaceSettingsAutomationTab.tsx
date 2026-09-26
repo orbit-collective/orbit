@@ -463,8 +463,8 @@ export default function WorkspaceSettingsAutomationTab({
     }));
 
     return (
-        <div className="space-y-5">
-            <div>
+        <div className="flex min-h-0 flex-1 flex-col gap-5">
+            <div className="shrink-0">
                 <h2 className="text-lg font-semibold text-[var(--text-color)]">
                     Automation
                 </h2>
@@ -474,12 +474,14 @@ export default function WorkspaceSettingsAutomationTab({
                 </p>
             </div>
 
-            <ProjectPickerPanel
-                projects={memberProjects}
-                selectedProjectId={selectedProject.id}
-                description="Choose which project's automation rules to manage."
-                onSelect={switchProject}
-            />
+            <div className="shrink-0">
+                <ProjectPickerPanel
+                    projects={memberProjects}
+                    selectedProjectId={selectedProject.id}
+                    description="Choose which project's automation rules to manage."
+                    onSelect={switchProject}
+                />
+            </div>
 
             {!hasAutomationAccess ? (
                 <SettingsPanel
@@ -489,7 +491,7 @@ export default function WorkspaceSettingsAutomationTab({
                     <></>
                 </SettingsPanel>
             ) : (
-                <div className="flex h-[560px] overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-dark-color)]">
+                <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-[var(--border-color)]">
                     <div className="flex w-64 shrink-0 flex-col overflow-y-auto border-r border-[var(--border-color)]">
                         <div className="flex items-center justify-between gap-2 px-4 py-3.5">
                             <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted-color)]">

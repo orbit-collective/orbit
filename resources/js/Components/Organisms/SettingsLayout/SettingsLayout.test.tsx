@@ -53,4 +53,22 @@ describe('SettingsLayout', () => {
             '2',
         );
     });
+
+    test('caps content width by default, but not for a fullBleed tab', () => {
+        const { container, rerender } = render(
+            <SettingsLayout tabId="labels">
+                <p>Tab body</p>
+            </SettingsLayout>,
+        );
+
+        expect(container.querySelector('.max-w-3xl')).toBeInTheDocument();
+
+        rerender(
+            <SettingsLayout tabId="labels" fullBleed>
+                <p>Tab body</p>
+            </SettingsLayout>,
+        );
+
+        expect(container.querySelector('.max-w-3xl')).not.toBeInTheDocument();
+    });
 });

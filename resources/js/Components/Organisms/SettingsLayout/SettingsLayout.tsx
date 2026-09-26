@@ -2,6 +2,7 @@ import Breadcrumb from '@/Components/Molecules/Breadcrumb/Breadcrumb';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { Project } from '@/types/Projects';
 import { SettingsTabId, getSettingsTab } from '@/types/Settings';
+import { cn } from '@/utils/cn';
 import { ReactNode } from 'react';
 
 interface SettingsLayoutProps {
@@ -13,12 +14,21 @@ interface SettingsLayoutProps {
     tabId: SettingsTabId;
     projects?: Project[];
     children: ReactNode;
+    /**
+     * Opts this tab out of the standard `max-w-3xl` reading-width cap and
+     * lets its content fill the panel's own remaining height instead of
+     * just growing with the page - for a tab whose content is genuinely a
+     * workspace rather than a column of settings rows (e.g. Automation's
+     * flow canvas, which is unusably narrow/short under the normal cap).
+     */
+    fullBleed?: boolean;
 }
 
 export default function SettingsLayout({
     tabId,
     projects = [],
     children,
+    fullBleed = false,
 }: SettingsLayoutProps) {
     const tab = getSettingsTab(tabId);
 
@@ -27,8 +37,20 @@ export default function SettingsLayout({
             <Sidebar projects={projects} />
 
             <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
-                <main className="flex-1 overflow-y-auto">
-                    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 lg:px-10 lg:pt-10">
+                <main
+                    className={cn(
+                        'flex-1',
+                        fullBleed ? 'flex min-h-0 flex-col' : 'overflow-y-auto',
+                    )}
+                >
+                    <div
+                        className={cn(
+                            'mx-auto flex w-full flex-col gap-6 px-4 sm:px-6',
+                            fullBleed
+                                ? 'min-h-0 flex-1 pb-6 pt-6'
+                                : 'max-w-3xl gap-8 pb-16 pt-8 lg:px-10 lg:pt-10',
+                        )}
+                    >
                         <header className="space-y-2">
                             <Breadcrumb
                                 items={[
@@ -47,7 +69,13 @@ export default function SettingsLayout({
                             </p>
                         </header>
 
-                        {children}
+                        {fullBleed ? (
+                            <div className="flex min-h-0 flex-1 flex-col">
+                                {children}
+                            </div>
+                        ) : (
+                            children
+                        )}
                     </div>
                 </main>
             </div>

@@ -8,15 +8,18 @@ vi.mock('@/Components/Organisms/SettingsLayout/SettingsLayout', () => ({
         tabId,
         projects = [],
         children,
+        fullBleed,
     }: {
         tabId: string;
         projects?: unknown[];
         children: React.ReactNode;
+        fullBleed?: boolean;
     }) => (
         <div
             data-testid="layout"
             data-tab-id={tabId}
             data-projects-count={projects.length}
+            data-full-bleed={String(!!fullBleed)}
         >
             {children}
         </div>
@@ -54,6 +57,7 @@ describe('Settings SettingsAutomation page', () => {
         const layout = screen.getByTestId('layout');
         expect(layout).toHaveAttribute('data-tab-id', 'automation');
         expect(layout).toHaveAttribute('data-projects-count', '1');
+        expect(layout).toHaveAttribute('data-full-bleed', 'true');
 
         const tabProps = JSON.parse(
             screen.getByTestId('tab').getAttribute('data-props') ?? '{}',
