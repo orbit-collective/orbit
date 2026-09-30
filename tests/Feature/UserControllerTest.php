@@ -138,6 +138,19 @@ test('changing password requires a minimum length', function () {
     expect(Hash::check('old-password', $user->fresh()->password))->toBeTrue();
 });
 
+test('a passwordless GitHub-only account can set an initial password without a current one', function () {
+    $user = User::factory()->create(['password' => null, 'github_id' => '123']);
+
+    $response = $this->actingAs($user)->post('/account/change-password', [
+        'new_password' => 'new-password',
+        'new_password_confirmation' => 'new-password',
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success', 'Password has been updated successfully.');
+    expect(Hash::check('new-password', $user->fresh()->password))->toBeTrue();
+});
+
 test('guests cannot change password', function () {
     $response = $this->post('/account/change-password', [
         'current_password' => 'old-password',

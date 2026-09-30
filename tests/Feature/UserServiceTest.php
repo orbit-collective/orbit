@@ -195,6 +195,23 @@ test('it throws a validation exception when the current password is incorrect', 
     $this->service->updatePassword($user, 'wrong-password', 'new-password');
 })->throws(ValidationException::class);
 
+test('it sets an initial password for a passwordless account without a current password', function () {
+    $user = User::factory()->create(['password' => null]);
+
+    $this->userRepository->shouldReceive('updatePassword')
+        ->once()
+        ->with($user, 'new-password')
+        ->andReturn($user);
+
+    $this->activityLogService->shouldReceive('log')
+        ->once()
+        ->with(null, 'Set an account password', $user->id);
+
+    $result = $this->service->updatePassword($user, null, 'new-password');
+
+    expect($result)->toBe($user);
+});
+
 test('it maps user sessions to their display shape', function () {
     $user = User::factory()->create();
 

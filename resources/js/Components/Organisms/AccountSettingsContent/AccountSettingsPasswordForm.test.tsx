@@ -6,6 +6,7 @@ import AccountSettingsPasswordForm from './AccountSettingsPasswordForm';
 const formState = vi.hoisted(() => ({
     errors: {} as Record<string, string>,
     processing: false,
+    hasPassword: true,
 }));
 const mockPost = vi.hoisted(() => vi.fn());
 const mockReset = vi.hoisted(() => vi.fn());
@@ -40,6 +41,11 @@ vi.mock('@inertiajs/react', async () => {
                 reset: mockReset,
             };
         },
+        usePage: () => ({
+            props: {
+                auth: { user: { has_password: formState.hasPassword } },
+            },
+        }),
     };
 });
 
@@ -49,6 +55,7 @@ describe('AccountSettingsPasswordForm', () => {
     beforeEach(() => {
         formState.errors = {};
         formState.processing = false;
+        formState.hasPassword = true;
         mockPost.mockClear();
         mockReset.mockClear();
     });
@@ -162,6 +169,31 @@ describe('AccountSettingsPasswordForm', () => {
         );
 
         expect(mockPost).toHaveBeenCalled();
+    });
+
+    test('hides the current password field and submits directly for a passwordless account', async () => {
+        formState.hasPassword = false;
+        renderForm();
+        const user = userEvent.setup();
+
+        expect(
+            screen.queryByLabelText(/Current password/),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Set password' }),
+        ).toBeInTheDocument();
+
+        await user.type(screen.getByLabelText(/New password/), 'newpassword1');
+        await user.type(
+            screen.getByLabelText(/Confirm new password/),
+            'newpassword1',
+        );
+        await user.click(screen.getByRole('button', { name: 'Set password' }));
+
+        expect(mockPost).toHaveBeenCalledWith(
+            '/account.change-password',
+            expect.objectContaining({ preserveScroll: true }),
+        );
     });
 
     test('locks the form after 5 failed attempts', async () => {

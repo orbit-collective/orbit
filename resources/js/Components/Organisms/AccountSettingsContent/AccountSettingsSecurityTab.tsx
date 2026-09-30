@@ -156,7 +156,11 @@ export default function AccountSettingsSecurityTab({
 
             <SettingsPanel
                 title="Password"
-                description="Change your password or send yourself a reset link."
+                description={
+                    hasPassword
+                        ? 'Change your password or send yourself a reset link.'
+                        : 'Set a password so you can also sign in without GitHub.'
+                }
                 icon="KeyRound"
             >
                 <AccountSettingsPasswordForm />

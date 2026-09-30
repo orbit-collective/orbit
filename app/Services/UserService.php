@@ -74,8 +74,10 @@ class UserService
 
         return $updatedUser;
     }
-    public function updatePassword(User $user, string $currentPassword, string $newPassword): User {
-        if (! Hash::check($currentPassword, $user->password)) {
+    public function updatePassword(User $user, ?string $currentPassword, string $newPassword): User {
+        $isSettingInitialPassword = $user->password === null;
+
+        if (! $isSettingInitialPassword && ! Hash::check((string) $currentPassword, $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => 'The provided password does not match your current password.',
             ]);
@@ -83,7 +85,11 @@ class UserService
 
         $updatedUser = $this->userRepository->updatePassword($user, $newPassword);
 
-        $this->activityLogService->log(null, 'Changed account password', $user->id);
+        $this->activityLogService->log(
+            null,
+            $isSettingInitialPassword ? 'Set an account password' : 'Changed account password',
+            $user->id
+        );
 
         return $updatedUser;
     }
