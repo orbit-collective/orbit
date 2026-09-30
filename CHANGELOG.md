@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.10.0](https://github.com/orbit-collective/orbit/compare/v0.9.4...v0.10.0) (2026-09-30)
+
+
+### Features
+
+* **auth:** add GitHub OAuth configuration to docker-compose ([b2b6cd8](https://github.com/orbit-collective/orbit/commit/b2b6cd884ace34ab09f5296bc1352dac0803fee6))
+* **auth:** add Socialite and GitHub OAuth App config ([1dc5fc8](https://github.com/orbit-collective/orbit/commit/1dc5fc814a5429cddcf02d5dc37b777b6e969c85))
+* **auth:** enable GitHub sign-in button, add link/unlink settings UI ([3f4ed5b](https://github.com/orbit-collective/orbit/commit/3f4ed5b745e845f4682e6a88b7fca45d31b118e9))
+* **auth:** log in with GitHub, link/unlink from an existing account ([fa3aa52](https://github.com/orbit-collective/orbit/commit/fa3aa521a28ed8dea6a9936421e80c7d5b82bd90))
+* **github:** require a linked GitHub account to create branches/PRs ([a23d12e](https://github.com/orbit-collective/orbit/commit/a23d12e43d663490e2ddbb91ae108891cd02e3ca))
+
+
+### Bug Fixes
+
+* **attachments:** serve image attachments through an authorized route ([a78abfa](https://github.com/orbit-collective/orbit/commit/a78abfae5b977ac2c313d3882a5abf5a0f89d826))
+
 ## [0.9.4](https://github.com/orbit-collective/orbit/compare/v0.9.3...v0.9.4) (2026-09-26)
 
 
