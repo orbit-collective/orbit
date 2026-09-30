@@ -41,7 +41,15 @@ class GithubAuthController extends Controller
     {
         $state = Str::random(40);
 
-        $request->session()->put(self::STATE_SESSION_KEY, $state);
+        // The acting user id is captured alongside state so callback() can
+        // detect a session that changed identity mid-flow (e.g. a guest who
+        // logs in with a password in another tab while GitHub sign-in is
+        // pending) and refuse to silently switch from "sign in as a new
+        // account" to "link GitHub to whoever is now logged in".
+        $request->session()->put(self::STATE_SESSION_KEY, [
+            'state' => $state,
+            'userId' => $request->user()?->id,
+        ]);
 
         $returnTo = route('auth.github.callback', ['state' => $state]);
         $orbitApiUrl = rtrim(config('services.orbit_api.url'), '/');
@@ -51,27 +59,32 @@ class GithubAuthController extends Controller
 
     public function callback(Request $request): RedirectResponse
     {
-        $expectedState = $request->session()->pull(self::STATE_SESSION_KEY);
+        $expected = $request->session()->pull(self::STATE_SESSION_KEY);
         $state = (string) $request->query('state');
+        $failureRoute = $request->user() ? 'settings.security-access' : 'login';
 
-        if (! $expectedState || ! hash_equals($expectedState, $state)) {
-            return redirect()->route('login')->with('error', 'GitHub authentication failed. Please try again.');
+        if (
+            ! is_array($expected)
+            || ! hash_equals((string) $expected['state'], $state)
+            || $expected['userId'] !== $request->user()?->id
+        ) {
+            return redirect()->route($failureRoute)->with('error', 'GitHub authentication failed. Please try again.');
         }
 
-        if ($error = $request->query('error')) {
-            return redirect()->route('login')->with('error', $error);
+        if ($request->query('error')) {
+            return redirect()->route($failureRoute)->with('error', 'GitHub authentication failed. Please try again.');
         }
 
         $exchangeToken = $request->query('exchange_token');
 
         if (! $exchangeToken) {
-            return redirect()->route('login')->with('error', 'GitHub authentication failed. Please try again.');
+            return redirect()->route($failureRoute)->with('error', 'GitHub authentication failed. Please try again.');
         }
 
         try {
             $identity = $this->relayClient->resolveGithubLoginToken($exchangeToken);
         } catch (OrbitRelayApiException) {
-            return redirect()->route('login')->with('error', 'GitHub authentication failed. Please try again.');
+            return redirect()->route($failureRoute)->with('error', 'GitHub authentication failed. Please try again.');
         }
 
         if ($request->user()) {
