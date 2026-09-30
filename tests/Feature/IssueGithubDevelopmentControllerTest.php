@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->project = Project::factory()->create();
     $this->issue = Issue::factory()->create(['project_id' => $this->project->id]);
-    $this->member = User::factory()->create();
+    $this->member = User::factory()->create(['github_id' => '123', 'github_username' => 'octocat']);
     $this->project->users()->attach($this->member->id, ['role' => 'member']);
 });
 
@@ -199,4 +199,30 @@ test('a repository not connected to this project is rejected without ever reachi
 
     $response->assertSessionHasErrors(['pullRequest']);
     expect(session('errors')->get('pullRequest')[0])->toBe('That repository is not connected to this project.');
+});
+
+test('a member with no linked GitHub account cannot create a branch', function () {
+    $this->member->update(['github_id' => null, 'github_username' => null]);
+
+    $response = $this->actingAs($this->member)->post("/issues/{$this->issue->id}/github/branches", [
+        'repository_id' => 1,
+        'name' => '1234-fix-login',
+    ]);
+
+    $response->assertSessionHasErrors(['branch']);
+    expect(session('errors')->get('branch')[0])->toBe('Link your GitHub account in Settings before creating a branch or pull request.');
+});
+
+test('a member with no linked GitHub account cannot create a pull request', function () {
+    $this->member->update(['github_id' => null, 'github_username' => null]);
+
+    $response = $this->actingAs($this->member)->post("/issues/{$this->issue->id}/github/pull-requests", [
+        'repository_id' => 1,
+        'title' => 'Fix login',
+        'head' => 'fix/login',
+        'base' => 'main',
+    ]);
+
+    $response->assertSessionHasErrors(['pullRequest']);
+    expect(session('errors')->get('pullRequest')[0])->toBe('Link your GitHub account in Settings before creating a branch or pull request.');
 });
