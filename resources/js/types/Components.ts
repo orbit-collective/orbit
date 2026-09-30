@@ -578,6 +578,7 @@ export interface IssuePageProps {
     githubRepositories?: GithubDevelopmentRepository[];
     githubDefaultBranchName?: string;
     canCreateGithubDevelopment?: boolean;
+    githubAccountLinked?: boolean;
 }
 export interface IssuePageHeaderProps {
     project: Project;
