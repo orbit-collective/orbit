@@ -68,3 +68,24 @@ test('a failed insert removes the file it had already stored', function () {
 
     expect(Storage::disk('local')->allFiles())->toBeEmpty();
 });
+
+test('a failed url update rolls back the row and removes the file', function () {
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+
+    $repository = Mockery::mock(AttachmentRepository::class);
+    $repository->shouldReceive('create')
+        ->once()
+        ->andReturnUsing(fn (Project $project, array $data) => Attachment::factory()->create(array_merge(['project_id' => $project->id], $data)));
+    $repository->shouldReceive('update')->once()->andThrow(new RuntimeException('update failed'));
+    $service = new AttachmentService($repository);
+
+    expect(fn () => $service->storeImage(
+        $project,
+        UploadedFile::fake()->create('shot.png', 10, 'image/png'),
+        $user,
+    ))->toThrow(RuntimeException::class);
+
+    expect(Storage::disk('local')->allFiles())->toBeEmpty();
+    expect(Attachment::query()->count())->toBe(0);
+});
