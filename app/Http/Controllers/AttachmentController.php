@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attachment;
 use App\Models\Project;
 use App\Services\AttachmentService;
 use App\Services\NsfwDetectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class AttachmentController extends Controller
@@ -63,5 +67,26 @@ class AttachmentController extends Controller
             'url' => $attachment->url,
             'name' => $attachment->original_name,
         ], 201);
+    }
+
+    /**
+     * Serves an attachment's file behind the same project-membership check
+     * as every other project resource, instead of a world-readable
+     * /storage/... URL (see GitHub issue #273). A pre-existing attachment
+     * stored on the legacy 'public' disk is still served from here too - the
+     * authorization check applies uniformly regardless of which disk a row
+     * happens to point at.
+     */
+    public function show(Project $project, Attachment $attachment): StreamedResponse
+    {
+        $this->authorize('view', $project);
+
+        if ($attachment->project_id !== $project->id) {
+            throw new NotFoundHttpException;
+        }
+
+        return Storage::disk($attachment->disk)->response($attachment->path, $attachment->original_name, [
+            'Content-Type' => $attachment->mime_type,
+        ]);
     }
 }
