@@ -14,31 +14,59 @@ addition to) an Orbit password. GitHub is the first provider wired up
 
 ## The architecture in one paragraph
 
-`App\Services\GithubOAuthService` is the only place the actual
-login/link/unlink decisions are made; `App\Http\Controllers\Auth\GithubAuthController`
-is a thin two-action controller (`redirect()`/`callback()` via
-`Laravel\Socialite\Facades\Socialite`, plus `unlink()`) that branches
-on `$request->user()` — the **same** `/auth/github/callback` route
-handles both a guest signing in and an already-authenticated user
-linking their account from Settings, since Socialite's OAuth dance
-doesn't otherwise care who's calling it. `loginOrRegister()` resolves,
-in order: an existing `github_id` match (sign in), a matching verified
-email on an unlinked account (auto-link — GitHub already proved the
-caller owns that email), or, failing both, a brand-new account with no
-password (`users.password` is nullable for exactly this reason). A
-GitHub identity is never a secret Orbit has to protect: no access
-token is stored at all, only `github_id` (unique, used to look the
-account up) and `github_username` (display only) on `users`.
+Orbit Local never talks to GitHub's OAuth endpoints and never holds a
+GitHub OAuth App client secret - orbit-api is a **centralized sign-in
+broker**, shared by every self-hosted Orbit Local instance, using the
+one GitHub App/OAuth client it already has installed for the
+repository integration (see
+[`../integrations/06-github-integration.md`](../integrations/06-github-integration.md)).
+This means a self-hosted deployment gets "Sign in with GitHub" for
+free, without its operator ever registering their own GitHub OAuth
+App. The hand-off between the two codebases (`src/auth/github-login`
+in orbit-api, `GithubAuthController` in Local) is:
+
+1. Local's `redirect()` generates its own CSRF `state`, stores it in
+   the session, and redirects the browser to orbit-api's
+   `GET /v1/auth/github/redirect?return_to=<Local's own callback URL, state included>`.
+2. orbit-api's `GitHubLoginService::start()` stores that `return_to`
+   against a **second**, orbit-api-owned `state` (its own CSRF
+   protection for the GitHub round-trip - Local's `state` is just an
+   opaque part of the URL to orbit-api at this point) and redirects to
+   GitHub's real authorize URL.
+3. GitHub redirects back to orbit-api's fixed `GITHUB_LOGIN_CALLBACK_URL`.
+   `GitHubLoginService::callback()` exchanges the code, fetches the
+   profile (`GET /user`, falling back to `GET /user/emails` for a
+   private email - see `github-user.client.ts`), mints a random,
+   single-use `exchange_token` valid for 60 seconds, and redirects the
+   browser back to the stored `return_to` (Local's own callback,
+   **its** `state` still attached) with `exchange_token` appended.
+4. Local's `callback()` checks its own `state` against the session
+   (standard CSRF check, unrelated to step 2's), then calls
+   `OrbitRelayClient::resolveGithubLoginToken($exchangeToken)` -
+   **server-to-server**, unauthenticated (possession of the token is
+   itself the authorization, exactly like an OAuth code) - which
+   redeems the token exactly once for a `GithubIdentityDTO`
+   (`githubId`, `githubUsername`, `email`, `name`). A GitHub access
+   token never reaches Local, and the exchange_token itself is useless
+   after its first (and only) redemption.
+
+`App\Services\GithubOAuthService::loginOrRegister()`/`linkToUser()`/`unlink()`
+are unchanged by any of this - they only ever see a `GithubIdentityDTO`,
+never knowing or caring whether it came from Socialite directly or
+through the broker. `loginOrRegister()` resolves, in order: an existing
+`github_id` match (sign in), a matching verified email on an unlinked
+account (auto-link - GitHub already proved the caller owns that
+email), or, failing both, a brand-new account with no password
+(`users.password` is nullable for exactly this reason).
 
 **This is a separate identity from the GitHub App integration**
-(`app/Services/Integrations/Github`, see
-[`../integrations/06-github-integration.md`](../integrations/06-github-integration.md)).
-That one is project-scoped and grants repository access via an
-installation token; this one is user-scoped and only proves "this
-Orbit account is owned by this GitHub account." Neither implies the
-other — a project can be connected to GitHub with nobody's personal
-account linked, and a user can link their GitHub account without their
-project having any GitHub integration at all.
+(`app/Services/Integrations/Github`). That one is project-scoped and
+grants repository access via an installation token; this one is
+user-scoped and only proves "this Orbit account is owned by this
+GitHub account." Neither implies the other - a project can be
+connected to GitHub with nobody's personal account linked, and a user
+can link their GitHub account without their project having any GitHub
+integration at all.
 
 ## Using the link as a gate elsewhere
 
