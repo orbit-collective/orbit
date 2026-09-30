@@ -38,7 +38,7 @@ function fakeGithubResolveFailure(string $code = 'INVALID_EXCHANGE_TOKEN'): void
 function callbackWithState(array $query = []): TestResponse
 {
     test()->get(route('auth.github.redirect'));
-    $state = session('github_login_state');
+    $state = session('github_login_state')['state'];
 
     return test()->get(route('auth.github.callback', array_merge(['state' => $state], $query)));
 }
@@ -99,6 +99,26 @@ test('an invalid exchange token redirects to login with an error', function () {
     $this->assertGuest();
 });
 
+test('a session that authenticates mid-flow does not silently switch to linking', function () {
+    // Started as a guest...
+    $this->get(route('auth.github.redirect'));
+    $state = session('github_login_state')['state'];
+
+    // ...but logs in via another tab before GitHub redirects back.
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    fakeGithubResolve();
+
+    $response = $this->get(
+        route('auth.github.callback', ['state' => $state, 'exchange_token' => 'a-token']),
+    );
+
+    $response->assertRedirect(route('settings.security-access'));
+    $response->assertSessionHas('error');
+    expect($user->fresh()->github_id)->toBeNull();
+});
+
 test('an authenticated user linking GitHub is redirected back to security settings', function () {
     $user = User::factory()->create(['github_id' => null]);
 
@@ -107,7 +127,7 @@ test('an authenticated user linking GitHub is redirected back to security settin
     $response = $this->actingAs($user)->get(
         route('auth.github.redirect'),
     );
-    $state = session('github_login_state');
+    $state = session('github_login_state')['state'];
 
     $response = $this->actingAs($user)->get(
         route('auth.github.callback', ['state' => $state, 'exchange_token' => 'a-token']),
@@ -125,7 +145,7 @@ test('linking a GitHub account already claimed by someone else fails with an err
     fakeGithubResolve();
 
     $this->actingAs($user)->get(route('auth.github.redirect'));
-    $state = session('github_login_state');
+    $state = session('github_login_state')['state'];
 
     $response = $this->actingAs($user)->get(
         route('auth.github.callback', ['state' => $state, 'exchange_token' => 'a-token']),
