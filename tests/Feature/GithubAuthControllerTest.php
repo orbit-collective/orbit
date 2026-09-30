@@ -1,46 +1,61 @@
 <?php
 
 use App\Models\User;
-use Laravel\Socialite\Contracts\Provider as SocialiteProvider;
-use Laravel\Socialite\Contracts\User as SocialiteUser;
-use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
 
-function fakeSocialiteProviderReturning(SocialiteUser $user): SocialiteProvider
+function fakeGithubResolve(array $overrides = []): void
 {
-    $provider = Mockery::mock(SocialiteProvider::class);
-    $provider->shouldReceive('user')->andReturn($user);
-
-    Socialite::shouldReceive('driver')->with('github')->andReturn($provider);
-
-    return $provider;
+    Http::fake([
+        '*/v1/auth/github/resolve' => Http::response([
+            'success' => true,
+            'data' => array_merge([
+                'githubId' => '123',
+                'githubUsername' => 'octocat',
+                'email' => 'octocat@example.com',
+                'name' => 'The Octocat',
+            ], $overrides),
+        ], 200),
+    ]);
 }
 
-function fakeSocialiteGithubUser(string $id = '123', ?string $email = 'octocat@example.com', string $nickname = 'octocat'): SocialiteUser
+function fakeGithubResolveFailure(string $code = 'INVALID_EXCHANGE_TOKEN'): void
 {
-    $user = Mockery::mock(SocialiteUser::class);
-    $user->shouldReceive('getId')->andReturn($id);
-    $user->shouldReceive('getEmail')->andReturn($email);
-    $user->shouldReceive('getNickname')->andReturn($nickname);
-    $user->shouldReceive('getName')->andReturn('The Octocat');
-
-    return $user;
+    Http::fake([
+        '*/v1/auth/github/resolve' => Http::response([
+            'success' => false,
+            'error' => ['code' => $code, 'message' => 'This GitHub login token is invalid or was already used.'],
+        ], 410),
+    ]);
 }
 
-test('the redirect route delegates to the GitHub Socialite driver', function () {
-    $provider = Mockery::mock(SocialiteProvider::class);
-    $provider->shouldReceive('redirect')->once()->andReturn(redirect('https://github.com/login/oauth/authorize'));
+/**
+ * Drives the controller's redirect() step first, so the session actually
+ * holds the CSRF state it generated, then follows up on callback() with
+ * that same state - mirroring how orbit-api's broker echoes the state back
+ * unchanged once GitHub's OAuth round-trip completes.
+ */
+function callbackWithState(array $query = []): TestResponse
+{
+    test()->get(route('auth.github.redirect'));
+    $state = session('github_login_state');
 
-    Socialite::shouldReceive('driver')->with('github')->andReturn($provider);
+    return test()->get(route('auth.github.callback', array_merge(['state' => $state], $query)));
+}
 
+test('the redirect route hands off to the orbit-api sign-in broker', function () {
     $response = $this->get(route('auth.github.redirect'));
 
-    $response->assertRedirect('https://github.com/login/oauth/authorize');
+    $location = $response->headers->get('Location');
+
+    expect($location)->toStartWith(rtrim(config('services.orbit_api.url'), '/').'/v1/auth/github/redirect?return_to=');
+    expect(session('github_login_state'))->not->toBeNull();
 });
 
 test('a guest with a new GitHub account is registered and signed in', function () {
-    fakeSocialiteProviderReturning(fakeSocialiteGithubUser(email: 'brandnew@example.com'));
+    fakeGithubResolve(['email' => 'brandnew@example.com']);
 
-    $response = $this->get(route('auth.github.callback'));
+    $response = callbackWithState(['exchange_token' => 'a-token']);
 
     $response->assertRedirect(route('dashboard'));
     $this->assertAuthenticated();
@@ -50,20 +65,34 @@ test('a guest with a new GitHub account is registered and signed in', function (
 test('a guest with an already-linked GitHub account is signed in', function () {
     $user = User::factory()->create(['github_id' => '123']);
 
-    fakeSocialiteProviderReturning(fakeSocialiteGithubUser());
+    fakeGithubResolve();
 
-    $response = $this->get(route('auth.github.callback'));
+    $response = callbackWithState(['exchange_token' => 'a-token']);
 
     $response->assertRedirect(route('dashboard'));
     $this->assertAuthenticatedAs($user);
 });
 
-test('a GitHub authentication failure redirects to login with an error', function () {
-    $provider = Mockery::mock(SocialiteProvider::class);
-    $provider->shouldReceive('user')->andThrow(new Exception('denied'));
-    Socialite::shouldReceive('driver')->with('github')->andReturn($provider);
+test('a mismatched or missing state redirects to login with an error', function () {
+    $response = $this->get(route('auth.github.callback', ['state' => 'bogus', 'exchange_token' => 'a-token']));
 
-    $response = $this->get(route('auth.github.callback'));
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHas('error');
+    $this->assertGuest();
+});
+
+test('an error from the broker redirects to login with that message', function () {
+    $response = callbackWithState(['error' => 'GitHub authentication failed.']);
+
+    $response->assertRedirect(route('login'));
+    $response->assertSessionHas('error');
+    $this->assertGuest();
+});
+
+test('an invalid exchange token redirects to login with an error', function () {
+    fakeGithubResolveFailure();
+
+    $response = callbackWithState(['exchange_token' => 'a-token']);
 
     $response->assertRedirect(route('login'));
     $response->assertSessionHas('error');
@@ -73,9 +102,16 @@ test('a GitHub authentication failure redirects to login with an error', functio
 test('an authenticated user linking GitHub is redirected back to security settings', function () {
     $user = User::factory()->create(['github_id' => null]);
 
-    fakeSocialiteProviderReturning(fakeSocialiteGithubUser());
+    fakeGithubResolve();
 
-    $response = $this->actingAs($user)->get(route('auth.github.callback'));
+    $response = $this->actingAs($user)->get(
+        route('auth.github.redirect'),
+    );
+    $state = session('github_login_state');
+
+    $response = $this->actingAs($user)->get(
+        route('auth.github.callback', ['state' => $state, 'exchange_token' => 'a-token']),
+    );
 
     $response->assertRedirect(route('settings.security-access'));
     $response->assertSessionHas('success');
@@ -86,9 +122,14 @@ test('linking a GitHub account already claimed by someone else fails with an err
     User::factory()->create(['github_id' => '123']);
     $user = User::factory()->create(['github_id' => null]);
 
-    fakeSocialiteProviderReturning(fakeSocialiteGithubUser());
+    fakeGithubResolve();
 
-    $response = $this->actingAs($user)->get(route('auth.github.callback'));
+    $this->actingAs($user)->get(route('auth.github.redirect'));
+    $state = session('github_login_state');
+
+    $response = $this->actingAs($user)->get(
+        route('auth.github.callback', ['state' => $state, 'exchange_token' => 'a-token']),
+    );
 
     $response->assertRedirect(route('settings.security-access'));
     $response->assertSessionHas('error');
