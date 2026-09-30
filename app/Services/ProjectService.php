@@ -72,8 +72,11 @@ class ProjectService
 
         // The attachments table cascades on the foreign key, which never runs
         // an Eloquent delete and so never reaches AttachmentService::delete().
-        // Without this the uploaded files stay on the public disk, reachable,
-        // after the project and every row describing them are gone.
+        // Without this the uploaded files stay on disk, reachable, after the
+        // project and every row describing them are gone. New uploads live on
+        // the 'local' disk (see AttachmentService), but a project created
+        // before that change may still have files on the legacy 'public' one.
+        Storage::disk('local')->deleteDirectory("attachments/$projectId");
         Storage::disk('public')->deleteDirectory("attachments/$projectId");
     }
 }

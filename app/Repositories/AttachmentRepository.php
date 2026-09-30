@@ -13,6 +13,13 @@ class AttachmentRepository
         return $project->attachments()->create($data);
     }
 
+    public function update(Attachment $attachment, array $data): Attachment
+    {
+        $attachment->update($data);
+
+        return $attachment;
+    }
+
     public function findForProject(Project $project, int $id): ?Attachment
     {
         return $project->attachments()->whereKey($id)->first();
