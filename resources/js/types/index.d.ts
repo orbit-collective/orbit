@@ -9,6 +9,8 @@ export interface User {
     has_completed_onboarding: boolean;
     has_completed_project_onboarding: boolean;
     session_lifetime: number;
+    has_password: boolean;
+    github_username?: string | null;
 }
 
 export type PageProps<
