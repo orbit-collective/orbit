@@ -95,4 +95,15 @@ class UserRepository {
     public function findByEmail(string $email): ?User {
         return User::query()->where('email', $email)->first();
     }
+    public function findByGithubId(string $githubId): ?User {
+        return User::query()->where('github_id', $githubId)->first();
+    }
+    public function linkGithubAccount(User $user, string $githubId, string $githubUsername): User {
+        $user->update(['github_id' => $githubId, 'github_username' => $githubUsername]);
+        return $user;
+    }
+    public function unlinkGithubAccount(User $user): User {
+        $user->update(['github_id' => null, 'github_username' => null]);
+        return $user;
+    }
 }

@@ -121,6 +121,9 @@ documentation/
       README.md              <- indeks tej kategorii
       01-add-a-new-trigger-type.md
       02-add-a-new-action-type.md
+    authentication/
+      README.md              <- indeks tej kategorii
+      01-add-an-oauth-provider.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik

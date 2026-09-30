@@ -75,6 +75,10 @@ services:
 
             ORBIT_API_URL: ${ORBIT_API_URL:-https://api.orbit-dev.app}
 
+            GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+            GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+            GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:8000/auth/github/callback}
+
         volumes:
             - .:/app
 
@@ -163,6 +167,10 @@ services:
             NSFW_THRESHOLD: ${NSFW_THRESHOLD}
 
             ORBIT_API_URL: ${ORBIT_API_URL:-https://api.orbit-dev.app}
+
+            GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+            GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+            GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:8000/auth/github/callback}
 
         volumes:
             - .:/app
@@ -254,6 +262,10 @@ services:
             NSFW_THRESHOLD: ${NSFW_THRESHOLD}
 
             ORBIT_API_URL: ${ORBIT_API_URL:-https://api.orbit-dev.app}
+
+            GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+            GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+            GITHUB_REDIRECT_URI: ${GITHUB_REDIRECT_URI:-http://localhost:8000/auth/github/callback}
 
         volumes:
             - .:/app

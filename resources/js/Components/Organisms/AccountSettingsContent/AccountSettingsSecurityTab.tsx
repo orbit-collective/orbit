@@ -98,8 +98,62 @@ export default function AccountSettingsSecurityTab({
     //     }, 1000);
     // };
 
+    const githubUsername = props.auth?.user?.github_username;
+    const hasPassword = props.auth?.user?.has_password ?? true;
+    const [isUnlinking, setIsUnlinking] = useState(false);
+
+    const unlinkGithub = () => {
+        setIsUnlinking(true);
+        router.delete(route('auth.github.unlink'), {
+            preserveScroll: true,
+            onSuccess: () => addAlert('GitHub account unlinked.', 'success'),
+            onError: () =>
+                addAlert('Failed to unlink your GitHub account.', 'error'),
+            onFinish: () => setIsUnlinking(false),
+        });
+    };
+
     return (
         <div className="space-y-5">
+            <SettingsPanel
+                title="Connected accounts"
+                description="Sign in faster by linking an external account."
+                icon="Link2"
+            >
+                <SettingsPanelRow
+                    title="GitHub"
+                    description={
+                        githubUsername
+                            ? `Linked as @${githubUsername}. You can also sign in with this GitHub account.`
+                            : 'Link your GitHub account to sign in with it, and to create branches or pull requests from an issue.'
+                    }
+                    action={
+                        githubUsername ? (
+                            <button
+                                type="button"
+                                onClick={unlinkGithub}
+                                disabled={isUnlinking || !hasPassword}
+                                title={
+                                    hasPassword
+                                        ? undefined
+                                        : 'Set a password first so you can still sign in after unlinking'
+                                }
+                                className="bg-[var(--error-color)]/10 hover:bg-[var(--error-color)]/20 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--error-color)] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {isUnlinking ? 'Unlinking...' : 'Unlink'}
+                            </button>
+                        ) : (
+                            <a
+                                href={route('auth.github.redirect')}
+                                className="rounded-md bg-[var(--bg-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                            >
+                                Link GitHub
+                            </a>
+                        )
+                    }
+                />
+            </SettingsPanel>
+
             <SettingsPanel
                 title="Password"
                 description="Change your password or send yourself a reset link."

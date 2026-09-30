@@ -188,6 +188,7 @@ describe('Issues/Show Page', () => {
                     { id: 1, owner: 'orbit-collective', name: 'orbit' },
                 ]}
                 canCreateGithubDevelopment
+                githubAccountLinked
             />,
         );
 
@@ -196,6 +197,29 @@ describe('Issues/Show Page', () => {
         ).toBeInTheDocument();
         expect(
             screen.getByRole('button', { name: 'Create pull request' }),
+        ).toBeInTheDocument();
+    });
+
+    test('hints to link a GitHub account instead of showing create actions when permitted but unlinked', () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue()}
+                users={users}
+                githubRepositories={[
+                    { id: 1, owner: 'orbit-collective', name: 'orbit' },
+                ]}
+                canCreateGithubDevelopment
+                githubAccountLinked={false}
+            />,
+        );
+
+        expect(
+            screen.queryByRole('button', { name: 'Create branch' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.getByText('Link your GitHub account'),
         ).toBeInTheDocument();
     });
 

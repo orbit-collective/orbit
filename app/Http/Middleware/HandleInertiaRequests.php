@@ -49,6 +49,8 @@ class HandleInertiaRequests extends Middleware
                     'has_completed_onboarding' => $request->user()->has_completed_onboarding,
                     'has_completed_project_onboarding' => $request->user()->has_completed_project_onboarding,
                     'session_lifetime' => $request->user()->session_lifetime,
+                    'has_password' => $request->user()->password !== null,
+                    'github_username' => $request->user()->github_username,
                 ] : null,
             ],
             'hasProjects' => fn () => $request->user()

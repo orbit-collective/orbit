@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('local');
     $this->service = app(AttachmentService::class);
 });
 
@@ -28,12 +28,12 @@ test('storeImage stores the file under the project and records it', function () 
 
     expect($attachment->project_id)->toBe($project->id)
         ->and($attachment->user_id)->toBe($user->id)
-        ->and($attachment->disk)->toBe('public')
+        ->and($attachment->disk)->toBe('local')
         ->and($attachment->original_name)->toBe('screenshot.png')
         ->and($attachment->path)->toStartWith("attachments/$project->id/")
-        ->and($attachment->url)->toBe(Storage::url($attachment->path));
+        ->and($attachment->url)->toBe(route('projects.attachments.show', [$project, $attachment]));
 
-    Storage::disk('public')->assertExists($attachment->path);
+    Storage::disk('local')->assertExists($attachment->path);
 });
 
 test('delete removes both the stored file and the record', function () {
@@ -48,7 +48,7 @@ test('delete removes both the stored file and the record', function () {
 
     $this->service->delete($attachment);
 
-    Storage::disk('public')->assertMissing($attachment->path);
+    Storage::disk('local')->assertMissing($attachment->path);
     expect(Attachment::query()->count())->toBe(0);
 });
 
@@ -66,5 +66,5 @@ test('a failed insert removes the file it had already stored', function () {
         $user,
     ))->toThrow(RuntimeException::class);
 
-    expect(Storage::disk('public')->allFiles())->toBeEmpty();
+    expect(Storage::disk('local')->allFiles())->toBeEmpty();
 });

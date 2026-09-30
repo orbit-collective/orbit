@@ -437,6 +437,30 @@ test('a project member can create github branches/pull requests, a viewer cannot
     expect($response->json('props.canCreateGithubDevelopment'))->toBeFalse();
 });
 
+test('githubAccountLinked reflects whether the acting user has linked a GitHub account', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $linkedMember = actingAsProjectMember($project, 'member');
+    $linkedMember->update(['github_id' => '123']);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $response = $this->actingAs($linkedMember)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    expect($response->json('props.githubAccountLinked'))->toBeTrue();
+
+    $unlinkedMember = actingAsProjectMember($project, 'member');
+
+    $response = $this->actingAs($unlinkedMember)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id");
+
+    expect($response->json('props.githubAccountLinked'))->toBeFalse();
+});
+
 test('guests cannot view an issue detail page', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);

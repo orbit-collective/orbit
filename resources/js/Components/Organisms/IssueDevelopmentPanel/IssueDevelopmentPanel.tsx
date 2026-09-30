@@ -18,6 +18,8 @@ interface IssueDevelopmentPanelProps {
         head: string;
         base: string;
     }) => void;
+    /** True when the project has repositories and the user's role allows it, but their Orbit account has no linked GitHub account yet. */
+    requiresGithubAccountLink?: boolean;
 }
 
 const badgeVariants = cva(
@@ -243,6 +245,7 @@ export default function IssueDevelopmentPanel({
     defaultBranchName = '',
     onCreateBranch,
     onCreatePullRequest,
+    requiresGithubAccountLink = false,
 }: IssueDevelopmentPanelProps) {
     const [openForm, setOpenForm] = useState<'branch' | 'pullRequest' | null>(
         null,
@@ -250,8 +253,11 @@ export default function IssueDevelopmentPanel({
 
     const canCreate =
         repositories.length > 0 && (onCreateBranch || onCreatePullRequest);
+    const showGithubLinkHint =
+        repositories.length > 0 && !canCreate && requiresGithubAccountLink;
 
-    if (pullRequests.length === 0 && !canCreate) return null;
+    if (pullRequests.length === 0 && !canCreate && !showGithubLinkHint)
+        return null;
 
     return (
         <div className="flex w-full flex-col gap-2">
@@ -326,6 +332,18 @@ export default function IssueDevelopmentPanel({
                     </a>
                 );
             })}
+
+            {showGithubLinkHint && (
+                <span className="text-[11px] text-[var(--text-gray-color)]">
+                    <a
+                        href={route('settings.security-access')}
+                        className="font-medium text-[var(--accent-color)] hover:underline"
+                    >
+                        Link your GitHub account
+                    </a>{' '}
+                    to create a branch or pull request.
+                </span>
+            )}
 
             {canCreate && openForm === null && (
                 <div className="flex flex-col items-start gap-2">

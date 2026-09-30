@@ -3,6 +3,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import IssueDevelopmentPanel from './IssueDevelopmentPanel';
 
+vi.stubGlobal(
+    'route',
+    vi.fn((name: string) => `/${name.replace(/\./g, '/')}`),
+);
+
 const repository: GithubDevelopmentRepository = {
     id: 1,
     owner: 'orbit-collective',
@@ -209,6 +214,23 @@ describe('IssueDevelopmentPanel', () => {
         expect(
             screen.getByRole('button', { name: 'Create pull request' }),
         ).toBeInTheDocument();
+    });
+
+    test('hints to link a GitHub account when repositories exist but neither creator is wired up', () => {
+        render(
+            <IssueDevelopmentPanel
+                pullRequests={[]}
+                repositories={[repository]}
+                requiresGithubAccountLink
+            />,
+        );
+
+        expect(
+            screen.getByText('Link your GitHub account'),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Create branch' }),
+        ).not.toBeInTheDocument();
     });
 
     test('renders nothing when there are no pull requests and no connected repositories', () => {

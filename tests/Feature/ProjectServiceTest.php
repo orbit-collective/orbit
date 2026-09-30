@@ -59,17 +59,22 @@ test('it delegates checking for existing projects to the repository', function (
     expect($this->service->hasAnyProjectsForUser(5))->toBeTrue();
 });
 
-test('deleting a project removes its uploaded attachment files', function () {
+test('deleting a project removes its uploaded attachment files on both the current and legacy disks', function () {
+    Storage::fake('local');
     Storage::fake('public');
 
     $project = new Project(['id' => 7, 'name' => 'Doomed']);
-    Storage::disk('public')->put('attachments/7/shot.png', 'x');
+    Storage::disk('local')->put('attachments/7/shot.png', 'x');
+    Storage::disk('local')->put('attachments/8/other.png', 'x');
+    Storage::disk('public')->put('attachments/7/legacy.png', 'x');
     Storage::disk('public')->put('attachments/8/other.png', 'x');
 
     $this->projectRepository->shouldReceive('delete')->once()->with($project);
 
     $this->service->deleteProject($project);
 
-    Storage::disk('public')->assertMissing('attachments/7/shot.png');
+    Storage::disk('local')->assertMissing('attachments/7/shot.png');
+    Storage::disk('local')->assertExists('attachments/8/other.png');
+    Storage::disk('public')->assertMissing('attachments/7/legacy.png');
     Storage::disk('public')->assertExists('attachments/8/other.png');
 });
