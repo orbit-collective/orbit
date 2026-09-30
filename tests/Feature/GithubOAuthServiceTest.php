@@ -1,12 +1,12 @@
 <?php
 
+use App\DataTransferObjects\Github\GithubIdentityDTO;
 use App\Models\User;
 use App\Services\GithubOAuthService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\ValidationException;
-use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 uses(RefreshDatabase::class);
 
@@ -14,15 +14,14 @@ beforeEach(function () {
     $this->service = app(GithubOAuthService::class);
 });
 
-function fakeGithubUser(string $id = '123', ?string $email = 'octocat@example.com', string $nickname = 'octocat', ?string $name = 'The Octocat'): SocialiteUser
+function fakeGithubUser(string $id = '123', ?string $email = 'octocat@example.com', string $nickname = 'octocat', ?string $name = 'The Octocat'): GithubIdentityDTO
 {
-    $user = Mockery::mock(SocialiteUser::class);
-    $user->shouldReceive('getId')->andReturn($id);
-    $user->shouldReceive('getEmail')->andReturn($email);
-    $user->shouldReceive('getNickname')->andReturn($nickname);
-    $user->shouldReceive('getName')->andReturn($name);
-
-    return $user;
+    return new GithubIdentityDTO(
+        githubId: $id,
+        githubUsername: $nickname,
+        email: $email,
+        name: $name,
+    );
 }
 
 test('loginOrRegister signs in an existing linked account', function () {

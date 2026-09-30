@@ -6,6 +6,7 @@ use App\DataTransferObjects\Github\GithubCommentResultDTO;
 use App\DataTransferObjects\Github\GithubConnectionDTO;
 use App\DataTransferObjects\Github\GithubCreatedBranchDTO;
 use App\DataTransferObjects\Github\GithubCreatedPullRequestDTO;
+use App\DataTransferObjects\Github\GithubIdentityDTO;
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
 use App\DataTransferObjects\Github\GithubRepositoryDTO;
 use Illuminate\Http\Client\ConnectionException;
@@ -204,6 +205,26 @@ class OrbitRelayClient
         );
 
         return $data['template'] ?? null;
+    }
+
+    /**
+     * Redeems a one-time exchange_token from orbit-api's centralized GitHub
+     * sign-in broker for the identity it carries (see
+     * documentation/en/authentication) - deliberately unauthenticated, since
+     * the caller has no relay token yet at this point in the login flow;
+     * possession of the (short-lived, single-use) token is itself the
+     * authorization.
+     */
+    public function resolveGithubLoginToken(string $exchangeToken): GithubIdentityDTO
+    {
+        $data = $this->request(
+            fn () => $this->client()->post('/v1/auth/github/resolve', [
+                'exchange_token' => $exchangeToken,
+            ]),
+            'POST /v1/auth/github/resolve',
+        );
+
+        return GithubIdentityDTO::fromResponse($data);
     }
 
     public function removeRepository(string $relayToken, int $repositoryId): void

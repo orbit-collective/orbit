@@ -2,15 +2,16 @@
 
 namespace App\Services;
 
+use App\DataTransferObjects\Github\GithubIdentityDTO;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
-use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 /**
- * Turns a GitHub OAuth callback into one of three outcomes: sign in an
+ * Turns a resolved GitHub identity (see OrbitRelayClient::resolveGithubLoginToken(),
+ * documentation/en/authentication) into one of three outcomes: sign in an
  * existing linked account, link GitHub to the currently authenticated
  * account, or (for a guest with no matching account) register a brand new
  * one. This is a separate identity from the GitHub App installation used by
@@ -30,39 +31,35 @@ class GithubOAuthService
      * a matching verified email auto-links (GitHub already proved the
      * caller owns that email), and anything else registers a new account.
      */
-    public function loginOrRegister(SocialiteUser $githubUser): User
+    public function loginOrRegister(GithubIdentityDTO $identity): User
     {
-        $githubId = (string) $githubUser->getId();
-
-        if ($user = $this->userRepository->findByGithubId($githubId)) {
+        if ($user = $this->userRepository->findByGithubId($identity->githubId)) {
             Auth::login($user);
 
             return $user;
         }
 
-        $email = $githubUser->getEmail();
-
-        if ($email && $user = $this->userRepository->findByEmail($email)) {
-            $this->assertGithubIdIsFree($githubId, $user);
-            $this->userRepository->linkGithubAccount($user, $githubId, (string) $githubUser->getNickname());
+        if ($identity->email && $user = $this->userRepository->findByEmail($identity->email)) {
+            $this->assertGithubIdIsFree($identity->githubId, $user);
+            $this->userRepository->linkGithubAccount($user, $identity->githubId, $identity->githubUsername);
             $this->activityLogService->log(null, 'Linked a GitHub account (matched by email)', $user->id);
             Auth::login($user);
 
             return $user;
         }
 
-        if (! $email) {
+        if (! $identity->email) {
             throw ValidationException::withMessages([
                 'github' => 'Your GitHub account needs a public email address to sign up with it.',
             ]);
         }
 
         $user = $this->userRepository->create([
-            'name' => $githubUser->getName() ?: $githubUser->getNickname(),
-            'email' => $email,
+            'name' => $identity->name ?: $identity->githubUsername,
+            'email' => $identity->email,
             'password' => null,
-            'github_id' => $githubId,
-            'github_username' => $githubUser->getNickname(),
+            'github_id' => $identity->githubId,
+            'github_username' => $identity->githubUsername,
         ]);
 
         event(new Registered($user));
@@ -74,13 +71,11 @@ class GithubOAuthService
     /**
      * Links GitHub to an already-authenticated user, e.g. from Settings.
      */
-    public function linkToUser(User $user, SocialiteUser $githubUser): User
+    public function linkToUser(User $user, GithubIdentityDTO $identity): User
     {
-        $githubId = (string) $githubUser->getId();
+        $this->assertGithubIdIsFree($identity->githubId, $user);
 
-        $this->assertGithubIdIsFree($githubId, $user);
-
-        $linked = $this->userRepository->linkGithubAccount($user, $githubId, (string) $githubUser->getNickname());
+        $linked = $this->userRepository->linkGithubAccount($user, $identity->githubId, $identity->githubUsername);
 
         $this->activityLogService->log(null, 'Linked their GitHub account', $user->id);
 
