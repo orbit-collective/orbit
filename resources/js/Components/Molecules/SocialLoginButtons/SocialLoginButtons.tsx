@@ -4,6 +4,7 @@ import { cn } from '@/utils/cn';
 const providers = [
     {
         name: 'Google',
+        enabled: false,
         icon: (
             <svg viewBox="0 0 24 24" className="h-4 w-4">
                 <path
@@ -27,6 +28,7 @@ const providers = [
     },
     {
         name: 'GitHub',
+        enabled: true,
         icon: (
             <svg
                 viewBox="0 0 24 24"
@@ -38,6 +40,7 @@ const providers = [
     },
     {
         name: 'Microsoft',
+        enabled: false,
         icon: (
             <svg viewBox="0 0 24 24" className="h-4 w-4">
                 <rect x="1" y="1" width="10" height="10" fill="#F25022" />
@@ -49,21 +52,37 @@ const providers = [
     },
 ] as const;
 
+const enabledButtonClassName =
+    'flex items-center justify-center rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] py-2 transition-opacity duration-150 hover:opacity-80';
+const disabledButtonClassName =
+    'flex cursor-not-allowed items-center justify-center rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] py-2 opacity-50 transition-opacity duration-150 hover:opacity-70';
+
 const SocialLoginButtons = ({ className }: SocialLoginButtonsProps) => {
     return (
         <div className={cn('grid grid-cols-3 gap-3', className)}>
-            {providers.map((provider) => (
-                <button
-                    key={provider.name}
-                    type="button"
-                    disabled
-                    title={`${provider.name} sign-in is coming soon`}
-                    aria-label={`Continue with ${provider.name} (coming soon)`}
-                    className="flex cursor-not-allowed items-center justify-center rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] py-2 opacity-50 transition-opacity duration-150 hover:opacity-70"
-                >
-                    {provider.icon}
-                </button>
-            ))}
+            {providers.map((provider) =>
+                provider.enabled ? (
+                    <a
+                        key={provider.name}
+                        href={route('auth.github.redirect')}
+                        aria-label={`Continue with ${provider.name}`}
+                        className={enabledButtonClassName}
+                    >
+                        {provider.icon}
+                    </a>
+                ) : (
+                    <button
+                        key={provider.name}
+                        type="button"
+                        disabled
+                        title={`${provider.name} sign-in is coming soon`}
+                        aria-label={`Continue with ${provider.name} (coming soon)`}
+                        className={disabledButtonClassName}
+                    >
+                        {provider.icon}
+                    </button>
+                ),
+            )}
         </div>
     );
 };
