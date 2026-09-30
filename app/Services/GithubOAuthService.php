@@ -40,6 +40,17 @@ class GithubOAuthService
         }
 
         if ($identity->email && $user = $this->userRepository->findByEmail($identity->email)) {
+            // Auto-linking by email only applies to an account with no GitHub
+            // link yet - otherwise a GitHub account that happens to share an
+            // email with an already-linked Orbit account (e.g. a reassigned
+            // address) could silently take over that account by replacing
+            // its existing github_id.
+            if ($user->github_id !== null) {
+                throw ValidationException::withMessages([
+                    'github' => 'This email address already belongs to an Orbit account linked to a different GitHub account.',
+                ]);
+            }
+
             $this->assertGithubIdIsFree($identity->githubId, $user);
             $this->userRepository->linkGithubAccount($user, $identity->githubId, $identity->githubUsername);
             $this->activityLogService->log(null, 'Linked a GitHub account (matched by email)', $user->id);

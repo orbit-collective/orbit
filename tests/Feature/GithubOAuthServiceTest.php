@@ -42,6 +42,15 @@ test('loginOrRegister links by matching email for an unlinked account', function
     $this->assertAuthenticatedAs($user);
 });
 
+test('loginOrRegister rejects an email match against an account already linked to a different GitHub account', function () {
+    $user = User::factory()->create(['email' => 'octocat@example.com', 'github_id' => '999']);
+
+    expect(fn () => $this->service->loginOrRegister(fakeGithubUser(id: '123')))
+        ->toThrow(ValidationException::class);
+    expect($user->fresh()->github_id)->toBe('999');
+    $this->assertGuest();
+});
+
 test('loginOrRegister registers a brand new account when nothing matches', function () {
     Event::fake();
 
