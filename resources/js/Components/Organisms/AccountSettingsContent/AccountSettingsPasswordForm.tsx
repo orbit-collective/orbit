@@ -2,7 +2,8 @@ import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import PasswordField from '@/Components/Molecules/PasswordField/PasswordField';
 import PasswordStrengthMeter from '@/Components/Molecules/PasswordStrengthMeter/PasswordStrengthMeter';
-import { useForm } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import { useForm, usePage } from '@inertiajs/react';
 import { SyntheticEvent, useEffect, useRef, useState } from 'react';
 
 const MAX_ATTEMPTS = 5;
@@ -16,6 +17,9 @@ interface PasswordFormData {
 }
 
 export default function AccountSettingsPasswordForm() {
+    const { props } = usePage<PageProps>();
+    const hasPassword = props.auth?.user?.has_password ?? true;
+
     const {
         data,
         setData,
@@ -70,6 +74,7 @@ export default function AccountSettingsPasswordForm() {
         clearErrors();
 
         if (
+            hasPassword &&
             data.new_password &&
             data.current_password &&
             data.new_password === data.current_password
@@ -120,20 +125,22 @@ export default function AccountSettingsPasswordForm() {
             )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="md:col-span-2">
-                    <PasswordField
-                        id="current-password"
-                        label="Current password"
-                        value={data.current_password}
-                        onChange={(event) =>
-                            setData('current_password', event.target.value)
-                        }
-                        autoComplete="current-password"
-                        error={errors.current_password}
-                        isDisabled={isLocked}
-                        required
-                    />
-                </div>
+                {hasPassword && (
+                    <div className="md:col-span-2">
+                        <PasswordField
+                            id="current-password"
+                            label="Current password"
+                            value={data.current_password}
+                            onChange={(event) =>
+                                setData('current_password', event.target.value)
+                            }
+                            autoComplete="current-password"
+                            error={errors.current_password}
+                            isDisabled={isLocked}
+                            required
+                        />
+                    </div>
+                )}
 
                 <div className="space-y-1.5">
                     <PasswordField
@@ -175,7 +182,7 @@ export default function AccountSettingsPasswordForm() {
                     isDisabled={isLocked || processing}
                     className="shrink-0 rounded-lg px-4 py-1.5"
                 >
-                    Update password
+                    {hasPassword ? 'Update password' : 'Set password'}
                 </Button>
             </div>
         </form>

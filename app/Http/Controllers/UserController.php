@@ -101,8 +101,10 @@ class UserController extends Controller
     }
     public function updatePassword(Request $request): RedirectResponse
     {
+        // A GitHub-only account has no password to confirm yet - this is a
+        // "set password" action for it, not a "change password" one.
         $request->validate([
-            'current_password' => 'required|string',
+            'current_password' => $request->user()->password ? 'required|string' : 'nullable|string',
             'new_password' => 'required|string|min:8|confirmed',
         ]);
 
