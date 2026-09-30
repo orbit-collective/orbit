@@ -107,6 +107,9 @@ documentation/
       README.md              <- index for this category
       01-add-a-new-trigger-type.md
       02-add-a-new-action-type.md
+    authentication/
+      README.md              <- index for this category
+      01-add-an-oauth-provider.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -127,6 +130,8 @@ documentation/
     issue-views/             <- Polish translation of every guide above
     rich-text-editor/        <- Polish translation of every guide above
     project-onboarding/      <- Polish translation of every guide above
+    automation/              <- Polish translation of every guide above
+    authentication/          <- Polish translation of every guide above
 ```
 
 ## When to add or update a guide here
