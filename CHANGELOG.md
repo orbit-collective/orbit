@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.9.5](https://github.com/orbit-collective/orbit/compare/v0.9.4...v0.9.5) (2026-10-01)
+
+
+### Features
+
+* **auth:** add GitHub OAuth configuration to docker-compose ([382d4a0](https://github.com/orbit-collective/orbit/commit/382d4a0274735bc6720eabc292c397decfcd5292))
+* **auth:** add Socialite and GitHub OAuth App config ([31141e7](https://github.com/orbit-collective/orbit/commit/31141e74ec4d02ddd2bb78c08eaefd7577264e93))
+* **auth:** enable GitHub sign-in button, add link/unlink settings UI ([ec16737](https://github.com/orbit-collective/orbit/commit/ec16737f79fcd0e0d8ee2f19970321f221354083))
+* **auth:** let a GitHub-only account set an initial password ([5a8a6eb](https://github.com/orbit-collective/orbit/commit/5a8a6eb179f2cd1a4ea12147363e824ddffe2dce))
+* **auth:** log in with GitHub, link/unlink from an existing account ([51ae742](https://github.com/orbit-collective/orbit/commit/51ae742960def2dc4bf10c5457845e666ec51135))
+* **auth:** route GitHub sign-in through orbit-api's centralized broker ([b166dba](https://github.com/orbit-collective/orbit/commit/b166dba60ae902c2ba485462237e996cdcb8eed6))
+* **github:** require a linked GitHub account to create branches/PRs ([4efe6d1](https://github.com/orbit-collective/orbit/commit/4efe6d1b0082b5d7649b15b728e6b8d1d494b9f4))
+
+
+### Bug Fixes
+
+* **attachments:** make attachment creation atomic ([e4d2b90](https://github.com/orbit-collective/orbit/commit/e4d2b90983450b7d16011a2841c717a5d3ba10e8))
+* **attachments:** serve image attachments through an authorized route ([06586ef](https://github.com/orbit-collective/orbit/commit/06586efccad4fc09e1aac837b4dab111d34be52d))
+* **auth:** bind the GitHub callback to the session that started it ([c6554d7](https://github.com/orbit-collective/orbit/commit/c6554d7efb9e46e4cfd8191470cd3d1e33a8683c))
+* **auth:** make the GitHub OAuth migration rollback safe ([d13fb30](https://github.com/orbit-collective/orbit/commit/d13fb309824abf37e74184379d245da9d0b80551))
+* **auth:** reject an email match that would replace an existing GitHub link ([28171e8](https://github.com/orbit-collective/orbit/commit/28171e866760e2941879c770ec5b81574cc48e3d))
+
+
+### Miscellaneous Chores
+
+* release 0.9.5 ([c4035b9](https://github.com/orbit-collective/orbit/commit/c4035b9bdf97ff85ba5527fd2005cff18a51e716))
+
 ## [0.9.4](https://github.com/orbit-collective/orbit/compare/v0.9.3...v0.9.4) (2026-09-26)
 
 
