@@ -485,10 +485,20 @@ export default function WorkspaceSettingsIntegrationsTab({
         isLoadingAvailableGithubRepositories,
         setIsLoadingAvailableGithubRepositories,
     ] = useState(false);
+    // Whether the picker list has been requested (loading or loaded) - read
+    // through a ref so a refresh callback sees the current value, not the one
+    // captured when Refresh was clicked.
+    const githubPickerRequestedRef = useRef(false);
+    // Only the latest picker request may write its result, so an older
+    // response that lands late can't overwrite a newer one.
+    const githubPickerRequestIdRef = useRef(0);
 
     const openGithubRepositoryPicker = async () => {
         if (!selectedProject) return;
 
+        const requestId = ++githubPickerRequestIdRef.current;
+
+        githubPickerRequestedRef.current = true;
         setIsLoadingAvailableGithubRepositories(true);
 
         try {
@@ -504,12 +514,18 @@ export default function WorkspaceSettingsIntegrationsTab({
             const data: { repositories: GithubConnectedRepository[] } =
                 await response.json();
 
+            if (requestId !== githubPickerRequestIdRef.current) return;
+
             setAvailableGithubRepositories(data.repositories);
         } catch {
+            if (requestId !== githubPickerRequestIdRef.current) return;
+
             addAlert('Failed to load available repositories.', 'error');
             setAvailableGithubRepositories([]);
         } finally {
-            setIsLoadingAvailableGithubRepositories(false);
+            if (requestId === githubPickerRequestIdRef.current) {
+                setIsLoadingAvailableGithubRepositories(false);
+            }
         }
     };
 
@@ -526,6 +542,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveState: true,
                 onSuccess: () => {
                     addAlert('Repository connected.', 'success');
+                    githubPickerRequestedRef.current = false;
                     setAvailableGithubRepositories(null);
                 },
                 onError: () => {
@@ -573,9 +590,9 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    // Reload an already-loaded picker list instead of
-                    // clearing it, so an open picker doesn't go empty.
-                    if (availableGithubRepositories !== null) {
+                    // Reload a requested picker list instead of clearing it,
+                    // so an open picker doesn't go empty or stay stale.
+                    if (githubPickerRequestedRef.current) {
                         void openGithubRepositoryPicker();
                     }
                 },

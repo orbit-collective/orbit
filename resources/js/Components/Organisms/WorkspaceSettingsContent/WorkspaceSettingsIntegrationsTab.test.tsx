@@ -533,6 +533,47 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
 
             fetchSpy.mockRestore();
         });
+
+        const jsonResponse = (repositories: (typeof orbit)[]) =>
+            new Response(JSON.stringify({ repositories }));
+
+        test('reloads the picker even when Refresh is clicked while it is still loading', async () => {
+            let resolveFirst: ((response: Response) => void) | undefined;
+            const fetchSpy = vi
+                .spyOn(globalThis, 'fetch')
+                .mockImplementationOnce(
+                    () =>
+                        new Promise<Response>((resolve) => {
+                            resolveFirst = resolve;
+                        }),
+                )
+                .mockImplementation(async () =>
+                    jsonResponse([orbitWeb, orbitApi]),
+                );
+
+            renderTab(githubProps([orbit]));
+
+            await openGithub();
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Add repository' }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Refresh' }),
+            );
+
+            await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(2));
+
+            // The older, slower request lands last and must be ignored.
+            await act(async () => {
+                resolveFirst?.(jsonResponse([orbitWeb]));
+            });
+
+            expect(
+                await screen.findByText('orbit-collective/orbit-api'),
+            ).toBeInTheDocument();
+
+            fetchSpy.mockRestore();
+        });
     });
 
     describe('Jira import live progress toast', () => {
