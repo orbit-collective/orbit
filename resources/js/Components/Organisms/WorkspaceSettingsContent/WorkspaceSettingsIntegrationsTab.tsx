@@ -556,8 +556,13 @@ export default function WorkspaceSettingsIntegrationsTab({
         );
     };
 
+    const [isRefreshingGithubRepositories, setIsRefreshingGithubRepositories] =
+        useState(false);
+
     const refreshGithubRepositories = () => {
-        if (!selectedProject) return;
+        if (!selectedProject || isRefreshingGithubRepositories) return;
+
+        setIsRefreshingGithubRepositories(true);
 
         router.post(
             route('projects.integrations.github.repositories.sync', [
@@ -568,10 +573,17 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    setAvailableGithubRepositories(null);
+                    // Reload an already-loaded picker list instead of
+                    // clearing it, so an open picker doesn't go empty.
+                    if (availableGithubRepositories !== null) {
+                        void openGithubRepositoryPicker();
+                    }
                 },
                 onError: () => {
                     addAlert('Failed to refresh repositories.', 'error');
+                },
+                onFinish: () => {
+                    setIsRefreshingGithubRepositories(false);
                 },
             },
         );
@@ -764,6 +776,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                 onAddGithubRepository={addGithubRepository}
                 onRemoveGithubRepository={removeGithubRepository}
                 onRefreshGithubRepositories={refreshGithubRepositories}
+                isRefreshingGithubRepositories={isRefreshingGithubRepositories}
                 onClose={() => setOpenIntegrationId(null)}
             />
         </div>

@@ -45,6 +45,7 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     onAddGithubRepository?: (repositoryId: number) => void;
     onRemoveGithubRepository?: (repositoryId: number) => void;
     onRefreshGithubRepositories?: () => void;
+    isRefreshingGithubRepositories?: boolean;
     onClose: () => void;
 }
 
@@ -72,6 +73,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     onAddGithubRepository,
     onRemoveGithubRepository,
     onRefreshGithubRepositories,
+    isRefreshingGithubRepositories,
     onClose,
 }: WorkspaceSettingsIntegrationDetailModalProps) {
     const [webhookUrlDraft, setWebhookUrlDraft] = useState(
@@ -331,6 +333,9 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         onAddRepository={onAddGithubRepository}
                         onRemoveRepository={onRemoveGithubRepository}
                         onRefreshRepositories={onRefreshGithubRepositories}
+                        isRefreshingRepositories={
+                            isRefreshingGithubRepositories
+                        }
                     />
                 )}
             </div>

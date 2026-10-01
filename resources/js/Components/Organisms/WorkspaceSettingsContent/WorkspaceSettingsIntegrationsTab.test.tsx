@@ -1,6 +1,6 @@
 import { AlertProvider } from '@/context/AlertContext';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsIntegrationsTab from './WorkspaceSettingsIntegrationsTab';
@@ -403,34 +403,49 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
     });
 
     describe('GitHub repositories refresh', () => {
-        test('posts to the repositories sync route', async () => {
-            renderTab({
-                memberProjects: [projectA],
-                selectedProjectId: projectA.id,
-                hasIntegrationsAccess: true,
-                canUpdateIntegrations: true,
-                integrationStatuses: { github: true },
-                githubConnectStatus: {
-                    status: 'connected',
-                    installUrl: null,
-                    repository: { owner: 'orbit-collective', name: 'orbit' },
-                    repositories: [
-                        { id: 1, owner: 'orbit-collective', name: 'orbit' },
-                    ],
-                    connectedAt: '2026-10-01T00:00:00Z',
-                    health: 'healthy',
-                    lastSuccessfulSyncAt: null,
-                    lastSyncAttemptAt: null,
-                    lastFailedSyncAt: null,
-                    errorMessage: null,
-                    pendingEventCount: 0,
-                    pendingEventCountCapped: false,
-                },
-            });
+        const orbit = { id: 1, owner: 'orbit-collective', name: 'orbit' };
+        const orbitApi = {
+            id: 2,
+            owner: 'orbit-collective',
+            name: 'orbit-api',
+        };
+        const orbitWeb = {
+            id: 3,
+            owner: 'orbit-collective',
+            name: 'orbit-web',
+        };
 
-            await userEvent.click(
-                screen.getByRole('heading', { name: 'GitHub' }),
-            );
+        const githubProps = (
+            repositories: (typeof orbit)[],
+        ): Parameters<typeof WorkspaceSettingsIntegrationsTab>[0] => ({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+            integrationStatuses: { github: true },
+            githubConnectStatus: {
+                status: 'connected',
+                installUrl: null,
+                repository: { owner: 'orbit-collective', name: 'orbit' },
+                repositories,
+                connectedAt: '2026-10-01T00:00:00Z',
+                health: 'healthy',
+                lastSuccessfulSyncAt: null,
+                lastSyncAttemptAt: null,
+                lastFailedSyncAt: null,
+                errorMessage: null,
+                pendingEventCount: 0,
+                pendingEventCountCapped: false,
+            },
+        });
+
+        const openGithub = () =>
+            userEvent.click(screen.getByRole('heading', { name: 'GitHub' }));
+
+        test('posts to the sync route and shows the refreshed list', async () => {
+            const { rerender } = renderTab(githubProps([orbit]));
+
+            await openGithub();
             await userEvent.click(
                 screen.getByRole('button', { name: 'Refresh' }),
             );
@@ -440,6 +455,83 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
                 {},
                 expect.objectContaining({ preserveScroll: true }),
             );
+
+            // Inertia re-renders the page with the synced status.
+            rerender(
+                <AlertProvider>
+                    <WorkspaceSettingsIntegrationsTab
+                        {...githubProps([orbit, orbitApi])}
+                    />
+                </AlertProvider>,
+            );
+
+            expect(
+                screen.getByText('orbit-collective/orbit-api'),
+            ).toBeInTheDocument();
+        });
+
+        test('disables the button while a refresh is in flight', async () => {
+            let finish: (() => void) | undefined;
+
+            mockRouterPost.mockImplementationOnce((_url, _data, opts) => {
+                finish = (opts as { onFinish?: () => void })?.onFinish;
+            });
+
+            renderTab(githubProps([orbit]));
+
+            await openGithub();
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Refresh' }),
+            );
+
+            const pending = screen.getByRole('button', {
+                name: 'Refreshing…',
+            });
+
+            expect(pending).toBeDisabled();
+
+            await userEvent.click(pending);
+
+            expect(mockRouterPost).toHaveBeenCalledTimes(1);
+
+            act(() => finish?.());
+
+            expect(
+                screen.getByRole('button', { name: 'Refresh' }),
+            ).toBeEnabled();
+        });
+
+        test('reloads an open repository picker instead of emptying it', async () => {
+            const fetchSpy = vi
+                .spyOn(globalThis, 'fetch')
+                .mockImplementation(
+                    async () =>
+                        new Response(
+                            JSON.stringify({ repositories: [orbitWeb] }),
+                        ),
+                );
+
+            renderTab(githubProps([orbit]));
+
+            await openGithub();
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Add repository' }),
+            );
+
+            expect(
+                await screen.findByText('orbit-collective/orbit-web'),
+            ).toBeInTheDocument();
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Refresh' }),
+            );
+
+            await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(2));
+            expect(
+                await screen.findByText('orbit-collective/orbit-web'),
+            ).toBeInTheDocument();
+
+            fetchSpy.mockRestore();
         });
     });
 

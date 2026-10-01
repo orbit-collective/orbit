@@ -291,6 +291,30 @@ describe('WorkspaceSettingsGithubConnectPanel', () => {
         expect(onRefreshRepositories).toHaveBeenCalledOnce();
     });
 
+    test('shows a disabled refreshing button while a refresh is in flight', () => {
+        const onRefreshRepositories = vi.fn();
+
+        render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={healthy}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
+                onRefreshRepositories={onRefreshRepositories}
+                isRefreshingRepositories
+            />,
+        );
+
+        const button = screen.getByRole('button', { name: 'Refreshing…' });
+
+        expect(button).toBeDisabled();
+
+        fireEvent.click(button);
+
+        expect(onRefreshRepositories).not.toHaveBeenCalled();
+    });
+
     test('hides the refresh button for a read-only viewer', () => {
         render(
             <WorkspaceSettingsGithubConnectPanel

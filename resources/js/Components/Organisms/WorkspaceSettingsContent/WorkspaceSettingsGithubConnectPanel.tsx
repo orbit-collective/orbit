@@ -20,6 +20,7 @@ interface WorkspaceSettingsGithubConnectPanelProps {
     onRemoveRepository?: (repositoryId: number) => void;
     /** Re-fetches the connected repository list from orbit-api - see GithubIntegrationService::syncRepositories. */
     onRefreshRepositories?: () => void;
+    isRefreshingRepositories?: boolean;
 }
 
 const HEALTH_LABELS: Record<Exclude<GithubIntegrationHealth, null>, string> = {
@@ -110,6 +111,7 @@ function ConnectedRepositories({
     onAddRepository,
     onRemoveRepository,
     onRefreshRepositories,
+    isRefreshingRepositories = false,
 }: {
     canUpdate: boolean;
     repositories: GithubConnectedRepository[];
@@ -119,6 +121,7 @@ function ConnectedRepositories({
     onAddRepository?: (repositoryId: number) => void;
     onRemoveRepository?: (repositoryId: number) => void;
     onRefreshRepositories?: () => void;
+    isRefreshingRepositories?: boolean;
 }) {
     const [isPickerOpen, setIsPickerOpen] = useState(false);
 
@@ -133,9 +136,12 @@ function ConnectedRepositories({
                         <button
                             type="button"
                             onClick={onRefreshRepositories}
-                            className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                            disabled={isRefreshingRepositories}
+                            className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            Refresh
+                            {isRefreshingRepositories
+                                ? 'Refreshing…'
+                                : 'Refresh'}
                         </button>
                     )}
                     {canUpdate && onAddRepository && (
@@ -248,6 +254,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
     onAddRepository,
     onRemoveRepository,
     onRefreshRepositories,
+    isRefreshingRepositories,
 }: WorkspaceSettingsGithubConnectPanelProps) {
     const state = status?.status ?? 'not_connected';
     const health = status?.health ?? null;
@@ -343,6 +350,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                         onAddRepository={onAddRepository}
                         onRemoveRepository={onRemoveRepository}
                         onRefreshRepositories={onRefreshRepositories}
+                        isRefreshingRepositories={isRefreshingRepositories}
                     />
                     <GithubDiagnostics status={status} />
                 </div>
