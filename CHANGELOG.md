@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.9.6](https://github.com/orbit-collective/orbit/compare/v0.9.5...v0.9.6) (2026-10-01)
+
+
+### Features
+
+* **github:** add refresh button for connected repositories ([4a1966a](https://github.com/orbit-collective/orbit/commit/4a1966a81b4de31c6fc826dcbc52fadeea8d74e8))
+
+
+### Bug Fixes
+
+* **github:** clear install tab opener right after opening it ([d0b80f1](https://github.com/orbit-collective/orbit/commit/d0b80f16ce1520a316b46eceae4dcee06dcafb28))
+* **github:** disable refresh while syncing and keep open picker loaded ([be66779](https://github.com/orbit-collective/orbit/commit/be66779aa1b24af83992a6d536aeac49e280ee84))
+* **github:** drop noopener from install tab so window.open returns a handle ([f53cf7a](https://github.com/orbit-collective/orbit/commit/f53cf7a231851f701bde80659f295f4b8f25e50e))
+* **github:** ignore stale picker responses after a repositories refresh ([046a0c9](https://github.com/orbit-collective/orbit/commit/046a0c9548ab07f0ff99fa3fd5b68fe20bc17bd4))
+
+
+### Miscellaneous Chores
+
+* release 0.9.6 ([faf6275](https://github.com/orbit-collective/orbit/commit/faf6275d71b2ef20b3014445bdf870debf034168))
+
 ## [0.9.5](https://github.com/orbit-collective/orbit/compare/v0.9.4...v0.9.5) (2026-10-01)
 
 
