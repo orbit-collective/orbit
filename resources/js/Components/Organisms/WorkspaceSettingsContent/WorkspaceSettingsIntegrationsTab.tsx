@@ -402,7 +402,9 @@ export default function WorkspaceSettingsIntegrationsTab({
         // to the user gesture and not blocked as a popup - the install URL
         // isn't known yet at this point, only after the POST below resolves,
         // so this tab starts blank and gets navigated once it is.
-        const installTab = window.open('', '_blank', 'noopener,noreferrer');
+        // No 'noopener' here: with it window.open always returns null, so we
+        // couldn't navigate the tab - the opener is cut manually below.
+        const installTab = window.open('', '_blank');
 
         if (!installTab) {
             addAlert(
@@ -423,6 +425,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                     const installUrl = githubStatusRef.current?.installUrl;
 
                     if (installUrl) {
+                        installTab.opener = null;
                         installTab.location.href = installUrl;
                     } else {
                         installTab.close();

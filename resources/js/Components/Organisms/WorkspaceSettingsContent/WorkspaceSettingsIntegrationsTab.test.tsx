@@ -292,10 +292,20 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
 
     describe('GitHub connect flow', () => {
         test('opens a blank tab synchronously, then navigates it to the install url once the request succeeds', async () => {
-            const fakeTab = { location: { href: '' }, close: vi.fn() };
+            const fakeTab = {
+                opener: {},
+                location: { href: '' },
+                close: vi.fn(),
+            };
+            // Mirrors the spec: with 'noopener' window.open returns null even
+            // though the tab opens.
             const openSpy = vi
                 .spyOn(window, 'open')
-                .mockReturnValue(fakeTab as unknown as Window);
+                .mockImplementation((_url, _target, features) =>
+                    features?.includes('noopener')
+                        ? null
+                        : (fakeTab as unknown as Window),
+                );
 
             renderTab({
                 memberProjects: [projectA],
@@ -325,11 +335,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
             // window.open must be called before router.post resolves - not
             // after - or the browser treats it as an unrelated popup and
             // blocks it.
-            expect(openSpy).toHaveBeenCalledWith(
-                '',
-                '_blank',
-                'noopener,noreferrer',
-            );
+            expect(openSpy).toHaveBeenCalledWith('', '_blank');
             expect(mockRouterPost).toHaveBeenCalledWith(
                 '/projects.integrations.github.connect/1',
                 {},
@@ -338,6 +344,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
             expect(fakeTab.location.href).toBe(
                 'https://github.com/apps/orbit/installations/new?state=xyz',
             );
+            expect(fakeTab.opener).toBeNull();
 
             openSpy.mockRestore();
         });
