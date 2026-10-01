@@ -403,8 +403,11 @@ export default function WorkspaceSettingsIntegrationsTab({
         // isn't known yet at this point, only after the POST below resolves,
         // so this tab starts blank and gets navigated once it is.
         // No 'noopener' here: with it window.open always returns null, so we
-        // couldn't navigate the tab - the opener is cut manually below.
+        // couldn't navigate the tab - the opener is cut by hand right away
+        // instead, before the request below has a chance to stall or fail.
         const installTab = window.open('', '_blank');
+
+        if (installTab) installTab.opener = null;
 
         if (!installTab) {
             addAlert(
@@ -425,7 +428,6 @@ export default function WorkspaceSettingsIntegrationsTab({
                     const installUrl = githubStatusRef.current?.installUrl;
 
                     if (installUrl) {
-                        installTab.opener = null;
                         installTab.location.href = installUrl;
                     } else {
                         installTab.close();
