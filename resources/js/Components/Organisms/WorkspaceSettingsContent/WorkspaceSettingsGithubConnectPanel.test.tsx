@@ -272,6 +272,42 @@ describe('WorkspaceSettingsGithubConnectPanel', () => {
         expect(onRemoveRepository).toHaveBeenCalledWith(2);
     });
 
+    test('refreshes the connected repository list', () => {
+        const onRefreshRepositories = vi.fn();
+
+        render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate
+                status={healthy}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
+                onRefreshRepositories={onRefreshRepositories}
+            />,
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: 'Refresh' }));
+
+        expect(onRefreshRepositories).toHaveBeenCalledOnce();
+    });
+
+    test('hides the refresh button for a read-only viewer', () => {
+        render(
+            <WorkspaceSettingsGithubConnectPanel
+                canUpdate={false}
+                status={healthy}
+                onConnect={noop}
+                onDisconnect={noop}
+                onRetry={noop}
+                onRefreshRepositories={noop}
+            />,
+        );
+
+        expect(
+            screen.queryByRole('button', { name: 'Refresh' }),
+        ).not.toBeInTheDocument();
+    });
+
     test('opens the repository picker, fetches available repositories, and adds one', () => {
         const onOpenRepositoryPicker = vi.fn();
         const onAddRepository = vi.fn();

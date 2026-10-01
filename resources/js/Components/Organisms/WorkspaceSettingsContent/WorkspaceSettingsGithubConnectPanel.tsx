@@ -18,6 +18,8 @@ interface WorkspaceSettingsGithubConnectPanelProps {
     isLoadingAvailableRepositories?: boolean;
     onAddRepository?: (repositoryId: number) => void;
     onRemoveRepository?: (repositoryId: number) => void;
+    /** Re-fetches the connected repository list from orbit-api - see GithubIntegrationService::syncRepositories. */
+    onRefreshRepositories?: () => void;
 }
 
 const HEALTH_LABELS: Record<Exclude<GithubIntegrationHealth, null>, string> = {
@@ -107,6 +109,7 @@ function ConnectedRepositories({
     onOpenRepositoryPicker,
     onAddRepository,
     onRemoveRepository,
+    onRefreshRepositories,
 }: {
     canUpdate: boolean;
     repositories: GithubConnectedRepository[];
@@ -115,6 +118,7 @@ function ConnectedRepositories({
     onOpenRepositoryPicker?: () => void;
     onAddRepository?: (repositoryId: number) => void;
     onRemoveRepository?: (repositoryId: number) => void;
+    onRefreshRepositories?: () => void;
 }) {
     const [isPickerOpen, setIsPickerOpen] = useState(false);
 
@@ -124,21 +128,32 @@ function ConnectedRepositories({
                 <p className="text-sm font-medium text-[var(--text-color)]">
                     Connected repositories
                 </p>
-                {canUpdate && onAddRepository && (
-                    <button
-                        type="button"
-                        onClick={() => {
-                            const next = !isPickerOpen;
+                <div className="flex items-center gap-2">
+                    {canUpdate && onRefreshRepositories && (
+                        <button
+                            type="button"
+                            onClick={onRefreshRepositories}
+                            className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                        >
+                            Refresh
+                        </button>
+                    )}
+                    {canUpdate && onAddRepository && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const next = !isPickerOpen;
 
-                            setIsPickerOpen(next);
+                                setIsPickerOpen(next);
 
-                            if (next) onOpenRepositoryPicker?.();
-                        }}
-                        className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
-                    >
-                        {isPickerOpen ? 'Close' : 'Add repository'}
-                    </button>
-                )}
+                                if (next) onOpenRepositoryPicker?.();
+                            }}
+                            className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                        >
+                            {isPickerOpen ? 'Close' : 'Add repository'}
+                        </button>
+                    )}
+                </div>
             </div>
 
             {repositories.length === 0 ? (
@@ -232,6 +247,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
     isLoadingAvailableRepositories,
     onAddRepository,
     onRemoveRepository,
+    onRefreshRepositories,
 }: WorkspaceSettingsGithubConnectPanelProps) {
     const state = status?.status ?? 'not_connected';
     const health = status?.health ?? null;
@@ -326,6 +342,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                         onOpenRepositoryPicker={onOpenRepositoryPicker}
                         onAddRepository={onAddRepository}
                         onRemoveRepository={onRemoveRepository}
+                        onRefreshRepositories={onRefreshRepositories}
                     />
                     <GithubDiagnostics status={status} />
                 </div>
