@@ -402,6 +402,47 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         });
     });
 
+    describe('GitHub repositories refresh', () => {
+        test('posts to the repositories sync route', async () => {
+            renderTab({
+                memberProjects: [projectA],
+                selectedProjectId: projectA.id,
+                hasIntegrationsAccess: true,
+                canUpdateIntegrations: true,
+                integrationStatuses: { github: true },
+                githubConnectStatus: {
+                    status: 'connected',
+                    installUrl: null,
+                    repository: { owner: 'orbit-collective', name: 'orbit' },
+                    repositories: [
+                        { id: 1, owner: 'orbit-collective', name: 'orbit' },
+                    ],
+                    connectedAt: '2026-10-01T00:00:00Z',
+                    health: 'healthy',
+                    lastSuccessfulSyncAt: null,
+                    lastSyncAttemptAt: null,
+                    lastFailedSyncAt: null,
+                    errorMessage: null,
+                    pendingEventCount: 0,
+                    pendingEventCountCapped: false,
+                },
+            });
+
+            await userEvent.click(
+                screen.getByRole('heading', { name: 'GitHub' }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Refresh' }),
+            );
+
+            expect(mockRouterPost).toHaveBeenCalledWith(
+                '/projects.integrations.github.repositories.sync/1',
+                {},
+                expect.objectContaining({ preserveScroll: true }),
+            );
+        });
+    });
+
     describe('Jira import live progress toast', () => {
         const jiraSettings = {
             hasCredentials: true,

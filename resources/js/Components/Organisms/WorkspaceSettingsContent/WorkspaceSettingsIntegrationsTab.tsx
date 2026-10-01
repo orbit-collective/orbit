@@ -556,6 +556,27 @@ export default function WorkspaceSettingsIntegrationsTab({
         );
     };
 
+    const refreshGithubRepositories = () => {
+        if (!selectedProject) return;
+
+        router.post(
+            route('projects.integrations.github.repositories.sync', [
+                selectedProject.id,
+            ]),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setAvailableGithubRepositories(null);
+                },
+                onError: () => {
+                    addAlert('Failed to refresh repositories.', 'error');
+                },
+            },
+        );
+    };
+
     if (!selectedProject || !hasIntegrationsAccess) {
         return (
             <SettingsPanel
@@ -742,6 +763,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                 }
                 onAddGithubRepository={addGithubRepository}
                 onRemoveGithubRepository={removeGithubRepository}
+                onRefreshGithubRepositories={refreshGithubRepositories}
                 onClose={() => setOpenIntegrationId(null)}
             />
         </div>
