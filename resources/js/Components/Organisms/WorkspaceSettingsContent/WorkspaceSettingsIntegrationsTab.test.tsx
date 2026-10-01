@@ -349,6 +349,35 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
             openSpy.mockRestore();
         });
 
+        test('clears the opener right away, before the connect request resolves', async () => {
+            const fakeTab = {
+                opener: {},
+                location: { href: '' },
+                close: vi.fn(),
+            };
+            const openSpy = vi
+                .spyOn(window, 'open')
+                .mockReturnValue(fakeTab as unknown as Window);
+            // Leave the request pending - no onSuccess/onError.
+            mockRouterPost.mockImplementationOnce(() => {});
+
+            renderTab({
+                memberProjects: [projectA],
+                selectedProjectId: projectA.id,
+                hasIntegrationsAccess: true,
+                canUpdateIntegrations: true,
+            });
+
+            const toggles = screen.getAllByRole('button', { name: '' });
+            await userEvent.click(toggles[5]);
+
+            expect(mockRouterPost).toHaveBeenCalled();
+            expect(fakeTab.opener).toBeNull();
+            expect(fakeTab.location.href).toBe('');
+
+            openSpy.mockRestore();
+        });
+
         test('shows an error and never sends the request when the popup is blocked', async () => {
             const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
 
