@@ -62,15 +62,25 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
                             {
                                 label: 'Reset Column Sizes',
                                 value: 'reset_sizes',
+                                kind: 'action',
                             },
-                            { label: '---', value: 'sep1', disabled: true },
-                            { label: 'Row: Compact', value: 'row_compact' },
+                            { label: '', value: 'sep1', kind: 'separator' },
+                            {
+                                label: 'Row: Compact',
+                                value: 'row_compact',
+                                kind: 'radio',
+                            },
                             {
                                 label: 'Row: Comfortable',
                                 value: 'row_comfortable',
+                                kind: 'radio',
                             },
-                            { label: 'Row: Spacious', value: 'row_spacious' },
-                            { label: '---', value: 'sep2', disabled: true },
+                            {
+                                label: 'Row: Spacious',
+                                value: 'row_spacious',
+                                kind: 'radio',
+                            },
+                            { label: '', value: 'sep2', kind: 'separator' },
                             ...ISSUE_TABLE_COLUMNS.map((column) => ({
                                 label: column.label,
                                 value: column.value,
@@ -93,6 +103,7 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
                             <IconButton
                                 iconName="Settings"
                                 iconSize={13}
+                                ariaLabel="Table display options"
                                 className="text-[var(--text-muted-color)] opacity-40 transition-opacity hover:opacity-100"
                             />
                         }

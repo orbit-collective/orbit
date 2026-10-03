@@ -438,7 +438,13 @@ export interface DashboardEmptyStateProps {
     actionShortcut?: string;
 }
 export interface SelectionDropdownProps {
-    options: { label: string; value: string; disabled?: boolean }[];
+    options: {
+        label: string;
+        value: string;
+        disabled?: boolean;
+        /** checkbox (default) toggles, radio picks one, action just fires, separator is a divider. */
+        kind?: 'checkbox' | 'radio' | 'action' | 'separator';
+    }[];
     selectedValues: string[];
     onChange: (value: string) => void;
     trigger: ReactNode;
