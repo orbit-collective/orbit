@@ -563,4 +563,18 @@ describe('CommentForm image uploads', () => {
             screen.queryByText('Type an issue number'),
         ).not.toBeInTheDocument();
     });
+
+    test('closes the suggestions when the textarea loses focus', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            'Hi @jane',
+        );
+        expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+        await userEvent.tab();
+
+        expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
 });

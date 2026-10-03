@@ -11,6 +11,8 @@ import { createPortal } from 'react-dom';
  * position instead of reusing useFloatingDropdown (which tracks a trigger
  * element's bounding box).
  */
+const MENU_WIDTH = 240;
+
 export default function MentionSuggestions({
     users,
     activeIndex,
@@ -35,14 +37,24 @@ export default function MentionSuggestions({
         nameCounts.set(user.name, (nameCounts.get(user.name) ?? 0) + 1);
     });
 
+    // The anchor is a raw caret coordinate, so near the right edge of the
+    // viewport the menu would be clipped - pull it back inside.
+    const left = Math.max(
+        8,
+        Math.min(position.left, window.innerWidth - MENU_WIDTH - 8),
+    );
+
     return createPortal(
         <DropdownMenu
             position="floating"
+            role={isEmpty ? undefined : 'listbox'}
+            aria-label={isIssue ? 'Issue suggestions' : 'Member suggestions'}
             style={{
                 position: 'fixed',
                 top: position.top,
-                left: position.left,
+                left,
                 minWidth: 200,
+                maxWidth: 'min(360px, calc(100vw - 16px))',
                 zIndex: 9999,
             }}
         >
@@ -58,6 +70,9 @@ export default function MentionSuggestions({
                 issues.map((issue, index) => (
                     <DropdownItem
                         key={issue.id}
+                        role="option"
+                        aria-selected={index === activeIndex}
+                        title={issue.title}
                         appearance="flat"
                         isActive={index === activeIndex}
                         onMouseDown={(e) => e.preventDefault()}
