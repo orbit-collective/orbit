@@ -110,7 +110,7 @@ describe('BoardCard Component', () => {
         );
 
         expect(container.querySelector('img')).not.toBeInTheDocument();
-        expect(screen.getByText('-')).toBeInTheDocument();
+        expect(screen.getByText('?')).toBeInTheDocument();
     });
 
     test('renders the issue status as a badge', () => {
