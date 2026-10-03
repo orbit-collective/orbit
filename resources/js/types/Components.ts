@@ -570,6 +570,8 @@ export interface CalendarViewProps {
 export interface IssuePreviewCardProps {
     issue: Issue;
     anchorRect: DOMRect;
+    /** 'top' always sits above the anchor; 'auto' prefers below when it fits. */
+    placement?: 'auto' | 'top';
 }
 export interface UpcomingDeadlinesPanelProps {
     issues: Issue[];

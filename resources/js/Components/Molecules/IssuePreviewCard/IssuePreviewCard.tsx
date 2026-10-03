@@ -4,7 +4,7 @@ import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { IssuePreviewCardProps } from '@/types/Components';
 import { parseDateKey } from '@/utils/time';
-import React, { useMemo } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 const CARD_WIDTH = 260;
 const ESTIMATED_HEIGHT = 220;
@@ -25,23 +25,32 @@ const formatShort = (dateString: string) =>
 const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
     issue,
     anchorRect,
+    placement = 'auto',
 }) => {
+    const cardRef = useRef<HTMLDivElement>(null);
+    const [height, setHeight] = useState(ESTIMATED_HEIGHT);
+
+    // The card's height depends on its labels/assignee, so measure it rather
+    // than guess - an over-estimate leaves a visible gap above the anchor.
+    useLayoutEffect(() => {
+        const measured = cardRef.current?.offsetHeight;
+
+        if (measured) setHeight(measured);
+    }, [issue]);
+
     const position = useMemo(() => {
         const spaceBelow = window.innerHeight - anchorRect.bottom;
         const top =
-            spaceBelow >= ESTIMATED_HEIGHT + VIEWPORT_MARGIN
+            placement !== 'top' && spaceBelow >= height + VIEWPORT_MARGIN
                 ? anchorRect.bottom + 8
-                : Math.max(
-                      anchorRect.top - ESTIMATED_HEIGHT - 8,
-                      VIEWPORT_MARGIN,
-                  );
+                : Math.max(anchorRect.top - height - 8, VIEWPORT_MARGIN);
         const left = Math.min(
             anchorRect.left,
             window.innerWidth - CARD_WIDTH - VIEWPORT_MARGIN,
         );
 
         return { top, left };
-    }, [anchorRect]);
+    }, [anchorRect, height, placement]);
 
     const dateRange = useMemo(() => {
         if (!issue.start_date) return null;
@@ -54,6 +63,7 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
 
     return (
         <div
+            ref={cardRef}
             style={{
                 position: 'fixed',
                 top: position.top,
