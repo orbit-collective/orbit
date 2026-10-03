@@ -79,9 +79,40 @@ class IssueController extends Controller
 
         $issues = $this->issueService->searchProjectIssuesById($project, (string) $request->query('q', ''));
 
-        return response()->json(
-            $issues->map(fn (Issue $issue) => ['id' => $issue->id, 'title' => $issue->title])->values()
-        );
+        return response()->json($issues->map(fn (Issue $issue) => $this->previewPayload($issue))->values());
+    }
+
+    /**
+     * JSON data for the hover card on an issue mentioned in a comment.
+     */
+    public function preview(Project $project, Issue $issue): JsonResponse
+    {
+        $this->authorize('view', $project);
+
+        if ($issue->project_id !== $project->id) {
+            throw new NotFoundHttpException;
+        }
+
+        return response()->json($this->previewPayload($issue->loadMissing('assignee')));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function previewPayload(Issue $issue): array
+    {
+        return [
+            'id' => $issue->id,
+            'title' => $issue->title,
+            'status' => $issue->status,
+            'priority' => $issue->priority,
+            'labels' => $issue->labels ?? [],
+            'start_date' => $issue->start_date,
+            'end_date' => $issue->end_date,
+            'assignee' => $issue->assignee
+                ? ['id' => $issue->assignee->id, 'name' => $issue->assignee->name, 'avatar' => $issue->assignee->avatar]
+                : null,
+        ];
     }
 
     /**
