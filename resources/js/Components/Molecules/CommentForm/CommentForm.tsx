@@ -419,6 +419,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 onSelect={handleSelectionChange}
                 onPaste={handlePaste}
                 onCut={handleCut}
+                onBlur={() => setMention(null)}
                 placeholder="Leave a comment..."
                 className="min-h-[60px] resize-none border-none bg-transparent p-0 text-sm focus:border-none"
                 isDisabled={isSubmitting}
