@@ -18,7 +18,13 @@ import {
     tokenizeMentionRanges,
 } from '@/utils/mentions';
 import axios from 'axios';
-import React, { SyntheticEvent, useEffect, useRef, useState } from 'react';
+import React, {
+    SyntheticEvent,
+    useEffect,
+    useId,
+    useRef,
+    useState,
+} from 'react';
 
 interface MentionState {
     kind: 'user' | 'issue';
@@ -27,6 +33,17 @@ interface MentionState {
     activeIndex: number;
     position: { top: number; left: number };
 }
+
+/** Viewport coordinates just below the "@"/"#" being typed. */
+const menuPosition = (textarea: HTMLTextAreaElement, start: number) => {
+    const caret = getCaretCoordinates(textarea, start);
+    const rect = textarea.getBoundingClientRect();
+
+    return {
+        top: rect.top - textarea.scrollTop + caret.top + caret.height + 4,
+        left: rect.left - textarea.scrollLeft + caret.left,
+    };
+};
 
 const CommentForm: React.FC<CommentFormProps> = ({
     onSubmit,
@@ -48,6 +65,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
         query: string;
         items: IssueSuggestion[];
     } | null>(null);
+    const listboxId = useId();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     // The selection right before the current edit is applied - captured on
     // keydown/paste/cut, since that's the only reliable way to know exactly
@@ -112,6 +130,33 @@ const CommentForm: React.FC<CommentFormProps> = ({
         };
     }, [issueQuery, projectId]);
 
+    const mentionStart = mention?.start ?? null;
+
+    // The menu is fixed to viewport coordinates, so scrolling the page (or
+    // any scroll container around the form) or resizing the window would
+    // leave it behind - re-measure the caret while it's open.
+    useEffect(() => {
+        if (mentionStart === null) return;
+
+        const reposition = () => {
+            const textarea = textareaRef.current;
+
+            if (!textarea) return;
+
+            const position = menuPosition(textarea, mentionStart);
+
+            setMention((prev) => (prev ? { ...prev, position } : prev));
+        };
+
+        window.addEventListener('scroll', reposition, true);
+        window.addEventListener('resize', reposition);
+
+        return () => {
+            window.removeEventListener('scroll', reposition, true);
+            window.removeEventListener('resize', reposition);
+        };
+    }, [mentionStart]);
+
     const issueEmptyLabel =
         issueQuery === ''
             ? 'Type an issue number'
@@ -147,23 +192,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
             return;
         }
 
-        const caret = getCaretCoordinates(textarea, activeMention.start);
-        const rect = textarea.getBoundingClientRect();
-
         setMention({
             kind: userMention ? 'user' : 'issue',
             start: activeMention.start,
             query: activeMention.query,
             activeIndex: 0,
-            position: {
-                top:
-                    rect.top -
-                    textarea.scrollTop +
-                    caret.top +
-                    caret.height +
-                    4,
-                left: rect.left - textarea.scrollLeft + caret.left,
-            },
+            position: menuPosition(textarea, activeMention.start),
         });
     };
 
@@ -420,6 +454,17 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 onPaste={handlePaste}
                 onCut={handleCut}
                 onBlur={() => setMention(null)}
+                role="combobox"
+                aria-haspopup="listbox"
+                aria-expanded={mention !== null && optionCount > 0}
+                aria-controls={
+                    mention !== null && optionCount > 0 ? listboxId : undefined
+                }
+                aria-activedescendant={
+                    mention !== null && optionCount > 0
+                        ? `${listboxId}-option-${mention.activeIndex}`
+                        : undefined
+                }
                 placeholder="Leave a comment..."
                 className="min-h-[60px] resize-none border-none bg-transparent p-0 text-sm focus:border-none"
                 isDisabled={isSubmitting}
@@ -437,6 +482,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
             </div>
             {mention && (
                 <MentionSuggestions
+                    id={listboxId}
                     kind={mention.kind}
                     users={suggestions}
                     issues={issueSuggestions}

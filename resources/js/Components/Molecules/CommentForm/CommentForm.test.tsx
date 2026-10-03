@@ -577,4 +577,43 @@ describe('CommentForm image uploads', () => {
 
         expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     });
+
+    test('moves the suggestions with the textarea when the page scrolls', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        let top = 100;
+        textarea.getBoundingClientRect = () => ({ top, left: 20 }) as DOMRect;
+
+        await userEvent.type(textarea, 'Hi @jane');
+        const before = parseFloat(screen.getByRole('listbox').style.top);
+
+        top = 40;
+        fireEvent.scroll(window);
+
+        await waitFor(() =>
+            expect(parseFloat(screen.getByRole('listbox').style.top)).toBe(
+                before - 60,
+            ),
+        );
+    });
+
+    test('exposes the textarea as a combobox controlling the suggestion list', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        const textarea = screen.getByRole('combobox');
+        expect(textarea).toHaveAttribute('aria-expanded', 'false');
+
+        await userEvent.type(textarea, 'Hi @jane');
+
+        expect(textarea).toHaveAttribute('aria-expanded', 'true');
+        expect(textarea).toHaveAttribute(
+            'aria-controls',
+            screen.getByRole('listbox').id,
+        );
+        expect(textarea).toHaveAttribute(
+            'aria-activedescendant',
+            screen.getByRole('option').id,
+        );
+    });
 });

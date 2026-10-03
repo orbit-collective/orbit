@@ -3,6 +3,7 @@ import { cn } from '@/utils/cn';
 
 export default function DropdownMenu({
     children,
+    id,
     direction = 'bottom',
     header,
     stretch = true,
@@ -14,6 +15,7 @@ export default function DropdownMenu({
 }: DropdownMenuProps) {
     return (
         <div
+            id={id}
             role={role}
             aria-label={ariaLabel}
             style={style}
