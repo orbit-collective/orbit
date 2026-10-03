@@ -261,7 +261,7 @@ const Pagination = ({
                 </span>{' '}
                 results
             </div>
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:flex-nowrap lg:gap-6">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:gap-6 xl:flex-nowrap">
                 <div
                     ref={rowsPerPageRef}
                     onKeyDown={handleMenuKeyDown}
@@ -323,7 +323,7 @@ const Pagination = ({
                 {links && numericLinks.length > 1 && (
                     <nav
                         aria-label="Pagination"
-                        className="scrollbar-hide flex flex-nowrap items-center justify-center gap-1 overflow-x-auto sm:gap-2"
+                        className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto scrollbar-none sm:gap-2"
                     >
                         {renderLink(prevLink, 'prev')}
                         {getCondensedPageNumbers(currentPage, lastPage).map(
@@ -334,7 +334,7 @@ const Pagination = ({
                                         aria-hidden="true"
                                         className={`${paginationVariants({
                                             disabled: true,
-                                        })} flex`}
+                                        })} hidden sm:flex`}
                                     >
                                         ...
                                     </span>
