@@ -4,7 +4,7 @@ import Input from '@/Components/Atoms/Input/Input';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import { GithubDevelopmentRepository, LinkedPullRequest } from '@/types/Issues';
 import { cva } from 'class-variance-authority';
-import { useId, useState } from 'react';
+import { ComponentProps, useId, useState } from 'react';
 
 interface IssueDevelopmentPanelProps {
     pullRequests: LinkedPullRequest[];
@@ -110,7 +110,7 @@ function RepositoryPicker({
 function LabelledInput({
     label,
     ...props
-}: { label: string } & React.ComponentProps<typeof Input>) {
+}: { label: string } & ComponentProps<typeof Input>) {
     const id = useId();
 
     return (
@@ -150,7 +150,8 @@ function CreateBranchForm({
                 value={repositoryId}
                 onChange={setRepositoryId}
             />
-            <Input
+            <LabelledInput
+                label="Branch name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="branch-name"
@@ -209,17 +210,20 @@ function CreatePullRequestForm({
                 value={repositoryId}
                 onChange={setRepositoryId}
             />
-            <Input
+            <LabelledInput
+                label="Pull request title"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Pull request title"
             />
-            <Input
+            <LabelledInput
+                label="Source branch"
                 value={head}
                 onChange={(event) => setHead(event.target.value)}
                 placeholder="Source branch"
             />
-            <Input
+            <LabelledInput
+                label="Target branch"
                 value={base}
                 onChange={(event) => setBase(event.target.value)}
                 placeholder="Target branch (default: main)"
