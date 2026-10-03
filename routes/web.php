@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/projects/{project}/issue-search', [IssueController::class, 'search'])->name('projects.issues.search');
     Route::get('/projects/{project}/issues/{issue}', [IssueController::class, 'show'])->name('issues.show');
     Route::delete('/issues/bulk-destroy', [IssueController::class, 'bulkDestroy'])->name('issues.bulk-destroy');
     Route::post('/issues/{issue}/github/branches', [IssueGithubDevelopmentController::class, 'createBranch'])->name('issues.github.branches.store');

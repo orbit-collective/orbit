@@ -1,8 +1,19 @@
 import { AssignableUser } from '@/types/Users';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import CommentForm from './CommentForm';
+
+const mockAxios = vi.hoisted(() => ({ get: vi.fn() }));
+
+vi.mock('axios', () => ({ default: mockAxios }));
+
+beforeEach(() => {
+    mockAxios.get.mockReset();
+    globalThis.route = vi.fn(
+        (name: string, id: unknown) => `/${name}/${id}`,
+    ) as unknown as typeof globalThis.route;
+});
 
 const users: AssignableUser[] = [
     { id: 1, name: 'Jane Cooper' },
@@ -475,5 +486,81 @@ describe('CommentForm image uploads', () => {
 
         expect(event.defaultPrevented).toBe(false);
         expect(onImageUpload).not.toHaveBeenCalled();
+    });
+
+    test('shows an empty state when no member matches the @ query', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            'Hi @zzz',
+        );
+
+        expect(screen.getByText('No members found')).toBeInTheDocument();
+    });
+
+    test('suggests project issues for #, inserts the pick and submits a token', async () => {
+        mockAxios.get.mockResolvedValue({
+            data: [{ id: 2, title: 'Fix login' }],
+        });
+        const handleSubmit = vi.fn();
+        render(
+            <CommentForm onSubmit={handleSubmit} users={users} projectId={7} />,
+        );
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        await userEvent.type(textarea, 'See #2');
+        await userEvent.click(await screen.findByText('Fix login'));
+
+        expect(mockAxios.get).toHaveBeenCalledWith(
+            '/projects.issues.search/7',
+            {
+                params: { q: '2' },
+            },
+        );
+        expect(textarea).toHaveValue('See #2 ');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith('See #[Fix login](2) ', []);
+    });
+
+    test('shows an empty state when no issue matches #', async () => {
+        mockAxios.get.mockResolvedValue({ data: [] });
+        render(<CommentForm onSubmit={() => {}} projectId={7} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            '#99',
+        );
+
+        expect(await screen.findByText('No issues found')).toBeInTheDocument();
+    });
+
+    test('prompts for a number after a bare #', async () => {
+        render(<CommentForm onSubmit={() => {}} projectId={7} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            '#',
+        );
+
+        expect(screen.getByText('Type an issue number')).toBeInTheDocument();
+        expect(mockAxios.get).not.toHaveBeenCalled();
+    });
+
+    test('does not offer issue suggestions without a projectId', async () => {
+        render(<CommentForm onSubmit={() => {}} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            '#2',
+        );
+
+        expect(
+            screen.queryByText('Type an issue number'),
+        ).not.toBeInTheDocument();
     });
 });

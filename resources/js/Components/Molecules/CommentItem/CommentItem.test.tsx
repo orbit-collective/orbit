@@ -183,4 +183,21 @@ describe('CommentItem image rendering', () => {
             screen.getByRole('img', { name: 'shot.png' }),
         ).toBeInTheDocument();
     });
+
+    test('renders an issue token as a link to that issue in the project', () => {
+        globalThis.route = vi.fn(
+            (name: string, params: unknown[]) => `/${name}/${params.join('/')}`,
+        ) as unknown as typeof globalThis.route;
+
+        render(
+            <CommentItem
+                comment={makeComment({ body: 'See #[Fix login](2)' })}
+                projectId={7}
+            />,
+        );
+
+        const link = screen.getByRole('link', { name: '#2' });
+        expect(link).toHaveAttribute('href', '/issues.show/7/2');
+        expect(link).toHaveAttribute('title', 'Fix login');
+    });
 });

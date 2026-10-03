@@ -10,13 +10,28 @@ import React from 'react';
 const CommentItem: React.FC<CommentItemProps> = ({
     comment,
     users = [],
+    projectId,
     onEdit,
     onDelete,
     onImageUpload,
 }) => {
     const renderText = (value: string, keyPrefix: string) =>
         splitMentionText(value, users).map((segment, index) =>
-            segment.type === 'mention' ? (
+            segment.type === 'issue' ? (
+                <a
+                    key={`${keyPrefix}-${index}`}
+                    href={
+                        projectId
+                            ? route('issues.show', [projectId, segment.issueId])
+                            : undefined
+                    }
+                    title={segment.title}
+                    onClick={(e) => e.stopPropagation()}
+                    className="mx-0.5 font-medium text-[var(--accent-color)] hover:underline"
+                >
+                    {segment.value}
+                </a>
+            ) : segment.type === 'mention' ? (
                 <span
                     key={`${keyPrefix}-${index}`}
                     className="bg-[var(--accent-color)]/10 mx-0.5 inline-flex items-center gap-1 rounded px-1 align-middle font-medium text-[var(--accent-color)]"

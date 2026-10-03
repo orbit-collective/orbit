@@ -1130,3 +1130,34 @@ test('changing the issue type and picking a status of the new type in one reques
         ->and($issue->workflow_status_id)->toBe($bugDone->id)
         ->and($issue->status)->toBe('closed');
 });
+
+test('issue search returns only this project\'s issues whose id starts with the query', function () {
+    $project = Project::factory()->create();
+    $other = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $mine = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Mine']);
+    Issue::factory()->create(['project_id' => $other->id, 'title' => 'Foreign']);
+
+    $response = $this->actingAs($member)->getJson("/projects/$project->id/issue-search?q=".$mine->id);
+
+    $response->assertOk()->assertJsonFragment(['id' => $mine->id, 'title' => 'Mine']);
+    expect(collect($response->json())->pluck('title'))->not->toContain('Foreign');
+});
+
+test('issue search returns an empty list for a non-numeric or unmatched query', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+
+    $this->actingAs($member)->getJson("/projects/$project->id/issue-search?q=abc")->assertOk()->assertExactJson([]);
+    $this->actingAs($member)->getJson("/projects/$project->id/issue-search?q=999999")->assertOk()->assertExactJson([]);
+});
+
+test('issue search is forbidden to non-members', function () {
+    $project = Project::factory()->create();
+    $outsider = User::factory()->create();
+
+    $this->actingAs($outsider)->getJson("/projects/$project->id/issue-search?q=1")->assertForbidden();
+});

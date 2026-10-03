@@ -163,6 +163,20 @@ class IssueService
         return $this->issueRepository->findWithRelations($id);
     }
 
+    /**
+     * @return Collection<array-key, Issue>
+     */
+    public function searchProjectIssuesById(Project $project, string $query): Collection
+    {
+        $digits = preg_replace('/\D/', '', $query) ?? '';
+
+        if ($digits === '') {
+            return collect();
+        }
+
+        return $this->issueRepository->searchByIdPrefix($project->id, $digits);
+    }
+
     public function updateIssue(Issue $issue, array $data): Issue
     {
         $before = $this->snapshot($issue);
