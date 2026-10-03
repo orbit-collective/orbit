@@ -33,6 +33,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
             localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true',
     );
     const userMenuRef = useRef<HTMLDivElement>(null);
+    const userMenuTriggerRef = useRef<HTMLButtonElement>(null);
     const {
         url,
         props: { auth },
@@ -59,10 +60,31 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
             }
         };
 
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setIsUserMenuOpen(false);
+                userMenuTriggerRef.current?.focus();
+            }
+        };
+
         document.addEventListener('mousedown', handleClickOutside);
-        return () =>
+        document.addEventListener('keydown', handleEscape);
+        return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
     }, [isUserMenuOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') setIsOpen(false);
+        };
+
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen]);
 
     const handleLogout = () => {
         router.post(route('logout'));
@@ -94,13 +116,17 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
     return (
         <>
             <button
+                type="button"
                 onClick={() => setIsOpen(true)}
+                aria-label="Open sidebar"
+                aria-expanded={isOpen}
                 className="fixed left-4 top-4 z-40 rounded-md border border-solid border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] p-2 text-[var(--text-gray-color)] hover:text-[var(--text-color)] md:hidden"
             >
                 <Icon name="Menu" size={20} />
             </button>
             {isOpen && (
                 <div
+                    aria-hidden="true"
                     className="fixed inset-0 z-40 bg-[var(--overlay-color)] backdrop-blur-sm md:hidden"
                     onClick={() => setIsOpen(false)}
                 />
@@ -108,7 +134,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
 
             <aside
                 className={cn(
-                    'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col justify-between bg-[var(--bg-color)] p-3 pr-1 transition-all duration-300 ease-in-out md:relative md:translate-x-0',
+                    'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col justify-between bg-[var(--bg-color)] p-3 pr-1 transition-all duration-300 ease-in-out motion-reduce:transition-none md:relative md:translate-x-0',
                     isCollapsed ? 'w-[72px]' : 'w-[240px]',
                     isOpen ? 'translate-x-0' : '-translate-x-full',
                 )}
@@ -144,6 +170,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                         </Link>
 
                         <button
+                            type="button"
                             onClick={() => setIsCollapsed((prev) => !prev)}
                             aria-label={
                                 isCollapsed
@@ -168,7 +195,9 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                         </button>
 
                         <button
+                            type="button"
                             onClick={() => setIsOpen(false)}
+                            aria-label="Close sidebar"
                             className="rounded-md p-2 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] md:hidden"
                         >
                             <Icon name="X" size={18} />
@@ -177,7 +206,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
 
                     <Divider className="mb-3" />
 
-                    <nav className={'flex shrink-0 flex-col'}>
+                    <nav aria-label="Main" className={'flex shrink-0 flex-col'}>
                         <NavItem
                             icon="LayoutDashboard"
                             label="Dashboard"
@@ -205,7 +234,10 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                             {title}
                                         </h3>
                                     )}
-                                    <nav className="flex flex-col">
+                                    <nav
+                                        aria-label={title}
+                                        className="flex flex-col"
+                                    >
                                         {SETTINGS_TABS.filter(
                                             (tab) => tab.section === section,
                                         ).map((tab) => (
@@ -239,33 +271,35 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     <Icon name="Plus" size={16} />
                                 </button>
                             ) : (
-                                <Link
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setIsNewProjectModalOpen(true);
-                                    }}
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setIsNewProjectModalOpen(true)
+                                    }
+                                    aria-label="New project"
                                     className={
                                         'group mb-1.5 flex shrink-0 items-center justify-between rounded-md px-2.5 py-1'
                                     }
                                 >
-                                    <h3
+                                    <span
                                         className={
                                             'text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
                                         }
                                     >
                                         PROJECTS
-                                    </h3>
-                                    <div className="flex items-center gap-1.5 text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]">
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]">
                                         {projects.length > 0 && (
                                             <span className="text-xs font-medium">
                                                 {projects.length}
                                             </span>
                                         )}
                                         <Icon name={'Plus'} size={14} />
-                                    </div>
-                                </Link>
+                                    </span>
+                                </button>
                             )}
                             <nav
+                                aria-label="Projects"
                                 /* eslint-disable-next-line react/no-unknown-property */
                                 scroll-region={''}
                                 className={
@@ -283,6 +317,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     return (
                                         <NavItem
                                             key={projectElement.id}
+                                            title={projectElement.name}
                                             icon="FolderGit2"
                                             iconClassName={`${
                                                 getColorTheme(
@@ -315,10 +350,15 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                     }
                     ref={userMenuRef}
                 >
-                    <div
+                    <button
+                        type="button"
+                        ref={userMenuTriggerRef}
                         onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                        aria-haspopup="menu"
+                        aria-expanded={isUserMenuOpen}
+                        aria-label={isCollapsed ? 'User menu' : undefined}
                         className={cn(
-                            'flex cursor-pointer items-center rounded-lg px-2 py-1.5 hover:bg-[var(--bg-light-color)]',
+                            'flex w-full cursor-pointer items-center rounded-lg px-2 py-1.5 text-left hover:bg-[var(--bg-light-color)]',
                             isCollapsed ? 'justify-center' : 'justify-between',
                         )}
                     >
@@ -338,7 +378,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                 color="var(--text-gray-color)"
                             />
                         )}
-                    </div>
+                    </button>
 
                     {isUserMenuOpen && (
                         <DropdownMenu direction="top" stretch={!isCollapsed}>

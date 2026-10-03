@@ -238,6 +238,50 @@ describe('Sidebar Component', () => {
         expect(screen.queryByText('Log out')).not.toBeInTheDocument();
     });
 
+    test('exposes the user menu state and closes it with Escape, returning focus', async () => {
+        const user = userEvent.setup();
+        render(<Sidebar projects={[]} />);
+
+        const trigger = screen.getByRole('button', { name: /John Doe/ });
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+        await user.click(trigger);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+        await user.keyboard('{Escape}');
+        expect(screen.queryByText('Log out')).not.toBeInTheDocument();
+        expect(trigger).toHaveFocus();
+    });
+
+    test('closes the mobile drawer with Escape', async () => {
+        const user = userEvent.setup();
+        const { container } = render(<Sidebar projects={[]} />);
+
+        const aside = container.querySelector('aside') as HTMLElement;
+        await user.click(screen.getByLabelText('Open sidebar'));
+        expect(aside).toHaveClass('translate-x-0');
+
+        await user.keyboard('{Escape}');
+        expect(aside).toHaveClass('-translate-x-full');
+    });
+
+    test('keeps the full project name available when the label is truncated', () => {
+        render(
+            <Sidebar
+                projects={[
+                    makeProject({
+                        id: 6,
+                        name: 'A Very Long Project Name Here',
+                    }),
+                ]}
+            />,
+        );
+
+        expect(
+            screen.getByText('A Very Long Proj...').closest('a'),
+        ).toHaveAttribute('title', 'A Very Long Project Name Here');
+    });
+
     test('renders the Orbit brand at the top', () => {
         render(<Sidebar projects={[]} />);
 
@@ -286,17 +330,12 @@ describe('Sidebar Component', () => {
     });
 
     test('opens NewProjectModal when clicking PROJECTS', async () => {
-        userEvent.setup();
+        const user = userEvent.setup();
         render(<Sidebar projects={[]} />);
 
-        const projectsLink = screen
-            .getByText('PROJECTS')
-            .closest('a') as HTMLElement;
-        const clickEvent = new MouseEvent('click', { bubbles: true });
-        const preventDefaultSpy = vi.spyOn(clickEvent, 'preventDefault');
-        projectsLink.dispatchEvent(clickEvent);
+        await user.click(screen.getByRole('button', { name: 'New project' }));
 
-        expect(preventDefaultSpy).toHaveBeenCalled();
+        expect(screen.getByTestId('new-project-modal')).toBeInTheDocument();
     });
 
     test('closes NewProjectModal when onClose is called', async () => {
@@ -305,7 +344,7 @@ describe('Sidebar Component', () => {
 
         const projectsLink = screen
             .getByText('PROJECTS')
-            .closest('a') as HTMLElement;
+            .closest('button') as HTMLElement;
         await user.click(projectsLink);
 
         // Modal should be rendered
