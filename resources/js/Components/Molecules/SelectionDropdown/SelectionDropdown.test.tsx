@@ -23,7 +23,6 @@ const baseOptions: SelectionDropdownProps['options'] = [
 
 describe('SelectionDropdown Component', () => {
     beforeEach(() => {
-        vi.spyOn(console, 'log').mockImplementation(() => {});
         mockGetIfAnyModalIsOpened.mockReturnValue(false);
         mockUseShortcuts.mockClear();
     });
@@ -173,7 +172,7 @@ describe('SelectionDropdown Component', () => {
         const user = userEvent.setup();
         const options: SelectionDropdownProps['options'] = [
             { label: 'Title', value: 'title' },
-            { label: '', value: 'separator' },
+            { label: '', value: 'separator', kind: 'separator' },
             { label: 'Status', value: 'status' },
         ];
         render(
@@ -188,7 +187,8 @@ describe('SelectionDropdown Component', () => {
         await user.click(screen.getByText('Columns'));
         await screen.findByText('Display Columns');
 
-        expect(screen.getAllByRole('button')).toHaveLength(2);
+        expect(screen.getAllByRole('menuitemcheckbox')).toHaveLength(2);
+        expect(screen.getByRole('separator')).toBeInTheDocument();
     });
 
     test('renders the header with no option buttons when the list is empty', async () => {
@@ -205,7 +205,7 @@ describe('SelectionDropdown Component', () => {
         await user.click(screen.getByText('Columns'));
 
         expect(await screen.findByText('Display Columns')).toBeInTheDocument();
-        expect(screen.queryAllByRole('button')).toHaveLength(0);
+        expect(screen.queryAllByRole('menuitemcheckbox')).toHaveLength(0);
     });
 
     test('closes the dropdown when clicking outside', async () => {
@@ -271,5 +271,155 @@ describe('SelectionDropdown Component', () => {
         });
 
         expect(screen.queryByText('Display Columns')).not.toBeInTheDocument();
+    });
+
+    test('removes the scroll listener it added when it closes', async () => {
+        const user = userEvent.setup();
+        const add = vi.spyOn(window, 'addEventListener');
+        const remove = vi.spyOn(window, 'removeEventListener');
+        render(
+            <SelectionDropdown
+                options={baseOptions}
+                selectedValues={[]}
+                onChange={vi.fn()}
+                trigger={<button>Columns</button>}
+            />,
+        );
+
+        await user.click(screen.getByText('Columns'));
+        await screen.findByRole('menu');
+        await user.click(document.body);
+
+        const added = add.mock.calls.find(([type]) => type === 'scroll');
+        const removed = remove.mock.calls.find(([type]) => type === 'scroll');
+        expect(added).toBeDefined();
+        expect(removed?.[1]).toBe(added?.[1]);
+
+        add.mockRestore();
+        remove.mockRestore();
+    });
+
+    test('closes when the page scrolls', async () => {
+        const user = userEvent.setup();
+        render(
+            <SelectionDropdown
+                options={baseOptions}
+                selectedValues={[]}
+                onChange={vi.fn()}
+                trigger={<button>Columns</button>}
+            />,
+        );
+
+        await user.click(screen.getByText('Columns'));
+        await screen.findByRole('menu');
+
+        act(() => {
+            window.dispatchEvent(new Event('scroll'));
+        });
+
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    test('moves focus into the menu, supports arrow keys, and returns focus on Escape', async () => {
+        const user = userEvent.setup();
+        render(
+            <SelectionDropdown
+                options={baseOptions}
+                selectedValues={['title']}
+                onChange={vi.fn()}
+                trigger={<button>Columns</button>}
+            />,
+        );
+
+        const trigger = screen.getByText('Columns');
+        await user.click(trigger);
+
+        const title = await screen.findByRole('menuitemcheckbox', {
+            name: 'Title',
+        });
+        expect(title).toHaveFocus();
+        expect(title).toHaveAttribute('aria-checked', 'true');
+
+        await user.keyboard('{ArrowDown}');
+        expect(
+            screen.getByRole('menuitemcheckbox', { name: 'Status' }),
+        ).toHaveFocus();
+
+        // Disabled options are skipped, so the list wraps back to the start.
+        await user.keyboard('{ArrowDown}');
+        expect(title).toHaveFocus();
+
+        await user.keyboard('{Escape}');
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+        expect(trigger).toHaveFocus();
+    });
+
+    test('exposes the open state on the trigger element', async () => {
+        const user = userEvent.setup();
+        render(
+            <SelectionDropdown
+                options={baseOptions}
+                selectedValues={[]}
+                onChange={vi.fn()}
+                trigger={<button>Columns</button>}
+            />,
+        );
+
+        const trigger = screen.getByRole('button', { name: 'Columns' });
+        expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+        await user.click(trigger);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    test('derives item roles and the checkbox indicator from the option kind', async () => {
+        const user = userEvent.setup();
+        const options: SelectionDropdownProps['options'] = [
+            { label: 'Reset', value: 'reset', kind: 'action' },
+            { label: 'Compact', value: 'compact', kind: 'radio' },
+            { label: 'Title', value: 'title' },
+        ];
+        render(
+            <SelectionDropdown
+                options={options}
+                selectedValues={['compact']}
+                onChange={vi.fn()}
+                trigger={<span>Columns</span>}
+            />,
+        );
+
+        await user.click(screen.getByText('Columns'));
+
+        expect(
+            screen.getByRole('menuitem', { name: 'Reset' }),
+        ).not.toHaveAttribute('aria-checked');
+        expect(
+            screen.getByRole('menuitemradio', { name: 'Compact' }),
+        ).toHaveAttribute('aria-checked', 'true');
+        expect(
+            screen.getByRole('menuitemcheckbox', { name: 'Title' }),
+        ).toHaveAttribute('aria-checked', 'false');
+        // Only the checkbox-kind option renders the checkbox indicator box.
+        expect(
+            document.querySelectorAll('.h-4.w-4.rounded.border'),
+        ).toHaveLength(1);
+    });
+
+    test('keeps the menu inside the viewport when the trigger is near the left edge', async () => {
+        const user = userEvent.setup();
+        render(
+            <SelectionDropdown
+                options={baseOptions}
+                selectedValues={[]}
+                onChange={vi.fn()}
+                trigger={<button>Columns</button>}
+            />,
+        );
+
+        // jsdom reports a zero rect (right = 0), i.e. the left edge.
+        await user.click(screen.getByText('Columns'));
+
+        expect(screen.getByRole('menu').style.left).toBe('8px');
     });
 });
