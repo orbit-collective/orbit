@@ -628,16 +628,34 @@ export interface CommentFormProps {
     isSubmitting?: boolean;
     onImageUpload?: (file: File) => Promise<string>;
 }
+/** An issue as returned by the project issue search/preview endpoints. */
 export interface IssueSuggestion {
     id: number;
     title: string;
+    status?: Issue['status'];
+    priority?: Issue['priority'];
+    labels?: Issue['labels'];
+    start_date?: Issue['start_date'];
+    end_date?: Issue['end_date'];
+    assignee?: Pick<
+        NonNullable<Issue['assignee']>,
+        'id' | 'name' | 'avatar'
+    > | null;
+}
+export interface IssueMentionLinkProps {
+    projectId?: number;
+    issueId: number;
+    /** Title captured in the comment token; used until/unless the live one loads. */
+    title: string;
+    label: string;
 }
 export interface MentionSuggestionsProps {
     /** Id of the listbox; option ids are derived as `${id}-option-${index}`. */
     id?: string;
     users: AssignableUser[];
     activeIndex: number;
-    position: { top: number; left: number };
+    /** `top` is just below the caret line, `lineTop` just above it. */
+    position: { top: number; lineTop: number; left: number };
     onSelect: (user: AssignableUser) => void;
     onHover: (index: number) => void;
     /** Renders issue rows instead of user rows when set to 'issue'. */

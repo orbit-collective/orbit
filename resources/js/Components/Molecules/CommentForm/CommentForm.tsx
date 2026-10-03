@@ -31,16 +31,19 @@ interface MentionState {
     start: number;
     query: string;
     activeIndex: number;
-    position: { top: number; left: number };
+    position: { top: number; lineTop: number; left: number };
 }
 
-/** Viewport coordinates just below the "@"/"#" being typed. */
+/** Viewport coordinates just below and above the "@"/"#" being typed. */
 const menuPosition = (textarea: HTMLTextAreaElement, start: number) => {
     const caret = getCaretCoordinates(textarea, start);
     const rect = textarea.getBoundingClientRect();
 
+    const lineTop = rect.top - textarea.scrollTop + caret.top;
+
     return {
-        top: rect.top - textarea.scrollTop + caret.top + caret.height + 4,
+        top: lineTop + caret.height + 4,
+        lineTop: lineTop - 4,
         left: rect.left - textarea.scrollLeft + caret.left,
     };
 };
