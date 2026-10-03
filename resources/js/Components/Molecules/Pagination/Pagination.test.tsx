@@ -10,12 +10,13 @@ vi.mock('@inertiajs/react', () => ({
         children,
         href,
         className,
+        ...rest
     }: {
         children: React.ReactNode;
         href?: string;
         className?: string;
     }) => (
-        <a href={href} className={className}>
+        <a href={href} className={className} {...rest}>
             {children}
         </a>
     ),
@@ -125,14 +126,24 @@ describe('Pagination Component', () => {
         await userEvent.click(screen.getByRole('button'));
         await userEvent.click(screen.getByText('20 rows'));
 
-        expect(addAlert).toHaveBeenCalledWith(
-            'Rows per page changed to 20',
-            'information',
-        );
         expect(router.get).toHaveBeenCalledWith(
             window.location.pathname,
             { page: 1, perPage: 20 },
-            { preserveScroll: true, preserveState: true },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: expect.any(Function),
+            },
+        );
+
+        // The alert only fires once the request has succeeded.
+        expect(addAlert).not.toHaveBeenCalled();
+        vi.mocked(router.get)
+            .mock.calls.at(-1)?.[2]
+            ?.onSuccess?.({} as never);
+        expect(addAlert).toHaveBeenCalledWith(
+            'Rows per page changed to 20',
+            'information',
         );
 
         // The dropdown closes after a selection is made.
@@ -149,5 +160,75 @@ describe('Pagination Component', () => {
         render(<Pagination links={links} from={1} to={10} total={25} />);
 
         expect(screen.getByText('2')).toHaveClass('hidden', 'sm:flex');
+    });
+
+    test('closes the rows-per-page dropdown with Escape or an outside click', async () => {
+        render(<Pagination links={buildLinks()} from={1} to={10} total={25} />);
+
+        await userEvent.click(screen.getByRole('button'));
+        expect(screen.getByText('20 rows')).toBeInTheDocument();
+        await userEvent.keyboard('{Escape}');
+        expect(screen.queryByText('20 rows')).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByRole('button'));
+        await userEvent.click(document.body);
+        expect(screen.queryByText('20 rows')).not.toBeInTheDocument();
+    });
+
+    test('exposes a labelled pagination landmark with named, current-aware links', () => {
+        render(<Pagination links={buildLinks()} from={1} to={10} total={25} />);
+
+        const nav = screen.getByRole('navigation', { name: 'Pagination' });
+        expect(nav).toBeInTheDocument();
+        expect(
+            screen.getByRole('link', { name: 'Next page' }),
+        ).toBeInTheDocument();
+        expect(screen.getByLabelText('Previous page')).toHaveAttribute(
+            'aria-disabled',
+            'true',
+        );
+        expect(screen.getByRole('link', { current: 'page' })).toHaveAttribute(
+            'aria-label',
+            'Page 1',
+        );
+    });
+
+    test('names the rows-per-page trigger for screen readers', () => {
+        render(<Pagination links={buildLinks()} from={1} to={10} total={25} />);
+
+        expect(
+            screen.getByRole('button', { name: /rows per page/i }),
+        ).toBeInTheDocument();
+    });
+
+    test('moves focus into the menu and supports arrow-key navigation', async () => {
+        render(<Pagination links={buildLinks()} from={1} to={10} total={25} />);
+
+        const trigger = screen.getByRole('button', { name: /rows per page/i });
+        expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+        await userEvent.click(trigger);
+        expect(trigger).toHaveAttribute('aria-expanded', 'true');
+        expect(
+            screen.getByRole('menuitemradio', { name: /10 rows/ }),
+        ).toHaveFocus();
+
+        await userEvent.keyboard('{ArrowDown}');
+        expect(
+            screen.getByRole('menuitemradio', { name: '20 rows' }),
+        ).toHaveFocus();
+
+        await userEvent.keyboard('{End}');
+        expect(
+            screen.getByRole('menuitemradio', { name: '100 rows' }),
+        ).toHaveFocus();
+
+        await userEvent.keyboard('{ArrowDown}');
+        expect(
+            screen.getByRole('menuitemradio', { name: /10 rows/ }),
+        ).toHaveFocus();
+
+        await userEvent.keyboard('{Escape}');
+        expect(trigger).toHaveFocus();
     });
 });
