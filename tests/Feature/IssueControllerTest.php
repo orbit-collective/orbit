@@ -1161,3 +1161,32 @@ test('issue search is forbidden to non-members', function () {
 
     $this->actingAs($outsider)->getJson("/projects/$project->id/issue-search?q=1")->assertForbidden();
 });
+
+test('issue preview returns the card data for an issue in the project', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Fix login', 'assignee_id' => $member->id]);
+
+    $this->actingAs($member)->getJson("/projects/$project->id/issues/$issue->id/preview")
+        ->assertOk()
+        ->assertJsonPath('id', $issue->id)
+        ->assertJsonPath('title', 'Fix login')
+        ->assertJsonPath('assignee.name', $member->name);
+});
+
+test('issue preview 404s for an issue of another project', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $project->users()->attach($member->id, ['role' => 'member']);
+    $foreign = Issue::factory()->create(['project_id' => Project::factory()->create()->id]);
+
+    $this->actingAs($member)->getJson("/projects/$project->id/issues/$foreign->id/preview")->assertNotFound();
+});
+
+test('issue preview is forbidden to non-members', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+
+    $this->actingAs(User::factory()->create())->getJson("/projects/$project->id/issues/$issue->id/preview")->assertForbidden();
+});

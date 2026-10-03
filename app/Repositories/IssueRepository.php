@@ -79,9 +79,10 @@ class IssueRepository
         return Issue::query()
             ->where('project_id', $projectId)
             ->where('id', 'like', $idPrefix.'%')
+            ->with('assignee')
             ->orderBy('id')
             ->limit($limit)
-            ->get(['id', 'title', 'project_id']);
+            ->get();
     }
 
     /**
