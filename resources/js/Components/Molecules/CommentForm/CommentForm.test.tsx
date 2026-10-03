@@ -510,7 +510,9 @@ describe('CommentForm image uploads', () => {
 
         const textarea = screen.getByPlaceholderText('Leave a comment...');
         await userEvent.type(textarea, 'See #2');
-        await userEvent.click(await screen.findByText('Fix login'));
+        await userEvent.click(
+            await screen.findByRole('option', { name: /Fix login/ }),
+        );
 
         expect(mockAxios.get).toHaveBeenCalledWith(
             '/projects.issues.search/7',
@@ -615,5 +617,30 @@ describe('CommentForm image uploads', () => {
             'aria-activedescendant',
             screen.getByRole('option').id,
         );
+    });
+
+    test('shows a preview card for the highlighted issue suggestion', async () => {
+        mockAxios.get.mockResolvedValue({
+            data: [
+                {
+                    id: 2,
+                    title: 'Fix login',
+                    status: 'in_progress',
+                    priority: 'high',
+                    labels: [],
+                    assignee: null,
+                },
+            ],
+        });
+        render(<CommentForm onSubmit={() => {}} projectId={7} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            '#2',
+        );
+        await screen.findByRole('option', { name: /Fix login/ });
+
+        expect(await screen.findByText('In Progress')).toBeInTheDocument();
+        expect(screen.getByText('Unassigned')).toBeInTheDocument();
     });
 });

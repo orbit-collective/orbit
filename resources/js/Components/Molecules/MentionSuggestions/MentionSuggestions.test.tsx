@@ -15,7 +15,7 @@ describe('MentionSuggestions Component', () => {
             <MentionSuggestions
                 users={[]}
                 activeIndex={0}
-                position={{ top: 0, left: 0 }}
+                position={{ top: 0, lineTop: 0, left: 0 }}
                 onSelect={() => {}}
                 onHover={() => {}}
             />,
@@ -29,7 +29,7 @@ describe('MentionSuggestions Component', () => {
             <MentionSuggestions
                 users={users}
                 activeIndex={0}
-                position={{ top: 0, left: 0 }}
+                position={{ top: 0, lineTop: 0, left: 0 }}
                 onSelect={() => {}}
                 onHover={() => {}}
             />,
@@ -45,7 +45,7 @@ describe('MentionSuggestions Component', () => {
             <MentionSuggestions
                 users={users}
                 activeIndex={0}
-                position={{ top: 0, left: 0 }}
+                position={{ top: 0, lineTop: 0, left: 0 }}
                 onSelect={handleSelect}
                 onHover={() => {}}
             />,
@@ -62,7 +62,7 @@ describe('MentionSuggestions Component', () => {
             <MentionSuggestions
                 users={users}
                 activeIndex={0}
-                position={{ top: 0, left: 0 }}
+                position={{ top: 0, lineTop: 0, left: 0 }}
                 onSelect={() => {}}
                 onHover={handleHover}
             />,
@@ -78,7 +78,7 @@ describe('MentionSuggestions Component', () => {
             <MentionSuggestions
                 users={[]}
                 activeIndex={0}
-                position={{ top: 0, left: 0 }}
+                position={{ top: 0, lineTop: 0, left: 0 }}
                 onSelect={() => {}}
                 onHover={() => {}}
                 emptyLabel="No members found"
@@ -98,7 +98,7 @@ describe('MentionSuggestions Component', () => {
                 users={[]}
                 issues={[{ id: 2, title: 'Fix login' }]}
                 activeIndex={0}
-                position={{ top: 0, left: 0 }}
+                position={{ top: 0, lineTop: 0, left: 0 }}
                 onSelect={() => {}}
                 onSelectIssue={onSelectIssue}
                 onHover={() => {}}
@@ -111,5 +111,38 @@ describe('MentionSuggestions Component', () => {
             id: 2,
             title: 'Fix login',
         });
+    });
+
+    test('opens upwards from the caret line when there is room above', () => {
+        render(
+            <MentionSuggestions
+                id="m"
+                users={users}
+                activeIndex={0}
+                position={{ top: 700, lineTop: 680, left: 20 }}
+                onSelect={() => {}}
+                onHover={() => {}}
+            />,
+        );
+
+        const panel = screen.getByRole('listbox').parentElement!;
+        expect(panel.style.bottom).toBe(`${window.innerHeight - 680}px`);
+        expect(panel.style.top).toBe('');
+    });
+
+    test('drops below the caret when there is no room above', () => {
+        render(
+            <MentionSuggestions
+                id="m"
+                users={users}
+                activeIndex={0}
+                position={{ top: 40, lineTop: 20, left: 20 }}
+                onSelect={() => {}}
+                onHover={() => {}}
+            />,
+        );
+
+        const panel = screen.getByRole('listbox').parentElement!;
+        expect(panel.style.top).toBe('40px');
     });
 });

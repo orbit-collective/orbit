@@ -1,3 +1,5 @@
+import { IssueSuggestion } from '@/types/Components';
+import { Issue } from '@/types/Issues';
 import { AssignableUser } from '@/types/Users';
 
 export interface ActiveMention {
@@ -223,4 +225,19 @@ export function splitMentionText(
     }
 
     return segments;
+}
+
+/**
+ * Adapts an issue returned by the search/preview endpoints to the shape
+ * IssuePreviewCard renders. The endpoints only send the fields the card
+ * shows, so the rest of Issue is intentionally left unset.
+ */
+export function toPreviewIssue(suggestion: IssueSuggestion): Issue {
+    return {
+        ...suggestion,
+        id: String(suggestion.id),
+        status: suggestion.status ?? 'open',
+        priority: suggestion.priority ?? 'medium',
+        assignee: suggestion.assignee ?? undefined,
+    } as Issue;
 }
