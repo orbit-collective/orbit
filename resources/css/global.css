@@ -10,7 +10,6 @@
     text-decoration: none;
     list-style: none;
     font-family: 'Poppins', sans-serif;
-    transition: all .3s ease;
 }
 
 html, body, #app {
