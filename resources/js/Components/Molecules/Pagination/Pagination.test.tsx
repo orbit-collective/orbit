@@ -162,6 +162,21 @@ describe('Pagination Component', () => {
         expect(screen.getByText('2')).toHaveClass('hidden', 'sm:flex');
     });
 
+    test('hides the ellipsis on mobile along with the numeric page links', () => {
+        const links = [
+            { url: null, label: '&laquo; Previous', active: false },
+            ...Array.from({ length: 10 }, (_, i) => ({
+                url: `/?page=${i + 1}`,
+                label: String(i + 1),
+                active: i === 0,
+            })),
+            { url: '/?page=2', label: 'Next &raquo;', active: false },
+        ];
+        render(<Pagination links={links} from={1} to={10} total={100} />);
+
+        expect(screen.getByText('...')).toHaveClass('hidden', 'sm:flex');
+    });
+
     test('closes the rows-per-page dropdown with Escape or an outside click', async () => {
         render(<Pagination links={buildLinks()} from={1} to={10} total={25} />);
 
