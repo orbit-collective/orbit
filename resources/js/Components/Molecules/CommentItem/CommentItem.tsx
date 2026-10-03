@@ -1,6 +1,7 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
+import IssueMentionLink from '@/Components/Molecules/IssueMentionLink/IssueMentionLink';
 import { CommentItemProps } from '@/types/Components';
 import { splitMarkdownImages } from '@/utils/imagePaste';
 import { splitMentionText } from '@/utils/mentions';
@@ -10,13 +11,22 @@ import React from 'react';
 const CommentItem: React.FC<CommentItemProps> = ({
     comment,
     users = [],
+    projectId,
     onEdit,
     onDelete,
     onImageUpload,
 }) => {
     const renderText = (value: string, keyPrefix: string) =>
         splitMentionText(value, users).map((segment, index) =>
-            segment.type === 'mention' ? (
+            segment.type === 'issue' ? (
+                <IssueMentionLink
+                    key={`${keyPrefix}-${index}`}
+                    projectId={projectId}
+                    issueId={segment.issueId}
+                    title={segment.title}
+                    label={segment.value}
+                />
+            ) : segment.type === 'mention' ? (
                 <span
                     key={`${keyPrefix}-${index}`}
                     className="bg-[var(--accent-color)]/10 mx-0.5 inline-flex items-center gap-1 rounded px-1 align-middle font-medium text-[var(--accent-color)]"

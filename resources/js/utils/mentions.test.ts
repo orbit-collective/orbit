@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest';
 import {
     applyRangeEdit,
     filterUsersByMention,
+    findActiveIssueMention,
     findActiveMention,
     MentionRange,
     splitMentionText,
@@ -210,6 +211,37 @@ describe('splitMentionText', () => {
     test('leaves plain "@Name" text (no token) unhighlighted', () => {
         expect(splitMentionText('Reach me at @nobody', users)).toEqual([
             { type: 'text', value: 'Reach me at @nobody' },
+        ]);
+    });
+});
+
+describe('issue mentions', () => {
+    test('findActiveIssueMention detects a "#" followed by digits', () => {
+        expect(findActiveIssueMention('see #12', 7)).toEqual({
+            query: '12',
+            start: 4,
+        });
+        expect(findActiveIssueMention('#', 1)).toEqual({ query: '', start: 0 });
+    });
+
+    test('findActiveIssueMention ignores "#" glued to a word and non-digits', () => {
+        expect(findActiveIssueMention('abc#1', 5)).toBeNull();
+        expect(findActiveIssueMention('#abc', 4)).toBeNull();
+    });
+
+    test('tokenizes issue ranges as #[title](id)', () => {
+        expect(
+            tokenizeMentionRanges('fix #2 now', [
+                { start: 4, length: 2, userId: 2, name: 'Bug', kind: 'issue' },
+            ]),
+        ).toBe('fix #[Bug](2) now');
+    });
+
+    test('splitMentionText yields issue segments', () => {
+        expect(splitMentionText('see #[Bug](2)!')).toEqual([
+            { type: 'text', value: 'see ' },
+            { type: 'issue', value: '#2', issueId: 2, title: 'Bug' },
+            { type: 'text', value: '!' },
         ]);
     });
 });

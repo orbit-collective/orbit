@@ -1,3 +1,5 @@
+import { IssueSuggestion } from '@/types/Components';
+import { Issue } from '@/types/Issues';
 import { AssignableUser } from '@/types/Users';
 
 export interface ActiveMention {
@@ -24,6 +26,27 @@ export function findActiveMention(
     const query = match[1];
 
     return { query, start: cursor - query.length - 1 };
+}
+
+export interface ActiveIssueMention {
+    query: string;
+    start: number;
+}
+
+/**
+ * Same idea as findActiveMention, for an in-progress "#2" issue reference: a
+ * "#" preceded by start-of-text or whitespace, followed only by digits. The
+ * returned `start` is the index of the "#" itself.
+ */
+export function findActiveIssueMention(
+    text: string,
+    cursor: number,
+): ActiveIssueMention | null {
+    const match = text.slice(0, cursor).match(/(?:^|\s)#(\d*)$/);
+
+    if (!match) return null;
+
+    return { query: match[1], start: cursor - match[1].length - 1 };
 }
 
 /**
@@ -56,6 +79,8 @@ export interface MentionRange {
     length: number;
     userId: number;
     name: string;
+    /** Defaults to 'user'; 'issue' ranges carry the issue id in `userId`. */
+    kind?: 'user' | 'issue';
 }
 
 /**
@@ -113,7 +138,8 @@ export function tokenizeMentionRanges(
     const sorted = [...ranges].sort((a, b) => b.start - a.start);
 
     return sorted.reduce((text, range) => {
-        const token = `@[${range.name}](${range.userId})`;
+        const prefix = range.kind === 'issue' ? '#' : '@';
+        const token = `${prefix}[${range.name}](${range.userId})`;
 
         return (
             text.slice(0, range.start) +
@@ -123,7 +149,7 @@ export function tokenizeMentionRanges(
     }, body);
 }
 
-const MENTION_TOKEN_PATTERN = /@\[([^\]]+)\]\((\d+)\)/g;
+const MENTION_TOKEN_PATTERN = /([@#])\[([^\]]+)\]\((\d+)\)/g;
 
 export type MentionSegment =
     | { type: 'text'; value: string }
@@ -133,7 +159,8 @@ export type MentionSegment =
           userId: number;
           name: string;
           avatar?: string | null;
-      };
+      }
+    | { type: 'issue'; value: string; issueId: number; title: string };
 
 /**
  * Splits a persisted comment body into plain-text and mention segments,
@@ -156,7 +183,7 @@ export function splitMentionText(
 
     MENTION_TOKEN_PATTERN.lastIndex = 0;
     while ((match = MENTION_TOKEN_PATTERN.exec(body)) !== null) {
-        const [full, tokenName, tokenId] = match;
+        const [full, sigil, tokenName, tokenId] = match;
         const userId = Number(tokenId);
         const user = usersById.get(userId);
 
@@ -165,6 +192,17 @@ export function splitMentionText(
                 type: 'text',
                 value: body.slice(lastIndex, match.index),
             });
+        }
+
+        if (sigil === '#') {
+            segments.push({
+                type: 'issue',
+                value: `#${userId}`,
+                issueId: userId,
+                title: tokenName,
+            });
+            lastIndex = match.index + full.length;
+            continue;
         }
 
         segments.push({
@@ -187,4 +225,19 @@ export function splitMentionText(
     }
 
     return segments;
+}
+
+/**
+ * Adapts an issue returned by the search/preview endpoints to the shape
+ * IssuePreviewCard renders. The endpoints only send the fields the card
+ * shows, so the rest of Issue is intentionally left unset.
+ */
+export function toPreviewIssue(suggestion: IssueSuggestion): Issue {
+    return {
+        ...suggestion,
+        id: String(suggestion.id),
+        status: suggestion.status ?? 'open',
+        priority: suggestion.priority ?? 'medium',
+        assignee: suggestion.assignee ?? undefined,
+    } as Issue;
 }

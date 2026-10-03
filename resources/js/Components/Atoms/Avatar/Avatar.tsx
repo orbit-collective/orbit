@@ -3,7 +3,7 @@ import { cva } from 'class-variance-authority';
 import React from 'react';
 
 const classVariants = cva(
-    'flex items-center justify-center rounded-full overflow-hidden border border-[var(--border-color)] bg-[var(--bg-light-color)] shrink-0',
+    'flex items-center justify-center rounded-full overflow-hidden shrink-0',
     {
         variants: {
             size: {

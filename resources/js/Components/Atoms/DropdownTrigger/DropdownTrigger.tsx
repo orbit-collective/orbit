@@ -60,6 +60,8 @@ const DropdownTrigger = forwardRef<HTMLButtonElement, DropdownTriggerProps>(
                     className,
                 )}
                 onClick={onClick}
+                aria-haspopup="true"
+                aria-expanded={!!isOpen}
                 disabled={disabled}
             >
                 {icon && (

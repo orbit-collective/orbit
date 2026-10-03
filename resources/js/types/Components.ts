@@ -31,6 +31,7 @@ import { WorkflowStatus } from '@/types/Workflow';
 import type { VariantProps } from 'class-variance-authority';
 import { icons } from 'lucide-react';
 import React, {
+    AriaRole,
     ButtonHTMLAttributes,
     ChangeEvent,
     HTMLAttributes,
@@ -70,12 +71,15 @@ export interface ChildrenItemProps {
     children: ReactNode;
 }
 export interface DropdownMenuProps extends ChildrenItemProps {
+    id?: string;
     direction?: 'top' | 'bottom';
     header?: ReactNode;
     stretch?: boolean;
     position?: 'inline' | 'floating';
     style?: React.CSSProperties;
     className?: string;
+    role?: AriaRole;
+    'aria-label'?: string;
 }
 export interface DropdownTriggerProps extends VariantProps<
     typeof dropdownTriggerVariants
@@ -151,6 +155,11 @@ export interface TextAreaProps extends VariantProps<typeof textareaVariants> {
     onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
     ref?: React.Ref<HTMLTextAreaElement> | null;
     onDrop?: (e: React.DragEvent<HTMLTextAreaElement>) => void;
+    role?: AriaRole;
+    'aria-expanded'?: boolean;
+    'aria-haspopup'?: 'listbox';
+    'aria-controls'?: string;
+    'aria-activedescendant'?: string;
 }
 export interface VisualCardProps {
     children: ReactNode;
@@ -352,6 +361,7 @@ export interface NavItemProps {
     onClick?: () => void;
     iconClassName?: string;
     link?: string;
+    title?: string;
     preserveScroll?: boolean;
     collapsed?: boolean;
     disabled?: boolean;
@@ -434,7 +444,13 @@ export interface DashboardEmptyStateProps {
     actionShortcut?: string;
 }
 export interface SelectionDropdownProps {
-    options: { label: string; value: string; disabled?: boolean }[];
+    options: {
+        label: string;
+        value: string;
+        disabled?: boolean;
+        /** checkbox (default) toggles, radio picks one, action just fires, separator is a divider. */
+        kind?: 'checkbox' | 'radio' | 'action' | 'separator';
+    }[];
     selectedValues: string[];
     onChange: (value: string) => void;
     trigger: ReactNode;
@@ -554,6 +570,8 @@ export interface CalendarViewProps {
 export interface IssuePreviewCardProps {
     issue: Issue;
     anchorRect: DOMRect;
+    /** 'top' always sits above the anchor; 'auto' prefers below when it fits. */
+    placement?: 'auto' | 'top';
 }
 export interface UpcomingDeadlinesPanelProps {
     issues: Issue[];
@@ -587,6 +605,7 @@ export interface IssuePageHeaderProps {
     ancestors?: Issue[];
 }
 export interface CommentItemProps {
+    projectId?: number;
     comment: Comment;
     users?: AssignableUser[];
     onEdit?: (comment: Comment, body: string) => void;
@@ -594,6 +613,7 @@ export interface CommentItemProps {
     onImageUpload?: (file: File) => Promise<string>;
 }
 export interface CommentListProps {
+    projectId?: number;
     comments: Comment[];
     users?: AssignableUser[];
     onEdit?: (comment: Comment, body: string) => void;
@@ -603,15 +623,47 @@ export interface CommentListProps {
 export interface CommentFormProps {
     onSubmit: (body: string, mentionedUserIds: number[]) => void;
     users?: AssignableUser[];
+    /** Enables "#2" issue mentions, resolved against this project's issues. */
+    projectId?: number;
     isSubmitting?: boolean;
     onImageUpload?: (file: File) => Promise<string>;
 }
+/** An issue as returned by the project issue search/preview endpoints. */
+export interface IssueSuggestion {
+    id: number;
+    title: string;
+    status?: Issue['status'];
+    priority?: Issue['priority'];
+    labels?: Issue['labels'];
+    start_date?: Issue['start_date'];
+    end_date?: Issue['end_date'];
+    assignee?: Pick<
+        NonNullable<Issue['assignee']>,
+        'id' | 'name' | 'avatar'
+    > | null;
+}
+export interface IssueMentionLinkProps {
+    projectId?: number;
+    issueId: number;
+    /** Title captured in the comment token; used until/unless the live one loads. */
+    title: string;
+    label: string;
+}
 export interface MentionSuggestionsProps {
+    /** Id of the listbox; option ids are derived as `${id}-option-${index}`. */
+    id?: string;
     users: AssignableUser[];
     activeIndex: number;
-    position: { top: number; left: number };
+    /** `top` is just below the caret line, `lineTop` just above it. */
+    position: { top: number; lineTop: number; left: number };
     onSelect: (user: AssignableUser) => void;
     onHover: (index: number) => void;
+    /** Renders issue rows instead of user rows when set to 'issue'. */
+    kind?: 'user' | 'issue';
+    issues?: IssueSuggestion[];
+    onSelectIssue?: (issue: IssueSuggestion) => void;
+    /** Shown instead of hiding the menu when there is nothing to suggest. */
+    emptyLabel?: string;
 }
 export interface IssueTableProps {
     issues: Issue[];

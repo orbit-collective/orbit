@@ -5,6 +5,7 @@ import React from 'react';
 const CommentList: React.FC<CommentListProps> = ({
     comments,
     users,
+    projectId,
     onEdit,
     onDelete,
     onImageUpload,
@@ -24,6 +25,7 @@ const CommentList: React.FC<CommentListProps> = ({
                     key={comment.id}
                     comment={comment}
                     users={users}
+                    projectId={projectId}
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onImageUpload={onImageUpload}

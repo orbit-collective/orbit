@@ -6,11 +6,17 @@ import { useAlert } from '@/context/AlertContext';
 import { PaginationProps } from '@/types/Components';
 import { Link, router } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
-import { Key, useState } from 'react';
+import {
+    Key,
+    KeyboardEvent as ReactKeyboardEvent,
+    useEffect,
+    useRef,
+    useState,
+} from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const paginationVariants = cva(
-    'flex items-center justify-center min-w-[32px] h-[32px] px-2 rounded-md text-sm text-[var(--text-color)] no-underline transition-all duration-100 ease-in-out border border-solid border-transparent cursor-pointer',
+    'flex items-center justify-center min-w-[32px] h-[32px] px-2 rounded-md text-sm text-[var(--text-color)] no-underline transition-all duration-100 ease-in-out border border-solid border-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)]',
     {
         variants: {
             active: {
@@ -79,6 +85,69 @@ const Pagination = ({
 }: PaginationProps) => {
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const { addAlert } = useAlert();
+    const rowsPerPageRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        if (!dropdownVisible) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (!rowsPerPageRef.current?.contains(event.target as Node)) {
+                setDropdownVisible(false);
+            }
+        };
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                setDropdownVisible(false);
+                triggerRef.current?.focus();
+            }
+        };
+
+        const items = getMenuItems();
+        (
+            items.find((item) => item.dataset.active === 'true') ?? items[0]
+        )?.focus();
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [dropdownVisible]);
+
+    const getMenuItems = () =>
+        Array.from(
+            rowsPerPageRef.current?.querySelectorAll<HTMLButtonElement>(
+                '[role="menuitemradio"]',
+            ) ?? [],
+        );
+
+    const handleMenuKeyDown = (event: ReactKeyboardEvent) => {
+        if (!dropdownVisible) return;
+
+        if (event.key === 'Tab') {
+            setDropdownVisible(false);
+            return;
+        }
+
+        const items = getMenuItems();
+        const index = items.indexOf(
+            document.activeElement as HTMLButtonElement,
+        );
+        let next: number | null = null;
+
+        if (event.key === 'ArrowDown') next = (index + 1) % items.length;
+        else if (event.key === 'ArrowUp')
+            next = (index - 1 + items.length) % items.length;
+        else if (event.key === 'Home') next = 0;
+        else if (event.key === 'End') next = items.length - 1;
+
+        if (next !== null) {
+            event.preventDefault();
+            items[next]?.focus();
+        }
+    };
 
     if (total === 0) return null;
 
@@ -95,7 +164,6 @@ const Pagination = ({
         queryParams?.perPage || rowsPerPageCounts[0].toString();
 
     const handlePerPageChange = (newPerPage: number) => {
-        addAlert(`Rows per page changed to ${newPerPage}`, 'information');
         const newParams = {
             ...queryParams,
             perPage: newPerPage,
@@ -105,8 +173,20 @@ const Pagination = ({
         router.get(window.location.pathname, newParams, {
             preserveScroll: true,
             preserveState: true,
+            onSuccess: () =>
+                addAlert(
+                    `Rows per page changed to ${newPerPage}`,
+                    'information',
+                ),
         });
         setDropdownVisible(false);
+        triggerRef.current?.focus();
+    };
+
+    const getLinkAriaLabel = (label: string) => {
+        if (label.includes('Previous')) return 'Previous page';
+        if (label.includes('Next')) return 'Next page';
+        return `Page ${label}`;
     };
 
     const prevLink = links[0];
@@ -140,14 +220,25 @@ const Pagination = ({
 
         if (isLinkDisabled) {
             return (
-                <span key={key} className={className}>
+                <span
+                    key={key}
+                    className={className}
+                    aria-label={getLinkAriaLabel(link.label)}
+                    aria-disabled="true"
+                >
                     {renderLabel(link.label)}
                 </span>
             );
         }
 
         return (
-            <Link key={key} href={link.url!} className={className}>
+            <Link
+                key={key}
+                href={link.url!}
+                className={className}
+                aria-label={getLinkAriaLabel(link.label)}
+                aria-current={link.active ? 'page' : undefined}
+            >
                 {renderLabel(link.label)}
             </Link>
         );
@@ -170,23 +261,37 @@ const Pagination = ({
                 </span>{' '}
                 results
             </div>
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:flex-nowrap lg:gap-6">
-                <div className="relative flex shrink-0 items-center gap-2">
-                    <span className="whitespace-nowrap text-[var(--text-gray-color)]">
+            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:gap-6 xl:flex-nowrap">
+                <div
+                    ref={rowsPerPageRef}
+                    onKeyDown={handleMenuKeyDown}
+                    className="relative flex shrink-0 items-center gap-2"
+                >
+                    <span
+                        aria-hidden="true"
+                        className="whitespace-nowrap text-[var(--text-gray-color)]"
+                    >
                         Rows per page:
                     </span>
                     <DropdownTrigger
+                        ref={triggerRef}
                         label={
                             <div className="flex items-center gap-2">
+                                <span className="sr-only">Rows per page:</span>
                                 <span className="font-semibold text-[var(--text-color)]">
                                     {currentPerPage}
                                 </span>
                             </div>
                         }
+                        isOpen={dropdownVisible}
                         onClick={() => setDropdownVisible(!dropdownVisible)}
                     />
                     {dropdownVisible && (
-                        <DropdownMenu direction={'top'}>
+                        <DropdownMenu
+                            direction={'top'}
+                            role="menu"
+                            aria-label="Rows per page"
+                        >
                             {rowsPerPageCounts.map((count) => (
                                 <DropdownItem
                                     key={count}
@@ -199,6 +304,13 @@ const Pagination = ({
                                             )}
                                         </div>
                                     }
+                                    role="menuitemradio"
+                                    aria-checked={
+                                        currentPerPage === count.toString()
+                                    }
+                                    data-active={
+                                        currentPerPage === count.toString()
+                                    }
                                     isActive={
                                         currentPerPage === count.toString()
                                     }
@@ -209,16 +321,20 @@ const Pagination = ({
                     )}
                 </div>
                 {links && numericLinks.length > 1 && (
-                    <div className="scrollbar-hide flex flex-nowrap items-center justify-center gap-1 overflow-x-auto sm:gap-2">
+                    <nav
+                        aria-label="Pagination"
+                        className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto scrollbar-none sm:gap-2"
+                    >
                         {renderLink(prevLink, 'prev')}
                         {getCondensedPageNumbers(currentPage, lastPage).map(
                             (page, index) =>
                                 page === 'ellipsis' ? (
                                     <span
                                         key={`ellipsis-${index}`}
+                                        aria-hidden="true"
                                         className={`${paginationVariants({
                                             disabled: true,
-                                        })} flex`}
+                                        })} hidden sm:flex`}
                                     >
                                         ...
                                     </span>
@@ -234,7 +350,7 @@ const Pagination = ({
                                 ),
                         )}
                         {renderLink(nextLink, 'next')}
-                    </div>
+                    </nav>
                 )}
             </div>
         </div>

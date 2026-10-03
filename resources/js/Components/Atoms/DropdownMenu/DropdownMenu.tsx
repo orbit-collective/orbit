@@ -3,15 +3,21 @@ import { cn } from '@/utils/cn';
 
 export default function DropdownMenu({
     children,
+    id,
     direction = 'bottom',
     header,
     stretch = true,
     position = 'inline',
     style,
     className,
+    role,
+    'aria-label': ariaLabel,
 }: DropdownMenuProps) {
     return (
         <div
+            id={id}
+            role={role}
+            aria-label={ariaLabel}
             style={style}
             className={cn(
                 'z-[100] flex max-h-[320px] flex-col overflow-y-auto overflow-x-hidden rounded-xl border border-[var(--border-color-strong)] bg-[var(--bg-dark-color)] p-1.5 shadow-2xl backdrop-blur-md scrollbar-none',

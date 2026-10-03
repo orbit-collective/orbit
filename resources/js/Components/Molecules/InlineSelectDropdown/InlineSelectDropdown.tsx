@@ -2,7 +2,15 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import { InlineSelectDropdownProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { icons } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    KeyboardEvent as ReactKeyboardEvent,
+    useCallback,
+    useEffect,
+    useId,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 const PANEL_WIDTH = 224;
@@ -26,8 +34,10 @@ export default function InlineSelectDropdown({
 }: InlineSelectDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState('');
+    const listboxId = useId();
     const triggerRef = useRef<HTMLButtonElement>(null);
     const panelRef = useRef<HTMLDivElement>(null);
+    const searchRef = useRef<HTMLInputElement>(null);
     const [coords, setCoords] = useState<{ top: number; left: number } | null>(
         null,
     );
@@ -74,26 +84,85 @@ export default function InlineSelectDropdown({
             }
             setIsOpen(false);
         };
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setIsOpen(false);
-        };
-
         document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleKeyDown);
         window.addEventListener('resize', updateCoords);
         window.addEventListener('scroll', updateCoords, true);
 
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('resize', updateCoords);
             window.removeEventListener('scroll', updateCoords, true);
         };
     }, [isOpen, updateCoords]);
 
+    const closeAndRestoreFocus = useCallback(() => {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+    }, []);
+
+    // Move focus to the selected option (or the first focusable item) once the
+    // panel is mounted. With the search box the input keeps autoFocus.
+    useEffect(() => {
+        if (!isOpen || !coords || showSearch) return;
+        const items = getNavItems();
+        const selected = items.find(
+            (item) => item.getAttribute('aria-selected') === 'true',
+        );
+        (selected ?? items[0])?.focus();
+    }, [isOpen, coords !== null, showSearch]);
+
+    function getNavItems(): HTMLElement[] {
+        return Array.from(
+            panelRef.current?.querySelectorAll<HTMLElement>('[data-nav]') ?? [],
+        );
+    }
+
+    const handlePanelKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Escape') {
+            // Close only this dropdown, not a parent modal.
+            event.preventDefault();
+            event.stopPropagation();
+            closeAndRestoreFocus();
+            return;
+        }
+        if (event.key === 'Tab') {
+            // The panel is portaled to <body>; keep Tab order sane.
+            event.preventDefault();
+            closeAndRestoreFocus();
+            return;
+        }
+
+        const items = getNavItems();
+        if (items.length === 0) return;
+        const current = items.indexOf(document.activeElement as HTMLElement);
+        let next: number | null = null;
+
+        if (event.key === 'ArrowDown') next = (current + 1) % items.length;
+        else if (event.key === 'ArrowUp')
+            next = current <= 0 ? items.length - 1 : current - 1;
+        else if (event.key === 'Home' && event.target !== searchRef.current)
+            next = 0;
+        else if (event.key === 'End' && event.target !== searchRef.current)
+            next = items.length - 1;
+
+        if (next !== null) {
+            event.preventDefault();
+            items[next].focus();
+        }
+    };
+
+    const handleTriggerKeyDown = (
+        event: ReactKeyboardEvent<HTMLButtonElement>,
+    ) => {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            setIsOpen(true);
+        }
+    };
+
     const selectValue = (nextValue: string) => {
         onChange(value === nextValue ? null : nextValue);
-        setIsOpen(false);
+        closeAndRestoreFocus();
     };
 
     return (
@@ -103,10 +172,13 @@ export default function InlineSelectDropdown({
                 type="button"
                 disabled={disabled}
                 aria-label={label}
+                aria-haspopup="listbox"
                 aria-expanded={isOpen}
+                aria-controls={isOpen ? listboxId : undefined}
                 onClick={() => setIsOpen((prev) => !prev)}
+                onKeyDown={handleTriggerKeyDown}
                 className={cn(
-                    'flex min-w-[9rem] cursor-pointer items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm transition-all duration-100 ease-in-out disabled:cursor-not-allowed disabled:opacity-50',
+                    'flex min-w-[9rem] cursor-pointer items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm transition-all duration-100 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-50',
                     selectedOption && subtle
                         ? 'border-solid border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)]'
                         : selectedOption
@@ -152,6 +224,7 @@ export default function InlineSelectDropdown({
                 createPortal(
                     <div
                         ref={panelRef}
+                        onKeyDown={handlePanelKeyDown}
                         style={{
                             position: 'fixed',
                             top: coords.top,
@@ -168,11 +241,12 @@ export default function InlineSelectDropdown({
                             {selectedOption && (
                                 <button
                                     type="button"
+                                    data-nav
                                     onClick={() => {
                                         onChange(null);
-                                        setIsOpen(false);
+                                        closeAndRestoreFocus();
                                     }}
-                                    className="cursor-pointer text-[10px] font-medium text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
+                                    className="cursor-pointer rounded-sm text-[10px] font-medium text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)] focus:text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                                 >
                                     Clear
                                 </button>
@@ -187,7 +261,11 @@ export default function InlineSelectDropdown({
                                     className="shrink-0 text-[var(--text-muted-color)]"
                                 />
                                 <input
+                                    ref={searchRef}
+                                    data-nav
                                     autoFocus
+                                    aria-label={`Search ${label.toLowerCase()}`}
+                                    aria-controls={listboxId}
                                     value={search}
                                     onChange={(event) =>
                                         setSearch(event.target.value)
@@ -198,7 +276,12 @@ export default function InlineSelectDropdown({
                             </div>
                         )}
 
-                        <div className="mt-2 min-h-0 flex-1 overflow-y-auto px-1.5 pb-1.5">
+                        <div
+                            id={listboxId}
+                            role="listbox"
+                            aria-label={label}
+                            className="mt-2 min-h-0 flex-1 overflow-y-auto px-1.5 pb-1.5"
+                        >
                             {filteredOptions.length === 0 ? (
                                 <div className="flex flex-col items-center gap-1.5 px-3 py-6 text-center">
                                     <Icon
@@ -217,11 +300,14 @@ export default function InlineSelectDropdown({
                                         <button
                                             key={option.value}
                                             type="button"
+                                            role="option"
+                                            aria-selected={isSelected}
+                                            data-nav
                                             onClick={() =>
                                                 selectValue(option.value)
                                             }
                                             className={cn(
-                                                'group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-all duration-150',
+                                                'group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-all duration-150 focus:bg-[var(--bg-light-color)] focus:text-[var(--text-color)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--accent-color)]',
                                                 isSelected
                                                     ? 'bg-[var(--accent-color)]/10 text-[var(--text-color)]'
                                                     : 'text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',

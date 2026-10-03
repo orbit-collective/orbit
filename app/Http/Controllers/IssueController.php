@@ -19,6 +19,7 @@ use App\Services\ProjectService;
 use App\Services\UserService;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -67,6 +68,51 @@ class IssueController extends Controller
             'canCreateGithubDevelopment' => $request->user()->can('createGithubDevelopment', $issue),
             'githubAccountLinked' => $request->user()->github_id !== null,
         ]);
+    }
+
+    /**
+     * JSON lookup behind the "#2" mention suggestions in the comment box.
+     */
+    public function search(Request $request, Project $project): JsonResponse
+    {
+        $this->authorize('view', $project);
+
+        $issues = $this->issueService->searchProjectIssuesById($project, (string) $request->query('q', ''));
+
+        return response()->json($issues->map(fn (Issue $issue) => $this->previewPayload($issue))->values());
+    }
+
+    /**
+     * JSON data for the hover card on an issue mentioned in a comment.
+     */
+    public function preview(Project $project, Issue $issue): JsonResponse
+    {
+        $this->authorize('view', $project);
+
+        if ($issue->project_id !== $project->id) {
+            throw new NotFoundHttpException;
+        }
+
+        return response()->json($this->previewPayload($issue->loadMissing('assignee')));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function previewPayload(Issue $issue): array
+    {
+        return [
+            'id' => $issue->id,
+            'title' => $issue->title,
+            'status' => $issue->status,
+            'priority' => $issue->priority,
+            'labels' => $issue->labels ?? [],
+            'start_date' => $issue->start_date,
+            'end_date' => $issue->end_date,
+            'assignee' => $issue->assignee
+                ? ['id' => $issue->assignee->id, 'name' => $issue->assignee->name, 'avatar' => $issue->assignee->avatar]
+                : null,
+        ];
     }
 
     /**
