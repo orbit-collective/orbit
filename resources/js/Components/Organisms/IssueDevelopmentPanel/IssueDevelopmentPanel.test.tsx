@@ -334,7 +334,9 @@ describe('IssueDevelopmentPanel', () => {
         );
 
         fireEvent.click(screen.getByRole('button', { name: 'Create branch' }));
-        expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Repository' }),
+        ).not.toBeInTheDocument();
 
         rerender(
             <IssueDevelopmentPanel
@@ -344,6 +346,8 @@ describe('IssueDevelopmentPanel', () => {
             />,
         );
 
-        expect(screen.getByRole('combobox')).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Repository' }),
+        ).toBeInTheDocument();
     });
 });

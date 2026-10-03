@@ -1,7 +1,10 @@
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
+import Button from '@/Components/Atoms/Button/Button';
+import Input from '@/Components/Atoms/Input/Input';
+import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import { GithubDevelopmentRepository, LinkedPullRequest } from '@/types/Issues';
 import { cva } from 'class-variance-authority';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 interface IssueDevelopmentPanelProps {
     pullRequests: LinkedPullRequest[];
@@ -85,17 +88,38 @@ function RepositoryPicker({
     if (repositories.length <= 1) return null;
 
     return (
-        <select
-            value={value}
-            onChange={(event) => onChange(Number(event.target.value))}
-            className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-dark-color)] px-2 py-1.5 text-xs text-[var(--text-color)]"
-        >
-            {repositories.map((repository) => (
-                <option key={repository.id} value={repository.id}>
-                    {repository.owner}/{repository.name}
-                </option>
-            ))}
-        </select>
+        <div className="[&>button]:w-full">
+            <InlineSelectDropdown
+                label="Repository"
+                placeholder="Select repository"
+                options={repositories.map((repository) => ({
+                    value: String(repository.id),
+                    label: `${repository.owner}/${repository.name}`,
+                    icon: 'GitBranch',
+                }))}
+                value={String(value)}
+                onChange={(next) => {
+                    if (next !== null) onChange(Number(next));
+                }}
+                subtle
+            />
+        </div>
+    );
+}
+
+function LabelledInput({
+    label,
+    ...props
+}: { label: string } & React.ComponentProps<typeof Input>) {
+    const id = useId();
+
+    return (
+        <>
+            <label htmlFor={id} className="sr-only">
+                {label}
+            </label>
+            <Input id={id} {...props} />
+        </>
     );
 }
 
@@ -119,34 +143,33 @@ function CreateBranchForm({
                 event.preventDefault();
                 onSubmit({ repositoryId, name });
             }}
-            className="flex flex-col gap-1.5 rounded-lg border border-[var(--border-color)] p-2"
+            className="flex flex-col gap-1.5 rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-2"
         >
             <RepositoryPicker
                 repositories={repositories}
                 value={repositoryId}
                 onChange={setRepositoryId}
             />
-            <input
+            <Input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="branch-name"
-                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-dark-color)] px-2 py-1.5 text-xs text-[var(--text-color)]"
             />
             <div className="flex items-center justify-end gap-2">
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="text-xs text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
+                    className="cursor-pointer rounded-sm text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:text-[var(--text-color)] focus-visible:outline-2 focus-visible:outline-[var(--accent-color)]"
                 >
                     Cancel
                 </button>
-                <button
+                <Button
                     type="submit"
-                    disabled={name.trim() === ''}
-                    className="rounded-lg bg-[var(--accent-color)] px-2.5 py-1 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                    isDisabled={name.trim() === ''}
+                    className="px-2.5 py-1 text-xs"
                 >
                     Create branch
-                </button>
+                </Button>
             </div>
         </form>
     );
@@ -179,46 +202,43 @@ function CreatePullRequestForm({
                 event.preventDefault();
                 onSubmit({ repositoryId, title, head, base: base || 'main' });
             }}
-            className="flex flex-col gap-1.5 rounded-lg border border-[var(--border-color)] p-2"
+            className="flex flex-col gap-1.5 rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-2"
         >
             <RepositoryPicker
                 repositories={repositories}
                 value={repositoryId}
                 onChange={setRepositoryId}
             />
-            <input
+            <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Pull request title"
-                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-dark-color)] px-2 py-1.5 text-xs text-[var(--text-color)]"
             />
-            <input
+            <Input
                 value={head}
                 onChange={(event) => setHead(event.target.value)}
                 placeholder="Source branch"
-                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-dark-color)] px-2 py-1.5 text-xs text-[var(--text-color)]"
             />
-            <input
+            <Input
                 value={base}
                 onChange={(event) => setBase(event.target.value)}
                 placeholder="Target branch (default: main)"
-                className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-dark-color)] px-2 py-1.5 text-xs text-[var(--text-color)]"
             />
             <div className="flex items-center justify-end gap-2">
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="text-xs text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
+                    className="cursor-pointer rounded-sm text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:text-[var(--text-color)] focus-visible:outline-2 focus-visible:outline-[var(--accent-color)]"
                 >
                     Cancel
                 </button>
-                <button
+                <Button
                     type="submit"
-                    disabled={title.trim() === '' || head.trim() === ''}
-                    className="rounded-lg bg-[var(--accent-color)] px-2.5 py-1 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                    isDisabled={title.trim() === '' || head.trim() === ''}
+                    className="px-2.5 py-1 text-xs"
                 >
                     Create pull request
-                </button>
+                </Button>
             </div>
         </form>
     );
