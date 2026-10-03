@@ -72,4 +72,44 @@ describe('MentionSuggestions Component', () => {
 
         expect(handleHover).toHaveBeenCalledWith(1);
     });
+
+    test('renders the empty label when there is nothing to suggest', () => {
+        render(
+            <MentionSuggestions
+                users={[]}
+                activeIndex={0}
+                position={{ top: 0, left: 0 }}
+                onSelect={() => {}}
+                onHover={() => {}}
+                emptyLabel="No members found"
+            />,
+        );
+
+        expect(screen.getByRole('status')).toHaveTextContent(
+            'No members found',
+        );
+    });
+
+    test('renders issue rows and selects one in issue mode', async () => {
+        const onSelectIssue = vi.fn();
+        render(
+            <MentionSuggestions
+                kind="issue"
+                users={[]}
+                issues={[{ id: 2, title: 'Fix login' }]}
+                activeIndex={0}
+                position={{ top: 0, left: 0 }}
+                onSelect={() => {}}
+                onSelectIssue={onSelectIssue}
+                onHover={() => {}}
+            />,
+        );
+
+        expect(screen.getByText('#2')).toBeInTheDocument();
+        await userEvent.click(screen.getByText('Fix login'));
+        expect(onSelectIssue).toHaveBeenCalledWith({
+            id: 2,
+            title: 'Fix login',
+        });
+    });
 });

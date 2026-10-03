@@ -275,6 +275,7 @@ export default function Show({
                                     <CommentList
                                         comments={issue.comments || []}
                                         users={users}
+                                        projectId={project.id}
                                         onEdit={editComment}
                                         onDelete={deleteComment}
                                         onImageUpload={uploadImage}
@@ -282,6 +283,7 @@ export default function Show({
                                     <CommentForm
                                         onSubmit={addComment}
                                         users={users}
+                                        projectId={project.id}
                                         onImageUpload={uploadImage}
                                     />
                                 </div>

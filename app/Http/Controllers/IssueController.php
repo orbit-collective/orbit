@@ -19,6 +19,7 @@ use App\Services\ProjectService;
 use App\Services\UserService;
 use App\Services\WorkflowService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -67,6 +68,20 @@ class IssueController extends Controller
             'canCreateGithubDevelopment' => $request->user()->can('createGithubDevelopment', $issue),
             'githubAccountLinked' => $request->user()->github_id !== null,
         ]);
+    }
+
+    /**
+     * JSON lookup behind the "#2" mention suggestions in the comment box.
+     */
+    public function search(Request $request, Project $project): JsonResponse
+    {
+        $this->authorize('view', $project);
+
+        $issues = $this->issueService->searchProjectIssuesById($project, (string) $request->query('q', ''));
+
+        return response()->json(
+            $issues->map(fn (Issue $issue) => ['id' => $issue->id, 'title' => $issue->title])->values()
+        );
     }
 
     /**

@@ -68,6 +68,23 @@ class IssueRepository
     }
 
     /**
+     * Issues of one project whose id starts with the typed digits - backs the
+     * "#2" mention suggestions in the comment box. Always scoped by
+     * project_id so a mention can never surface another project's issue.
+     *
+     * @return Collection<array-key, Issue>
+     */
+    public function searchByIdPrefix(int $projectId, string $idPrefix, int $limit = 5): Collection
+    {
+        return Issue::query()
+            ->where('project_id', $projectId)
+            ->where('id', 'like', $idPrefix.'%')
+            ->orderBy('id')
+            ->limit($limit)
+            ->get(['id', 'title', 'project_id']);
+    }
+
+    /**
      * Bulk-create primitive: loops the existing store() per row rather than a
      * raw insert(), so Eloquent casts/model events still run per issue (e.g.
      * the labels enum-array cast) - correctness over a single fast query.

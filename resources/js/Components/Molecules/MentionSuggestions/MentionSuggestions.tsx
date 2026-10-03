@@ -17,8 +17,15 @@ export default function MentionSuggestions({
     position,
     onSelect,
     onHover,
+    kind = 'user',
+    issues = [],
+    onSelectIssue,
+    emptyLabel,
 }: MentionSuggestionsProps) {
-    if (users.length === 0) return null;
+    const isIssue = kind === 'issue';
+    const isEmpty = isIssue ? issues.length === 0 : users.length === 0;
+
+    if (isEmpty && !emptyLabel) return null;
 
     // Two project members can share a display name - without this, the list
     // would show two identical-looking rows with no way to tell which is
@@ -39,31 +46,59 @@ export default function MentionSuggestions({
                 zIndex: 9999,
             }}
         >
-            {users.map((user, index) => (
-                <DropdownItem
-                    key={user.id}
-                    appearance="flat"
-                    isActive={index === activeIndex}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onMouseEnter={() => onHover(index)}
-                    onClick={() => onSelect(user)}
-                    label={
-                        <>
-                            <Avatar
-                                src={user.avatar ?? undefined}
-                                initials={user.name.charAt(0)}
-                                size="sm"
-                            />
-                            <span className="truncate">{user.name}</span>
-                            {(nameCounts.get(user.name) ?? 0) > 1 && (
+            {isEmpty && (
+                <div
+                    role="status"
+                    className="px-3 py-2 text-sm text-[var(--text-muted-color)]"
+                >
+                    {emptyLabel}
+                </div>
+            )}
+            {isIssue &&
+                issues.map((issue, index) => (
+                    <DropdownItem
+                        key={issue.id}
+                        appearance="flat"
+                        isActive={index === activeIndex}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onMouseEnter={() => onHover(index)}
+                        onClick={() => onSelectIssue?.(issue)}
+                        label={
+                            <>
                                 <span className="shrink-0 text-xs text-[var(--text-muted-color)]">
-                                    #{user.id}
+                                    #{issue.id}
                                 </span>
-                            )}
-                        </>
-                    }
-                />
-            ))}
+                                <span className="truncate">{issue.title}</span>
+                            </>
+                        }
+                    />
+                ))}
+            {!isIssue &&
+                users.map((user, index) => (
+                    <DropdownItem
+                        key={user.id}
+                        appearance="flat"
+                        isActive={index === activeIndex}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onMouseEnter={() => onHover(index)}
+                        onClick={() => onSelect(user)}
+                        label={
+                            <>
+                                <Avatar
+                                    src={user.avatar ?? undefined}
+                                    initials={user.name.charAt(0)}
+                                    size="sm"
+                                />
+                                <span className="truncate">{user.name}</span>
+                                {(nameCounts.get(user.name) ?? 0) > 1 && (
+                                    <span className="shrink-0 text-xs text-[var(--text-muted-color)]">
+                                        #{user.id}
+                                    </span>
+                                )}
+                            </>
+                        }
+                    />
+                ))}
         </DropdownMenu>,
         document.body,
     );

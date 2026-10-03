@@ -1,7 +1,7 @@
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
-import { CommentFormProps } from '@/types/Components';
+import { CommentFormProps, IssueSuggestion } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
 import { getCaretCoordinates } from '@/utils/caretPosition';
 import {
@@ -12,13 +12,16 @@ import {
 import {
     applyRangeEdit,
     filterUsersByMention,
+    findActiveIssueMention,
     findActiveMention,
     MentionRange,
     tokenizeMentionRanges,
 } from '@/utils/mentions';
+import axios from 'axios';
 import React, { SyntheticEvent, useEffect, useRef, useState } from 'react';
 
 interface MentionState {
+    kind: 'user' | 'issue';
     start: number;
     query: string;
     activeIndex: number;
@@ -28,6 +31,7 @@ interface MentionState {
 const CommentForm: React.FC<CommentFormProps> = ({
     onSubmit,
     users = [],
+    projectId,
     isSubmitting = false,
     onImageUpload,
 }) => {
@@ -38,6 +42,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
     const [mentionRanges, setMentionRanges] = useState<MentionRange[]>([]);
     const [mention, setMention] = useState<MentionState | null>(null);
     const [pendingCaret, setPendingCaret] = useState<number | null>(null);
+    // Results are stored with the query they answer, so a stale or in-flight
+    // lookup is never mistaken for "no issue matches".
+    const [issueResults, setIssueResults] = useState<{
+        query: string;
+        items: IssueSuggestion[];
+    } | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     // The selection right before the current edit is applied - captured on
     // keydown/paste/cut, since that's the only reliable way to know exactly
@@ -61,9 +71,53 @@ const CommentForm: React.FC<CommentFormProps> = ({
         setPendingCaret(null);
     }, [body, pendingCaret]);
 
-    const suggestions = mention
-        ? filterUsersByMention(users, mention.query)
-        : [];
+    const suggestions =
+        mention?.kind === 'user'
+            ? filterUsersByMention(users, mention.query)
+            : [];
+
+    const issueQuery = mention?.kind === 'issue' ? mention.query : null;
+    const issueSuggestions =
+        issueQuery !== null && issueResults?.query === issueQuery
+            ? issueResults.items
+            : [];
+    const optionCount =
+        mention?.kind === 'issue'
+            ? issueSuggestions.length
+            : suggestions.length;
+
+    useEffect(() => {
+        if (issueQuery === null || !projectId || issueQuery === '') return;
+
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            axios
+                .get<IssueSuggestion[]>(
+                    route('projects.issues.search', projectId),
+                    { params: { q: issueQuery } },
+                )
+                .then(({ data }) => {
+                    if (!cancelled)
+                        setIssueResults({ query: issueQuery, items: data });
+                })
+                .catch(() => {
+                    if (!cancelled)
+                        setIssueResults({ query: issueQuery, items: [] });
+                });
+        }, 150);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [issueQuery, projectId]);
+
+    const issueEmptyLabel =
+        issueQuery === ''
+            ? 'Type an issue number'
+            : issueResults?.query === issueQuery
+              ? 'No issues found'
+              : 'Searching...';
 
     const captureEditRange = (
         el: HTMLTextAreaElement,
@@ -81,7 +135,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
     const syncMentionState = (textarea: HTMLTextAreaElement) => {
         const cursor = textarea.selectionStart;
-        const activeMention = findActiveMention(textarea.value, cursor);
+        const userMention = findActiveMention(textarea.value, cursor);
+        const issueMention =
+            !userMention && projectId
+                ? findActiveIssueMention(textarea.value, cursor)
+                : null;
+        const activeMention = userMention ?? issueMention;
 
         if (!activeMention) {
             setMention(null);
@@ -92,6 +151,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
         const rect = textarea.getBoundingClientRect();
 
         setMention({
+            kind: userMention ? 'user' : 'issue',
             start: activeMention.start,
             query: activeMention.query,
             activeIndex: 0,
@@ -144,6 +204,39 @@ const CommentForm: React.FC<CommentFormProps> = ({
         editRangeRef.current = null;
     };
 
+    const selectIssue = (issue: IssueSuggestion) => {
+        if (!mention || !textareaRef.current) return;
+
+        const cursor = textareaRef.current.selectionStart;
+        const mentionText = `#${issue.id}`;
+        const newBody =
+            body.slice(0, mention.start) +
+            mentionText +
+            ' ' +
+            body.slice(cursor);
+
+        setBody(newBody);
+        setMentionRanges((prev) => [
+            ...applyRangeEdit(
+                prev,
+                mention.start,
+                cursor,
+                mentionText.length + 1,
+            ),
+            {
+                start: mention.start,
+                length: mentionText.length,
+                userId: issue.id,
+                // Brackets would break the "#[title](id)" token.
+                name: issue.title.replace(/[[\]]/g, ''),
+                kind: 'issue',
+            },
+        ]);
+        setMention(null);
+        setPendingCaret(mention.start + mentionText.length + 1);
+        editRangeRef.current = null;
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const newBody = e.target.value;
         const captured = editRangeRef.current;
@@ -169,12 +262,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (mention && suggestions.length > 0) {
+        if (mention && optionCount > 0) {
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 setMention({
                     ...mention,
-                    activeIndex: (mention.activeIndex + 1) % suggestions.length,
+                    activeIndex: (mention.activeIndex + 1) % optionCount,
                 });
                 return;
             }
@@ -183,21 +276,25 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 setMention({
                     ...mention,
                     activeIndex:
-                        (mention.activeIndex - 1 + suggestions.length) %
-                        suggestions.length,
+                        (mention.activeIndex - 1 + optionCount) % optionCount,
                 });
                 return;
             }
             if (e.key === 'Enter' || e.key === 'Tab') {
                 e.preventDefault();
-                selectMention(suggestions[mention.activeIndex]);
+                if (mention.kind === 'issue') {
+                    selectIssue(issueSuggestions[mention.activeIndex]);
+                } else {
+                    selectMention(suggestions[mention.activeIndex]);
+                }
                 return;
             }
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                setMention(null);
-                return;
-            }
+        }
+
+        if (mention && e.key === 'Escape') {
+            e.preventDefault();
+            setMention(null);
+            return;
         }
 
         if (e.key === 'Backspace') {
@@ -295,7 +392,11 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
         const finalBody = tokenizeMentionRanges(body, mentionRanges);
         const mentionedUserIds = [
-            ...new Set(mentionRanges.map((range) => range.userId)),
+            ...new Set(
+                mentionRanges
+                    .filter((range) => range.kind !== 'issue')
+                    .map((range) => range.userId),
+            ),
         ];
 
         onSubmit(finalBody, mentionedUserIds);
@@ -333,9 +434,17 @@ const CommentForm: React.FC<CommentFormProps> = ({
                     className="h-7 w-7 rounded-full bg-[var(--bg-light-color-hover)] text-[var(--text-color)] hover:bg-[var(--accent-color)]"
                 />
             </div>
-            {mention && suggestions.length > 0 && (
+            {mention && (
                 <MentionSuggestions
+                    kind={mention.kind}
                     users={suggestions}
+                    issues={issueSuggestions}
+                    onSelectIssue={selectIssue}
+                    emptyLabel={
+                        mention.kind === 'issue'
+                            ? issueEmptyLabel
+                            : 'No members found'
+                    }
                     activeIndex={mention.activeIndex}
                     position={mention.position}
                     onSelect={selectMention}

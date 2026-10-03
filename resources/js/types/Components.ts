@@ -597,6 +597,7 @@ export interface IssuePageHeaderProps {
     ancestors?: Issue[];
 }
 export interface CommentItemProps {
+    projectId?: number;
     comment: Comment;
     users?: AssignableUser[];
     onEdit?: (comment: Comment, body: string) => void;
@@ -604,6 +605,7 @@ export interface CommentItemProps {
     onImageUpload?: (file: File) => Promise<string>;
 }
 export interface CommentListProps {
+    projectId?: number;
     comments: Comment[];
     users?: AssignableUser[];
     onEdit?: (comment: Comment, body: string) => void;
@@ -613,8 +615,14 @@ export interface CommentListProps {
 export interface CommentFormProps {
     onSubmit: (body: string, mentionedUserIds: number[]) => void;
     users?: AssignableUser[];
+    /** Enables "#2" issue mentions, resolved against this project's issues. */
+    projectId?: number;
     isSubmitting?: boolean;
     onImageUpload?: (file: File) => Promise<string>;
+}
+export interface IssueSuggestion {
+    id: number;
+    title: string;
 }
 export interface MentionSuggestionsProps {
     users: AssignableUser[];
@@ -622,6 +630,12 @@ export interface MentionSuggestionsProps {
     position: { top: number; left: number };
     onSelect: (user: AssignableUser) => void;
     onHover: (index: number) => void;
+    /** Renders issue rows instead of user rows when set to 'issue'. */
+    kind?: 'user' | 'issue';
+    issues?: IssueSuggestion[];
+    onSelectIssue?: (issue: IssueSuggestion) => void;
+    /** Shown instead of hiding the menu when there is nothing to suggest. */
+    emptyLabel?: string;
 }
 export interface IssueTableProps {
     issues: Issue[];
