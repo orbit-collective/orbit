@@ -31,6 +31,7 @@ import { WorkflowStatus } from '@/types/Workflow';
 import type { VariantProps } from 'class-variance-authority';
 import { icons } from 'lucide-react';
 import React, {
+    AriaRole,
     ButtonHTMLAttributes,
     ChangeEvent,
     HTMLAttributes,
@@ -76,6 +77,8 @@ export interface DropdownMenuProps extends ChildrenItemProps {
     position?: 'inline' | 'floating';
     style?: React.CSSProperties;
     className?: string;
+    role?: AriaRole;
+    'aria-label'?: string;
 }
 export interface DropdownTriggerProps extends VariantProps<
     typeof dropdownTriggerVariants
