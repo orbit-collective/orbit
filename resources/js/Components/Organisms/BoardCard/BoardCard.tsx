@@ -66,8 +66,8 @@ const BoardCardContent = ({
                     size="sm"
                 />
             ) : (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full border border-dashed border-[var(--border-color-strong)] bg-[var(--surface-color)] text-[8px] text-[var(--text-muted-color)]">
-                    -
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--surface-color)] text-[10px] text-[var(--text-muted-color)]">
+                    ?
                 </div>
             )}
         </div>
