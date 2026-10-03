@@ -15,6 +15,40 @@ const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
 });
 
 describe('BoardCard Component', () => {
+    test('shows the workflow status badge when the issue has one', () => {
+        render(
+            <BoardCard
+                issue={makeIssue({
+                    workflowStatus: {
+                        id: 1,
+                        issueTypeId: 1,
+                        name: 'In Review',
+                        color: '#3b82f6',
+                        category: 'in_progress',
+                        isInitial: false,
+                    },
+                })}
+                isClosed={false}
+                onClick={() => {}}
+            />,
+        );
+
+        expect(screen.getByText('In Review')).toBeInTheDocument();
+        expect(screen.queryByText('Open')).not.toBeInTheDocument();
+    });
+
+    test('falls back to the plain status badge without a workflow status', () => {
+        render(
+            <BoardCard
+                issue={makeIssue({ status: 'in_progress' })}
+                isClosed={false}
+                onClick={() => {}}
+            />,
+        );
+
+        expect(screen.getByText('in progress')).toBeInTheDocument();
+    });
+
     test('renders the issue title', () => {
         render(
             <BoardCard

@@ -1,6 +1,7 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
+import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import { BoardCardProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
@@ -45,14 +46,18 @@ const BoardCardContent = ({
             />
         )}
         <div className="mt-0.5 flex items-center justify-between gap-2 border-t border-[var(--border-color)] pt-2.5">
-            <Badge
-                color={issue.status}
-                variant="default"
-                className="flex items-center gap-1.5"
-            >
-                <StatusDot status={issue.status} />
-                <span>{formatStatusLabel(issue.status)}</span>
-            </Badge>
+            {issue.workflowStatus ? (
+                <WorkflowStatusBadge status={issue.workflowStatus} />
+            ) : (
+                <Badge
+                    color={issue.status}
+                    variant="default"
+                    className="flex items-center gap-1.5"
+                >
+                    <StatusDot status={issue.status} />
+                    <span>{formatStatusLabel(issue.status)}</span>
+                </Badge>
+            )}
             {issue.assignee ? (
                 <Avatar
                     src={issue.assignee.avatar}
