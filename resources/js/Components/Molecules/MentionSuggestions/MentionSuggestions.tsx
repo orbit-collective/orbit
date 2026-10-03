@@ -14,6 +14,7 @@ import { createPortal } from 'react-dom';
 const MENU_WIDTH = 240;
 
 export default function MentionSuggestions({
+    id,
     users,
     activeIndex,
     position,
@@ -47,6 +48,7 @@ export default function MentionSuggestions({
     return createPortal(
         <DropdownMenu
             position="floating"
+            id={id}
             role={isEmpty ? undefined : 'listbox'}
             aria-label={isIssue ? 'Issue suggestions' : 'Member suggestions'}
             style={{
@@ -70,6 +72,7 @@ export default function MentionSuggestions({
                 issues.map((issue, index) => (
                     <DropdownItem
                         key={issue.id}
+                        id={id && `${id}-option-${index}`}
                         role="option"
                         aria-selected={index === activeIndex}
                         title={issue.title}
@@ -92,6 +95,9 @@ export default function MentionSuggestions({
                 users.map((user, index) => (
                     <DropdownItem
                         key={user.id}
+                        id={id && `${id}-option-${index}`}
+                        role="option"
+                        aria-selected={index === activeIndex}
                         appearance="flat"
                         isActive={index === activeIndex}
                         onMouseDown={(e) => e.preventDefault()}

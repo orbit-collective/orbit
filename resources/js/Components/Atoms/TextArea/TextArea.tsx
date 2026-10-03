@@ -35,6 +35,11 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             onCut,
             onBlur,
             onDrop,
+            role,
+            'aria-expanded': ariaExpanded,
+            'aria-haspopup': ariaHasPopup,
+            'aria-controls': ariaControls,
+            'aria-activedescendant': ariaActiveDescendant,
         },
         ref,
     ) => {
@@ -57,6 +62,11 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
                 onPaste={onPaste}
                 onCut={onCut}
                 onBlur={onBlur}
+                role={role}
+                aria-expanded={ariaExpanded}
+                aria-haspopup={ariaHasPopup}
+                aria-controls={ariaControls}
+                aria-activedescendant={ariaActiveDescendant}
                 ref={ref}
                 onDrop={onDrop}
             ></textarea>

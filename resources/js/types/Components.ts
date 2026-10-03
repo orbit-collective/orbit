@@ -71,6 +71,7 @@ export interface ChildrenItemProps {
     children: ReactNode;
 }
 export interface DropdownMenuProps extends ChildrenItemProps {
+    id?: string;
     direction?: 'top' | 'bottom';
     header?: ReactNode;
     stretch?: boolean;
@@ -154,6 +155,11 @@ export interface TextAreaProps extends VariantProps<typeof textareaVariants> {
     onBlur?: (e: React.FocusEvent<HTMLTextAreaElement>) => void;
     ref?: React.Ref<HTMLTextAreaElement> | null;
     onDrop?: (e: React.DragEvent<HTMLTextAreaElement>) => void;
+    role?: AriaRole;
+    'aria-expanded'?: boolean;
+    'aria-haspopup'?: 'listbox';
+    'aria-controls'?: string;
+    'aria-activedescendant'?: string;
 }
 export interface VisualCardProps {
     children: ReactNode;
@@ -625,6 +631,8 @@ export interface IssueSuggestion {
     title: string;
 }
 export interface MentionSuggestionsProps {
+    /** Id of the listbox; option ids are derived as `${id}-option-${index}`. */
+    id?: string;
     users: AssignableUser[];
     activeIndex: number;
     position: { top: number; left: number };
