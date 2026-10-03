@@ -40,12 +40,13 @@ const NavItem: React.FC<NavItemProps> = ({
     onClick,
     iconClassName,
     link,
+    title: titleOverride,
     preserveScroll = false,
     collapsed = false,
     disabled = false,
 }) => {
     const className = classVariants({ isActive, collapsed, disabled });
-    const title = collapsed ? label : undefined;
+    const title = titleOverride ?? (collapsed ? label : undefined);
 
     const content = (
         <>
@@ -84,6 +85,7 @@ const NavItem: React.FC<NavItemProps> = ({
             href={link}
             preserveScroll={preserveScroll}
             title={title}
+            aria-current={isActive ? 'page' : undefined}
         >
             {content}
         </Link>

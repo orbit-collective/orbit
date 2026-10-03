@@ -352,6 +352,7 @@ export interface NavItemProps {
     onClick?: () => void;
     iconClassName?: string;
     link?: string;
+    title?: string;
     preserveScroll?: boolean;
     collapsed?: boolean;
     disabled?: boolean;
