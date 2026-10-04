@@ -192,6 +192,10 @@ export interface EditableMarkdownProps {
     placeholder?: string;
     disabled?: boolean;
     className?: string;
+    /** Project members offered by "@" mentions. Omit to disable user mentions. */
+    users?: AssignableUser[];
+    /** Project whose issues "#12" mentions resolve against. Omit to disable issue mentions. */
+    projectId?: number;
 }
 export interface LabelBadgeProps {
     label: IssueLabel;

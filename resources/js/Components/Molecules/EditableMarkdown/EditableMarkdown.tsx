@@ -1,3 +1,4 @@
+import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
 import { EditableMarkdownProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { extractImageFiles, markdownImageAlt } from '@/utils/imagePaste';
@@ -8,8 +9,10 @@ import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { Markdown } from 'tiptap-markdown';
+import { IssueMention, UserMention } from './mentionExtensions';
+import { useMentionSuggestions } from './useMentionSuggestions';
 
 const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     value,
@@ -18,6 +21,8 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     placeholder = 'Add a description...',
     disabled = false,
     className,
+    users,
+    projectId,
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -26,6 +31,10 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     // mid-upload must not end the editing session, or the image would be
     // inserted into an editor that is no longer editable and never saved.
     const pendingUploadsRef = useRef(0);
+
+    const listboxId = useId();
+    const { menu, setActiveIndex, userSuggestion, issueSuggestion } =
+        useMentionSuggestions({ users, projectId });
 
     const editor = useEditor({
         editable: false,
@@ -43,6 +52,19 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
             TaskItem.configure({ nested: true }),
             TableKit,
             Image,
+            // "@member" mentions need the project's members and "#12" mentions
+            // need its id; an editor given neither keeps plain text behaviour.
+            ...(users
+                ? [UserMention.configure({ suggestion: userSuggestion })]
+                : []),
+            ...(projectId !== undefined
+                ? [
+                      IssueMention.configure({
+                          projectId,
+                          suggestion: issueSuggestion,
+                      }),
+                  ]
+                : []),
         ],
         editorProps: {
             attributes: {
@@ -158,7 +180,11 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
      * of the way, so the image node can still be selected and deleted.
      */
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-        const image = (event.target as HTMLElement).closest?.('img');
+        const target = event.target as HTMLElement;
+        const image = target.closest?.('img');
+
+        // A mention is a link (or a hover card trigger), not a request to edit.
+        if (!isEditing && target.closest?.('a')) return;
 
         if (!isEditing && image?.src) {
             event.preventDefault();
@@ -219,6 +245,28 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
             )}
         >
             <EditorContent editor={editor} />
+            {menu && (
+                <MentionSuggestions
+                    id={listboxId}
+                    kind={menu.kind}
+                    users={menu.users}
+                    issues={menu.issues}
+                    onSelect={(user) =>
+                        menu.select(
+                            menu.users.findIndex((u) => u.id === user.id),
+                        )
+                    }
+                    onSelectIssue={(issue) =>
+                        menu.select(
+                            menu.issues.findIndex((i) => i.id === issue.id),
+                        )
+                    }
+                    emptyLabel={menu.emptyLabel}
+                    activeIndex={menu.activeIndex}
+                    position={menu.position}
+                    onHover={setActiveIndex}
+                />
+            )}
             {pendingUploads > 0 && (
                 <span className="mt-1 block text-xs text-[var(--text-gray-color)]">
                     Uploading {pendingUploads}{' '}
