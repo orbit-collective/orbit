@@ -7,10 +7,9 @@ import AccountSettingsAvatarUploader from '@/Components/Organisms/AccountSetting
 import AccountSettingsProfilePreview from '@/Components/Organisms/AccountSettingsContent/AccountSettingsProfilePreview';
 import { useAlert } from '@/context/AlertContext';
 import { cn } from '@/utils/cn';
+import { canvasToBlob, rasterizeImage } from '@/utils/faces';
 import { router, useForm } from '@inertiajs/react';
 import { SyntheticEvent, useState } from 'react';
-
-const FACE_EXPORT_SIZE = 256;
 
 const getInitials = (name: string) => {
     const trimmed = name.trim();
@@ -41,7 +40,6 @@ export default function AccountSettingsProfileTab({
     const [avatarSrc, setAvatarSrc] = useState<string | null>(userAvatar);
     const [savedName, setSavedName] = useState(userName);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-    const [selectedFace, setSelectedFace] = useState<string | null>(null);
     const [savingFace, setSavingFace] = useState(false);
 
     const initials = getInitials(data.name);
@@ -60,7 +58,6 @@ export default function AccountSettingsProfileTab({
 
     const handleResetAvatar = () => {
         setAvatarSrc(null);
-        setSelectedFace(null);
         addAlert('Avatar reset to default.', 'information');
     };
 
@@ -68,42 +65,11 @@ export default function AccountSettingsProfileTab({
     const handleSelectFace = async (src: string) => {
         setSavingFace(true);
         try {
-            // Fetch the SVG and load it from a blob URL: in dev the asset is served
-            // from the Vite origin, and drawing a cross-origin image taints the canvas
-            // so `toBlob` throws. The faces also only declare a viewBox, so give the
-            // image explicit dimensions.
-            const response = await fetch(src);
-            const svg = await response.blob();
-            const objectUrl = URL.createObjectURL(svg);
-            const image = new Image(FACE_EXPORT_SIZE, FACE_EXPORT_SIZE);
-            try {
-                await new Promise<void>((resolve, reject) => {
-                    image.onload = () => resolve();
-                    image.onerror = () =>
-                        reject(new Error('Image load failed'));
-                    image.src = objectUrl;
-                });
-            } finally {
-                URL.revokeObjectURL(objectUrl);
-            }
-
-            const canvas = document.createElement('canvas');
-            canvas.width = FACE_EXPORT_SIZE;
-            canvas.height = FACE_EXPORT_SIZE;
-            canvas
-                .getContext('2d')
-                ?.drawImage(image, 0, 0, FACE_EXPORT_SIZE, FACE_EXPORT_SIZE);
-
-            const blob = await new Promise<Blob | null>((resolve) =>
-                canvas.toBlob(resolve, 'image/png'),
-            );
-            if (!blob) {
-                throw new Error('Canvas export failed');
-            }
+            const canvas = await rasterizeImage(src);
+            const blob = await canvasToBlob(canvas);
 
             const file = new File([blob], 'avatar.png', { type: 'image/png' });
             setAvatarSrc(canvas.toDataURL('image/png'));
-            setSelectedFace(src);
 
             router.post(
                 route('account.upload-avatar'),
@@ -210,7 +176,7 @@ export default function AccountSettingsProfileTab({
                         description="Pick one of the ready-made avatars instead of uploading a photo."
                     >
                         <AccountSettingsAvatarLibrary
-                            selectedSrc={selectedFace}
+                            avatarSrc={avatarSrc}
                             disabled={savingFace}
                             onSelect={handleSelectFace}
                         />

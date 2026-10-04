@@ -1,5 +1,7 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { cn } from '@/utils/cn';
+import { canvasesMatch, rasterizeImage } from '@/utils/faces';
+import { useEffect, useState } from 'react';
 
 const faceModules = import.meta.glob<string>('../../../assets/faces/*.svg', {
     eager: true,
@@ -14,17 +16,63 @@ const faces = Object.entries(faceModules)
         src,
     }));
 
+const faceCanvases = new Map<string, Promise<HTMLCanvasElement>>();
+
+const getFaceCanvas = (src: string) => {
+    if (!faceCanvases.has(src)) {
+        faceCanvases.set(src, rasterizeImage(src));
+    }
+
+    return faceCanvases.get(src)!;
+};
+
 interface AccountSettingsAvatarLibraryProps {
-    selectedSrc: string | null;
+    avatarSrc: string | null;
     disabled?: boolean;
     onSelect: (src: string) => void;
 }
 
 export default function AccountSettingsAvatarLibrary({
-    selectedSrc,
+    avatarSrc,
     disabled = false,
     onSelect,
 }: AccountSettingsAvatarLibraryProps) {
+    const [selectedSrc, setSelectedSrc] = useState<string | null>(null);
+
+    // The server only stores the uploaded PNG, so work out which face (if any)
+    // is the current avatar by comparing pixels.
+    useEffect(() => {
+        let cancelled = false;
+
+        const findMatch = async () => {
+            if (!avatarSrc) {
+                return null;
+            }
+
+            const avatar = await rasterizeImage(avatarSrc);
+            for (const face of faces) {
+                const canvas = await getFaceCanvas(face.src);
+                if (canvasesMatch(avatar, canvas)) {
+                    return face.src;
+                }
+            }
+
+            return null;
+        };
+
+        findMatch()
+            .catch(() => null)
+            .then((match) => {
+                if (!cancelled) {
+                    setSelectedSrc(match);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [avatarSrc]);
+
     return (
         <div
             role="group"
