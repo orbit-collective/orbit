@@ -314,6 +314,26 @@ test('IssueMentioned notifies the mentioned user about the actor\'s comment', fu
     $this->listener->handle(new IssueMentioned($issue, $comment, $mentioned, $actor));
 });
 
+test('IssueMentioned says the description when there is no comment', function () {
+    $actor = User::factory()->create(['name' => 'Jane Cooper']);
+    $mentioned = User::factory()->create();
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['id' => 31, 'number' => 31, 'project_id' => $project->id, 'title' => 'Fix login crash']);
+
+    $this->notificationService->shouldReceive('notify')
+        ->once()
+        ->with(
+            $mentioned->id,
+            NotificationType::IssueMentioned,
+            'info',
+            'You were mentioned',
+            'Jane Cooper mentioned you in the description of "Fix login crash" (#31).',
+            route('issues.show', [$project->id, $issue->id])
+        );
+
+    $this->listener->handle(new IssueMentioned($issue, null, $mentioned, $actor));
+});
+
 test('IssueMentioned does not notify when the actor mentions themself', function () {
     $actor = User::factory()->create();
     $project = Project::factory()->create();
