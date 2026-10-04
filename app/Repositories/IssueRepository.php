@@ -78,8 +78,8 @@ class IssueRepository
     {
         $query = Issue::query();
         // PostgreSQL has no implicit bigint -> text conversion for LIKE, and
-        // MySQL has no TEXT target for CAST, so pick the type per driver.
-        $textType = $query->getConnection()->getDriverName() === 'mysql' ? 'CHAR' : 'TEXT';
+        // MySQL and MariaDB have no TEXT target for CAST, so pick the type per driver.
+        $textType = in_array($query->getConnection()->getDriverName(), ['mysql', 'mariadb'], true) ? 'CHAR' : 'TEXT';
 
         return $query
             ->where('project_id', $projectId)
