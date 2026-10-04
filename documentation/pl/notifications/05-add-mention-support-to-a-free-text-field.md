@@ -2,6 +2,12 @@
 
 Przećwiczony przykład: system `@mention` już zbudowany dla komentarzy do zadań — wpisz `@` w polu komentarza, wybierz członka projektu z pływającej listy podpowiedzi, a otrzyma powiadomienie "You were mentioned" (`NotificationType::IssueMentioned`, poprzez nowy event `IssueMentioned`). Ten przewodnik dokumentuje ten system od początku do końca, zarówno jako "jak to działa", jak i jako szablon do dodania tej samej funkcjonalności do innego pola tekstowego (opisu projektu, tytułu zadania, dowolnego innego pola opartego na zwykłym `<textarea>`).
 
+> **Wzmianki w opisie issue** (edytor Tiptap, a nie textarea) używają tych
+> samych tokenów `@[Name](id)` / `#[Title](id:number)` i tego samego zdarzenia
+> `IssueMentioned` — z `null` zamiast komentarza — i są opisane w
+> [`../rich-text-editor/04-add-mentions-to-a-tiptap-surface.md`](../rich-text-editor/04-add-mentions-to-a-tiptap-surface.md).
+> Ten przewodnik opisuje wariant z textareą.
+
 `NotificationType::IssueMentioned` oraz jego wiersz w ustawieniach konta (tablica `defaultNotificationTypes` w `AccountSettingsNotificationsTab.tsx`) istniały już przed tą funkcjonalnością — ten przewodnik dotyczy podłączenia nowego eventu domenowego do pipeline'u za istniejącym typem powiadomienia, a nie dodania samego typu (zobacz
 [`./01-add-a-new-notification-type.md`](./01-add-a-new-notification-type.md)
 po to drugie).
