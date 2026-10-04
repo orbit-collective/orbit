@@ -26,6 +26,8 @@ export interface Comment {
 
 export interface Issue {
     id: string;
+    /** Project-scoped number shown to users as "#12"; `id` stays the global key used in URLs and relations. */
+    number?: number;
     title: string;
     description?: string;
     status: 'open' | 'in_progress' | 'closed';
