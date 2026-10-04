@@ -33,6 +33,7 @@ class Project extends Model
         'restricted_role_types',
         'is_top_level',
         'sort_order',
+        'next_issue_number',
         'integration',
     ];
 

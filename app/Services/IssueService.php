@@ -48,10 +48,10 @@ class IssueService
         $data['user_id'] = auth()->id();
 
         $issue = $this->issueRepository->store($data);
-        $this->activityLogService->log($issue->project_id, "Added new task: #$issue->id");
+        $this->activityLogService->log($issue->project_id, "Added new task: #$issue->number");
 
         if ($issue->parent_id) {
-            $this->activityLogService->log($issue->project_id, "Issue #$issue->id added as a sub-issue of #$issue->parent_id");
+            $this->activityLogService->log($issue->project_id, "Issue #$issue->number added as a sub-issue of #".$this->numberOfIssue($issue->parent_id));
         }
 
         event(new IssueCreated($issue, auth()->user()));
@@ -78,7 +78,7 @@ class IssueService
         $data['user_id'] = $importedBy->id;
 
         $issue = $this->issueRepository->store($data);
-        $this->activityLogService->log($issue->project_id, "Imported task: #$issue->id", $importedBy->id);
+        $this->activityLogService->log($issue->project_id, "Imported task: #$issue->number", $importedBy->id);
 
         return $issue;
     }
@@ -107,7 +107,7 @@ class IssueService
 
         $this->activityLogService->log(
             $issue->project_id,
-            "Issue #$issue->id \"$issue->title\" synced from Jira: ".$this->summarize($changes),
+            "Issue #$issue->number \"$issue->title\" synced from Jira: ".$this->summarize($changes),
             $syncedBy->id,
         );
 
@@ -149,13 +149,13 @@ class IssueService
     }
 
     /**
-     * Best-effort preview of the id the next created issue will get, so the
+     * Best-effort preview of the number the next created issue will get, so the
      * inline quick-add row can show it instead of a blank cell. Only a hint -
-     * a concurrent create wins the actual id, and nothing depends on it.
+     * a concurrent create wins the actual number, and nothing depends on it.
      */
-    public function peekNextIssueId(): int
+    public function peekNextIssueId(Project $project): int
     {
-        return $this->issueRepository->maxId() + 1;
+        return $this->issueRepository->peekNextNumber($project);
     }
 
     public function getIssueWithRelations(int $id): Issue
@@ -193,7 +193,7 @@ class IssueService
 
         $this->activityLogService->log(
             $issue->project_id,
-            "Issue #$issue->id \"$issue->title\" updated by ".($actor?->name ?? 'someone').': '.$this->summarize($changes)
+            "Issue #$issue->number \"$issue->title\" updated by ".($actor?->name ?? 'someone').': '.$this->summarize($changes)
         );
 
         $this->notifyIssueUpdate($issue, $actor, $changes);
@@ -268,6 +268,12 @@ class IssueService
         return $changes;
     }
 
+    /** The project-scoped number shown to users for an issue's internal id. */
+    private function numberOfIssue(int $issueId): int|string
+    {
+        return Issue::query()->whereKey($issueId)->value('number') ?? $issueId;
+    }
+
     private function normalize(string $field, mixed $value): ?string
     {
         if ($field === 'labels') {
@@ -288,7 +294,7 @@ class IssueService
             'labels' => 'labels changed to ['.$this->formatLabels($new).']',
             'start_date' => 'start date changed to '.($new ?: 'none'),
             'end_date' => 'end date changed to '.($new ?: 'none'),
-            'parent_id' => $new ? "moved under issue #$new" : 'removed from its parent issue',
+            'parent_id' => $new ? 'moved under issue #'.$this->numberOfIssue((int) $new) : 'removed from its parent issue',
             default => "$field updated",
         };
     }
@@ -483,7 +489,7 @@ class IssueService
     public function deleteIssue(Issue $issue): void
     {
         $this->issueRepository->delete($issue);
-        $this->activityLogService->log($issue->project_id, "Deleted issue #$issue->id \"$issue->title\"");
+        $this->activityLogService->log($issue->project_id, "Deleted issue #$issue->number \"$issue->title\"");
     }
 
     public function bulkDeleteIssues(array $issueIds): void
@@ -493,7 +499,7 @@ class IssueService
         $this->issueRepository->bulkDelete($issueIds);
 
         foreach ($issues as $issue) {
-            $this->activityLogService->log($issue->project_id, "Deleted issue #$issue->id \"$issue->title\"");
+            $this->activityLogService->log($issue->project_id, "Deleted issue #$issue->number \"$issue->title\"");
         }
     }
 }

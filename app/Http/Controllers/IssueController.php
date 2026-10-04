@@ -60,7 +60,7 @@ class IssueController extends Controller
             'users' => $this->userService->getAssignableUsersForProject($project->id),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
-            'nextIssueId' => $this->issueService->peekNextIssueId(),
+            'nextIssueId' => $this->issueService->peekNextIssueId($project),
             'ancestors' => $this->issueService->ancestorsOf($issue)->values(),
             'linkedPullRequests' => $this->mapLinkedPullRequests($issueWithRelations->externalLinks),
             'githubRepositories' => $this->mapGithubRepositories($project),
@@ -103,6 +103,7 @@ class IssueController extends Controller
     {
         return [
             'id' => $issue->id,
+            'number' => $issue->number,
             'title' => $issue->title,
             'status' => $issue->status,
             'priority' => $issue->priority,
@@ -324,8 +325,8 @@ class IssueController extends Controller
 
         $changesSummary = $this->issueService->summarizeChanges($issue, $before);
         $message = $changesSummary
-            ? "Issue #$issue->id \"$issue->title\" updated: $changesSummary."
-            : "Issue #$issue->id \"$issue->title\" saved — no changes detected.";
+            ? "Issue #$issue->number \"$issue->title\" updated: $changesSummary."
+            : "Issue #$issue->number \"$issue->title\" saved — no changes detected.";
 
         return redirect()->back()
             ->with('success', $message)
@@ -407,7 +408,7 @@ class IssueController extends Controller
         $issue = $this->issueService->createIssue($data);
 
         return redirect()->back()
-            ->with('success', "Issue #$issue->id \"$issue->title\" has been created successfully.")
+            ->with('success', "Issue #$issue->number \"$issue->title\" has been created successfully.")
             ->with('action_url', route('projects.show', $issue->project_id).'?issue='.$issue->id);
     }
 
@@ -418,7 +419,7 @@ class IssueController extends Controller
         $this->issueService->deleteIssue($issue);
 
         return redirect()->back()
-            ->with('success', "Issue #$issue->id \"$issue->title\" has been deleted successfully.");
+            ->with('success', "Issue #$issue->number \"$issue->title\" has been deleted successfully.");
     }
 
     public function bulkDestroy(Request $request): RedirectResponse

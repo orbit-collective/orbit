@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Issue extends Model
 {
@@ -23,6 +24,7 @@ class Issue extends Model
 
     protected $fillable = [
         'id',
+        'number',
         'title',
         'description',
         'status',
@@ -38,6 +40,43 @@ class Issue extends Model
         'start_date',
         'end_date',
     ];
+
+    /**
+     * Every issue gets a project-scoped number ("#12") when created, unless
+     * one was set explicitly. Done here rather than in the repository so
+     * factories and any other creation path are numbered the same way.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Issue $issue) {
+            if ($issue->number !== null || ! $issue->project_id) {
+                return;
+            }
+
+            $issue->number = DB::transaction(function () use ($issue) {
+                $project = Project::query()->lockForUpdate()->findOrFail($issue->project_id);
+                $number = self::nextNumberFor($project);
+
+                $project->forceFill(['next_issue_number' => $number + 1])->save();
+
+                return $number;
+            });
+        });
+    }
+
+    /**
+     * The project's next issue number. Driven by a counter on the project
+     * (not just max(number)+1) so a number is never handed out twice, even
+     * after the newest issue is deleted - a stale "#12" in a comment or
+     * branch name can't end up pointing at a different issue.
+     */
+    public static function nextNumberFor(Project $project): int
+    {
+        return max(
+            (int) $project->next_issue_number,
+            (int) static::query()->where('project_id', $project->id)->max('number') + 1,
+        );
+    }
 
     protected function casts(): array
     {

@@ -27,7 +27,7 @@ beforeEach(function () {
 });
 
 test('getIssueWithRelations delegates to the repository', function () {
-    $issue = Issue::factory()->make(['id' => 42]);
+    $issue = Issue::factory()->make(['id' => 42, 'number' => 42]);
 
     $this->issueRepository->shouldReceive('findWithRelations')
         ->once()
@@ -72,7 +72,7 @@ test('it can create an issue and log activity', function () {
     $this->actingAs($user);
 
     $data = ['project_id' => 1, 'title' => 'Test Issue'];
-    $issue = new Issue(['id' => 123, 'project_id' => 1, 'title' => 'Test Issue']);
+    $issue = new Issue(['id' => 123, 'number' => 123, 'project_id' => 1, 'title' => 'Test Issue']);
 
     $this->issueRepository->shouldReceive('store')
         ->once()
@@ -96,7 +96,7 @@ test('createIssue fires IssueCreated for every new issue', function () {
     $this->actingAs($user);
 
     $data = ['project_id' => 1, 'title' => 'New Issue'];
-    $issue = new Issue(['id' => 42, 'project_id' => 1, 'title' => 'New Issue']);
+    $issue = new Issue(['id' => 42, 'number' => 42, 'project_id' => 1, 'title' => 'New Issue']);
 
     $this->issueRepository->shouldReceive('store')->once()->andReturn($issue);
     $this->activityLogService->shouldReceive('log')->once();
@@ -115,7 +115,7 @@ test('createIssue fires IssueCreated even when the issue is also assigned', func
     $this->actingAs($creator);
 
     $data = ['project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $assignee->id];
-    $issue = new Issue(['id' => 42, 'project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $assignee->id]);
+    $issue = new Issue(['id' => 42, 'number' => 42, 'project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $assignee->id]);
 
     $this->issueRepository->shouldReceive('store')->once()->andReturn($issue);
     $this->activityLogService->shouldReceive('log')->once();
@@ -132,7 +132,7 @@ test('it notifies the assignee when creating an issue assigned to someone else',
     $this->actingAs($creator);
 
     $data = ['project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $assignee->id];
-    $issue = new Issue(['id' => 42, 'project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $assignee->id]);
+    $issue = new Issue(['id' => 42, 'number' => 42, 'project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $assignee->id]);
 
     $this->issueRepository->shouldReceive('store')->once()->andReturn($issue);
     $this->activityLogService->shouldReceive('log')->once();
@@ -153,7 +153,7 @@ test('it does not notify the creator when they assign the issue to themselves', 
     $this->actingAs($creator);
 
     $data = ['project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $creator->id];
-    $issue = new Issue(['id' => 42, 'project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $creator->id]);
+    $issue = new Issue(['id' => 42, 'number' => 42, 'project_id' => 5, 'title' => 'New Issue', 'assignee_id' => $creator->id]);
 
     $this->issueRepository->shouldReceive('store')->once()->andReturn($issue);
     $this->activityLogService->shouldReceive('log')->once();
@@ -635,7 +635,7 @@ test('deleteIssue calls the repository delete and logs activity', function () {
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with($project->id, "Deleted issue #$issue->id \"Old bug\"");
+        ->with($project->id, "Deleted issue #$issue->number \"Old bug\"");
 
     $this->service->deleteIssue($issue);
 });
@@ -644,9 +644,9 @@ test('bulkDeleteIssues calls the repository bulkDelete with the given ids and lo
     $project = Project::factory()->create();
     $ids = [1, 2, 3];
     $issues = collect([
-        (object) ['id' => 1, 'project_id' => $project->id, 'title' => 'Bug one'],
-        (object) ['id' => 2, 'project_id' => $project->id, 'title' => 'Bug two'],
-        (object) ['id' => 3, 'project_id' => $project->id, 'title' => 'Bug three'],
+        (object) ['id' => 1, 'number' => 1, 'project_id' => $project->id, 'title' => 'Bug one'],
+        (object) ['id' => 2, 'number' => 2, 'project_id' => $project->id, 'title' => 'Bug two'],
+        (object) ['id' => 3, 'number' => 3, 'project_id' => $project->id, 'title' => 'Bug three'],
     ]);
 
     $this->issueRepository->shouldReceive('getMany')
@@ -661,7 +661,7 @@ test('bulkDeleteIssues calls the repository bulkDelete with the given ids and lo
     foreach ($issues as $issue) {
         $this->activityLogService->shouldReceive('log')
             ->once()
-            ->with($project->id, "Deleted issue #$issue->id \"$issue->title\"");
+            ->with($project->id, "Deleted issue #$issue->number \"$issue->title\"");
     }
 
     $this->service->bulkDeleteIssues($ids);
