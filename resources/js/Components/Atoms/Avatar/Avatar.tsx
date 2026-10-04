@@ -1,5 +1,4 @@
 import { AvatarProps } from '@/types/Components';
-import { cn } from '@/utils/cn';
 import { cva } from 'class-variance-authority';
 import React from 'react';
 
@@ -20,19 +19,9 @@ const classVariants = cva(
     },
 );
 
-const Avatar: React.FC<AvatarProps> = ({
-    src,
-    alt,
-    size = 'md',
-    initials,
-    onClick,
-    className,
-}) => {
+const Avatar: React.FC<AvatarProps> = ({ src, alt, size = 'md', initials }) => {
     return (
-        <div
-            onClick={onClick}
-            className={cn(classVariants({ size }), className)}
-        >
+        <div className={classVariants({ size })}>
             {src ? (
                 <img
                     src={src}

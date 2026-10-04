@@ -200,6 +200,7 @@ export default function AccountSettingsProfileTab({
                             onUpload={setAvatarSrc}
                             onReset={() => handleResetAvatar()}
                             onToggleLibrary={() => setIsLibraryOpen((o) => !o)}
+                            isLibraryOpen={isLibraryOpen}
                         />
                     }
                 />

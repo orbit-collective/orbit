@@ -10,6 +10,7 @@ interface AccountSettingsAvatarUploaderProps {
     onUpload: (dataUrl: string) => void;
     onReset: () => void;
     onToggleLibrary?: () => void;
+    isLibraryOpen?: boolean;
 }
 
 // Mirrors the `max:5120` (KB) rule enforced in UserController::uploadAvatar.
@@ -21,6 +22,7 @@ export default function AccountSettingsAvatarUploader({
     onUpload,
     onReset,
     onToggleLibrary,
+    isLibraryOpen = false,
 }: AccountSettingsAvatarUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const { addAlert } = useAlert();
@@ -123,14 +125,21 @@ export default function AccountSettingsAvatarUploader({
 
     return (
         <div className="flex items-center gap-3">
-            <Avatar
-                src={avatarSrc ?? undefined}
-                alt="Avatar preview"
-                initials={initials}
-                size="xl"
+            <button
+                type="button"
                 onClick={onToggleLibrary}
-                className="cursor-pointer"
-            />
+                disabled={!onToggleLibrary}
+                aria-expanded={onToggleLibrary ? isLibraryOpen : undefined}
+                aria-label="Choose an avatar from the library"
+                className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)] enabled:cursor-pointer enabled:hover:opacity-80"
+            >
+                <Avatar
+                    src={avatarSrc ?? undefined}
+                    alt="Avatar preview"
+                    initials={initials}
+                    size="xl"
+                />
+            </button>
 
             <div className="flex flex-col items-start gap-1.5">
                 {!processing ? (
@@ -146,6 +155,7 @@ export default function AccountSettingsAvatarUploader({
                             <button
                                 type="button"
                                 onClick={onToggleLibrary}
+                                aria-expanded={isLibraryOpen}
                                 className="flex items-center gap-1.5 rounded-md border border-[var(--border-color-strong)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
                             >
                                 <Icon name="Images" size={14} />
