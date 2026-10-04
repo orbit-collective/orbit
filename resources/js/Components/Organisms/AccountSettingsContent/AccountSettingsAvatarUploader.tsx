@@ -46,7 +46,7 @@ export default function AccountSettingsAvatarUploader({
 
         event.target.value = '';
 
-        if (!file) {
+        if (!file || busy) {
             return;
         }
 
@@ -64,11 +64,18 @@ export default function AccountSettingsAvatarUploader({
             return;
         }
 
+        // Mark the upload as in flight while the file is still being read, so
+        // the library cannot start a competing save in that window.
+        setProcessing(true);
+
         const reader = new FileReader();
 
         reader.onload = () => {
             const result = reader.result;
-            if (typeof result !== 'string') return;
+            if (typeof result !== 'string') {
+                setProcessing(false);
+                return;
+            }
 
             const image = new Image();
             image.src = result;
@@ -77,7 +84,6 @@ export default function AccountSettingsAvatarUploader({
                 if (image.width > 0 && image.height > 0) {
                     onUpload(result);
 
-                    setProcessing(true);
                     router.post(
                         route('account.upload-avatar'),
                         { avatar: file },
@@ -98,16 +104,23 @@ export default function AccountSettingsAvatarUploader({
                         },
                     );
                 } else {
+                    setProcessing(false);
                     addAlert('Invalid image file.', 'error');
                 }
             };
 
             image.onerror = () => {
+                setProcessing(false);
                 addAlert(
                     'Failed to load the image. File might be corrupted.',
                     'error',
                 );
             };
+        };
+
+        reader.onerror = () => {
+            setProcessing(false);
+            addAlert('Failed to read the image.', 'error');
         };
 
         reader.readAsDataURL(file);
