@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.10.1](https://github.com/orbit-collective/orbit/compare/v0.10.0...v0.10.1) (2026-10-04)
+
+
+### Features
+
+* **avatar:** implement face matching and rasterization ([b3715c6](https://github.com/orbit-collective/orbit/commit/b3715c6b2e034cea3d4e07c7dbe04575c3e84ef3))
+* **settings:** add avatar library to profile tab ([2741004](https://github.com/orbit-collective/orbit/commit/27410048d8f88502637c2d3e90071ee1c82796f2))
+
+
+### Bug Fixes
+
+* **settings:** close avatar upload race and face matching gap ([ca2cb8a](https://github.com/orbit-collective/orbit/commit/ca2cb8a60c425fabdcf2b7e7e76fa7c2ddaa6e29))
+* **settings:** harden avatar library saving and matching ([0e981ce](https://github.com/orbit-collective/orbit/commit/0e981cefecebab4f8d6349ffac1da784cb02dbb9))
+* **settings:** make avatar library keyboard accessible ([a7cfe5d](https://github.com/orbit-collective/orbit/commit/a7cfe5d713320e3319de51c0ddcf6bd70dd43cdd))
+
+
+### Miscellaneous Chores
+
+* release 0.10.1 ([0d09a41](https://github.com/orbit-collective/orbit/commit/0d09a41e4db1eba1b6b08dc0d82a203a5f57bd8b))
+
 ## [0.10.0](https://github.com/orbit-collective/orbit/compare/v0.9.6...v0.10.0) (2026-10-04)
 
 
