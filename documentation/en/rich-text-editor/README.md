@@ -23,6 +23,12 @@ format, just a `TEXT` column holding whatever markdown Tiptap's
    rather than Tiptap: issue comments (composing, editing, rendering,
    and the mention-range trap) and an issue type's template body —
    the two shapes any further surface will take.
+4. **[Add mentions to a Tiptap surface](./04-add-mentions-to-a-tiptap-surface.md)**
+   — how `@member` and `#issue` mentions work inside the Tiptap
+   description editor: mention nodes that round-trip to the same
+   markdown tokens comments use, the bridge from Tiptap's suggestion
+   plugin to the shared `MentionSuggestions` menu, and the listener
+   that notifies members named in a description.
 
 ## The architecture in one paragraph
 
@@ -48,6 +54,11 @@ handles markdown that's never editable at all (the integrations
 catalog's static `overview` field) — don't reach for Tiptap for
 read-only markdown display; it's a heavier tool for a job
 `react-markdown` already does.
+
+Mentions are the other exception, though they stay inside the
+`TEXT` column: when `users`/`projectId` are passed, two extra nodes
+(`@member`, `#issue`) are added to the list and serialize to the same
+`@[Name](id)` / `#[Title](id:number)` tokens comments store — guide 4.
 
 Images are the one thing that doesn't live in that `TEXT` column.
 Pasting or dropping one uploads it to `POST

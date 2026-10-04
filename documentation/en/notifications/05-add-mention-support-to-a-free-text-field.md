@@ -9,6 +9,12 @@ template for adding the same capability to a different free-text field
 (a project description, an issue title, anything else backed by a plain
 `<textarea>`).
 
+> **Mentions in the issue description** (a Tiptap editor, not a textarea)
+> reuse the same `@[Name](id)` / `#[Title](id:number)` tokens and the same
+> `IssueMentioned` event — with a `null` comment — and are documented in
+> [`../rich-text-editor/04-add-mentions-to-a-tiptap-surface.md`](../rich-text-editor/04-add-mentions-to-a-tiptap-surface.md).
+> This guide covers the textarea shape.
+
 `NotificationType::IssueMentioned` and its Account-settings row
 (`AccountSettingsNotificationsTab.tsx`'s `defaultNotificationTypes` array)
 already existed before this feature — this guide is about wiring a new
