@@ -70,6 +70,8 @@ When adding a feature, add tests alongside it rather than relying on the gate to
 - `Issue.labels` is a plain array cast, stored as JSON. Label names are not a fixed backend enum — each project has its own `Label` records (see `App\Models\Label`/`App\Services\LabelService`), and a name is validated per request against that project's real `labels` table rows (`documentation/en/labels/`).
 - Prettier is configured with single quotes and auto-organizes imports + Tailwind class ordering; run lint/format before committing.
 
+- **Issue identity is two-part.** `issues.id` is the global primary key used for routes, relations, `<!-- orbit-issue:ID -->` PR markers and `#[title](id)` comment tokens; `issues.number` is the project-scoped number users see as `#12` (assigned in `Issue::booted()` from `projects.next_issue_number`, unique per `(project_id, number)`, never reused). Show/search/log/notify/branch-name `#N` text uses `number`; links and lookups use `id`. Issues that predate the column have `number = id`, so old `#N` references stay valid.
+
 ## Documentation
 
 `documentation/` holds step-by-step, copy-pasteable "how do I extend X" guides, split into two language folders, `documentation/en/` and `documentation/pl/`, mirroring the same structure and file names — see `documentation/README.md` for the language index and the en/pl sync rule, and `documentation/en/integrations/` (+ its `documentation/pl/integrations/` translation) for a fully worked example (adding an integration, a permission, integration settings, and a brand-new event type).
