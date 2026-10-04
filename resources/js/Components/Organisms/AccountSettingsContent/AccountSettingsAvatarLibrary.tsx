@@ -20,7 +20,10 @@ const faceCanvases = new Map<string, Promise<HTMLCanvasElement>>();
 
 const getFaceCanvas = (src: string) => {
     if (!faceCanvases.has(src)) {
-        faceCanvases.set(src, rasterizeImage(src));
+        const canvas = rasterizeImage(src);
+        // Don't keep a failed load around, or matching could never recover.
+        canvas.catch(() => faceCanvases.delete(src));
+        faceCanvases.set(src, canvas);
     }
 
     return faceCanvases.get(src)!;

@@ -2,7 +2,7 @@ import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { useAlert } from '@/context/AlertContext';
 import { router } from '@inertiajs/react';
-import { ChangeEvent, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 interface AccountSettingsAvatarUploaderProps {
     avatarSrc: string | null;
@@ -11,6 +11,9 @@ interface AccountSettingsAvatarUploaderProps {
     onReset: () => void;
     onToggleLibrary?: () => void;
     isLibraryOpen?: boolean;
+    /** True while the parent is saving an avatar chosen elsewhere (e.g. the library). */
+    busy?: boolean;
+    onProcessingChange?: (processing: boolean) => void;
 }
 
 // Mirrors the `max:5120` (KB) rule enforced in UserController::uploadAvatar.
@@ -23,6 +26,8 @@ export default function AccountSettingsAvatarUploader({
     onReset,
     onToggleLibrary,
     isLibraryOpen = false,
+    busy = false,
+    onProcessingChange,
 }: AccountSettingsAvatarUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const { addAlert } = useAlert();
@@ -30,6 +35,11 @@ export default function AccountSettingsAvatarUploader({
     const openFilePicker = () => inputRef.current?.click();
 
     const [processing, setProcessing] = useState(false);
+    const isBusy = processing || busy;
+
+    useEffect(() => {
+        onProcessingChange?.(processing);
+    }, [processing, onProcessingChange]);
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -142,7 +152,7 @@ export default function AccountSettingsAvatarUploader({
             </button>
 
             <div className="flex flex-col items-start gap-1.5">
-                {!processing ? (
+                {!isBusy ? (
                     <>
                         <button
                             type="button"
