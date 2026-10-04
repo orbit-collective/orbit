@@ -126,8 +126,9 @@ export default function InlineSelectDropdown({
             return;
         }
         if (event.key === 'Tab') {
-            // The panel is portaled to <body>; keep Tab order sane.
-            event.preventDefault();
+            // The panel is portaled to <body>, so hand focus back to the
+            // trigger and let the browser's default Tab/Shift+Tab move on
+            // from there to the next/previous control.
             closeAndRestoreFocus();
             return;
         }

@@ -354,6 +354,28 @@ describe('SelectionDropdown Component', () => {
         expect(trigger).toHaveFocus();
     });
 
+    test('Tab closes the menu and moves on past the trigger', async () => {
+        const user = userEvent.setup();
+        render(
+            <>
+                <SelectionDropdown
+                    options={baseOptions}
+                    selectedValues={[]}
+                    onChange={vi.fn()}
+                    trigger={<button>Columns</button>}
+                />
+                <button>Next</button>
+            </>,
+        );
+
+        await user.click(screen.getByText('Columns'));
+        await screen.findByRole('menuitemcheckbox', { name: 'Title' });
+
+        await user.tab();
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+        expect(screen.getByText('Next')).toHaveFocus();
+    });
+
     test('exposes the open state on the trigger element', async () => {
         const user = userEvent.setup();
         render(

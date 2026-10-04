@@ -49,6 +49,18 @@ describe('InlineSelectDropdown keyboard', () => {
         expect(trigger).toHaveFocus();
     });
 
+    it('lets Tab continue past the trigger instead of trapping it', () => {
+        const { trigger } = setup();
+        fireEvent.click(trigger);
+        const notPrevented = fireEvent.keyDown(
+            screen.getByRole('option', { name: 'Alpha' }),
+            { key: 'Tab' },
+        );
+        expect(notPrevented).toBe(true);
+        expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+        expect(trigger).toHaveFocus();
+    });
+
     it('selects via click and restores focus', () => {
         const { trigger, onChange } = setup();
         fireEvent.click(trigger);
