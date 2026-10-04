@@ -13,7 +13,8 @@ final class IssueMentioned
 
     public function __construct(
         public readonly Issue $issue,
-        public readonly Comment $comment,
+        /** Null when the mention is in the issue description rather than a comment. */
+        public readonly ?Comment $comment,
         public readonly User $mentionedUser,
         public readonly ?User $actor,
     ) {}

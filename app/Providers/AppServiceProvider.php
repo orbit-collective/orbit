@@ -10,6 +10,7 @@ use App\Events\IssuesImported;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Events\ProjectInvited;
+use App\Listeners\NotifyDescriptionMentions;
 use App\Listeners\NotifyProjectIntegrationsListener;
 use App\Listeners\SendNotificationListener;
 use App\Repositories\EloquentNotificationSettingRepository;
@@ -57,6 +58,13 @@ class AppServiceProvider extends ServiceProvider
             ProjectInvited::class,
             IssuesImported::class,
         ], SendNotificationListener::class);
+
+        // "@[Name](id)" mentions in an issue description raise the same
+        // IssueMentioned event comments do, handled by the listener above.
+        Event::listen([
+            IssueCreated::class,
+            IssueUpdated::class,
+        ], NotifyDescriptionMentions::class);
 
         // Same event set (minus ProjectInvited, which no integration's
         // sub-options cover yet) also fans out to any project integration

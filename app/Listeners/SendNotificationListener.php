@@ -178,13 +178,14 @@ class SendNotificationListener
 
         $issue = $event->issue;
         $actorName = $event->actor?->name ?? 'Someone';
+        $where = $event->comment ? 'in a comment on' : 'in the description of';
 
         $this->notificationService->notify(
             $event->mentionedUser->id,
             NotificationType::IssueMentioned,
             'info',
             'You were mentioned',
-            "$actorName mentioned you in a comment on \"$issue->title\" (#$issue->number).",
+            "$actorName mentioned you $where \"$issue->title\" (#$issue->number).",
             route('issues.show', [$issue->project_id, $issue->id])
         );
     }
