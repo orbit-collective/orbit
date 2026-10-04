@@ -19,6 +19,7 @@ documentation/
     alerts/                  <- angielskie tłumaczenie każdego przewodnika poniżej
     theme-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
     accent-colors/           <- angielskie tłumaczenie każdego przewodnika poniżej
+    avatars/                 <- angielskie tłumaczenie każdego przewodnika poniżej
     architecture/            <- angielskie tłumaczenie każdego przewodnika poniżej
     settings-tabs/           <- angielskie tłumaczenie każdego przewodnika poniżej
     shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -68,6 +69,9 @@ documentation/
       README.md              <- indeks tej kategorii
       01-add-a-new-accent-color.md
       02-use-the-accent-color-in-a-component.md
+    avatars/
+      README.md              <- indeks tej kategorii
+      01-add-a-new-avatar-face.md
     architecture/
       README.md              <- indeks tej kategorii
       01-tech-stack-and-project-structure.md
