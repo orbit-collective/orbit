@@ -34,7 +34,7 @@ describe('BoardCard Component', () => {
         );
 
         expect(screen.getByText('In Review')).toBeInTheDocument();
-        expect(screen.queryByText('Open')).not.toBeInTheDocument();
+        expect(screen.queryByText('open')).not.toBeInTheDocument();
     });
 
     test('falls back to the plain status badge without a workflow status', () => {
