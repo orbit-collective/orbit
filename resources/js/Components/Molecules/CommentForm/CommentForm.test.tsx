@@ -529,6 +529,25 @@ describe('CommentForm image uploads', () => {
         expect(handleSubmit).toHaveBeenCalledWith('See #[Fix login](2) ', []);
     });
 
+    test('falls back to the issue number when the title is only brackets', async () => {
+        mockAxios.get.mockResolvedValue({ data: [{ id: 2, title: '[]' }] });
+        const handleSubmit = vi.fn();
+        render(
+            <CommentForm onSubmit={handleSubmit} users={users} projectId={7} />,
+        );
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            'See #2',
+        );
+        await userEvent.click(await screen.findByRole('option'));
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(handleSubmit).toHaveBeenCalledWith('See #[#2](2) ', []);
+    });
+
     test('shows an empty state when no issue matches #', async () => {
         mockAxios.get.mockResolvedValue({ data: [] });
         render(<CommentForm onSubmit={() => {}} projectId={7} />);

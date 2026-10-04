@@ -264,8 +264,9 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 start: mention.start,
                 length: mentionText.length,
                 userId: issue.id,
-                // Brackets would break the "#[title](id)" token.
-                name: issue.title.replace(/[[\]]/g, ''),
+                // Brackets would break the "#[title](id)" token, and an
+                // empty title would not match the token pattern at all.
+                name: issue.title.replace(/[[\]]/g, '').trim() || mentionText,
                 kind: 'issue',
             },
         ]);

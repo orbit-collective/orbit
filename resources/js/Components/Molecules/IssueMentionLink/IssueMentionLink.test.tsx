@@ -65,6 +65,42 @@ describe('IssueMentionLink', () => {
         );
     });
 
+    test('refetches a preview once the cached copy has expired', async () => {
+        const now = vi.spyOn(Date, 'now');
+        now.mockReturnValue(1_000);
+        mockAxios.get.mockResolvedValue({
+            data: {
+                id: 5,
+                title: 'Old',
+                status: 'open',
+                priority: 'low',
+                labels: [],
+            },
+        });
+        render(
+            <IssueMentionLink
+                projectId={7}
+                issueId={5}
+                title="Old"
+                label="#5"
+            />,
+        );
+        const link = screen.getByRole('link', { name: '#5' });
+
+        await userEvent.hover(link);
+        await waitFor(() => expect(mockAxios.get).toHaveBeenCalledTimes(1));
+        await userEvent.unhover(link);
+
+        await userEvent.hover(link);
+        await userEvent.unhover(link);
+        expect(mockAxios.get).toHaveBeenCalledTimes(1);
+
+        now.mockReturnValue(1_000 + 31_000);
+        await userEvent.hover(link);
+        await waitFor(() => expect(mockAxios.get).toHaveBeenCalledTimes(2));
+        now.mockRestore();
+    });
+
     test('shows no card when the preview cannot be loaded', async () => {
         mockAxios.get.mockRejectedValue(new Error('404'));
         render(
