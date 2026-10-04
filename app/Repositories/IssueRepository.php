@@ -76,9 +76,14 @@ class IssueRepository
      */
     public function searchByIdPrefix(int $projectId, string $idPrefix, int $limit = 5): Collection
     {
-        return Issue::query()
+        $query = Issue::query();
+        // PostgreSQL has no implicit bigint -> text conversion for LIKE, and
+        // MySQL has no TEXT target for CAST, so pick the type per driver.
+        $textType = $query->getConnection()->getDriverName() === 'mysql' ? 'CHAR' : 'TEXT';
+
+        return $query
             ->where('project_id', $projectId)
-            ->where('id', 'like', $idPrefix.'%')
+            ->whereRaw("CAST(issues.id AS {$textType}) LIKE ?", [$idPrefix.'%'])
             ->with('assignee')
             ->orderBy('id')
             ->limit($limit)
