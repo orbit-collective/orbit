@@ -45,7 +45,7 @@ test('it does nothing when the integration has no webhook url configured', funct
 test('it queues an embed for a new issue', function () {
     $project = Project::factory()->create();
     $integration = ($this->makeIntegration)($project);
-    $issue = Issue::factory()->create(['id' => 15, 'project_id' => $project->id, 'title' => 'New feature']);
+    $issue = Issue::factory()->create(['id' => 15, 'number' => 15, 'project_id' => $project->id, 'title' => 'New feature']);
     $actor = User::factory()->create(['name' => 'Erin']);
 
     $this->notifier->handle($integration, new IssueCreated($issue, $actor));
@@ -63,7 +63,7 @@ test('it queues an embed for a new issue', function () {
 test('it queues a green embed for an issue assignment', function () {
     $project = Project::factory()->create();
     $integration = ($this->makeIntegration)($project);
-    $issue = Issue::factory()->create(['id' => 12, 'project_id' => $project->id, 'title' => 'Fix login bug']);
+    $issue = Issue::factory()->create(['id' => 12, 'number' => 12, 'project_id' => $project->id, 'title' => 'Fix login bug']);
     $actor = User::factory()->create(['name' => 'Bob']);
     $assignee = User::factory()->create(['name' => 'Alice']);
 
@@ -84,7 +84,7 @@ test('it queues a green embed for an issue assignment', function () {
 test('it queues a gray embed for an issue unassignment', function () {
     $project = Project::factory()->create();
     $integration = ($this->makeIntegration)($project);
-    $issue = Issue::factory()->create(['id' => 7, 'project_id' => $project->id, 'title' => 'Flaky test']);
+    $issue = Issue::factory()->create(['id' => 7, 'number' => 7, 'project_id' => $project->id, 'title' => 'Flaky test']);
     $actor = User::factory()->create(['name' => 'Bob']);
     $previousAssignee = User::factory()->create(['name' => 'Alice']);
 
@@ -103,7 +103,7 @@ test('it queues a gray embed for an issue unassignment', function () {
 test('it queues a blurple embed summarizing an issue update', function () {
     $project = Project::factory()->create();
     $integration = ($this->makeIntegration)($project);
-    $issue = Issue::factory()->create(['id' => 9, 'project_id' => $project->id, 'title' => 'Search is slow']);
+    $issue = Issue::factory()->create(['id' => 9, 'number' => 9, 'project_id' => $project->id, 'title' => 'Search is slow']);
     $actor = User::factory()->create(['name' => 'Bob']);
 
     $this->notifier->handle($integration, new IssueUpdated($issue, $actor, [
@@ -134,7 +134,7 @@ test('it does not queue anything for an issue update with no actor', function ()
 test('it queues a fuchsia embed for a new comment', function () {
     $project = Project::factory()->create();
     $integration = ($this->makeIntegration)($project);
-    $issue = Issue::factory()->create(['id' => 4, 'project_id' => $project->id, 'title' => 'Onboarding flow']);
+    $issue = Issue::factory()->create(['id' => 4, 'number' => 4, 'project_id' => $project->id, 'title' => 'Onboarding flow']);
     $actor = User::factory()->create(['name' => 'Jane Cooper']);
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $actor->id, 'body' => 'This looks great, thanks!']);
 
@@ -153,7 +153,7 @@ test('it queues a fuchsia embed for a new comment', function () {
 test('every embed links back to the issue and is attributed to Orbit', function () {
     $project = Project::factory()->create();
     $integration = ($this->makeIntegration)($project);
-    $issue = Issue::factory()->create(['id' => 3, 'project_id' => $project->id]);
+    $issue = Issue::factory()->create(['id' => 3, 'number' => 3, 'project_id' => $project->id]);
     $actor = User::factory()->create();
 
     $this->notifier->handle($integration, new IssueUpdated($issue, $actor, [

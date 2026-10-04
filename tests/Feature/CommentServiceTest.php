@@ -42,7 +42,7 @@ test('getForIssue delegates to the repository', function () {
 
 test('addComment stamps the authenticated user, stores the comment and logs activity', function () {
     $user = User::factory()->create(['name' => 'Jane Cooper']);
-    $issue = Issue::factory()->create(['id' => 3, 'title' => 'Fix login crash', 'assignee_id' => null]);
+    $issue = Issue::factory()->create(['id' => 3, 'number' => 3, 'title' => 'Fix login crash', 'assignee_id' => null]);
     $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $user->id]);
 
     $this->actingAs($user);
@@ -66,6 +66,7 @@ test('addComment notifies the assignee when someone else comments', function () 
     $assignee = User::factory()->create();
     $issue = Issue::factory()->create([
         'id' => 4,
+        'number' => 4,
         'title' => 'Fix login crash',
         'assignee_id' => $assignee->id,
     ]);
@@ -297,7 +298,7 @@ test('updateComment fires IssueMentioned only for a newly added mention alongsid
 
 test('deleteComment removes the comment and logs activity', function () {
     $user = User::factory()->create(['name' => 'Jane Cooper']);
-    $issue = Issue::factory()->create(['id' => 5, 'title' => 'Fix login crash']);
+    $issue = Issue::factory()->create(['id' => 5, 'number' => 5, 'title' => 'Fix login crash']);
     $comment = Comment::factory()->create(['issue_id' => $issue->id]);
 
     $this->actingAs($user);

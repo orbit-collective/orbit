@@ -24,7 +24,7 @@ class SendNotificationAction implements AutomationActionHandler
         }
 
         $title = $params['title'] ?? 'Automation notification';
-        $message = $params['message'] ?? "Automation ran on issue #$issue->id \"$issue->title\".";
+        $message = $params['message'] ?? "Automation ran on issue #$issue->number \"$issue->title\".";
 
         $this->notificationService->notify(
             $issue->assignee_id,
