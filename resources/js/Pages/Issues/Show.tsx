@@ -257,6 +257,8 @@ export default function Show({
                                         updateIssue({ description: value })
                                     }
                                     onImageUpload={uploadImage}
+                                    users={users}
+                                    projectId={project.id}
                                     placeholder="Add a description..."
                                 />
 
