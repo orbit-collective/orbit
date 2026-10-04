@@ -44,6 +44,8 @@ export interface AvatarProps {
     alt?: string;
     size?: 'sm' | 'md' | 'lg' | 'xl';
     initials?: string;
+    onClick?: () => void;
+    className?: string;
 }
 export interface BadgeProps
     extends
