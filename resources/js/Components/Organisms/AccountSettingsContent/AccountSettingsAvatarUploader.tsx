@@ -9,6 +9,7 @@ interface AccountSettingsAvatarUploaderProps {
     initials: string;
     onUpload: (dataUrl: string) => void;
     onReset: () => void;
+    onToggleLibrary?: () => void;
 }
 
 // Mirrors the `max:5120` (KB) rule enforced in UserController::uploadAvatar.
@@ -19,6 +20,7 @@ export default function AccountSettingsAvatarUploader({
     initials,
     onUpload,
     onReset,
+    onToggleLibrary,
 }: AccountSettingsAvatarUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const { addAlert } = useAlert();
@@ -126,6 +128,8 @@ export default function AccountSettingsAvatarUploader({
                 alt="Avatar preview"
                 initials={initials}
                 size="xl"
+                onClick={onToggleLibrary}
+                className="cursor-pointer"
             />
 
             <div className="flex flex-col items-start gap-1.5">
@@ -138,6 +142,16 @@ export default function AccountSettingsAvatarUploader({
                         >
                             Upload new photo
                         </button>
+                        {onToggleLibrary && (
+                            <button
+                                type="button"
+                                onClick={onToggleLibrary}
+                                className="flex items-center gap-1.5 rounded-md border border-[var(--border-color-strong)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                            >
+                                <Icon name="Images" size={14} />
+                                Choose from library
+                            </button>
+                        )}
                         <button
                             type="button"
                             onClick={handleReset}
