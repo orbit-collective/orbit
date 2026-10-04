@@ -27,6 +27,8 @@ vi.stubGlobal(
     vi.fn((name: string) => `/${name}`),
 );
 
+let holdImageLoad = false;
+
 class MockImage {
     onload: (() => void) | null = null;
     onerror: (() => void) | null = null;
@@ -34,7 +36,9 @@ class MockImage {
     height = 1;
 
     set src(_value: string) {
-        queueMicrotask(() => this.onload?.());
+        if (!holdImageLoad) {
+            queueMicrotask(() => this.onload?.());
+        }
     }
 }
 
@@ -121,5 +125,49 @@ describe('AccountSettingsAvatarUploader', () => {
 
         await waitFor(() => expect(onUpload).toHaveBeenCalledTimes(1));
         expect(onUpload.mock.calls[0][0]).toMatch(/^data:image\/png;base64,/);
+    });
+
+    test('reports the upload as in flight while the image is still loading', async () => {
+        holdImageLoad = true;
+        const onProcessingChange = vi.fn();
+        renderWithAlertProvider(
+            <AccountSettingsAvatarUploader
+                avatarSrc={null}
+                initials="JD"
+                onUpload={() => {}}
+                onReset={() => {}}
+                onProcessingChange={onProcessingChange}
+            />,
+        );
+
+        const file = new File(['hello'], 'avatar.png', { type: 'image/png' });
+        await userEvent.upload(getFileInput(), file);
+
+        await waitFor(() =>
+            expect(onProcessingChange).toHaveBeenCalledWith(true),
+        );
+        expect(screen.getByText('Saving...')).toBeInTheDocument();
+        expect(mockRouterPost).not.toHaveBeenCalled();
+
+        holdImageLoad = false;
+    });
+
+    test('ignores a selected file while the parent is saving another avatar', async () => {
+        const onUpload = vi.fn();
+        renderWithAlertProvider(
+            <AccountSettingsAvatarUploader
+                avatarSrc={null}
+                initials="JD"
+                onUpload={onUpload}
+                onReset={() => {}}
+                busy
+            />,
+        );
+
+        const file = new File(['hello'], 'avatar.png', { type: 'image/png' });
+        await userEvent.upload(getFileInput(), file);
+
+        expect(onUpload).not.toHaveBeenCalled();
+        expect(mockRouterPost).not.toHaveBeenCalled();
     });
 });

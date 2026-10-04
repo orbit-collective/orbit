@@ -54,8 +54,9 @@ export default function AccountSettingsAvatarLibrary({
 
             const avatar = await rasterizeImage(avatarSrc);
             for (const face of faces) {
-                const canvas = await getFaceCanvas(face.src);
-                if (canvasesMatch(avatar, canvas)) {
+                // A face that fails to load must not hide a match further down.
+                const canvas = await getFaceCanvas(face.src).catch(() => null);
+                if (canvas && canvasesMatch(avatar, canvas)) {
                     return face.src;
                 }
             }

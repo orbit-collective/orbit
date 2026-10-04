@@ -71,4 +71,39 @@ describe('AccountSettingsAvatarLibrary', () => {
             ).toHaveLength(1),
         );
     });
+
+    test('still finds the matching face when an earlier face fails to load', async () => {
+        vi.resetModules();
+        const { default: FreshLibrary } =
+            await import('./AccountSettingsAvatarLibrary');
+
+        let faceCalls = 0;
+        mockRasterizeImage.mockImplementation((src: string) => {
+            if (src.startsWith('/storage/')) {
+                return Promise.resolve({});
+            }
+
+            faceCalls += 1;
+
+            return faceCalls === 1
+                ? Promise.reject(new Error('network'))
+                : Promise.resolve({});
+        });
+        mockCanvasesMatch.mockReturnValue(true);
+
+        render(
+            <FreshLibrary
+                avatarSrc="/storage/avatars/c.png"
+                onSelect={() => {}}
+            />,
+        );
+
+        const pressed = await screen.findAllByRole('button', {
+            pressed: true,
+        });
+        expect(pressed).toHaveLength(1);
+        expect(pressed[0]).not.toBe(
+            screen.getAllByRole('button', { name: /^Use .* avatar$/ })[0],
+        );
+    });
 });
