@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.10.0](https://github.com/orbit-collective/orbit/compare/v0.9.6...v0.10.0) (2026-10-04)
+
+
+### Features
+
+* **accessibility:** add labels to issue development form inputs ([81ce934](https://github.com/orbit-collective/orbit/commit/81ce934652b5a70491f6181f03c2a32b5f47d1b9))
+* **accessibility:** add role and aria-label props to dropdown components ([dfaffa5](https://github.com/orbit-collective/orbit/commit/dfaffa5c38a2636fb07b31729334a2eb2c147c3e))
+* **board:** add workflow status badge to BoardCard ([81e8daf](https://github.com/orbit-collective/orbit/commit/81e8daf40c377ea27d4179bbb63a026650899fd5))
+* **comments:** add #issue mentions and mention empty states ([11bb059](https://github.com/orbit-collective/orbit/commit/11bb05980dc1db74da7d7aa61c5e21f568b197c8))
+* **comments:** preview mentioned issues and open menu upward ([6f3ec12](https://github.com/orbit-collective/orbit/commit/6f3ec12e62bd5c5e65a808da78d6d4c9007d0bd5))
+* **dropdown:** enhance keyboard navigation and accessibility ([3f4ce5d](https://github.com/orbit-collective/orbit/commit/3f4ce5d30e1d2c4c52540f9ea7a7b0850db48408))
+* **github:** add title prop to NavItem and enhance accessibility ([7f23509](https://github.com/orbit-collective/orbit/commit/7f23509c32493f43041b723e58ef3ca9621604d4))
+* **issue-development-panel:** replace select with InlineSelectDropdown for repository selection ([d7c14d8](https://github.com/orbit-collective/orbit/commit/d7c14d8ddf0ed3938a9d0819d655c1b0c1124cf1))
+* **issues:** add issue preview endpoint for mentions ([34adca1](https://github.com/orbit-collective/orbit/commit/34adca187bf99e5b1ecdcd43b995c02823a2c7c7))
+* **pagination:** enhance accessibility and keyboard navigation ([6c3a56e](https://github.com/orbit-collective/orbit/commit/6c3a56e111e236be4816186427378339de020d0c))
+* **selection-dropdown:** add kind prop for option types ([f9fa5aa](https://github.com/orbit-collective/orbit/commit/f9fa5aaed6453f9caf42a6f352aa6deda0f5f8b5))
+
+
+### Bug Fixes
+
+* **comments:** harden issue mention token and preview cache ([e519fcb](https://github.com/orbit-collective/orbit/commit/e519fcb9de7a21aa0cfa84ad0ad6930932c910f0))
+* **issues:** cast id to text for issue prefix search ([2c28165](https://github.com/orbit-collective/orbit/commit/2c2816544b70c2ec8117a0e454eb6fd29adc81e7))
+* **issues:** use CHAR cast on MariaDB for issue search ([7346e93](https://github.com/orbit-collective/orbit/commit/7346e939b5caa1418b9abdf6fc125ae14d513d90))
+* **ui:** let Tab move past open select dropdowns ([72a03ad](https://github.com/orbit-collective/orbit/commit/72a03ad8766f8bfe2bdc512a28fc5e736d2bd024))
+* **ui:** size issue preview card from its real height ([3c918b4](https://github.com/orbit-collective/orbit/commit/3c918b43438224db6774339f0928fad8418c4efd))
+
 ## [0.9.6](https://github.com/orbit-collective/orbit/compare/v0.9.5...v0.9.6) (2026-10-01)
 
 
