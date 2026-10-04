@@ -28,7 +28,7 @@ const BoardCardContent = ({
                 </span>
             </div>
             <span className="shrink-0 font-mono text-[10px] font-medium text-[var(--text-muted-color)]">
-                #{issue.id}
+                #{issue.number ?? issue.id}
             </span>
         </div>
         <h4

@@ -120,7 +120,7 @@ export const ListRow = ({
                         )}
                         data-column="id"
                     >
-                        #{issue.id}
+                        #{issue.number ?? issue.id}
                     </td>
                 )}
                 {enabledColumns.title && (

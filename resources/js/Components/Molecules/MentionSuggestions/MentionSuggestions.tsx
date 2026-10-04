@@ -169,7 +169,7 @@ export default function MentionSuggestions({
                                           )}
                                       >
                                           <span className="shrink-0 text-[var(--text-muted-color)]">
-                                              #{issue.id}
+                                              #{issue.number ?? issue.id}
                                           </span>
                                           <span className="truncate font-medium">
                                               {issue.title}

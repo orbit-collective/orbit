@@ -631,6 +631,7 @@ export interface CommentFormProps {
 /** An issue as returned by the project issue search/preview endpoints. */
 export interface IssueSuggestion {
     id: number;
+    number?: number;
     title: string;
     status?: Issue['status'];
     priority?: Issue['priority'];

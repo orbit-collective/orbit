@@ -81,6 +81,8 @@ export interface MentionRange {
     name: string;
     /** Defaults to 'user'; 'issue' ranges carry the issue id in `userId`. */
     kind?: 'user' | 'issue';
+    /** Issue mentions only: the project-scoped number shown to users (`userId` holds the issue's internal id). */
+    issueNumber?: number;
 }
 
 /**
@@ -139,7 +141,11 @@ export function tokenizeMentionRanges(
 
     return sorted.reduce((text, range) => {
         const prefix = range.kind === 'issue' ? '#' : '@';
-        const token = `${prefix}[${range.name}](${range.userId})`;
+        const target =
+            range.kind === 'issue' && range.issueNumber !== undefined
+                ? `${range.userId}:${range.issueNumber}`
+                : range.userId;
+        const token = `${prefix}[${range.name}](${target})`;
 
         return (
             text.slice(0, range.start) +
@@ -149,7 +155,12 @@ export function tokenizeMentionRanges(
     }, body);
 }
 
-const MENTION_TOKEN_PATTERN = /([@#])\[([^\]]+)\]\((\d+)\)/g;
+/**
+ * "@[Name](userId)" or "#[Title](issueId)". Newer issue tokens also carry the
+ * project-scoped number as "#[Title](issueId:number)"; older ones don't, and
+ * fall back to the id (which equals the number for pre-numbering issues).
+ */
+const MENTION_TOKEN_PATTERN = /([@#])\[([^\]]+)\]\((\d+)(?::(\d+))?\)/g;
 
 export type MentionSegment =
     | { type: 'text'; value: string }
@@ -160,7 +171,13 @@ export type MentionSegment =
           name: string;
           avatar?: string | null;
       }
-    | { type: 'issue'; value: string; issueId: number; title: string };
+    | {
+          type: 'issue';
+          value: string;
+          issueId: number;
+          issueNumber: number;
+          title: string;
+      };
 
 /**
  * Splits a persisted comment body into plain-text and mention segments,
@@ -183,7 +200,7 @@ export function splitMentionText(
 
     MENTION_TOKEN_PATTERN.lastIndex = 0;
     while ((match = MENTION_TOKEN_PATTERN.exec(body)) !== null) {
-        const [full, sigil, tokenName, tokenId] = match;
+        const [full, sigil, tokenName, tokenId, tokenNumber] = match;
         const userId = Number(tokenId);
         const user = usersById.get(userId);
 
@@ -197,8 +214,9 @@ export function splitMentionText(
         if (sigil === '#') {
             segments.push({
                 type: 'issue',
-                value: `#${userId}`,
+                value: `#${tokenNumber ?? userId}`,
                 issueId: userId,
+                issueNumber: Number(tokenNumber ?? userId),
                 title: tokenName,
             });
             lastIndex = match.index + full.length;

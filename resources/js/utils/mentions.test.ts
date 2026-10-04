@@ -240,8 +240,39 @@ describe('issue mentions', () => {
     test('splitMentionText yields issue segments', () => {
         expect(splitMentionText('see #[Bug](2)!')).toEqual([
             { type: 'text', value: 'see ' },
-            { type: 'issue', value: '#2', issueId: 2, title: 'Bug' },
+            {
+                type: 'issue',
+                value: '#2',
+                issueId: 2,
+                issueNumber: 2,
+                title: 'Bug',
+            },
             { type: 'text', value: '!' },
         ]);
+    });
+
+    test('tokenizes an issue with its project number as #[title](id:number)', () => {
+        expect(
+            tokenizeMentionRanges('fix #3 now', [
+                {
+                    start: 4,
+                    length: 2,
+                    userId: 201,
+                    issueNumber: 3,
+                    name: 'Bug',
+                    kind: 'issue',
+                },
+            ]),
+        ).toBe('fix #[Bug](201:3) now');
+    });
+
+    test('splitMentionText shows the project number for id:number tokens', () => {
+        expect(splitMentionText('see #[Bug](201:3)')[1]).toEqual({
+            type: 'issue',
+            value: '#3',
+            issueId: 201,
+            issueNumber: 3,
+            title: 'Bug',
+        });
     });
 });

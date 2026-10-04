@@ -72,7 +72,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                         />
                     )}
                     <span className="truncate">
-                        #{issue.id} {issue.title}
+                        #{issue.number ?? issue.id} {issue.title}
                     </span>
                 </span>
             </div>

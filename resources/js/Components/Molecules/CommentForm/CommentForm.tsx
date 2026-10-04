@@ -245,7 +245,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
         if (!mention || !textareaRef.current) return;
 
         const cursor = textareaRef.current.selectionStart;
-        const mentionText = `#${issue.id}`;
+        const mentionText = `#${issue.number ?? issue.id}`;
         const newBody =
             body.slice(0, mention.start) +
             mentionText +
@@ -268,6 +268,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 // empty title would not match the token pattern at all.
                 name: issue.title.replace(/[[\]]/g, '').trim() || mentionText,
                 kind: 'issue',
+                issueNumber: issue.number,
             },
         ]);
         setMention(null);
