@@ -1,4 +1,4 @@
-.PHONY: setup up dev up-d down build ensure-env npm-install composer-install test test-coverage test-js test-js-coverage lint type-check logs shell tinker migrate fresh clean
+.PHONY: setup up dev up-d down build ensure-env npm-install composer-install test test-coverage test-js test-js-coverage lint type-check logs shell tinker migrate fresh clean backup-now
 
 # Use Doppler to inject environment variables when this directory is linked
 # to a Doppler project/config (`doppler setup`). Third parties without
@@ -18,6 +18,7 @@ endif
 # interpolation. No-op when Doppler is linked — Doppler is the source of
 # truth then and a stray .env must not shadow it.
 ensure-env:
+	@mkdir -p $${BACKUP_DIR:-backup}
 ifeq ($(strip $(DOPPLER_LINKED)),)
 	@if [ ! -f .env ]; then \
 		cp .env.example .env; \
@@ -178,3 +179,9 @@ fresh:
 
 clean:
 	$(COMPOSE) down -v
+
+
+# Take a database snapshot right now (the backup service also does this on a timer).
+
+backup-now: ensure-env
+	$(COMPOSE) run --rm backup once

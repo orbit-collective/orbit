@@ -306,6 +306,35 @@ services:
         networks:
             - orbit-network
 
+    backup:
+        build:
+            context: ./docker/backup
+
+        # Same uid as the host user so snapshots in ./backup are yours, not root's.
+        user: "${BACKUP_UID:-1000}:${BACKUP_GID:-1000}"
+
+        environment:
+            BACKUP_INTERVAL: ${BACKUP_INTERVAL:-3600}
+            BACKUP_KEEP: ${BACKUP_KEEP:-48}
+            BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-30}
+
+        volumes:
+            # Read-only: the backup container can never modify the live database.
+            - ./database:/data/database:ro
+
+            # Point BACKUP_DIR at another drive to keep snapshots off this disk.
+            - ${BACKUP_DIR:-./backup}:/backup
+
+        healthcheck:
+            test: ["CMD-SHELL", "find /backup -maxdepth 1 -name 'orbit-*.sqlite' -mmin -$$((2 * ${BACKUP_INTERVAL:-3600} / 60 + 1)) | grep -q ."]
+            interval: 5m
+            start_period: 2m
+
+        restart: unless-stopped
+
+        networks:
+            - orbit-network
+
     uptime-kuma:
         image: louislam/uptime-kuma:2
         profiles:
