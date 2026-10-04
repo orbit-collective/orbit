@@ -6,8 +6,13 @@ import axios from 'axios';
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-// Hovering the same mention repeatedly shouldn't refetch it every time.
-const previewCache = new Map<string, IssueSuggestion>();
+// Hovering the same mention repeatedly shouldn't refetch it every time, but
+// the entry expires so a renamed/reassigned issue doesn't stay stale.
+const PREVIEW_TTL_MS = 30_000;
+const previewCache = new Map<
+    string,
+    { data: IssueSuggestion; fetchedAt: number }
+>();
 
 /**
  * A "#2" issue mention inside a comment: links to the issue and, on
@@ -32,14 +37,18 @@ export default function IssueMentionLink({
         hoveredRef.current = true;
         const rect = element.getBoundingClientRect();
         const key = `${projectId}:${issueId}`;
-        let data = previewCache.get(key);
+        const cached = previewCache.get(key);
+        let data =
+            cached && Date.now() - cached.fetchedAt < PREVIEW_TTL_MS
+                ? cached.data
+                : undefined;
 
         if (!data) {
             try {
                 ({ data } = await axios.get<IssueSuggestion>(
                     route('projects.issues.preview', [projectId, issueId]),
                 ));
-                previewCache.set(key, data);
+                previewCache.set(key, { data, fetchedAt: Date.now() });
             } catch {
                 return;
             }
