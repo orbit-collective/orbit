@@ -41,6 +41,7 @@ export default function AccountSettingsProfileTab({
     const [savedName, setSavedName] = useState(userName);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [savingFace, setSavingFace] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
     const initials = getInitials(data.name);
     const hasUnsavedChanges = data.name.trim() !== savedName.trim();
@@ -69,6 +70,7 @@ export default function AccountSettingsProfileTab({
             const blob = await canvasToBlob(canvas);
 
             const file = new File([blob], 'avatar.png', { type: 'image/png' });
+            const previousAvatarSrc = avatarSrc;
             setAvatarSrc(canvas.toDataURL('image/png'));
 
             router.post(
@@ -80,7 +82,13 @@ export default function AccountSettingsProfileTab({
                         addAlert('Avatar updated successfully.', 'success');
                         setIsLibraryOpen(false);
                     },
-                    onError: (e) => addAlert(e.avatar, 'error'),
+                    onError: (e) => {
+                        setAvatarSrc(previousAvatarSrc);
+                        addAlert(
+                            e.avatar ?? 'Failed to update avatar.',
+                            'error',
+                        );
+                    },
                     onFinish: () => setSavingFace(false),
                 },
             );
@@ -167,6 +175,8 @@ export default function AccountSettingsProfileTab({
                             onReset={() => handleResetAvatar()}
                             onToggleLibrary={() => setIsLibraryOpen((o) => !o)}
                             isLibraryOpen={isLibraryOpen}
+                            busy={savingFace}
+                            onProcessingChange={setUploading}
                         />
                     }
                 />
@@ -177,7 +187,7 @@ export default function AccountSettingsProfileTab({
                     >
                         <AccountSettingsAvatarLibrary
                             avatarSrc={avatarSrc}
-                            disabled={savingFace}
+                            disabled={savingFace || uploading}
                             onSelect={handleSelectFace}
                         />
                     </SettingsPanelRow>
