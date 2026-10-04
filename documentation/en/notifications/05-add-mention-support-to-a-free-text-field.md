@@ -399,7 +399,7 @@ from the former (step 5), it never just trusts the array.
 File: `resources/js/utils/mentions.ts`
 
 ```ts
-const MENTION_TOKEN_PATTERN = /@\[([^\]]+)\]\((\d+)\)/g;
+const MENTION_TOKEN_PATTERN = /([@#])\[([^\]]+)\]\((\d+)\)/g; // '#' = issue, see below
 
 export type MentionSegment =
     | { type: 'text'; value: string }
@@ -432,7 +432,7 @@ export function splitMentionText(
 
     MENTION_TOKEN_PATTERN.lastIndex = 0;
     while ((match = MENTION_TOKEN_PATTERN.exec(body)) !== null) {
-        const [full, tokenName, tokenId] = match;
+        const [full, sigil, tokenName, tokenId] = match;
         const userId = Number(tokenId);
         const user = usersById.get(userId);
 
@@ -494,6 +494,45 @@ Editing an existing comment shows the raw `@[Name](id)` token in the plain
 `<textarea>` (there's no rich re-composition of an already-tokenized
 mention) — acceptable, since `EditableText`'s edit mode already shows the
 literal stored value for every field, mentions included.
+
+## Issue mentions (`#id`)
+
+The same box also supports `#2`-style references to issues of the **same
+project**. They are display-only: unlike `@user` mentions they never create
+notifications, so nothing in the backend steps below applies to them.
+
+**Detect and search.** `findActiveIssueMention(text, cursor)` in
+`resources/js/utils/mentions.ts` finds an in-progress `#` followed by digits.
+`CommentForm` then calls `route('projects.issues.search', projectId)`
+(`IssueController::search` -> `IssueService::searchProjectIssuesById` ->
+`IssueRepository::searchByIdPrefix`, always scoped by `project_id` and
+authorized with `view` on the project). The prefix match casts `issues.id` to
+text per database driver, because PostgreSQL has no implicit bigint to text
+conversion for `LIKE`. Without a `projectId` prop the form never offers issue
+suggestions.
+
+**Insert and track.** Picking a suggestion inserts `#<id>` and records a
+`MentionRange` with `kind: 'issue'` (the id lives in `userId`, the issue title
+in `name`). Square brackets are stripped from the title and an empty result
+falls back to `#<id>`, so the token always matches the parser.
+
+**Token.** On submit the range is rewritten to `#[Title](id)`; user mentions
+stay `@[Name](id)`. `MENTION_TOKEN_PATTERN` in `mentions.ts` is
+`/([@#])\[([^\]]+)\]\((\d+)\)/g` and `splitMentionText` returns an
+`{ type: 'issue', issueId, title }` segment for the `#` sigil.
+
+**Render and preview.** `CommentItem` renders issue segments with
+`IssueMentionLink`, which links to `issues.show` and, on hover or focus, loads
+`route('projects.issues.preview', [projectId, issueId])`
+(`IssueController::preview`, 404 for an issue from another project) and shows
+`IssuePreviewCard`. Previews are cached in memory for 30 seconds
+(`PREVIEW_TTL_MS`) so a renamed or reassigned issue does not stay stale for
+the whole page session.
+
+**Tests.** `mentions.test.ts` (sigil parsing), `CommentForm.test.tsx`
+(suggest, insert, bracket-only title, no `projectId`),
+`IssueMentionLink.test.tsx` (hover preview, cache expiry) and
+`IssueControllerTest.php` (search and preview scoping).
 
 ## How the backend resolves and notifies mentions
 
