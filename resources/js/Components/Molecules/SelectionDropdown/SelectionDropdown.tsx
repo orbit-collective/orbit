@@ -121,7 +121,8 @@ export default function SelectionDropdown({
 
     const handleMenuKeyDown = (event: ReactKeyboardEvent) => {
         if (event.key === 'Tab') {
-            event.preventDefault();
+            // Focus returns to the trigger; the default Tab then continues
+            // from there instead of being trapped.
             setIsOpen(false);
             focusTrigger();
             return;
