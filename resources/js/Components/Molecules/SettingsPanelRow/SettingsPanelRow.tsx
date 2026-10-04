@@ -14,19 +14,21 @@ export default function SettingsPanelRow({
     children,
 }: SettingsPanelRowProps) {
     return (
-        <div className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:flex-wrap md:items-center md:justify-between">
-            <div className="min-w-0 space-y-1">
-                <p className="text-sm font-medium text-[var(--text-color)]">
-                    {title}
-                </p>
-                {description && (
-                    <p className="text-sm text-[var(--text-gray-color)]">
-                        {description}
+        <div className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="min-w-0 space-y-1">
+                    <p className="text-sm font-medium text-[var(--text-color)]">
+                        {title}
                     </p>
-                )}
+                    {description && (
+                        <p className="text-sm text-[var(--text-gray-color)]">
+                            {description}
+                        </p>
+                    )}
+                </div>
+                {action && <div className="shrink-0">{action}</div>}
             </div>
-            {action && <div className="shrink-0">{action}</div>}
-            {children && <div className="w-full">{children}</div>}
+            {children}
         </div>
     );
 }
