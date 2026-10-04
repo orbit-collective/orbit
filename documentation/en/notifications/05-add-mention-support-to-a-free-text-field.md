@@ -409,7 +409,8 @@ export type MentionSegment =
           userId: number;
           name: string;
           avatar?: string | null;
-      };
+      }
+    | { type: 'issue'; value: string; issueId: number; title: string };
 
 /**
  * Splits a persisted comment body into plain-text and mention segments,
@@ -441,6 +442,17 @@ export function splitMentionText(
                 type: 'text',
                 value: body.slice(lastIndex, match.index),
             });
+        }
+
+        if (sigil === '#') {
+            segments.push({
+                type: 'issue',
+                value: `#${userId}`,
+                issueId: userId,
+                title: tokenName,
+            });
+            lastIndex = match.index + full.length;
+            continue;
         }
 
         segments.push({
