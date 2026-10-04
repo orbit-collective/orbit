@@ -62,7 +62,7 @@ class DiscordIntegrationNotifier implements IntegrationNotifier
         $actorName = $event->actor?->name ?? 'Someone';
 
         return $this->baseEmbed(
-            "📌 Issue #$issue->id assigned",
+            "📌 Issue #$issue->number assigned",
             "**{$event->assignee->name}** was assigned to **\"$issue->title\"** by $actorName.",
             self::COLOR_ASSIGNED,
             $issue,
@@ -75,7 +75,7 @@ class DiscordIntegrationNotifier implements IntegrationNotifier
         $actorName = $event->actor?->name ?? 'Someone';
 
         return $this->baseEmbed(
-            "📤 Issue #$issue->id unassigned",
+            "📤 Issue #$issue->number unassigned",
             "**{$event->previousAssignee->name}** was unassigned from **\"$issue->title\"** by $actorName.",
             self::COLOR_UNASSIGNED,
             $issue,
@@ -95,7 +95,7 @@ class DiscordIntegrationNotifier implements IntegrationNotifier
         ));
 
         return $this->baseEmbed(
-            "📝 Issue #$issue->id updated",
+            "📝 Issue #$issue->number updated",
             "**{$event->actor->name}** updated **\"$issue->title\"**:\n$summary",
             self::COLOR_UPDATED,
             $issue,
@@ -108,7 +108,7 @@ class DiscordIntegrationNotifier implements IntegrationNotifier
         $actorName = $event->actor?->name ?? 'Someone';
 
         return $this->baseEmbed(
-            "🆕 New issue #$issue->id created",
+            "🆕 New issue #$issue->number created",
             "**$actorName** created a new issue: **\"$issue->title\"**",
             self::COLOR_CREATED,
             $issue,
@@ -122,7 +122,7 @@ class DiscordIntegrationNotifier implements IntegrationNotifier
         $body = Str::limit(trim(strip_tags($event->comment->body ?? '')), 300);
 
         return $this->baseEmbed(
-            "💬 New comment on issue #$issue->id",
+            "💬 New comment on issue #$issue->number",
             "**$actorName** commented on **\"$issue->title\"**:\n> $body",
             self::COLOR_COMMENT,
             $issue,

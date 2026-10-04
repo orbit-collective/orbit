@@ -31,7 +31,7 @@ test('IssueAssigned notifies the new assignee with no "Also" suffix when there a
     $actor = User::factory()->create(['name' => 'Bob']);
     $assignee = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 10, 'project_id' => $project->id, 'title' => 'Fix bug', 'assignee_id' => $assignee->id]);
+    $issue = Issue::factory()->create(['id' => 10, 'number' => 10, 'project_id' => $project->id, 'title' => 'Fix bug', 'assignee_id' => $assignee->id]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -51,7 +51,7 @@ test('IssueAssigned appends the remaining changes to the message when otherChang
     $actor = User::factory()->create(['name' => 'Bob']);
     $assignee = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 10, 'project_id' => $project->id, 'title' => 'Fix bug', 'assignee_id' => $assignee->id]);
+    $issue = Issue::factory()->create(['id' => 10, 'number' => 10, 'project_id' => $project->id, 'title' => 'Fix bug', 'assignee_id' => $assignee->id]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -85,7 +85,7 @@ test('IssueUnassigned notifies the previous assignee', function () {
     $actor = User::factory()->create(['name' => 'Bob']);
     $previousAssignee = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 11, 'project_id' => $project->id, 'title' => 'Fix bug']);
+    $issue = Issue::factory()->create(['id' => 11, 'number' => 11, 'project_id' => $project->id, 'title' => 'Fix bug']);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -104,7 +104,7 @@ test('IssueUnassigned notifies the previous assignee', function () {
 test('IssueUpdated notifies the actor with the notification type mapped from the changed field', function () {
     $actor = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 12, 'project_id' => $project->id, 'assignee_id' => null]);
+    $issue = Issue::factory()->create(['id' => 12, 'number' => 12, 'project_id' => $project->id, 'assignee_id' => null]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -125,7 +125,7 @@ test('IssueUpdated notifies the actor with the notification type mapped from the
 test('IssueUpdated falls back to the generic IssueUpdated type for untracked fields', function () {
     $actor = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 13, 'project_id' => $project->id, 'assignee_id' => null]);
+    $issue = Issue::factory()->create(['id' => 13, 'number' => 13, 'project_id' => $project->id, 'assignee_id' => null]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -139,7 +139,7 @@ test('IssueUpdated falls back to the generic IssueUpdated type for untracked fie
 test('IssueUpdated sends one notification per notification type when unrelated fields change together', function () {
     $actor = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 14, 'project_id' => $project->id, 'assignee_id' => null]);
+    $issue = Issue::factory()->create(['id' => 14, 'number' => 14, 'project_id' => $project->id, 'assignee_id' => null]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -158,7 +158,7 @@ test('IssueUpdated sends one notification per notification type when unrelated f
 test('IssueUpdated groups start_date and end_date under the same IssueDatesChanged notification', function () {
     $actor = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 15, 'project_id' => $project->id, 'assignee_id' => null]);
+    $issue = Issue::factory()->create(['id' => 15, 'number' => 15, 'project_id' => $project->id, 'assignee_id' => null]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -181,7 +181,7 @@ test('IssueUpdated also notifies the current assignee when the assignee did not 
     $actor = User::factory()->create(['name' => 'Bob']);
     $assignee = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 16, 'project_id' => $project->id, 'assignee_id' => $assignee->id]);
+    $issue = Issue::factory()->create(['id' => 16, 'number' => 16, 'project_id' => $project->id, 'assignee_id' => $assignee->id]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -207,7 +207,7 @@ test('IssueUpdated does not notify the assignee track when the assignee just cha
     $actor = User::factory()->create();
     $newAssignee = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 17, 'project_id' => $project->id, 'assignee_id' => $newAssignee->id]);
+    $issue = Issue::factory()->create(['id' => 17, 'number' => 17, 'project_id' => $project->id, 'assignee_id' => $newAssignee->id]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -232,7 +232,7 @@ test('IssueUpdated does nothing when there is no actor and no assignee', functio
 test('IssueUpdated still notifies the assignee when there is no actor, e.g. an automation-triggered change', function () {
     $assignee = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 18, 'project_id' => $project->id, 'assignee_id' => $assignee->id]);
+    $issue = Issue::factory()->create(['id' => 18, 'number' => 18, 'project_id' => $project->id, 'assignee_id' => $assignee->id]);
 
     $this->notificationService->shouldReceive('notify')
         ->once()
@@ -254,7 +254,7 @@ test('CommentAdded notifies the issue assignee', function () {
     $actor = User::factory()->create(['name' => 'Jane Cooper']);
     $assignee = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 20, 'project_id' => $project->id, 'title' => 'Fix login crash', 'assignee_id' => $assignee->id]);
+    $issue = Issue::factory()->create(['id' => 20, 'number' => 20, 'project_id' => $project->id, 'title' => 'Fix login crash', 'assignee_id' => $assignee->id]);
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $actor->id]);
 
     $this->notificationService->shouldReceive('notify')
@@ -297,7 +297,7 @@ test('IssueMentioned notifies the mentioned user about the actor\'s comment', fu
     $actor = User::factory()->create(['name' => 'Jane Cooper']);
     $mentioned = User::factory()->create();
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['id' => 30, 'project_id' => $project->id, 'title' => 'Fix login crash']);
+    $issue = Issue::factory()->create(['id' => 30, 'number' => 30, 'project_id' => $project->id, 'title' => 'Fix login crash']);
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $actor->id]);
 
     $this->notificationService->shouldReceive('notify')

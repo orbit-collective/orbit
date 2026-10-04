@@ -69,7 +69,7 @@ class SendNotificationListener
         $issue = $event->issue;
         $actorName = $event->actor?->name ?? 'Someone';
 
-        $message = "$actorName assigned you to \"$issue->title\" (#$issue->id).";
+        $message = "$actorName assigned you to \"$issue->title\" (#$issue->number).";
 
         if ($otherSummary = $this->summarize($event->otherChanges)) {
             $message .= " Also: $otherSummary.";
@@ -95,7 +95,7 @@ class SendNotificationListener
             NotificationType::IssueAssigned,
             'info',
             'You were unassigned from an issue',
-            "$actorName unassigned you from \"$issue->title\" (#$issue->id).",
+            "$actorName unassigned you from \"$issue->title\" (#$issue->number).",
             $this->buildActionUrl($issue)
         );
     }
@@ -122,7 +122,7 @@ class SendNotificationListener
                     $type,
                     'info',
                     $this->updateSubject($issue, $type),
-                    "You updated \"$issue->title\" (#$issue->id): {$this->summarize($groupChanges)}.",
+                    "You updated \"$issue->title\" (#$issue->number): {$this->summarize($groupChanges)}.",
                     $actionUrl
                 );
             }
@@ -144,7 +144,7 @@ class SendNotificationListener
                 $type,
                 'info',
                 $this->updateSubject($issue, $type),
-                "$actorName updated \"$issue->title\" (#$issue->id), which is assigned to you: {$this->summarize($groupChanges)}.",
+                "$actorName updated \"$issue->title\" (#$issue->number), which is assigned to you: {$this->summarize($groupChanges)}.",
                 $actionUrl
             );
         }
@@ -165,7 +165,7 @@ class SendNotificationListener
             NotificationType::IssueCommented,
             'info',
             'New comment on your issue',
-            "$actorName commented on \"$issue->title\" (#$issue->id).",
+            "$actorName commented on \"$issue->title\" (#$issue->number).",
             route('issues.show', [$issue->project_id, $issue->id])
         );
     }
@@ -184,7 +184,7 @@ class SendNotificationListener
             NotificationType::IssueMentioned,
             'info',
             'You were mentioned',
-            "$actorName mentioned you in a comment on \"$issue->title\" (#$issue->id).",
+            "$actorName mentioned you in a comment on \"$issue->title\" (#$issue->number).",
             route('issues.show', [$issue->project_id, $issue->id])
         );
     }
@@ -254,7 +254,7 @@ class SendNotificationListener
     {
         $suffix = self::UPDATE_SUBJECTS[$type->value] ?? 'updated';
 
-        return "Issue #$issue->id $suffix";
+        return "Issue #$issue->number $suffix";
     }
 
     private function summarize(array $changes): string
