@@ -355,7 +355,7 @@ Zarówno stokenizowane `body`, jak i zwykła tablica `mentionedUserIds` trafiaj�
 Plik: `resources/js/utils/mentions.ts`
 
 ```ts
-const MENTION_TOKEN_PATTERN = /@\[([^\]]+)\]\((\d+)\)/g;
+const MENTION_TOKEN_PATTERN = /([@#])\[([^\]]+)\]\((\d+)\)/g; // '#' = issue, patrz niżej
 
 export type MentionSegment =
     | { type: 'text'; value: string }
@@ -388,7 +388,7 @@ export function splitMentionText(
 
     MENTION_TOKEN_PATTERN.lastIndex = 0;
     while ((match = MENTION_TOKEN_PATTERN.exec(body)) !== null) {
-        const [full, tokenName, tokenId] = match;
+        const [full, sigil, tokenName, tokenId] = match;
         const userId = Number(tokenId);
         const user = usersById.get(userId);
 
@@ -446,6 +446,46 @@ const renderBody = (value: string) =>
 ```
 
 Edycja istniejącego komentarza pokazuje surowy token `@[Name](id)` w zwykłym `<textarea>` (nie ma bogatego, ponownego skomponowania już stokenizowanej wzmianki) — to akceptowalne, ponieważ tryb edycji `EditableText` już pokazuje dosłowną zapisaną wartość dla każdego pola, wzmianki włącznie.
+
+## Wzmianki o zgłoszeniach (`#id`)
+
+To samo pole obsługuje też odwołania w stylu `#2` do zgłoszeń **tego samego
+projektu**. Służą tylko do wyświetlania: w przeciwieństwie do wzmianek
+`@user` nie tworzą powiadomień, więc kroki backendowe poniżej ich nie
+dotyczą.
+
+**Wykrywanie i wyszukiwanie.** `findActiveIssueMention(text, cursor)` w
+`resources/js/utils/mentions.ts` znajduje wpisywane `#` z cyframi.
+`CommentForm` wywołuje wtedy `route('projects.issues.search', projectId)`
+(`IssueController::search` -> `IssueService::searchProjectIssuesById` ->
+`IssueRepository::searchByIdPrefix`, zawsze ograniczone przez `project_id` i
+autoryzowane przez `view` na projekcie). Dopasowanie prefiksu rzutuje
+`issues.id` na tekst zależnie od sterownika bazy, bo PostgreSQL nie ma
+niejawnej konwersji bigint na tekst dla `LIKE`. Bez propsa `projectId`
+formularz nigdy nie pokazuje podpowiedzi zgłoszeń.
+
+**Wstawianie i śledzenie.** Wybranie podpowiedzi wstawia `#<id>` i zapisuje
+`MentionRange` z `kind: 'issue'` (id w `userId`, tytuł zgłoszenia w `name`).
+Nawiasy kwadratowe są usuwane z tytułu, a pusty wynik zamieniany na `#<id>`,
+więc token zawsze pasuje do parsera.
+
+**Token.** Przy wysyłaniu zakres jest przepisywany na `#[Tytuł](id)`;
+wzmianki użytkowników zostają `@[Name](id)`. `MENTION_TOKEN_PATTERN` w
+`mentions.ts` to `/([@#])\[([^\]]+)\]\((\d+)\)/g`, a `splitMentionText`
+zwraca segment `{ type: 'issue', issueId, title }` dla znaku `#`.
+
+**Renderowanie i podgląd.** `CommentItem` renderuje segmenty zgłoszeń przez
+`IssueMentionLink`, który linkuje do `issues.show`, a po najechaniu lub
+fokusie pobiera `route('projects.issues.preview', [projectId, issueId])`
+(`IssueController::preview`, 404 dla zgłoszenia z innego projektu) i pokazuje
+`IssuePreviewCard`. Podglądy są cache'owane w pamięci przez 30 sekund
+(`PREVIEW_TTL_MS`), więc zmieniony tytuł lub przypisanie nie zostają nieaktualne
+do końca sesji strony.
+
+**Testy.** `mentions.test.ts` (parsowanie znaku), `CommentForm.test.tsx`
+(podpowiedzi, wstawianie, tytuł z samych nawiasów, brak `projectId`),
+`IssueMentionLink.test.tsx` (podgląd, wygaśnięcie cache) i
+`IssueControllerTest.php` (zakres search i preview).
 
 ## Jak backend rozwiązuje i powiadamia o wzmiankach
 
