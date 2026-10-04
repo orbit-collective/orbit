@@ -157,8 +157,8 @@ test('it can search issues by description', function () {
 
 test('it can search issues by ID', function () {
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['project_id' => $project->id, 'id' => 999]);
-    Issue::factory()->create(['project_id' => $project->id, 'id' => 888]);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'id' => 999, 'number' => 999]);
+    Issue::factory()->create(['project_id' => $project->id, 'id' => 888, 'number' => 888]);
 
     $results = $this->repository->getAllPaginated($project->id, 10, [], ['search' => '999']);
 

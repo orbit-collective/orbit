@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Issue;
+use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -46,9 +47,15 @@ class IssueRepository
         return Issue::query()->create($data);
     }
 
-    public function maxId(): int
+    /** The number the next issue created in the project will get (a hint only). */
+    public function peekNextNumber(Project $project): int
     {
-        return (int) Issue::query()->max('id');
+        return Issue::nextNumberFor($project);
+    }
+
+    public function findByNumber(int $projectId, int $number): ?Issue
+    {
+        return Issue::query()->where('project_id', $projectId)->where('number', $number)->first();
     }
 
     /** Just enough of an issue to render it as a breadcrumb crumb. */
@@ -83,9 +90,9 @@ class IssueRepository
 
         return $query
             ->where('project_id', $projectId)
-            ->whereRaw("CAST(issues.id AS {$textType}) LIKE ?", [$idPrefix.'%'])
+            ->whereRaw("CAST(issues.number AS {$textType}) LIKE ?", [$idPrefix.'%'])
             ->with('assignee')
-            ->orderBy('id')
+            ->orderBy('number')
             ->limit($limit)
             ->get();
     }
@@ -135,6 +142,9 @@ class IssueRepository
         if ($column && in_array($column, $allowedColumns)) {
             switch ($column) {
                 case 'id':
+                    $query->orderBy('issues.number', $direction)->orderBy('issues.id', $direction);
+                    break;
+
                 case 'title':
                 case 'status':
                 case 'labels':
@@ -194,7 +204,7 @@ class IssueRepository
                         $q->where(function ($sq) use ($value) {
                             $sq->where('title', 'like', "%$value%")
                                 ->orWhere('description', 'like', "%$value%")
-                                ->orWhere('issues.id', 'like', "%$value%")
+                                ->orWhere('issues.number', 'like', "%$value%")
                                 ->orWhere('labels', 'like', "%$value%");
                         });
                     } elseif (in_array($key, ['title', 'status', 'priority', 'labels'])) {
@@ -292,6 +302,6 @@ class IssueRepository
 
     public function getMany(array $ids): Collection
     {
-        return Issue::query()->whereIn('id', $ids)->get(['id', 'project_id', 'title']);
+        return Issue::query()->whereIn('id', $ids)->get(['id', 'number', 'project_id', 'title']);
     }
 }
