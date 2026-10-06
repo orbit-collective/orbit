@@ -28,7 +28,7 @@ Wszystkie ustawienia to zmienne środowiskowe z wartościami domyślnymi, czytan
 | `BACKUP_KEEP` | `48` | Ile najnowszych snapshotów zostawić. |
 | `BACKUP_KEEP_DAILY` | `30` | Ile kopii dziennych zostawić w `backup/daily/`. |
 | `BACKUP_DIR` | `./backup` | Katalog hosta, do którego trafiają snapshoty. |
-| `BACKUP_UID` / `BACKUP_GID` | `1000` / `1000` | Właściciel snapshotów. Ustaw oba na id swojego użytkownika, jeśli nie jest to 1000 (`id -u`, `id -g`). |
+| `BACKUP_UID` / `BACKUP_GID` | właściciel `database.sqlite` | Użytkownik, jako którego działa usługa i który jest właścicielem snapshotów. Zostaw puste, by użyć właściciela pliku bazy; ustaw oba, by nadpisać. |
 
 Plik: `docker-compose.yml`
 
@@ -37,12 +37,13 @@ Plik: `docker-compose.yml`
         build:
             context: ./docker/backup
 
-        # Starts as root only to chown the mounted directory, then runs as this
-        # uid/gid (set both to your host user's if it is not 1000) so snapshots
-        # in ./backup belong to you, not root.
+        # Starts as root only to chown the mounted directory, then runs as the
+        # owner of database/database.sqlite so it can always read it and the
+        # snapshots in ./backup belong to you. Set BACKUP_UID and BACKUP_GID to
+        # override that.
         environment:
-            BACKUP_UID: ${BACKUP_UID:-1000}
-            BACKUP_GID: ${BACKUP_GID:-1000}
+            BACKUP_UID: ${BACKUP_UID:-}
+            BACKUP_GID: ${BACKUP_GID:-}
             BACKUP_INTERVAL: ${BACKUP_INTERVAL:-3600}
             BACKUP_KEEP: ${BACKUP_KEEP:-48}
             BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-30}
@@ -96,7 +97,7 @@ Rzeczy, w których łatwo o błąd, a które są tu obsłużone:
 - **Błędy muszą się propagować.** Pętla woła `backup_once || true`, żeby jeden nieudany przebieg nie zatrzymał harmonogramu, a to wyłącza `set -e` wewnątrz funkcji. Dlatego każdy krok, który może się nie udać, sprawdza własny wynik i zwraca niezerowy kod, zanim cokolwiek zostanie zalogowane jako zapisane albo przycięte.
 - **Zapis atomowy.** Zarówno snapshot, jak i kopia dzienna są zapisywane pod tymczasową nazwą i przemianowywane, więc przerwany przebieg nie zostawi pliku wyglądającego na gotowy.
 - **Unikalne nazwy.** Każda nazwa ma losowy sufiks, więc harmonogram i `make backup-now` mogą działać w tej samej sekundzie bez nadpisywania się.
-- **Własność.** Brakujący katalog hosta tworzy Docker jako root, a użytkownik hosta nie zawsze ma uid 1000, więc skrypt startuje jako root, robi `chown` na `/backup` dla `BACKUP_UID:BACKUP_GID` i uruchamia się ponownie przez `su-exec` jako ten użytkownik. Makefile nie musi więc tworzyć katalogu.
+- **Własność.** Brakujący katalog hosta tworzy Docker jako root, więc skrypt startuje jako root, robi `chown` na `/backup`, jego katalogu `daily/` i plikach `orbit-*.sqlite` w nich (i niczym więcej, bo `BACKUP_DIR` może zawierać inne dane), po czym uruchamia się ponownie przez `su-exec` jako docelowy użytkownik. Domyślnie jest to właściciel pliku bazy, który w kontenerze jest tylko do odczytu i może być czytelny tylko dla swojego właściciela, więc zawsze da się go odczytać, a snapshoty należą do osoby, do której należą dane. `BACKUP_DROPPED` zapobiega nieskończonemu ponownemu uruchamianiu się skryptu, gdy baza należy do roota. Makefile nie musi tworzyć katalogu.
 
 ```sh
 #!/bin/sh
@@ -114,9 +115,12 @@ Rzeczy, w których łatwo o błąd, a które są tu obsłużone:
 #   BACKUP_KEEP_DAILY days (in /backup/daily), so a bad state - e.g. an
 #   accidentally wiped database - cannot rotate every good copy away within hours.
 # - Starts as root only to make /backup writable: a missing host directory is
-#   created by Docker as root, and the host user's uid is not always 1000. It
-#   chowns /backup to BACKUP_UID:BACKUP_GID and drops to that user before
-#   touching any data.
+#   created by Docker as root. It chowns /backup, its daily/ directory and the
+#   orbit-*.sqlite files in them (nothing else, BACKUP_DIR may hold other data)
+#   to the user it will run as, and drops to that user before touching any data.
+#   That user is BACKUP_UID:BACKUP_GID when set, otherwise the owner of the
+#   database file, so a database only its owner can read is still backed up and
+#   the snapshots belong to the person who owns the data.
 #
 # Usage: backup.sh          run forever, one snapshot every BACKUP_INTERVAL seconds
 #        backup.sh once     take a single snapshot and exit (used by `make backup-now`)
@@ -129,17 +133,33 @@ DEST="${BACKUP_DIR:-/backup}"
 INTERVAL="${BACKUP_INTERVAL:-3600}"
 KEEP="${BACKUP_KEEP:-48}"
 KEEP_DAILY="${BACKUP_KEEP_DAILY:-30}"
-RUN_UID="${BACKUP_UID:-1000}"
-RUN_GID="${BACKUP_GID:-1000}"
+RUN_UID="${BACKUP_UID:-}"
+RUN_GID="${BACKUP_GID:-}"
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') [backup] $*"
 }
 
-if [ "$(id -u)" = "0" ]; then
+# BACKUP_DROPPED stops a database owned by root (uid 0) from re-executing as
+# root forever: the script only drops privileges once.
+if [ "$(id -u)" = "0" ] && [ -z "${BACKUP_DROPPED:-}" ]; then
+    # The database is mounted read-only and may be readable only by its owner,
+    # so by default run as that owner.
+    if [ -z "$RUN_UID" ]; then
+        RUN_UID="$(stat -c %u "$DB" 2>/dev/null || echo 1000)"
+    fi
+    if [ -z "$RUN_GID" ]; then
+        RUN_GID="$(stat -c %g "$DB" 2>/dev/null || echo 1000)"
+    fi
+
     mkdir -p "$DEST"
     chown "$RUN_UID:$RUN_GID" "$DEST"
-    exec su-exec "$RUN_UID:$RUN_GID" "$0" "$@"
+    if [ -d "$DEST/daily" ]; then
+        chown "$RUN_UID:$RUN_GID" "$DEST/daily"
+    fi
+    # Snapshots written under a previous BACKUP_UID, so the new user can prune them.
+    find "$DEST" -maxdepth 2 -name 'orbit-*.sqlite' -exec chown "$RUN_UID:$RUN_GID" {} +
+    BACKUP_DROPPED=1 exec su-exec "$RUN_UID:$RUN_GID" "$0" "$@"
 fi
 
 prune() {
@@ -235,7 +255,6 @@ backup-now: ensure-env
 # Regression tests for the backup script (builds the image, runs it on throwaway copies).
 
 test-backup:
-	$(COMPOSE) build backup
 	sh docker/backup/test.sh
 ```
 
@@ -272,8 +291,13 @@ make test-backup
 
 - Katalog hosta, do którego użytkownik kontenera nie może pisać (należący do roota, tak jak tworzy go Docker dla brakującego montowania), nadal działa, a snapshot należy do `BACKUP_UID`.
 - Dwa backupy uruchomione w tej samej sekundzie dają dwa snapshoty i żadnych pozostałych plików tymczasowych.
-- Nieudana kopia dzienna jest raportowana jako błąd i nigdy nie jest logowana jako zapisana.
+- Nieudana kopia dzienna jest raportowana jako błąd i nigdy nie jest logowana jako zapisana, a test zostawia w spokoju inne kontenery zbudowane z tego samego obrazu (prawdziwą usługę backupu).
 - Zakończony przebieg zostawia tylko całe pliki, a kopia dzienna przechodzi `integrity_check`.
+- Baza czytelna tylko dla właściciela jest kopiowana, a snapshot należy do tego właściciela.
+- Po zmianie `BACKUP_UID` katalog `daily/` i istniejące snapshoty należą do nowego użytkownika.
+- Baza należąca do roota jest kopiowana raz i skrypt nie wpada w pętlę.
+
+Skrypt buduje własny obraz z `docker/backup/`, więc zawsze testuje bieżący kod i nie zależy od nazwy, jaką Compose nadaje usłudze.
 
 Plik: `docker/backup/test.sh`
 
@@ -281,17 +305,23 @@ Plik: `docker/backup/test.sh`
 #!/bin/sh
 # Regression tests for backup.sh, run against the built `backup` image.
 #
-#   docker compose build backup && sh docker/backup/test.sh      (or: make test-backup)
+#   sh docker/backup/test.sh      (or: make test-backup)
+#
+# The script builds its own image from this directory, so it always tests the
+# current code and does not depend on the name Compose gives the service.
 #
 # Every case works on a throwaway copy of a tiny SQLite database in a temp
 # directory; nothing touches database/database.sqlite or ./backup.
 
 set -u
 
-IMAGE="${BACKUP_IMAGE:-orbit-backup}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+IMAGE="${BACKUP_IMAGE:-orbit-backup-test}"
 WORK="$(mktemp -d)"
 FAILED=0
 trap 'docker run --rm -v "$WORK:/w" --entrypoint sh "$IMAGE" -c "rm -rf /w/*" >/dev/null 2>&1; rm -rf "$WORK"' EXIT
+
+docker build -q -t "$IMAGE" "$HERE" >/dev/null || { echo "FAIL - could not build $IMAGE"; exit 1; }
 
 pass() { echo "ok   - $1"; }
 fail() { echo "FAIL - $1"; FAILED=1; }
@@ -300,7 +330,7 @@ new_case() {
     CASE="$WORK/$1"
     mkdir -p "$CASE/db" "$CASE/out"
     docker run --rm -v "$CASE/db:/db" --entrypoint sh "$IMAGE" -c \
-        "sqlite3 /db/database.sqlite 'create table t(a); insert into t values (1);' && chmod 644 /db/database.sqlite" >/dev/null
+        "sqlite3 /db/database.sqlite 'create table t(a); insert into t values (1);' && chmod 644 /db/database.sqlite && chown $(id -u):$(id -g) /db/database.sqlite" >/dev/null
 }
 
 run_backup() {
@@ -341,20 +371,29 @@ else
 fi
 
 # 3. A failing daily copy is reported as a failure, never logged as saved,
-#    and the scheduled loop keeps running.
+#    and the scheduled loop keeps running. The test must also leave any other
+#    container built from the same image (the real backup service) alone.
 new_case daily
 : > "$CASE/out/daily"   # a file where the daily directory should be
-log="$(run_backup "$CASE" "$IMAGE" 2>&1 &
-    pid=$!
-    sleep 5
-    docker ps -q --filter "ancestor=$IMAGE" | xargs -r docker stop >/dev/null 2>&1
-    wait $pid 2>/dev/null)"
+bystander="backup-test-bystander-$$"
+docker run -d --name "$bystander" --entrypoint sleep "$IMAGE" 300 >/dev/null
+runner="backup-test-runner-$$"
+docker run -d --name "$runner" -v "$CASE/db:/data/database:ro" -v "$CASE/out:/backup" "$IMAGE" >/dev/null
+sleep 5
+log="$(docker logs "$runner" 2>&1)"
+docker rm -f "$runner" >/dev/null 2>&1
 if echo "$log" | grep -q "ERROR" && ! echo "$log" | grep -q "saved daily copy"; then
     pass "a failed daily copy is reported and not logged as saved"
 else
     fail "a failed daily copy is reported and not logged as saved"
     echo "$log" | sed 's/^/       /'
 fi
+if [ "$(docker inspect -f '{{.State.Running}}' "$bystander" 2>/dev/null)" = "true" ]; then
+    pass "the test leaves other containers built from the image running"
+else
+    fail "the test leaves other containers built from the image running"
+fi
+docker rm -f "$bystander" >/dev/null 2>&1
 
 # 4. A completed run leaves only whole files: no temp files, and the daily
 #    copy passes integrity_check.
@@ -368,6 +407,48 @@ if [ -n "$daily" ] && [ "$check" = "ok" ] && [ "$leftovers" = "0" ]; then
     pass "daily copy is complete and no temp files remain"
 else
     fail "daily copy is complete and no temp files remain"
+fi
+
+# 5. With no BACKUP_UID the service runs as the owner of the database file, so
+#    a database only its owner can read (mode 0600) is still backed up, and the
+#    snapshot belongs to that owner.
+new_case restricted
+docker run --rm -v "$CASE/db:/db" --entrypoint sh "$IMAGE" -c \
+    "chown 4343:4343 /db/database.sqlite && chmod 600 /db/database.sqlite"
+run_backup "$CASE" "$IMAGE" once >/dev/null 2>&1
+snapshot="$(ls "$CASE"/out/orbit-*.sqlite 2>/dev/null | head -1)"
+if [ -n "$snapshot" ] && [ "$(stat -c %u "$snapshot")" = "4343" ]; then
+    pass "a database readable only by its owner is backed up, owned by that owner"
+else
+    fail "a database readable only by its owner is backed up, owned by that owner"
+fi
+
+# 6. Changing BACKUP_UID after backups exist hands the existing files and the
+#    daily directory to the new user, so daily copies keep working.
+new_case reowned
+run_backup "$CASE" -e BACKUP_UID=4242 -e BACKUP_GID=4242 "$IMAGE" once >/dev/null 2>&1
+as_root() {
+    docker run --rm -v "$CASE/out:/o" --entrypoint sh "$IMAGE" -c "$1" 2>/dev/null
+}
+as_root 'rm -f /o/daily/orbit-*.sqlite'
+run_backup "$CASE" -e BACKUP_UID=4545 -e BACKUP_GID=4545 "$IMAGE" once >/dev/null 2>&1
+owner="$(as_root 'stat -c %u /o/daily')"
+daily_files="$(as_root 'ls /o/daily' | grep -c '^orbit-')"
+if [ "$owner" = "4545" ] && [ "$daily_files" = "1" ]; then
+    pass "after BACKUP_UID changes the daily directory and copies belong to the new user"
+else
+    fail "after BACKUP_UID changes the daily directory and copies belong to the new user (owner=$owner, daily files=$daily_files)"
+fi
+
+# 7. A database owned by root must not make the script re-execute itself as
+#    root forever; it runs once, as root, and finishes.
+new_case rootdb
+docker run --rm -v "$CASE/db:/db" --entrypoint sh "$IMAGE" -c "chown 0:0 /db/database.sqlite" >/dev/null
+if timeout 40 docker run --rm -v "$CASE/db:/data/database:ro" -v "$CASE/out:/backup" "$IMAGE" once >/dev/null 2>&1 \
+    && [ "$(ls "$CASE"/out/orbit-*.sqlite 2>/dev/null | wc -l | tr -d ' ')" = "1" ]; then
+    pass "a root-owned database is backed up once and the script does not loop"
+else
+    fail "a root-owned database is backed up once and the script does not loop"
 fi
 
 exit $FAILED
