@@ -189,5 +189,4 @@ backup-now: ensure-env
 # Regression tests for the backup script (builds the image, runs it on throwaway copies).
 
 test-backup:
-	$(COMPOSE) build backup
 	sh docker/backup/test.sh
