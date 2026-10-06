@@ -319,7 +319,19 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 IMAGE="${BACKUP_IMAGE:-orbit-backup-test}"
 WORK="$(mktemp -d)"
 FAILED=0
-trap 'docker run --rm -v "$WORK:/w" --entrypoint sh "$IMAGE" -c "rm -rf /w/*" >/dev/null 2>&1; rm -rf "$WORK"' EXIT
+RUNNER="backup-test-runner-$$"
+BYSTANDER="backup-test-bystander-$$"
+
+cleanup() {
+    docker rm -f "$RUNNER" "$BYSTANDER" >/dev/null 2>&1
+    docker run --rm -v "$WORK:/w" --entrypoint sh "$IMAGE" -c "rm -rf /w/*" >/dev/null 2>&1
+    rm -rf "$WORK"
+}
+# Also clean up when interrupted: EXIT alone does not run for every signal, and
+# the detached containers would otherwise keep running the backup loop.
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 docker build -q -t "$IMAGE" "$HERE" >/dev/null || { echo "FAIL - could not build $IMAGE"; exit 1; }
 
@@ -375,25 +387,23 @@ fi
 #    container built from the same image (the real backup service) alone.
 new_case daily
 : > "$CASE/out/daily"   # a file where the daily directory should be
-bystander="backup-test-bystander-$$"
-docker run -d --name "$bystander" --entrypoint sleep "$IMAGE" 300 >/dev/null
-runner="backup-test-runner-$$"
-docker run -d --name "$runner" -v "$CASE/db:/data/database:ro" -v "$CASE/out:/backup" "$IMAGE" >/dev/null
+docker run -d --name "$BYSTANDER" --entrypoint sleep "$IMAGE" 300 >/dev/null
+docker run -d --name "$RUNNER" -v "$CASE/db:/data/database:ro" -v "$CASE/out:/backup" "$IMAGE" >/dev/null
 sleep 5
-log="$(docker logs "$runner" 2>&1)"
-docker rm -f "$runner" >/dev/null 2>&1
+log="$(docker logs "$RUNNER" 2>&1)"
+docker rm -f "$RUNNER" >/dev/null 2>&1
 if echo "$log" | grep -q "ERROR" && ! echo "$log" | grep -q "saved daily copy"; then
     pass "a failed daily copy is reported and not logged as saved"
 else
     fail "a failed daily copy is reported and not logged as saved"
     echo "$log" | sed 's/^/       /'
 fi
-if [ "$(docker inspect -f '{{.State.Running}}' "$bystander" 2>/dev/null)" = "true" ]; then
+if [ "$(docker inspect -f '{{.State.Running}}' "$BYSTANDER" 2>/dev/null)" = "true" ]; then
     pass "the test leaves other containers built from the image running"
 else
     fail "the test leaves other containers built from the image running"
 fi
-docker rm -f "$bystander" >/dev/null 2>&1
+docker rm -f "$BYSTANDER" >/dev/null 2>&1
 
 # 4. A completed run leaves only whole files: no temp files, and the daily
 #    copy passes integrity_check.
