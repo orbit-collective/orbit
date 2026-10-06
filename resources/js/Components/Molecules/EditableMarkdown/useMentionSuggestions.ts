@@ -155,27 +155,26 @@ export function useMentionSuggestions({ users, projectId }: Options) {
         onExit: () => update(null),
     });
 
-    const command: Suggestion['command'] = ({ editor, range, props }) => {
-        editor
-            .chain()
-            .focus()
-            .insertContentAt(range, [
-                {
-                    type:
-                        props.number !== undefined
-                            ? 'issueMention'
-                            : 'userMention',
-                    attrs: props,
-                },
-                { type: 'text', text: ' ' },
-            ])
-            .run();
-    };
+    // The node type is fixed per suggestion rather than inferred from the
+    // attributes, so an issue can never be stored as a "@[Title](id)" user
+    // token (which would notify the user whose id equals the issue's).
+    const insertMention =
+        (nodeType: 'userMention' | 'issueMention'): Suggestion['command'] =>
+        ({ editor, range, props }) => {
+            editor
+                .chain()
+                .focus()
+                .insertContentAt(range, [
+                    { type: nodeType, attrs: props },
+                    { type: 'text', text: ' ' },
+                ])
+                .run();
+        };
 
     const userSuggestion: Suggestion = {
         char: '@',
         items: ({ query }) => filterUsersByMention(usersRef.current, query),
-        command,
+        command: insertMention('userMention'),
         render: render('user') as Suggestion['render'],
     };
 
@@ -205,7 +204,7 @@ export function useMentionSuggestions({ users, projectId }: Options) {
 
             return lastIssuesRef.current;
         },
-        command,
+        command: insertMention('issueMention'),
         render: render('issue') as Suggestion['render'],
     };
 

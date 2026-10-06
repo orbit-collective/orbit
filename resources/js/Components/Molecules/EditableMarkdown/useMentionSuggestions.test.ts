@@ -243,3 +243,47 @@ describe('issue suggestions', () => {
         );
     });
 });
+
+describe('inserting a mention', () => {
+    const insertedNode = (
+        suggestion: 'userSuggestion' | 'issueSuggestion',
+        props: Record<string, unknown>,
+    ) => {
+        const inserted: unknown[] = [];
+        const editor = {
+            chain: () => ({
+                focus: () => ({
+                    insertContentAt: (_range: unknown, content: unknown[]) => {
+                        inserted.push(...content);
+
+                        return { run: () => true };
+                    },
+                }),
+            }),
+        };
+        const { hook } = setup();
+
+        hook.result.current[suggestion].command!({
+            editor: editor as never,
+            range: { from: 1, to: 3 },
+            props: props as never,
+        });
+
+        return inserted[0] as { type: string; attrs: unknown };
+    };
+
+    test('a member is inserted as a user mention', () => {
+        expect(
+            insertedNode('userSuggestion', { id: 1, label: 'Jane' }),
+        ).toEqual({ type: 'userMention', attrs: { id: 1, label: 'Jane' } });
+    });
+
+    test('an issue is always inserted as an issue mention, even without a number', () => {
+        expect(
+            insertedNode('issueSuggestion', { id: 201, label: 'Login bug' }),
+        ).toEqual({
+            type: 'issueMention',
+            attrs: { id: 201, label: 'Login bug' },
+        });
+    });
+});
