@@ -13,9 +13,12 @@
 #   BACKUP_KEEP_DAILY days (in /backup/daily), so a bad state - e.g. an
 #   accidentally wiped database - cannot rotate every good copy away within hours.
 # - Starts as root only to make /backup writable: a missing host directory is
-#   created by Docker as root, and the host user's uid is not always 1000. It
-#   chowns /backup to BACKUP_UID:BACKUP_GID and drops to that user before
-#   touching any data.
+#   created by Docker as root. It chowns /backup, its daily/ directory and the
+#   orbit-*.sqlite files in them (nothing else, BACKUP_DIR may hold other data)
+#   to the user it will run as, and drops to that user before touching any data.
+#   That user is BACKUP_UID:BACKUP_GID when set, otherwise the owner of the
+#   database file, so a database only its owner can read is still backed up and
+#   the snapshots belong to the person who owns the data.
 #
 # Usage: backup.sh          run forever, one snapshot every BACKUP_INTERVAL seconds
 #        backup.sh once     take a single snapshot and exit (used by `make backup-now`)
@@ -28,17 +31,33 @@ DEST="${BACKUP_DIR:-/backup}"
 INTERVAL="${BACKUP_INTERVAL:-3600}"
 KEEP="${BACKUP_KEEP:-48}"
 KEEP_DAILY="${BACKUP_KEEP_DAILY:-30}"
-RUN_UID="${BACKUP_UID:-1000}"
-RUN_GID="${BACKUP_GID:-1000}"
+RUN_UID="${BACKUP_UID:-}"
+RUN_GID="${BACKUP_GID:-}"
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') [backup] $*"
 }
 
-if [ "$(id -u)" = "0" ]; then
+# BACKUP_DROPPED stops a database owned by root (uid 0) from re-executing as
+# root forever: the script only drops privileges once.
+if [ "$(id -u)" = "0" ] && [ -z "${BACKUP_DROPPED:-}" ]; then
+    # The database is mounted read-only and may be readable only by its owner,
+    # so by default run as that owner.
+    if [ -z "$RUN_UID" ]; then
+        RUN_UID="$(stat -c %u "$DB" 2>/dev/null || echo 1000)"
+    fi
+    if [ -z "$RUN_GID" ]; then
+        RUN_GID="$(stat -c %g "$DB" 2>/dev/null || echo 1000)"
+    fi
+
     mkdir -p "$DEST"
     chown "$RUN_UID:$RUN_GID" "$DEST"
-    exec su-exec "$RUN_UID:$RUN_GID" "$0" "$@"
+    if [ -d "$DEST/daily" ]; then
+        chown "$RUN_UID:$RUN_GID" "$DEST/daily"
+    fi
+    # Snapshots written under a previous BACKUP_UID, so the new user can prune them.
+    find "$DEST" -maxdepth 2 -name 'orbit-*.sqlite' -exec chown "$RUN_UID:$RUN_GID" {} +
+    BACKUP_DROPPED=1 exec su-exec "$RUN_UID:$RUN_GID" "$0" "$@"
 fi
 
 prune() {
