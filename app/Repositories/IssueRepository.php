@@ -50,7 +50,15 @@ class IssueRepository
     /** The number the next issue created in the project will get (a hint only). */
     public function peekNextNumber(Project $project): int
     {
-        return Issue::nextNumberFor($project);
+        return (int) $project->next_issue_number;
+    }
+
+    /** The project-scoped number of the issue with this internal id, if it exists. */
+    public function findNumber(int $issueId): ?int
+    {
+        $number = Issue::query()->whereKey($issueId)->value('number');
+
+        return $number === null ? null : (int) $number;
     }
 
     public function findByNumber(int $projectId, int $number): ?Issue

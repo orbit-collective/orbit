@@ -271,7 +271,7 @@ class IssueService
     /** The project-scoped number shown to users for an issue's internal id. */
     private function numberOfIssue(int $issueId): int|string
     {
-        return Issue::query()->whereKey($issueId)->value('number') ?? $issueId;
+        return $this->issueRepository->findNumber($issueId) ?? $issueId;
     }
 
     private function normalize(string $field, mixed $value): ?string
