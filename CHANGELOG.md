@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.10.2](https://github.com/orbit-collective/orbit/compare/v0.10.1...v0.10.2) (2026-10-06)
+
+
+### Features
+
+* **backup:** add backup service for SQLite database ([931575a](https://github.com/orbit-collective/orbit/commit/931575ab5ea97e75123e77aab10fdcdeccc981e0))
+* **issues:** add @ and # mentions to the description ([f011362](https://github.com/orbit-collective/orbit/commit/f011362a00e55c1d6743c1b1dc31e34b776b6831))
+* **issues:** notify members mentioned in a description ([099747c](https://github.com/orbit-collective/orbit/commit/099747c35900539dd734c971cb91ccc7b8761dc3))
+* **issues:** number issues per project ([20daed8](https://github.com/orbit-collective/orbit/commit/20daed87543f5b619fd87d700e63620ccc61d479))
+* **issues:** show per-project issue numbers in the UI ([30ad957](https://github.com/orbit-collective/orbit/commit/30ad95761e063dfbc93aa1e651d75b19114ac74c))
+
+
+### Bug Fixes
+
+* **backup:** clean up test containers when interrupted ([2c8fce5](https://github.com/orbit-collective/orbit/commit/2c8fce5ee2f425ffd1d66d80a32c828fa82417eb))
+* **backup:** harden the backup service ([be2ef35](https://github.com/orbit-collective/orbit/commit/be2ef35c8d2d7bcb182e9b4286f8ede5d617c995))
+* **backup:** run as the database owner and make tests safe ([1b487bb](https://github.com/orbit-collective/orbit/commit/1b487bb4c59a209efda06c2e4530b940c1aacc24))
+* **deps:** declare @tiptap/extensions as a dependency ([aaed2d4](https://github.com/orbit-collective/orbit/commit/aaed2d4eae988caae4b8cb5fad37e47e0f87706a))
+* **issues:** allocate issue numbers atomically ([109ec0e](https://github.com/orbit-collective/orbit/commit/109ec0eaa74b291c67b7e439075fd01c2251e671))
+* **issues:** pick the mention node type explicitly ([fc10a9a](https://github.com/orbit-collective/orbit/commit/fc10a9a3c869e4f029a67c4c2bd6ec4d3827df2e))
+* **issues:** show the project issue number in messages ([60ec3b5](https://github.com/orbit-collective/orbit/commit/60ec3b502e9ab594e6f3123374e763970f9bb2f1))
+
+
+### Miscellaneous Chores
+
+* release 0.10.2 ([d3fb44b](https://github.com/orbit-collective/orbit/commit/d3fb44b2f4056410269b984f69270c66ce4374f3))
+
 ## [0.10.1](https://github.com/orbit-collective/orbit/compare/v0.10.0...v0.10.1) (2026-10-04)
 
 
