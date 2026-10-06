@@ -103,6 +103,9 @@ documentation/
     rich-text-editor/
       README.md              <- index for this category
       01-add-a-new-tiptap-extension.md
+    backup/
+      README.md              <- index for this category
+      01-run-configure-and-restore-database-backups.md
     project-onboarding/
       README.md              <- index for this category
       01-add-a-welcome-tour-slide.md
@@ -133,6 +136,7 @@ documentation/
     issue-types/             <- Polish translation of every guide above
     issue-views/             <- Polish translation of every guide above
     rich-text-editor/        <- Polish translation of every guide above
+    backup/                  <- Polish translation of every guide above
     project-onboarding/      <- Polish translation of every guide above
     automation/              <- Polish translation of every guide above
     authentication/          <- Polish translation of every guide above
