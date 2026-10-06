@@ -34,7 +34,7 @@ test('an issue can be created as a sub-issue of an Epic', function () {
 
     $response->assertRedirect();
     $this->assertDatabaseHas('issues', ['project_id' => $project->id, 'title' => 'Sub task', 'parent_id' => $epic->id]);
-    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => 'Issue #'.$project->issues()->where('title', 'Sub task')->first()->id." added as a sub-issue of #$epic->id"]);
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => 'Issue #'.$project->issues()->where('title', 'Sub task')->first()->number." added as a sub-issue of #$epic->number"]);
 });
 
 test('an issue cannot be created under a parent whose type does not allow children', function () {
