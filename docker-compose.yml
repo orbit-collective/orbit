@@ -310,10 +310,12 @@ services:
         build:
             context: ./docker/backup
 
-        # Same uid as the host user so snapshots in ./backup are yours, not root's.
-        user: "${BACKUP_UID:-1000}:${BACKUP_GID:-1000}"
-
+        # Starts as root only to chown the mounted directory, then runs as this
+        # uid/gid (set both to your host user's if it is not 1000) so snapshots
+        # in ./backup belong to you, not root.
         environment:
+            BACKUP_UID: ${BACKUP_UID:-1000}
+            BACKUP_GID: ${BACKUP_GID:-1000}
             BACKUP_INTERVAL: ${BACKUP_INTERVAL:-3600}
             BACKUP_KEEP: ${BACKUP_KEEP:-48}
             BACKUP_KEEP_DAILY: ${BACKUP_KEEP_DAILY:-30}
