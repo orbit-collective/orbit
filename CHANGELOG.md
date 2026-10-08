@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.3](https://github.com/orbit-collective/orbit/compare/v0.10.2...v0.10.3) (2026-10-08)
+
+
+### Bug Fixes
+
+* **deps:** align all tiptap packages to 3.31.4 ([65347d5](https://github.com/orbit-collective/orbit/commit/65347d53b46d806f20add4e7dd42d3af402f2afd))
+
 ## [0.10.2](https://github.com/orbit-collective/orbit/compare/v0.10.1...v0.10.2) (2026-10-06)
 
 
