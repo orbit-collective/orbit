@@ -143,6 +143,12 @@ export default function Dropdown({
     }, [isOpen, position === null]);
 
     const handlePanelKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+        // Portaled, but React keys still bubble to the component tree's
+        // ancestors (e.g. a row that opens on Enter): keep them in here.
+        // Escape is left alone: the hook closes the panel from a document
+        // listener, which a stopped event would never reach.
+        if (event.key !== 'Escape') event.stopPropagation();
+
         if (!isListVariant) return;
 
         if (event.key === 'Tab') {

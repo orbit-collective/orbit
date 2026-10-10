@@ -85,6 +85,9 @@ export const ListRow = ({
                 onContextMenu={handleContextMenu}
                 tabIndex={0}
                 onKeyDown={(e) => {
+                    // Keys from the actions button or from the (portaled)
+                    // menu belong to those controls, not to the row.
+                    if (e.target !== e.currentTarget) return;
                     if (e.key === 'Enter') onClick();
                     if (e.key === ' ') {
                         e.preventDefault();

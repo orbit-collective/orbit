@@ -102,11 +102,13 @@ the content is yours. Tab doesn't close a panel, so forms keep working.
 
 ## Behaviors worth knowing
 
-- Clicks inside the panel and on the trigger don't propagate to
-  clickable ancestors (a row, a card), even though the panel is portaled.
+- Clicks and key presses inside the panel, and clicks on the trigger,
+  don't propagate to ancestors in the component tree (a row, a card),
+  even though the panel is portaled. The panel closes if its trigger
+  scrolls out of the window.
 - ArrowUp/Down, Home/End move between rows, Escape closes and returns
   focus to the trigger, and Tab closes the list and moves on.
-- The panel renders above modals (`z-[9999]`).
+- The panel renders above modals (inline `zIndex: 9999`).
 
 ## Test it
 

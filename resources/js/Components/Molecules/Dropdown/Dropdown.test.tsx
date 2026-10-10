@@ -155,6 +155,24 @@ describe('Dropdown', () => {
         expect(onAncestorClick).not.toHaveBeenCalled();
     });
 
+    test('key presses inside the panel do not reach ancestors, but Escape still closes it', async () => {
+        const onAncestorKeyDown = vi.fn();
+        render(
+            <div onKeyDown={onAncestorKeyDown}>
+                <Dropdown trigger={<button>Open</button>} options={options} />
+            </div>,
+        );
+        await userEvent.click(screen.getByText('Open'));
+        onAncestorKeyDown.mockClear();
+
+        await userEvent.keyboard('{ArrowDown}{Enter}');
+        expect(onAncestorKeyDown).not.toHaveBeenCalled();
+
+        await userEvent.click(screen.getByText('Open'));
+        await userEvent.keyboard('{Escape}');
+        expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    });
+
     test('does not select disabled options', async () => {
         const { onSelect } = setup({
             options: [{ value: 'x', label: 'Locked', disabled: true }],
