@@ -1,4 +1,5 @@
 import { ShortcutDefinition } from '@/types/Shortcuts';
+import { suspendShortcuts } from '@/utils/shortcutSuspension';
 import { act, renderHook } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -231,6 +232,23 @@ describe('useShortcuts', () => {
 
         expect(action).not.toHaveBeenCalled();
         document.body.removeChild(input);
+    });
+
+    test('ignores global shortcuts while they are suspended and resumes after', () => {
+        renderHook(() => useShortcuts(), { wrapper });
+        mockRouter.visit.mockClear();
+
+        const resume = suspendShortcuts();
+        act(() => {
+            dispatchKeydown({ key: 'p', altKey: true });
+        });
+        expect(mockRouter.visit).not.toHaveBeenCalled();
+
+        resume();
+        act(() => {
+            dispatchKeydown({ key: 'p', altKey: true });
+        });
+        expect(mockRouter.visit).toHaveBeenCalledWith('/projects');
     });
 
     test('alt+p navigates to /projects via the router', () => {
