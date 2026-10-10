@@ -109,7 +109,12 @@ describe('Pagination Component', () => {
 
         expect(screen.getByText('10 rows')).toBeInTheDocument();
         expect(screen.getByText('20 rows')).toBeInTheDocument();
-        expect(screen.getByText('Active')).toBeInTheDocument();
+        expect(
+            screen.getByRole('menuitemradio', { name: /10 rows/ }),
+        ).toHaveAttribute('aria-checked', 'true');
+        expect(
+            screen.getByRole('menuitemradio', { name: '20 rows' }),
+        ).toHaveAttribute('aria-checked', 'false');
     });
 
     test('changes the rows per page, alerts, and navigates with the new value', async () => {

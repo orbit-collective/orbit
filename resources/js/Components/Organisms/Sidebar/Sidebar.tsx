@@ -1,9 +1,9 @@
 import Divider from '@/Components/Atoms/Divider/Divider';
-import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
-import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
+import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import NewProjectModal from '@/Components/Organisms/NewProjectModal/NewProjectModal';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { PageProps } from '@/types';
+import { DropdownOptionItem } from '@/types/Dropdown';
 import { Project } from '@/types/Projects';
 import { getSettingsTabByPath, SETTINGS_TABS } from '@/types/Settings';
 import { ShortcutDefinition } from '@/types/Shortcuts';
@@ -12,10 +12,22 @@ import { getColorTheme } from '@/utils/colors';
 import { isTourSidebarOpen, TOUR_SIDEBAR_EVENT } from '@/utils/tourSidebar';
 import logo from '@assets/1820.png';
 import { Link, router, usePage } from '@inertiajs/react';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 import NavItem from '../../Molecules/NavItem/NavItem';
 import UserBadge from '../../Molecules/UserBadge/UserBadge';
+
+const USER_MENU_URLS: Record<string, string> = {
+    learn: 'https://orbit-dev.app/learn',
+    docs: 'https://docs.orbit-dev.app',
+};
+
+const USER_MENU_OPTIONS: DropdownOptionItem[] = [
+    { value: 'learn', label: 'Learn', icon: 'BookOpen' },
+    { value: 'docs', label: 'Documentation', icon: 'CircleQuestionMark' },
+    { value: 'settings', label: 'Settings', icon: 'Settings' },
+    { value: 'logout', label: 'Log out', icon: 'LogOut', tone: 'danger' },
+];
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed';
 
@@ -27,14 +39,11 @@ const SETTINGS_NAV_SECTIONS = [
 const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
     const [isOpen, setIsOpen] = useState(isTourSidebarOpen);
     const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
-    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(
         () =>
             typeof window !== 'undefined' &&
             localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true',
     );
-    const userMenuRef = useRef<HTMLDivElement>(null);
-    const userMenuTriggerRef = useRef<HTMLButtonElement>(null);
     const {
         url,
         props: { auth },
@@ -51,30 +60,6 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
             String(isCollapsed),
         );
     }, [isCollapsed]);
-
-    useEffect(() => {
-        if (!isUserMenuOpen) return;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (!userMenuRef.current?.contains(event.target as Node)) {
-                setIsUserMenuOpen(false);
-            }
-        };
-
-        const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                setIsUserMenuOpen(false);
-                userMenuTriggerRef.current?.focus();
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isUserMenuOpen]);
 
     useEffect(() => {
         const syncWithTour = () => setIsOpen(isTourSidebarOpen());
@@ -95,17 +80,19 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
         return () => document.removeEventListener('keydown', handleEscape);
     }, [isOpen]);
 
-    const handleLogout = () => {
-        router.post(route('logout'));
-    };
-    const handleOpenSettings = () => {
-        setIsUserMenuOpen(false);
-        router.visit(route('settings'));
-    };
-    const handleOpenUrl = (url: string) => () => {
-        setIsUserMenuOpen(false);
-        const w = window.open(url, '_blank', 'noopener,noreferrer');
-        if (w) w.opener = null;
+    const handleUserMenuSelect = (action: string) => {
+        if (action === 'logout') {
+            router.post(route('logout'));
+        } else if (action === 'settings') {
+            router.visit(route('settings'));
+        } else {
+            const w = window.open(
+                USER_MENU_URLS[action],
+                '_blank',
+                'noopener,noreferrer',
+            );
+            if (w) w.opener = null;
+        }
     };
 
     const shortcuts = useMemo(
@@ -372,87 +359,48 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                     className={
                         'relative shrink-0 border-t border-solid border-[var(--bg-light-color)] pt-3'
                     }
-                    ref={userMenuRef}
                 >
-                    <button
-                        type="button"
-                        ref={userMenuTriggerRef}
-                        data-tour="user-menu"
-                        onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                        aria-haspopup="menu"
-                        aria-expanded={isUserMenuOpen}
-                        aria-label={isCollapsed ? 'User menu' : undefined}
-                        className={cn(
-                            'flex w-full cursor-pointer items-center rounded-lg px-2 py-1.5 text-left hover:bg-[var(--bg-light-color)]',
-                            isCollapsed ? 'justify-center' : 'justify-between',
-                        )}
-                    >
-                        <UserBadge
-                            name={auth.user.name}
-                            email={auth.user.email}
-                            avatarSrc={auth.user.avatar ?? undefined}
-                            size="md"
-                            showDetails={!isCollapsed}
-                            showName={!isCollapsed}
-                            showTooltip={false}
-                        />
-                        {!isCollapsed && (
-                            <Icon
-                                name="ChevronDown"
-                                size={14}
-                                color="var(--text-gray-color)"
-                            />
-                        )}
-                    </button>
-
-                    {isUserMenuOpen && (
-                        <DropdownMenu direction="top" stretch={!isCollapsed}>
-                            <DropdownItem
-                                label={
-                                    <>
-                                        <Icon name="BookOpen" size={14} />
-                                        Learn
-                                    </>
+                    <Dropdown
+                        variant="menu"
+                        ariaLabel="User menu"
+                        placement="top"
+                        width={isCollapsed ? 208 : 'trigger'}
+                        triggerClassName="w-full"
+                        options={USER_MENU_OPTIONS}
+                        onSelect={handleUserMenuSelect}
+                        trigger={
+                            <button
+                                type="button"
+                                data-tour="user-menu"
+                                aria-label={
+                                    isCollapsed ? 'User menu' : undefined
                                 }
-                                onClick={handleOpenUrl(
-                                    'https://orbit-dev.app/learn',
+                                className={cn(
+                                    'flex w-full cursor-pointer items-center rounded-lg px-2 py-1.5 text-left hover:bg-[var(--bg-light-color)]',
+                                    isCollapsed
+                                        ? 'justify-center'
+                                        : 'justify-between',
                                 )}
-                            />
-                            <DropdownItem
-                                label={
-                                    <>
-                                        <Icon
-                                            name="CircleQuestionMark"
-                                            size={14}
-                                        />
-                                        Documentation
-                                    </>
-                                }
-                                onClick={handleOpenUrl(
-                                    'https://docs.orbit-dev.app',
+                            >
+                                <UserBadge
+                                    name={auth.user.name}
+                                    email={auth.user.email}
+                                    avatarSrc={auth.user.avatar ?? undefined}
+                                    size="md"
+                                    showDetails={!isCollapsed}
+                                    showName={!isCollapsed}
+                                    showTooltip={false}
+                                />
+                                {!isCollapsed && (
+                                    <Icon
+                                        name="ChevronDown"
+                                        size={14}
+                                        color="var(--text-gray-color)"
+                                    />
                                 )}
-                            />
-                            <DropdownItem
-                                label={
-                                    <>
-                                        <Icon name="Settings" size={14} />
-                                        Settings
-                                    </>
-                                }
-                                onClick={handleOpenSettings}
-                            />
-                            <DropdownItem
-                                label={
-                                    <>
-                                        <Icon name="LogOut" size={14} />
-                                        Log out
-                                    </>
-                                }
-                                onClick={handleLogout}
-                                variant="danger"
-                            />
-                        </DropdownMenu>
-                    )}
+                            </button>
+                        }
+                    />
                 </div>
             </aside>
 
