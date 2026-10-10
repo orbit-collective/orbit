@@ -3,7 +3,13 @@ import useTourTarget from '@/hooks/useTourTarget';
 import { PageProps } from '@/types';
 import { TourStep } from '@/types/Tour';
 import { suspendShortcuts } from '@/utils/shortcutSuspension';
-import { closeTopModal, getPopoverPosition, Size } from '@/utils/tour';
+import {
+    closeTopModal,
+    getPopoverPosition,
+    getTabStops,
+    nextTabStop,
+    Size,
+} from '@/utils/tour';
 import { setTourSidebarOpen } from '@/utils/tourSidebar';
 import { router, usePage } from '@inertiajs/react';
 import {
@@ -159,14 +165,28 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
         };
     }, [advance, interaction, step?.target]);
 
-    // Steps that finish on their own (e.g. once the project has been created).
+    // Steps that finish on their own (e.g. once the project has been created,
+    // even if the form was submitted early from an earlier step).
     useEffect(() => {
-        if (step?.completeWhen?.({ hasProjects })) advance();
+        if (!step?.completeWhen?.({ hasProjects })) return;
+
+        const skipIndex = step.skipTo
+            ? steps.findIndex(({ id }) => id === step.skipTo)
+            : -1;
+
+        if (skipIndex >= 0) {
+            direction.current = 1;
+            setIndex(skipIndex);
+        } else {
+            advance();
+        }
     }, [hasProjects, step?.id]);
 
     // The target vanished (modal closed): don't strand the user on this step.
     useEffect(() => {
         if (target.status !== 'missing' || !step?.backTo) return;
+        // The form vanished because it was submitted, not because it was closed.
+        if (step.completeWhen?.({ hasProjects })) return;
 
         const backIndex = steps.findIndex(({ id }) => id === step.backTo);
         if (backIndex >= 0) {
@@ -192,6 +212,25 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
 
         return () => document.removeEventListener('input', read, true);
     }, [interaction?.type, step?.id, step?.target, target.status]);
+
+    // A field can sit below the fold of a scrollable modal while still being
+    // inside the window, so bring the target into view once per step.
+    const scrolledStep = useRef<string | null>(null);
+    useEffect(() => {
+        if (
+            !interaction ||
+            target.status !== 'found' ||
+            scrolledStep.current === step.id
+        ) {
+            return;
+        }
+
+        scrolledStep.current = step.id;
+        queryTarget(step.target)?.scrollIntoView?.({
+            block: 'nearest',
+            inline: 'nearest',
+        });
+    }, [interaction, step?.id, step?.target, target.status]);
 
     // Put the cursor in the field so the user can type straight away.
     useEffect(() => {
@@ -227,6 +266,26 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                 height: window.innerHeight,
             });
         const onKeyDown = (event: KeyboardEvent) => {
+            // The blockers stop the pointer, not the keyboard: keep Tab on the
+            // highlighted element and the tour's own controls.
+            if (event.key === 'Tab' && interaction) {
+                const stops = getTabStops(
+                    queryTarget(step.target),
+                    popoverRef.current,
+                );
+                const next = nextTabStop(
+                    stops,
+                    document.activeElement,
+                    event.shiftKey,
+                );
+
+                if (next) {
+                    event.preventDefault();
+                    next.focus();
+                }
+                return;
+            }
+
             // Interactive steps live next to a modal that owns Escape, and
             // arrows must keep moving the caret while the user types.
             if (event.key === 'Escape') {
@@ -247,7 +306,14 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
             window.removeEventListener('resize', onResize);
             window.removeEventListener('keydown', onKeyDown);
         };
-    }, [handleNext, handlePrev, interaction, nextDisabled, onClose]);
+    }, [
+        handleNext,
+        handlePrev,
+        interaction,
+        nextDisabled,
+        onClose,
+        step?.target,
+    ]);
 
     useLayoutEffect(() => {
         const element = popoverRef.current;
