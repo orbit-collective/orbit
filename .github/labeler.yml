@@ -84,7 +84,7 @@ configuration:
           - 'tsconfig.json'
           - 'vite.config.js'
           - 'eslint.config.js'
-          - '.prettierrc'
+          - '.oxfmtrc.json'
           - 'phpunit.xml'
 
 integrations:
