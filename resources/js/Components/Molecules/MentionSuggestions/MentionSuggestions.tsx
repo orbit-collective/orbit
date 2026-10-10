@@ -1,8 +1,9 @@
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
+import DropdownOption from '@/Components/Atoms/DropdownOption/DropdownOption';
+import DropdownPanel from '@/Components/Atoms/DropdownPanel/DropdownPanel';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssuePreviewCard from '@/Components/Molecules/IssuePreviewCard/IssuePreviewCard';
 import { MentionSuggestionsProps } from '@/types/Components';
-import { cn } from '@/utils/cn';
 import { toPreviewIssue } from '@/utils/mentions';
 import { useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -11,9 +12,9 @@ import { createPortal } from 'react-dom';
  * Floating "@mention" suggestion list, positioned at an arbitrary viewport
  * coordinate (the typed "@" inside a textarea) rather than anchored to a
  * trigger element, so it's rendered through a portal with its own fixed
- * position instead of reusing useFloatingDropdown (which tracks a trigger
- * element's bounding box). Styled like the filter/label/priority dropdowns
- * (EditableSelect, InlineSelectDropdown) so it reads as the same control.
+ * position instead of reusing `Dropdown` (which anchors to a trigger
+ * element). It is built from the same DropdownPanel / DropdownOption atoms,
+ * so it reads as the same control as every other dropdown.
  */
 const MENU_WIDTH = 240;
 const TYPED_LINE_HEIGHT = 24;
@@ -97,18 +98,10 @@ export default function MentionSuggestions({
     const opensUp = spaceAbove >= wanted || spaceAbove >= spaceBelow;
     const maxHeight = Math.max(opensUp ? spaceAbove : spaceBelow, 120);
 
-    const rowClass = (isActive: boolean) =>
-        cn(
-            'flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-all duration-150',
-            isActive
-                ? 'bg-[var(--accent-color)]/10 text-[var(--text-color)]'
-                : 'text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
-        );
-
     return (
         <>
             {createPortal(
-                <div
+                <DropdownPanel
                     style={{
                         position: 'fixed',
                         ...(opensUp
@@ -120,7 +113,6 @@ export default function MentionSuggestions({
                         maxWidth: 'calc(100vw - 16px)',
                         zIndex: 9999,
                     }}
-                    className="animate-in fade-in zoom-in-95 flex flex-col overflow-hidden rounded-2xl bg-[var(--bg-dark-color)] shadow-2xl backdrop-blur-md duration-100 motion-reduce:animate-none"
                 >
                     <p className="px-3 pt-3 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
                         {isIssue ? 'Issues' : 'Members'}
@@ -152,65 +144,73 @@ export default function MentionSuggestions({
                         >
                             {isIssue
                                 ? issues.map((issue, index) => (
-                                      <button
+                                      <DropdownOption
                                           key={issue.id}
                                           id={id && `${id}-option-${index}`}
-                                          type="button"
                                           role="option"
                                           aria-selected={index === activeIndex}
                                           title={issue.title}
+                                          indicator="none"
+                                          isSelected={index === activeIndex}
                                           onMouseDown={(e) =>
                                               e.preventDefault()
                                           }
                                           onMouseEnter={() => onHover(index)}
                                           onClick={() => onSelectIssue?.(issue)}
-                                          className={rowClass(
-                                              index === activeIndex,
-                                          )}
-                                      >
-                                          <span className="shrink-0 text-[var(--text-muted-color)]">
-                                              #{issue.number ?? issue.id}
-                                          </span>
-                                          <span className="truncate font-medium">
-                                              {issue.title}
-                                          </span>
-                                      </button>
+                                          label={
+                                              <>
+                                                  <span className="shrink-0 text-[var(--text-muted-color)]">
+                                                      #
+                                                      {issue.number ?? issue.id}
+                                                  </span>
+                                                  <span className="truncate">
+                                                      {issue.title}
+                                                  </span>
+                                              </>
+                                          }
+                                      />
                                   ))
                                 : users.map((user, index) => (
-                                      <button
+                                      <DropdownOption
                                           key={user.id}
                                           id={id && `${id}-option-${index}`}
-                                          type="button"
                                           role="option"
                                           aria-selected={index === activeIndex}
+                                          indicator="none"
+                                          isSelected={index === activeIndex}
                                           onMouseDown={(e) =>
                                               e.preventDefault()
                                           }
                                           onMouseEnter={() => onHover(index)}
                                           onClick={() => onSelect(user)}
-                                          className={rowClass(
-                                              index === activeIndex,
-                                          )}
-                                      >
-                                          <Avatar
-                                              src={user.avatar ?? undefined}
-                                              initials={user.name.charAt(0)}
-                                              size="sm"
-                                          />
-                                          <span className="truncate font-medium">
-                                              {user.name}
-                                          </span>
-                                          {(nameCounts.get(user.name) ?? 0) >
-                                              1 && (
-                                              <span className="shrink-0 text-[var(--text-muted-color)]">
-                                                  #{user.id}
-                                              </span>
-                                          )}
-                                      </button>
+                                          label={
+                                              <>
+                                                  <Avatar
+                                                      src={
+                                                          user.avatar ??
+                                                          undefined
+                                                      }
+                                                      initials={user.name.charAt(
+                                                          0,
+                                                      )}
+                                                      size="sm"
+                                                  />
+                                                  <span className="truncate">
+                                                      {user.name}
+                                                  </span>
+                                                  {(nameCounts.get(user.name) ??
+                                                      0) > 1 && (
+                                                      <span className="shrink-0 font-normal text-[var(--text-muted-color)]">
+                                                          #{user.id}
+                                                      </span>
+                                                  )}
+                                              </>
+                                          }
+                                      />
                                   ))}
                         </div>
                     )}
-                </div>,
+                </DropdownPanel>,
                 document.body,
             )}
             {activeIssue &&
