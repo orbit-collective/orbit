@@ -27,6 +27,7 @@ documentation/
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
     saved-filters/           <- angielskie tłumaczenie każdego przewodnika poniżej
+    dropdowns/               <- angielskie tłumaczenie każdego przewodnika poniżej
     labels/                  <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-types/             <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-views/             <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -126,6 +127,9 @@ documentation/
       README.md              <- indeks tej kategorii
       01-add-a-tour-step.md
       02-add-an-interactive-tour-step.md
+    dropdowns/
+      README.md              <- indeks tej kategorii
+      01-add-a-dropdown.md
     automation/
       README.md              <- indeks tej kategorii
       01-add-a-new-trigger-type.md

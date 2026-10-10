@@ -77,8 +77,8 @@ Plik: `resources/js/Components/Molecules/MentionSuggestions/MentionSuggestions.t
 
 ```tsx
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
-import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
-import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
+import DropdownOption from '@/Components/Atoms/DropdownOption/DropdownOption';
+import DropdownPanel from '@/Components/Atoms/DropdownPanel/DropdownPanel';
 import { MentionSuggestionsProps } from '@/types/Components';
 import { createPortal } from 'react-dom';
 
@@ -86,8 +86,8 @@ import { createPortal } from 'react-dom';
  * Floating "@mention" suggestion list, positioned at an arbitrary viewport
  * coordinate (the typed "@" inside a textarea) rather than anchored to a
  * trigger element, so it's rendered through a portal with its own fixed
- * position instead of reusing useFloatingDropdown (which tracks a trigger
- * element's bounding box).
+ * position instead of reusing Dropdown (which anchors to a trigger
+ * element). It uses the same DropdownPanel / DropdownOption atoms.
  */
 export default function MentionSuggestions({
     users,
@@ -107,8 +107,7 @@ export default function MentionSuggestions({
     });
 
     return createPortal(
-        <DropdownMenu
-            position="floating"
+        <DropdownPanel
             style={{
                 position: 'fixed',
                 top: position.top,
@@ -118,10 +117,10 @@ export default function MentionSuggestions({
             }}
         >
             {users.map((user, index) => (
-                <DropdownItem
+                <DropdownOption
                     key={user.id}
-                    appearance="flat"
-                    isActive={index === activeIndex}
+                    indicator="none"
+                    isSelected={index === activeIndex}
                     onMouseDown={(e) => e.preventDefault()}
                     onMouseEnter={() => onHover(index)}
                     onClick={() => onSelect(user)}
@@ -142,7 +141,7 @@ export default function MentionSuggestions({
                     }
                 />
             ))}
-        </DropdownMenu>,
+        </DropdownPanel>,
         document.body,
     );
 }
