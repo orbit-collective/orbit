@@ -124,7 +124,7 @@ documentation/
       01-run-configure-and-restore-database-backups.md
     project-onboarding/
       README.md              <- indeks tej kategorii
-      01-add-a-welcome-tour-slide.md
+      01-add-a-tour-step.md
     automation/
       README.md              <- indeks tej kategorii
       01-add-a-new-trigger-type.md
