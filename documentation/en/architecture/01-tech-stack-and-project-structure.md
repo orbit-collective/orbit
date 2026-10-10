@@ -38,7 +38,7 @@ summary.
 | `@sentry/react` | Frontend error monitoring — initialized in `app.tsx`, reports uncaught frontend exceptions when `VITE_SENTRY_DSN` is set |
 | `axios` | HTTP client Inertia's `router` uses under the hood — rarely called directly |
 | `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom` | The frontend test stack |
-| `eslint*`, `oxfmt` | Linting/formatting — oxfmt auto-sorts Tailwind classes and imports (`sortTailwindcss`, `sortImports` in `.oxfmtrc.json`) |
+| `oxlint`, `oxfmt` | Linting/formatting — oxfmt auto-sorts Tailwind classes and imports (`sortTailwindcss`, `sortImports` in `.oxfmtrc.json`) |
 
 ## The directory map, one level deeper than the root README
 

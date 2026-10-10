@@ -250,6 +250,8 @@ Run formatting:
 composer format
 
 npm run lint
+
+npm run format
 ```
 
 All CI checks must pass.

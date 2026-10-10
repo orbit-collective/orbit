@@ -11,7 +11,7 @@ Orbit is an issue/project tracker built as a Laravel + Inertia.js + React (TypeS
 ### Frontend (npm)
 - `npm run dev` — Vite dev server (HMR). For the full stack use the composer `dev` script below.
 - `npm run build` — type-check (`tsc`) then production build.
-- `npm run lint` — ESLint over `resources/js` with `--fix`.
+- `npm run lint` — oxlint over `resources/js` with `--fix`. `npm run format` / `npm run format:check` — oxfmt.
 - `npm test` — Vitest (watch mode by default). `npm run test:watch`, `npm run test:coverage`.
 - Run a single frontend test: `npx vitest run resources/js/Components/Atoms/Button/Button.test.tsx` (add `-t "test name"` to filter).
 
