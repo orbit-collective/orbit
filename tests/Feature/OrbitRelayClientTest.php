@@ -228,3 +228,33 @@ test('a connection failure that is not a timeout is not flagged as one', functio
             ->and($exception->getMessage())->toBe('Orbit relay API request failed to connect: GET /v1/github/events');
     }
 });
+
+test('each timeout marker is recognised on its own', function (string $message) {
+    Http::fake(function () use ($message) {
+        throw new ConnectionException($message);
+    });
+
+    try {
+        $this->client->listEvents('orb_local_secret');
+        $this->fail('Expected an OrbitRelayApiException.');
+    } catch (OrbitRelayApiException $exception) {
+        expect($exception->isTimeout)->toBeTrue();
+    }
+})->with([
+    'the cURL error code alone' => 'cURL error 28: see https://curl.se/libcurl/c/libcurl-errors.html',
+    'the wording alone' => 'The operation timed out while waiting for a response',
+    'the wording in a different case' => 'Request Timed Out',
+]);
+
+test('a connect timeout is reported as a timeout too, since the relay did not respond in time', function () {
+    Http::fake(function () {
+        throw new ConnectionException('cURL error 28: Connection timed out after 5001 milliseconds');
+    });
+
+    try {
+        $this->client->listEvents('orb_local_secret');
+        $this->fail('Expected an OrbitRelayApiException.');
+    } catch (OrbitRelayApiException $exception) {
+        expect($exception->isTimeout)->toBeTrue();
+    }
+});
