@@ -284,6 +284,8 @@ export interface FilterButtonProps {
     value?: string;
     isActive?: boolean;
     onClick?: () => void;
+    /** Shows the chevron; defaults to on when `onClick` is given. */
+    hasMenu?: boolean;
 }
 export type FilterDropdownType = 'labels' | 'status' | 'assignee' | 'priority';
 export interface FilterDropdownProps {
