@@ -95,13 +95,6 @@ export function useFloatingDropdown({
             window.innerHeight - rect.bottom - GAP - VIEWPORT_MARGIN;
         const spaceAbove = rect.top - GAP - VIEWPORT_MARGIN;
 
-        // Never taller than what is really left, nor than the viewport.
-        const cap = (space: number) =>
-            Math.min(
-                Math.max(space, MIN_PANEL_HEIGHT),
-                window.innerHeight - 2 * VIEWPORT_MARGIN,
-            );
-
         let side = placement;
         if (side === 'bottom' && spaceBelow < FLIP_THRESHOLD) {
             if (spaceAbove > spaceBelow) side = 'top';
@@ -119,21 +112,37 @@ export function useFloatingDropdown({
             ),
         );
 
+        // The panel takes the room that is left on its side. When that is
+        // less than a usable height (a short window, a trigger near an edge)
+        // it keeps a minimum height and is pulled back over the trigger so it
+        // still ends inside the window - options below the fold can't be
+        // reached by scrolling the list.
+        const available = side === 'bottom' ? spaceBelow : spaceAbove;
+        const windowRoom = window.innerHeight - 2 * VIEWPORT_MARGIN;
+        const maxHeight = Math.min(
+            Math.max(available, MIN_PANEL_HEIGHT),
+            windowRoom,
+        );
+        const farthestEdge = window.innerHeight - VIEWPORT_MARGIN - maxHeight;
+
         setPosition({
             side,
             style:
                 side === 'bottom'
                     ? {
-                          top: rect.bottom + GAP,
+                          top: Math.min(rect.bottom + GAP, farthestEdge),
                           left,
                           width: panelWidth,
-                          maxHeight: cap(spaceBelow),
+                          maxHeight,
                       }
                     : {
-                          bottom: window.innerHeight - rect.top + GAP,
+                          bottom: Math.min(
+                              window.innerHeight - rect.top + GAP,
+                              farthestEdge,
+                          ),
                           left,
                           width: panelWidth,
-                          maxHeight: cap(spaceAbove),
+                          maxHeight,
                       },
         });
     }, [placement, align, width, anchorPoint]);
