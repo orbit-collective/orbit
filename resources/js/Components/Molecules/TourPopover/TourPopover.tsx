@@ -1,7 +1,7 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { TourPopoverProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { forwardRef, useEffect, useRef } from 'react';
+import { forwardRef, KeyboardEvent, useEffect, useRef } from 'react';
 
 const ARROW_SIDE = {
     top: 'bottom-[-5px] border-b border-r',
@@ -36,14 +36,37 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
             nextRef.current?.focus();
         }, [stepId]);
 
+        // The page behind is inert while touring; keep Tab inside the popover.
+        const trapFocus = (event: KeyboardEvent<HTMLDivElement>) => {
+            if (event.key !== 'Tab') return;
+
+            const focusable = Array.from(
+                event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                    'button:not(:disabled)',
+                ),
+            );
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+
         return (
             <div
                 ref={ref}
                 role="dialog"
+                aria-modal="true"
+                onKeyDown={trapFocus}
                 aria-label={title}
                 aria-live="polite"
                 style={style}
-                className="fixed z-[71] w-[340px] max-w-[calc(100vw-24px)] rounded-xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] p-4 text-[var(--text-color)] shadow-2xl backdrop-blur-2xl transition-[top,left] duration-300 ease-out"
+                className="fixed z-[71] w-[340px] max-w-[calc(100vw-24px)] rounded-xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] p-4 text-[var(--text-color)] shadow-2xl backdrop-blur-2xl transition-[top,left] duration-300 ease-out motion-reduce:transition-none"
             >
                 {placement !== 'center' && (
                     <span
@@ -64,12 +87,12 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                     type="button"
                     onClick={onClose}
                     aria-label="Close tour"
-                    className="absolute right-2.5 top-2.5 flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                    className="absolute right-2 top-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
                 >
                     <Icon name="X" size={16} />
                 </button>
 
-                <div key={stepId} className="pr-6">
+                <div key={stepId} className="max-h-[40vh] overflow-y-auto pr-8">
                     <h2 className="flex items-center gap-1 text-sm font-semibold text-[var(--text-color)]">
                         {title} {icon && <Icon name={icon} />}
                     </h2>
@@ -87,7 +110,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                             <span
                                 key={index}
                                 className={cn(
-                                    'h-1.5 rounded-full transition-all duration-300',
+                                    'h-1.5 rounded-full transition-all duration-300 motion-reduce:transition-none',
                                     index === currentStep
                                         ? 'w-4 bg-[var(--accent-color)]'
                                         : 'w-1.5 bg-[var(--bg-light-color)]',
@@ -102,7 +125,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                             onClick={onPrev}
                             disabled={isFirstStep}
                             aria-label="Previous step"
-                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-solid border-[var(--border-color-strong)] bg-transparent text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-solid border-[var(--border-color-strong)] bg-transparent text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                         >
                             <Icon name="ChevronLeft" size={16} />
                         </button>
@@ -113,7 +136,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                             aria-label={
                                 isLastStep ? 'Finish tour' : 'Next step'
                             }
-                            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--accent-color)] text-white transition-colors hover:bg-[var(--accent-light-color)]"
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--accent-color)] text-white transition-colors hover:bg-[var(--accent-light-color)]"
                         >
                             <Icon
                                 name={isLastStep ? 'Check' : 'ChevronRight'}

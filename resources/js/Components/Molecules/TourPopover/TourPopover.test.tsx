@@ -58,6 +58,23 @@ describe('TourPopover', () => {
         expect(screen.getByLabelText('Finish tour')).toBeInTheDocument();
     });
 
+    test('keeps Tab focus inside the popover', async () => {
+        setup();
+        const next = screen.getByLabelText('Next step');
+        const close = screen.getByLabelText('Close tour');
+
+        expect(next).toHaveFocus();
+        await userEvent.tab();
+        expect(close).toHaveFocus();
+
+        await userEvent.tab({ shift: true });
+        await userEvent.tab({ shift: true });
+        await userEvent.tab({ shift: true });
+        expect(screen.getByRole('dialog')).toContainElement(
+            document.activeElement as HTMLElement,
+        );
+    });
+
     test('hides the arrow when centered', () => {
         setup({ placement: 'center' });
 
