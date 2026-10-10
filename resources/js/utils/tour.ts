@@ -103,16 +103,22 @@ export const getPopoverPosition = (
         };
     }
 
+    const perpendicular: TourPlacement[] =
+        preferred === 'left' || preferred === 'right'
+            ? ['bottom', 'top']
+            : ['right', 'left'];
+    const candidates = [preferred, OPPOSITE[preferred], ...perpendicular];
+
+    // First side that fits; otherwise keep the preferred one and clamp.
     let placement = preferred;
-    let position = place(target, popover, placement);
+    let position = place(target, popover, preferred);
+    for (const candidate of candidates) {
+        const candidatePosition = place(target, popover, candidate);
 
-    if (!fits(position, popover, viewport, placement)) {
-        const flipped = OPPOSITE[placement];
-        const flippedPosition = place(target, popover, flipped);
-
-        if (fits(flippedPosition, popover, viewport, flipped)) {
-            placement = flipped;
-            position = flippedPosition;
+        if (fits(candidatePosition, popover, viewport, candidate)) {
+            placement = candidate;
+            position = candidatePosition;
+            break;
         }
     }
 
