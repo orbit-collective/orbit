@@ -1,44 +1,145 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+    DropdownAlign,
+    DropdownPlacement,
+    FloatingPosition,
+} from '@/types/Dropdown';
+import {
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react';
+
+const GAP = 6;
+const VIEWPORT_MARGIN = 12;
+// Rough panel height used to decide whether to flip above the trigger.
+const FLIP_THRESHOLD = 260;
+const MIN_PANEL_HEIGHT = 160;
+const MIN_TRIGGER_WIDTH = 180;
+
+interface UseFloatingDropdownOptions {
+    placement?: DropdownPlacement;
+    align?: DropdownAlign;
+    /** Panel width in px, or `trigger` to match the trigger's width. */
+    width?: number | 'trigger';
+    /** Controlled open state; omit to let the hook own it. */
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    /** Anchor the panel to a point (e.g. a right-click) instead of the trigger. */
+    anchorPoint?: { x: number; y: number } | null;
+}
 
 /**
- * Positioning-only logic for a dropdown whose panel needs to render into a
- * portal (e.g. to escape an ancestor's `overflow-hidden`). Provides the open
- * state, refs to attach to the trigger/panel, and the panel's fixed-position
- * coordinates — the visuals are left entirely to the caller (DropdownTrigger
- * + DropdownMenu).
+ * Behavior shared by every dropdown: open state (controlled or not), a
+ * viewport-aware fixed position for a panel rendered into a portal, closing
+ * on outside click / Escape, and handing focus back to the trigger.
+ * The visuals live in `Dropdown`, `DropdownPanel` and `DropdownOption`.
  */
-export function useFloatingDropdown<
-    TTrigger extends HTMLElement = HTMLButtonElement,
->() {
-    const [isOpen, setIsOpen] = useState(false);
-    const triggerRef = useRef<TTrigger>(null);
-    const panelRef = useRef<HTMLDivElement>(null);
-    const [coords, setCoords] = useState<{
-        top: number;
-        left: number;
-        width: number;
-    } | null>(null);
+export function useFloatingDropdown({
+    placement = 'bottom',
+    align = 'start',
+    width = 224,
+    open,
+    onOpenChange,
+    anchorPoint,
+}: UseFloatingDropdownOptions = {}) {
+    const [internalOpen, setInternalOpen] = useState(false);
+    const isControlled = open !== undefined;
+    const isOpen = isControlled ? open : internalOpen;
+    const isOpenRef = useRef(isOpen);
+    isOpenRef.current = isOpen;
 
-    const updateCoords = useCallback(() => {
-        if (!triggerRef.current) {
-            return;
-        }
-        const rect = triggerRef.current.getBoundingClientRect();
-        setCoords({
-            top: rect.bottom + 8,
-            left: rect.left,
-            width: rect.width,
-        });
+    const triggerRef = useRef<HTMLDivElement>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
+    const [position, setPosition] = useState<FloatingPosition | null>(null);
+
+    const setIsOpen = useCallback(
+        (next: boolean | ((previous: boolean) => boolean)) => {
+            const resolved =
+                typeof next === 'function' ? next(isOpenRef.current) : next;
+
+            if (resolved === isOpenRef.current) return;
+            if (!isControlled) setInternalOpen(resolved);
+            onOpenChange?.(resolved);
+        },
+        [isControlled, onOpenChange],
+    );
+
+    const focusTrigger = useCallback(() => {
+        triggerRef.current
+            ?.querySelector<HTMLElement>('button, [href], [tabindex]')
+            ?.focus();
     }, []);
 
-    useEffect(() => {
-        if (!isOpen) {
-            return;
+    const close = useCallback(
+        (restoreFocus = false) => {
+            setIsOpen(false);
+            if (restoreFocus) focusTrigger();
+        },
+        [setIsOpen, focusTrigger],
+    );
+
+    const updatePosition = useCallback(() => {
+        const trigger = triggerRef.current;
+        if (!trigger && !anchorPoint) return;
+
+        const rect = anchorPoint
+            ? new DOMRect(anchorPoint.x, anchorPoint.y, 0, 0)
+            : trigger!.getBoundingClientRect();
+        const panelWidth =
+            width === 'trigger'
+                ? Math.max(rect.width, MIN_TRIGGER_WIDTH)
+                : width;
+        const spaceBelow =
+            window.innerHeight - rect.bottom - GAP - VIEWPORT_MARGIN;
+        const spaceAbove = rect.top - GAP - VIEWPORT_MARGIN;
+
+        let side = placement;
+        if (side === 'bottom' && spaceBelow < FLIP_THRESHOLD) {
+            if (spaceAbove > spaceBelow) side = 'top';
+        } else if (side === 'top' && spaceAbove < FLIP_THRESHOLD) {
+            if (spaceBelow > spaceAbove) side = 'bottom';
         }
 
-        updateCoords();
+        const preferredLeft =
+            align === 'end' ? rect.right - panelWidth : rect.left;
+        const left = Math.max(
+            VIEWPORT_MARGIN,
+            Math.min(
+                preferredLeft,
+                window.innerWidth - panelWidth - VIEWPORT_MARGIN,
+            ),
+        );
 
-        const handleClickOutside = (event: MouseEvent) => {
+        setPosition({
+            side,
+            style:
+                side === 'bottom'
+                    ? {
+                          top: rect.bottom + GAP,
+                          left,
+                          width: panelWidth,
+                          maxHeight: Math.max(spaceBelow, MIN_PANEL_HEIGHT),
+                      }
+                    : {
+                          bottom: window.innerHeight - rect.top + GAP,
+                          left,
+                          width: panelWidth,
+                          maxHeight: Math.max(spaceAbove, MIN_PANEL_HEIGHT),
+                      },
+        });
+    }, [placement, align, width, anchorPoint]);
+
+    useLayoutEffect(() => {
+        if (isOpen) updatePosition();
+        else setPosition(null);
+    }, [isOpen, updatePosition]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleMouseDown = (event: MouseEvent) => {
             const target = event.target as Node;
             if (
                 triggerRef.current?.contains(target) ||
@@ -49,23 +150,29 @@ export function useFloatingDropdown<
             setIsOpen(false);
         };
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                setIsOpen(false);
-            }
+            if (event.key === 'Escape') close(true);
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('resize', updateCoords);
-        window.addEventListener('scroll', updateCoords, true);
+        window.addEventListener('resize', updatePosition);
+        window.addEventListener('scroll', updatePosition, true);
 
         return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('mousedown', handleMouseDown);
             document.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('resize', updateCoords);
-            window.removeEventListener('scroll', updateCoords, true);
+            window.removeEventListener('resize', updatePosition);
+            window.removeEventListener('scroll', updatePosition, true);
         };
-    }, [isOpen, updateCoords]);
+    }, [isOpen, setIsOpen, close, updatePosition]);
 
-    return { isOpen, setIsOpen, triggerRef, panelRef, coords };
+    return {
+        isOpen,
+        setIsOpen,
+        close,
+        focusTrigger,
+        triggerRef,
+        panelRef,
+        position,
+    };
 }

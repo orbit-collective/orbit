@@ -87,7 +87,8 @@ export interface DropdownTriggerProps extends VariantProps<
     label: ReactNode;
     icon?: keyof typeof icons;
     badge?: number;
-    onClick: () => void;
+    /** Not needed inside `Dropdown`, which opens on any click on its trigger. */
+    onClick?: () => void;
     disabled?: boolean;
     className?: string;
 }

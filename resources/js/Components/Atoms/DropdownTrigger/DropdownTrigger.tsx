@@ -10,7 +10,7 @@ export const dropdownTriggerVariants = cva(
         variants: {
             variant: {
                 default:
-                    'justify-between gap-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)] px-4 py-2.5',
+                    'justify-between gap-2 rounded-md border border-solid border-[var(--bg-light-color)] bg-[var(--bg-color)] px-2.5 py-1.5 hover:bg-[var(--bg-light-color)]',
                 pill: 'h-9 justify-start gap-2 rounded-full border px-3.5',
             },
             isOpen: {
@@ -23,6 +23,11 @@ export const dropdownTriggerVariants = cva(
                 variant: 'pill',
                 isOpen: false,
                 class: 'border-[var(--border-color)] bg-[var(--bg-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
+            },
+            {
+                variant: 'default',
+                isOpen: true,
+                class: 'border-[var(--accent-color-opacity)] bg-[var(--bg-color)]',
             },
             {
                 variant: 'pill',
@@ -48,6 +53,7 @@ const DropdownTrigger = forwardRef<HTMLButtonElement, DropdownTriggerProps>(
             onClick,
             disabled,
             className,
+            ...props
         },
         ref,
     ) {
@@ -63,6 +69,7 @@ const DropdownTrigger = forwardRef<HTMLButtonElement, DropdownTriggerProps>(
                 aria-haspopup="true"
                 aria-expanded={!!isOpen}
                 disabled={disabled}
+                {...props}
             >
                 {icon && (
                     <Icon
