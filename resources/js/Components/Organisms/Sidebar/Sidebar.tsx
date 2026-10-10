@@ -5,10 +5,11 @@ import NewProjectModal from '@/Components/Organisms/NewProjectModal/NewProjectMo
 import { useShortcuts } from '@/context/ShortcutContext';
 import { PageProps } from '@/types';
 import { Project } from '@/types/Projects';
-import { SETTINGS_TABS, getSettingsTabByPath } from '@/types/Settings';
+import { getSettingsTabByPath, SETTINGS_TABS } from '@/types/Settings';
 import { ShortcutDefinition } from '@/types/Shortcuts';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
+import { isTourSidebarOpen, TOUR_SIDEBAR_EVENT } from '@/utils/tourSidebar';
 import logo from '@assets/1820.png';
 import { Link, router, usePage } from '@inertiajs/react';
 import { FC, useEffect, useMemo, useRef, useState } from 'react';
@@ -24,7 +25,7 @@ const SETTINGS_NAV_SECTIONS = [
 ];
 
 const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] = useState(isTourSidebarOpen);
     const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(
@@ -74,6 +75,14 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
             document.removeEventListener('keydown', handleEscape);
         };
     }, [isUserMenuOpen]);
+
+    useEffect(() => {
+        const syncWithTour = () => setIsOpen(isTourSidebarOpen());
+
+        window.addEventListener(TOUR_SIDEBAR_EVENT, syncWithTour);
+        return () =>
+            window.removeEventListener(TOUR_SIDEBAR_EVENT, syncWithTour);
+    }, []);
 
     useEffect(() => {
         if (!isOpen) return;

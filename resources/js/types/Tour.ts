@@ -20,6 +20,8 @@ export interface TourStep {
      * The tour navigates there when the current page differs.
      */
     visit?: string | (() => string | null);
+    /** Target lives in the sidebar, so open the mobile drawer for this step. */
+    sidebar?: boolean;
     /** Steps returning `false` are dropped from the tour for this user. */
     icon?: keyof typeof icons;
     when?: (context: TourContext) => boolean;
@@ -43,6 +45,7 @@ export const TOUR_STEPS: TourStep[] = [
     },
     {
         id: 'dashboard',
+        sidebar: true,
         visit: '/',
         target: 'nav-dashboard',
         placement: 'right',
@@ -52,6 +55,7 @@ export const TOUR_STEPS: TourStep[] = [
     },
     {
         id: 'projects',
+        sidebar: true,
         visit: '/projects',
         target: 'nav-projects',
         placement: 'right',
@@ -61,6 +65,7 @@ export const TOUR_STEPS: TourStep[] = [
     },
     {
         id: 'new-project',
+        sidebar: true,
         visit: '/projects',
         target: 'new-project',
         placement: 'right',
@@ -70,6 +75,7 @@ export const TOUR_STEPS: TourStep[] = [
     },
     {
         id: 'open-project',
+        sidebar: true,
         visit: '/projects',
         target: 'first-project',
         placement: 'right',
@@ -119,6 +125,7 @@ export const TOUR_STEPS: TourStep[] = [
     },
     {
         id: 'settings',
+        sidebar: true,
         visit: '/settings/preferences',
         target: 'settings-nav',
         placement: 'right',
@@ -128,6 +135,7 @@ export const TOUR_STEPS: TourStep[] = [
     },
     {
         id: 'user-menu',
+        sidebar: true,
         visit: '/settings/preferences',
         target: 'user-menu',
         placement: 'top',

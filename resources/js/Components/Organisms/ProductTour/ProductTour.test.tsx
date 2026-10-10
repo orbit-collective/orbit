@@ -1,4 +1,5 @@
 import { TourStep } from '@/types/Tour';
+import { isTourSidebarOpen } from '@/utils/tourSidebar';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -24,6 +25,7 @@ const steps: TourStep[] = [
     },
     { id: 'three', title: 'Third', description: 'd3', visit: () => null },
     { id: 'four', title: 'Fourth', description: 'd4' },
+    { id: 'five', title: 'Fifth', description: 'd5', sidebar: true },
 ];
 
 const addTarget = () => {
@@ -105,12 +107,29 @@ describe('ProductTour', () => {
             screen.getByLabelText('Next step').click();
         });
         await act(async () => {
-            vi.advanceTimersByTime(500);
+            vi.advanceTimersByTime(900);
         });
 
         expect(screen.getByText('Second')).toBeInTheDocument();
         expect(screen.queryByTestId('tour-spotlight')).not.toBeInTheDocument();
         vi.useRealTimers();
+    });
+
+    test('opens the sidebar on sidebar steps and closes it afterwards', async () => {
+        const { unmount } = render(
+            <ProductTour steps={[...steps].reverse()} onClose={vi.fn()} />,
+        );
+        // reversed: first step is 'five' (sidebar)
+        expect(isTourSidebarOpen()).toBe(true);
+
+        await userEvent.click(screen.getByLabelText('Next step'));
+        expect(isTourSidebarOpen()).toBe(false);
+
+        await userEvent.click(screen.getByLabelText('Previous step'));
+        expect(isTourSidebarOpen()).toBe(true);
+
+        unmount();
+        expect(isTourSidebarOpen()).toBe(false);
     });
 
     test('closes via the X button, Escape and finishing the last step', async () => {
@@ -121,7 +140,7 @@ describe('ProductTour', () => {
         await userEvent.keyboard('{Escape}');
         expect(onClose).toHaveBeenCalledTimes(2);
 
-        await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+        await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}');
         await userEvent.click(screen.getByLabelText('Finish tour'));
         expect(onClose).toHaveBeenCalledTimes(3);
     });

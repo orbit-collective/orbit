@@ -2,6 +2,7 @@ import TourPopover from '@/Components/Molecules/TourPopover/TourPopover';
 import useTourTarget from '@/hooks/useTourTarget';
 import { TourStep } from '@/types/Tour';
 import { getPopoverPosition, Size } from '@/utils/tour';
+import { setTourSidebarOpen } from '@/utils/tourSidebar';
 import { router, usePage } from '@inertiajs/react';
 import {
     CSSProperties,
@@ -81,6 +82,12 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
     }, [step?.id]);
 
     const target = useTourTarget(step?.target, true);
+
+    const needsSidebar = !!step?.sidebar;
+    useEffect(() => {
+        setTourSidebarOpen(needsSidebar);
+    }, [needsSidebar]);
+    useEffect(() => () => setTourSidebarOpen(false), []);
 
     useEffect(() => {
         const onResize = () =>
