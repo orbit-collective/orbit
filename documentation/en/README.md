@@ -110,6 +110,9 @@ documentation/
       README.md              <- index for this category
       01-add-a-tour-step.md
       02-add-an-interactive-tour-step.md
+    dropdowns/
+      README.md              <- index for this category
+      01-add-a-dropdown.md
     automation/
       README.md              <- index for this category
       01-add-a-new-trigger-type.md
@@ -133,6 +136,7 @@ documentation/
     project-invitations/     <- Polish translation of every guide above
     activity-log/            <- Polish translation of every guide above
     saved-filters/           <- Polish translation of every guide above
+    dropdowns/               <- Polish translation of every guide above
     labels/                  <- Polish translation of every guide above
     issue-types/             <- Polish translation of every guide above
     issue-views/             <- Polish translation of every guide above
