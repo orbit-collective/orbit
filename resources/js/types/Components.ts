@@ -268,10 +268,6 @@ export interface BackdropBlurProps {
     intensity?: 'sm' | 'md' | 'lg';
     className?: string;
 }
-export interface ProgressBarProps {
-    currentStep: number;
-    totalSteps: number;
-}
 // MOLECULES COMPONENTS
 export type BoardGroupBy = 'priority' | 'status';
 export interface BoardColumnMeta {
