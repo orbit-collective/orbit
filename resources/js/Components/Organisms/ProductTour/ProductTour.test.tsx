@@ -92,6 +92,27 @@ describe('ProductTour', () => {
         vi.useRealTimers();
     });
 
+    test('centers the card quickly when the target exists but is hidden', async () => {
+        vi.useFakeTimers();
+        const link = document.createElement('a');
+        link.setAttribute('data-tour', 'nav-projects');
+        link.getBoundingClientRect = () =>
+            ({ top: 0, left: -300, width: 260, height: 30 }) as DOMRect;
+        document.body.appendChild(link);
+
+        render(<ProductTour steps={steps} onClose={vi.fn()} />);
+        await act(async () => {
+            screen.getByLabelText('Next step').click();
+        });
+        await act(async () => {
+            vi.advanceTimersByTime(500);
+        });
+
+        expect(screen.getByText('Second')).toBeInTheDocument();
+        expect(screen.queryByTestId('tour-spotlight')).not.toBeInTheDocument();
+        vi.useRealTimers();
+    });
+
     test('closes via the X button, Escape and finishing the last step', async () => {
         const onClose = vi.fn();
         render(<ProductTour steps={steps} onClose={onClose} />);
