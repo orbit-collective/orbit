@@ -1,8 +1,8 @@
-import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
-import { ProjectLabel } from '@/types/Labels';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectLabel } from '@/types/Labels';
 import LabelBadge from './LabelBadge';
 
 const TEST_LABELS: ProjectLabel[] = [

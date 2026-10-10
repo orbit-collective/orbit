@@ -1,3 +1,5 @@
+import { router, useForm } from '@inertiajs/react';
+import { SyntheticEvent, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
@@ -8,8 +10,6 @@ import AccountSettingsProfilePreview from '@/Components/Organisms/AccountSetting
 import { useAlert } from '@/context/AlertContext';
 import { cn } from '@/utils/cn';
 import { canvasToBlob, rasterizeImage } from '@/utils/faces';
-import { router, useForm } from '@inertiajs/react';
-import { SyntheticEvent, useState } from 'react';
 
 const getInitials = (name: string) => {
     const trimmed = name.trim();

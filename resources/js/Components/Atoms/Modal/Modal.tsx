@@ -1,8 +1,8 @@
+import { cva } from 'class-variance-authority';
+import React, { useContext, useEffect, useId } from 'react';
 import { ModalContext } from '@/context/ModalContext';
 import { ModalProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { cva } from 'class-variance-authority';
-import React, { useContext, useEffect, useId } from 'react';
 
 const panelVariants = cva(
     'relative w-full flex flex-col overflow-hidden rounded-2xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] shadow-2xl max-h-[85vh] [animation:modalSlideUp_0.25s_cubic-bezier(0.16,1,0.3,1)]',

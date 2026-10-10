@@ -1,3 +1,6 @@
+import logo from '@assets/1820.png';
+import { Link, router, usePage } from '@inertiajs/react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import Divider from '@/Components/Atoms/Divider/Divider';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import NewProjectModal from '@/Components/Organisms/NewProjectModal/NewProjectModal';
@@ -10,9 +13,6 @@ import { ShortcutDefinition } from '@/types/Shortcuts';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
 import { isTourSidebarOpen, TOUR_SIDEBAR_EVENT } from '@/utils/tourSidebar';
-import logo from '@assets/1820.png';
-import { Link, router, usePage } from '@inertiajs/react';
-import { FC, useEffect, useMemo, useState } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 import NavItem from '../../Molecules/NavItem/NavItem';
 import UserBadge from '../../Molecules/UserBadge/UserBadge';

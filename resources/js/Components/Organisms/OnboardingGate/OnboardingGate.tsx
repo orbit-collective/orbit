@@ -1,8 +1,8 @@
+import { router, usePage } from '@inertiajs/react';
+import { useRef, useState } from 'react';
 import ProductTour from '@/Components/Organisms/ProductTour/ProductTour';
 import { PageProps } from '@/types';
 import { getTourSteps, TourStep } from '@/types/Tour';
-import { router, usePage } from '@inertiajs/react';
-import { useRef, useState } from 'react';
 
 const AUTH_PAGES = ['Auth/Login', 'Auth/Register'];
 

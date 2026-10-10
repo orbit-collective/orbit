@@ -1,9 +1,9 @@
-import { AlertProvider } from '@/context/AlertContext';
-import { AutomationRule } from '@/types/Automation';
-import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { AlertProvider } from '@/context/AlertContext';
+import { AutomationRule } from '@/types/Automation';
+import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsAutomationTab from './WorkspaceSettingsAutomationTab';
 
 type VisitOptions = {

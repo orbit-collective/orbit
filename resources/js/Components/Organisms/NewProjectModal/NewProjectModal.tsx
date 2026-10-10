@@ -1,3 +1,5 @@
+import { useForm } from '@inertiajs/react';
+import React, { SyntheticEvent, useEffect } from 'react';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import Input from '@/Components/Atoms/Input/Input';
 import Modal from '@/Components/Atoms/Modal/Modal';
@@ -7,8 +9,6 @@ import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
 import { NewProjectModalProps } from '@/types/Components';
 import { AVAILABLE_COLORS } from '@/types/Projects';
 import { getColorTheme } from '@/utils/colors';
-import { useForm } from '@inertiajs/react';
-import React, { SyntheticEvent, useEffect } from 'react';
 
 const NewProjectModal: React.FC<NewProjectModalProps> = ({
     isOpen,

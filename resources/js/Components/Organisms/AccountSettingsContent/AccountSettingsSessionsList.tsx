@@ -1,12 +1,12 @@
+import { router } from '@inertiajs/react';
+import { cva } from 'class-variance-authority';
+import { useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { useAlert } from '@/context/AlertContext';
 import { Session } from '@/types/Users';
 import { formatTimeAgo } from '@/utils/time';
-import { router } from '@inertiajs/react';
-import { cva } from 'class-variance-authority';
-import { useState } from 'react';
 
 interface AccountSettingsSessionsListProps {
     sessions?: Session[];

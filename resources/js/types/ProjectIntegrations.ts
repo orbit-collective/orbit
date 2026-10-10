@@ -80,7 +80,10 @@ export interface IntegrationImportProgress {
 }
 
 export type GithubConnectionStatus =
-    'not_connected' | 'pending' | 'connected' | 'revoked';
+    | 'not_connected'
+    | 'pending'
+    | 'connected'
+    | 'revoked';
 
 /**
  * Operational health, distinct from GithubConnectionStatus above (see
@@ -88,7 +91,11 @@ export type GithubConnectionStatus =
  * `status` is 'connected' or 'revoked' — null while pending/not connected.
  */
 export type GithubIntegrationHealth =
-    'healthy' | 'degraded' | 'error' | 'revoked' | null;
+    | 'healthy'
+    | 'degraded'
+    | 'error'
+    | 'revoked'
+    | null;
 
 /**
  * The settings-page prop for the 'github' kind integration (see

@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import React, { useEffect, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import Keybind from '@/Components/Atoms/Keybind/Keybind';
@@ -5,8 +7,6 @@ import { SavedFilter } from '@/hooks/useSavedFilters';
 import { FilterDropdownType } from '@/types/Components';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
-import { router } from '@inertiajs/react';
-import React, { useEffect, useRef, useState } from 'react';
 import FilterDropdown from '../../Molecules/FilterDropdown/FilterDropdown';
 import SavedFiltersDropdown from '../../Molecules/SavedFiltersDropdown/SavedFiltersDropdown';
 

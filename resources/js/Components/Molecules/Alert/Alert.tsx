@@ -1,8 +1,8 @@
-import Icon from '@/Components/Atoms/Icon/Icon';
-import { AlertItem } from '@/types/Alert';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
 import { icons, X } from 'lucide-react';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import { AlertItem } from '@/types/Alert';
 
 const alertVariants = cva(
     'pointer-events-auto inline-flex max-w-md items-center gap-3 rounded-[24px] border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-4 py-2.5 shadow-lg backdrop-blur-md transition-all duration-300 text-[var(--text-color)]',

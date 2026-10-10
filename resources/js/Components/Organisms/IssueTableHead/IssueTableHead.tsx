@@ -1,10 +1,10 @@
+import { FC } from 'react';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import SelectionDropdown from '@/Components/Molecules/SelectionDropdown/SelectionDropdown';
 import TableHeaderCell from '@/Components/Molecules/TableHeaderCell/TableHeaderCell';
 import { IssueTableHeadProps } from '@/types/Components';
 import { ISSUE_TABLE_COLUMNS } from '@/utils/issueTableColumns';
-import { FC } from 'react';
 export const IssueTableHead: FC<IssueTableHeadProps> = ({
     headers,
     resolvedColumnWidths,

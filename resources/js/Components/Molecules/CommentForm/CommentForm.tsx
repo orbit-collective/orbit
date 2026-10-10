@@ -1,3 +1,11 @@
+import axios from 'axios';
+import React, {
+    SyntheticEvent,
+    useEffect,
+    useId,
+    useRef,
+    useState,
+} from 'react';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
@@ -17,14 +25,6 @@ import {
     MentionRange,
     tokenizeMentionRanges,
 } from '@/utils/mentions';
-import axios from 'axios';
-import React, {
-    SyntheticEvent,
-    useEffect,
-    useId,
-    useRef,
-    useState,
-} from 'react';
 
 interface MentionState {
     kind: 'user' | 'issue';

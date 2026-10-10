@@ -1,6 +1,6 @@
+import { FC } from 'react';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { TableHeaderCellProps } from '@/types/Components';
-import { FC } from 'react';
 
 export const TableHeaderCell: FC<TableHeaderCellProps> = ({
     column,

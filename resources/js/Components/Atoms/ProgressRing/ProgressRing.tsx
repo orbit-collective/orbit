@@ -1,5 +1,5 @@
-import { ProgressRingProps } from '@/types/Components';
 import React from 'react';
+import { ProgressRingProps } from '@/types/Components';
 
 const ProgressRing: React.FC<ProgressRingProps> = ({
     radius = 18,

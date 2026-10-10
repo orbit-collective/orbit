@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import { SyntheticEvent, useEffect, useState } from 'react';
 import { useAlert } from '@/context/AlertContext';
 import {
     AssignableProjectMemberRole,
@@ -5,8 +7,6 @@ import {
     ProjectDetails,
     ProjectMember,
 } from '@/types/ProjectMembers';
-import { router } from '@inertiajs/react';
-import { SyntheticEvent, useEffect, useState } from 'react';
 
 interface UseMembersManagementArgs {
     memberProjects: MemberProjectSummary[];

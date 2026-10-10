@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState } from 'react';
 import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import { EditableTextProps } from '@/types/Components';
@@ -7,7 +8,6 @@ import {
     insertMarkdownImage,
     nextImageRange,
 } from '@/utils/imagePaste';
-import React, { useEffect, useRef, useState } from 'react';
 
 const EditableText: React.FC<EditableTextProps> = ({
     value,

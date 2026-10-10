@@ -1,10 +1,10 @@
+import { icons } from 'lucide-react';
+import { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { InlineSelectDropdownProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { cn } from '@/utils/cn';
-import { icons } from 'lucide-react';
-import { useMemo } from 'react';
 
 /**
  * A single-select dropdown driven by plain value/onChange props, for use

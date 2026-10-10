@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { DropdownOptionItem } from '@/types/Dropdown';
@@ -11,7 +12,6 @@ import {
     ROLE_ICONS,
     ROLE_LABELS,
 } from '@/utils/projectMemberRoles';
-import { useMemo } from 'react';
 
 const CUSTOM_ROLE_PREFIX = 'custom:';
 

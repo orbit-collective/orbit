@@ -1,7 +1,7 @@
-import { Notification } from '@/types/Notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { Notification } from '@/types/Notification';
 import NotificationsList from './NotificationsList';
 
 describe('NotificationsList Component', () => {

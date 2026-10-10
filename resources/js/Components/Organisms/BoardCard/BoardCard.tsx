@@ -1,3 +1,6 @@
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { motion } from 'framer-motion';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
@@ -8,9 +11,6 @@ import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
 import { formatStatusLabel } from '@/utils/text';
 import { boardCardVariants } from '@/utils/variants';
-import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
-import { motion } from 'framer-motion';
 
 const BoardCardContent = ({
     issue,

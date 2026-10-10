@@ -1,9 +1,9 @@
-import { TourStep } from '@/types/Tour';
-import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
-import { isTourSidebarOpen } from '@/utils/tourSidebar';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { TourStep } from '@/types/Tour';
+import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
+import { isTourSidebarOpen } from '@/utils/tourSidebar';
 import ProductTour from './ProductTour';
 
 const mockVisit = vi.fn();

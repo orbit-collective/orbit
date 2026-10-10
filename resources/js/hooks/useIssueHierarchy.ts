@@ -1,5 +1,5 @@
-import { Issue } from '@/types/Issues';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Issue } from '@/types/Issues';
 
 export interface HierarchyRow {
     issue: Issue;

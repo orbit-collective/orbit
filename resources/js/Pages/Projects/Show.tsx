@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
 import CalendarView from '@/Components/Organisms/CalendarView/CalendarView';
@@ -21,7 +22,6 @@ import { ProjectLabel } from '@/types/Labels';
 import { Project } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
-import { useState } from 'react';
 
 interface QueryParams {
     sort?: SortingColumn;

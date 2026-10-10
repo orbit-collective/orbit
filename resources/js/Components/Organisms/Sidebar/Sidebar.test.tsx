@@ -1,8 +1,8 @@
-import { Project } from '@/types/Projects';
-import { setTourSidebarOpen } from '@/utils/tourSidebar';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { Project } from '@/types/Projects';
+import { setTourSidebarOpen } from '@/utils/tourSidebar';
 import Sidebar from './Sidebar';
 
 const pageState = vi.hoisted(() => ({ url: '/' }));

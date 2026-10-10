@@ -1,6 +1,6 @@
-import { IssueTypeField } from '@/types/IssueTypes';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { IssueTypeField } from '@/types/IssueTypes';
 import IssueCustomField from './IssueCustomField';
 
 const makeField = (

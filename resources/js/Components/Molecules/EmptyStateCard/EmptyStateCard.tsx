@@ -1,8 +1,8 @@
+import { Link } from '@inertiajs/react';
+import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { DashboardEmptyStateProps } from '@/types/Components';
-import { Link } from '@inertiajs/react';
-import React from 'react';
 
 function DashboardEmptyState({
     iconName,

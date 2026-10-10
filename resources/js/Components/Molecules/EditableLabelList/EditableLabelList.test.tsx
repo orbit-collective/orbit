@@ -1,9 +1,9 @@
-import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
-import { ProjectLabel } from '@/types/Labels';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectLabel } from '@/types/Labels';
 import EditableLabelList from './EditableLabelList';
 
 const TEST_LABELS: ProjectLabel[] = [

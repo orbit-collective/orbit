@@ -1,5 +1,5 @@
-import Icon from '@/Components/Atoms/Icon/Icon';
 import { icons } from 'lucide-react';
+import Icon from '@/Components/Atoms/Icon/Icon';
 
 interface AccountSettingsHomeViewCardProps {
     title: string;

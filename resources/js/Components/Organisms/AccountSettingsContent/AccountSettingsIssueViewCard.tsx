@@ -1,6 +1,6 @@
+import { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { IssuePageLooks } from '@/types/Issues';
-import { icons } from 'lucide-react';
 
 interface AccountSettingsIssueViewCardProps {
     view: IssuePageLooks;

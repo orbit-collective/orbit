@@ -1,6 +1,6 @@
-import { GithubDevelopmentRepository, LinkedPullRequest } from '@/types/Issues';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import { GithubDevelopmentRepository, LinkedPullRequest } from '@/types/Issues';
 import IssueDevelopmentPanel from './IssueDevelopmentPanel';
 
 vi.stubGlobal(

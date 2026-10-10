@@ -1,3 +1,6 @@
+import { router } from '@inertiajs/react';
+import { icons } from 'lucide-react';
+import { useState } from 'react';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -7,9 +10,6 @@ import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
 import { IssueFieldType, IssueType, IssueTypeField } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
-import { router } from '@inertiajs/react';
-import { icons } from 'lucide-react';
-import { useState } from 'react';
 
 interface WorkspaceSettingsFieldsModalProps {
     isOpen: boolean;

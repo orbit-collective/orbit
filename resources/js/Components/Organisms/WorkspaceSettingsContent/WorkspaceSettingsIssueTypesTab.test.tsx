@@ -1,8 +1,8 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsIssueTypesTab from './WorkspaceSettingsIssueTypesTab';
 
 vi.stubGlobal(

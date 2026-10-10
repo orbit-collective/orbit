@@ -83,8 +83,8 @@ configuration:
           - '.env.example'
           - 'tsconfig.json'
           - 'vite.config.js'
-          - 'eslint.config.js'
-          - '.prettierrc'
+          - '.oxlintrc.json'
+          - '.oxfmtrc.json'
           - 'phpunit.xml'
 
 integrations:

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import AccountSettingsIssueViewCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsIssueViewCard';
 import AccountSettingsThemeCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsThemeCard';
@@ -7,7 +8,6 @@ import { AccentColor } from '@/types/Accent';
 import { IssuePageLooks } from '@/types/Issues';
 import { ThemeMode } from '@/types/Theme';
 import { ACCENT_COLOR_OPTIONS, getAccentSwatch } from '@/utils/accentColors';
-import { useState } from 'react';
 
 const issueViewOptions: Array<{
     id: IssuePageLooks;

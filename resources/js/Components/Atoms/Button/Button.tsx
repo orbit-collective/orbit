@@ -1,6 +1,6 @@
+import { cva } from 'class-variance-authority';
 import { ButtonProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { cva } from 'class-variance-authority';
 
 const buttonVariants = cva(
     'font-medium text-sm cursor-pointer transition-all ease-in-out duration-150 disabled:cursor-not-allowed flex items-center justify-center gap-2',

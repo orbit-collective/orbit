@@ -1,5 +1,5 @@
-import { CompletionRatioCardProps } from '@/types/Components';
 import { FC } from 'react';
+import { CompletionRatioCardProps } from '@/types/Components';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 

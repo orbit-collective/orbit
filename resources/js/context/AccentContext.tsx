@@ -1,6 +1,3 @@
-import { useTheme } from '@/context/ThemeContext';
-import { AccentColor, AccentContextType } from '@/types/Accent';
-import { getAccentCssVariables } from '@/utils/accentColors';
 import {
     createContext,
     ReactNode,
@@ -8,6 +5,9 @@ import {
     useEffect,
     useState,
 } from 'react';
+import { useTheme } from '@/context/ThemeContext';
+import { AccentColor, AccentContextType } from '@/types/Accent';
+import { getAccentCssVariables } from '@/utils/accentColors';
 
 const ACCENT_STORAGE_KEY = 'accentColor';
 

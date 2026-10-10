@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
@@ -20,8 +22,6 @@ import {
 } from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
-import { router } from '@inertiajs/react';
-import { useEffect, useMemo, useRef, useState } from 'react';
 import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
 import WorkspaceSettingsIntegrationDetailModal from './WorkspaceSettingsIntegrationDetailModal';
 

@@ -1,11 +1,11 @@
+import { router } from '@inertiajs/react';
+import { SyntheticEvent, useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ModalFooter from '@/Components/Molecules/ModalFooter/ModalFooter';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
-import { router } from '@inertiajs/react';
-import { SyntheticEvent, useEffect, useState } from 'react';
 
 interface WorkspaceSettingsCreateRoleModalProps {
     isOpen: boolean;
