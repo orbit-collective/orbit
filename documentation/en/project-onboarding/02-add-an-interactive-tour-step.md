@@ -60,6 +60,11 @@ File: `resources/js/types/Tour.ts`
 - `free` — the user may poke at the target (e.g. pick a color);
   the arrow simply moves on.
 
+A step inside a form can also set `completeWhen` and `skipTo`: if the
+form gets submitted early (the user presses Enter before reaching the
+submit step), the tour jumps to `skipTo` instead of treating the vanished
+form as a closed modal. All steps of the "New project" form do this.
+
 `backTo` names an earlier step to jump back to if the target
 disappears mid-step (for example the user closed the modal), so the
 tour never strands on a step. Pressing the back arrow from such a
@@ -81,7 +86,11 @@ the mobile drawer) and leave it off for steps inside a modal.
 - Layers sit above `Modal` (`z-[1000]`), at `z-[1100]`/`z-[1101]`.
 - Escape is ignored on interactive steps (the modal owns it), and
   ←/→ are ignored while typing so the caret keeps working.
-- The popover doesn't steal focus or trap Tab on interactive steps.
+- The popover doesn't steal focus on interactive steps. Instead of the
+  popover's own trap, Tab cycles through the highlighted element and the
+  tour's controls only, so covered fields can't be reached by keyboard.
+- The target is scrolled into view once when an interactive step starts,
+  since a field can be inside the window yet clipped by a scrollable modal.
 
 ## Step 4 — Test it
 

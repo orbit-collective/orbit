@@ -48,8 +48,14 @@ export interface TourStep {
     icon?: keyof typeof icons;
     /** Makes the target interactive; see `TourInteraction`. */
     interaction?: TourInteraction;
-    /** For `external` steps: advance automatically once this turns true. */
+    /**
+     * Leave the step on its own once this turns true: for `external` steps it
+     * is how they finish, and a step that lives in a form can use it to react
+     * to the form being submitted early (e.g. by pressing Enter).
+     */
     completeWhen?: (runtime: TourRuntime) => boolean;
+    /** Where `completeWhen` goes; defaults to the next step. */
+    skipTo?: string;
     /**
      * Step to jump back to if the target disappears (e.g. the user closed
      * the modal the step lives in), so the tour never strands on a step.
@@ -106,6 +112,8 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         target: 'project-name',
         placement: 'right',
         backTo: 'project-open',
+        completeWhen: ({ hasProjects }) => hasProjects,
+        skipTo: 'project-created',
         when: needsProjectChapter,
         title: 'Name it',
         description:
@@ -121,6 +129,8 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         target: 'project-slug',
         placement: 'right',
         backTo: 'project-open',
+        completeWhen: ({ hasProjects }) => hasProjects,
+        skipTo: 'project-created',
         when: needsProjectChapter,
         title: 'Give it a short key',
         description:
@@ -136,6 +146,8 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         target: 'project-description',
         placement: 'right',
         backTo: 'project-open',
+        completeWhen: ({ hasProjects }) => hasProjects,
+        skipTo: 'project-created',
         when: needsProjectChapter,
         title: 'Describe it (optional)',
         description:
@@ -150,6 +162,8 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         target: 'project-color',
         placement: 'left',
         backTo: 'project-open',
+        completeWhen: ({ hasProjects }) => hasProjects,
+        skipTo: 'project-created',
         when: needsProjectChapter,
         title: 'Pick a color',
         description:

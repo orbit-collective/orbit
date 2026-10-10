@@ -336,6 +336,110 @@ describe('ProductTour', () => {
             vi.useRealTimers();
         });
 
+        const formSteps: TourStep[] = [
+            { id: 'open', title: 'Open', description: 'o' },
+            {
+                id: 'name',
+                title: 'Name',
+                description: 'n',
+                target: 'name-field',
+                backTo: 'open',
+                completeWhen: ({ hasProjects }) => hasProjects,
+                skipTo: 'created',
+                interaction: { type: 'input', hint: 'Type a name' },
+            },
+            {
+                id: 'submit',
+                title: 'Submit',
+                description: 's',
+                target: 'submit-btn',
+                backTo: 'open',
+                interaction: { type: 'click', hint: 'Click create' },
+            },
+            { id: 'created', title: 'Created', description: 'c' },
+        ];
+
+        test('jumps to the end when the form is submitted early, instead of restarting', async () => {
+            vi.useFakeTimers({
+                toFake: [
+                    'setTimeout',
+                    'clearTimeout',
+                    'requestAnimationFrame',
+                    'cancelAnimationFrame',
+                ],
+            });
+            const { wrapper } = addField('name-field');
+            const { rerender } = render(
+                <ProductTour steps={formSteps.slice(1)} onClose={vi.fn()} />,
+            );
+            await act(async () => {
+                vi.advanceTimersByTime(50);
+            });
+            expect(screen.getByText('Name')).toBeInTheDocument();
+
+            // Pressing Enter submits the real form: the project exists and
+            // the modal (and with it the highlighted field) disappears.
+            mockHasProjects = true;
+            await act(async () => {
+                wrapper.remove();
+            });
+            rerender(
+                <ProductTour steps={formSteps.slice(1)} onClose={vi.fn()} />,
+            );
+            await act(async () => {
+                vi.advanceTimersByTime(1500);
+            });
+
+            expect(screen.getByText('Created')).toBeInTheDocument();
+            expect(screen.queryByText('Open')).not.toBeInTheDocument();
+            vi.useRealTimers();
+        });
+
+        test('brings an interactive target into view once', async () => {
+            const scrollIntoView = vi.fn();
+            Element.prototype.scrollIntoView = scrollIntoView;
+            addField('name-field');
+            const { rerender } = render(
+                <ProductTour steps={formSteps.slice(1)} onClose={vi.fn()} />,
+            );
+            await screen.findByText('Name');
+
+            rerender(
+                <ProductTour steps={formSteps.slice(1)} onClose={vi.fn()} />,
+            );
+
+            expect(scrollIntoView).toHaveBeenCalledTimes(1);
+            expect(scrollIntoView).toHaveBeenCalledWith({
+                block: 'nearest',
+                inline: 'nearest',
+            });
+            delete (Element.prototype as Partial<Element>).scrollIntoView;
+        });
+
+        test('keeps Tab on the highlighted field and the tour controls', async () => {
+            const outside = document.createElement('button');
+            outside.textContent = 'Covered';
+            document.body.appendChild(outside);
+            const { input } = addField('name-field');
+            render(
+                <ProductTour steps={formSteps.slice(1)} onClose={vi.fn()} />,
+            );
+            await screen.findByText('Name');
+            input.focus();
+
+            const dialog = screen.getByRole('dialog');
+            for (let i = 0; i < 6; i++) {
+                await userEvent.tab();
+                const active = document.activeElement as HTMLElement;
+
+                expect(active).not.toBe(outside);
+                expect(active === input || dialog.contains(active)).toBe(true);
+            }
+
+            await userEvent.tab({ shift: true });
+            expect(document.activeElement).not.toBe(outside);
+        });
+
         test('closes the modal when stepping back out of a modal step', async () => {
             const onEscape = vi.fn();
             window.addEventListener('keydown', onEscape);

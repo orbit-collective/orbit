@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { getPopoverPosition, isRectVisible } from './tour';
+import {
+    getPopoverPosition,
+    getTabStops,
+    isRectVisible,
+    nextTabStop,
+} from './tour';
 
 const viewport = { width: 1200, height: 800 };
 const popover = { width: 340, height: 180 };
@@ -59,5 +64,58 @@ describe('isRectVisible', () => {
         [{ top: 900, left: 10, width: 50, height: 20 }, false],
     ])('%j -> %s', (rect, expected) => {
         expect(isRectVisible(rect, viewport)).toBe(expected);
+    });
+});
+
+describe('tab stops', () => {
+    const build = () => {
+        document.body.innerHTML = `
+            <div id="target"><input id="a" /><button id="b">b</button></div>
+            <div id="popover"><button id="c">c</button><button id="d" disabled>d</button></div>
+        `;
+
+        return {
+            target: document.getElementById('target')!,
+            popover: document.getElementById('popover')!,
+            byId: (id: string) => document.getElementById(id)!,
+        };
+    };
+
+    test('collects the target then the popover, skipping disabled controls', () => {
+        const { target, popover } = build();
+
+        expect(getTabStops(target, popover).map((el) => el.id)).toEqual([
+            'a',
+            'b',
+            'c',
+        ]);
+    });
+
+    test('includes the target itself when it is focusable', () => {
+        const { byId, popover } = build();
+
+        expect(getTabStops(byId('b'), popover).map((el) => el.id)).toEqual([
+            'b',
+            'c',
+        ]);
+    });
+
+    test('moves forwards and backwards, wrapping at the ends', () => {
+        const { target, popover, byId } = build();
+        const stops = getTabStops(target, popover);
+
+        expect(nextTabStop(stops, byId('a'), false)?.id).toBe('b');
+        expect(nextTabStop(stops, byId('c'), false)?.id).toBe('a');
+        expect(nextTabStop(stops, byId('a'), true)?.id).toBe('c');
+    });
+
+    test('pulls focus back in from outside the stops', () => {
+        const { target, popover } = build();
+        const stops = getTabStops(target, popover);
+        const outside = document.createElement('button');
+
+        expect(nextTabStop(stops, outside, false)?.id).toBe('a');
+        expect(nextTabStop(stops, outside, true)?.id).toBe('c');
+        expect(nextTabStop([], outside, false)).toBeNull();
     });
 });

@@ -145,3 +145,42 @@ export const getPopoverPosition = (
 export const closeTopModal = (): void => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
 };
+
+const FOCUSABLE =
+    'a[href], button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex="-1"])';
+
+const focusableIn = (root: HTMLElement | null): HTMLElement[] => {
+    if (!root) return [];
+
+    const inside = Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE));
+
+    return root.matches(FOCUSABLE) ? [root, ...inside] : inside;
+};
+
+/** Everything that may hold focus on an interactive step, in Tab order. */
+export const getTabStops = (
+    target: HTMLElement | null,
+    popover: HTMLElement | null,
+): HTMLElement[] => [...focusableIn(target), ...focusableIn(popover)];
+
+/**
+ * The element Tab (or Shift+Tab) should land on, wrapping at the ends and
+ * pulling focus back in when it is somewhere outside `stops`.
+ */
+export const nextTabStop = (
+    stops: HTMLElement[],
+    active: Element | null,
+    backwards: boolean,
+): HTMLElement | null => {
+    if (stops.length === 0) return null;
+
+    const index = stops.indexOf(active as HTMLElement);
+
+    if (index === -1) {
+        return backwards ? stops[stops.length - 1] : stops[0];
+    }
+
+    const next = backwards ? index - 1 : index + 1;
+
+    return stops[(next + stops.length) % stops.length];
+};

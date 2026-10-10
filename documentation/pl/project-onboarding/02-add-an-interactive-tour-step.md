@@ -44,6 +44,8 @@ Plik: `resources/js/types/Tour.ts`
 - `input` — wpisywanie w polu wewnątrz celu. Z `required: true` strzałka jest wyłączona, dopóki pole nie ma wartości.
 - `free` — użytkownik może dowolnie kliknąć cel (np. wybrać kolor); strzałka po prostu idzie dalej.
 
+Krok wewnątrz formularza może też ustawić `completeWhen` i `skipTo`: jeśli formularz zostanie wysłany wcześniej (użytkownik naciśnie Enter przed krokiem z przyciskiem), wycieczka przeskakuje do `skipTo`, zamiast traktować zniknięty formularz jak zamknięty modal. Robią tak wszystkie kroki formularza "New project".
+
 `backTo` wskazuje wcześniejszy krok, do którego należy wrócić, jeśli cel zniknie w trakcie kroku (np. użytkownik zamknął modal), dzięki czemu wycieczka nigdy nie utknie na kroku. Strzałka wstecz z takiego kroku zamyka też modal, w którym on żyje.
 
 ## Krok 3 — Umieść w rozdziale
@@ -56,7 +58,8 @@ Ustaw `sidebar: true` na krokach, których cel jest w sidebarze (otwiera panel n
 
 - Warstwy są ponad `Modal` (`z-[1000]`), na `z-[1100]`/`z-[1101]`.
 - Escape jest ignorowany na krokach interaktywnych (należy do modala), a ←/→ są ignorowane podczas pisania, żeby kursor działał.
-- Popup nie kradnie fokusa ani nie pułapkuje Tab na krokach interaktywnych.
+- Popup nie kradnie fokusa na krokach interaktywnych. Zamiast własnej pułapki popupu Tab krąży tylko po podświetlonym elemencie i kontrolkach wycieczki, więc zasłonięte pola są nieosiągalne z klawiatury.
+- Cel jest raz przewijany do widoku na początku kroku interaktywnego, bo pole może być w oknie, a mimo to przycięte przez przewijany modal.
 
 ## Krok 4 — Przetestuj
 
