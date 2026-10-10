@@ -8,6 +8,9 @@ export type TourTargetState =
     | { status: 'missing' };
 
 const SEARCH_TIMEOUT_MS = 2500;
+// An element that exists but stays hidden (off-canvas drawer, `hidden sm:flex`)
+// won't become visible on its own, so give up sooner than for a missing one.
+const HIDDEN_TIMEOUT_MS = 400;
 
 const measure = (element: Element): Rect | null => {
     const { top, left, width, height } = element.getBoundingClientRect();
@@ -84,17 +87,21 @@ export default function useTourTarget(
         window.addEventListener('resize', schedule);
         window.addEventListener('scroll', schedule, true);
 
-        const timeout = window.setTimeout(() => {
+        const giveUp = () =>
             setState((previous) =>
                 previous.status === 'found' ? previous : { status: 'missing' },
             );
-        }, SEARCH_TIMEOUT_MS);
+        const timeout = window.setTimeout(giveUp, SEARCH_TIMEOUT_MS);
+        const hiddenTimeout = window.setTimeout(() => {
+            if (element?.isConnected) giveUp();
+        }, HIDDEN_TIMEOUT_MS);
 
         update();
 
         return () => {
             cancelAnimationFrame(frame);
             window.clearTimeout(timeout);
+            window.clearTimeout(hiddenTimeout);
             observer.disconnect();
             window.removeEventListener('resize', schedule);
             window.removeEventListener('scroll', schedule, true);
