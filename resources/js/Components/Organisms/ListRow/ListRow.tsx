@@ -1,19 +1,29 @@
-import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
-import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import { StatusIcon } from '@/Components/Atoms/StatusIcon/StatusIcon';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
+import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import { ListRowProps } from '@/types/Components';
+import { DropdownOptionItem } from '@/types/Dropdown';
 import { cn } from '@/utils/cn';
 import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
 import { formatStatusLabel } from '@/utils/text';
 import { formatTimeAgo } from '@/utils/time';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
+
+const rowMenuOptions = (removeDisabled: boolean): DropdownOptionItem[] => [
+    { value: 'open', label: 'Open issue', icon: 'Maximize2' },
+    {
+        value: 'remove',
+        label: 'Remove',
+        icon: 'Trash',
+        disabled: removeDisabled,
+    },
+];
 
 const cellBase =
     'px-3 py-2 border-b border-[var(--border-color)] align-middle text-[12px] font-normal';
@@ -32,31 +42,30 @@ export const ListRow = ({
     onToggleCollapse,
 }: ListRowProps) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
-    const menuRef = useRef<HTMLTableCellElement>(null);
+    // Set while the menu was opened by right-click, so it opens at the cursor.
+    const [menuAnchor, setMenuAnchor] = useState<{
+        x: number;
+        y: number;
+    } | null>(null);
 
     const handleContextMenu = (e: React.MouseEvent) => {
         e.preventDefault();
-        setMenuPosition({ x: e.clientX, y: e.clientY });
+        setMenuAnchor({ x: e.clientX, y: e.clientY });
         setIsMenuOpen(true);
     };
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (
-                menuRef.current &&
-                !menuRef.current.contains(event.target as Node)
-            ) {
-                setIsMenuOpen(false);
-            }
-        };
+    const handleMenuOpenChange = (open: boolean) => {
+        setIsMenuOpen(open);
+        if (!open) setMenuAnchor(null);
+    };
 
-        if (isMenuOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
+    const handleMenuSelect = (action: string) => {
+        if (action === 'open') {
+            onClick();
+        } else if (action === 'remove') {
+            onRemove?.();
         }
-        return () =>
-            document.removeEventListener('mousedown', handleClickOutside);
-    }, [isMenuOpen]);
+    };
 
     const handleRowClick = (e: React.MouseEvent) => {
         const target = e.target as HTMLElement;
@@ -67,13 +76,6 @@ export const ListRow = ({
             return;
         }
         onClick();
-    };
-
-    const handleEllipsisClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        const rect = e.currentTarget.getBoundingClientRect();
-        setMenuPosition({ x: rect.left, y: rect.bottom });
-        setIsMenuOpen(!isMenuOpen);
     };
 
     return (
@@ -271,55 +273,28 @@ export const ListRow = ({
                 <td
                     className={cn(cellBase, 'w-[50px] text-right')}
                     data-column="actions"
-                    ref={menuRef}
                 >
-                    <IconButton
-                        iconName="Ellipsis"
-                        onClick={handleEllipsisClick}
-                        className={cn(
-                            'rounded p-1 text-[var(--text-muted-color)] opacity-0 hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)] group-hover/row:opacity-100',
-                            isMenuOpen && 'opacity-100',
-                        )}
+                    <Dropdown
+                        variant="menu"
+                        ariaLabel="Issue actions"
+                        align="end"
+                        width={192}
+                        options={rowMenuOptions(!onRemove)}
+                        onSelect={handleMenuSelect}
+                        open={isMenuOpen}
+                        onOpenChange={handleMenuOpenChange}
+                        anchorPoint={menuAnchor}
+                        trigger={
+                            <IconButton
+                                iconName="Ellipsis"
+                                ariaLabel="Issue actions"
+                                className={cn(
+                                    'rounded p-1 text-[var(--text-muted-color)] opacity-0 hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)] group-hover/row:opacity-100',
+                                    isMenuOpen && 'opacity-100',
+                                )}
+                            />
+                        }
                     />
-                    {isMenuOpen && (
-                        <div
-                            className="fixed z-[9999] w-48 bg-transparent p-1"
-                            style={{
-                                top: `${menuPosition.y}px`,
-                                left: `${menuPosition.x > window.innerWidth - 200 ? menuPosition.x - 192 : menuPosition.x}px`,
-                            }}
-                        >
-                            <DropdownMenu>
-                                <DropdownItem
-                                    label={
-                                        <div className="flex items-center gap-2 text-xs">
-                                            <Icon name="Maximize2" size={13} />
-                                            <span>Open issue</span>
-                                        </div>
-                                    }
-                                    onClick={() => {
-                                        onClick();
-                                        setIsMenuOpen(false);
-                                    }}
-                                />
-                                <DropdownItem
-                                    label={
-                                        <div className="flex items-center gap-2 text-xs">
-                                            <Icon name="Trash" size={13} />
-                                            <span>Remove</span>
-                                        </div>
-                                    }
-                                    disabled={!onRemove}
-                                    onClick={() => {
-                                        if (onRemove) {
-                                            onRemove();
-                                            setIsMenuOpen(false);
-                                        }
-                                    }}
-                                />
-                            </DropdownMenu>
-                        </div>
-                    )}
                 </td>
             </tr>
         </>
