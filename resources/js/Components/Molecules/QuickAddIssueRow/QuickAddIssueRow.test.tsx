@@ -195,4 +195,25 @@ describe('QuickAddIssueRow', () => {
 
         expect(handleSubmit).toHaveBeenCalledWith('Broken', 2);
     });
+
+    test('indents the title through its cell so the field is never wider than it', () => {
+        renderRow({ indent: 2 });
+        fireEvent.click(screen.getByText('New issue'));
+
+        const input = screen.getByPlaceholderText('What needs to be done?');
+
+        expect(input.style.marginLeft).toBe('');
+        expect(input.closest('td')?.style.paddingLeft).toBe('56px');
+    });
+
+    test('shows the selected type as the same badge the list uses, with a chevron', () => {
+        renderRow();
+        fireEvent.click(screen.getByText('New issue'));
+
+        const trigger = screen.getByRole('button', { name: 'Issue type' });
+
+        expect(trigger).toHaveTextContent('Task');
+        expect(trigger.querySelector('.rounded-full')).not.toBeNull();
+        expect(trigger.querySelectorAll('svg').length).toBeGreaterThan(1);
+    });
 });

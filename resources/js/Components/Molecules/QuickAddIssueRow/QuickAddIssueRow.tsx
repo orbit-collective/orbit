@@ -1,12 +1,15 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
+import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
-import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
+import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
+import { DropdownOptionItem } from '@/types/Dropdown';
 import { IssueType } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
 import {
     forwardRef,
     useImperativeHandle,
+    useMemo,
     useRef,
     useState,
     type KeyboardEvent,
@@ -76,6 +79,18 @@ export const QuickAddIssueRow = forwardRef<
             selectedType?.statuses?.[0] ??
             null;
 
+        // Rows are the same badges the list shows, so a type looks identical
+        // wherever it appears.
+        const typeOptions = useMemo(
+            (): DropdownOptionItem[] =>
+                issueTypes.map((type) => ({
+                    value: String(type.id),
+                    label: <IssueTypeBadge issueType={type} />,
+                    searchLabel: type.name,
+                })),
+            [issueTypes],
+        );
+
         const reveal = () => {
             setIsEditing(true);
             setIssueTypeId(defaultTypeId);
@@ -143,7 +158,10 @@ export const QuickAddIssueRow = forwardRef<
                     </td>
                 )}
                 {enabledColumns.title && (
-                    <td className={cn(cellBase, 'truncate')}>
+                    <td
+                        className={cn(cellBase, 'truncate')}
+                        style={{ paddingLeft }}
+                    >
                         <input
                             ref={inputRef}
                             value={title}
@@ -151,7 +169,6 @@ export const QuickAddIssueRow = forwardRef<
                             onKeyDown={handleKeyDown}
                             disabled={isSubmitting}
                             placeholder="What needs to be done?"
-                            style={{ marginLeft: paddingLeft - 12 }}
                             className="w-full min-w-[160px] rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] disabled:opacity-60"
                         />
                     </td>
@@ -159,22 +176,40 @@ export const QuickAddIssueRow = forwardRef<
                 {enabledColumns.type && (
                     <td className={cellBase}>
                         {issueTypes.length > 0 ? (
-                            <InlineSelectDropdown
-                                label="Issue type"
-                                placeholder="Type"
-                                options={issueTypes.map((type) => ({
-                                    value: String(type.id),
-                                    label: type.name,
-                                    icon: type.icon,
-                                    color: type.color,
-                                }))}
-                                value={
+                            <Dropdown
+                                variant="select"
+                                title="Issue type"
+                                ariaLabel="Issue type"
+                                options={typeOptions}
+                                selectedValues={
                                     issueTypeId !== null
-                                        ? String(issueTypeId)
-                                        : null
+                                        ? [String(issueTypeId)]
+                                        : []
                                 }
-                                onChange={(value) =>
-                                    setIssueTypeId(value ? Number(value) : null)
+                                onSelect={(value) =>
+                                    setIssueTypeId(Number(value))
+                                }
+                                trigger={
+                                    <button
+                                        type="button"
+                                        aria-label="Issue type"
+                                        className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+                                    >
+                                        {selectedType ? (
+                                            <IssueTypeBadge
+                                                issueType={selectedType}
+                                            />
+                                        ) : (
+                                            <span className="text-xs text-[var(--text-muted-color)]">
+                                                Type
+                                            </span>
+                                        )}
+                                        <Icon
+                                            name="ChevronDown"
+                                            size={12}
+                                            className="text-[var(--text-muted-color)]"
+                                        />
+                                    </button>
                                 }
                             />
                         ) : (
