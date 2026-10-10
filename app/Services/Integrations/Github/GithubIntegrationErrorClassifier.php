@@ -66,6 +66,10 @@ class GithubIntegrationErrorClassifier
             return new GithubSyncError($code, self::RECONNECT_MESSAGE, isTransient: false);
         }
 
+        if ($code === null && $exception instanceof OrbitRelayApiException && $exception->isTimeout) {
+            return new GithubSyncError(null, 'The GitHub relay service took too long to respond.', isTransient: true);
+        }
+
         if ($code === null) {
             return new GithubSyncError(null, 'Orbit could not reach the GitHub relay service.', isTransient: true);
         }

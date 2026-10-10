@@ -191,3 +191,40 @@ test('a connection failure throws without leaking the token in the log context',
         return ! str_contains(json_encode($context), 'orb_local_secret');
     });
 });
+
+test('a request that is not answered in time is reported as a timeout, with the real cause logged', function () {
+    Log::spy();
+
+    Http::fake(function () {
+        throw new ConnectionException('cURL error 28: Operation timed out after 10002 milliseconds with 0 bytes received for https://api.orbit-dev.app/v1/github/events');
+    });
+
+    try {
+        $this->client->listEvents('orb_local_secret');
+        $this->fail('Expected an OrbitRelayApiException.');
+    } catch (OrbitRelayApiException $exception) {
+        expect($exception->isTimeout)->toBeTrue()
+            ->and($exception->errorCode)->toBeNull()
+            ->and($exception->getMessage())->toBe('Orbit relay API request timed out: GET /v1/github/events');
+    }
+
+    Log::shouldHaveReceived('warning')->withArgs(function (string $message, array $context) {
+        return $message === 'Orbit relay API request timed out'
+            && str_contains($context['reason'], 'cURL error 28')
+            && ! str_contains(json_encode($context), 'orb_local_secret');
+    });
+});
+
+test('a connection failure that is not a timeout is not flagged as one', function () {
+    Http::fake(function () {
+        throw new ConnectionException('cURL error 6: Could not resolve host: api.orbit-dev.app');
+    });
+
+    try {
+        $this->client->listEvents('orb_local_secret');
+        $this->fail('Expected an OrbitRelayApiException.');
+    } catch (OrbitRelayApiException $exception) {
+        expect($exception->isTimeout)->toBeFalse()
+            ->and($exception->getMessage())->toBe('Orbit relay API request failed to connect: GET /v1/github/events');
+    }
+});
