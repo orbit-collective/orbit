@@ -11,6 +11,10 @@ use Throwable;
  * `code` separate from the exception message (and from PHP's own built-in,
  * non-readonly `Exception::$code`) lets callers branch on stable
  * machine-readable codes (e.g. CONNECTION_REVOKED) without parsing text.
+ *
+ * `isTimeout` marks a transport failure where the relay was reached but did
+ * not answer in time, so it can be told apart from one that could not be
+ * reached at all.
  */
 class OrbitRelayApiException extends RuntimeException
 {
@@ -18,6 +22,7 @@ class OrbitRelayApiException extends RuntimeException
         string $message,
         public readonly ?string $errorCode = null,
         ?Throwable $previous = null,
+        public readonly bool $isTimeout = false,
     ) {
         parent::__construct($message, 0, $previous);
     }

@@ -58,3 +58,20 @@ test('the safe message never contains the raw exception text', function () {
 
     expect($error->safeMessage)->not->toContain('orb_local_super_secret_value');
 });
+
+test('a relay timeout is transient and says so instead of claiming the relay is unreachable', function () {
+    $error = $this->classifier->classify(new OrbitRelayApiException(
+        'Orbit relay API request timed out: GET /v1/github/events',
+        isTimeout: true,
+    ));
+
+    expect($error->code)->toBeNull()
+        ->and($error->isTransient)->toBeTrue()
+        ->and($error->safeMessage)->toBe('The GitHub relay service took too long to respond.');
+});
+
+test('a timeout flag never overrides a real orbit-api error code', function () {
+    $error = $this->classifier->classify(new OrbitRelayApiException('raw', 'CONNECTION_REVOKED', isTimeout: true));
+
+    expect($error->safeMessage)->toBe('The GitHub connection has been revoked.');
+});

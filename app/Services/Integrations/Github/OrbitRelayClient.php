@@ -244,9 +244,25 @@ class OrbitRelayClient
         try {
             $response = $call();
         } catch (ConnectionException $exception) {
-            Log::warning('Orbit relay API request failed to connect', ['path' => $path]);
+            $isTimeout = $this->isTimeout($exception);
 
-            throw new OrbitRelayApiException("Orbit relay API request failed to connect: $path", previous: $exception);
+            // The transport error carries the real cause (DNS, refused, timed
+            // out) and only ever the request URL - never the bearer token,
+            // which is sent as a header.
+            Log::warning(
+                $isTimeout
+                    ? 'Orbit relay API request timed out'
+                    : 'Orbit relay API request failed to connect',
+                ['path' => $path, 'reason' => $exception->getMessage()],
+            );
+
+            throw new OrbitRelayApiException(
+                $isTimeout
+                    ? "Orbit relay API request timed out: $path"
+                    : "Orbit relay API request failed to connect: $path",
+                previous: $exception,
+                isTimeout: $isTimeout,
+            );
         }
 
         $body = $response->json() ?? [];
@@ -265,6 +281,17 @@ class OrbitRelayClient
         }
 
         return $body['data'];
+    }
+
+    /**
+     * cURL reports a request that connected but was not answered in time as
+     * error 28 ("Operation timed out"); a connect timeout uses the same code,
+     * which is fine here - either way the relay did not respond in time.
+     */
+    private function isTimeout(ConnectionException $exception): bool
+    {
+        return str_contains($exception->getMessage(), 'cURL error 28')
+            || stripos($exception->getMessage(), 'timed out') !== false;
     }
 
     private function client(): PendingRequest
