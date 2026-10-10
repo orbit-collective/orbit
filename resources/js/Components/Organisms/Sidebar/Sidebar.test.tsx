@@ -1,4 +1,5 @@
 import { Project } from '@/types/Projects';
+import { setTourSidebarOpen } from '@/utils/tourSidebar';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -263,6 +264,26 @@ describe('Sidebar Component', () => {
 
         await user.keyboard('{Escape}');
         expect(aside).toHaveClass('-translate-x-full');
+    });
+
+    test('opens the mobile drawer when the product tour asks for it', () => {
+        const { container, unmount } = render(<Sidebar projects={[]} />);
+        const aside = container.querySelector('aside') as HTMLElement;
+
+        act(() => setTourSidebarOpen(true));
+        expect(aside).toHaveClass('translate-x-0');
+
+        act(() => setTourSidebarOpen(false));
+        expect(aside).toHaveClass('-translate-x-full');
+
+        // A page visit remounts the Sidebar; it must pick the state back up.
+        act(() => setTourSidebarOpen(true));
+        unmount();
+        const remounted = render(<Sidebar projects={[]} />);
+        expect(remounted.container.querySelector('aside')).toHaveClass(
+            'translate-x-0',
+        );
+        act(() => setTourSidebarOpen(false));
     });
 
     test('keeps the full project name available when the label is truncated', () => {

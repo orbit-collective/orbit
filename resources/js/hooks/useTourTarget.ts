@@ -10,7 +10,7 @@ export type TourTargetState =
 const SEARCH_TIMEOUT_MS = 2500;
 // An element that exists but stays hidden (off-canvas drawer, `hidden sm:flex`)
 // won't become visible on its own, so give up sooner than for a missing one.
-const HIDDEN_TIMEOUT_MS = 400;
+const HIDDEN_TIMEOUT_MS = 800;
 
 const measure = (element: Element): Rect | null => {
     const { top, left, width, height } = element.getBoundingClientRect();
@@ -86,6 +86,8 @@ export default function useTourTarget(
         });
         window.addEventListener('resize', schedule);
         window.addEventListener('scroll', schedule, true);
+        // Re-measure once slide-in animations (mobile drawer) settle.
+        document.addEventListener('transitionend', schedule, true);
 
         const giveUp = () =>
             setState((previous) =>
@@ -105,6 +107,7 @@ export default function useTourTarget(
             observer.disconnect();
             window.removeEventListener('resize', schedule);
             window.removeEventListener('scroll', schedule, true);
+            document.removeEventListener('transitionend', schedule, true);
         };
     }, [target, enabled]);
 
