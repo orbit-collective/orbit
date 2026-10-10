@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import React, { useMemo } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
@@ -5,8 +7,6 @@ import { UpcomingDeadlinesPanelProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
 import { parseDateKey } from '@/utils/time';
-import { router } from '@inertiajs/react';
-import React, { useMemo } from 'react';
 
 const SHORT_DATE_FORMAT: Intl.DateTimeFormatOptions = {
     month: 'short',

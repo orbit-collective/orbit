@@ -1,6 +1,6 @@
+import React from 'react';
 import { WorkflowStatusBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import React from 'react';
 
 const WorkflowStatusBadge: React.FC<WorkflowStatusBadgeProps> = ({
     status,

@@ -1,7 +1,7 @@
+import { useState } from 'react';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
-import { useState } from 'react';
 
 export default function WorkspaceSettingsPrioritiesTab() {
     const [priorityScale, setPriorityScale] = useState('Three levels');

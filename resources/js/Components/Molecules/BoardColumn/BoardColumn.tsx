@@ -1,9 +1,9 @@
+import { useDroppable } from '@dnd-kit/core';
+import { AnimatePresence } from 'framer-motion';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueElement from '@/Components/Molecules/IssueElement/IssueElement';
 import { BoardColumnProps } from '@/types/Components';
-import { useDroppable } from '@dnd-kit/core';
-import { AnimatePresence } from 'framer-motion';
 
 function BoardColumn({ issues, meta, count }: BoardColumnProps) {
     const { setNodeRef, isOver } = useDroppable({ id: meta.id });

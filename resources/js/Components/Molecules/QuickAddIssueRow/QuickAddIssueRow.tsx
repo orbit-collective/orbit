@@ -1,11 +1,3 @@
-import Icon from '@/Components/Atoms/Icon/Icon';
-import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
-import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
-import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
-import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
-import { DropdownOptionItem } from '@/types/Dropdown';
-import { IssueType } from '@/types/IssueTypes';
-import { cn } from '@/utils/cn';
 import {
     forwardRef,
     useImperativeHandle,
@@ -14,6 +6,14 @@ import {
     useState,
     type KeyboardEvent,
 } from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
+import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
+import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
+import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
+import { DropdownOptionItem } from '@/types/Dropdown';
+import { IssueType } from '@/types/IssueTypes';
+import { cn } from '@/utils/cn';
 
 export interface QuickAddIssueRowHandle {
     open: () => void;

@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import React, { ReactNode, useMemo } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
@@ -7,8 +9,6 @@ import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { FilterDropdownProps, FilterDropdownType } from '@/types/Components';
 import { ProjectLabel } from '@/types/Labels';
 import { AssignableUser } from '@/types/Users';
-import { router } from '@inertiajs/react';
-import React, { ReactNode, useMemo } from 'react';
 import FilterButton from '../FilterButton/FilterButton';
 
 interface FilterOption {

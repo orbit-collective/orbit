@@ -1,3 +1,15 @@
+import {
+    DndContext,
+    PointerSensor,
+    closestCenter,
+    useDraggable,
+    useDroppable,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import { router } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -21,18 +33,6 @@ import {
     triggerMeta,
 } from '@/utils/automationMeta';
 import { cn } from '@/utils/cn';
-import {
-    DndContext,
-    PointerSensor,
-    closestCenter,
-    useDraggable,
-    useDroppable,
-    useSensor,
-    useSensors,
-    type DragEndEvent,
-} from '@dnd-kit/core';
-import { router } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
 
 interface WorkspaceSettingsAutomationTabProps {
     memberProjects?: MemberProjectSummary[];

@@ -1,10 +1,10 @@
+import { router } from '@inertiajs/react';
+import { icons } from 'lucide-react';
+import { useState } from 'react';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import AccountSettingsNotificationTypeRow from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationTypeRow';
 import { useAlert } from '@/context/AlertContext';
 import { NotificationSettings } from '@/types/Notification';
-import { router } from '@inertiajs/react';
-import { icons } from 'lucide-react';
-import { useState } from 'react';
 
 interface NotificationTypeState {
     id: string;

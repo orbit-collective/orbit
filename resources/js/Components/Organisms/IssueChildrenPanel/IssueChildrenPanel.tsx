@@ -1,3 +1,5 @@
+import { Link, router } from '@inertiajs/react';
+import { useRef, useState, type KeyboardEvent } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
@@ -7,8 +9,6 @@ import { useAlert } from '@/context/AlertContext';
 import { Issue } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
-import { Link, router } from '@inertiajs/react';
-import { useRef, useState, type KeyboardEvent } from 'react';
 
 interface IssueChildrenPanelProps {
     project: Project;

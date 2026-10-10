@@ -1,10 +1,10 @@
+import { useCallback, useMemo, useState } from 'react';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { useModal } from '@/context/ModalContext';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { SelectionDropdownProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { ShortcutDefinition } from '@/types/Shortcuts';
-import { useCallback, useMemo, useState } from 'react';
 
 const KIND_ROLES = {
     checkbox: 'menuitemcheckbox',

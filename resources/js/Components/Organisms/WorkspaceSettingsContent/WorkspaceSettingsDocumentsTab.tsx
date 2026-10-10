@@ -1,6 +1,6 @@
+import { useState } from 'react';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
-import { useState } from 'react';
 
 export default function WorkspaceSettingsDocumentsTab() {
     const [documentAccess, setDocumentAccess] = useState('Members only');

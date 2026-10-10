@@ -1,7 +1,7 @@
-import { IssueType } from '@/types/IssueTypes';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ComponentProps, createRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { IssueType } from '@/types/IssueTypes';
 import QuickAddIssueRow, { QuickAddIssueRowHandle } from './QuickAddIssueRow';
 
 const issueTypes: IssueType[] = [

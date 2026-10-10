@@ -1,7 +1,7 @@
-import { AlertProvider } from '@/context/AlertContext';
-import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import { AlertProvider } from '@/context/AlertContext';
+import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
 
 vi.stubGlobal(

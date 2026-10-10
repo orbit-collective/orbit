@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import Modal from '@/Components/Atoms/Modal/Modal';
@@ -5,8 +7,6 @@ import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
-import { router } from '@inertiajs/react';
-import { useState } from 'react';
 
 interface WorkspaceSettingsHierarchyModalProps {
     isOpen: boolean;

@@ -1,15 +1,15 @@
 import {
-    DropdownAlign,
-    DropdownPlacement,
-    FloatingPosition,
-} from '@/types/Dropdown';
-import {
     useCallback,
     useEffect,
     useLayoutEffect,
     useRef,
     useState,
 } from 'react';
+import {
+    DropdownAlign,
+    DropdownPlacement,
+    FloatingPosition,
+} from '@/types/Dropdown';
 
 const GAP = 6;
 const VIEWPORT_MARGIN = 12;

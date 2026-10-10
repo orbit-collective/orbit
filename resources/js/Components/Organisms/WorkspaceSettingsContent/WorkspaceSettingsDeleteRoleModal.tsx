@@ -1,10 +1,10 @@
+import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
 import { WorkspaceRole } from '@/types/Roles';
-import { router } from '@inertiajs/react';
-import { useState } from 'react';
 
 interface WorkspaceSettingsDeleteRoleModalProps {
     role: WorkspaceRole | null;

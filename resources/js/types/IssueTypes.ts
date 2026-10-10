@@ -28,7 +28,13 @@ export interface IssueTypeTemplate {
 }
 
 export type IssueFieldType =
-    'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'url';
+    | 'text'
+    | 'textarea'
+    | 'number'
+    | 'date'
+    | 'select'
+    | 'checkbox'
+    | 'url';
 
 export interface IssueTypeField {
     id: number;

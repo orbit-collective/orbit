@@ -1,8 +1,8 @@
+import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ActivityLogItem from '@/Components/Molecules/ActivityLogItem/ActivityLogItem';
 import { ActivityLogsProps } from '@/types/Components';
 import { groupActivityLogs } from '@/utils/activityLog';
-import React, { useMemo } from 'react';
 
 const ActivityLogs: React.FC<ActivityLogsProps> = ({
     logs,

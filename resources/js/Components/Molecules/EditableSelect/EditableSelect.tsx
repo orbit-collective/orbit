@@ -1,7 +1,7 @@
+import React, { useMemo } from 'react';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { EditableSelectProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import React, { useMemo } from 'react';
 
 /**
  * Click-to-edit single select: the current value is the trigger, picking

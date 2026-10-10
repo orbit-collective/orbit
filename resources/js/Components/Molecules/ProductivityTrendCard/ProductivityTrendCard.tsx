@@ -1,6 +1,6 @@
+import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { ProductivityTrendCardProps } from '@/types/Components';
-import { FC } from 'react';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 

@@ -1,10 +1,10 @@
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { IssuePreviewCardProps } from '@/types/Components';
 import { parseDateKey } from '@/utils/time';
-import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 const CARD_WIDTH = 260;
 const ESTIMATED_HEIGHT = 220;

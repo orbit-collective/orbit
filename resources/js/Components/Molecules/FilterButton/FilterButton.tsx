@@ -1,6 +1,6 @@
+import React from 'react';
 import { FilterButtonProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import React from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const FilterButton: React.FC<FilterButtonProps> = ({

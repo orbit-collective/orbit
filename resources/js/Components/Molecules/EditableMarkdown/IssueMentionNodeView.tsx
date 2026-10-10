@@ -1,6 +1,6 @@
+import { NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import IssueMentionLink from '@/Components/Molecules/IssueMentionLink/IssueMentionLink';
 import { MentionAttrs } from '@/utils/tiptapMentions';
-import { NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 
 /**
  * Renders an "#12" mention inside the description editor the way a comment

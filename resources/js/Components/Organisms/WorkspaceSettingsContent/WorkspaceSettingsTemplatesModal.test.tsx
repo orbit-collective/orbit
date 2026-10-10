@@ -1,6 +1,3 @@
-import { AlertProvider } from '@/context/AlertContext';
-import { IssueType } from '@/types/IssueTypes';
-import { ProjectLabel } from '@/types/Labels';
 import {
     fireEvent,
     render,
@@ -9,6 +6,9 @@ import {
     within,
 } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { AlertProvider } from '@/context/AlertContext';
+import { IssueType } from '@/types/IssueTypes';
+import { ProjectLabel } from '@/types/Labels';
 import WorkspaceSettingsTemplatesModal from './WorkspaceSettingsTemplatesModal';
 
 vi.stubGlobal(

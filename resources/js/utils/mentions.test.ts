@@ -1,5 +1,5 @@
-import { AssignableUser } from '@/types/Users';
 import { describe, expect, test } from 'vitest';
+import { AssignableUser } from '@/types/Users';
 import {
     applyRangeEdit,
     filterUsersByMention,

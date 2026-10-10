@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import React, { useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
@@ -16,8 +18,6 @@ import {
     insertMarkdownImage,
     nextImageRange,
 } from '@/utils/imagePaste';
-import { router } from '@inertiajs/react';
-import React, { useRef, useState } from 'react';
 
 interface WorkspaceSettingsTemplatesModalProps {
     isOpen: boolean;

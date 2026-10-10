@@ -1,3 +1,4 @@
+import React from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
@@ -6,7 +7,6 @@ import { CommentItemProps } from '@/types/Components';
 import { splitMarkdownImages } from '@/utils/imagePaste';
 import { splitMentionText } from '@/utils/mentions';
 import { formatTimeAgo } from '@/utils/time';
-import React from 'react';
 
 const CommentItem: React.FC<CommentItemProps> = ({
     comment,

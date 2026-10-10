@@ -1,7 +1,7 @@
+import { ReactNode } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import { ProjectMember } from '@/types/ProjectMembers';
 import { formatDate } from '@/utils/time';
-import { ReactNode } from 'react';
 
 interface MemberRowProps {
     member: ProjectMember;

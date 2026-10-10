@@ -1,6 +1,6 @@
+import { motion } from 'framer-motion';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { OrbitRingProps } from '@/types/Components';
-import { motion } from 'framer-motion';
 
 export const OrbitRing = ({
     radius,

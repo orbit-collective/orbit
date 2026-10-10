@@ -1,6 +1,6 @@
-import Icon from '@/Components/Atoms/Icon/Icon';
 import { icons } from 'lucide-react';
 import React from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
 
 interface SettingsPanelProps {
     title: string;

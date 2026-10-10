@@ -1,3 +1,5 @@
+import { icons } from 'lucide-react';
+import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import { PermissionDefinition } from '@/types/Roles';
@@ -5,8 +7,6 @@ import {
     getPermissionDescription,
     getPermissionLabel,
 } from '@/utils/permissions';
-import { icons } from 'lucide-react';
-import { useState } from 'react';
 
 interface PermissionGroupCardSection {
     section: string;

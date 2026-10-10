@@ -1,10 +1,3 @@
-import { AlertContainer } from '@/Components/Organisms/AlertContainer/AlertContainer';
-import {
-    AlertContextType,
-    AlertItem,
-    AlertType,
-    InertiaPageProps,
-} from '@/types/Alert';
 import { router, usePage } from '@inertiajs/react';
 import {
     createContext,
@@ -15,6 +8,13 @@ import {
     useRef,
     useState,
 } from 'react';
+import { AlertContainer } from '@/Components/Organisms/AlertContainer/AlertContainer';
+import {
+    AlertContextType,
+    AlertItem,
+    AlertType,
+    InertiaPageProps,
+} from '@/types/Alert';
 
 const AlertContext = createContext<AlertContextType | undefined>(undefined);
 

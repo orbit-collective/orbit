@@ -1,5 +1,5 @@
-import { VisualCardHeaderProps } from '@/types/Components';
 import { FC } from 'react';
+import { VisualCardHeaderProps } from '@/types/Components';
 
 export const VisualCardHeader: FC<VisualCardHeaderProps> = ({
     title,

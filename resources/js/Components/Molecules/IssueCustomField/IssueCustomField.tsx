@@ -1,7 +1,7 @@
+import { useState } from 'react';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import { IssueTypeField } from '@/types/IssueTypes';
-import { useState } from 'react';
 
 interface IssueCustomFieldProps {
     field: IssueTypeField;

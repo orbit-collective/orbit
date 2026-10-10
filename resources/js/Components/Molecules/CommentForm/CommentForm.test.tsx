@@ -1,7 +1,7 @@
-import { AssignableUser } from '@/types/Users';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { AssignableUser } from '@/types/Users';
 import CommentForm from './CommentForm';
 
 const mockAxios = vi.hoisted(() => ({ get: vi.fn() }));

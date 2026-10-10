@@ -1,7 +1,7 @@
-import { StatCardProps } from '@/types/Components';
-import { cn } from '@/utils/cn';
 import { cva } from 'class-variance-authority';
 import React from 'react';
+import { StatCardProps } from '@/types/Components';
+import { cn } from '@/utils/cn';
 import Badge from '../../Atoms/Badge/Badge';
 import Icon from '../../Atoms/Icon/Icon';
 import ProgressRing from '../../Atoms/ProgressRing/ProgressRing';

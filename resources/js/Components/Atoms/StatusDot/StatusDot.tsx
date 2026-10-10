@@ -1,6 +1,6 @@
-import { StatusDotProps } from '@/types/Components';
 import { cva } from 'class-variance-authority';
 import React from 'react';
+import { StatusDotProps } from '@/types/Components';
 
 export const statusDotVariants = cva('inline-block rounded-sm shrink-0', {
     variants: {
