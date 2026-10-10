@@ -24,7 +24,7 @@ import {
 } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
-import { Project, ProjectColors } from '@/types/Projects';
+import { Project } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
 import { WorkflowStatus } from '@/types/Workflow';
@@ -37,7 +37,6 @@ import React, {
     CSSProperties,
     HTMLAttributes,
     ReactNode,
-    SyntheticEvent,
 } from 'react';
 
 export interface AvatarProps {
@@ -263,10 +262,6 @@ export interface StatusIconProps {
     status: string;
     className?: string;
     tooltip?: boolean;
-}
-export interface BackdropBlurProps {
-    intensity?: 'sm' | 'md' | 'lg';
-    className?: string;
 }
 // MOLECULES COMPONENTS
 export type BoardGroupBy = 'priority' | 'status';
@@ -540,34 +535,11 @@ export interface TourPopoverProps {
     onNext: () => void;
     onClose: () => void;
 }
-export interface ProjectOnboardingFormData {
-    name: string;
-    slug: string;
-    description: string;
-    color: ProjectColors;
-}
-export interface ProjectOnboardingHeaderProps {
-    userName: string;
-}
-export interface ProjectOnboardingFormProps {
-    data: ProjectOnboardingFormData;
-    setData: <K extends keyof ProjectOnboardingFormData>(
-        key: K,
-        value: ProjectOnboardingFormData[K],
-    ) => void;
-    errors: Partial<Record<keyof ProjectOnboardingFormData, string>>;
-    processing: boolean;
-    onSubmit: (e: SyntheticEvent) => void;
-    onSkip: () => void;
-}
 export interface ActivityLogItemProps {
     group: ActivityLogGroup;
     users?: AssignableUser[];
     roles?: RoleNameSummary[];
     issueTypes?: IssueType[];
-}
-export interface ProjectOnboardingPreviewProps {
-    data: ProjectOnboardingFormData;
 }
 // ORGANISMS COMPONENTS
 export interface ActivityLogsProps {
@@ -690,10 +662,6 @@ export interface IssueTableProps {
 export interface NewProjectModalProps {
     isOpen: boolean;
     onClose: () => void;
-}
-export interface ProjectOnboardingModalProps {
-    userName: string;
-    onSkip: () => void;
 }
 export interface PageHeaderTab {
     id: string;
