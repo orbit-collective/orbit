@@ -47,12 +47,28 @@ export default function useTourTarget(
         const selector = `[data-tour="${target}"]`;
         let frame = 0;
         let element: Element | null = null;
+        let wasFound = false;
+        let lostTimeout = 0;
 
         const update = () => {
             element = element?.isConnected
                 ? element
                 : document.querySelector(selector);
             const rect = element ? measure(element) : null;
+
+            if (rect) {
+                wasFound = true;
+                window.clearTimeout(lostTimeout);
+                lostTimeout = 0;
+            } else if (wasFound && !lostTimeout) {
+                // The target vanished mid-step (e.g. its modal was closed):
+                // start the clock again instead of waiting forever.
+                lostTimeout = window.setTimeout(() => {
+                    wasFound = false;
+                    lostTimeout = 0;
+                    setState({ status: 'missing' });
+                }, HIDDEN_TIMEOUT_MS);
+            }
 
             setState((previous) => {
                 if (rect) {
@@ -86,8 +102,9 @@ export default function useTourTarget(
         });
         window.addEventListener('resize', schedule);
         window.addEventListener('scroll', schedule, true);
-        // Re-measure once slide-in animations (mobile drawer) settle.
+        // Re-measure once slide-in animations (mobile drawer, modals) settle.
         document.addEventListener('transitionend', schedule, true);
+        document.addEventListener('animationend', schedule, true);
 
         const giveUp = () =>
             setState((previous) =>
@@ -104,10 +121,12 @@ export default function useTourTarget(
             cancelAnimationFrame(frame);
             window.clearTimeout(timeout);
             window.clearTimeout(hiddenTimeout);
+            window.clearTimeout(lostTimeout);
             observer.disconnect();
             window.removeEventListener('resize', schedule);
             window.removeEventListener('scroll', schedule, true);
             document.removeEventListener('transitionend', schedule, true);
+            document.removeEventListener('animationend', schedule, true);
         };
     }, [target, enabled]);
 
