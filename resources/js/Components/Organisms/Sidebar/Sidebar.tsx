@@ -280,6 +280,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     }
                                     title="New project"
                                     aria-label="New project"
+                                    data-tour="new-project"
                                     className="mb-1.5 flex shrink-0 items-center justify-center rounded-md py-1.5 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
                                 >
                                     <Icon name="Plus" size={16} />
