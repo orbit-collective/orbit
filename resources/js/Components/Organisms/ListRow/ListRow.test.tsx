@@ -317,6 +317,66 @@ describe('ListRow Component', () => {
             expect(screen.queryByText('Remove')).not.toBeInTheDocument();
         });
 
+        test('pressing Enter on a menu item acts once and does not also open the issue', async () => {
+            const handleClick = vi.fn();
+            const handleRemove = vi.fn();
+            renderRow({ onClick: handleClick, onRemove: handleRemove });
+
+            const row = screen
+                .getByText('Fix the login page')
+                .closest('tr') as HTMLElement;
+            fireEvent.contextMenu(row);
+
+            screen.getByRole('menuitem', { name: 'Remove' }).focus();
+            await userEvent.keyboard('{Enter}');
+
+            expect(handleRemove).toHaveBeenCalledTimes(1);
+            expect(handleClick).not.toHaveBeenCalled();
+        });
+
+        test('"Open issue" opens the issue once when chosen with the keyboard', async () => {
+            const handleClick = vi.fn();
+            renderRow({ onClick: handleClick });
+
+            const row = screen
+                .getByText('Fix the login page')
+                .closest('tr') as HTMLElement;
+            fireEvent.contextMenu(row);
+
+            screen.getByRole('menuitem', { name: 'Open issue' }).focus();
+            await userEvent.keyboard('{Enter}');
+
+            expect(handleClick).toHaveBeenCalledTimes(1);
+        });
+
+        test('pressing Enter on the actions button opens the menu without opening the issue', async () => {
+            const handleClick = vi.fn();
+            renderRow({ onClick: handleClick });
+
+            (
+                document.querySelector(
+                    '[data-column="actions"] button',
+                ) as HTMLElement
+            ).focus();
+            await userEvent.keyboard('{Enter}');
+
+            expect(screen.getByText('Open issue')).toBeInTheDocument();
+            expect(handleClick).not.toHaveBeenCalled();
+        });
+
+        test('Enter on the focused row itself still opens the issue', async () => {
+            const handleClick = vi.fn();
+            renderRow({ onClick: handleClick });
+
+            const row = screen
+                .getByText('Fix the login page')
+                .closest('tr') as HTMLElement;
+            row.focus();
+            await userEvent.keyboard('{Enter}');
+
+            expect(handleClick).toHaveBeenCalledTimes(1);
+        });
+
         test('the "Remove" action is disabled', () => {
             renderRow({});
 

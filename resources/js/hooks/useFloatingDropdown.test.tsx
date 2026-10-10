@@ -135,4 +135,64 @@ describe('useFloatingDropdown positioning', () => {
 
         expect(latest.position).toBeNull();
     });
+
+    test('closes when the trigger scrolls out of the window', () => {
+        let rect: Partial<DOMRect> = {
+            top: 100,
+            bottom: 130,
+            left: 50,
+            right: 150,
+            width: 100,
+        };
+        const { rerender } = render(<Harness rect={rect} />);
+        act(() => latest.setIsOpen(true));
+        expect(latest.isOpen).toBe(true);
+
+        rect = { ...rect, top: -80, bottom: -50 };
+        rerender(<Harness rect={rect} />);
+        act(() => {
+            window.dispatchEvent(new Event('scroll'));
+        });
+
+        expect(latest.isOpen).toBe(false);
+    });
+
+    test('keeps following the trigger while it is still in the window', () => {
+        let rect: Partial<DOMRect> = {
+            top: 100,
+            bottom: 130,
+            left: 50,
+            right: 150,
+            width: 100,
+        };
+        const { rerender } = render(<Harness rect={rect} />);
+        act(() => latest.setIsOpen(true));
+
+        rect = { ...rect, top: 300, bottom: 330 };
+        rerender(<Harness rect={rect} />);
+        act(() => {
+            window.dispatchEvent(new Event('scroll'));
+        });
+
+        expect(latest.isOpen).toBe(true);
+        expect(latest.position?.style.top).toBe(336);
+    });
+
+    test('never makes the panel taller than the window', () => {
+        Object.defineProperty(window, 'innerHeight', {
+            value: 120,
+            configurable: true,
+        });
+
+        const { style } = openWith({
+            top: 50,
+            bottom: 70,
+            left: 50,
+            right: 150,
+            width: 100,
+        });
+
+        // The 160px minimum would not fit in a 120px window.
+        expect(style.maxHeight).toBe(120 - 2 * 12);
+    });
 });

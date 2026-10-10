@@ -95,6 +95,13 @@ export function useFloatingDropdown({
             window.innerHeight - rect.bottom - GAP - VIEWPORT_MARGIN;
         const spaceAbove = rect.top - GAP - VIEWPORT_MARGIN;
 
+        // Never taller than what is really left, nor than the viewport.
+        const cap = (space: number) =>
+            Math.min(
+                Math.max(space, MIN_PANEL_HEIGHT),
+                window.innerHeight - 2 * VIEWPORT_MARGIN,
+            );
+
         let side = placement;
         if (side === 'bottom' && spaceBelow < FLIP_THRESHOLD) {
             if (spaceAbove > spaceBelow) side = 'top';
@@ -120,13 +127,13 @@ export function useFloatingDropdown({
                           top: rect.bottom + GAP,
                           left,
                           width: panelWidth,
-                          maxHeight: Math.max(spaceBelow, MIN_PANEL_HEIGHT),
+                          maxHeight: cap(spaceBelow),
                       }
                     : {
                           bottom: window.innerHeight - rect.top + GAP,
                           left,
                           width: panelWidth,
-                          maxHeight: Math.max(spaceAbove, MIN_PANEL_HEIGHT),
+                          maxHeight: cap(spaceAbove),
                       },
         });
     }, [placement, align, width, anchorPoint]);
@@ -153,18 +160,35 @@ export function useFloatingDropdown({
             if (event.key === 'Escape') close(true);
         };
 
+        // Follow the trigger while the page moves, but once it has scrolled
+        // out of the window the panel would slide off-screen with it.
+        const reposition = () => {
+            const trigger = triggerRef.current;
+
+            if (!anchorPoint && trigger) {
+                const { top, bottom } = trigger.getBoundingClientRect();
+
+                if (bottom < 0 || top > window.innerHeight) {
+                    setIsOpen(false);
+                    return;
+                }
+            }
+
+            updatePosition();
+        };
+
         document.addEventListener('mousedown', handleMouseDown);
         document.addEventListener('keydown', handleKeyDown);
-        window.addEventListener('resize', updatePosition);
-        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', reposition);
+        window.addEventListener('scroll', reposition, true);
 
         return () => {
             document.removeEventListener('mousedown', handleMouseDown);
             document.removeEventListener('keydown', handleKeyDown);
-            window.removeEventListener('resize', updatePosition);
-            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('resize', reposition);
+            window.removeEventListener('scroll', reposition, true);
         };
-    }, [isOpen, setIsOpen, close, updatePosition]);
+    }, [isOpen, setIsOpen, close, updatePosition, anchorPoint]);
 
     return {
         isOpen,

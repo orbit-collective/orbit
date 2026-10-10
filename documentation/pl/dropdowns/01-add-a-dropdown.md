@@ -86,9 +86,9 @@ Dostajesz powierzchnię, pozycjonowanie oraz obsługę Escape / kliku poza; zawa
 
 ## Warto wiedzieć
 
-- Kliknięcia w panelu i na triggerze nie propagują się do klikalnych przodków (wiersz, karta), mimo że panel jest w portalu.
+- Kliknięcia i klawisze w panelu oraz kliknięcia na triggerze nie propagują się do przodków w drzewie komponentów (wiersz, karta), mimo że panel jest w portalu. Panel zamyka się, gdy trigger wyjdzie poza okno przy scrollu.
 - ArrowUp/Down i Home/End przechodzą między wierszami, Escape zamyka i zwraca fokus do triggera, a Tab zamyka listę i idzie dalej.
-- Panel renderuje się nad modalami (`z-[9999]`).
+- Panel renderuje się nad modalami (inline `zIndex: 9999`).
 
 ## Przetestuj
 
