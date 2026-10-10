@@ -2,7 +2,7 @@ import '../css/global.css';
 import './bootstrap';
 
 import { ModalContainer } from '@/Components/Organisms/Modal';
-import OnboardingModal from '@/Components/Organisms/OnboardingModal/OnboardingModal';
+import ProductTour from '@/Components/Organisms/ProductTour/ProductTour';
 import ProjectOnboardingModal from '@/Components/Organisms/ProjectOnboardingModal/ProjectOnboardingModal';
 import { AccentProvider } from '@/context/AccentContext';
 import { AlertProvider } from '@/context/AlertContext';
@@ -10,6 +10,7 @@ import { ModalProvider } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { PageProps } from '@/types';
+import { TOUR_STEPS } from '@/types/Tour';
 import type { ResolvedComponent } from '@inertiajs/react';
 import { createInertiaApp, router, usePage } from '@inertiajs/react';
 import * as Sentry from '@sentry/react';
@@ -47,7 +48,12 @@ function OnboardingGate() {
             );
         };
 
-        return <OnboardingModal onClose={handleClose} />;
+        const steps = TOUR_STEPS.filter(
+            (step) =>
+                !step.when || step.when({ hasProjects: props.hasProjects }),
+        );
+
+        return <ProductTour steps={steps} onClose={handleClose} />;
     }
 
     if (!user.has_completed_project_onboarding && !props.hasProjects) {
