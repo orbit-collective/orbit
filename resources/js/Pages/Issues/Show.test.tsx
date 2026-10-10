@@ -422,7 +422,7 @@ describe('Issues/Show Page', () => {
         );
 
         await userEvent.click(screen.getByRole('button', { name: 'open' }));
-        await userEvent.click(screen.getByRole('button', { name: 'closed' }));
+        await userEvent.click(screen.getByRole('option', { name: 'closed' }));
 
         expect(mockPatch).toHaveBeenCalledWith(
             expect.any(String),
@@ -442,7 +442,7 @@ describe('Issues/Show Page', () => {
         );
 
         await userEvent.click(screen.getByRole('button', { name: 'high' }));
-        await userEvent.click(screen.getByRole('button', { name: 'low' }));
+        await userEvent.click(screen.getByRole('option', { name: 'low' }));
 
         expect(mockPatch).toHaveBeenCalledWith(
             expect.any(String),
@@ -521,7 +521,7 @@ describe('Issues/Show Page', () => {
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
         );
-        await userEvent.click(screen.getByRole('button', { name: /design/i }));
+        await userEvent.click(screen.getByRole('option', { name: /design/i }));
 
         expect(mockPatch).toHaveBeenCalledWith(
             expect.any(String),

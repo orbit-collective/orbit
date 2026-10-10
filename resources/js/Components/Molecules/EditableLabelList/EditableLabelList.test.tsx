@@ -108,7 +108,7 @@ describe('EditableLabelList Component', () => {
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
         );
-        await userEvent.click(screen.getByRole('button', { name: /design/i }));
+        await userEvent.click(screen.getByRole('option', { name: /design/i }));
 
         expect(handleSave).toHaveBeenCalledWith(['bug', 'design']);
     });
@@ -125,7 +125,7 @@ describe('EditableLabelList Component', () => {
         await userEvent.click(
             screen.getByRole('button', { name: 'Edit labels' }),
         );
-        await userEvent.click(screen.getByRole('button', { name: /design/i }));
+        await userEvent.click(screen.getByRole('option', { name: /design/i }));
 
         expect(handleSave).toHaveBeenCalledWith(['bug']);
     });
@@ -139,10 +139,10 @@ describe('EditableLabelList Component', () => {
             screen.getByRole('button', { name: 'Edit labels' }),
         );
 
-        const bugRow = screen.getByRole('button', { name: /bug/i });
+        const bugRow = screen.getByRole('option', { name: /bug/i });
         expect(bugRow.querySelector('svg')).toBeInTheDocument();
 
-        const featureRow = screen.getByRole('button', { name: /feature/i });
+        const featureRow = screen.getByRole('option', { name: /feature/i });
         expect(featureRow.querySelector('svg')).not.toBeInTheDocument();
     });
 
