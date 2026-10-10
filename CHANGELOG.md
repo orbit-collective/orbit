@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.4](https://github.com/orbit-collective/orbit/compare/v0.10.3...v0.10.4) (2026-10-10)
+
+
+### Bug Fixes
+
+* **ui:** update default banner image source ([bc8a972](https://github.com/orbit-collective/orbit/commit/bc8a972993a1ad7ec84a5d5883d77da9a489b614))
+
 ## [0.10.3](https://github.com/orbit-collective/orbit/compare/v0.10.2...v0.10.3) (2026-10-10)
 
 
