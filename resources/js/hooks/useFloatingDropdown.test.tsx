@@ -195,4 +195,47 @@ describe('useFloatingDropdown positioning', () => {
         // The 160px minimum would not fit in a 120px window.
         expect(style.maxHeight).toBe(120 - 2 * 12);
     });
+
+    test('keeps the whole panel inside a short window instead of letting it run off the bottom', () => {
+        Object.defineProperty(window, 'innerHeight', {
+            value: 300,
+            configurable: true,
+        });
+
+        // 112px are left below the trigger: less than a usable panel.
+        const { style } = openWith({
+            top: 120,
+            bottom: 170,
+            left: 50,
+            right: 150,
+            width: 100,
+        });
+
+        const top = style.top as number;
+        const maxHeight = style.maxHeight as number;
+
+        expect(maxHeight).toBe(160);
+        expect(top + maxHeight).toBeLessThanOrEqual(300 - 12);
+        expect(top).toBeGreaterThanOrEqual(12);
+    });
+
+    test('keeps the whole panel inside a short window when it opens upwards', () => {
+        Object.defineProperty(window, 'innerHeight', {
+            value: 300,
+            configurable: true,
+        });
+
+        const { side, style } = openWith(
+            { top: 130, bottom: 180, left: 50, right: 150, width: 100 },
+            { placement: 'top' },
+        );
+
+        const bottom = style.bottom as number;
+        const maxHeight = style.maxHeight as number;
+
+        // 112px above, 102px below: it stays above, pulled down into the window.
+        expect(side).toBe('top');
+        expect(maxHeight).toBe(160);
+        expect(300 - bottom - maxHeight).toBeGreaterThanOrEqual(12);
+    });
 });

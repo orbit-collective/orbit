@@ -1,4 +1,3 @@
-import EditableSelect from '@/Components/Atoms/EditableSelect/EditableSelect';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
@@ -10,6 +9,7 @@ import CommentForm from '@/Components/Molecules/CommentForm/CommentForm';
 import CommentList from '@/Components/Molecules/CommentList/CommentList';
 import EditableLabelList from '@/Components/Molecules/EditableLabelList/EditableLabelList';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
+import EditableSelect from '@/Components/Molecules/EditableSelect/EditableSelect';
 import IssueCustomField from '@/Components/Molecules/IssueCustomField/IssueCustomField';
 import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
