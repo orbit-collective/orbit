@@ -40,7 +40,7 @@ const DropdownOption = forwardRef<HTMLButtonElement, DropdownOptionProps>(
                 ref={ref}
                 type="button"
                 className={cn(
-                    'group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-all duration-150 focus:outline-none focus-visible:bg-[var(--bg-light-color)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent',
+                    'group flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs transition-colors duration-150 focus:outline-none focus-visible:bg-[var(--bg-light-color)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent',
                     tone === 'danger'
                         ? 'text-red-400 hover:bg-red-500/10 hover:text-red-300 focus-visible:bg-red-500/10'
                         : isSelected
