@@ -254,6 +254,12 @@ npm run lint
 npm run format
 ```
 
+Enable the `pre-push` hook once per clone so unformatted code (oxfmt) is blocked before it reaches CI:
+
+```bash
+npm run hooks:install
+```
+
 All CI checks must pass.
 
 ---

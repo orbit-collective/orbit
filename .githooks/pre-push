@@ -1,0 +1,17 @@
+#!/bin/sh
+# Blocks a push when the frontend is not formatted with oxfmt.
+# Enable once per clone with: npm run hooks:install
+# Bypass in an emergency with: git push --no-verify
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+if [ ! -x node_modules/.bin/oxfmt ]; then
+    echo "pre-push: oxfmt is not installed (run npm install), skipping format check." >&2
+    exit 0
+fi
+
+if ! npx --no-install oxfmt --check resources/js; then
+    echo "" >&2
+    echo "pre-push: formatting issues found. Run 'npm run format', commit the result and push again." >&2
+    exit 1
+fi
