@@ -9,6 +9,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
     value,
     isActive,
     onClick,
+    hasMenu,
 }) => {
     return (
         <button
@@ -40,7 +41,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
                     {value}
                 </span>
             )}
-            {onClick && (
+            {(hasMenu ?? !!onClick) && (
                 <Icon
                     name="ChevronDown"
                     size={12}
