@@ -103,6 +103,7 @@ function PageHeader({
                     {primaryAction && (
                         <button
                             onClick={primaryAction.onClick}
+                            data-tour="primary-action"
                             title={primaryAction.label}
                             className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-[var(--accent-color)] px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--accent-light-color)] sm:px-3"
                         >
@@ -136,6 +137,7 @@ function PageHeader({
 
                     <div className="relative shrink-0" ref={notificationsRef}>
                         <button
+                            data-tour="notifications"
                             className={
                                 'relative flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]'
                             }
@@ -176,7 +178,10 @@ function PageHeader({
             </div>
 
             {tabs && (
-                <nav className="scrollbar-hide flex gap-6 overflow-x-auto">
+                <nav
+                    data-tour="page-tabs"
+                    className="scrollbar-hide flex gap-6 overflow-x-auto"
+                >
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}

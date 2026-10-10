@@ -212,6 +212,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             label="Dashboard"
                             badge="Alt B"
                             link={'/'}
+                            tourId="nav-dashboard"
                             isActive={url === '/'}
                             collapsed={isCollapsed}
                         />
@@ -220,13 +221,17 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             label="Projects"
                             badge={'Alt P'}
                             link={'/projects'}
+                            tourId="nav-projects"
                             isActive={url === '/projects'}
                             collapsed={isCollapsed}
                         />
                     </nav>
 
                     {isSettingsPage ? (
-                        <div className="mt-5 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto">
+                        <div
+                            data-tour="settings-nav"
+                            className="mt-5 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto"
+                        >
                             {SETTINGS_NAV_SECTIONS.map(({ title, section }) => (
                                 <div key={section}>
                                     {!isCollapsed && (
@@ -277,6 +282,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                         setIsNewProjectModalOpen(true)
                                     }
                                     aria-label="New project"
+                                    data-tour="new-project"
                                     className={
                                         'group mb-1.5 flex shrink-0 items-center justify-between rounded-md px-2.5 py-1'
                                     }
@@ -306,39 +312,47 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     'flex min-h-0 flex-col overflow-y-auto'
                                 }
                             >
-                                {projects.map((projectElement: Project) => {
-                                    const projectLink = `/projects/${projectElement.id}`;
+                                {projects.map(
+                                    (projectElement: Project, index) => {
+                                        const projectLink = `/projects/${projectElement.id}`;
 
-                                    const isActive =
-                                        url === projectLink ||
-                                        url.startsWith(`${projectLink}/`) ||
-                                        url.startsWith(`${projectLink}?`);
+                                        const isActive =
+                                            url === projectLink ||
+                                            url.startsWith(`${projectLink}/`) ||
+                                            url.startsWith(`${projectLink}?`);
 
-                                    return (
-                                        <NavItem
-                                            key={projectElement.id}
-                                            title={projectElement.name}
-                                            icon="FolderGit2"
-                                            iconClassName={`${
-                                                getColorTheme(
-                                                    projectElement.color,
-                                                ).accent
-                                            } h-5 w-5 rounded-md p-1`}
-                                            label={
-                                                projectElement.name.length > 16
-                                                    ? projectElement.name.substring(
-                                                          0,
-                                                          16,
-                                                      ) + '...'
-                                                    : projectElement.name
-                                            }
-                                            link={projectLink}
-                                            isActive={isActive}
-                                            preserveScroll
-                                            collapsed={isCollapsed}
-                                        />
-                                    );
-                                })}
+                                        return (
+                                            <NavItem
+                                                key={projectElement.id}
+                                                title={projectElement.name}
+                                                icon="FolderGit2"
+                                                iconClassName={`${
+                                                    getColorTheme(
+                                                        projectElement.color,
+                                                    ).accent
+                                                } h-5 w-5 rounded-md p-1`}
+                                                label={
+                                                    projectElement.name.length >
+                                                    16
+                                                        ? projectElement.name.substring(
+                                                              0,
+                                                              16,
+                                                          ) + '...'
+                                                        : projectElement.name
+                                                }
+                                                link={projectLink}
+                                                tourId={
+                                                    index === 0
+                                                        ? 'first-project'
+                                                        : undefined
+                                                }
+                                                isActive={isActive}
+                                                preserveScroll
+                                                collapsed={isCollapsed}
+                                            />
+                                        );
+                                    },
+                                )}
                             </nav>
                         </div>
                     )}
@@ -353,6 +367,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                     <button
                         type="button"
                         ref={userMenuTriggerRef}
+                        data-tour="user-menu"
                         onClick={() => setIsUserMenuOpen((prev) => !prev)}
                         aria-haspopup="menu"
                         aria-expanded={isUserMenuOpen}

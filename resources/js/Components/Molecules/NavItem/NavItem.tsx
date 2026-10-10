@@ -44,6 +44,7 @@ const NavItem: React.FC<NavItemProps> = ({
     preserveScroll = false,
     collapsed = false,
     disabled = false,
+    tourId,
 }) => {
     const className = classVariants({ isActive, collapsed, disabled });
     const title = titleOverride ?? (collapsed ? label : undefined);
@@ -72,7 +73,12 @@ const NavItem: React.FC<NavItemProps> = ({
 
     if (disabled) {
         return (
-            <div className={className} title={title} aria-disabled="true">
+            <div
+                className={className}
+                title={title}
+                aria-disabled="true"
+                data-tour={tourId}
+            >
                 {content}
             </div>
         );
@@ -85,6 +91,7 @@ const NavItem: React.FC<NavItemProps> = ({
             href={link}
             preserveScroll={preserveScroll}
             title={title}
+            data-tour={tourId}
             aria-current={isActive ? 'page' : undefined}
         >
             {content}

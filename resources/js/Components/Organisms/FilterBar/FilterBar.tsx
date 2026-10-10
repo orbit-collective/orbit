@@ -44,7 +44,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
     };
 
     return (
-        <div className="sticky top-0 z-40 flex w-full flex-col gap-3 border-b border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div
+            data-tour="filter-bar"
+            className="sticky top-0 z-40 flex w-full flex-col gap-3 border-b border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+        >
             <div className="flex flex-1 items-center">
                 <div className="relative flex w-full max-w-md items-center rounded-lg border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-3 py-1.5 transition-all duration-150 focus-within:border-[var(--border-color-strong)] focus-within:bg-[var(--bg-color-hover)] focus-within:ring-1 focus-within:ring-[var(--border-color-strong)]">
                     <Icon name={'Search'} />

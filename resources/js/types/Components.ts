@@ -370,6 +370,8 @@ export interface NavItemProps {
     preserveScroll?: boolean;
     collapsed?: boolean;
     disabled?: boolean;
+    /** Anchor id the product tour can point at (rendered as `data-tour`). */
+    tourId?: string;
 }
 export interface PaginationProps {
     links: Array<{ url: string | null; label: string; active: boolean }>;
