@@ -79,7 +79,23 @@ describe('TourPopover', () => {
         setup({ placement: 'center' });
 
         expect(
-            screen.getByRole('dialog').querySelector('span[aria-hidden]'),
+            screen.getByRole('dialog').querySelector('span.rotate-45'),
         ).toBeNull();
+    });
+
+    test('shows the action hint for interactive steps', () => {
+        setup({
+            hint: { icon: 'Pencil', text: 'Type a project name' },
+            interactive: true,
+        });
+
+        expect(screen.getByText('Type a project name')).toBeInTheDocument();
+    });
+
+    test('disables the arrow when asked and leaves focus alone when interactive', () => {
+        setup({ nextDisabled: true, interactive: true });
+
+        expect(screen.getByLabelText('Next step')).toBeDisabled();
+        expect(screen.getByLabelText('Next step')).not.toHaveFocus();
     });
 });

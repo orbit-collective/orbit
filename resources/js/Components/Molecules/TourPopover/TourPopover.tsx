@@ -22,6 +22,9 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
             placement,
             arrowOffset,
             style,
+            hint,
+            nextDisabled = false,
+            interactive = false,
             onPrev,
             onNext,
             onClose,
@@ -33,12 +36,12 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
         const isLastStep = currentStep === totalSteps - 1;
 
         useEffect(() => {
-            nextRef.current?.focus();
-        }, [stepId]);
+            if (!interactive) nextRef.current?.focus();
+        }, [stepId, interactive]);
 
         // The page behind is inert while touring; keep Tab inside the popover.
         const trapFocus = (event: KeyboardEvent<HTMLDivElement>) => {
-            if (event.key !== 'Tab') return;
+            if (event.key !== 'Tab' || interactive) return;
 
             const focusable = Array.from(
                 event.currentTarget.querySelectorAll<HTMLButtonElement>(
@@ -66,7 +69,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                 aria-label={title}
                 aria-live="polite"
                 style={style}
-                className="fixed z-[71] w-[340px] max-w-[calc(100vw-24px)] rounded-xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] p-4 text-[var(--text-color)] shadow-2xl backdrop-blur-2xl transition-[top,left] duration-300 ease-out motion-reduce:transition-none"
+                className="fixed z-[1101] w-[340px] max-w-[calc(100vw-24px)] rounded-xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] p-4 text-[var(--text-color)] shadow-2xl backdrop-blur-2xl transition-[top,left] duration-300 ease-out motion-reduce:transition-none"
             >
                 {placement !== 'center' && (
                     <span
@@ -101,22 +104,32 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                     </p>
                 </div>
 
+                {hint && (
+                    <p className="mt-3 flex items-center gap-2 rounded-md bg-[var(--accent-color-opacity)] px-2.5 py-1.5 text-xs font-medium text-[var(--accent-color)]">
+                        <Icon name={hint.icon} size={14} />
+                        {hint.text}
+                    </p>
+                )}
+
                 <div className="mt-4 flex items-center justify-between">
                     <div
-                        className="flex items-center gap-1"
+                        className="flex items-center gap-2"
                         aria-label={`Step ${currentStep + 1} of ${totalSteps}`}
                     >
-                        {Array.from({ length: totalSteps }, (_, index) => (
-                            <span
-                                key={index}
-                                className={cn(
-                                    'h-1.5 rounded-full transition-all duration-300 motion-reduce:transition-none',
-                                    index === currentStep
-                                        ? 'w-4 bg-[var(--accent-color)]'
-                                        : 'w-1.5 bg-[var(--bg-light-color)]',
-                                )}
+                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                            <div
+                                className="h-full rounded-full bg-[var(--accent-color)] transition-all duration-300 motion-reduce:transition-none"
+                                style={{
+                                    width: `${((currentStep + 1) / totalSteps) * 100}%`,
+                                }}
                             />
-                        ))}
+                        </div>
+                        <span
+                            aria-hidden="true"
+                            className="text-xs tabular-nums text-[var(--text-gray-color)]"
+                        >
+                            {currentStep + 1}/{totalSteps}
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -133,10 +146,16 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                             ref={nextRef}
                             type="button"
                             onClick={onNext}
+                            disabled={nextDisabled}
+                            title={
+                                nextDisabled
+                                    ? 'Fill in the field to continue'
+                                    : undefined
+                            }
                             aria-label={
                                 isLastStep ? 'Finish tour' : 'Next step'
                             }
-                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--accent-color)] text-white transition-colors hover:bg-[var(--accent-light-color)]"
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--accent-color)] text-white transition-colors hover:bg-[var(--accent-light-color)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--accent-color)]"
                         >
                             <Icon
                                 name={isLastStep ? 'Check' : 'ChevronRight'}
