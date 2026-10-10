@@ -2,24 +2,19 @@ import '../css/global.css';
 import './bootstrap';
 
 import { ModalContainer } from '@/Components/Organisms/Modal';
-import ProductTour from '@/Components/Organisms/ProductTour/ProductTour';
-import ProjectOnboardingModal from '@/Components/Organisms/ProjectOnboardingModal/ProjectOnboardingModal';
+import OnboardingGate from '@/Components/Organisms/OnboardingGate/OnboardingGate';
 import { AccentProvider } from '@/context/AccentContext';
 import { AlertProvider } from '@/context/AlertContext';
 import { ModalProvider } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import { PageProps } from '@/types';
-import { TOUR_STEPS } from '@/types/Tour';
 import type { ResolvedComponent } from '@inertiajs/react';
-import { createInertiaApp, router, usePage } from '@inertiajs/react';
+import { createInertiaApp } from '@inertiajs/react';
 import * as Sentry from '@sentry/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
-
-const AUTH_PAGES = ['Auth/Login', 'Auth/Register'];
 
 Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -30,48 +25,6 @@ Sentry.init({
         // httpBodies: []
     },
 });
-
-function OnboardingGate() {
-    const { component, props } = usePage<PageProps>();
-    const user = props.auth.user;
-
-    if (!user || AUTH_PAGES.includes(component)) {
-        return null;
-    }
-
-    if (!user.has_completed_onboarding) {
-        const handleClose = () => {
-            router.post(
-                route('onboarding.complete'),
-                {},
-                { preserveScroll: true },
-            );
-        };
-
-        const steps = TOUR_STEPS.filter(
-            (step) =>
-                !step.when || step.when({ hasProjects: props.hasProjects }),
-        );
-
-        return <ProductTour steps={steps} onClose={handleClose} />;
-    }
-
-    if (!user.has_completed_project_onboarding && !props.hasProjects) {
-        const handleSkip = () => {
-            router.post(
-                route('onboarding.project.complete'),
-                {},
-                { preserveScroll: true },
-            );
-        };
-
-        return (
-            <ProjectOnboardingModal userName={user.name} onSkip={handleSkip} />
-        );
-    }
-
-    return null;
-}
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

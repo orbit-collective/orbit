@@ -1,7 +1,8 @@
 import TourPopover from '@/Components/Molecules/TourPopover/TourPopover';
 import useTourTarget from '@/hooks/useTourTarget';
+import { PageProps } from '@/types';
 import { TourStep } from '@/types/Tour';
-import { getPopoverPosition, Size } from '@/utils/tour';
+import { closeTopModal, getPopoverPosition, Size } from '@/utils/tour';
 import { setTourSidebarOpen } from '@/utils/tourSidebar';
 import { router, usePage } from '@inertiajs/react';
 import {
@@ -23,8 +24,29 @@ const DEFAULT_POPOVER_SIZE: Size = { width: 340, height: 180 };
 
 const pathOf = (url: string) => url.split('?')[0].replace(/(.)\/+$/, '$1');
 
+const queryTarget = (id: string | undefined) =>
+    id ? document.querySelector<HTMLElement>(`[data-tour="${id}"]`) : null;
+
+const getField = (element: HTMLElement | null) =>
+    element?.matches('input, textarea')
+        ? (element as HTMLInputElement | HTMLTextAreaElement)
+        : (element?.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+              'input, textarea',
+          ) ?? null);
+
+const isEditable = (target: EventTarget | null) =>
+    target instanceof HTMLElement &&
+    (target.isContentEditable || target.matches('input, textarea, select'));
+
+const HINT_ICONS = {
+    click: 'MousePointerClick',
+    input: 'Pencil',
+    free: 'MousePointerClick',
+} as const;
+
 export default function ProductTour({ steps, onClose }: ProductTourProps) {
-    const { url } = usePage();
+    const { url, props } = usePage<PageProps>();
+    const hasProjects = props?.hasProjects ?? false;
     const urlRef = useRef(url);
     urlRef.current = url;
 
@@ -39,6 +61,9 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
 
     const step = steps[index];
     const isLast = index === steps.length - 1;
+    const interaction = step?.interaction;
+    const [filled, setFilled] = useState(false);
+    const focusedStep = useRef<string | null>(null);
 
     const go = useCallback(
         (delta: 1 | -1) => {
@@ -52,13 +77,36 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
         [steps.length],
     );
 
-    const handleNext = useCallback(() => {
+    const advance = useCallback(() => {
         if (isLast) {
             onClose();
         } else {
             go(1);
         }
     }, [go, isLast, onClose]);
+
+    const handleNext = useCallback(() => {
+        // Interactive click steps: the arrow performs the click for the user.
+        if (interaction?.type === 'click') {
+            const element = queryTarget(step.target);
+
+            if (element) {
+                element.click();
+                return;
+            }
+        }
+
+        advance();
+    }, [advance, interaction?.type, step?.target]);
+
+    const handlePrev = useCallback(() => {
+        // Stepping back out of a modal step: close the modal it lives in.
+        if (step?.backTo && steps[index - 1]?.id === step.backTo) {
+            closeTopModal();
+        }
+
+        go(-1);
+    }, [go, index, step?.backTo, steps]);
 
     // Move to the page the step lives on; skip it if that page can't be resolved.
     useEffect(() => {
@@ -83,6 +131,84 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
 
     const target = useTourTarget(step?.target, true);
 
+    // Interactive click step: move on right after the user clicks the target.
+    useEffect(() => {
+        if (
+            interaction?.type !== 'click' ||
+            interaction.advance === 'external' ||
+            !step.target
+        ) {
+            return;
+        }
+
+        const selector = `[data-tour="${step.target}"]`;
+        let timeout = 0;
+        const onClick = (event: MouseEvent) => {
+            if ((event.target as Element | null)?.closest?.(selector)) {
+                // Let the page's own click handler (e.g. opening a modal) run first.
+                timeout = window.setTimeout(advance, 0);
+            }
+        };
+
+        document.addEventListener('click', onClick, true);
+
+        return () => {
+            window.clearTimeout(timeout);
+            document.removeEventListener('click', onClick, true);
+        };
+    }, [advance, interaction, step?.target]);
+
+    // Steps that finish on their own (e.g. once the project has been created).
+    useEffect(() => {
+        if (step?.completeWhen?.({ hasProjects })) advance();
+    }, [hasProjects, step?.id]);
+
+    // The target vanished (modal closed): don't strand the user on this step.
+    useEffect(() => {
+        if (target.status !== 'missing' || !step?.backTo) return;
+
+        const backIndex = steps.findIndex(({ id }) => id === step.backTo);
+        if (backIndex >= 0) {
+            direction.current = -1;
+            setIndex(backIndex);
+        }
+    }, [target.status, step?.backTo, steps]);
+
+    // Required input steps unlock the arrow once the field has a value.
+    useEffect(() => {
+        if (interaction?.type !== 'input') {
+            setFilled(false);
+            return;
+        }
+
+        const read = () =>
+            setFilled(
+                (getField(queryTarget(step.target))?.value.trim() ?? '') !== '',
+            );
+
+        read();
+        document.addEventListener('input', read, true);
+
+        return () => document.removeEventListener('input', read, true);
+    }, [interaction?.type, step?.id, step?.target, target.status]);
+
+    // Put the cursor in the field so the user can type straight away.
+    useEffect(() => {
+        if (
+            interaction?.type !== 'input' ||
+            target.status !== 'found' ||
+            focusedStep.current === step.id
+        ) {
+            return;
+        }
+
+        focusedStep.current = step.id;
+        getField(queryTarget(step.target))?.focus({ preventScroll: true });
+    }, [interaction?.type, step?.id, step?.target, target.status]);
+
+    const nextDisabled =
+        interaction?.type === 'input' && !!interaction.required && !filled;
+
     const needsSidebar = !!step?.sidebar;
     useEffect(() => {
         setTourSidebarOpen(needsSidebar);
@@ -96,9 +222,17 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                 height: window.innerHeight,
             });
         const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') onClose();
-            else if (event.key === 'ArrowRight') handleNext();
-            else if (event.key === 'ArrowLeft') go(-1);
+            // Interactive steps live next to a modal that owns Escape, and
+            // arrows must keep moving the caret while the user types.
+            if (event.key === 'Escape') {
+                if (!interaction) onClose();
+            } else if (isEditable(event.target)) {
+                return;
+            } else if (event.key === 'ArrowRight') {
+                if (!nextDisabled) handleNext();
+            } else if (event.key === 'ArrowLeft') {
+                handlePrev();
+            }
         };
 
         window.addEventListener('resize', onResize);
@@ -108,7 +242,7 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
             window.removeEventListener('resize', onResize);
             window.removeEventListener('keydown', onKeyDown);
         };
-    }, [go, handleNext, onClose]);
+    }, [handleNext, handlePrev, interaction, nextDisabled, onClose]);
 
     useLayoutEffect(() => {
         const element = popoverRef.current;
@@ -155,22 +289,48 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
           }
         : undefined;
 
+    // The page underneath is blocked while touring — except the spotlighted
+    // element on interactive steps, which is left as a hole in the blocker.
+    const blockers: CSSProperties[] =
+        interaction && spotlightStyle
+            ? (() => {
+                  const top = spotlightStyle.top as number;
+                  const left = spotlightStyle.left as number;
+                  const width = spotlightStyle.width as number;
+                  const height = spotlightStyle.height as number;
+
+                  return [
+                      { top: 0, left: 0, right: 0, height: Math.max(top, 0) },
+                      { top: top + height, left: 0, right: 0, bottom: 0 },
+                      { top, left: 0, width: Math.max(left, 0), height },
+                      { top, left: left + width, right: 0, height },
+                  ];
+              })()
+            : [{ inset: 0 }];
+
     return (
         <div data-testid="product-tour">
-            {/* Blocks interaction with the page underneath while touring. */}
-            <div className="fixed inset-0 z-[70]" aria-hidden="true" />
+            {blockers.map((style, blockerIndex) => (
+                <div
+                    key={blockerIndex}
+                    data-testid="tour-blocker"
+                    className="fixed z-[1100]"
+                    style={style}
+                    aria-hidden="true"
+                />
+            ))}
 
             {spotlightStyle ? (
                 <div
                     data-testid="tour-spotlight"
                     aria-hidden="true"
                     style={spotlightStyle}
-                    className="pointer-events-none fixed z-[70] rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] ring-2 ring-[var(--accent-color)] transition-all duration-300 ease-out motion-reduce:transition-none"
+                    className="pointer-events-none fixed z-[1100] rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] ring-2 ring-[var(--accent-color)] transition-all duration-300 ease-out motion-reduce:transition-none"
                 />
             ) : (
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none fixed inset-0 z-[70] bg-black/60 backdrop-blur-[2px]"
+                    className="pointer-events-none fixed inset-0 z-[1100] bg-black/60 backdrop-blur-[2px]"
                 />
             )}
 
@@ -189,7 +349,17 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                         arrowLimit - 20,
                     )}
                     style={{ top: position.top, left: position.left }}
-                    onPrev={() => go(-1)}
+                    hint={
+                        interaction
+                            ? {
+                                  icon: HINT_ICONS[interaction.type],
+                                  text: interaction.hint,
+                              }
+                            : undefined
+                    }
+                    nextDisabled={nextDisabled}
+                    interactive={!!interaction}
+                    onPrev={handlePrev}
                     onNext={handleNext}
                     onClose={onClose}
                 />
