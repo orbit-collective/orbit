@@ -1,10 +1,10 @@
+import axios from 'axios';
+import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import IssuePreviewCard from '@/Components/Molecules/IssuePreviewCard/IssuePreviewCard';
 import { IssueMentionLinkProps, IssueSuggestion } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { toPreviewIssue } from '@/utils/mentions';
-import axios from 'axios';
-import { useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 // Hovering the same mention repeatedly shouldn't refetch it every time, but
 // the entry expires so a renamed/reassigned issue doesn't stay stale.

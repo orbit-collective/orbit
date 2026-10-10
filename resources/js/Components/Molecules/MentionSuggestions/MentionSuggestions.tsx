@@ -1,3 +1,5 @@
+import { useLayoutEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import DropdownOption from '@/Components/Atoms/DropdownOption/DropdownOption';
 import DropdownPanel from '@/Components/Atoms/DropdownPanel/DropdownPanel';
@@ -5,8 +7,6 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import IssuePreviewCard from '@/Components/Molecules/IssuePreviewCard/IssuePreviewCard';
 import { MentionSuggestionsProps } from '@/types/Components';
 import { toPreviewIssue } from '@/utils/mentions';
-import { useLayoutEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 /**
  * Floating "@mention" suggestion list, positioned at an arbitrary viewport

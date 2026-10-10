@@ -1,10 +1,10 @@
+import { SyntheticEvent } from 'react';
 import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import { ProjectDetails } from '@/types/ProjectMembers';
 import { AVAILABLE_COLORS } from '@/types/Projects';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
-import { SyntheticEvent } from 'react';
 
 interface ProjectDetailsFormProps {
     draft: ProjectDetails;

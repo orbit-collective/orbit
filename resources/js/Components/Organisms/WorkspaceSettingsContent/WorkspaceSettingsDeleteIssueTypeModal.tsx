@@ -1,8 +1,8 @@
+import { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { IssueType } from '@/types/IssueTypes';
-import { icons } from 'lucide-react';
 
 interface WorkspaceSettingsDeleteIssueTypeModalProps {
     isOpen: boolean;

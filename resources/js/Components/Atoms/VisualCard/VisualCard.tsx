@@ -1,5 +1,5 @@
-import { VisualCardProps } from '@/types/Components';
 import { FC } from 'react';
+import { VisualCardProps } from '@/types/Components';
 
 export const VisualCard: FC<VisualCardProps> = ({
     children,

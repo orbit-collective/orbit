@@ -1,10 +1,10 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { Issue } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
-import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import IssueChildrenPanel from './IssueChildrenPanel';
 
 vi.stubGlobal(

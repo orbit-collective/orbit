@@ -1,3 +1,4 @@
+import React from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { ActivityLogItemProps } from '@/types/Components';
@@ -5,7 +6,6 @@ import { getActivityLogVisual } from '@/utils/activityLog';
 import { renderActivityLogBody } from '@/utils/activityLogRichText';
 import { cn } from '@/utils/cn';
 import { formatTimeAgo } from '@/utils/time';
-import React from 'react';
 
 const COLOR_TEXT_CLASSES = {
     accent: 'text-[var(--accent-color)]',

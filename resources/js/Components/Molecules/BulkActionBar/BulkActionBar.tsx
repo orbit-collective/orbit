@@ -1,7 +1,7 @@
+import { FC } from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Button from '@/Components/Atoms/Button/Button';
 import { BulkActionBarProps } from '@/types/Components';
-import { FC } from 'react';
 
 export const BulkActionBar: FC<BulkActionBarProps> = ({
     selectedCount,

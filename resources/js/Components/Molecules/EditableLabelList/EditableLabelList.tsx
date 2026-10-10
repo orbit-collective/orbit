@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
@@ -5,7 +6,6 @@ import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { EditableLabelListProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { IssueLabel } from '@/types/Issues';
-import React, { useMemo } from 'react';
 
 const EditableLabelList: React.FC<EditableLabelListProps> = ({
     labels,

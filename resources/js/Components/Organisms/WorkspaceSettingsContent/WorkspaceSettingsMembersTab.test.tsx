@@ -1,3 +1,6 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import {
     MemberProjectSummary,
@@ -5,9 +8,6 @@ import {
     ProjectMember,
 } from '@/types/ProjectMembers';
 import { WorkspaceRole } from '@/types/Roles';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsMembersTab from './WorkspaceSettingsMembersTab';
 
 vi.stubGlobal(

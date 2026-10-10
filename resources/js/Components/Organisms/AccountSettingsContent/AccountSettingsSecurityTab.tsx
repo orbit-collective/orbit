@@ -1,14 +1,14 @@
+import { router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import AccountSettingsDeleteAccountModal from '@/Components/Organisms/AccountSettingsContent/AccountSettingsDeleteAccountModal';
 import AccountSettingsPasswordForm from '@/Components/Organisms/AccountSettingsContent/AccountSettingsPasswordForm';
-import AccountSettingsSessionTimeoutCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsSessionTimeoutCard';
 import AccountSettingsSessionsList from '@/Components/Organisms/AccountSettingsContent/AccountSettingsSessionsList';
+import AccountSettingsSessionTimeoutCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsSessionTimeoutCard';
 import { useAlert } from '@/context/AlertContext';
 import { PageProps } from '@/types';
 import { Session } from '@/types/Users';
-import { router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 
 const sessionTimeoutOptions = [
     {

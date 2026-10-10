@@ -1,8 +1,8 @@
+import { router } from '@inertiajs/react';
 import { BoardCard } from '@/Components/Organisms/BoardCard/BoardCard';
 import { ListRow } from '@/Components/Organisms/ListRow/ListRow';
 import { IssueElementProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
-import { router } from '@inertiajs/react';
 
 export const IssueElement = ({
     issue,

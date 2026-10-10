@@ -13,7 +13,10 @@ export type DropdownPlacement = 'top' | 'bottom';
 export type DropdownAlign = 'start' | 'end';
 
 export type DropdownOptionRole =
-    'option' | 'menuitem' | 'menuitemcheckbox' | 'menuitemradio';
+    | 'option'
+    | 'menuitem'
+    | 'menuitemcheckbox'
+    | 'menuitemradio';
 
 export interface DropdownOptionItem {
     value: string;

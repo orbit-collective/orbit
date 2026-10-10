@@ -1,6 +1,6 @@
+import { icons } from 'lucide-react';
 import { PermissionDefinition } from '@/types/Roles';
 import { getPermissionSection } from '@/utils/permissions';
-import { icons } from 'lucide-react';
 
 const GROUP_META: Record<string, { label: string; icon: keyof typeof icons }> =
     {

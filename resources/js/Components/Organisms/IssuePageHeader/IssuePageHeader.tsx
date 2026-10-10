@@ -1,9 +1,9 @@
-import Icon from '@/Components/Atoms/Icon/Icon';
-import IconButton from '@/Components/Atoms/IconButton/IconButton';
-import { IssuePageHeaderProps } from '@/types/Components';
 import { Link } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import React from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import IconButton from '@/Components/Atoms/IconButton/IconButton';
+import { IssuePageHeaderProps } from '@/types/Components';
 
 const Separator = () => (
     <span className="shrink-0 text-[var(--text-gray-color)]">/</span>

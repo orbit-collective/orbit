@@ -1,6 +1,6 @@
+import { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
-import { icons } from 'lucide-react';
 
 interface AccountSettingsNotificationTypeRowProps {
     icon: keyof typeof icons;

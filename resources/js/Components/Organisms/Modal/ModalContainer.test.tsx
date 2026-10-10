@@ -1,7 +1,7 @@
-import { ModalProvider, useModal } from '@/context/ModalContext';
-import { ModalContextType } from '@/types/Modal';
 import { act, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import { ModalProvider, useModal } from '@/context/ModalContext';
+import { ModalContextType } from '@/types/Modal';
 import { ModalContainer } from './ModalContainer';
 
 const renderModalContainer = () => {

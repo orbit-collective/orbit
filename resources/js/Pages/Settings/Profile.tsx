@@ -1,8 +1,8 @@
+import { usePage } from '@inertiajs/react';
 import AccountSettingsProfileTab from '@/Components/Organisms/AccountSettingsContent/AccountSettingsProfileTab';
 import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
 import { PageProps } from '@/types';
 import { Project } from '@/types/Projects';
-import { usePage } from '@inertiajs/react';
 
 interface SettingsProfileProps {
     projects?: Project[];

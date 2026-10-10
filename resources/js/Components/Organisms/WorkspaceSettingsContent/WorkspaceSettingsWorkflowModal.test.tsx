@@ -1,7 +1,7 @@
-import { AlertProvider } from '@/context/AlertContext';
-import { IssueType } from '@/types/IssueTypes';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import { AlertProvider } from '@/context/AlertContext';
+import { IssueType } from '@/types/IssueTypes';
 import WorkspaceSettingsWorkflowModal from './WorkspaceSettingsWorkflowModal';
 
 vi.stubGlobal(

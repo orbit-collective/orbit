@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -10,7 +11,6 @@ import { IssueType } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
 import { ISSUE_TYPE_ICON_OPTIONS } from '@/utils/issueTypeIcons';
 import { LABEL_COLOR_PALETTE } from '@/utils/labelColors';
-import { useState } from 'react';
 
 const REQUIRED_FIELD_OPTIONS: { value: string; label: string }[] = [
     { value: 'description', label: 'Description' },

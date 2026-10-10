@@ -1,6 +1,6 @@
-import { INTEGRATIONS } from '@/types/Integrations';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { INTEGRATIONS } from '@/types/Integrations';
 import WorkspaceSettingsIntegrationPreview from './WorkspaceSettingsIntegrationPreview';
 
 const discord = INTEGRATIONS.find(

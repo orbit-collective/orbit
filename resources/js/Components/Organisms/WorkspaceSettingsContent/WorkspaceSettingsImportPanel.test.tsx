@@ -1,9 +1,9 @@
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { INTEGRATIONS } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { ImportIntegrationSettings } from '@/types/ProjectIntegrations';
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import WorkspaceSettingsImportPanel from './WorkspaceSettingsImportPanel';
 
 const jira = INTEGRATIONS.find((d) => d.id === 'jira')!;

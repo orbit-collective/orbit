@@ -1,7 +1,7 @@
-import { InputProps } from '@/types/Components';
-import { cn } from '@/utils/cn';
 import { cva } from 'class-variance-authority';
 import { forwardRef } from 'react';
+import { InputProps } from '@/types/Components';
+import { cn } from '@/utils/cn';
 
 export const inputVariants = cva(
     'w-full rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] px-3 py-1.5 text-sm text-[var(--text-color)] transition-colors duration-150 file:hidden outline-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:shadow-none focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:bg-[var(--pending-color)]',

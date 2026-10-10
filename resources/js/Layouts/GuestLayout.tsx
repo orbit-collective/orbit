@@ -1,7 +1,7 @@
-import AuthShowcase from '@/Components/Organisms/AuthShowcase/AuthShowcase';
-import { GuestLayoutProps } from '@/types/Components';
 import image from '@assets/logo.png';
 import { Link } from '@inertiajs/react';
+import AuthShowcase from '@/Components/Organisms/AuthShowcase/AuthShowcase';
+import { GuestLayoutProps } from '@/types/Components';
 
 const GuestLayout = ({
     children,

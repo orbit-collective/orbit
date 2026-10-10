@@ -1,14 +1,3 @@
-import DropdownOption from '@/Components/Atoms/DropdownOption/DropdownOption';
-import DropdownPanel from '@/Components/Atoms/DropdownPanel/DropdownPanel';
-import Icon from '@/Components/Atoms/Icon/Icon';
-import { useFloatingDropdown } from '@/hooks/useFloatingDropdown';
-import {
-    DropdownOptionItem,
-    DropdownOptionRole,
-    DropdownProps,
-    DropdownVariant,
-} from '@/types/Dropdown';
-import { cn } from '@/utils/cn';
 import {
     cloneElement,
     isValidElement,
@@ -21,6 +10,17 @@ import {
     useState,
 } from 'react';
 import { createPortal } from 'react-dom';
+import DropdownOption from '@/Components/Atoms/DropdownOption/DropdownOption';
+import DropdownPanel from '@/Components/Atoms/DropdownPanel/DropdownPanel';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import { useFloatingDropdown } from '@/hooks/useFloatingDropdown';
+import {
+    DropdownOptionItem,
+    DropdownOptionRole,
+    DropdownProps,
+    DropdownVariant,
+} from '@/types/Dropdown';
+import { cn } from '@/utils/cn';
 
 const SEARCH_THRESHOLD = 6;
 

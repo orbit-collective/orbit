@@ -1,7 +1,7 @@
-import { INTEGRATIONS } from '@/types/Integrations';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { INTEGRATIONS } from '@/types/Integrations';
 import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
 
 const discord = INTEGRATIONS.find(

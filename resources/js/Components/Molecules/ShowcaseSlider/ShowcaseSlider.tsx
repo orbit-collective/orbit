@@ -1,6 +1,6 @@
-import { ShowcaseDots } from '@/Components/Atoms/ShowcaseDots/ShowcaseDots';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { ShowcaseDots } from '@/Components/Atoms/ShowcaseDots/ShowcaseDots';
 
 export interface ShowcaseSlide {
     text: string;

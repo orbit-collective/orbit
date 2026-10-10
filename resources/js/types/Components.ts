@@ -1,3 +1,13 @@
+import type { VariantProps } from 'class-variance-authority';
+import { icons } from 'lucide-react';
+import React, {
+    AriaRole,
+    ButtonHTMLAttributes,
+    ChangeEvent,
+    CSSProperties,
+    HTMLAttributes,
+    ReactNode,
+} from 'react';
 import { badgeVariants } from '@/Components/Atoms/Badge/Badge';
 import { dropdownTriggerVariants } from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import { iconButtonVariants } from '@/Components/Atoms/IconButton/IconButton';
@@ -27,16 +37,6 @@ import { Project } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
 import { WorkflowStatus } from '@/types/Workflow';
-import type { VariantProps } from 'class-variance-authority';
-import { icons } from 'lucide-react';
-import React, {
-    AriaRole,
-    ButtonHTMLAttributes,
-    ChangeEvent,
-    CSSProperties,
-    HTMLAttributes,
-    ReactNode,
-} from 'react';
 
 export interface AvatarProps {
     src?: string;

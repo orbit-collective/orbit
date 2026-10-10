@@ -1,7 +1,7 @@
+import { useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { cn } from '@/utils/cn';
 import { canvasesMatch, rasterizeImage } from '@/utils/faces';
-import { useEffect, useState } from 'react';
 
 const faceModules = import.meta.glob<string>('../../../assets/faces/*.svg', {
     eager: true,

@@ -1,10 +1,10 @@
+import { useState } from 'react';
 import {
     GithubConnectedRepository,
     GithubConnectStatus,
     GithubIntegrationHealth,
 } from '@/types/ProjectIntegrations';
 import { formatTimeAgo } from '@/utils/time';
-import { useState } from 'react';
 
 interface WorkspaceSettingsGithubConnectPanelProps {
     canUpdate: boolean;

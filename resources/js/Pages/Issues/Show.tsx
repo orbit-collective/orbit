@@ -1,3 +1,6 @@
+import type { FormDataConvertible } from '@inertiajs/core';
+import { Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
@@ -24,9 +27,6 @@ import { IssuePageProps } from '@/types/Components';
 import { Comment, IssueLabel, IssuePriority, Status } from '@/types/Issues';
 import { formatStatusLabel } from '@/utils/text';
 import { formatDate } from '@/utils/time';
-import type { FormDataConvertible } from '@inertiajs/core';
-import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
 
 const STATUSES: Status[] = ['open', 'in_progress', 'closed'];
 const PRIORITIES: IssuePriority[] = ['high', 'medium', 'low'];

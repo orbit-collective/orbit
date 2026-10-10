@@ -1,8 +1,8 @@
+import { cva } from 'class-variance-authority';
+import React from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import { UserBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { cva } from 'class-variance-authority';
-import React from 'react';
 import Avatar from '../../Atoms/Avatar/Avatar';
 
 const classVariants = cva(

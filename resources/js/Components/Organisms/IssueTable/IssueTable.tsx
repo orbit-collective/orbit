@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import BulkActionBar from '@/Components/Molecules/BulkActionBar/BulkActionBar';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
 import { IssueElement } from '@/Components/Molecules/IssueElement/IssueElement';
@@ -18,8 +20,6 @@ import {
     ISSUE_TABLE_COLUMNS,
 } from '@/utils/issueTableColumns';
 import { QUICK_ADD_ISSUE_EVENT } from '@/utils/quickAddIssueEvent';
-import { router } from '@inertiajs/react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 const defaultWidths = DEFAULT_COLUMN_WIDTHS;
 

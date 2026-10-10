@@ -1,12 +1,12 @@
+import { fireEvent, render, screen } from '@testing-library/react';
+import React from 'react';
+import { describe, expect, test, vi } from 'vitest';
 import { ModalProvider } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
 import { PageHeaderProps } from '@/types/Components';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import { QUICK_ADD_ISSUE_EVENT } from '@/utils/quickAddIssueEvent';
-import { fireEvent, render, screen } from '@testing-library/react';
-import React from 'react';
-import { describe, expect, test, vi } from 'vitest';
 import MainLayout from './MainLayout';
 
 vi.mock('@/Components/Organisms/Sidebar/Sidebar', () => ({

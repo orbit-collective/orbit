@@ -1,7 +1,7 @@
-import Icon from '@/Components/Atoms/Icon/Icon';
 import { Link } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { Fragment } from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
 
 export interface BreadcrumbItem {
     label: string;

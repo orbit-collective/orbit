@@ -1,6 +1,6 @@
+import { AnimatePresence } from 'framer-motion';
 import { Alert } from '@/Components/Molecules/Alert/Alert';
 import { AlertContainerProps } from '@/types/Components';
-import { AnimatePresence } from 'framer-motion';
 
 export const AlertContainer = ({
     alerts,

@@ -1,13 +1,3 @@
-import BoardColumn from '@/Components/Molecules/BoardColumn/BoardColumn';
-import { BoardCardOverlay } from '@/Components/Organisms/BoardCard/BoardCard';
-import { useAlert } from '@/context/AlertContext';
-import {
-    BoardColumnMeta,
-    BoardGroupBy,
-    IssueBoardProps,
-} from '@/types/Components';
-import { Issue } from '@/types/Issues';
-import { cn } from '@/utils/cn';
 import {
     DndContext,
     DragEndEvent,
@@ -21,6 +11,16 @@ import {
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import BoardColumn from '@/Components/Molecules/BoardColumn/BoardColumn';
+import { BoardCardOverlay } from '@/Components/Organisms/BoardCard/BoardCard';
+import { useAlert } from '@/context/AlertContext';
+import {
+    BoardColumnMeta,
+    BoardGroupBy,
+    IssueBoardProps,
+} from '@/types/Components';
+import { Issue } from '@/types/Issues';
+import { cn } from '@/utils/cn';
 
 const dropAnimationConfig: DropAnimation = {
     duration: 220,

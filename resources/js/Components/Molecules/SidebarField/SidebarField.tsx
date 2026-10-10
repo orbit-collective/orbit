@@ -1,5 +1,5 @@
-import { SidebarFieldProps } from '@/types/Components';
 import React from 'react';
+import { SidebarFieldProps } from '@/types/Components';
 
 const SidebarField: React.FC<SidebarFieldProps> = ({ label, children }) => {
     return (

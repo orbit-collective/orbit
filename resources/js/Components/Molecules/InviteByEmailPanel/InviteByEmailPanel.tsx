@@ -1,3 +1,4 @@
+import { SyntheticEvent } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Input from '@/Components/Atoms/Input/Input';
 import MemberRoleDropdown from '@/Components/Molecules/MemberRoleDropdown/MemberRoleDropdown';
@@ -5,7 +6,6 @@ import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import { AssignableProjectMemberRole } from '@/types/ProjectMembers';
 import { WorkspaceRole } from '@/types/Roles';
-import { SyntheticEvent } from 'react';
 
 interface InviteByEmailPanelProps {
     emailEnabled: boolean;

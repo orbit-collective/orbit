@@ -1,5 +1,5 @@
-import { isRectVisible, Rect } from '@/utils/tour';
 import { useEffect, useState } from 'react';
+import { isRectVisible, Rect } from '@/utils/tour';
 
 export type TourTargetState =
     | { status: 'idle' }

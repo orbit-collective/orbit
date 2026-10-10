@@ -1,7 +1,3 @@
-import Keybind from '@/Components/Atoms/Keybind/Keybind';
-import { useModal } from '@/context/ModalContext';
-import { useShortcuts } from '@/context/ShortcutContext';
-import { cn } from '@/utils/cn';
 import {
     ArrowDown,
     ArrowUp,
@@ -15,6 +11,10 @@ import {
     Zap,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Keybind from '@/Components/Atoms/Keybind/Keybind';
+import { useModal } from '@/context/ModalContext';
+import { useShortcuts } from '@/context/ShortcutContext';
+import { cn } from '@/utils/cn';
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
     Action: Zap,

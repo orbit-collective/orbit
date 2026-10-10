@@ -1,5 +1,5 @@
-import { DashboardVisualsProps } from '@/types/Components';
 import React, { useMemo } from 'react';
+import { DashboardVisualsProps } from '@/types/Components';
 import { CompletionRatioCard } from '../../Molecules/CompletionRatioCard/CompletionRatioCard';
 import { PriorityBreakdownCard } from '../../Molecules/PriorityBreakdownCard/PriorityBreakdownCard';
 import { ProductivityTrendCard } from '../../Molecules/ProductivityTrendCard/ProductivityTrendCard';

@@ -1,8 +1,8 @@
-import { Project } from '@/types/Projects';
-import { AssignableUser } from '@/types/Users';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { Project } from '@/types/Projects';
+import { AssignableUser } from '@/types/Users';
 import FilterBar from './FilterBar';
 
 const mockRouterGet = vi.hoisted(() => vi.fn());

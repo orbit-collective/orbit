@@ -1,7 +1,3 @@
-import { ShortcutHelpModal } from '@/Components/Organisms/ShortcutHelpModal/ShortcutHelpModal';
-import { useModal } from '@/context/ModalContext';
-import { ShortcutContextType, ShortcutDefinition } from '@/types/Shortcuts';
-import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
 import { router } from '@inertiajs/react';
 import React, {
     createContext,
@@ -11,6 +7,10 @@ import React, {
     useRef,
     useState,
 } from 'react';
+import { ShortcutHelpModal } from '@/Components/Organisms/ShortcutHelpModal/ShortcutHelpModal';
+import { useModal } from '@/context/ModalContext';
+import { ShortcutContextType, ShortcutDefinition } from '@/types/Shortcuts';
+import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
 
 const ShortcutContext = createContext<ShortcutContextType | undefined>(
     undefined,

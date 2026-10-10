@@ -1,9 +1,9 @@
+import { router } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAlert } from '@/context/AlertContext';
 import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import { buildPermissionGroups } from '@/utils/permissionGroups';
 import { getPermissionLabel } from '@/utils/permissions';
-import { router } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
 
 interface UseRolesManagementArgs {
     roles: WorkspaceRole[];

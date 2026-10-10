@@ -1,8 +1,8 @@
+import React from 'react';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { IssueLabel } from '@/types/Issues';
 import { cn } from '@/utils/cn';
-import React from 'react';
 
 interface LabelListProps {
     labels: IssueLabel[];

@@ -1,10 +1,10 @@
+import { useForm, usePage } from '@inertiajs/react';
+import { SyntheticEvent, useEffect, useRef, useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import PasswordField from '@/Components/Molecules/PasswordField/PasswordField';
 import PasswordStrengthMeter from '@/Components/Molecules/PasswordStrengthMeter/PasswordStrengthMeter';
 import { PageProps } from '@/types';
-import { useForm, usePage } from '@inertiajs/react';
-import { SyntheticEvent, useEffect, useRef, useState } from 'react';
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 60;

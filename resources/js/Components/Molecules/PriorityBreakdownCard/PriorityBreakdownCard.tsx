@@ -1,6 +1,6 @@
+import { FC } from 'react';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { PriorityBreakdownCardProps, PriorityItem } from '@/types/Components';
-import { FC } from 'react';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 

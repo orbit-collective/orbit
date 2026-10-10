@@ -1,7 +1,7 @@
+import { Fragment } from 'react';
 import NotificationEmptyState from '@/Components/Molecules/NotificationEmptyState/NotificationEmptyState';
 import NotificationItem from '@/Components/Molecules/NotificationItem/NotificationItem';
 import { Notification } from '@/types/Notification';
-import { Fragment } from 'react';
 
 interface NotificationsListProps {
     notifications: Notification[];

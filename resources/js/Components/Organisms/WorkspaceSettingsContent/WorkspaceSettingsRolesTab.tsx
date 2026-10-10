@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import RoleDetailHeader from '@/Components/Molecules/RoleDetailHeader/RoleDetailHeader';
@@ -9,7 +10,6 @@ import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useRolesManagement } from '@/hooks/useRolesManagement';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
-import { router } from '@inertiajs/react';
 import WorkspaceSettingsCreateRoleModal from './WorkspaceSettingsCreateRoleModal';
 import WorkspaceSettingsDeleteRoleModal from './WorkspaceSettingsDeleteRoleModal';
 

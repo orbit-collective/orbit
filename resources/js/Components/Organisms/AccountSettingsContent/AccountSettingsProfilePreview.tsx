@@ -1,7 +1,7 @@
-import Avatar from '@/Components/Atoms/Avatar/Avatar';
-import Icon from '@/Components/Atoms/Icon/Icon';
 import { icons } from 'lucide-react';
 import { ReactNode } from 'react';
+import Avatar from '@/Components/Atoms/Avatar/Avatar';
+import Icon from '@/Components/Atoms/Icon/Icon';
 
 interface AccountSettingsProfilePreviewProps {
     name: string;

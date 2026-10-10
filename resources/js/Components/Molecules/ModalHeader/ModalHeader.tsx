@@ -1,6 +1,6 @@
+import React from 'react';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { ModalHeaderProps } from '@/types/Components';
-import React from 'react';
 
 const ModalHeader: React.FC<ModalHeaderProps> = ({ title, onClose, icon }) => {
     return (

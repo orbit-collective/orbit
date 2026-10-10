@@ -1,5 +1,5 @@
-import { AVAILABLE_COLORS, ProjectColors } from '@/types/Projects';
 import { describe, expect, test } from 'vitest';
+import { AVAILABLE_COLORS, ProjectColors } from '@/types/Projects';
 import { getColorTheme } from './colors';
 
 describe('getColorTheme', () => {

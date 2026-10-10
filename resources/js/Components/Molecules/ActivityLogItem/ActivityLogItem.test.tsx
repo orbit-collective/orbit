@@ -1,6 +1,6 @@
-import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 import ActivityLogItem from './ActivityLogItem';
 
 describe('ActivityLogItem Component', () => {

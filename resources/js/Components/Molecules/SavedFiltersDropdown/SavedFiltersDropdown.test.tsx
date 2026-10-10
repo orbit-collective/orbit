@@ -1,7 +1,7 @@
-import { SavedFilter } from '@/hooks/useSavedFilters';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { SavedFilter } from '@/hooks/useSavedFilters';
 import SavedFiltersDropdown from './SavedFiltersDropdown';
 
 const mockRouter = vi.hoisted(() => ({

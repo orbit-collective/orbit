@@ -1,10 +1,10 @@
+import { Link } from '@inertiajs/react';
+import { cva } from 'class-variance-authority';
+import React from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Keybind from '@/Components/Atoms/Keybind/Keybind';
 import { NavItemProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { Link } from '@inertiajs/react';
-import { cva } from 'class-variance-authority';
-import React from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const classVariants = cva(

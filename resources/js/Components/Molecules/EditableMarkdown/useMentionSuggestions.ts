@@ -1,7 +1,3 @@
-import { IssueSuggestion } from '@/types/Components';
-import { AssignableUser } from '@/types/Users';
-import { filterUsersByMention } from '@/utils/mentions';
-import { MentionAttrs, sanitizeMentionLabel } from '@/utils/tiptapMentions';
 import {
     SuggestionKeyDownProps,
     SuggestionOptions,
@@ -9,6 +5,10 @@ import {
 } from '@tiptap/suggestion';
 import axios from 'axios';
 import { useRef, useState } from 'react';
+import { IssueSuggestion } from '@/types/Components';
+import { AssignableUser } from '@/types/Users';
+import { filterUsersByMention } from '@/utils/mentions';
+import { MentionAttrs, sanitizeMentionLabel } from '@/utils/tiptapMentions';
 
 type Item = AssignableUser | IssueSuggestion;
 type Suggestion = Partial<SuggestionOptions<Item, MentionAttrs>>;

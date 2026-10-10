@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -16,7 +17,6 @@ import {
     ProjectIntegrationSettings,
 } from '@/types/ProjectIntegrations';
 import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
-import { useEffect, useState } from 'react';
 import WorkspaceSettingsGithubConnectPanel from './WorkspaceSettingsGithubConnectPanel';
 import WorkspaceSettingsImportPanel from './WorkspaceSettingsImportPanel';
 import WorkspaceSettingsIntegrationPreview from './WorkspaceSettingsIntegrationPreview';

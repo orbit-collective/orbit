@@ -1,7 +1,7 @@
-import { SelectionDropdownProps } from '@/types/Components';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { SelectionDropdownProps } from '@/types/Components';
 import SelectionDropdown from './SelectionDropdown';
 
 const mockGetIfAnyModalIsOpened = vi.hoisted(() => vi.fn(() => false));

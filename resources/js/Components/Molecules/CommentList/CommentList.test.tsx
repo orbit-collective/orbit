@@ -1,7 +1,7 @@
-import { Comment } from '@/types/Issues';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { Comment } from '@/types/Issues';
 import CommentList from './CommentList';
 
 const makeComment = (overrides: Partial<Comment> = {}): Comment => ({

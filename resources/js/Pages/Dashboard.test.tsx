@@ -1,9 +1,9 @@
-import { ActivityLogEntry } from '@/types/ActivityLog';
-import { Issue, ProductivityTrendProps } from '@/types/Issues';
-import { Project } from '@/types/Projects';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { ActivityLogEntry } from '@/types/ActivityLog';
+import { Issue, ProductivityTrendProps } from '@/types/Issues';
+import { Project } from '@/types/Projects';
 import Dashboard from './Dashboard';
 
 vi.mock('@/context/ShortcutContext', () => ({

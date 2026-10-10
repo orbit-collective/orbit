@@ -1,7 +1,7 @@
-import { Issue } from '@/types/Issues';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { Issue } from '@/types/Issues';
 import CalendarView from './CalendarView';
 
 const mockRouterVisit = vi.fn();

@@ -1,6 +1,6 @@
-import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { renderActivityLogBody } from './activityLogRichText';
 
 describe('renderActivityLogBody', () => {

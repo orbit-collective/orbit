@@ -1,9 +1,9 @@
+import { router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
-import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
 
 interface WorkspaceSettingsDeleteProjectModalProps {
     isOpen: boolean;

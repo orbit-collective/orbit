@@ -1,8 +1,12 @@
-import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 import { icons } from 'lucide-react';
+import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 
 export type ActivityLogColor =
-    'accent' | 'success' | 'warning' | 'error' | 'info';
+    | 'accent'
+    | 'success'
+    | 'warning'
+    | 'error'
+    | 'info';
 
 interface ActivityLogVisual {
     icon: keyof typeof icons;

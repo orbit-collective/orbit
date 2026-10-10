@@ -1,12 +1,12 @@
+import { router, usePage } from '@inertiajs/react';
+import { cva } from 'class-variance-authority';
+import { useEffect, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import NotificationsPopup from '@/Components/Organisms/NotificationsPopup/NotificationsPopup';
 import { PageProps } from '@/types';
 import { PageHeaderProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { formattedDate } from '@/utils/time';
-import { router, usePage } from '@inertiajs/react';
-import { cva } from 'class-variance-authority';
-import { useEffect, useRef, useState } from 'react';
 
 const tabVariants = cva(
     'flex cursor-pointer items-center justify-center gap-1 py-2 text-sm transition-all duration-100 ease-in-out hover:text-[var(--text-color)]',

@@ -1,10 +1,10 @@
+import { cva } from 'class-variance-authority';
+import { ComponentProps, useId, useState } from 'react';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import Button from '@/Components/Atoms/Button/Button';
 import Input from '@/Components/Atoms/Input/Input';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import { GithubDevelopmentRepository, LinkedPullRequest } from '@/types/Issues';
-import { cva } from 'class-variance-authority';
-import { ComponentProps, useId, useState } from 'react';
 
 interface IssueDevelopmentPanelProps {
     pullRequests: LinkedPullRequest[];

@@ -1,3 +1,6 @@
+import { router } from '@inertiajs/react';
+import { icons } from 'lucide-react';
+import { useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
@@ -8,9 +11,6 @@ import { useAlert } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { router } from '@inertiajs/react';
-import { icons } from 'lucide-react';
-import { useState } from 'react';
 import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
 import WorkspaceSettingsFieldsModal from './WorkspaceSettingsFieldsModal';
 import WorkspaceSettingsHierarchyModal from './WorkspaceSettingsHierarchyModal';

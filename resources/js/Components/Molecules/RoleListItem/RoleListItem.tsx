@@ -1,8 +1,8 @@
+import { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProgressRing from '@/Components/Atoms/ProgressRing/ProgressRing';
 import { WorkspaceRole } from '@/types/Roles';
 import { cn } from '@/utils/cn';
-import { icons } from 'lucide-react';
 
 interface RoleListItemTheme {
     label: string;

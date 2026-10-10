@@ -1,8 +1,8 @@
+import { cva } from 'class-variance-authority';
+import { forwardRef } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { DropdownTriggerProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { cva } from 'class-variance-authority';
-import { forwardRef } from 'react';
 
 export const dropdownTriggerVariants = cva(
     'flex cursor-pointer items-center text-left text-sm font-medium text-[var(--text-color)] outline-none transition-all duration-200 ease-linear disabled:cursor-not-allowed disabled:opacity-60',

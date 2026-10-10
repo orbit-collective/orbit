@@ -1,3 +1,5 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import { SyntheticEvent } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Divider from '@/Components/Atoms/Divider/Divider';
 import AuthFormHeader from '@/Components/Molecules/AuthFormHeader/AuthFormHeader';
@@ -6,8 +8,6 @@ import PasswordField from '@/Components/Molecules/PasswordField/PasswordField';
 import PasswordStrengthMeter from '@/Components/Molecules/PasswordStrengthMeter/PasswordStrengthMeter';
 import SocialLoginButtons from '@/Components/Molecules/SocialLoginButtons/SocialLoginButtons';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { SyntheticEvent } from 'react';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({

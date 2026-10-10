@@ -1,6 +1,6 @@
-import { useAlert } from '@/context/AlertContext';
 import axios from 'axios';
 import { useCallback, useState } from 'react';
+import { useAlert } from '@/context/AlertContext';
 
 /**
  * Uploads an image to a project's attachment endpoint and resolves with the
@@ -46,7 +46,8 @@ export const useImageUpload = (projectId: number) => {
 const resolveUploadError = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
         const data = error.response?.data as
-            { message?: string; errors?: Record<string, string[]> } | undefined;
+            | { message?: string; errors?: Record<string, string[]> }
+            | undefined;
 
         const validationMessage = data?.errors?.file?.[0];
         if (validationMessage) return validationMessage;

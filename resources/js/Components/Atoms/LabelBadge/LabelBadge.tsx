@@ -1,7 +1,7 @@
+import React from 'react';
 import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { LabelBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import React from 'react';
 
 const LabelBadge: React.FC<LabelBadgeProps> = ({
     label,

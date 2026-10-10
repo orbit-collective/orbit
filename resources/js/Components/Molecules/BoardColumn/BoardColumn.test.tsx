@@ -1,7 +1,7 @@
-import { BoardColumnMeta } from '@/types/Components';
-import { Issue } from '@/types/Issues';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { BoardColumnMeta } from '@/types/Components';
+import { Issue } from '@/types/Issues';
 import BoardColumn from './BoardColumn';
 
 let counter = 0;

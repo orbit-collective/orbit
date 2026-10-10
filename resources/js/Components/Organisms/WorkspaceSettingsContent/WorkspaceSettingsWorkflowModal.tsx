@@ -1,14 +1,3 @@
-import Icon from '@/Components/Atoms/Icon/Icon';
-import Input from '@/Components/Atoms/Input/Input';
-import Modal from '@/Components/Atoms/Modal/Modal';
-import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
-import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
-import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
-import { useAlert } from '@/context/AlertContext';
-import { IssueType } from '@/types/IssueTypes';
-import { WorkflowStatus, WorkflowStatusCategory } from '@/types/Workflow';
-import { cn } from '@/utils/cn';
-import { LABEL_COLOR_PALETTE } from '@/utils/labelColors';
 import {
     DndContext,
     PointerSensor,
@@ -21,6 +10,17 @@ import {
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
 import { Fragment, ReactNode, useState } from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import Input from '@/Components/Atoms/Input/Input';
+import Modal from '@/Components/Atoms/Modal/Modal';
+import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
+import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
+import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
+import { useAlert } from '@/context/AlertContext';
+import { IssueType } from '@/types/IssueTypes';
+import { WorkflowStatus, WorkflowStatusCategory } from '@/types/Workflow';
+import { cn } from '@/utils/cn';
+import { LABEL_COLOR_PALETTE } from '@/utils/labelColors';
 
 interface WorkspaceSettingsWorkflowModalProps {
     isOpen: boolean;

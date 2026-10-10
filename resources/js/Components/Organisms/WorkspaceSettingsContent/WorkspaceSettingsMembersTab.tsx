@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import DangerZonePanel from '@/Components/Molecules/DangerZonePanel/DangerZonePanel';
 import InviteByEmailPanel from '@/Components/Molecules/InviteByEmailPanel/InviteByEmailPanel';
 import JoinWithCodePanel from '@/Components/Molecules/JoinWithCodePanel/JoinWithCodePanel';
@@ -19,7 +20,6 @@ import {
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
 import { WorkspaceRole } from '@/types/Roles';
-import { usePage } from '@inertiajs/react';
 import WorkspaceSettingsDeleteProjectModal from './WorkspaceSettingsDeleteProjectModal';
 import WorkspaceSettingsTransferOwnershipModal from './WorkspaceSettingsTransferOwnershipModal';
 

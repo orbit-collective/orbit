@@ -1,8 +1,8 @@
-import { ShortcutDefinition } from '@/types/Shortcuts';
-import { suspendShortcuts } from '@/utils/shortcutSuspension';
 import { act, renderHook } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { ShortcutDefinition } from '@/types/Shortcuts';
+import { suspendShortcuts } from '@/utils/shortcutSuspension';
 
 const mockOpenModal = vi.hoisted(() => vi.fn());
 const mockRouter = vi.hoisted(() => ({ visit: vi.fn() }));

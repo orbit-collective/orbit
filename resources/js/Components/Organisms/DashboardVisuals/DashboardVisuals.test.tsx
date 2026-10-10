@@ -1,6 +1,6 @@
-import { Issue } from '@/types/Issues';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { Issue } from '@/types/Issues';
 import DashboardVisuals from './DashboardVisuals';
 
 let counter = 0;

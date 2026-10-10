@@ -1,5 +1,5 @@
-import { IconProps } from '@/types/Components';
 import { AlertOctagon, icons, type LucideIcon } from 'lucide-react';
+import { IconProps } from '@/types/Components';
 
 function Icon({ name, size = 16, color, className }: IconProps) {
     const LucideIcon: LucideIcon = icons[name];

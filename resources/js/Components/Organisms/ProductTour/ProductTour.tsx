@@ -1,3 +1,12 @@
+import { router, usePage } from '@inertiajs/react';
+import {
+    CSSProperties,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react';
 import TourPopover from '@/Components/Molecules/TourPopover/TourPopover';
 import useTourTarget from '@/hooks/useTourTarget';
 import { PageProps } from '@/types';
@@ -11,15 +20,6 @@ import {
     Size,
 } from '@/utils/tour';
 import { setTourSidebarOpen } from '@/utils/tourSidebar';
-import { router, usePage } from '@inertiajs/react';
-import {
-    CSSProperties,
-    useCallback,
-    useEffect,
-    useLayoutEffect,
-    useRef,
-    useState,
-} from 'react';
 
 interface ProductTourProps {
     steps: TourStep[];

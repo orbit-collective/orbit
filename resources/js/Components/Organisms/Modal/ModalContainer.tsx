@@ -1,6 +1,6 @@
-import { useModal } from '@/context/ModalContext';
 import { AnimatePresence } from 'framer-motion';
 import { useMemo } from 'react';
+import { useModal } from '@/context/ModalContext';
 import { ModalOrg } from './Modal';
 
 export const ModalContainer = () => {

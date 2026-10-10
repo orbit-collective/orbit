@@ -1,5 +1,5 @@
-import { ActivityLogEntry } from '@/types/ActivityLog';
 import { describe, expect, test } from 'vitest';
+import { ActivityLogEntry } from '@/types/ActivityLog';
 import { getActivityLogVisual, groupActivityLogs } from './activityLog';
 
 describe('getActivityLogVisual', () => {

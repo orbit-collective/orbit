@@ -1,10 +1,10 @@
+import { useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import NotificationFilterTabs from '@/Components/Molecules/NotificationFilterTabs/NotificationFilterTabs';
 import NotificationHeader from '@/Components/Molecules/NotificationHeader/NotificationHeader';
 import NotificationsList from '@/Components/Organisms/NotificationsList/NotificationsList';
 import { PageProps } from '@/types';
 import { NotificationFilter } from '@/types/Notification';
-import { useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 
 function NotificationsPopup() {
     const { notifications } = usePage<PageProps>().props;

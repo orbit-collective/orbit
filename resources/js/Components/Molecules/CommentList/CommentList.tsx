@@ -1,6 +1,6 @@
+import React from 'react';
 import CommentItem from '@/Components/Molecules/CommentItem/CommentItem';
 import { CommentListProps } from '@/types/Components';
-import React from 'react';
 
 const CommentList: React.FC<CommentListProps> = ({
     comments,

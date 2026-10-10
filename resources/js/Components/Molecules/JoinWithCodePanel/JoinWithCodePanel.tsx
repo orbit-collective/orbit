@@ -1,8 +1,8 @@
+import { SyntheticEvent } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Input from '@/Components/Atoms/Input/Input';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
-import { SyntheticEvent } from 'react';
 
 interface JoinWithCodePanelProps {
     token: string;

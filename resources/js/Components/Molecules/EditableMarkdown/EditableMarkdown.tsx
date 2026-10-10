@@ -1,7 +1,3 @@
-import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
-import { EditableMarkdownProps } from '@/types/Components';
-import { cn } from '@/utils/cn';
-import { extractImageFiles, markdownImageAlt } from '@/utils/imagePaste';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import { TableKit } from '@tiptap/extension-table';
@@ -11,6 +7,10 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Markdown } from 'tiptap-markdown';
+import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
+import { EditableMarkdownProps } from '@/types/Components';
+import { cn } from '@/utils/cn';
+import { extractImageFiles, markdownImageAlt } from '@/utils/imagePaste';
 import { IssueMention, UserMention } from './mentionExtensions';
 import { useMentionSuggestions } from './useMentionSuggestions';
 

@@ -1,9 +1,9 @@
+import { ReactNode } from 'react';
 import Breadcrumb from '@/Components/Molecules/Breadcrumb/Breadcrumb';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { Project } from '@/types/Projects';
 import { SettingsTabId, getSettingsTab } from '@/types/Settings';
 import { cn } from '@/utils/cn';
-import { ReactNode } from 'react';
 
 interface SettingsLayoutProps {
     /**

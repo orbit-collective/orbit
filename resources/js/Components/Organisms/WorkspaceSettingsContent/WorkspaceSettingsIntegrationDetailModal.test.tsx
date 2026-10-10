@@ -1,8 +1,8 @@
-import { INTEGRATIONS } from '@/types/Integrations';
-import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { INTEGRATIONS } from '@/types/Integrations';
+import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
 import WorkspaceSettingsIntegrationDetailModal from './WorkspaceSettingsIntegrationDetailModal';
 
 const discord = INTEGRATIONS.find(

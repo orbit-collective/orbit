@@ -1,6 +1,6 @@
+import React from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import { ModalFooterProps } from '@/types/Components';
-import React from 'react';
 
 const ModalFooter: React.FC<ModalFooterProps> = ({
     onCancel,

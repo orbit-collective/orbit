@@ -1,10 +1,10 @@
+import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { MainLayoutProps } from '@/types/Components';
 import { ShortcutDefinition } from '@/types/Shortcuts';
 import { requestQuickAddIssue } from '@/utils/quickAddIssueEvent';
-import React, { useMemo } from 'react';
 import Sidebar from '../Components/Organisms/Sidebar/Sidebar';
 
 const MainLayout: React.FC<MainLayoutProps> = ({

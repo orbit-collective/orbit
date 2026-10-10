@@ -24,7 +24,10 @@ export type IntegrationId =
     | 'figma';
 
 export type IntegrationCategory =
-    'Communication' | 'Developer tools' | 'Storage' | 'Productivity';
+    | 'Communication'
+    | 'Developer tools'
+    | 'Storage'
+    | 'Productivity';
 
 export const INTEGRATION_CATEGORIES: IntegrationCategory[] = [
     'Communication',
@@ -63,7 +66,10 @@ export interface IntegrationImportCredentialField {
 }
 
 export type IntegrationFieldMappingType =
-    'status' | 'priority' | 'label' | 'issue_type';
+    | 'status'
+    | 'priority'
+    | 'label'
+    | 'issue_type';
 
 /**
  * Parameterizes the shared import panel per integration: which credential

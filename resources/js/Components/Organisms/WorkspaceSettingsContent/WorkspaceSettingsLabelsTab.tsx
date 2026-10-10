@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import { useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
@@ -7,8 +9,6 @@ import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useAlert } from '@/context/AlertContext';
 import { ProjectLabel } from '@/types/Labels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
-import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import WorkspaceSettingsDeleteLabelModal from './WorkspaceSettingsDeleteLabelModal';
 import WorkspaceSettingsLabelInlineEditor from './WorkspaceSettingsLabelInlineEditor';
 

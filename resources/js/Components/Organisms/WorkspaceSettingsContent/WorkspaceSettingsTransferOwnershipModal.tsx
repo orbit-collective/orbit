@@ -1,3 +1,5 @@
+import { router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
@@ -5,8 +7,6 @@ import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
 import { ProjectMember } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
-import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
 
 interface WorkspaceSettingsTransferOwnershipModalProps {
     isOpen: boolean;

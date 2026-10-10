@@ -1,5 +1,5 @@
-import { RoleTypeValue } from '@/types/Roles';
 import { icons } from 'lucide-react';
+import { RoleTypeValue } from '@/types/Roles';
 
 export interface RoleTypeTheme {
     label: string;

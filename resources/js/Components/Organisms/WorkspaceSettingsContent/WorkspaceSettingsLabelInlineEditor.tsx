@@ -1,10 +1,10 @@
+import { useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import { ProjectLabel } from '@/types/Labels';
 import { LABEL_COLOR_PALETTE } from '@/utils/labelColors';
-import { useState } from 'react';
 
 interface WorkspaceSettingsLabelInlineEditorProps {
     label: ProjectLabel | null;

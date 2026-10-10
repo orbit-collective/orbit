@@ -1,7 +1,7 @@
-import { Notification } from '@/types/Notification';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { Notification } from '@/types/Notification';
 import NotificationsPopup from './NotificationsPopup';
 
 const pageState = vi.hoisted(() => ({

@@ -1,5 +1,5 @@
-import { cn } from '@/utils/cn';
 import { forwardRef, HTMLAttributes } from 'react';
+import { cn } from '@/utils/cn';
 
 /**
  * The floating surface every dropdown shares: a soft dark background with

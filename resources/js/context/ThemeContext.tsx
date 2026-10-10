@@ -1,4 +1,3 @@
-import { ResolvedTheme, ThemeContextType, ThemeMode } from '@/types/Theme';
 import {
     createContext,
     ReactNode,
@@ -6,6 +5,7 @@ import {
     useEffect,
     useState,
 } from 'react';
+import { ResolvedTheme, ThemeContextType, ThemeMode } from '@/types/Theme';
 
 const THEME_STORAGE_KEY = 'theme';
 const LIGHT_MEDIA_QUERY = '(prefers-color-scheme: light)';

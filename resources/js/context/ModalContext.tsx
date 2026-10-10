@@ -1,4 +1,3 @@
-import { ModalContent, ModalContextType } from '@/types/Modal';
 import {
     createContext,
     ReactNode,
@@ -6,6 +5,7 @@ import {
     useContext,
     useState,
 } from 'react';
+import { ModalContent, ModalContextType } from '@/types/Modal';
 
 export const ModalContext = createContext<ModalContextType | undefined>(
     undefined,

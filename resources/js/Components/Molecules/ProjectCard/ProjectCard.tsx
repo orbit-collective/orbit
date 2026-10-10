@@ -1,9 +1,9 @@
+import { Link } from '@inertiajs/react';
+import { FC } from 'react';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { ProjectCardProps } from '@/types/Components';
 import { getColorTheme } from '@/utils/colors';
-import { Link } from '@inertiajs/react';
-import { FC } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 import ProgressRing from '../../Atoms/ProgressRing/ProgressRing';
 

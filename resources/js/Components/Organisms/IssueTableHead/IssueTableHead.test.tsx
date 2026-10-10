@@ -1,8 +1,8 @@
-import { ModalProvider } from '@/context/ModalContext';
-import { ShortcutProvider } from '@/context/ShortcutContext';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { ModalProvider } from '@/context/ModalContext';
+import { ShortcutProvider } from '@/context/ShortcutContext';
 import { IssueTableHead } from './IssueTableHead';
 
 describe('IssueTableHead Component', () => {

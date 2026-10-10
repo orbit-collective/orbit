@@ -1,6 +1,10 @@
 import '../css/global.css';
 import './bootstrap';
-
+import type { ResolvedComponent } from '@inertiajs/react';
+import { createInertiaApp } from '@inertiajs/react';
+import * as Sentry from '@sentry/react';
+import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { createRoot } from 'react-dom/client';
 import { ModalContainer } from '@/Components/Organisms/Modal';
 import OnboardingGate from '@/Components/Organisms/OnboardingGate/OnboardingGate';
 import { AccentProvider } from '@/context/AccentContext';
@@ -8,11 +12,6 @@ import { AlertProvider } from '@/context/AlertContext';
 import { ModalProvider } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
 import { ThemeProvider } from '@/context/ThemeContext';
-import type { ResolvedComponent } from '@inertiajs/react';
-import { createInertiaApp } from '@inertiajs/react';
-import * as Sentry from '@sentry/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
-import { createRoot } from 'react-dom/client';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

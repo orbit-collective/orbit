@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Input from '@/Components/Atoms/Input/Input';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
@@ -12,7 +13,6 @@ import {
     IntegrationFieldMappingDraft,
     IntegrationMappingOption,
 } from '@/types/ProjectIntegrations';
-import { useEffect, useState } from 'react';
 
 interface WorkspaceSettingsImportPanelProps {
     integration: IntegrationDefinition;

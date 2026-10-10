@@ -1,6 +1,6 @@
-import { IconButtonProps } from '@/types/Components';
 import { Link } from '@inertiajs/react';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { IconButtonProps } from '@/types/Components';
 import Icon from '../Icon/Icon';
 
 export const iconButtonVariants = cva(

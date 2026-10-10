@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
@@ -13,7 +14,6 @@ import { cn } from '@/utils/cn';
 import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
 import { formatStatusLabel } from '@/utils/text';
 import { formatTimeAgo } from '@/utils/time';
-import React, { useState } from 'react';
 
 const rowMenuOptions = (removeDisabled: boolean): DropdownOptionItem[] => [
     { value: 'open', label: 'Open issue', icon: 'Maximize2' },

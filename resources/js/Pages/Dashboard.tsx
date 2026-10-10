@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+import { useMemo } from 'react';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
 import ProjectCard from '@/Components/Molecules/ProjectCard/ProjectCard';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
@@ -11,8 +13,6 @@ import { Issue, ProductivityTrendProps } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
-import { Link } from '@inertiajs/react';
-import { useMemo } from 'react';
 
 export default function Dashboard({
     issues,

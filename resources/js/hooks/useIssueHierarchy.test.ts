@@ -1,6 +1,6 @@
-import { Issue } from '@/types/Issues';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { Issue } from '@/types/Issues';
 import { useIssueHierarchy } from './useIssueHierarchy';
 
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({

@@ -1,6 +1,6 @@
+import { createContext, ReactNode, useContext, useMemo } from 'react';
 import { ProjectLabel } from '@/types/Labels';
 import { hashLabelColor } from '@/utils/labelColors';
-import { createContext, ReactNode, useContext, useMemo } from 'react';
 
 interface ProjectLabelsContextType {
     labels: ProjectLabel[];

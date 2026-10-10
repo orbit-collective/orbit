@@ -1,3 +1,5 @@
+import { Head, Link, useForm } from '@inertiajs/react';
+import { SyntheticEvent } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import Divider from '@/Components/Atoms/Divider/Divider';
@@ -6,8 +8,6 @@ import FormField from '@/Components/Molecules/FormField/FormField';
 import PasswordField from '@/Components/Molecules/PasswordField/PasswordField';
 import SocialLoginButtons from '@/Components/Molecules/SocialLoginButtons/SocialLoginButtons';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
-import { SyntheticEvent } from 'react';
 
 export default function Login() {
     const { data, setData, post, processing, errors, reset } = useForm({

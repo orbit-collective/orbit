@@ -1,7 +1,7 @@
-import { AlertProvider } from '@/context/AlertContext';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
+import { AlertProvider } from '@/context/AlertContext';
 import AccountSettingsSecurityTab from './AccountSettingsSecurityTab';
 
 vi.stubGlobal(

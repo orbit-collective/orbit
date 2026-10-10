@@ -1,11 +1,11 @@
+import { Link, router } from '@inertiajs/react';
+import { cva } from 'class-variance-authority';
+import { Key } from 'react';
 import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { useAlert } from '@/context/AlertContext';
 import { PaginationProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
-import { Link, router } from '@inertiajs/react';
-import { cva } from 'class-variance-authority';
-import { Key } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const paginationVariants = cva(

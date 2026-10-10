@@ -1,8 +1,8 @@
+import { router } from '@inertiajs/react';
+import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { useAlert } from '@/context/AlertContext';
-import { router } from '@inertiajs/react';
-import { ChangeEvent, useEffect, useRef, useState } from 'react';
 
 interface AccountSettingsAvatarUploaderProps {
     avatarSrc: string | null;

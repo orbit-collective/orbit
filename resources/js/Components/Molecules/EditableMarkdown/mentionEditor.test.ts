@@ -1,10 +1,10 @@
-import { createMentionNode, UserMention } from '@/utils/tiptapMentions';
 import { act, renderHook } from '@testing-library/react';
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import axios from 'axios';
 import { Markdown } from 'tiptap-markdown';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createMentionNode, UserMention } from '@/utils/tiptapMentions';
 import { useMentionSuggestions } from './useMentionSuggestions';
 
 vi.mock('axios');

@@ -1,7 +1,7 @@
-import { ShortcutDefinition } from '@/types/Shortcuts';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ShortcutDefinition } from '@/types/Shortcuts';
 
 const mockCloseAllModals = vi.hoisted(() => vi.fn());
 const shortcutsHolder = vi.hoisted(() => ({
