@@ -31,6 +31,16 @@ describe('getPopoverPosition', () => {
         expect(result.top).toBe(20 + 30 + 14);
     });
 
+    test('falls back to below the target when neither horizontal side fits', () => {
+        const narrow = { width: 360, height: 800 };
+        const target = { top: 100, left: 12, width: 216, height: 32 };
+
+        const result = getPopoverPosition(target, popover, narrow, 'right');
+
+        expect(result.placement).toBe('bottom');
+        expect(result.top).toBe(100 + 32 + 14);
+    });
+
     test('keeps the popover inside the viewport', () => {
         const target = { top: 100, left: 1150, width: 40, height: 40 };
 
