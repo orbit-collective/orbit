@@ -113,7 +113,7 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                 ? previous
                 : { width, height },
         );
-    }, [step?.id, target.status]);
+    }, [step?.id, target.status, viewport.width]);
 
     if (!step) return null;
 
@@ -158,7 +158,7 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                     data-testid="tour-spotlight"
                     aria-hidden="true"
                     style={spotlightStyle}
-                    className="pointer-events-none fixed z-[70] rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] ring-2 ring-[var(--accent-color)] transition-all duration-300 ease-out"
+                    className="pointer-events-none fixed z-[70] rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] ring-2 ring-[var(--accent-color)] transition-all duration-300 ease-out motion-reduce:transition-none"
                 />
             ) : (
                 <div
