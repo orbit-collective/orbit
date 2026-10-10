@@ -136,3 +136,12 @@ export const getPopoverPosition = (
         ),
     };
 };
+
+/**
+ * Closes the topmost modal. `Modal` listens for Escape on `window`, so a
+ * synthetic Escape is the one hook that works for every modal without
+ * threading a close callback through the tour.
+ */
+export const closeTopModal = (): void => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+};
