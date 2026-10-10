@@ -58,7 +58,10 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                 >
                     <div className="grid flex-1 grid-cols-1 gap-6 overflow-y-auto p-6 md:grid-cols-[1fr_50%]">
                         <div className="flex flex-col gap-5">
-                            <div className="flex flex-col gap-1.5">
+                            <div
+                                data-tour="project-name"
+                                className="flex flex-col gap-1.5"
+                            >
                                 <label className="text-sm font-medium text-[var(--text-color)]">
                                     Project name
                                     <span className="text-[var(--error-color)]">
@@ -80,7 +83,10 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     </span>
                                 )}
                             </div>
-                            <div className="flex flex-col gap-1.5">
+                            <div
+                                data-tour="project-slug"
+                                className="flex flex-col gap-1.5"
+                            >
                                 <label className="text-sm font-medium text-[var(--text-color)]">
                                     Slug
                                     <span className="text-[var(--error-color)]">
@@ -105,7 +111,10 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     Unique key to identify your project
                                 </p>
                             </div>
-                            <div className="flex flex-col gap-1.5">
+                            <div
+                                data-tour="project-description"
+                                className="flex flex-col gap-1.5"
+                            >
                                 <label className="text-sm font-medium text-[var(--text-color)]">
                                     Description
                                 </label>
@@ -126,7 +135,10 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                         </div>
                         <div className="flex flex-col gap-4">
                             <SidebarField label="Color">
-                                <div className="flex flex-wrap gap-3">
+                                <div
+                                    data-tour="project-color"
+                                    className="flex flex-wrap gap-3"
+                                >
                                     {AVAILABLE_COLORS.map((color) => (
                                         <button
                                             key={color}
@@ -168,6 +180,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                         </button>
                         <button
                             type="submit"
+                            data-tour="project-submit"
                             disabled={processing}
                             className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-[var(--accent-color)] px-6 py-2 text-sm font-medium text-[var(--text-color)] transition-all duration-150 ease-in-out hover:bg-[var(--accent-light-color)] disabled:opacity-50"
                         >
