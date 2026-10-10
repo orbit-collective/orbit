@@ -1,6 +1,7 @@
 import { ShortcutHelpModal } from '@/Components/Organisms/ShortcutHelpModal/ShortcutHelpModal';
 import { useModal } from '@/context/ModalContext';
 import { ShortcutContextType, ShortcutDefinition } from '@/types/Shortcuts';
+import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
 import { router } from '@inertiajs/react';
 import React, {
     createContext,
@@ -143,6 +144,8 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const handleKeyDown = useCallback(
         (event: KeyboardEvent) => {
+            if (areShortcutsSuspended()) return;
+
             const target = event.target as HTMLElement;
 
             const isInput =

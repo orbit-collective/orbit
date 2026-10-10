@@ -2,6 +2,7 @@ import TourPopover from '@/Components/Molecules/TourPopover/TourPopover';
 import useTourTarget from '@/hooks/useTourTarget';
 import { PageProps } from '@/types';
 import { TourStep } from '@/types/Tour';
+import { suspendShortcuts } from '@/utils/shortcutSuspension';
 import { closeTopModal, getPopoverPosition, Size } from '@/utils/tour';
 import { setTourSidebarOpen } from '@/utils/tourSidebar';
 import { router, usePage } from '@inertiajs/react';
@@ -214,6 +215,10 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
         setTourSidebarOpen(needsSidebar);
     }, [needsSidebar]);
     useEffect(() => () => setTourSidebarOpen(false), []);
+
+    // The tour owns the keyboard: global shortcuts (Alt+P, ?, …) would act on
+    // the page under it and pull the user off the current step.
+    useEffect(() => suspendShortcuts(), []);
 
     useEffect(() => {
         const onResize = () =>

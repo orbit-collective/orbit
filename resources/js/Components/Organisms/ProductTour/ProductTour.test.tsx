@@ -1,4 +1,5 @@
 import { TourStep } from '@/types/Tour';
+import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
 import { isTourSidebarOpen } from '@/utils/tourSidebar';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -135,6 +136,16 @@ describe('ProductTour', () => {
 
         unmount();
         expect(isTourSidebarOpen()).toBe(false);
+    });
+
+    test('suspends global shortcuts while open and restores them on close', () => {
+        const { unmount } = render(
+            <ProductTour steps={steps} onClose={vi.fn()} />,
+        );
+        expect(areShortcutsSuspended()).toBe(true);
+
+        unmount();
+        expect(areShortcutsSuspended()).toBe(false);
     });
 
     test('closes via the X button, Escape and finishing the last step', async () => {
