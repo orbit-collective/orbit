@@ -1,5 +1,4 @@
 import { badgeVariants } from '@/Components/Atoms/Badge/Badge';
-import { dropdownItemVariants } from '@/Components/Atoms/DropdownItem/DropdownItem';
 import { dropdownTriggerVariants } from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import { iconButtonVariants } from '@/Components/Atoms/IconButton/IconButton';
 import { inputVariants } from '@/Components/Atoms/Input/Input';
@@ -59,27 +58,6 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     isBox?: boolean;
     isDisabled?: boolean;
     type?: 'button' | 'submit' | 'reset';
-}
-export interface DropdownItemProps
-    extends
-        ButtonHTMLAttributes<HTMLButtonElement>,
-        VariantProps<typeof dropdownItemVariants> {
-    label: ReactNode;
-    trailing?: ReactNode;
-}
-export interface ChildrenItemProps {
-    children: ReactNode;
-}
-export interface DropdownMenuProps extends ChildrenItemProps {
-    id?: string;
-    direction?: 'top' | 'bottom';
-    header?: ReactNode;
-    stretch?: boolean;
-    position?: 'inline' | 'floating';
-    style?: React.CSSProperties;
-    className?: string;
-    role?: AriaRole;
-    'aria-label'?: string;
 }
 export interface DropdownTriggerProps extends VariantProps<
     typeof dropdownTriggerVariants
