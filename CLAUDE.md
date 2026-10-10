@@ -69,7 +69,7 @@ When adding a feature, add tests alongside it rather than relying on the gate to
 
 ## Conventions
 - `Issue.labels` is a plain array cast, stored as JSON. Label names are not a fixed backend enum — each project has its own `Label` records (see `App\Models\Label`/`App\Services\LabelService`), and a name is validated per request against that project's real `labels` table rows (`documentation/en/labels/`).
-- oxfmt (`.oxfmtrc.json`) is configured with single quotes and auto-organizes imports + Tailwind class ordering; run `npm run format` before committing.
+- oxfmt (`.oxfmtrc.json`) is configured with single quotes and auto-organizes imports + Tailwind class ordering; run `npm run format` before committing. `.githooks/pre-push` runs `oxfmt --check` and blocks unformatted pushes; enable it once per clone with `npm run hooks:install`.
 
 - **Issue identity is two-part.** `issues.id` is the global primary key used for routes, relations, `<!-- orbit-issue:ID -->` PR markers and `#[title](id)` comment tokens; `issues.number` is the project-scoped number users see as `#12` (assigned in `Issue::booted()` from `projects.next_issue_number`, unique per `(project_id, number)`, never reused). Show/search/log/notify/branch-name `#N` text uses `number`; links and lookups use `id`. Issues that predate the column have `number = id`, so old `#N` references stay valid.
 

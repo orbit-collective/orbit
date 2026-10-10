@@ -8,6 +8,7 @@
         "lint": "oxlint resources/js --fix",
         "format": "oxfmt resources/js",
         "format:check": "oxfmt --check resources/js",
+        "hooks:install": "git config core.hooksPath .githooks",
         "test": "vitest",
         "test:watch": "vitest --watch",
         "test:coverage": "vitest run --coverage"
