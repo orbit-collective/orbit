@@ -1,0 +1,56 @@
+{
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "plugins": [
+        "react",
+        "typescript"
+    ],
+    "categories": {
+        "correctness": "error"
+    },
+    "env": {
+        "browser": true,
+        "node": true,
+        "es2026": true
+    },
+    "ignorePatterns": [
+        "node_modules/**",
+        "vendor/**",
+        "public/build/**",
+        "coverage/**"
+    ],
+    "rules": {
+        "react/react-in-jsx-scope": "off",
+        "react/no-unescaped-entities": "off",
+        "react/exhaustive-deps": "off",
+        "typescript/no-explicit-any": "off",
+        "no-unused-vars": "off",
+        "no-undef": "off",
+        "react/set-state-in-effect": "off",
+        "react/refs": "off",
+        "react/purity": "off",
+        "react/preserve-manual-memoization": "off",
+        "react/globals": "off",
+        "react/use-memo": "off",
+        "react/immutability": "off",
+        "react/rules-of-hooks": "error",
+        "react/jsx-key": "error",
+        "react/jsx-no-target-blank": "error",
+        "react/no-unknown-property": "error",
+        "no-array-constructor": "error",
+        "no-unused-expressions": "error",
+        "no-useless-escape": "error",
+        "no-unassigned-vars": "error",
+        "preserve-caught-error": "error",
+        "typescript/ban-ts-comment": "error",
+        "typescript/no-empty-object-type": "error",
+        "typescript/no-namespace": "error",
+        "typescript/no-require-imports": "error",
+        "typescript/no-this-alias": "error",
+        "typescript/no-unsafe-function-type": "error",
+        "typescript/no-wrapper-object-types": "error",
+        "typescript/prefer-as-const": "error",
+        "typescript/triple-slash-reference": "error",
+        "typescript/no-duplicate-enum-values": "error",
+        "typescript/no-unnecessary-type-constraint": "error"
+    }
+}
