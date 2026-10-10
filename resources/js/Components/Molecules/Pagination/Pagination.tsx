@@ -1,18 +1,11 @@
-import Badge from '@/Components/Atoms/Badge/Badge';
-import DropdownItem from '@/Components/Atoms/DropdownItem/DropdownItem';
-import DropdownMenu from '@/Components/Atoms/DropdownMenu/DropdownMenu';
 import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
+import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { useAlert } from '@/context/AlertContext';
 import { PaginationProps } from '@/types/Components';
+import { DropdownOptionItem } from '@/types/Dropdown';
 import { Link, router } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
-import {
-    Key,
-    KeyboardEvent as ReactKeyboardEvent,
-    useEffect,
-    useRef,
-    useState,
-} from 'react';
+import { Key } from 'react';
 import Icon from '../../Atoms/Icon/Icon';
 
 const paginationVariants = cva(
@@ -36,6 +29,15 @@ const paginationVariants = cva(
 );
 
 const rowsPerPageCounts: number[] = [10, 20, 50, 100];
+
+const ROWS_PER_PAGE_OPTIONS: DropdownOptionItem[] = rowsPerPageCounts.map(
+    (count) => ({
+        value: String(count),
+        label: `${count} rows`,
+        role: 'menuitemradio',
+        indicator: 'check',
+    }),
+);
 
 const range = (start: number, end: number): number[] =>
     Array.from({ length: end - start + 1 }, (_, i) => start + i);
@@ -83,71 +85,7 @@ const Pagination = ({
     total,
     queryParams,
 }: PaginationProps) => {
-    const [dropdownVisible, setDropdownVisible] = useState(false);
     const { addAlert } = useAlert();
-    const rowsPerPageRef = useRef<HTMLDivElement>(null);
-    const triggerRef = useRef<HTMLButtonElement>(null);
-
-    useEffect(() => {
-        if (!dropdownVisible) return;
-
-        const handleClickOutside = (event: MouseEvent) => {
-            if (!rowsPerPageRef.current?.contains(event.target as Node)) {
-                setDropdownVisible(false);
-            }
-        };
-        const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                setDropdownVisible(false);
-                triggerRef.current?.focus();
-            }
-        };
-
-        const items = getMenuItems();
-        (
-            items.find((item) => item.dataset.active === 'true') ?? items[0]
-        )?.focus();
-
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [dropdownVisible]);
-
-    const getMenuItems = () =>
-        Array.from(
-            rowsPerPageRef.current?.querySelectorAll<HTMLButtonElement>(
-                '[role="menuitemradio"]',
-            ) ?? [],
-        );
-
-    const handleMenuKeyDown = (event: ReactKeyboardEvent) => {
-        if (!dropdownVisible) return;
-
-        if (event.key === 'Tab') {
-            setDropdownVisible(false);
-            return;
-        }
-
-        const items = getMenuItems();
-        const index = items.indexOf(
-            document.activeElement as HTMLButtonElement,
-        );
-        let next: number | null = null;
-
-        if (event.key === 'ArrowDown') next = (index + 1) % items.length;
-        else if (event.key === 'ArrowUp')
-            next = (index - 1 + items.length) % items.length;
-        else if (event.key === 'Home') next = 0;
-        else if (event.key === 'End') next = items.length - 1;
-
-        if (next !== null) {
-            event.preventDefault();
-            items[next]?.focus();
-        }
-    };
 
     if (total === 0) return null;
 
@@ -179,8 +117,6 @@ const Pagination = ({
                     'information',
                 ),
         });
-        setDropdownVisible(false);
-        triggerRef.current?.focus();
     };
 
     const getLinkAriaLabel = (label: string) => {
@@ -262,63 +198,37 @@ const Pagination = ({
                 results
             </div>
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:gap-6 xl:flex-nowrap">
-                <div
-                    ref={rowsPerPageRef}
-                    onKeyDown={handleMenuKeyDown}
-                    className="relative flex shrink-0 items-center gap-2"
-                >
+                <div className="flex shrink-0 items-center gap-2">
                     <span
                         aria-hidden="true"
                         className="whitespace-nowrap text-[var(--text-gray-color)]"
                     >
                         Rows per page:
                     </span>
-                    <DropdownTrigger
-                        ref={triggerRef}
-                        label={
-                            <div className="flex items-center gap-2">
-                                <span className="sr-only">Rows per page:</span>
-                                <span className="font-semibold text-[var(--text-color)]">
-                                    {currentPerPage}
-                                </span>
-                            </div>
-                        }
-                        isOpen={dropdownVisible}
-                        onClick={() => setDropdownVisible(!dropdownVisible)}
+                    <Dropdown
+                        variant="menu"
+                        ariaLabel="Rows per page"
+                        placement="top"
+                        width={176}
+                        options={ROWS_PER_PAGE_OPTIONS}
+                        selectedValues={[currentPerPage]}
+                        onSelect={(count) => handlePerPageChange(Number(count))}
+                        trigger={({ isOpen }) => (
+                            <DropdownTrigger
+                                isOpen={isOpen}
+                                label={
+                                    <div className="flex items-center gap-2">
+                                        <span className="sr-only">
+                                            Rows per page:
+                                        </span>
+                                        <span className="font-semibold text-[var(--text-color)]">
+                                            {currentPerPage}
+                                        </span>
+                                    </div>
+                                }
+                            />
+                        )}
                     />
-                    {dropdownVisible && (
-                        <DropdownMenu
-                            direction={'top'}
-                            role="menu"
-                            aria-label="Rows per page"
-                        >
-                            {rowsPerPageCounts.map((count) => (
-                                <DropdownItem
-                                    key={count}
-                                    label={
-                                        <div className="flex w-full items-center justify-between">
-                                            <span>{count} rows</span>
-                                            {currentPerPage ===
-                                                count.toString() && (
-                                                <Badge>Active</Badge>
-                                            )}
-                                        </div>
-                                    }
-                                    role="menuitemradio"
-                                    aria-checked={
-                                        currentPerPage === count.toString()
-                                    }
-                                    data-active={
-                                        currentPerPage === count.toString()
-                                    }
-                                    isActive={
-                                        currentPerPage === count.toString()
-                                    }
-                                    onClick={() => handlePerPageChange(count)}
-                                />
-                            ))}
-                        </DropdownMenu>
-                    )}
                 </div>
                 {links && numericLinks.length > 1 && (
                     <nav

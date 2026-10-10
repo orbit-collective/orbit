@@ -299,7 +299,7 @@ describe('SelectionDropdown Component', () => {
         remove.mockRestore();
     });
 
-    test('closes when the page scrolls', async () => {
+    test('stays open and follows the trigger when the page scrolls', async () => {
         const user = userEvent.setup();
         render(
             <SelectionDropdown
@@ -317,7 +317,7 @@ describe('SelectionDropdown Component', () => {
             window.dispatchEvent(new Event('scroll'));
         });
 
-        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+        expect(screen.getByRole('menu')).toBeInTheDocument();
     });
 
     test('moves focus into the menu, supports arrow keys, and returns focus on Escape', async () => {
@@ -422,10 +422,22 @@ describe('SelectionDropdown Component', () => {
         expect(
             screen.getByRole('menuitemcheckbox', { name: 'Title' }),
         ).toHaveAttribute('aria-checked', 'false');
-        // Only the checkbox-kind option renders the checkbox indicator box.
+        // Toggle and radio rows show a selection indicator; action rows don't.
         expect(
-            document.querySelectorAll('.h-4.w-4.rounded.border'),
-        ).toHaveLength(1);
+            screen
+                .getByRole('menuitem', { name: 'Reset' })
+                .querySelector('.h-4.w-4'),
+        ).toBeNull();
+        expect(
+            screen
+                .getByRole('menuitemradio', { name: 'Compact' })
+                .querySelector('.h-4.w-4'),
+        ).not.toBeNull();
+        expect(
+            screen
+                .getByRole('menuitemcheckbox', { name: 'Title' })
+                .querySelector('.h-4.w-4'),
+        ).not.toBeNull();
     });
 
     test('keeps the menu inside the viewport when the trigger is near the left edge', async () => {
@@ -442,6 +454,9 @@ describe('SelectionDropdown Component', () => {
         // jsdom reports a zero rect (right = 0), i.e. the left edge.
         await user.click(screen.getByText('Columns'));
 
-        expect(screen.getByRole('menu').style.left).toBe('8px');
+        const panel = screen
+            .getByRole('menu')
+            .closest<HTMLElement>('[style*="position: fixed"]');
+        expect(panel?.style.left).toBe('12px');
     });
 });
