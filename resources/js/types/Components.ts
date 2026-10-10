@@ -538,19 +538,6 @@ export interface TourPopoverProps {
     onNext: () => void;
     onClose: () => void;
 }
-export interface SlideContentProps {
-    title: string;
-    subtitle: string;
-    description: string;
-}
-export interface OnboardingModalFooterProps {
-    currentStep: number;
-    totalSteps: number;
-    isFirstStep: boolean;
-    isLastStep: boolean;
-    onPrev: () => void;
-    onNext: () => void;
-}
 export interface ProjectOnboardingFormData {
     name: string;
     slug: string;
