@@ -125,6 +125,7 @@ documentation/
     project-onboarding/
       README.md              <- indeks tej kategorii
       01-add-a-tour-step.md
+      02-add-an-interactive-tour-step.md
     automation/
       README.md              <- indeks tej kategorii
       01-add-a-new-trigger-type.md
