@@ -284,9 +284,10 @@ class OrbitRelayClient
     }
 
     /**
-     * cURL reports a request that connected but was not answered in time as
-     * error 28 ("Operation timed out"); a connect timeout uses the same code,
-     * which is fine here - either way the relay did not respond in time.
+     * cURL reports both a request that was not answered in time and a connect
+     * timeout as error 28 ("Operation timed out"). The message check is a
+     * fallback for transports that word it differently; either way the relay
+     * did not respond in time.
      */
     private function isTimeout(ConnectionException $exception): bool
     {

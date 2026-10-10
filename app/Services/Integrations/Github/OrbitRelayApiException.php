@@ -12,9 +12,10 @@ use Throwable;
  * non-readonly `Exception::$code`) lets callers branch on stable
  * machine-readable codes (e.g. CONNECTION_REVOKED) without parsing text.
  *
- * `isTimeout` marks a transport failure where the relay was reached but did
- * not answer in time, so it can be told apart from one that could not be
- * reached at all.
+ * `isTimeout` marks a transport failure caused by a time limit - the relay did
+ * not answer in time, or the connection itself timed out - as opposed to one
+ * that failed outright (DNS, refused, TLS). It does not say which of the two
+ * timeouts happened; the logged transport `reason` does.
  */
 class OrbitRelayApiException extends RuntimeException
 {
