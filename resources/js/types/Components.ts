@@ -34,6 +34,7 @@ import React, {
     AriaRole,
     ButtonHTMLAttributes,
     ChangeEvent,
+    CSSProperties,
     HTMLAttributes,
     ReactNode,
     SyntheticEvent,
@@ -518,6 +519,22 @@ export interface TableHeaderCellProps {
     onSort: (column: SortingColumn) => void;
     onMouseDown: (column: string, e: React.MouseEvent<HTMLDivElement>) => void;
     onDoubleClick: (column: string) => void;
+}
+export interface TourPopoverProps {
+    stepId: string;
+    title: string;
+    icon?: keyof typeof icons;
+    description: string;
+    currentStep: number;
+    totalSteps: number;
+    /** Side of the popover that faces the spotlighted element. */
+    placement: 'top' | 'right' | 'bottom' | 'left' | 'center';
+    /** Offset (px) of the arrow along the popover edge it sits on. */
+    arrowOffset: number;
+    style: CSSProperties;
+    onPrev: () => void;
+    onNext: () => void;
+    onClose: () => void;
 }
 export interface SlideContentProps {
     title: string;
