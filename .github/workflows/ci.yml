@@ -32,7 +32,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --legacy-peer-deps
-      - run: npx eslint resources/js
+      - run: npx oxlint resources/js
+      - run: npx oxfmt --check resources/js
 
   test-js:
     name: Component tests (Vitest)

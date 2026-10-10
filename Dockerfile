@@ -65,9 +65,9 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-# --legacy-peer-deps: eslint-plugin-react's peer range (<=9.7) lags behind the
-# project's eslint 10.x; npm's default strict peer resolution fails a clean
-# `npm ci` over this even though the versions work fine together in practice.
+# --legacy-peer-deps: tailwind-scrollbar@4 declares a tailwindcss 4.x peer while
+# the project is on tailwindcss 3.x; npm's default strict peer resolution fails
+# a clean `npm ci` over this even though the versions work together in practice.
 RUN npm ci --legacy-peer-deps
 
 COPY . .

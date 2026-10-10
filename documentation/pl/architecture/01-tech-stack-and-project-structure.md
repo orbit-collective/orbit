@@ -33,7 +33,7 @@ Główny [`README.md`](../../../README.md#tech-stack) ma sztandarową tabelę st
 | `@sentry/react` | Monitoring błędów frontendu — inicjalizowany w `app.tsx`, raportuje nieprzechwycone wyjątki frontendu, gdy ustawiony jest `VITE_SENTRY_DSN` |
 | `axios` | Klient HTTP, którego `router` Inertii używa pod spodem — rzadko wywoływany bezpośrednio |
 | `vitest`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`, `jsdom` | Stack testów frontendu |
-| `eslint*`, `oxfmt` | Linting/formatowanie — oxfmt automatycznie sortuje klasy Tailwinda i importy (`sortTailwindcss`, `sortImports` w `.oxfmtrc.json`) |
+| `oxlint`, `oxfmt` | Linting/formatowanie — oxfmt automatycznie sortuje klasy Tailwinda i importy (`sortTailwindcss`, `sortImports` w `.oxfmtrc.json`) |
 
 ## Mapa katalogów, o poziom głębiej niż w głównym README
 
