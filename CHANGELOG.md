@@ -1,5 +1,43 @@
 # Changelog
 
+## [0.10.3](https://github.com/orbit-collective/orbit/compare/v0.10.2...v0.10.3) (2026-10-10)
+
+
+### Features
+
+* **ui:** add anchored tour popover component ([694cb6d](https://github.com/orbit-collective/orbit/commit/694cb6dffa6ed0d053848517d51d165b6c7877a4))
+* **ui:** add hook to track tour target element ([b8095e3](https://github.com/orbit-collective/orbit/commit/b8095e3d4c10b9faab297a6928452c5e2ff86bed))
+* **ui:** add interactive create-project chapter to tour ([9a8f36f](https://github.com/orbit-collective/orbit/commit/9a8f36ffaee2599635cf0e3cae225f568abedbf6))
+* **ui:** add product tour overlay ([f418171](https://github.com/orbit-collective/orbit/commit/f418171fed253283b6054d6f38a2abba46a34163))
+* **ui:** add product tour step definitions ([3e93e9a](https://github.com/orbit-collective/orbit/commit/3e93e9ab7d4abf658ae705aa1866880f4c64afaa))
+* **ui:** add shared Dropdown component with variants ([3cf367c](https://github.com/orbit-collective/orbit/commit/3cf367cf474c51b2a269ab56de8e9b9808bc77b2))
+* **ui:** add tour anchors to the new project form ([a6eacb2](https://github.com/orbit-collective/orbit/commit/a6eacb21d0c7ccbeef09a30f15e693c8ed13d018))
+* **ui:** add tour popover positioning helpers ([83da875](https://github.com/orbit-collective/orbit/commit/83da8753a0e01707c1952d4a0e88642e01172bf5))
+* **ui:** mark tour anchors with data-tour attributes ([c50373e](https://github.com/orbit-collective/orbit/commit/c50373e6e98694ba232cae8bb5da8b48a444dad3))
+* **ui:** open mobile sidebar on sidebar tour steps ([cb99e32](https://github.com/orbit-collective/orbit/commit/cb99e32be8aa677d2c758b2edf818bf64c77b483))
+* **ui:** replace onboarding modal with product tour ([6e4c4aa](https://github.com/orbit-collective/orbit/commit/6e4c4aab020eb88475bc5fb8375399a21d69932b))
+* **ui:** show action hints in the tour popover ([b91e54e](https://github.com/orbit-collective/orbit/commit/b91e54ec04f94b8258f3002a112fbd60c4dcce7b))
+
+
+### Bug Fixes
+
+* **deps:** align all tiptap packages to 3.31.4 ([65347d5](https://github.com/orbit-collective/orbit/commit/65347d53b46d806f20add4e7dd42d3af402f2afd))
+* **github:** report relay timeouts instead of "unreachable" ([cbb88ac](https://github.com/orbit-collective/orbit/commit/cbb88ac27d97df8c9d18caa70e6623585e3f4331))
+* **github:** tighten relay timeout docs and test each marker ([6995e7a](https://github.com/orbit-collective/orbit/commit/6995e7a6717e3e0f75de43dc54c187de5ddf23ed))
+* **issues:** fix quick-add row title field and type picker ([64e07bb](https://github.com/orbit-collective/orbit/commit/64e07bbf7b96779b5b2e1b47e99084c39d55e304))
+* **ui:** address dropdown review feedback ([d03f6df](https://github.com/orbit-collective/orbit/commit/d03f6dfa5269c6b7439560f992a50dec8fa0b0bd))
+* **ui:** fall back to vertical placement for tour popover ([36488fa](https://github.com/orbit-collective/orbit/commit/36488fa4a351499182cdc3cbe3dfd6a9a759ebba))
+* **ui:** harden interactive tour steps from review ([ba8c341](https://github.com/orbit-collective/orbit/commit/ba8c3411cf5d9450c416e3f655da800fff88245a))
+* **ui:** keep dropdown panels on screen and atoms below molecules ([82db7c3](https://github.com/orbit-collective/orbit/commit/82db7c35fba6bc6e684578ac2709f8ee3154f629))
+* **ui:** recover when a tour target vanishes mid-step ([dd47f1b](https://github.com/orbit-collective/orbit/commit/dd47f1b158c3b6a80926d4757f06e3c2030fdbcb))
+* **ui:** remove focus flash on dropdown options ([f8c6236](https://github.com/orbit-collective/orbit/commit/f8c62364ca9930d315a22c48bccc9e53f0307c5b))
+* **ui:** suspend global shortcuts during product tour ([0764f43](https://github.com/orbit-collective/orbit/commit/0764f4383cff522c00a8647bebb7a3f3e7cf5cf3))
+
+
+### Miscellaneous Chores
+
+* release 0.10.3 ([b0f58d0](https://github.com/orbit-collective/orbit/commit/b0f58d0ba30df94eb6bb767c4376364682e5b1cf))
+
 ## [0.10.2](https://github.com/orbit-collective/orbit/compare/v0.10.1...v0.10.2) (2026-10-06)
 
 
