@@ -530,6 +530,12 @@ export interface TourPopoverProps {
     /** Offset (px) of the arrow along the popover edge it sits on. */
     arrowOffset: number;
     style: CSSProperties;
+    /** Call-to-action shown for steps the user performs themselves. */
+    hint?: { icon: keyof typeof icons; text: string };
+    /** Arrow is disabled (e.g. a required field is still empty). */
+    nextDisabled?: boolean;
+    /** The user is working in the page behind: don't steal focus or trap Tab. */
+    interactive?: boolean;
     onPrev: () => void;
     onNext: () => void;
     onClose: () => void;
