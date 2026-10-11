@@ -17,13 +17,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     const shortcuts = useMemo(
         (): ShortcutDefinition[] => [
             {
-                key: 'c',
-                description: 'Create issue',
-                category: 'Creation',
-                action: requestQuickAddIssue,
-            },
-            {
-                key: 'ctrl+i',
+                key: ['c', 'ctrl+i'],
                 description: 'Create issue',
                 category: 'Creation',
                 action: requestQuickAddIssue,
