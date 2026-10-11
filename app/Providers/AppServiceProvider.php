@@ -16,6 +16,7 @@ use App\Listeners\SendNotificationListener;
 use App\Repositories\EloquentNotificationSettingRepository;
 use App\Repositories\NotificationSettingRepository;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Vite;
@@ -44,6 +45,10 @@ class AppServiceProvider extends ServiceProvider
         // burst of notifications (e.g. several fields changing on one issue)
         // gets spaced out instead of tripping the provider's limit.
         RateLimiter::for('emails', fn () => Limit::perSecond(2));
+
+        // The palette searches as the user types (debounced), so this is
+        // generous; it only stops a runaway client.
+        RateLimiter::for('command-palette', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()));
 
         // Every notification-worthy event routes through this one listener,
         // which dispatches on the event type internally — see its handle()
