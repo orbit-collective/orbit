@@ -1,17 +1,59 @@
 #!/bin/sh
-# Blocks a push when the frontend is not formatted with oxfmt.
+# Blocks a push when a pushed commit contains frontend files that are not
+# formatted with oxfmt. It checks the content of the commits being pushed (not
+# the working tree), so uncommitted edits can neither hide nor cause a failure.
+# Runs oxfmt from the host's node_modules, or inside the `vite` container when
+# dependencies only live there (the Docker setup).
 # Enable once per clone with: npm run hooks:install
 # Bypass in an emergency with: git push --no-verify
 
-cd "$(git rev-parse --show-toplevel)" || exit 1
+top=$(git rev-parse --show-toplevel) || exit 1
+cd "$top" || exit 1
 
-if [ ! -x node_modules/.bin/oxfmt ]; then
-    echo "pre-push: oxfmt is not installed (run npm install), skipping format check." >&2
-    exit 0
+zero=0000000000000000000000000000000000000000
+tmp=
+trap '[ -n "$tmp" ] && rm -rf "$tmp"' EXIT
+
+compose="docker compose"
+if command -v doppler >/dev/null 2>&1 && doppler configure get project --plain >/dev/null 2>&1; then
+    compose="doppler run -- docker compose"
 fi
 
-if ! npx --no-install oxfmt --check resources/js; then
+failed=0
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ "$local_sha" = "$zero" ] && continue
+
+    # Files touched by commits that are not on any remote yet, as they exist
+    # in the pushed commit.
+    files=$(git log --format= --name-only --diff-filter=d "$local_sha" --not --remotes -- resources/js </dev/null \
+        | grep -E '\.(ts|tsx|js|jsx)$' | sort -u \
+        | while read -r f; do git cat-file -e "$local_sha:$f" 2>/dev/null && echo "$f"; done)
+    [ -z "$files" ] && continue
+
+    tmp=$(mktemp -d "$(git rev-parse --absolute-git-dir)/pre-push-oxfmt.XXXXXX") || exit 1
+    # shellcheck disable=SC2086
+    git archive "$local_sha" $files .oxfmtrc.json tailwind.config.js </dev/null | tar -x -C "$tmp" || exit 1
+
+    # Resolves node_modules by walking up from the temp dir inside the repo.
+    if [ -x node_modules/.bin/oxfmt ]; then
+        # shellcheck disable=SC2086
+        (cd "$tmp" && "$top/node_modules/.bin/oxfmt" --check $files) </dev/null || failed=1
+    elif command -v docker >/dev/null 2>&1; then
+        rel=${tmp#"$top"/}
+        echo "pre-push: oxfmt not found on the host, checking inside the vite container." >&2
+        # shellcheck disable=SC2086
+        $compose run --rm -T -w "/app/$rel" vite /app/node_modules/.bin/oxfmt --check $files </dev/null || failed=1
+    else
+        echo "pre-push: oxfmt is not installed on the host and docker is unavailable, skipping format check." >&2
+    fi
+
+    rm -rf "$tmp"
+    tmp=
+done
+
+if [ "$failed" -ne 0 ]; then
     echo "" >&2
-    echo "pre-push: formatting issues found. Run 'npm run format', commit the result and push again." >&2
+    echo "pre-push: the pushed commits contain unformatted files. Run 'npm run format', commit the result and push again." >&2
     exit 1
 fi
