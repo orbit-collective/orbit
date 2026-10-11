@@ -12,7 +12,9 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->service = app(CommandPaletteSearchService::class);
-    $this->user = User::factory()->create();
+    // A fixed name: a random one can contain "ann" and then match the "@ann"
+    // searches below, because the searching user shares their own projects.
+    $this->user = User::factory()->create(['name' => 'Zed Viewer']);
     $this->project = Project::factory()->create(['name' => 'Orbit']);
     $this->project->users()->attach($this->user->id, ['role' => 'member']);
 });
