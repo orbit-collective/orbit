@@ -149,7 +149,7 @@ export default function Show({
                                 </div>
                             ) : (
                                 <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
-                                    <div className="mb-2 flex items-center justify-between">
+                                    <div className="mb-2">
                                         <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                                             Recent Work Activity
                                         </h3>
