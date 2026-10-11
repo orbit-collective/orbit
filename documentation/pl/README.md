@@ -25,6 +25,7 @@ documentation/
     shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
     command-palette/         <- angielskie tłumaczenie każdego przewodnika poniżej
     storybook/               <- angielskie tłumaczenie każdego przewodnika poniżej
+    redis/                   <- angielskie tłumaczenie każdego przewodnika poniżej
     content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -150,6 +151,11 @@ documentation/
       02-mock-inertia-and-network.md
       03-theme-accent-and-docker.md
       04-stories-as-vitest-tests.md
+    redis/
+      README.md              <- indeks tej kategorii
+      01-run-and-operate-redis.md
+      02-cache-a-value-and-invalidate-it.md
+      03-sessions-on-redis.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
