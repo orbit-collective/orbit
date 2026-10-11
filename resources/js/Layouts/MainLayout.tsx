@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import Icon from '@/Components/Atoms/Icon/Icon';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import { useCommands } from '@/hooks/useCommands';
 import { Command } from '@/types/Commands';
@@ -72,7 +71,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         [project.name, setSelectedLook],
     );
 
-    const { openPalette } = useCommands(commands);
+    useCommands(commands);
 
     return (
         <div
@@ -126,21 +125,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                             onClick: () => setSelectedLook('Activity'),
                         },
                     ]}
-                >
-                    <button
-                        type="button"
-                        onClick={() => openPalette()}
-                        aria-label="Open command palette"
-                        title="Open command palette"
-                        className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
-                    >
-                        <Icon
-                            name="Search"
-                            size={18}
-                            color="var(--text-gray-color)"
-                        />
-                    </button>
-                </PageHeader>
+                />
                 <main className={'flex flex-1 flex-col overflow-y-auto'}>
                     {children}
                 </main>

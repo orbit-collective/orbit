@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { Command } from '@/types/Commands';
+import { requestOpenCommandPalette } from '@/utils/commandPaletteEvent';
 
 vi.mock('@/context/ModalContext', () => ({
     useModal: () => ({ openModal: vi.fn() }),
@@ -416,6 +417,23 @@ describe('CommandContext', () => {
             expect(result.current.palette.isOpen).toBe(true);
 
             act(() => result.current.palette.closePalette());
+            expect(result.current.palette.isOpen).toBe(false);
+        });
+
+        test('a page header can open the palette through the window event', () => {
+            const { result } = setup();
+
+            act(() => requestOpenCommandPalette());
+
+            expect(result.current.palette.isOpen).toBe(true);
+            expect(result.current.palette.mode).toBe('default');
+        });
+
+        test('stops listening for the event once the provider unmounts', () => {
+            const { result, unmount } = setup();
+            unmount();
+
+            expect(() => requestOpenCommandPalette()).not.toThrow();
             expect(result.current.palette.isOpen).toBe(false);
         });
 

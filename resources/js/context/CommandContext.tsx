@@ -17,6 +17,7 @@ import {
     PaletteMode,
 } from '@/types/Commands';
 import { ShortcutDefinition } from '@/types/Shortcuts';
+import { OPEN_COMMAND_PALETTE_EVENT } from '@/utils/commandPaletteEvent';
 
 const CommandContext = createContext<CommandContextType | undefined>(undefined);
 
@@ -144,6 +145,14 @@ export const CommandProvider = ({ children }: { children: ReactNode }) => {
                 })),
         [commands, runCommand],
     );
+
+    useEffect(() => {
+        const open = () => openPalette();
+
+        window.addEventListener(OPEN_COMMAND_PALETTE_EVENT, open);
+        return () =>
+            window.removeEventListener(OPEN_COMMAND_PALETTE_EVENT, open);
+    }, [openPalette]);
 
     useEffect(() => {
         if (shortcutDefinitions.length === 0) return;
