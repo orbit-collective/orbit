@@ -18,6 +18,7 @@ Orbit is an issue/project tracker built as a Laravel + Inertia.js + React (TypeS
   - `npm run unused` — reports unused imports and variables (oxlint `no-unused-vars`, which is off in `.oxlintrc.json`, so plain `npm run lint` does not catch them). `npm run unused:fix` removes the unused imports; `npm run unused:fix:dangerous` also removes unused local variables with their initializers, so review the diff.
   - `npm run cleanup` — `unused:fix` followed by `knip:fix`. Always run the tests afterwards.
 - `npm test` — Vitest (watch mode by default). `npm run test:watch`, `npm run test:coverage`.
+- `npm run storybook` — Storybook dev server (:6006); `npm run build-storybook` — static build; `npm run test:stories` — every story rendered + its `play` function run as a Vitest test.
 - Run a single frontend test: `npx vitest run resources/js/Components/Atoms/Button/Button.test.tsx` (add `-t "test name"` to filter).
 
 ### Backend (php / composer)
@@ -33,6 +34,7 @@ The full stack also runs in Docker — two services, `app` (Laravel on :8000) an
 - `make setup` — build images (no cache) and start detached. `make up`/`make dev` — foreground; `make down` — detached; `make clean` — stop and drop volumes.
 - `make test` (PHP/Pest), `make test-js` (Vitest once), `make test-coverage` (PHP with the coverage gate), `make test-js-coverage` (Vitest with the coverage gate), `make lint`, `make type-check` — run the suites inside the containers. The `app` image includes PCOV so PHP coverage works out of the box.
 - `make knip`, `make knip-fix`, `make unused`, `make unused-fix`, `make unused-fix-dangerous`, `make cleanup` — the unused-code commands above, run inside the `vite` container (run `make npm-install` once after pulling, since knip is a new dependency).
+- `make storybook` (foreground) / `make storybook-d` (detached) / `make storybook-stop` / `make logs-storybook` — Storybook in its own `storybook` container (profile `storybook`, :6006; not part of `make up`). `make storybook-build` and `make test-stories` run the static build and the stories-as-tests inside it.
 - `make shell` (app shell), `make tinker`, `make migrate`, `make fresh` (migrate:fresh --seed), `make logs`.
 - `make npm-install` / `make composer-install` — run after adding/updating/removing an npm or composer package (including via a branch merge). `node_modules`/`vendor` are anonymous volumes, so a plain `make up`/`make dev` reuses the stale ones already inside the container image; these targets rebuild the relevant image and recreate its container with `--renew-anon-volumes` to pick up the new dependencies.
 - `backup` service — snapshots `database/database.sqlite` (consistent `sqlite3 .backup`, integrity-checked, source mounted read-only) into `./backup` every `BACKUP_INTERVAL` seconds (default 3600), keeping the newest `BACKUP_KEEP` (48) plus one per day for `BACKUP_KEEP_DAILY` (30) days in `backup/daily/`. `make backup-now` takes a snapshot immediately. Set `BACKUP_DIR` to another drive to keep copies off the project disk; the container starts as root only to chown that directory, then runs as the owner of `database/database.sqlite` (override with `BACKUP_UID`/`BACKUP_GID`). `make test-backup` runs the script's regression tests. Restore by stopping the stack and copying a snapshot over `database/database.sqlite` (never `migrate:fresh`). Timestamps are UTC (container clock). Script: `docker/backup/backup.sh`.
@@ -55,6 +57,9 @@ When adding a feature, keep this separation: query code goes in the Repository, 
 - **Command palette** (`mod+k`): every action is a `Command` (`types/Commands.ts`) registered with `useCommands()`; a keybinding is just its optional `shortcut`, and app-wide commands live in `hooks/useGlobalCommands.ts`. Run a command from a button with `useCommandPalette().runCommand('<id>')`, not the deprecated `triggerShortcut()`. Issue/project/people search goes through the one internal `GET /command-palette/search` endpoint, scoped to the user's memberships. See `documentation/en/command-palette/`.
 - Shared prop/domain types live in `resources/js/types/` (`Issues.ts`, `Projects.ts`, `Users.ts`, `Components.ts`).
 - Utilities in `resources/js/utils/`: `cn.ts` (clsx + tailwind-merge — use it to merge Tailwind classes), plus `colors.ts`, `time.ts`.
+
+### Storybook
+Every component has a colocated `X.stories.tsx` (`title: 'Atoms|Molecules|Organisms/X'`). Config is in `.storybook/` (own Vite config aliasing `@inertiajs/react` and `axios` to `.storybook/mocks/`; `withOrbitApp` decorator wraps stories in the app's real providers; toolbar theme dark/light + accent drive `ThemeProvider`/`AccentProvider`). Stories get page props via `parameters.inertia` and HTTP answers via `parameters.network`; shared sample data is `resources/js/stories/fixtures.ts`. Each layer's stories run as Vitest tests (`resources/js/stories/*.stories.test.tsx`) and are excluded from the coverage gate. See `documentation/en/storybook/`.
 
 ### Styling
 - Tailwind CSS. Class-variance-authority (`cva`) + `cn()` for component variants.
