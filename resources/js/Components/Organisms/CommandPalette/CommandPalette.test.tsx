@@ -1,6 +1,6 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ReactNode } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { Command, PaletteSearchIssue } from '@/types/Commands';
 
@@ -783,6 +783,120 @@ describe('CommandPalette', () => {
             await user.click(screen.getByText('Change status'));
 
             expect(loadHistory()).toEqual([]);
+        });
+    });
+
+    describe('contextual issue steps', () => {
+        test('the breadcrumb leads with the issue the step belongs to', async () => {
+            const user = setup([
+                makeCommand({
+                    id: 'issue.status',
+                    title: 'Change status…',
+                    group: 'suggested',
+                    context: '#12',
+                    children: () => [makeCommand({ id: 'x', title: 'Doing' })],
+                }),
+            ]);
+            open();
+
+            await user.click(screen.getByText('Change status…'));
+
+            const crumbs = screen.getByRole('list', { name: 'Current step' });
+            expect(crumbs).toHaveTextContent('#12');
+            expect(crumbs).toHaveTextContent('Change status…');
+            expect(crumbs.textContent?.indexOf('#12')).toBeLessThan(
+                crumbs.textContent?.indexOf('Change status…') ?? 0,
+            );
+        });
+
+        test('the Suggested group comes first', () => {
+            setup([
+                dashboard,
+                makeCommand({
+                    id: 'issue.priority',
+                    title: 'Change priority…',
+                    group: 'suggested',
+                    children: () => [],
+                }),
+            ]);
+            open();
+
+            expect(screen.getAllByRole('group')[0]).toHaveAccessibleName(
+                'Suggested',
+            );
+            expect(screen.getAllByRole('option')[0]).toHaveTextContent(
+                'Change priority…',
+            );
+        });
+
+        test('a multi-select step stays open and reflects the new state', async () => {
+            const Labels = () => {
+                const [on, setOn] = useState(false);
+                const commands = useMemo(
+                    (): Command[] => [
+                        makeCommand({
+                            id: 'issue.labels',
+                            title: 'Labels…',
+                            group: 'suggested',
+                            children: () => [
+                                makeCommand({
+                                    id: 'issue.labels.bug',
+                                    title: 'bug',
+                                    subtitle: on ? 'Added' : undefined,
+                                    keepOpen: true,
+                                    perform: () => setOn((value) => !value),
+                                }),
+                            ],
+                        }),
+                    ],
+                    [on],
+                );
+                useCommands(commands);
+                return null;
+            };
+            const user = userEvent.setup();
+            render(
+                <Providers>
+                    <Harness commands={[]} />
+                    <Labels />
+                </Providers>,
+            );
+            open();
+
+            await user.click(screen.getByText('Labels…'));
+            expect(
+                screen.getByRole('option', { name: 'bug' }),
+            ).toBeInTheDocument();
+
+            await user.click(screen.getByText('bug'));
+
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+            expect(
+                screen.getByRole('option', { name: /bug.*Added/ }),
+            ).toBeInTheDocument();
+
+            await user.click(screen.getByText('bug'));
+            expect(screen.queryByText('Added')).not.toBeInTheDocument();
+        });
+
+        test('a plain step command closes the palette after running', async () => {
+            const perform = vi.fn();
+            const user = setup([
+                makeCommand({
+                    id: 'issue.priority',
+                    title: 'Change priority…',
+                    children: () => [
+                        makeCommand({ id: 'p', title: 'High', perform }),
+                    ],
+                }),
+            ]);
+            open();
+
+            await user.click(screen.getByText('Change priority…'));
+            await user.click(screen.getByText('High'));
+
+            expect(perform).toHaveBeenCalledTimes(1);
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         });
     });
 });

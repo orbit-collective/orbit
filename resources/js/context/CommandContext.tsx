@@ -109,6 +109,7 @@ export const CommandProvider = ({ children }: { children: ReactNode }) => {
                 const page = {
                     id: command.id,
                     title: command.title,
+                    context: command.context,
                     commands: command.children(),
                 };
                 if (isOpenRef.current) {
@@ -121,7 +122,7 @@ export const CommandProvider = ({ children }: { children: ReactNode }) => {
                 return;
             }
 
-            closePalette();
+            if (!command.keepOpen) closePalette();
             command.perform?.();
         },
         [closePalette, pushPage],
