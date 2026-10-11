@@ -17,5 +17,5 @@
         },
         "types": ["vitest/globals", "@testing-library/jest-dom/vitest"]
     },
-    "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx", "resources/js/**/*.d.ts"]
+    "include": ["resources/js/**/*.ts", "resources/js/**/*.tsx", "resources/js/**/*.d.ts", ".storybook/**/*.ts", ".storybook/**/*.tsx"]
 }
