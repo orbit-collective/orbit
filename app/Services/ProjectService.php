@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Repositories\ProjectRepository;
+use App\Support\Cache\CachedModels;
 use App\Support\Cache\CacheVersion;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -41,12 +42,14 @@ class ProjectService
      */
     public function getAllForUser(int $userId): Collection
     {
-        return CacheVersion::remember(
+        $rows = CacheVersion::remember(
             CacheVersion::MEMBERSHIP,
-            "user:$userId:projects",
+            "user:$userId:projects:rows",
             self::CACHE_TTL,
-            fn () => $this->projectRepository->getAllForUser($userId),
+            fn () => CachedModels::toRows($this->projectRepository->getAllForUser($userId)),
         );
+
+        return CachedModels::hydrate(Project::class, $rows);
     }
 
     public function findById(int $id): ?Project
