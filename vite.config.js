@@ -2,6 +2,7 @@
 
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
+import os from 'node:os';
 import path from 'node:path';
 import { defineConfig } from 'vite';
 
@@ -38,6 +39,13 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'jsdom',
+        // Each test file gets its own VM context inside a long-lived worker
+        // thread, instead of a fresh process: creating jsdom per file was
+        // ~44% of the run. Needs the `performance` polyfill in setup.ts.
+        pool: 'vmThreads',
+        // Vitest leaves one core free by default; on the 4 vCPU CI runner that
+        // is a quarter of the capacity. Locally the default is kept.
+        maxWorkers: process.env.CI ? os.availableParallelism() : undefined,
         setupFiles: './resources/js/tests/setup.ts',
         css: true,
 
