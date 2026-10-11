@@ -1,13 +1,11 @@
 import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
-import Keybind from '@/Components/Atoms/Keybind/Keybind';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import { useCommands } from '@/hooks/useCommands';
 import { Command } from '@/types/Commands';
 import { MainLayoutProps } from '@/types/Components';
 import { IssuePageLooks } from '@/types/Issues';
 import { requestQuickAddIssue } from '@/utils/quickAddIssueEvent';
-import { formatBindingParts } from '@/utils/shortcutKeys';
 import Sidebar from '../Components/Organisms/Sidebar/Sidebar';
 
 const LOOKS: {
@@ -134,23 +132,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         onClick={() => openPalette()}
                         aria-label="Open command palette"
                         title="Open command palette"
-                        className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                        className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
                     >
                         <Icon
                             name="Search"
                             size={18}
                             color="var(--text-gray-color)"
                         />
-                        <span className="hidden items-center gap-1 lg:flex">
-                            {formatBindingParts('mod+k').map((part) => (
-                                <Keybind
-                                    key={part}
-                                    tooltipText="Open command palette"
-                                    tooltip={false}
-                                    keybind={part}
-                                />
-                            ))}
-                        </span>
                     </button>
                 </PageHeader>
                 <main className={'flex flex-1 flex-col overflow-y-auto'}>
