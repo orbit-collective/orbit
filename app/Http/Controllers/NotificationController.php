@@ -42,7 +42,7 @@ class NotificationController extends Controller
 
         $this->activityLogService->log(null, "Notification #$notification->id deleted by " . auth()->user()?->name ?? 'Someone', auth()->id());
 
-        $notification->delete();
+        $this->notificationService->delete($notification);
 
         return redirect()->back();
     }

@@ -78,3 +78,11 @@ test('it only marks the given user unread notifications as read', function () {
         ->and(Notification::where('user_id', $user->id)->where('read', false)->count())->toBe(0)
         ->and(Notification::where('user_id', $otherUser->id)->where('read', false)->count())->toBe(1);
 });
+
+test('it can delete a notification', function () {
+    $notification = Notification::factory()->create();
+
+    $this->repository->delete($notification);
+
+    $this->assertDatabaseMissing('notifications', ['id' => $notification->id]);
+});
