@@ -53,4 +53,36 @@ describe('BulkActionBar Component', () => {
 
         expect(screen.getByText('Removing...')).toBeDisabled();
     });
+
+    test('clears the selection when Clear is clicked', () => {
+        const handleClear = vi.fn();
+        render(
+            <BulkActionBar
+                selectedCount={2}
+                onBulkDelete={vi.fn()}
+                onClear={handleClear}
+                isDeleting={false}
+            />,
+        );
+
+        fireEvent.click(screen.getByLabelText('Clear'));
+
+        expect(handleClear).toHaveBeenCalledTimes(1);
+    });
+
+    test('clears the selection when Escape is pressed', () => {
+        const handleClear = vi.fn();
+        render(
+            <BulkActionBar
+                selectedCount={2}
+                onBulkDelete={vi.fn()}
+                onClear={handleClear}
+                isDeleting={false}
+            />,
+        );
+
+        fireEvent.keyDown(window, { key: 'Escape' });
+
+        expect(handleClear).toHaveBeenCalledTimes(1);
+    });
 });
