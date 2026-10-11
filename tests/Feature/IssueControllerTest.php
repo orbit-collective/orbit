@@ -1190,3 +1190,29 @@ test('issue preview is forbidden to non-members', function () {
 
     $this->actingAs(User::factory()->create())->getJson("/projects/$project->id/issues/$issue->id/preview")->assertForbidden();
 });
+
+test('the issue page exposes what the acting user may change, mirroring update()', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+    $get = fn ($user) => $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id")
+        ->json('props.issueAbilities');
+
+    expect($get(actingAsProjectMember($project, 'member')))->toBe([
+        'update' => true,
+        'changeStatus' => true,
+        'assign' => true,
+        'changePriority' => true,
+        'changeLabels' => true,
+    ])->and($get(actingAsProjectMember($project, 'viewer')))->toBe([
+        'update' => false,
+        'changeStatus' => false,
+        'assign' => false,
+        'changePriority' => false,
+        'changeLabels' => false,
+    ]);
+});
