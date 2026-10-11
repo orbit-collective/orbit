@@ -46,6 +46,7 @@ When adding a feature, keep this separation: query code goes in the Repository, 
 - Entry: `resources/js/app.tsx` bootstraps Inertia. Pages resolve from `resources/js/Pages/**/*.tsx` by name (e.g. controller `Inertia::render('Dashboard', [...])` → `Pages/Dashboard.tsx`). Page props are the array passed from the controller — types them inline in the page component.
 - Components use **atomic design**: `Components/Atoms/`, `Components/Molecules/`, `Components/Organisms/`. Each component lives in its own folder (`Button/Button.tsx`, colocated `Button/Button.test.tsx`). Compose upward — Organisms use Molecules use Atoms.
 - Path alias `@/` → `resources/js/` (configured in `tsconfig.json` and Vite).
+- **Command palette** (`mod+k`): every action is a `Command` (`types/Commands.ts`) registered with `useCommands()`; a keybinding is just its optional `shortcut`, and app-wide commands live in `hooks/useGlobalCommands.ts`. Run a command from a button with `useCommandPalette().runCommand('<id>')`, not the deprecated `triggerShortcut()`. Issue/project/people search goes through the one internal `GET /command-palette/search` endpoint, scoped to the user's memberships. See `documentation/en/command-palette/`.
 - Shared prop/domain types live in `resources/js/types/` (`Issues.ts`, `Projects.ts`, `Users.ts`, `Components.ts`).
 - Utilities in `resources/js/utils/`: `cn.ts` (clsx + tailwind-merge — use it to merge Tailwind classes), plus `colors.ts`, `time.ts`.
 

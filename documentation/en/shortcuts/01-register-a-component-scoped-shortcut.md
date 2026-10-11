@@ -15,7 +15,7 @@ for that shape instead). This mirrors `Sidebar.tsx`'s real `p` →
 | `modifier+key` | `'ctrl+k'`, `'alt+p'` | Held modifier + key, checked against the event's `ctrlKey`/`altKey`/`metaKey`/`shiftKey` flags |
 | `mod+key` | `'mod+k'` | `mod` is `meta` (⌘) on macOS and `ctrl` elsewhere; help chips render `⌘` or `CTRL` to match. Prefer it over a hardcoded `ctrl+…` for app-wide shortcuts |
 | Alt/Option combos | `'alt+p'` | Matched on the physical key (`event.code`), because Option on macOS changes `event.key` (`Option+P` → `π`) |
-| Space-separated sequence | `'g p'` | Two non-modifier keys pressed within 500ms of each other (the "combo" tracked by `comboRef`) — no shortcut in the codebase actually uses this today, but the matching logic already supports it |
+| Space-separated sequence | `'g p'` | Two non-modifier keys pressed within 500ms of each other (the "combo" tracked by `comboRef`) — the global navigation commands use it (`g d` Dashboard, `g p` Projects, `g s` Settings, `g n` Notifications); the longest run of recent keys wins, so `g p` beats the single-key `p` |
 
 Always lowercase — `ShortcutContext` normalizes both the registered
 `key` and the pressed combination to lowercase before comparing, so

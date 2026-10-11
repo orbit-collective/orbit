@@ -34,9 +34,10 @@ whenever the array reference changes). A single `window.addEventListener('keydow
 event) builds a `pressedKey` string from the event's modifier flags
 (`ctrl+`/`alt+`/`meta+`/`shift+` prefixes) and separately tracks a
 "combo" of recent non-modifier keypresses within a 500ms window (for
-multi-key sequences like `g p`, though nothing currently registers one
-— see guide 1's key-format table), then looks for a `ShortcutDefinition`
-whose `key` matches either form. Shortcuts are ignored entirely while
+multi-key sequences like `g d` or `g p`, which the global navigation
+commands register — the longest run of recent keys wins, so `g p` beats
+the single-key `p`), then looks for a `ShortcutDefinition` whose `key`
+matches either form. Shortcuts are ignored entirely while
 an `<input>`/`<textarea>`/`contenteditable` element has focus, except
 `Escape`. `ShortcutProvider` registers nothing itself: app-wide shortcuts are
 attributes of commands (`CommandContext`, `useGlobalCommands`), which

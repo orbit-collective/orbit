@@ -72,6 +72,11 @@ documentation/
       README.md              <- index for this category
       01-register-a-component-scoped-shortcut.md
       02-register-a-global-shortcut.md
+    command-palette/
+      README.md              <- index for this category
+      01-add-a-global-command.md
+      02-add-a-contextual-command-with-nested-steps.md
+      03-add-a-search-source.md
     content-moderation/
       README.md              <- index for this category
       01-add-moderation-to-a-new-upload-point.md
@@ -132,6 +137,7 @@ documentation/
     avatars/                 <- Polish translation of every guide above
     settings-tabs/           <- Polish translation of every guide above
     shortcuts/               <- Polish translation of every guide above
+    command-palette/         <- Polish translation of every guide above
     content-moderation/      <- Polish translation of every guide above
     project-invitations/     <- Polish translation of every guide above
     activity-log/            <- Polish translation of every guide above
