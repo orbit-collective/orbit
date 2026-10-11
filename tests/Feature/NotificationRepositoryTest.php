@@ -24,6 +24,21 @@ test('it only returns notifications for the given user', function () {
         ->and($notifications->pluck('user_id')->unique()->all())->toBe([$user->id]);
 });
 
+test('it returns only the newest notifications once there are more than the limit', function () {
+    $user = User::factory()->create();
+
+    Notification::factory()->count(NotificationRepository::LIMIT)->create([
+        'user_id' => $user->id,
+        'created_at' => now()->subDay(),
+    ]);
+    $newest = Notification::factory()->create(['user_id' => $user->id, 'created_at' => now()]);
+
+    $notifications = $this->repository->getAllForUser($user->id);
+
+    expect($notifications)->toHaveCount(NotificationRepository::LIMIT)
+        ->and($notifications->first()->id)->toBe($newest->id);
+});
+
 test('it can store a new notification', function () {
     $user = User::factory()->create();
     $data = [
