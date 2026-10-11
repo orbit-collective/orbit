@@ -1,6 +1,6 @@
 # Keyboard shortcuts
 
-Every keyboard shortcut in Orbit — `?`/`/` for help, `ctrl+k`, `alt+p`,
+Every keyboard shortcut in Orbit — `?`/`/` for help, `mod+k`, `alt+p`,
 a page-scoped `p` for "create project" — goes through one system:
 `ShortcutContext`. There's no per-component `keydown` listener
 anywhere in the app; a single global listener resolves every keypress
@@ -17,7 +17,7 @@ hand-maintained shortcuts-list to keep in sync.
 2. **[Register a global shortcut](./02-register-a-global-shortcut.md)**
    — worked example adding a shortcut that should exist everywhere in
    the app, registered directly inside `ShortcutProvider` the same way
-   `ctrl+k`/`alt+p`/`alt+b` already are.
+   `mod+k`/`alt+p`/`alt+b` already are.
 
 ## The architecture in one paragraph
 

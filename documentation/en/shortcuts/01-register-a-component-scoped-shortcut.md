@@ -1,7 +1,7 @@
 # Register a component-scoped shortcut
 
 Worked example: adding a `n` shortcut on the Projects index page that
-opens the "new project" flow — scoped to that page, unlike `ctrl+k`
+opens the "new project" flow — scoped to that page, unlike `mod+k`
 which should work everywhere (see
 [`02-register-a-global-shortcut.md`](./02-register-a-global-shortcut.md)
 for that shape instead). This mirrors `Sidebar.tsx`'s real `p` →
@@ -13,12 +13,29 @@ for that shape instead). This mirrors `Sidebar.tsx`'s real `p` →
 |---|---|---|
 | A single character | `'p'`, `'?'` | Pressed alone, with no modifier held |
 | `modifier+key` | `'ctrl+k'`, `'alt+p'` | Held modifier + key, checked against the event's `ctrlKey`/`altKey`/`metaKey`/`shiftKey` flags |
+| `mod+key` | `'mod+k'` | `mod` is `meta` (⌘) on macOS and `ctrl` elsewhere; help chips render `⌘` or `CTRL` to match. Prefer it over a hardcoded `ctrl+…` for app-wide shortcuts |
+| Alt/Option combos | `'alt+p'` | Matched on the physical key (`event.code`), because Option on macOS changes `event.key` (`Option+P` → `π`) |
 | Space-separated sequence | `'g p'` | Two non-modifier keys pressed within 500ms of each other (the "combo" tracked by `comboRef`) — no shortcut in the codebase actually uses this today, but the matching logic already supports it |
 
 Always lowercase — `ShortcutContext` normalizes both the registered
 `key` and the pressed combination to lowercase before comparing, so
 `'Ctrl+K'` and `'ctrl+k'` behave identically, but write it lowercase
 for consistency with every existing definition.
+
+## One definition, several keys, and scopes
+
+`key` may be an array — `key: ['?', '/']`, `key: ['c', 'ctrl+i']` — so
+one action is one definition (and one row in the help modal) however
+many bindings it has.
+
+`scope?: 'global' | 'project' | 'issue'` (default `'global'`) decides
+which definition wins when several share a key: the most specific
+scope runs (`issue` > `project` > `global`), regardless of registration
+order. A disabled definition is skipped, so the next scope down takes
+over. Binding the same key twice **within the same scope** logs a
+dev-only `console.warn` naming both descriptions.
+
+Don't bind `ctrl+f`/`mod+f` — it is the browser's native Find.
 
 ## Step — Register the shortcut with `useShortcuts()`
 

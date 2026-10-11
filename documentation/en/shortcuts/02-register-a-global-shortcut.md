@@ -5,15 +5,15 @@ alternative — wait, that one already exists as `alt+b`; the real
 worked example here is adding `alt+i` for "Go to my Issues" (a page
 that doesn't have a route yet, used purely to demonstrate the
 registration shape) — a shortcut that should work from anywhere in the
-app, not just one page, following the exact pattern `ctrl+k`/`alt+p`/
-`alt+b`/`ctrl+f` already use.
+app, not just one page, following the exact pattern `mod+k`/`alt+p`/
+`alt+b` already use.
 
 ## When this is the right shape, vs. guide 1
 
 Register directly inside `ShortcutProvider` (this guide) only for a
 shortcut that's genuinely global — navigation between top-level areas,
 or an action meaningful regardless of what page is open (the help
-modal itself, `ctrl+k`). Everything else — an action specific to one
+modal itself, `mod+k`). Everything else — an action specific to one
 page's content, like `Sidebar.tsx`'s `p` or a hypothetical per-issue
 shortcut — belongs in that component via `useShortcuts()` instead (see
 [`01-register-a-component-scoped-shortcut.md`](./01-register-a-component-scoped-shortcut.md)).
@@ -45,24 +45,13 @@ useEffect(() => {
             category: 'Navigation',
             action: () => router.visit('/issues/mine'),
         },
-        {
-            key: 'ctrl+f',
-            description: 'Focus Search',
-            category: 'Search',
-            action: () => {
-                const searchInput = document.querySelector(
-                    'input[type="text"]',
-                ) as HTMLInputElement;
-                if (searchInput) searchInput.focus();
-            },
-        },
     ]);
 }, [registerBatch]);
 ```
 
 This is the **only** `useEffect` in `ShortcutProvider` that batches
 multiple navigation shortcuts together — the help-modal (`?`/`/`) and
-command-palette (`ctrl+k`) shortcuts each get their own dedicated
+command-palette (`mod+k`) shortcuts each get their own dedicated
 `useEffect`/`register()` call instead, purely because they were added
 at different times, not because of any rule about which shape to use.
 Either is fine for a new global shortcut; adding to the existing
