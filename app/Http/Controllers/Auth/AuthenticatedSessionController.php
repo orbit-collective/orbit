@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\ProjectInvitationService;
+use App\Support\Sessions\SessionRegistry;
 use Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,8 +45,12 @@ class AuthenticatedSessionController extends Controller
         return redirect()->intended(route('dashboard'));
     }
 
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request, SessionRegistry $sessionRegistry): RedirectResponse
     {
+        if ($request->user() && $sessionRegistry->enabled()) {
+            $sessionRegistry->forget($request->user()->id, $request->session()->getId());
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

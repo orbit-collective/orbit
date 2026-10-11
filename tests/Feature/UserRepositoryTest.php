@@ -2,6 +2,7 @@
 
 use App\Models\Project;
 use App\Models\User;
+use App\Support\Sessions\SessionRegistry;
 use App\Repositories\UserRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -173,4 +174,18 @@ test('it updates a user session lifetime', function () {
 
     expect($updatedUser->session_lifetime)->toBe(1440);
     $this->assertDatabaseHas('users', ['id' => $user->id, 'session_lifetime' => 1440]);
+});
+
+test('it reads and revokes sessions through the registry when the session store needs one', function () {
+    $user = User::factory()->create();
+    $registry = Mockery::mock(SessionRegistry::class);
+    $registry->shouldReceive('enabled')->andReturnTrue();
+    $registry->shouldReceive('forUser')->once()->with($user->id)->andReturn(collect([(object) ['id' => 'a']]));
+    $registry->shouldReceive('revoke')->once()->with($user->id, 'a')->andReturnTrue();
+    $registry->shouldReceive('revokeOthers')->once()->with($user->id, 'current')->andReturn(2);
+    $this->app->instance(SessionRegistry::class, $registry);
+
+    expect($this->repository->getUserSessions($user)->pluck('id')->all())->toBe(['a'])
+        ->and($this->repository->deleteSession($user, 'a'))->toBeTrue()
+        ->and($this->repository->deleteOtherSessions($user, 'current'))->toBe(2);
 });
