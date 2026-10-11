@@ -14,6 +14,8 @@
 FROM php:8.5-cli AS php
 
 # System libraries + PHP extensions required by Laravel and SQLite.
+# phpredis is the Redis client (REDIS_CLIENT=phpredis) for the cache, session
+# and queue drivers.
 # pcov powers `make test-coverage` / `composer test-coverage` (code coverage
 # gate) — it's cheap enough to keep enabled in every environment, unlike Xdebug.
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -25,8 +27,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libonig-dev \
         $PHPIZE_DEPS \
     && docker-php-ext-install pdo pdo_sqlite bcmath zip intl mbstring \
-    && pecl install pcov \
-    && docker-php-ext-enable pcov \
+    && pecl install pcov redis \
+    && docker-php-ext-enable pcov redis \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

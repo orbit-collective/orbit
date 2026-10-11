@@ -86,7 +86,10 @@ services:
         stdin_open: true
 
         depends_on:
-            - nsfwjs
+            nsfwjs:
+                condition: service_started
+            redis:
+                condition: service_healthy
 
         networks:
             - orbit-network
@@ -173,7 +176,10 @@ services:
         restart: unless-stopped
 
         depends_on:
-            - app
+            app:
+                condition: service_started
+            redis:
+                condition: service_healthy
 
         networks:
             - orbit-network
@@ -264,7 +270,10 @@ services:
         restart: unless-stopped
 
         depends_on:
-            - app
+            app:
+                condition: service_started
+            redis:
+                condition: service_healthy
 
         networks:
             - orbit-network
@@ -328,6 +337,45 @@ services:
         restart: unless-stopped
         tty: true
         stdin_open: true
+
+    redis:
+        # Cache, sessions and queues (CACHE_STORE / SESSION_DRIVER /
+        # QUEUE_CONNECTION=redis). Only reachable inside the Docker network as
+        # `redis` (set REDIS_HOST=redis), so no port is published.
+        image: redis:7-alpine
+
+        # AOF keeps queued jobs and sessions across restarts. volatile-lru only
+        # ever evicts keys that have a TTL (cache entries, sessions), never the
+        # queue lists, so a full cache cannot lose jobs. REDIS_PASSWORD is
+        # optional: unset, empty or `null` means no password.
+        command:
+            - sh
+            - -c
+            - |
+              if [ -n "$$REDIS_PASSWORD" ] && [ "$$REDIS_PASSWORD" != "null" ]; then
+                  set -- --requirepass "$$REDIS_PASSWORD"
+              else
+                  set --
+              fi
+              exec redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy volatile-lru "$$@"
+
+        environment:
+            REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+
+        volumes:
+            - redis-data:/data
+
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - |
+                  p="$$REDIS_PASSWORD"; [ "$$p" = "null" ] && p=""
+                  if [ -n "$$p" ]; then REDISCLI_AUTH="$$p" redis-cli ping; else redis-cli ping; fi | grep -q PONG
+            interval: 10s
+            timeout: 3s
+            retries: 5
+
+        restart: unless-stopped
 
         networks:
             - orbit-network
@@ -394,4 +442,5 @@ networks:
         driver: bridge
 
 volumes:
+    redis-data:
     uptime-kuma-data:
