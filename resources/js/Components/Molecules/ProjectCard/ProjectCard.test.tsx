@@ -6,13 +6,13 @@ import { Issue } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import ProjectCard, { ProjectNewCard } from './ProjectCard';
 
-const { triggerShortcut } = vi.hoisted(() => ({
-    triggerShortcut: vi.fn(),
+const { runCommand } = vi.hoisted(() => ({
+    runCommand: vi.fn(),
 }));
 
-vi.mock('@/context/ShortcutContext', () => ({
-    useShortcuts: () => ({
-        triggerShortcut,
+vi.mock('@/context/CommandContext', () => ({
+    useCommandPalette: () => ({
+        runCommand,
     }),
 }));
 
@@ -144,11 +144,11 @@ describe('ProjectNewCard Component', () => {
         expect(screen.getByText('New Project')).toBeInTheDocument();
     });
 
-    test('triggers the "p" shortcut when clicked', async () => {
+    test('runs the project.create command when clicked', async () => {
         render(<ProjectNewCard />);
 
         await userEvent.click(screen.getByText('New Project').closest('a')!);
 
-        expect(triggerShortcut).toHaveBeenCalledWith('p');
+        expect(runCommand).toHaveBeenCalledWith('project.create');
     });
 });

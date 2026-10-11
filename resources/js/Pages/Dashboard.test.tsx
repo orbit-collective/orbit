@@ -7,9 +7,9 @@ import { Issue, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import Dashboard from './Dashboard';
 
-vi.mock('@/context/ShortcutContext', () => ({
-    useShortcuts: () => ({
-        triggerShortcut: vi.fn(),
+vi.mock('@/context/CommandContext', () => ({
+    useCommandPalette: () => ({
+        runCommand: vi.fn(),
     }),
 }));
 

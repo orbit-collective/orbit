@@ -5,11 +5,11 @@ import { describe, expect, test, vi } from 'vitest';
 import { Project } from '@/types/Projects';
 import Index from './Index';
 
-const mockTriggerShortcut = vi.hoisted(() => vi.fn());
+const mockRunCommand = vi.hoisted(() => vi.fn());
 
-vi.mock('@/context/ShortcutContext', () => ({
-    useShortcuts: () => ({
-        triggerShortcut: mockTriggerShortcut,
+vi.mock('@/context/CommandContext', () => ({
+    useCommandPalette: () => ({
+        runCommand: mockRunCommand,
     }),
 }));
 
@@ -84,13 +84,13 @@ describe('Projects Index Page', () => {
         );
     });
 
-    test('triggers the "p" shortcut when the New project button is clicked', async () => {
+    test('runs the project.create command when the New project button is clicked', async () => {
         const user = userEvent.setup();
         render(<Index projects={[]} />);
 
         await user.click(screen.getByRole('button', { name: /New project/i }));
 
-        expect(mockTriggerShortcut).toHaveBeenCalledWith('p');
+        expect(mockRunCommand).toHaveBeenCalledWith('project.create');
     });
 
     test('renders a ProjectCard for every project plus a "New Project" card', () => {

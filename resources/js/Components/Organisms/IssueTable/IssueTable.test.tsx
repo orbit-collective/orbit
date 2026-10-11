@@ -31,6 +31,12 @@ vi.mock('@/context/ShortcutContext', () => ({
     }),
 }));
 
+vi.mock('@/context/CommandContext', () => ({
+    useCommandPalette: () => ({
+        runCommand: vi.fn(),
+    }),
+}));
+
 vi.mock('@inertiajs/react', () => {
     const mockRouterGet = vi.fn();
     const mockRouterPatch = vi.fn(

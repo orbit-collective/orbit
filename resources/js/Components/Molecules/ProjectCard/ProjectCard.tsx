@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { FC } from 'react';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
-import { useShortcuts } from '@/context/ShortcutContext';
+import { useCommandPalette } from '@/context/CommandContext';
 import { ProjectCardProps } from '@/types/Components';
 import { getColorTheme } from '@/utils/colors';
 import Icon from '../../Atoms/Icon/Icon';
@@ -114,14 +114,14 @@ const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
     );
 };
 export function ProjectNewCard() {
-    const { triggerShortcut } = useShortcuts();
+    const { runCommand } = useCommandPalette();
 
     return (
         <Link
             className="group flex min-h-[160px] cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[var(--bg-light-color)] bg-transparent transition-all duration-300 hover:border-[var(--accent-color)] hover:bg-[var(--accent-color-opacity)]"
             onClick={(e) => {
                 e.preventDefault();
-                triggerShortcut('p');
+                runCommand('project.create');
             }}
         >
             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-dashed border-[var(--bg-light-color)] transition-all duration-300 group-hover:border-[var(--accent-color)] group-hover:bg-[var(--accent-color-opacity)]">
