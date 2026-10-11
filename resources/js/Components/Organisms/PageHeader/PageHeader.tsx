@@ -7,6 +7,7 @@ import { PageProps } from '@/types';
 import { PageHeaderProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
+import { OPEN_NOTIFICATIONS_EVENT } from '@/utils/notificationsPopupEvent';
 import { formattedDate } from '@/utils/time';
 
 const tabVariants = cva(
@@ -43,6 +44,13 @@ function PageHeader({
         setIsRefreshing(true);
         router.reload({ onFinish: () => setIsRefreshing(false) });
     };
+
+    useEffect(() => {
+        const open = () => setShowNotificationsPopup(true);
+
+        window.addEventListener(OPEN_NOTIFICATIONS_EVENT, open);
+        return () => window.removeEventListener(OPEN_NOTIFICATIONS_EVENT, open);
+    }, []);
 
     useEffect(() => {
         if (!showNotificationsPopup) return;
