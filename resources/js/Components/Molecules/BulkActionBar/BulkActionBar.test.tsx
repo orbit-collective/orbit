@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { BulkActionBar } from './BulkActionBar';
 
@@ -84,5 +84,21 @@ describe('BulkActionBar Component', () => {
         fireEvent.keyDown(window, { key: 'Escape' });
 
         expect(handleClear).toHaveBeenCalledTimes(1);
+    });
+
+    test('stays mounted while animating out, then unmounts', async () => {
+        const props = { onBulkDelete: vi.fn(), isDeleting: false };
+        const { rerender } = render(
+            <BulkActionBar selectedCount={2} {...props} />,
+        );
+
+        rerender(<BulkActionBar selectedCount={0} {...props} />);
+
+        expect(screen.getByRole('toolbar')).toBeInTheDocument();
+        expect(screen.getByText('2')).toBeInTheDocument();
+
+        await waitFor(() =>
+            expect(screen.queryByRole('toolbar')).not.toBeInTheDocument(),
+        );
     });
 });
