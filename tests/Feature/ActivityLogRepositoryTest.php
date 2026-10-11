@@ -38,7 +38,7 @@ test('it can get recent account-level activity logs for a user', function () {
 
 test('it paginates activity logs for a project, newest first, scoped to that project', function () {
     $project = Project::factory()->create();
-    $old = ActivityLog::factory()->create(['project_id' => $project->id, 'created_at' => now()->subDay()]);
+    ActivityLog::factory()->create(['project_id' => $project->id, 'created_at' => now()->subDay()]);
     $new = ActivityLog::factory()->create(['project_id' => $project->id, 'created_at' => now()]);
     ActivityLog::factory()->count(3)->create(); // other projects
 
@@ -48,8 +48,7 @@ test('it paginates activity logs for a project, newest first, scoped to that pro
         ->and($page->lastPage())->toBe(2)
         ->and($page->items())->toHaveCount(1)
         ->and($page->items()[0]->id)->toBe($new->id)
-        ->and($page->items()[0]->relationLoaded('user'))->toBeTrue()
-        ->and($old->id)->not->toBe($new->id);
+        ->and($page->items()[0]->relationLoaded('user'))->toBeTrue();
 });
 
 test('it paginates activity logs for a user', function () {
