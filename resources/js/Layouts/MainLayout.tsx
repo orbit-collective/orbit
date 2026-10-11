@@ -1,11 +1,31 @@
 import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import Keybind from '@/Components/Atoms/Keybind/Keybind';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
-import { useShortcuts } from '@/context/ShortcutContext';
+import { useCommands } from '@/hooks/useCommands';
+import { Command } from '@/types/Commands';
 import { MainLayoutProps } from '@/types/Components';
-import { ShortcutDefinition } from '@/types/Shortcuts';
+import { IssuePageLooks } from '@/types/Issues';
 import { requestQuickAddIssue } from '@/utils/quickAddIssueEvent';
+import { formatBindingParts } from '@/utils/shortcutKeys';
 import Sidebar from '../Components/Organisms/Sidebar/Sidebar';
+
+const LOOKS: {
+    look: IssuePageLooks;
+    title: string;
+    icon: Command['icon'];
+    key: string;
+}[] = [
+    { look: 'List', title: 'List view', icon: 'Rows3', key: '1' },
+    { look: 'Board', title: 'Board view', icon: 'Columns3', key: '2' },
+    {
+        look: 'Calendar',
+        title: 'Calendar view',
+        icon: 'CalendarDays',
+        key: '3',
+    },
+    { look: 'Activity', title: 'Activity view', icon: 'Activity', key: '4' },
+];
 
 const MainLayout: React.FC<MainLayoutProps> = ({
     children,
@@ -14,43 +34,47 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     projects,
     project,
 }) => {
-    const shortcuts = useMemo(
-        (): ShortcutDefinition[] => [
+    const commands = useMemo(
+        (): Command[] => [
             {
-                key: ['c', 'ctrl+i'],
-                description: 'Create issue',
-                category: 'Creation',
-                action: requestQuickAddIssue,
+                id: 'issue.create',
+                title: 'Create issue',
+                subtitle: project.name,
+                group: 'creation',
+                icon: 'CirclePlus',
+                shortcut: ['c', 'ctrl+i'],
+                scope: 'project',
+                keywords: ['new issue', 'add issue'],
+                perform: requestQuickAddIssue,
             },
-            {
-                key: '1',
-                description: 'List view',
+            ...LOOKS.map(({ look, title, icon, key }): Command => ({
+                id: `view.${look.toLowerCase()}`,
+                title,
+                subtitle: project.name,
+                group: 'navigation',
+                icon,
+                shortcut: key,
                 category: 'View',
-                action: () => setSelectedLook('List'),
-            },
+                scope: 'project',
+                keywords: ['view', look],
+                perform: () => setSelectedLook(look),
+            })),
             {
-                key: '2',
-                description: 'Board view',
-                category: 'View',
-                action: () => setSelectedLook('Board'),
-            },
-            {
-                key: '3',
-                description: 'Calendar view',
-                category: 'View',
-                action: () => setSelectedLook('Calendar'),
-            },
-            {
-                key: '4',
-                description: 'Activity view',
-                category: 'View',
-                action: () => setSelectedLook('Activity'),
+                id: 'issue.search',
+                title: 'Search issues in this project',
+                subtitle: project.name,
+                group: 'navigation',
+                icon: 'ListFilter',
+                scope: 'project',
+                keywords: ['find', 'filter'],
+                perform: () =>
+                    document.getElementById('global-search-input')?.focus(),
             },
         ],
-        [setSelectedLook],
+        [project.name, setSelectedLook],
     );
 
-    useShortcuts(shortcuts);
+    const { openPalette } = useCommands(commands);
 
     return (
         <div
@@ -105,12 +129,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                         },
                     ]}
                 >
-                    <button className="flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]">
+                    <button
+                        type="button"
+                        onClick={() => openPalette()}
+                        aria-label="Open command palette"
+                        title="Open command palette"
+                        className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                    >
                         <Icon
                             name="Search"
                             size={18}
                             color="var(--text-gray-color)"
                         />
+                        <span className="hidden items-center gap-1 lg:flex">
+                            {formatBindingParts('mod+k').map((part) => (
+                                <Keybind
+                                    key={part}
+                                    tooltipText="Open command palette"
+                                    tooltip={false}
+                                    keybind={part}
+                                />
+                            ))}
+                        </span>
                     </button>
                 </PageHeader>
                 <main className={'flex flex-1 flex-col overflow-y-auto'}>
