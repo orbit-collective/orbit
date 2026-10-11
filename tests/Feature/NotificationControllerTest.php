@@ -134,3 +134,19 @@ test('guests cannot mark all notifications as read', function () {
 
     $response->assertRedirect(route('login'));
 });
+
+test('the cached notification list follows deletes, updates and mark-all-read', function () {
+    $user = User::factory()->create();
+    $first = Notification::factory()->create(['user_id' => $user->id, 'read' => false]);
+    $second = Notification::factory()->create(['user_id' => $user->id, 'read' => false]);
+
+    $this->actingAs($user)->get('/notifications')->assertJsonCount(2);
+
+    $this->delete("/notifications/$first->id");
+    $this->get('/notifications')->assertJsonCount(1);
+
+    $this->post('/notifications/mark-all-read');
+    expect($this->get('/notifications')->json('0.read'))->toBeTruthy();
+
+    expect($second->fresh()->read)->toBeTruthy();
+});

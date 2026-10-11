@@ -172,3 +172,43 @@ test('it still delegates the email dispatch even when in-app is disabled', funct
 
     $this->service->notify(5, NotificationType::IssueCommented, 'info', 'Title', 'Message');
 });
+
+test('the notification list is served from the cache until something changes it', function () {
+    $notifications = new Collection([new Notification(['id' => 1, 'user_id' => 5])]);
+
+    $this->notificationRepository->shouldReceive('getAllForUser')->twice()->with(5)->andReturn($notifications);
+    $this->notificationRepository->shouldReceive('markAllAsReadForUser')->once()->with(5)->andReturn(1);
+
+    $this->service->getAllForUser(5);
+    $this->service->getAllForUser(5);
+
+    $this->service->markAllAsReadForUser(5);
+
+    $this->service->getAllForUser(5);
+});
+
+test('storing, updating and deleting a notification refresh the owner\'s cached list', function () {
+    $notification = new Notification(['id' => 1, 'user_id' => 5]);
+
+    $this->notificationRepository->shouldReceive('getAllForUser')->times(4)->with(5)->andReturn(new Collection);
+    $this->notificationRepository->shouldReceive('store')->once()->andReturn($notification);
+    $this->notificationRepository->shouldReceive('update')->once()->andReturn($notification);
+    $this->notificationRepository->shouldReceive('delete')->once()->with($notification);
+
+    $this->service->getAllForUser(5);
+    $this->service->store(['user_id' => 5]);
+    $this->service->getAllForUser(5);
+    $this->service->update($notification, []);
+    $this->service->getAllForUser(5);
+    $this->service->delete($notification);
+    $this->service->getAllForUser(5);
+});
+
+test('one user\'s cached list is not shared with another user', function () {
+    $this->notificationRepository->shouldReceive('getAllForUser')->once()->with(5)->andReturn(new Collection);
+    $this->notificationRepository->shouldReceive('getAllForUser')->once()->with(6)->andReturn(new Collection);
+
+    $this->service->getAllForUser(5);
+    $this->service->getAllForUser(6);
+    $this->service->getAllForUser(5);
+});

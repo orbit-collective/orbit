@@ -39,6 +39,11 @@ class NotificationRepository
         return $notification;
     }
 
+    public function delete(Notification $notification): void
+    {
+        $notification->delete();
+    }
+
     public function markAllAsReadForUser(int $userId): int
     {
         return Notification::query()
