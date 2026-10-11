@@ -1,10 +1,10 @@
 # Zarejestruj skrót globalny
 
-Przećwiczony przykład: dodanie `alt+i` jako globalnego skrótu "Go to my Issues" (strona, która jeszcze nie ma trasy, użyta czysto do zademonstrowania kształtu rejestracji) — skrót, który powinien działać z dowolnego miejsca w aplikacji, nie tylko jednej strony, na wzór dokładnie tego, jak już działają `ctrl+k`/`alt+p`/`alt+b`/`ctrl+f`.
+Przećwiczony przykład: dodanie `alt+i` jako globalnego skrótu "Go to my Issues" (strona, która jeszcze nie ma trasy, użyta czysto do zademonstrowania kształtu rejestracji) — skrót, który powinien działać z dowolnego miejsca w aplikacji, nie tylko jednej strony, na wzór dokładnie tego, jak już działają `mod+k`/`alt+p`/`alt+b`.
 
 ## Kiedy to jest właściwy kształt, a kiedy przewodnik 1
 
-Rejestruj bezpośrednio wewnątrz `ShortcutProvider` (ten przewodnik) tylko dla skrótu, który jest faktycznie globalny — nawigacja między obszarami najwyższego poziomu, albo akcja mająca sens niezależnie od tego, jaka strona jest otwarta (sam modal pomocy, `ctrl+k`). Wszystko inne — akcja specyficzna dla treści jednej strony, jak `p` w `Sidebar.tsx` albo hipotetyczny skrót per-issue — należy zamiast tego do tego komponentu przez `useShortcuts()` (zobacz [`01-register-a-component-scoped-shortcut.md`](./01-register-a-component-scoped-shortcut.md)). Zarejestrowanie tutaj czegoś specyficznego dla strony sprawiłoby, że wystrzeliwałby nawet na stronach, gdzie akcja nie ma sensu.
+Rejestruj bezpośrednio wewnątrz `ShortcutProvider` (ten przewodnik) tylko dla skrótu, który jest faktycznie globalny — nawigacja między obszarami najwyższego poziomu, albo akcja mająca sens niezależnie od tego, jaka strona jest otwarta (sam modal pomocy, `mod+k`). Wszystko inne — akcja specyficzna dla treści jednej strony, jak `p` w `Sidebar.tsx` albo hipotetyczny skrót per-issue — należy zamiast tego do tego komponentu przez `useShortcuts()` (zobacz [`01-register-a-component-scoped-shortcut.md`](./01-register-a-component-scoped-shortcut.md)). Zarejestrowanie tutaj czegoś specyficznego dla strony sprawiłoby, że wystrzeliwałby nawet na stronach, gdzie akcja nie ma sensu.
 
 ## Krok — Dodaj go do istniejącego globalnego wywołania `registerBatch()`
 
@@ -31,22 +31,11 @@ useEffect(() => {
             category: 'Navigation',
             action: () => router.visit('/issues/mine'),
         },
-        {
-            key: 'ctrl+f',
-            description: 'Focus Search',
-            category: 'Search',
-            action: () => {
-                const searchInput = document.querySelector(
-                    'input[type="text"]',
-                ) as HTMLInputElement;
-                if (searchInput) searchInput.focus();
-            },
-        },
     ]);
 }, [registerBatch]);
 ```
 
-To **jedyny** `useEffect` w `ShortcutProvider`, który grupuje razem wiele skrótów nawigacyjnych — skróty modalu pomocy (`?`/`/`) i palety komend (`ctrl+k`) mają zamiast tego każdy swoje dedykowane wywołanie `useEffect`/`register()`, czysto dlatego, że zostały dodane w różnym czasie, nie z powodu żadnej zasady o tym, jakiego kształtu użyć. Oba są w porządku dla nowego globalnego skrótu; dodanie do istniejącej tablicy `registerBatch()` (pokazane powyżej) to nieco mniej kodu dla jeszcze jednego wpisu w stylu nawigacyjnym.
+To **jedyny** `useEffect` w `ShortcutProvider`, który grupuje razem wiele skrótów nawigacyjnych — skróty modalu pomocy (`?`/`/`) i palety komend (`mod+k`) mają zamiast tego każdy swoje dedykowane wywołanie `useEffect`/`register()`, czysto dlatego, że zostały dodane w różnym czasie, nie z powodu żadnej zasady o tym, jakiego kształtu użyć. Oba są w porządku dla nowego globalnego skrótu; dodanie do istniejącej tablicy `registerBatch()` (pokazane powyżej) to nieco mniej kodu dla jeszcze jednego wpisu w stylu nawigacyjnym.
 
 `router.visit(...)` (kliencka nawigacja Inertii) to właściwy prymityw tutaj, nie `window.location.href = ...` — trzyma nawigację wewnątrz routingu Inertii w stylu SPA zamiast wymuszać pełne przeładowanie strony.
 

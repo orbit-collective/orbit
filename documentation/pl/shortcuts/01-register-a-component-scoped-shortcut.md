@@ -1,6 +1,6 @@
 # Zarejestruj skrót zakresu komponentu
 
-Przećwiczony przykład: dodanie skrótu `n` na stronie listy projektów, który otwiera przepływ "nowy projekt" — scope'owany do tej strony, w przeciwieństwie do `ctrl+k`, który powinien działać wszędzie (zobacz [`02-register-a-global-shortcut.md`](./02-register-a-global-shortcut.md) po ten kształt zamiast tego). To odzwierciedla dokładnie prawdziwy skrót `p` → "Create project" w `Sidebar.tsx`.
+Przećwiczony przykład: dodanie skrótu `n` na stronie listy projektów, który otwiera przepływ "nowy projekt" — scope'owany do tej strony, w przeciwieństwie do `mod+k`, który powinien działać wszędzie (zobacz [`02-register-a-global-shortcut.md`](./02-register-a-global-shortcut.md) po ten kształt zamiast tego). To odzwierciedla dokładnie prawdziwy skrót `p` → "Create project" w `Sidebar.tsx`.
 
 ## Format stringa `key`
 
@@ -8,9 +8,19 @@ Przećwiczony przykład: dodanie skrótu `n` na stronie listy projektów, który
 |---|---|---|
 | Pojedynczy znak | `'p'`, `'?'` | Naciśnięty samodzielnie, bez trzymanego modyfikatora |
 | `modyfikator+klawisz` | `'ctrl+k'`, `'alt+p'` | Trzymany modyfikator + klawisz, sprawdzany względem flag eventu `ctrlKey`/`altKey`/`metaKey`/`shiftKey` |
+| `mod+klawisz` | `'mod+k'` | `mod` to `meta` (⌘) na macOS i `ctrl` gdzie indziej; chipy w pomocy pokazują `⌘` lub `CTRL` odpowiednio. Preferuj go zamiast na sztywno wpisanego `ctrl+…` dla skrótów w całej aplikacji |
+| Kombinacje Alt/Option | `'alt+p'` | Dopasowywane po fizycznym klawiszu (`event.code`), bo Option na macOS zmienia `event.key` (`Option+P` → `π`) |
 | Sekwencja rozdzielona spacją | `'g p'` | Dwa klawisze bez modyfikatora naciśnięte w ciągu 500ms od siebie (śledzone "combo" przez `comboRef`) — żaden skrót w kodzie faktycznie tego dziś nie używa, ale logika dopasowania już to wspiera |
 
 Zawsze małymi literami — `ShortcutContext` normalizuje zarówno zarejestrowany `key`, jak i naciśniętą kombinację do małych liter przed porównaniem, więc `'Ctrl+K'` i `'ctrl+k'` zachowują się identycznie, ale zapisz go małymi literami dla spójności z każdą istniejącą definicją.
+
+## Jedna definicja, kilka klawiszy i scope'y
+
+`key` może być tablicą — `key: ['?', '/']`, `key: ['c', 'ctrl+i']` — więc jedna akcja to jedna definicja (i jeden wiersz w modalu pomocy), niezależnie od liczby bindingów.
+
+`scope?: 'global' | 'project' | 'issue'` (domyślnie `'global'`) rozstrzyga, która definicja wygrywa, gdy kilka dzieli ten sam klawisz: uruchamiany jest najbardziej szczegółowy scope (`issue` > `project` > `global`), niezależnie od kolejności rejestracji. Wyłączona definicja jest pomijana, więc przejmuje następny scope niżej. Zbindowanie tego samego klawisza dwa razy **w tym samym scope** loguje `console.warn` (tylko w dev) z opisami obu definicji.
+
+Nie binduj `ctrl+f`/`mod+f` — to natywne wyszukiwanie przeglądarki.
 
 ## Krok — Zarejestruj skrót przez `useShortcuts()`
 
