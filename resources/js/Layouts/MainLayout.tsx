@@ -73,6 +73,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 <PageHeader
                     title={project.name}
                     icon="FolderGit2"
+                    iconColors={project.color}
                     showDate={true}
                     showSettingsIcon={true}
                     primaryAction={{

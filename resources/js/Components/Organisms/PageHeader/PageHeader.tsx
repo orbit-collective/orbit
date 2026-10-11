@@ -6,6 +6,7 @@ import NotificationsPopup from '@/Components/Organisms/NotificationsPopup/Notifi
 import { PageProps } from '@/types';
 import { PageHeaderProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { getColorTheme } from '@/utils/colors';
 import { formattedDate } from '@/utils/time';
 
 const tabVariants = cva(
@@ -23,6 +24,7 @@ const tabVariants = cva(
 function PageHeader({
     title,
     icon,
+    iconColors,
     showDate = true,
     showSettingsIcon = true,
     primaryAction,
@@ -67,12 +69,15 @@ function PageHeader({
             <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-3">
                     {icon && (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)]">
-                            <Icon
-                                name={icon}
-                                size={16}
-                                className="text-[var(--accent-color)]"
-                            />
+                        <span
+                            className={cn(
+                                'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                                iconColors
+                                    ? getColorTheme(iconColors).badgeBg
+                                    : 'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]',
+                            )}
+                        >
+                            <Icon name={icon} size={16} />
                         </span>
                     )}
                     <div className="flex min-w-0 flex-col">

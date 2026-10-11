@@ -33,7 +33,7 @@ import {
 } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
-import { Project } from '@/types/Projects';
+import { Project, ProjectColors } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
 import { WorkflowStatus } from '@/types/Workflow';
@@ -668,6 +668,7 @@ export interface PageHeaderTab {
 export interface PageHeaderProps {
     title: string;
     icon?: keyof typeof icons;
+    iconColors?: ProjectColors;
     showDate?: boolean;
     showSettingsIcon?: boolean;
     primaryAction?: {
