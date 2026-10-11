@@ -12,6 +12,11 @@ Orbit is an issue/project tracker built as a Laravel + Inertia.js + React (TypeS
 - `npm run dev` — Vite dev server (HMR). For the full stack use the composer `dev` script below.
 - `npm run build` — type-check (`tsc`) then production build.
 - `npm run lint` — oxlint over `resources/js` with `--fix`. `npm run format` / `npm run format:check` — oxfmt.
+- Unused code (config in `knip.json`):
+  - `npm run knip` — reports unused files, exports, types and dependencies (knip). Exits non-zero while there are findings.
+  - `npm run knip:fix` — removes the `export` from unused exports and types, and drops unused barrel re-exports, then formats the touched files. It only strips the keyword, so the now-local declaration may be dead; it never touches `package.json` or deletes files (do that by hand: `npx knip --fix --fix-type dependencies` needs an `npm install` after, `--allow-remove-files` deletes files).
+  - `npm run unused` — reports unused imports and variables (oxlint `no-unused-vars`, which is off in `.oxlintrc.json`, so plain `npm run lint` does not catch them). `npm run unused:fix` removes the unused imports; `npm run unused:fix:dangerous` also removes unused local variables with their initializers, so review the diff.
+  - `npm run cleanup` — `unused:fix` followed by `knip:fix`. Always run the tests afterwards.
 - `npm test` — Vitest (watch mode by default). `npm run test:watch`, `npm run test:coverage`.
 - Run a single frontend test: `npx vitest run resources/js/Components/Atoms/Button/Button.test.tsx` (add `-t "test name"` to filter).
 
@@ -27,6 +32,7 @@ Orbit is an issue/project tracker built as a Laravel + Inertia.js + React (TypeS
 The full stack also runs in Docker — two services, `app` (Laravel on :8000) and `vite` (assets on :5173). The `Makefile` is the entry point; targets run inside the containers:
 - `make setup` — build images (no cache) and start detached. `make up`/`make dev` — foreground; `make down` — detached; `make clean` — stop and drop volumes.
 - `make test` (PHP/Pest), `make test-js` (Vitest once), `make test-coverage` (PHP with the coverage gate), `make test-js-coverage` (Vitest with the coverage gate), `make lint`, `make type-check` — run the suites inside the containers. The `app` image includes PCOV so PHP coverage works out of the box.
+- `make knip`, `make knip-fix`, `make unused`, `make unused-fix`, `make unused-fix-dangerous`, `make cleanup` — the unused-code commands above, run inside the `vite` container (run `make npm-install` once after pulling, since knip is a new dependency).
 - `make shell` (app shell), `make tinker`, `make migrate`, `make fresh` (migrate:fresh --seed), `make logs`.
 - `make npm-install` / `make composer-install` — run after adding/updating/removing an npm or composer package (including via a branch merge). `node_modules`/`vendor` are anonymous volumes, so a plain `make up`/`make dev` reuses the stale ones already inside the container image; these targets rebuild the relevant image and recreate its container with `--renew-anon-volumes` to pick up the new dependencies.
 - `backup` service — snapshots `database/database.sqlite` (consistent `sqlite3 .backup`, integrity-checked, source mounted read-only) into `./backup` every `BACKUP_INTERVAL` seconds (default 3600), keeping the newest `BACKUP_KEEP` (48) plus one per day for `BACKUP_KEEP_DAILY` (30) days in `backup/daily/`. `make backup-now` takes a snapshot immediately. Set `BACKUP_DIR` to another drive to keep copies off the project disk; the container starts as root only to chown that directory, then runs as the owner of `database/database.sqlite` (override with `BACKUP_UID`/`BACKUP_GID`). `make test-backup` runs the script's regression tests. Restore by stopping the stack and copying a snapshot over `database/database.sqlite` (never `migrate:fresh`). Timestamps are UTC (container clock). Script: `docker/backup/backup.sh`.
