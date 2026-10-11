@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
+use App\Support\Cache\CacheVersion;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,9 @@ class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
     use HasFactory;
+
+    /** Seconds a membership lookup stays cached; writes retire it sooner (see membershipOf()). */
+    private const int MEMBERSHIP_CACHE_TTL = 600;
 
     protected $fillable = [
         'id',
@@ -97,21 +101,65 @@ class Project extends Model
         return $this->hasMany(IssueType::class);
     }
 
+    /**
+     * Whether the user belongs to this project, and with which role and
+     * granular permissions. Every authorization check starts here, so the
+     * answer is cached per project and user under the membership version
+     * (see CacheVersion::MEMBERSHIP), which every write to membership, roles
+     * and role permissions moves.
+     *
+     * @return array{member: bool, role: ?string, permissions: list<string>}
+     */
+    public function membershipOf(User $user): array
+    {
+        return CacheVersion::remember(
+            CacheVersion::MEMBERSHIP,
+            "project:$this->id:user:$user->id:membership",
+            self::MEMBERSHIP_CACHE_TTL,
+            function () use ($user) {
+                $member = $this->users()->where('users.id', $user->id)->first();
+
+                if (! $member) {
+                    return ['member' => false, 'role' => null, 'permissions' => []];
+                }
+
+                return [
+                    'member' => true,
+                    'role' => $member->pivot->role,
+                    'permissions' => $member->pivot->roles()->with('permissions')->get()
+                        ->flatMap(fn ($role) => $role->permissions->pluck('key'))
+                        ->unique()
+                        ->values()
+                        ->all(),
+                ];
+            },
+        );
+    }
+
+    public function hasMember(User $user): bool
+    {
+        return $this->membershipOf($user)['member'];
+    }
+
+    /** The user's system role on this project (owner, admin, ...), or null for a non-member. */
+    public function roleOf(User $user): ?string
+    {
+        return $this->membershipOf($user)['role'];
+    }
+
     public function hasPermission(User $user, PermissionEnum $permission): bool
     {
-        $member = $this->users()->where('users.id', $user->id)->first();
+        $membership = $this->membershipOf($user);
 
-        if (! $member) {
+        if (! $membership['member']) {
             return false;
         }
 
-        if ($member->pivot->role === RoleType::OWNER->value) {
+        if ($membership['role'] === RoleType::OWNER->value) {
             return true;
         }
 
-        return $member->pivot->roles()
-            ->whereHas('permissions', fn ($query) => $query->where('key', $permission->value))
-            ->exists();
+        return in_array($permission->value, $membership['permissions'], true);
     }
 
     /**
@@ -122,7 +170,7 @@ class Project extends Model
      */
     public function hasPermissionOrTier(User $user, PermissionEnum $permission, array $tiers): bool
     {
-        $role = $this->users()->where('users.id', $user->id)->first()?->pivot->role;
+        $role = $this->roleOf($user);
 
         if (in_array($role, array_map(fn (RoleType $tier) => $tier->value, $tiers), true)) {
             return true;
