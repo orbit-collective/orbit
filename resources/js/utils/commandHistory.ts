@@ -59,11 +59,3 @@ export const recordHistory = (entry: HistoryEntry): void => {
         // History is a convenience; losing it must never break the palette.
     }
 };
-
-export const clearHistory = (): void => {
-    try {
-        localStorage.removeItem(STORAGE_KEY);
-    } catch {
-        // See recordHistory.
-    }
-};

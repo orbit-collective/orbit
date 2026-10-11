@@ -53,7 +53,6 @@ function CommandPalette() {
     const previousSteps = useRef(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
-    const listRef = useRef<HTMLDivElement>(null);
     const baseId = useId();
     const listboxId = `${baseId}-listbox`;
     const optionId = (index: number) => `${baseId}-option-${index}`;
@@ -69,7 +68,7 @@ function CommandPalette() {
 
     const inRoot = !currentPage;
     const parsed = useMemo(() => parsePaletteQuery(query), [query]);
-    // Prefixes (`>` commands, `#` issues) only exist on the root list.
+    // Prefixes (`>` commands, `#` issues, `@` people) only exist on the root list.
     const text = inRoot ? parsed.text : query.trim();
     const scope = inRoot ? parsed.scope : 'all';
     const search = usePaletteSearch(
@@ -372,7 +371,6 @@ function CommandPalette() {
                 >
                     {flat.length > 0 && (
                         <div
-                            ref={listRef}
                             id={listboxId}
                             role="listbox"
                             aria-label="Commands"

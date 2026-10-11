@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PaletteSearchIssue } from '@/types/Commands';
-import {
-    clearHistory,
-    HISTORY_LIMIT,
-    loadHistory,
-    recordHistory,
-} from './commandHistory';
+import { HISTORY_LIMIT, loadHistory, recordHistory } from './commandHistory';
 
 const KEY = 'orbit.command-palette.history';
 
@@ -96,26 +91,11 @@ describe('commandHistory', () => {
             .mockImplementation(() => {
                 throw new Error('blocked');
             });
-        const removeItem = vi
-            .spyOn(localStorage, 'removeItem')
-            .mockImplementation(() => {
-                throw new Error('blocked');
-            });
 
         expect(loadHistory()).toEqual([]);
         expect(() => recordHistory({ type: 'command', id: 'a' })).not.toThrow();
-        expect(() => clearHistory()).not.toThrow();
 
         getItem.mockRestore();
         setItem.mockRestore();
-        removeItem.mockRestore();
-    });
-
-    test('clearHistory empties it', () => {
-        recordHistory({ type: 'command', id: 'a' });
-
-        clearHistory();
-
-        expect(loadHistory()).toEqual([]);
     });
 });
