@@ -1,8 +1,27 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ReactNode } from 'react';
-import { describe, expect, test, vi } from 'vitest';
-import { Command } from '@/types/Commands';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { Command, PaletteSearchIssue } from '@/types/Commands';
+
+const search = vi.hoisted(() => ({
+    state: { status: 'idle', issues: [], projects: [] } as {
+        status: 'idle' | 'loading' | 'success' | 'error';
+        issues: unknown[];
+        projects: unknown[];
+    },
+    queries: [] as (string | null)[],
+}));
+const mockVisit = vi.hoisted(() => vi.fn());
+
+vi.mock('@inertiajs/react', () => ({ router: { visit: mockVisit } }));
+
+vi.mock('@/hooks/usePaletteSearch', () => ({
+    usePaletteSearch: (query: string | null) => {
+        search.queries.push(query);
+        return search.state;
+    },
+}));
 
 vi.mock('@/Components/Organisms/ShortcutHelpModal/ShortcutHelpModal', () => ({
     ShortcutHelpModal: () => null,
@@ -12,6 +31,7 @@ import { CommandProvider } from '@/context/CommandContext';
 import { ModalProvider, useModal } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
 import { useCommands } from '@/hooks/useCommands';
+import { HISTORY_LIMIT, loadHistory } from '@/utils/commandHistory';
 import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
 import CommandPalette from './CommandPalette';
 
@@ -86,7 +106,35 @@ const darkTheme = makeCommand({
 });
 const BASE = [dashboard, createIssue, createProject, darkTheme];
 
+const issue = (
+    overrides: Partial<PaletteSearchIssue> = {},
+): PaletteSearchIssue => ({
+    id: 5,
+    number: 12,
+    title: 'Fix login redirect',
+    url: '/projects/1/issues/5',
+    project: { id: 1, name: 'Orbit' },
+    type: { name: 'Bug', icon: 'Bug', color: '#ff0000' },
+    status: { name: 'In progress', color: '#00ff00' },
+    ...overrides,
+});
+const project = {
+    id: 1,
+    name: 'Login Portal',
+    slug: 'login-portal',
+    color: 'blue',
+    url: '/projects/1',
+};
+
+const lastQuery = () => search.queries[search.queries.length - 1];
+
 describe('CommandPalette', () => {
+    beforeEach(() => {
+        search.state = { status: 'idle', issues: [], projects: [] };
+        search.queries = [];
+        mockVisit.mockClear();
+    });
+
     test('renders nothing while closed', () => {
         setup(BASE);
 
@@ -477,6 +525,264 @@ describe('CommandPalette', () => {
             open();
 
             expect(screen.getByRole('combobox')).toHaveValue('');
+        });
+    });
+
+    describe('issue and project search', () => {
+        test('sends the typed text to the server search once it is long enough', async () => {
+            const user = setup(BASE);
+            open();
+            await user.type(screen.getByRole('combobox'), 'l');
+            expect(lastQuery()).toBeNull();
+
+            await user.type(screen.getByRole('combobox'), 'o');
+            expect(lastQuery()).toBe('lo');
+        });
+
+        test('"#" searches issues only and a digit is enough', async () => {
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), '#4');
+
+            expect(lastQuery()).toBe('#4');
+        });
+
+        test('the ">" prefix is commands only and never reaches the server', async () => {
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), '>create');
+
+            expect(lastQuery()).toBeNull();
+            expect(optionNames()).toEqual(['Create issue', 'Create project']);
+        });
+
+        test('the "#" prefix hides commands and hints what to type', async () => {
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), '#');
+
+            expect(screen.queryByRole('option')).not.toBeInTheDocument();
+            expect(
+                screen.getByText('Type an issue number or title'),
+            ).toBeInTheDocument();
+
+            await user.type(screen.getByRole('combobox'), 'a');
+            expect(
+                screen.getByText('Keep typing to search issues'),
+            ).toBeInTheDocument();
+        });
+
+        test('shows a skeleton while loading instead of a no-results state', async () => {
+            search.state = { status: 'loading', issues: [], projects: [] };
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), 'zzzzz');
+
+            expect(
+                screen.getByTestId('command-palette-skeleton'),
+            ).toBeInTheDocument();
+            expect(
+                screen.queryByText(/No results for/),
+            ).not.toBeInTheDocument();
+            expect(
+                screen.getByTestId('command-palette-live'),
+            ).toHaveTextContent('Searching');
+        });
+
+        test('renders server issues and projects after the matching commands', async () => {
+            search.state = {
+                status: 'success',
+                issues: [issue()],
+                projects: [project],
+            };
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), 'login');
+
+            const groups = screen
+                .getAllByRole('group')
+                .map((g) => g.getAttribute('aria-labelledby'));
+            expect(
+                groups
+                    .slice(-2)
+                    .map(
+                        (id) =>
+                            document.getElementById(id as string)?.textContent,
+                    ),
+            ).toEqual(['Issues', 'Projects']);
+            const row = screen.getByRole('option', {
+                name: /Fix login redirect/,
+            });
+            expect(row).toHaveTextContent('#12');
+            expect(row).toHaveTextContent('Orbit · In progress');
+            expect(
+                screen.getByRole('option', { name: /Login Portal/ }),
+            ).toBeInTheDocument();
+        });
+
+        test('keeps local results working and says so when the request fails', async () => {
+            search.state = { status: 'error', issues: [], projects: [] };
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), 'dark');
+
+            expect(optionNames()).toEqual(['Switch to dark theme']);
+            expect(
+                screen.getByText(/search is unavailable/i),
+            ).toBeInTheDocument();
+        });
+
+        test('does not search the server inside a nested step', async () => {
+            const user = setup([
+                makeCommand({
+                    id: 'issue.status',
+                    title: 'Change status',
+                    children: () => [makeCommand({ id: 'x', title: 'Todo' })],
+                }),
+            ]);
+            open();
+            await user.click(screen.getByText('Change status'));
+            search.queries = [];
+
+            await user.type(screen.getByRole('combobox'), 'todo');
+
+            expect(search.queries.every((q) => q === null)).toBe(true);
+        });
+
+        test('opening an issue row navigates and remembers the issue', async () => {
+            search.state = {
+                status: 'success',
+                issues: [issue()],
+                projects: [],
+            };
+            const user = setup(BASE);
+            open();
+            await user.type(screen.getByRole('combobox'), 'login');
+
+            await user.click(
+                screen.getByRole('option', { name: /Fix login redirect/ }),
+            );
+
+            expect(mockVisit).toHaveBeenCalledWith('/projects/1/issues/5');
+            expect(loadHistory()).toEqual([{ type: 'issue', issue: issue() }]);
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
+
+        test('opening a project row navigates', async () => {
+            search.state = {
+                status: 'success',
+                issues: [],
+                projects: [project],
+            };
+            const user = setup(BASE);
+            open();
+            await user.type(screen.getByRole('combobox'), 'login');
+
+            await user.click(
+                screen.getByRole('option', { name: /Login Portal/ }),
+            );
+
+            expect(mockVisit).toHaveBeenCalledWith('/projects/1');
+        });
+    });
+
+    describe('recently used', () => {
+        test('running a command remembers it and shows it first next time', async () => {
+            const user = setup(BASE);
+            open();
+            await user.click(screen.getByText('Create project'));
+            expect(loadHistory()).toEqual([
+                { type: 'command', id: 'project.create' },
+            ]);
+
+            open();
+
+            const groups = screen.getAllByRole('group');
+            expect(groups[0]).toHaveAccessibleName('Recent');
+            expect(within(groups[0]).getAllByRole('option')).toHaveLength(1);
+            expect(within(groups[0]).getByRole('option')).toHaveTextContent(
+                'Create project',
+            );
+        });
+
+        test('shows remembered issues next to commands, newest first', async () => {
+            const user = setup(BASE);
+            open();
+            await user.click(screen.getByText('Create project'));
+            localStorage.setItem(
+                'orbit.command-palette.history',
+                JSON.stringify([
+                    { type: 'issue', issue: issue() },
+                    { type: 'command', id: 'project.create' },
+                ]),
+            );
+
+            open();
+
+            const recent = within(screen.getAllByRole('group')[0]).getAllByRole(
+                'option',
+            );
+            expect(recent[0]).toHaveTextContent('Fix login redirect');
+            expect(recent[1]).toHaveTextContent('Create project');
+        });
+
+        test('skips remembered commands that no longer exist or are hidden', () => {
+            localStorage.setItem(
+                'orbit.command-palette.history',
+                JSON.stringify([
+                    { type: 'command', id: 'gone' },
+                    { type: 'command', id: 'hidden' },
+                ]),
+            );
+            setup([
+                ...BASE,
+                makeCommand({
+                    id: 'hidden',
+                    title: 'Hidden',
+                    when: () => false,
+                }),
+            ]);
+            open();
+
+            expect(screen.queryByText('Recent')).not.toBeInTheDocument();
+        });
+
+        test('are hidden as soon as the user types, and capped at the limit', async () => {
+            const user = setup(BASE);
+            localStorage.setItem(
+                'orbit.command-palette.history',
+                JSON.stringify(
+                    Array.from({ length: 20 }, (_, i) => ({
+                        type: 'command',
+                        id: `c${i}`,
+                    })),
+                ),
+            );
+            expect(loadHistory()).toHaveLength(HISTORY_LIMIT);
+            open();
+            await user.type(screen.getByRole('combobox'), 'dark');
+
+            expect(screen.queryByText('Recent')).not.toBeInTheDocument();
+        });
+
+        test('commands that open a step are not remembered', async () => {
+            const user = setup([
+                makeCommand({
+                    id: 'issue.status',
+                    title: 'Change status',
+                    children: () => [makeCommand({ id: 'x', title: 'Todo' })],
+                }),
+            ]);
+            open();
+            await user.click(screen.getByText('Change status'));
+
+            expect(loadHistory()).toEqual([]);
         });
     });
 });
