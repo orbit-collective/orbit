@@ -18,6 +18,16 @@ final class CacheVersion
     /** Anything that changes who belongs to which project, or what a role may do. */
     public const string MEMBERSHIP = 'membership';
 
+    /**
+     * Anything an issue list shows: issues, issue types, workflow statuses.
+     * Deliberately one global scope: those writers cannot all cheaply say
+     * which project they touched, and a bump is a single Redis INCR.
+     */
+    public const string ISSUES = 'issues';
+
+    /** A user's name or avatar changed, or a user was deleted (shown on issues). */
+    public const string USERS = 'users';
+
     public static function project(int $projectId): string
     {
         return "project:$projectId";
@@ -38,17 +48,23 @@ final class CacheVersion
     }
 
     /**
-     * Caches $callback under $key for $ttl seconds, scoped to $scope's current
-     * version.
+     * Caches $callback under $key for $ttl seconds. The key embeds the current
+     * version of every scope the value depends on, so bumping any one of them
+     * retires it.
      *
      * @template T
      *
+     * @param  string|list<string>  $scopes
      * @param  Closure(): T  $callback
      * @return T
      */
-    public static function remember(string $scope, string $key, int $ttl, Closure $callback): mixed
+    public static function remember(string|array $scopes, string $key, int $ttl, Closure $callback): mixed
     {
-        return Cache::remember(self::key($scope).':v'.self::current($scope).":$key", $ttl, $callback);
+        $versions = collect((array) $scopes)
+            ->map(fn (string $scope) => $scope.'.v'.self::current($scope))
+            ->implode('|');
+
+        return Cache::remember("cached:$versions:$key", $ttl, $callback);
     }
 
     private static function key(string $scope): string

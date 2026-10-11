@@ -54,3 +54,19 @@ test('bump() creates the version on a store that cannot increment a missing key'
 test('project() names a per-project scope', function () {
     expect(CacheVersion::project(7))->toBe('project:7');
 });
+
+test('a value that depends on several scopes is retired by any of them', function () {
+    $calls = 0;
+    $compute = function () use (&$calls) {
+        return ++$calls;
+    };
+
+    expect(CacheVersion::remember(['a', 'b'], 'k', 60, $compute))->toBe(1);
+    expect(CacheVersion::remember(['a', 'b'], 'k', 60, $compute))->toBe(1);
+
+    CacheVersion::bump('b');
+    expect(CacheVersion::remember(['a', 'b'], 'k', 60, $compute))->toBe(2);
+
+    CacheVersion::bump('a');
+    expect(CacheVersion::remember(['a', 'b'], 'k', 60, $compute))->toBe(3);
+});
