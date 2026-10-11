@@ -1,5 +1,5 @@
-/** `>` = commands only, `#` = issues only, anything else = everything. */
-export type PaletteScope = 'all' | 'commands' | 'issues';
+/** `>` = commands only, `#` = issues only, `@` = people only, anything else = everything. */
+export type PaletteScope = 'all' | 'commands' | 'issues' | 'people';
 
 export interface ParsedPaletteQuery {
     scope: PaletteScope;
@@ -8,7 +8,7 @@ export interface ParsedPaletteQuery {
     /**
      * What to send to the server, or `null` when nothing should be sent: the
      * scope is commands-only, or the text is below the minimum length (1 digit
-     * after `#`, otherwise 2 characters).
+     * after `#`, 1 character after `@`, otherwise 2 characters).
      */
     serverQuery: string | null;
 }
@@ -22,6 +22,19 @@ export const parsePaletteQuery = (raw: string): ParsedPaletteQuery => {
             scope: 'commands',
             text: raw.slice(1).trim(),
             serverQuery: null,
+        };
+    }
+
+    if (raw.startsWith('@')) {
+        const rest = raw.slice(1).trim();
+
+        return {
+            scope: 'people',
+            text: rest,
+            // A first name is short; the member list is small, so one
+            // character is enough.
+            serverQuery:
+                rest.length >= 1 ? `@${rest}`.slice(0, MAX_QUERY_LENGTH) : null,
         };
     }
 

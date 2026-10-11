@@ -43,6 +43,7 @@ describe('usePaletteSearch', () => {
             status: 'idle',
             issues: [],
             projects: [],
+            people: [],
         });
         expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -68,6 +69,7 @@ describe('usePaletteSearch', () => {
             status: 'success',
             issues: [{ id: 1 }],
             projects: [{ id: 2 }],
+            people: [],
         });
     });
 
@@ -179,6 +181,7 @@ describe('usePaletteSearch', () => {
             status: 'idle',
             issues: [],
             projects: [],
+            people: [],
         });
     });
 
@@ -192,6 +195,7 @@ describe('usePaletteSearch', () => {
             status: 'error',
             issues: [],
             projects: [],
+            people: [],
         });
     });
 
@@ -214,6 +218,18 @@ describe('usePaletteSearch', () => {
             status: 'success',
             issues: [],
             projects: [],
+            people: [],
         });
+    });
+
+    test('exposes people from an "@" search', async () => {
+        mockFetch.mockReturnValue(
+            respond({ issues: [], projects: [], people: [{ id: 9 }] }),
+        );
+        const { result } = renderHook(() => usePaletteSearch('@ann'));
+
+        await settle();
+
+        expect(result.current.people).toEqual([{ id: 9 }]);
     });
 });

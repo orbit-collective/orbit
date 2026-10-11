@@ -10,7 +10,8 @@ export type CommandGroup =
     | 'account'
     | 'help'
     | 'issues'
-    | 'projects';
+    | 'projects'
+    | 'people';
 
 /** On-screen order of the groups when the query is empty. */
 export const COMMAND_GROUP_ORDER: CommandGroup[] = [
@@ -23,6 +24,7 @@ export const COMMAND_GROUP_ORDER: CommandGroup[] = [
     'help',
     'issues',
     'projects',
+    'people',
 ];
 
 export const COMMAND_GROUP_LABELS: Record<CommandGroup, string> = {
@@ -35,6 +37,7 @@ export const COMMAND_GROUP_LABELS: Record<CommandGroup, string> = {
     help: 'Help',
     issues: 'Issues',
     projects: 'Projects',
+    people: 'People',
 };
 
 export type PaletteMode = 'default' | 'search';
@@ -118,9 +121,20 @@ export interface PaletteSearchProject {
     url: string;
 }
 
+/** A member of one of the user's projects, with a project they share. */
+export interface PaletteSearchPerson {
+    id: number;
+    name: string;
+    avatar: string | null;
+    project: { id: number; name: string };
+    /** The project's issue list filtered to this assignee. */
+    url: string;
+}
+
 export interface PaletteSearchResults {
     issues: PaletteSearchIssue[];
     projects: PaletteSearchProject[];
+    people: PaletteSearchPerson[];
 }
 
 export type PaletteSearchStatus = 'idle' | 'loading' | 'success' | 'error';

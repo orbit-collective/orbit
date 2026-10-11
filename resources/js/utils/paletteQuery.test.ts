@@ -45,6 +45,26 @@ describe('parsePaletteQuery', () => {
         });
     });
 
+    test('"@" is people only and one character is enough', () => {
+        expect(parsePaletteQuery('@a')).toEqual({
+            scope: 'people',
+            text: 'a',
+            serverQuery: '@a',
+        });
+        expect(parsePaletteQuery('@ann marlow').serverQuery).toBe(
+            '@ann marlow',
+        );
+    });
+
+    test('a bare "@" waits for a name', () => {
+        expect(parsePaletteQuery('@')).toEqual({
+            scope: 'people',
+            text: '',
+            serverQuery: null,
+        });
+        expect(parsePaletteQuery('@   ').serverQuery).toBeNull();
+    });
+
     test('a bare "#" waits for more input', () => {
         expect(parsePaletteQuery('#')).toEqual({
             scope: 'issues',
@@ -65,6 +85,9 @@ describe('parsePaletteQuery', () => {
             MAX_QUERY_LENGTH,
         );
         expect(parsePaletteQuery(`#${long}`).serverQuery).toHaveLength(
+            MAX_QUERY_LENGTH,
+        );
+        expect(parsePaletteQuery(`@${long}`).serverQuery).toHaveLength(
             MAX_QUERY_LENGTH,
         );
     });
