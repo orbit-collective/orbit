@@ -1,10 +1,17 @@
 export type ShortcutAction = () => void;
 
+export type ShortcutScope = 'global' | 'project' | 'issue';
+
 export interface ShortcutDefinition {
-    key: string; // e.g., 'c', 'g p', 'ctrl+k', '/'
+    // e.g. 'c', 'g p', 'mod+k', '/'. An array gives one definition several
+    // bindings (['?', '/']). `mod` is `meta` on macOS and `ctrl` elsewhere.
+    key: string | string[];
     action: ShortcutAction;
     description: string;
     category?: 'Navigation' | 'Creation' | 'Search' | 'View' | 'Action';
+    // The most specific scope wins when several definitions share a key.
+    // Defaults to 'global'.
+    scope?: ShortcutScope;
     disabled?: boolean;
 }
 

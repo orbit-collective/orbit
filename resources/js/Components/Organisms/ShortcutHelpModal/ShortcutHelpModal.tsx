@@ -15,6 +15,7 @@ import Keybind from '@/Components/Atoms/Keybind/Keybind';
 import { useModal } from '@/context/ModalContext';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { cn } from '@/utils/cn';
+import { formatBindingParts, toBindings } from '@/utils/shortcutKeys';
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
     Action: Zap,
@@ -22,6 +23,53 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
     Navigation: Compass,
     Search,
     View: Eye,
+};
+
+const BindingChips: React.FC<{ binding: string; description: string }> = ({
+    binding,
+    description,
+}) => {
+    if (binding.includes('+') && binding !== '+') {
+        return (
+            <div className="flex items-center gap-1">
+                {formatBindingParts(binding).map((part, idx) => (
+                    <React.Fragment key={idx}>
+                        {idx > 0 && (
+                            <span className="text-[10px] text-[var(--text-muted-color)]">
+                                +
+                            </span>
+                        )}
+                        <Keybind
+                            tooltipText={description}
+                            tooltip={false}
+                            keybind={part}
+                        />
+                    </React.Fragment>
+                ))}
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex items-center gap-1">
+            {binding
+                .toLowerCase()
+                .split(/\s+/)
+                .map((part, idx) => (
+                    <React.Fragment key={idx}>
+                        {idx > 0 && (
+                            <span className="text-[9px] font-medium text-[var(--text-muted-color)]">
+                                then
+                            </span>
+                        )}
+                        <Keybind
+                            tooltipText={`Press ${part.toUpperCase()}`}
+                            keybind={part.toUpperCase()}
+                        />
+                    </React.Fragment>
+                ))}
+        </div>
+    );
 };
 
 export const ShortcutHelpModal: React.FC = () => {
@@ -49,7 +97,9 @@ export const ShortcutHelpModal: React.FC = () => {
             if (!query) return true;
             return (
                 s.description.toLowerCase().includes(query) ||
-                s.key.toLowerCase().includes(query) ||
+                toBindings(s.key).some((b) =>
+                    b.toLowerCase().includes(query),
+                ) ||
                 category.toLowerCase().includes(query)
             );
         });
@@ -195,76 +245,26 @@ export const ShortcutHelpModal: React.FC = () => {
                                                     {s.description}
                                                 </span>
                                                 <div className="flex shrink-0 items-center gap-1.5">
-                                                    {s.key.includes('+') ? (
-                                                        <div className="flex items-center gap-1">
-                                                            {s.key
-                                                                .toLowerCase()
-                                                                .split('+')
-                                                                .map(
-                                                                    (
-                                                                        kPart,
-                                                                        kIdx,
-                                                                    ) => (
-                                                                        <React.Fragment
-                                                                            key={
-                                                                                kIdx
-                                                                            }
-                                                                        >
-                                                                            {kIdx >
-                                                                                0 && (
-                                                                                <span className="text-[10px] text-[var(--text-muted-color)]">
-                                                                                    +
-                                                                                </span>
-                                                                            )}
-                                                                            <Keybind
-                                                                                tooltipText={
-                                                                                    s.description
-                                                                                }
-                                                                                tooltip={
-                                                                                    false
-                                                                                }
-                                                                                keybind={
-                                                                                    kPart ===
-                                                                                        'control' ||
-                                                                                    kPart ===
-                                                                                        'ctrl'
-                                                                                        ? 'CTRL'
-                                                                                        : kPart.toUpperCase()
-                                                                                }
-                                                                            />
-                                                                        </React.Fragment>
-                                                                    ),
+                                                    {toBindings(s.key).map(
+                                                        (binding, bIdx) => (
+                                                            <React.Fragment
+                                                                key={binding}
+                                                            >
+                                                                {bIdx > 0 && (
+                                                                    <span className="text-[9px] font-medium text-[var(--text-muted-color)]">
+                                                                        or
+                                                                    </span>
                                                                 )}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex items-center gap-1">
-                                                            {s.key
-                                                                .toLowerCase()
-                                                                .split(/\s+/)
-                                                                .map(
-                                                                    (
-                                                                        part,
-                                                                        pIdx,
-                                                                    ) => (
-                                                                        <React.Fragment
-                                                                            key={
-                                                                                pIdx
-                                                                            }
-                                                                        >
-                                                                            {pIdx >
-                                                                                0 && (
-                                                                                <span className="text-[9px] font-medium text-[var(--text-muted-color)]">
-                                                                                    then
-                                                                                </span>
-                                                                            )}
-                                                                            <Keybind
-                                                                                tooltipText={`Press ${part.toUpperCase()}`}
-                                                                                keybind={part.toUpperCase()}
-                                                                            />
-                                                                        </React.Fragment>
-                                                                    ),
-                                                                )}
-                                                        </div>
+                                                                <BindingChips
+                                                                    binding={
+                                                                        binding
+                                                                    }
+                                                                    description={
+                                                                        s.description
+                                                                    }
+                                                                />
+                                                            </React.Fragment>
+                                                        ),
                                                     )}
                                                 </div>
                                             </div>

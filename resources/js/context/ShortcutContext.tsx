@@ -10,6 +10,13 @@ import React, {
 import { ShortcutHelpModal } from '@/Components/Organisms/ShortcutHelpModal/ShortcutHelpModal';
 import { useModal } from '@/context/ModalContext';
 import { ShortcutContextType, ShortcutDefinition } from '@/types/Shortcuts';
+import {
+    bindingsId,
+    normalizeBinding,
+    normalizeBindings,
+    resolveEventKey,
+    SCOPE_RANK,
+} from '@/utils/shortcutKeys';
 import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
 
 const ShortcutContext = createContext<ShortcutContextType | undefined>(
@@ -23,12 +30,13 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
     const { openModal } = useModal();
     const comboRef = useRef<string[]>([]);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const warnedConflictsRef = useRef<Set<string>>(new Set());
 
     const register = useCallback((shortcut: ShortcutDefinition) => {
         setShortcuts((prev) => {
             const exists = prev.some(
                 (s) =>
-                    s.key === shortcut.key &&
+                    bindingsId(s.key) === bindingsId(shortcut.key) &&
                     s.description === shortcut.description,
             );
             if (exists) return prev;
@@ -47,7 +55,7 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
                 (ns) =>
                     !prev.some(
                         (ps) =>
-                            ps.key === ns.key &&
+                            bindingsId(ps.key) === bindingsId(ns.key) &&
                             ps.description === ns.description,
                     ),
             );
@@ -70,27 +78,17 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
     }, [openModal]);
 
     useEffect(() => {
-        const unreg1 = register({
-            key: '?',
+        return register({
+            key: ['?', '/'],
             description: 'Show keyboard shortcuts',
             category: 'Action',
             action: handleOpenHelp,
         });
-        const unreg2 = register({
-            key: '/',
-            description: 'Show keyboard shortcuts',
-            category: 'Action',
-            action: handleOpenHelp,
-        });
-        return () => {
-            unreg1();
-            unreg2();
-        };
     }, [register, handleOpenHelp]);
 
     useEffect(() => {
         return register({
-            key: 'ctrl+k',
+            key: 'mod+k',
             description: 'Open Command Palette',
             category: 'Action',
             action: handleOpenHelp,
@@ -111,35 +109,57 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
                 category: 'Navigation',
                 action: () => router.visit('/'),
             },
-            {
-                key: 'ctrl+f',
-                description: 'Focus Search',
-                category: 'Search',
-                action: () => {
-                    const searchInput = document.querySelector(
-                        'input[type="text"]',
-                    ) as HTMLInputElement;
-                    if (searchInput) searchInput.focus();
-                },
-            },
         ]);
     }, [registerBatch]);
 
-    const triggerShortcut = useCallback(
-        (key: string) => {
-            const normalizedKey = key.toLowerCase().replace(/\s+/g, ' ').trim();
+    useEffect(() => {
+        if (!import.meta.env.DEV) return;
 
-            const matchedShortcut = shortcuts.find((s) => {
-                if (s.disabled) return false;
-                return (
-                    s.key.toLowerCase().replace(/\s+/g, ' ').trim() ===
-                    normalizedKey
+        const owners = new Map<string, ShortcutDefinition>();
+        shortcuts.forEach((shortcut) => {
+            const scope = shortcut.scope ?? 'global';
+            new Set(normalizeBindings(shortcut.key)).forEach((binding) => {
+                const id = `${scope}:${binding}`;
+                const owner = owners.get(id);
+                if (!owner) {
+                    owners.set(id, shortcut);
+                    return;
+                }
+                const conflictId = `${id}:${owner.description}|${shortcut.description}`;
+                if (warnedConflictsRef.current.has(conflictId)) return;
+                warnedConflictsRef.current.add(conflictId);
+                console.warn(
+                    `[shortcuts] "${binding}" is bound twice in the "${scope}" scope: "${owner.description}" and "${shortcut.description}".`,
                 );
             });
+        });
+    }, [shortcuts]);
 
-            matchedShortcut?.action();
+    const findMatch = useCallback(
+        (candidates: string[]) => {
+            let best: ShortcutDefinition | undefined;
+            shortcuts.forEach((s) => {
+                if (s.disabled) return;
+                if (
+                    !normalizeBindings(s.key).some((b) =>
+                        candidates.includes(b),
+                    )
+                )
+                    return;
+                const rank = SCOPE_RANK[s.scope ?? 'global'];
+                if (!best || rank > SCOPE_RANK[best.scope ?? 'global'])
+                    best = s;
+            });
+            return best;
         },
         [shortcuts],
+    );
+
+    const triggerShortcut = useCallback(
+        (key: string) => {
+            findMatch([normalizeBinding(key)])?.action();
+        },
+        [findMatch],
     );
 
     const handleKeyDown = useCallback(
@@ -158,7 +178,7 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
                 return;
             }
 
-            const key = event.key.toLowerCase();
+            const key = resolveEventKey(event);
             if (['control', 'shift', 'alt', 'meta'].includes(key)) return;
 
             let pressedKey = '';
@@ -195,19 +215,7 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
 
             const currentCombo = comboRef.current.join(' ');
 
-            const matchedShortcut = shortcuts.find((s) => {
-                if (s.disabled) return false;
-                const normalizedKey = s.key
-                    .toLowerCase()
-                    .replace(/\s+/g, ' ')
-                    .trim();
-                return (
-                    normalizedKey === currentCombo ||
-                    normalizedKey === pressedKey ||
-                    (key === '?' && normalizedKey === '?') ||
-                    (key === '/' && normalizedKey === '/')
-                );
-            });
+            const matchedShortcut = findMatch([currentCombo, pressedKey]);
 
             if (matchedShortcut) {
                 event.preventDefault();
@@ -217,7 +225,7 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
                 if (timerRef.current) clearTimeout(timerRef.current);
             }
         },
-        [shortcuts],
+        [findMatch],
     );
 
     useEffect(() => {

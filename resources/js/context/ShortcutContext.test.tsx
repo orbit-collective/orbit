@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { ReactNode } from 'react';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ShortcutDefinition } from '@/types/Shortcuts';
 import { suspendShortcuts } from '@/utils/shortcutSuspension';
 
@@ -20,6 +20,11 @@ vi.mock('@/Components/Organisms/ShortcutHelpModal/ShortcutHelpModal', () => ({
 }));
 
 import { ShortcutProvider, useShortcuts } from './ShortcutContext';
+
+beforeEach(() => {
+    mockOpenModal.mockClear();
+    mockRouter.visit.mockClear();
+});
 
 const wrapper = ({ children }: { children: ReactNode }) => (
     <ShortcutProvider>{children}</ShortcutProvider>
@@ -47,15 +52,9 @@ describe('useShortcuts', () => {
 
         const keys = result.current.shortcuts.map((s) => s.key);
         expect(keys).toEqual(
-            expect.arrayContaining([
-                '?',
-                '/',
-                'ctrl+k',
-                'alt+p',
-                'alt+b',
-                'ctrl+f',
-            ]),
+            expect.arrayContaining([['?', '/'], 'mod+k', 'alt+p', 'alt+b']),
         );
+        expect(keys).not.toContain('ctrl+f');
     });
 
     test('register adds a custom shortcut and its cleanup removes it', () => {
@@ -339,29 +338,276 @@ describe('useShortcuts', () => {
         document.body.removeChild(marker);
     });
 
-    test('ctrl+f focuses the first text input on the page', () => {
+    test('ctrl+f is left to the browser and is not prevented', () => {
         renderHook(() => useShortcuts(), { wrapper });
         const input = document.createElement('input');
         input.type = 'text';
         document.body.appendChild(input);
         const focusSpy = vi.spyOn(input, 'focus');
 
+        let event!: KeyboardEvent;
         act(() => {
-            dispatchKeydown({ key: 'f', ctrlKey: true });
+            event = dispatchKeydown({ key: 'f', ctrlKey: true });
         });
 
-        expect(focusSpy).toHaveBeenCalled();
+        expect(focusSpy).not.toHaveBeenCalled();
+        expect(event.defaultPrevented).toBe(false);
         document.body.removeChild(input);
     });
 
-    test('ctrl+f does nothing when there is no text input on the page', () => {
+    describe('mod key', () => {
+        const mockPlatform = (platform: string) =>
+            vi.spyOn(navigator, 'platform', 'get').mockReturnValue(platform);
+
+        afterEach(() => vi.restoreAllMocks());
+
+        test('mod+k opens help with Ctrl on Windows/Linux and not with Meta', () => {
+            mockPlatform('Linux x86_64');
+            renderHook(() => useShortcuts(), { wrapper });
+
+            act(() => dispatchKeydown({ key: 'k', metaKey: true }));
+            expect(mockOpenModal).not.toHaveBeenCalled();
+
+            act(() => dispatchKeydown({ key: 'k', ctrlKey: true }));
+            expect(mockOpenModal).toHaveBeenCalledTimes(1);
+        });
+
+        test('mod+k opens help with Cmd on macOS and not with Ctrl', () => {
+            mockPlatform('MacIntel');
+            renderHook(() => useShortcuts(), { wrapper });
+
+            act(() => dispatchKeydown({ key: 'k', ctrlKey: true }));
+            expect(mockOpenModal).not.toHaveBeenCalled();
+
+            act(() => dispatchKeydown({ key: 'k', metaKey: true }));
+            expect(mockOpenModal).toHaveBeenCalledTimes(1);
+        });
+
+        test('modifier order in a binding does not matter', () => {
+            mockPlatform('Linux x86_64');
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+            act(() => {
+                result.current.register({
+                    key: 'shift+mod+j',
+                    description: 'Unordered combo',
+                    action,
+                });
+            });
+            act(() =>
+                dispatchKeydown({ key: 'J', ctrlKey: true, shiftKey: true }),
+            );
+
+            expect(action).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    test('alt combos match on event.code so macOS Option still works', () => {
         renderHook(() => useShortcuts(), { wrapper });
 
-        expect(() => {
-            act(() => {
-                dispatchKeydown({ key: 'f', ctrlKey: true });
+        act(() => dispatchKeydown({ key: 'π', code: 'KeyP', altKey: true }));
+        expect(mockRouter.visit).toHaveBeenCalledWith('/projects');
+
+        act(() => dispatchKeydown({ key: '∫', code: 'KeyB', altKey: true }));
+        expect(mockRouter.visit).toHaveBeenCalledWith('/');
+    });
+
+    test('alt combos match digit keys via event.code', () => {
+        const action = vi.fn();
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+        act(() => {
+            result.current.register({
+                key: 'alt+1',
+                description: 'Alt digit',
+                action,
             });
-        }).not.toThrow();
+        });
+        act(() => dispatchKeydown({ key: '¡', code: 'Digit1', altKey: true }));
+
+        expect(action).toHaveBeenCalledTimes(1);
+    });
+
+    test('a definition with an array key fires for every binding', () => {
+        const action = vi.fn();
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+        act(() => {
+            result.current.register({
+                key: ['g', 'ctrl+g'],
+                description: 'Array key',
+                action,
+            });
+        });
+        act(() => dispatchKeydown({ key: 'g' }));
+        act(() => dispatchKeydown({ key: 'g', ctrlKey: true }));
+
+        expect(action).toHaveBeenCalledTimes(2);
+    });
+
+    test('"/" and "?" are one definition and both open help', () => {
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+        const help = result.current.shortcuts.filter(
+            (s) => s.description === 'Show keyboard shortcuts',
+        );
+        expect(help).toHaveLength(1);
+
+        act(() => dispatchKeydown({ key: '/' }));
+        act(() => dispatchKeydown({ key: '?' }));
+        expect(mockOpenModal).toHaveBeenCalledTimes(2);
+    });
+
+    test('register does not duplicate an identical array-key definition', () => {
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
+        const before = result.current.shortcuts.length;
+        const shortcut: ShortcutDefinition = {
+            key: ['x', 'y'],
+            description: 'Dup',
+            action: vi.fn(),
+        };
+
+        act(() => {
+            result.current.register(shortcut);
+            result.current.register({ ...shortcut });
+        });
+
+        expect(result.current.shortcuts).toHaveLength(before + 1);
+    });
+
+    describe('scopes', () => {
+        test('the most specific scope wins regardless of registration order', () => {
+            const globalAction = vi.fn();
+            const issueAction = vi.fn();
+            const projectAction = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+            act(() => {
+                result.current.register({
+                    key: 'z',
+                    description: 'Issue z',
+                    scope: 'issue',
+                    action: issueAction,
+                });
+                result.current.register({
+                    key: 'z',
+                    description: 'Global z',
+                    action: globalAction,
+                });
+                result.current.register({
+                    key: 'z',
+                    description: 'Project z',
+                    scope: 'project',
+                    action: projectAction,
+                });
+            });
+            act(() => dispatchKeydown({ key: 'z' }));
+
+            expect(issueAction).toHaveBeenCalledTimes(1);
+            expect(projectAction).not.toHaveBeenCalled();
+            expect(globalAction).not.toHaveBeenCalled();
+        });
+
+        test('a disabled specific shortcut falls back to the global one', () => {
+            const globalAction = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+            act(() => {
+                result.current.register({
+                    key: 'z',
+                    description: 'Issue z',
+                    scope: 'issue',
+                    disabled: true,
+                    action: vi.fn(),
+                });
+                result.current.register({
+                    key: 'z',
+                    description: 'Global z',
+                    action: globalAction,
+                });
+            });
+            act(() => dispatchKeydown({ key: 'z' }));
+
+            expect(globalAction).toHaveBeenCalledTimes(1);
+        });
+
+        test('triggerShortcut also prefers the most specific scope', () => {
+            const globalAction = vi.fn();
+            const projectAction = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+            act(() => {
+                result.current.register({
+                    key: 'q',
+                    description: 'Global q',
+                    action: globalAction,
+                });
+                result.current.register({
+                    key: 'q',
+                    description: 'Project q',
+                    scope: 'project',
+                    action: projectAction,
+                });
+            });
+            act(() => result.current.triggerShortcut('q'));
+
+            expect(projectAction).toHaveBeenCalledTimes(1);
+            expect(globalAction).not.toHaveBeenCalled();
+        });
+
+        test('warns once in dev when a key is bound twice in the same scope', () => {
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+            act(() => {
+                result.current.register({
+                    key: 'w',
+                    description: 'First w',
+                    action: vi.fn(),
+                });
+                result.current.register({
+                    key: ['w', 'v'],
+                    description: 'Second w',
+                    action: vi.fn(),
+                });
+            });
+            act(() => {
+                result.current.register({
+                    key: 'u',
+                    description: 'Unrelated',
+                    action: vi.fn(),
+                });
+            });
+
+            const conflicts = warn.mock.calls.filter(([msg]) =>
+                String(msg).includes('"w"'),
+            );
+            expect(conflicts).toHaveLength(1);
+            warn.mockRestore();
+        });
+
+        test('does not warn when the same key lives in different scopes', () => {
+            const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+
+            act(() => {
+                result.current.register({
+                    key: 'w',
+                    description: 'Global w',
+                    action: vi.fn(),
+                });
+                result.current.register({
+                    key: 'w',
+                    description: 'Issue w',
+                    scope: 'issue',
+                    action: vi.fn(),
+                });
+            });
+
+            expect(warn).not.toHaveBeenCalled();
+            warn.mockRestore();
+        });
     });
 
     test('recognizes ctrl and meta modifier combos', () => {
