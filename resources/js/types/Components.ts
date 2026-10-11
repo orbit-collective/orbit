@@ -363,6 +363,8 @@ export interface PaginationProps {
      * remount by default.
      */
     preserveState?: boolean;
+    /** Extra classes for the root element, merged over the defaults (e.g. `px-0` inside a padded panel). */
+    className?: string;
 }
 export interface ProjectCardProps {
     project: Project;
