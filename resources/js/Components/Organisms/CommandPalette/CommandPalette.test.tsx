@@ -1085,6 +1085,49 @@ describe('CommandPalette', () => {
         });
     });
 
+    describe('touch', () => {
+        test('the close button closes the palette and returns focus', async () => {
+            const user = setup(BASE);
+            const trigger = screen.getByText('trigger');
+            trigger.focus();
+            open();
+
+            await user.click(
+                screen.getByRole('button', { name: 'Close command palette' }),
+            );
+
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            expect(trigger).toHaveFocus();
+        });
+
+        test('Tab still cannot leave the dialog now that a close button exists', async () => {
+            const user = setup(BASE);
+            open();
+
+            await user.tab();
+            expect(screen.getByRole('combobox')).toHaveFocus();
+            await user.tab({ shift: true });
+            expect(screen.getByRole('combobox')).toHaveFocus();
+        });
+
+        test('the loading skeleton matches the row height, so nothing jumps', async () => {
+            search.state = {
+                status: 'loading',
+                issues: [],
+                projects: [],
+                people: [],
+            };
+            const user = setup(BASE);
+            open();
+            await user.type(screen.getByRole('combobox'), 'zzzzz');
+
+            const skeletonRow = screen.getByTestId('command-palette-skeleton')
+                .firstElementChild as HTMLElement;
+            expect(skeletonRow.className).toContain('h-12');
+            expect(skeletonRow.className).toContain('md:h-10');
+        });
+    });
+
     describe('screen reader wiring', () => {
         test('the combobox controls an existing listbox and points at a real option', async () => {
             const user = setup(BASE);

@@ -36,7 +36,8 @@ import {
 import { parsePaletteQuery } from '@/utils/paletteQuery';
 import { suspendShortcuts } from '@/utils/shortcutSuspension';
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled])';
+const FOCUSABLE =
+    'a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled])';
 
 function CommandPalette() {
     const { isOpen, mode, commands, pages, closePalette, runCommand, popPage } =
@@ -330,7 +331,7 @@ function CommandPalette() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Command palette"
-                className="relative flex max-h-[85vh] w-full animate-[palette-in_120ms_ease-out] flex-col overflow-hidden rounded-b-2xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-2xl motion-reduce:animate-none md:max-h-[70vh] md:max-w-[640px] md:rounded-2xl"
+                className="relative flex max-h-[85dvh] w-full animate-[palette-in_120ms_ease-out] flex-col overflow-hidden rounded-b-2xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-2xl motion-reduce:animate-none md:max-h-[70vh] md:max-w-[640px] md:rounded-2xl"
             >
                 <CommandPaletteInput
                     ref={inputRef}
@@ -349,6 +350,7 @@ function CommandPalette() {
                     activeDescendantId={
                         flat.length > 0 ? optionId(activeIndex) : undefined
                     }
+                    onClose={closePalette}
                     breadcrumb={[
                         ...(pages[0]?.context ? [pages[0].context] : []),
                         ...pages.map((page) => page.title),
@@ -417,7 +419,7 @@ function CommandPalette() {
                             {[0, 1, 2].map((row) => (
                                 <div
                                     key={row}
-                                    className="flex h-10 animate-pulse items-center gap-3 motion-reduce:animate-none"
+                                    className="flex h-12 animate-pulse items-center gap-3 motion-reduce:animate-none md:h-10"
                                 >
                                     <div className="h-4 w-4 rounded bg-[var(--bg-light-color)]" />
                                     <div
@@ -453,7 +455,7 @@ function CommandPalette() {
                           : `${flat.length} ${flat.length === 1 ? 'result' : 'results'}`}
                 </div>
 
-                <div className="flex items-center gap-5 border-t border-[var(--border-color)] bg-[var(--bg-dark-color)] px-4 py-2.5 text-[10px] text-[var(--text-gray-color)]">
+                <div className="hidden items-center gap-5 border-t border-[var(--border-color)] bg-[var(--bg-dark-color)] px-4 py-2.5 text-[10px] text-[var(--text-gray-color)] sm:flex">
                     <span className="flex items-center gap-1.5">
                         <Keybind
                             tooltipText="Navigate"

@@ -93,4 +93,26 @@ describe('CommandPaletteInput', () => {
         expect(input).toHaveAttribute('aria-expanded', 'true');
         expect(input).toHaveAttribute('aria-controls', 'list-1');
     });
+
+    test('has no close button unless it is given a handler', () => {
+        render(<CommandPaletteInput {...baseProps} />);
+
+        expect(
+            screen.queryByRole('button', { name: 'Close command palette' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('offers a close button for touch, outside the Tab order', async () => {
+        const user = userEvent.setup();
+        const onClose = vi.fn();
+        render(<CommandPaletteInput {...baseProps} onClose={onClose} />);
+
+        const button = screen.getByRole('button', {
+            name: 'Close command palette',
+        });
+        expect(button).toHaveAttribute('tabindex', '-1');
+
+        await user.click(button);
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
 });

@@ -81,11 +81,17 @@ function CommandPaletteItem({
                     {command.prefix}
                 </span>
             )}
-            <span className="min-w-0 truncate text-[14px] text-[var(--text-color)]">
+            <span
+                title={command.title}
+                className="min-w-0 truncate text-[14px] text-[var(--text-color)]"
+            >
                 {highlight(command.title, ranges)}
             </span>
             {command.subtitle && (
-                <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--text-gray-color)]">
+                <span
+                    title={command.subtitle}
+                    className="min-w-0 flex-1 truncate text-[12px] text-[var(--text-gray-color)]"
+                >
                     {command.subtitle}
                 </span>
             )}
