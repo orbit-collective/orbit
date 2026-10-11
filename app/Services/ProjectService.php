@@ -5,12 +5,20 @@ namespace App\Services;
 use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Repositories\ProjectRepository;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProjectService
 {
+    /**
+     * Seconds the per-user project lists stay cached. Membership and project
+     * writes move the membership version, which retires them at once; the TTL
+     * only bounds writes that bypass the repositories.
+     */
+    private const int CACHE_TTL = 600;
+
     public function __construct(
         protected ProjectRepository $projectRepository,
         protected ActivityLogService $activityLogService,
@@ -28,9 +36,17 @@ class ProjectService
         return $project;
     }
 
+    /**
+     * Every page needs the sidebar's project list, so it is cached per user.
+     */
     public function getAllForUser(int $userId): Collection
     {
-        return $this->projectRepository->getAllForUser($userId);
+        return CacheVersion::remember(
+            CacheVersion::MEMBERSHIP,
+            "user:$userId:projects",
+            self::CACHE_TTL,
+            fn () => $this->projectRepository->getAllForUser($userId),
+        );
     }
 
     public function findById(int $id): ?Project
@@ -40,7 +56,12 @@ class ProjectService
 
     public function hasAnyProjectsForUser(int $userId): bool
     {
-        return $this->projectRepository->hasAnyProjectsForUser($userId);
+        return CacheVersion::remember(
+            CacheVersion::MEMBERSHIP,
+            "user:$userId:has-projects",
+            self::CACHE_TTL,
+            fn () => $this->projectRepository->hasAnyProjectsForUser($userId),
+        );
     }
 
     public function updateColumns(Project $project, array $newColumns): Project

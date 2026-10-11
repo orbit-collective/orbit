@@ -7,6 +7,8 @@ use App\Repositories\ProjectRepository;
 use App\Services\ActivityLogService;
 use App\Services\ProjectService;
 use App\Services\RoleService;
+use App\Support\Cache\CacheVersion;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 
@@ -77,4 +79,46 @@ test('deleting a project removes its uploaded attachment files on both the curre
     Storage::disk('local')->assertExists('attachments/8/other.png');
     Storage::disk('public')->assertMissing('attachments/7/legacy.png');
     Storage::disk('public')->assertExists('attachments/8/other.png');
+});
+
+test('the project list is served from the cache until the membership version moves', function () {
+    $projects = new Collection([new Project(['id' => 1, 'name' => 'Orbit'])]);
+
+    $this->projectRepository->shouldReceive('getAllForUser')->twice()->with(5)->andReturn($projects);
+
+    $this->service->getAllForUser(5);
+    $this->service->getAllForUser(5);
+
+    CacheVersion::bump(CacheVersion::MEMBERSHIP);
+
+    $this->service->getAllForUser(5);
+});
+
+test('each user gets their own cached project list and has-projects answer', function () {
+    $this->projectRepository->shouldReceive('getAllForUser')->once()->with(5)->andReturn(new Collection);
+    $this->projectRepository->shouldReceive('getAllForUser')->once()->with(6)->andReturn(new Collection);
+    $this->projectRepository->shouldReceive('hasAnyProjectsForUser')->once()->with(5)->andReturnTrue();
+    $this->projectRepository->shouldReceive('hasAnyProjectsForUser')->once()->with(6)->andReturnFalse();
+
+    $this->service->getAllForUser(5);
+    $this->service->getAllForUser(6);
+    $this->service->getAllForUser(5);
+
+    expect($this->service->hasAnyProjectsForUser(5))->toBeTrue()
+        ->and($this->service->hasAnyProjectsForUser(6))->toBeFalse()
+        ->and($this->service->hasAnyProjectsForUser(5))->toBeTrue();
+});
+
+test('joining a project shows up in the cached project list straight away', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $service = app(ProjectService::class);
+
+    expect($service->getAllForUser($user->id))->toHaveCount(0)
+        ->and($service->hasAnyProjectsForUser($user->id))->toBeFalse();
+
+    app(ProjectRepository::class)->attachMember($project, $user->id, RoleType::MEMBER);
+
+    expect($service->getAllForUser($user->id))->toHaveCount(1)
+        ->and($service->hasAnyProjectsForUser($user->id))->toBeTrue();
 });
