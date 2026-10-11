@@ -1,4 +1,4 @@
-.PHONY: setup up dev up-d down build ensure-env npm-install composer-install test test-coverage test-js test-js-coverage lint type-check logs shell tinker migrate fresh clean backup-now test-backup
+.PHONY: setup up dev up-d down build ensure-env npm-install composer-install test test-coverage test-js test-js-coverage lint type-check knip knip-fix unused unused-fix unused-fix-dangerous cleanup logs shell tinker migrate fresh clean backup-now test-backup
 
 # Use Doppler to inject environment variables when this directory is linked
 # to a Doppler project/config (`doppler setup`). Third parties without
@@ -142,6 +142,42 @@ lint: ensure-env
 
 type-check: ensure-env
 	$(COMPOSE) run --rm vite npx tsc --noEmit
+
+
+# Report unused files, exports, types and dependencies (knip, see knip.json).
+
+knip: ensure-env
+	$(COMPOSE) run --rm vite npm run knip
+
+
+# Remove the unused exports and types knip reports (modifies files, then formats them).
+
+knip-fix: ensure-env
+	$(COMPOSE) run --rm vite npm run knip\:fix
+
+
+# Report unused imports and variables (oxlint no-unused-vars).
+
+unused: ensure-env
+	$(COMPOSE) run --rm vite npm run unused
+
+
+# Remove unused imports (modifies files).
+
+unused-fix: ensure-env
+	$(COMPOSE) run --rm vite npm run unused\:fix
+
+
+# Also remove unused local variables and functions, with their initializers (modifies files; review the diff).
+
+unused-fix-dangerous: ensure-env
+	$(COMPOSE) run --rm vite npm run unused\:fix\:dangerous
+
+
+# Remove unused imports, then the unused exports and types knip reports.
+
+cleanup: ensure-env
+	$(COMPOSE) run --rm vite npm run cleanup
 
 
 # Tail logs from all services.
