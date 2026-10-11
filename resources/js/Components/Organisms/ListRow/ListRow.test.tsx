@@ -151,7 +151,7 @@ describe('ListRow Component', () => {
         expect(
             container.querySelector('[data-column="status"]'),
         ).not.toBeInTheDocument();
-        expect(screen.getByText('2026-01-01')).toBeInTheDocument();
+        expect(screen.getByText('Thu, 1 Jan 2026')).toBeInTheDocument();
     });
 
     test('shows the assignee name via UserBadge', () => {
