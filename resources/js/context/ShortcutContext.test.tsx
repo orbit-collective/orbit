@@ -748,4 +748,116 @@ describe('useShortcuts', () => {
             vi.useRealTimers();
         }
     });
+
+    describe('key sequences', () => {
+        const registerSequence = (
+            result: { current: ReturnType<typeof useShortcuts> },
+            key: string,
+            action: () => void,
+            description = key,
+        ) =>
+            act(() => {
+                result.current.register({ key, description, action });
+            });
+
+        test('a sequence fires on its last key', () => {
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerSequence(result, 'g d', action);
+
+            act(() => dispatchKeydown({ key: 'g' }));
+            expect(action).not.toHaveBeenCalled();
+            act(() => dispatchKeydown({ key: 'd' }));
+
+            expect(action).toHaveBeenCalledTimes(1);
+        });
+
+        test('a sequence beats the single key it ends with', () => {
+            const single = vi.fn();
+            const sequence = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerSequence(result, 'p', single, 'Create project');
+            registerSequence(result, 'g p', sequence, 'Go to projects');
+
+            act(() => dispatchKeydown({ key: 'g' }));
+            act(() => dispatchKeydown({ key: 'p' }));
+
+            expect(sequence).toHaveBeenCalledTimes(1);
+            expect(single).not.toHaveBeenCalled();
+
+            act(() => dispatchKeydown({ key: 'p' }));
+            expect(single).toHaveBeenCalledTimes(1);
+        });
+
+        test('an unrelated key just before the sequence does not spoil it', () => {
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerSequence(result, 'g n', action);
+
+            act(() => dispatchKeydown({ key: 'x' }));
+            act(() => dispatchKeydown({ key: 'g' }));
+            act(() => dispatchKeydown({ key: 'n' }));
+
+            expect(action).toHaveBeenCalledTimes(1);
+        });
+
+        test('only the last few keys are remembered', () => {
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerSequence(result, 'a b c d', action);
+
+            ['a', 'b', 'c', 'd'].forEach((key) =>
+                act(() => dispatchKeydown({ key })),
+            );
+
+            expect(action).not.toHaveBeenCalled();
+        });
+
+        test('a matched sequence resets, so the same keys do not fire twice', () => {
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerSequence(result, 'g d', action);
+
+            act(() => dispatchKeydown({ key: 'g' }));
+            act(() => dispatchKeydown({ key: 'd' }));
+            act(() => dispatchKeydown({ key: 'd' }));
+
+            expect(action).toHaveBeenCalledTimes(1);
+        });
+
+        test('a modifier combo clears a half-typed sequence', () => {
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerSequence(result, 'g d', action);
+
+            act(() => dispatchKeydown({ key: 'g' }));
+            act(() => dispatchKeydown({ key: 'z', ctrlKey: true }));
+            act(() => dispatchKeydown({ key: 'd' }));
+
+            expect(action).not.toHaveBeenCalled();
+        });
+
+        test('sequences are ignored while typing in an input', () => {
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerSequence(result, 'g d', action);
+            const input = document.createElement('input');
+            document.body.appendChild(input);
+
+            ['g', 'd'].forEach((key) =>
+                act(() => {
+                    input.dispatchEvent(
+                        new KeyboardEvent('keydown', {
+                            key,
+                            bubbles: true,
+                            cancelable: true,
+                        }),
+                    );
+                }),
+            );
+
+            expect(action).not.toHaveBeenCalled();
+            document.body.removeChild(input);
+        });
+    });
 });
