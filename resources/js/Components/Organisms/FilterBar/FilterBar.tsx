@@ -2,7 +2,6 @@ import { router } from '@inertiajs/react';
 import React, { useEffect, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
-import Keybind from '@/Components/Atoms/Keybind/Keybind';
 import { SavedFilter } from '@/hooks/useSavedFilters';
 import { FilterDropdownType } from '@/types/Components';
 import { Project } from '@/types/Projects';
@@ -68,12 +67,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
                             ref={input}
                             className="ml-2.5 w-full border-none bg-transparent p-0 text-sm text-[var(--text-color)] placeholder-[var(--text-muted-color)] shadow-none outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
                         />
-                        <div className="hidden select-none items-center gap-1 pl-2 sm:flex">
-                            <Keybind
-                                tooltipText={'Press ⌘ F'}
-                                keybind={'⌘ F'}
-                            />
-                        </div>
                     </div>
                 </div>
 
