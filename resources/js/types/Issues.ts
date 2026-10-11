@@ -145,3 +145,12 @@ export interface GithubDevelopmentRepository {
     owner: string;
     name: string;
 }
+
+/** What the acting user may change on an issue (mirrors IssueController@update). */
+export interface IssueAbilities {
+    update: boolean;
+    changeStatus: boolean;
+    assign: boolean;
+    changePriority: boolean;
+    changeLabels: boolean;
+}

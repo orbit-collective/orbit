@@ -1,6 +1,6 @@
 import type { FormDataConvertible } from '@inertiajs/core';
 import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
@@ -23,11 +23,25 @@ import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useAlert } from '@/context/AlertContext';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useIssueCommands } from '@/hooks/useIssueCommands';
 import { IssuePageProps } from '@/types/Components';
-import { Comment, IssueLabel, IssuePriority, Status } from '@/types/Issues';
+import {
+    Comment,
+    Issue,
+    IssueLabel,
+    IssuePriority,
+    Status,
+} from '@/types/Issues';
+import { ProjectLabel } from '@/types/Labels';
 import { formatStatusLabel } from '@/utils/text';
 import { formatDate } from '@/utils/time';
+import { getReachableStatuses } from '@/utils/workflow';
 
+// Module-level so an omitted prop keeps one identity across renders: the
+// issue commands are memoized on these, and a fresh `[]` each render would
+// re-register them in a loop.
+const NO_LABELS: ProjectLabel[] = [];
+const NO_ANCESTORS: Issue[] = [];
 const STATUSES: Status[] = ['open', 'in_progress', 'closed'];
 const PRIORITIES: IssuePriority[] = ['high', 'medium', 'low'];
 
@@ -36,14 +50,15 @@ export default function Show({
     projects,
     issue,
     users,
-    labels = [],
+    labels = NO_LABELS,
     issueTypes = [],
-    ancestors = [],
+    ancestors = NO_ANCESTORS,
     linkedPullRequests = [],
     githubRepositories = [],
     githubDefaultBranchName = '',
     canCreateGithubDevelopment = false,
     githubAccountLinked = false,
+    issueAbilities,
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
@@ -101,11 +116,24 @@ export default function Show({
         );
     };
 
-    const updateIssue = (data: Record<string, FormDataConvertible>) => {
-        router.patch(route('issues.update', issue.id), data, {
-            preserveScroll: true,
-        });
-    };
+    const updateIssue = useCallback(
+        (data: Record<string, FormDataConvertible>) => {
+            router.patch(route('issues.update', issue.id), data, {
+                preserveScroll: true,
+            });
+        },
+        [issue.id],
+    );
+
+    useIssueCommands({
+        project,
+        issue,
+        ancestors,
+        users,
+        labels,
+        abilities: issueAbilities,
+        update: updateIssue,
+    });
 
     const toLocalDateString = (date: Date) => {
         const year = date.getFullYear();
@@ -139,25 +167,8 @@ export default function Show({
         });
     };
 
-    const workflowStatuses = issue.issueType?.statuses ?? [];
-    const transitions = issue.issueType?.transitions ?? [];
     const currentStatusId = issue.workflowStatus?.id ?? null;
-
-    /**
-     * Only statuses the workflow actually permits moving to from here, so
-     * the picker can't offer a transition the backend would reject. With no
-     * current status yet (a legacy issue), every status is reachable.
-     */
-    const reachableStatuses = workflowStatuses.filter(
-        (status) =>
-            currentStatusId === null ||
-            status.id === currentStatusId ||
-            transitions.some(
-                (transition) =>
-                    transition.fromStatusId === currentStatusId &&
-                    transition.toStatusId === status.id,
-            ),
-    );
+    const reachableStatuses = getReachableStatuses(issue);
 
     const workflowStatusOptions = reachableStatuses.map((status) => ({
         value: String(status.id),
