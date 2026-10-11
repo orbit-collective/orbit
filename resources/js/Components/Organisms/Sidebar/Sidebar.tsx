@@ -4,22 +4,23 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import Divider from '@/Components/Atoms/Divider/Divider';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import NewProjectModal from '@/Components/Organisms/NewProjectModal/NewProjectModal';
-import { useShortcuts } from '@/context/ShortcutContext';
+import { useCommands } from '@/hooks/useCommands';
 import { PageProps } from '@/types';
+import { Command } from '@/types/Commands';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { Project } from '@/types/Projects';
 import { getSettingsTabByPath, SETTINGS_TABS } from '@/types/Settings';
-import { ShortcutDefinition } from '@/types/Shortcuts';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
+import { DOCS_URL, LEARN_URL, openExternal } from '@/utils/externalLinks';
 import { isTourSidebarOpen, TOUR_SIDEBAR_EVENT } from '@/utils/tourSidebar';
 import Icon from '../../Atoms/Icon/Icon';
 import NavItem from '../../Molecules/NavItem/NavItem';
 import UserBadge from '../../Molecules/UserBadge/UserBadge';
 
 const USER_MENU_URLS: Record<string, string> = {
-    learn: 'https://orbit-dev.app/learn',
-    docs: 'https://docs.orbit-dev.app',
+    learn: LEARN_URL,
+    docs: DOCS_URL,
 };
 
 const USER_MENU_OPTIONS: DropdownOptionItem[] = [
@@ -86,28 +87,35 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
         } else if (action === 'settings') {
             router.visit(route('settings'));
         } else {
-            const w = window.open(
-                USER_MENU_URLS[action],
-                '_blank',
-                'noopener,noreferrer',
-            );
-            if (w) w.opener = null;
+            openExternal(USER_MENU_URLS[action]);
         }
     };
 
-    const shortcuts = useMemo(
-        (): ShortcutDefinition[] => [
+    const commands = useMemo(
+        (): Command[] => [
             {
-                key: 'p',
-                description: 'Create project',
-                category: 'Creation',
-                action: () => setIsNewProjectModalOpen(true),
+                id: 'project.create',
+                title: 'Create project',
+                group: 'creation',
+                icon: 'FolderPlus',
+                shortcut: 'p',
+                keywords: ['new project'],
+                perform: () => setIsNewProjectModalOpen(true),
             },
+            ...projects.map((project): Command => ({
+                id: `nav.project.${project.id}`,
+                title: project.name,
+                subtitle: 'Project',
+                group: 'navigation',
+                icon: 'FolderGit2',
+                keywords: [project.slug, 'project'],
+                perform: () => router.visit(`/projects/${project.id}`),
+            })),
         ],
-        [],
+        [projects],
     );
 
-    useShortcuts(shortcuts);
+    useCommands(commands);
 
     return (
         <>

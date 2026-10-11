@@ -8,7 +8,7 @@ import Sidebar from './Sidebar';
 const pageState = vi.hoisted(() => ({ url: '/' }));
 const mockRouterPost = vi.hoisted(() => vi.fn());
 const mockRouterVisit = vi.hoisted(() => vi.fn());
-const mockUseShortcuts = vi.hoisted(() => vi.fn());
+const mockUseCommands = vi.hoisted(() => vi.fn());
 
 vi.stubGlobal(
     'route',
@@ -62,8 +62,8 @@ vi.mock('@/Components/Organisms/NewProjectModal/NewProjectModal', () => ({
         ) : null,
 }));
 
-vi.mock('@/context/ShortcutContext', () => ({
-    useShortcuts: mockUseShortcuts,
+vi.mock('@/hooks/useCommands', () => ({
+    useCommands: mockUseCommands,
 }));
 
 const makeProject = (overrides: Partial<Project> = {}): Project => ({
@@ -82,7 +82,7 @@ describe('Sidebar Component', () => {
         pageState.url = '/';
         mockRouterPost.mockClear();
         mockRouterVisit.mockClear();
-        mockUseShortcuts.mockClear();
+        mockUseCommands.mockClear();
     });
 
     test('renders the primary navigation items', () => {
@@ -407,24 +407,53 @@ describe('Sidebar Component', () => {
         expect(projectLink).toHaveClass('text-[var(--text-color)]');
     });
 
-    test('registers a "p" shortcut that opens the new project modal', () => {
+    test('registers a "p" command that opens the new project modal', () => {
         render(<Sidebar projects={[]} />);
 
         expect(
             screen.queryByTestId('new-project-modal'),
         ).not.toBeInTheDocument();
 
-        const shortcuts = mockUseShortcuts.mock.calls[0][0];
-        const createProjectShortcut = shortcuts.find(
-            (s: { key: string }) => s.key === 'p',
+        const commands = mockUseCommands.mock.calls[0][0];
+        const createProject = commands.find(
+            (c: { id: string }) => c.id === 'project.create',
         );
-        expect(createProjectShortcut).toBeDefined();
+        expect(createProject).toBeDefined();
+        expect(createProject.shortcut).toBe('p');
 
         act(() => {
-            createProjectShortcut.action();
+            createProject.perform();
         });
 
         expect(screen.getByTestId('new-project-modal')).toBeInTheDocument();
+    });
+
+    test('registers one navigation command per project', () => {
+        render(
+            <Sidebar
+                projects={[
+                    makeProject({ id: 1, name: 'Alpha', slug: 'alpha' }),
+                    makeProject({ id: 2, name: 'Beta', slug: 'beta' }),
+                ]}
+            />,
+        );
+
+        const commands = mockUseCommands.mock.calls[0][0];
+        const alpha = commands.find(
+            (c: { id: string }) => c.id === 'nav.project.1',
+        );
+
+        expect(alpha).toMatchObject({
+            title: 'Alpha',
+            group: 'navigation',
+            keywords: ['alpha', 'project'],
+        });
+        expect(
+            commands.some((c: { id: string }) => c.id === 'nav.project.2'),
+        ).toBe(true);
+
+        alpha.perform();
+        expect(mockRouterVisit).toHaveBeenCalledWith('/projects/1');
     });
 
     test('renders settings tabs instead of projects when on the settings page', () => {
