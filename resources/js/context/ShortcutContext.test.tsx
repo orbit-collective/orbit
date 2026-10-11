@@ -40,6 +40,20 @@ const dispatchKeydown = (init: KeyboardEventInit) => {
     return event;
 };
 
+const registerNav = (
+    result: { current: ReturnType<typeof useShortcuts> },
+    key = 'alt+p',
+    to = '/projects',
+) => {
+    act(() => {
+        result.current.register({
+            key,
+            description: `Go to ${to}`,
+            action: () => mockRouter.visit(to),
+        });
+    });
+};
+
 describe('useShortcuts', () => {
     test('throws when used outside of a ShortcutProvider', () => {
         expect(() => renderHook(() => useShortcuts())).toThrow(
@@ -47,14 +61,11 @@ describe('useShortcuts', () => {
         );
     });
 
-    test('registers the built-in navigation and help shortcuts on mount', () => {
+    test('starts with an empty registry and exposes openHelp', () => {
         const { result } = renderHook(() => useShortcuts(), { wrapper });
 
-        const keys = result.current.shortcuts.map((s) => s.key);
-        expect(keys).toEqual(
-            expect.arrayContaining([['?', '/'], 'mod+k', 'alt+p', 'alt+b']),
-        );
-        expect(keys).not.toContain('ctrl+f');
+        expect(result.current.shortcuts).toEqual([]);
+        expect(typeof result.current.openHelp).toBe('function');
     });
 
     test('register adds a custom shortcut and its cleanup removes it', () => {
@@ -234,8 +245,8 @@ describe('useShortcuts', () => {
     });
 
     test('ignores global shortcuts while they are suspended and resumes after', () => {
-        renderHook(() => useShortcuts(), { wrapper });
-        mockRouter.visit.mockClear();
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
+        registerNav(result);
 
         const resume = suspendShortcuts();
         act(() => {
@@ -250,8 +261,9 @@ describe('useShortcuts', () => {
         expect(mockRouter.visit).toHaveBeenCalledWith('/projects');
     });
 
-    test('alt+p navigates to /projects via the router', () => {
-        renderHook(() => useShortcuts(), { wrapper });
+    test('alt+p fires its registered action', () => {
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
+        registerNav(result);
 
         act(() => {
             dispatchKeydown({ key: 'p', altKey: true });
@@ -260,8 +272,9 @@ describe('useShortcuts', () => {
         expect(mockRouter.visit).toHaveBeenCalledWith('/projects');
     });
 
-    test('alt+b navigates to / via the router', () => {
-        renderHook(() => useShortcuts(), { wrapper });
+    test('alt+b fires its registered action', () => {
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
+        registerNav(result, 'alt+b', '/');
 
         act(() => {
             dispatchKeydown({ key: 'b', altKey: true });
@@ -272,21 +285,19 @@ describe('useShortcuts', () => {
 
     test('registerBatch is a no-op when every shortcut already exists', () => {
         const { result } = renderHook(() => useShortcuts(), { wrapper });
+        const batch: ShortcutDefinition[] = [
+            { key: 'alt+p', description: 'Go to Projects', action: vi.fn() },
+            { key: 'alt+b', description: 'Go to Dashboard', action: vi.fn() },
+        ];
+        act(() => {
+            result.current.registerBatch(batch);
+        });
         const before = result.current.shortcuts.length;
 
         act(() => {
-            result.current.registerBatch([
-                {
-                    key: 'alt+p',
-                    description: 'Go to Projects',
-                    action: vi.fn(),
-                },
-                {
-                    key: 'alt+b',
-                    description: 'Go to Dashboard',
-                    action: vi.fn(),
-                },
-            ]);
+            result.current.registerBatch(
+                batch.map((shortcut) => ({ ...shortcut })),
+            );
         });
 
         expect(result.current.shortcuts).toHaveLength(before);
@@ -309,12 +320,10 @@ describe('useShortcuts', () => {
         expect(result.current.shortcuts).toHaveLength(before);
     });
 
-    test('"?" opens the keyboard shortcuts help modal', () => {
-        renderHook(() => useShortcuts(), { wrapper });
+    test('openHelp opens the keyboard shortcuts help modal', () => {
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
 
-        act(() => {
-            dispatchKeydown({ key: '?' });
-        });
+        act(() => result.current.openHelp());
 
         expect(mockOpenModal).toHaveBeenCalledWith(
             'Keyboard Shortcuts',
@@ -323,16 +332,14 @@ describe('useShortcuts', () => {
         );
     });
 
-    test('"?" does not reopen the help modal while it is already open', () => {
+    test('openHelp does not reopen the help modal while it is already open', () => {
         const marker = document.createElement('div');
         marker.className = 'shortcut-modal-marker';
         document.body.appendChild(marker);
 
-        renderHook(() => useShortcuts(), { wrapper });
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
 
-        act(() => {
-            dispatchKeydown({ key: '?' });
-        });
+        act(() => result.current.openHelp());
 
         expect(mockOpenModal).not.toHaveBeenCalled();
         document.body.removeChild(marker);
@@ -361,26 +368,42 @@ describe('useShortcuts', () => {
 
         afterEach(() => vi.restoreAllMocks());
 
-        test('mod+k opens help with Ctrl on Windows/Linux and not with Meta', () => {
+        const registerModK = (
+            result: { current: ReturnType<typeof useShortcuts> },
+            action: () => void,
+        ) =>
+            act(() => {
+                result.current.register({
+                    key: 'mod+k',
+                    description: 'Mod K',
+                    action,
+                });
+            });
+
+        test('mod+k fires with Ctrl on Windows/Linux and not with Meta', () => {
             mockPlatform('Linux x86_64');
-            renderHook(() => useShortcuts(), { wrapper });
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerModK(result, action);
 
             act(() => dispatchKeydown({ key: 'k', metaKey: true }));
-            expect(mockOpenModal).not.toHaveBeenCalled();
+            expect(action).not.toHaveBeenCalled();
 
             act(() => dispatchKeydown({ key: 'k', ctrlKey: true }));
-            expect(mockOpenModal).toHaveBeenCalledTimes(1);
+            expect(action).toHaveBeenCalledTimes(1);
         });
 
-        test('mod+k opens help with Cmd on macOS and not with Ctrl', () => {
+        test('mod+k fires with Cmd on macOS and not with Ctrl', () => {
             mockPlatform('MacIntel');
-            renderHook(() => useShortcuts(), { wrapper });
+            const action = vi.fn();
+            const { result } = renderHook(() => useShortcuts(), { wrapper });
+            registerModK(result, action);
 
             act(() => dispatchKeydown({ key: 'k', ctrlKey: true }));
-            expect(mockOpenModal).not.toHaveBeenCalled();
+            expect(action).not.toHaveBeenCalled();
 
             act(() => dispatchKeydown({ key: 'k', metaKey: true }));
-            expect(mockOpenModal).toHaveBeenCalledTimes(1);
+            expect(action).toHaveBeenCalledTimes(1);
         });
 
         test('modifier order in a binding does not matter', () => {
@@ -404,7 +427,9 @@ describe('useShortcuts', () => {
     });
 
     test('alt combos match on event.code so macOS Option still works', () => {
-        renderHook(() => useShortcuts(), { wrapper });
+        const { result } = renderHook(() => useShortcuts(), { wrapper });
+        registerNav(result, 'alt+p', '/projects');
+        registerNav(result, 'alt+b', '/');
 
         act(() => dispatchKeydown({ key: 'π', code: 'KeyP', altKey: true }));
         expect(mockRouter.visit).toHaveBeenCalledWith('/projects');
@@ -444,19 +469,6 @@ describe('useShortcuts', () => {
         act(() => dispatchKeydown({ key: 'g', ctrlKey: true }));
 
         expect(action).toHaveBeenCalledTimes(2);
-    });
-
-    test('"/" and "?" are one definition and both open help', () => {
-        const { result } = renderHook(() => useShortcuts(), { wrapper });
-
-        const help = result.current.shortcuts.filter(
-            (s) => s.description === 'Show keyboard shortcuts',
-        );
-        expect(help).toHaveLength(1);
-
-        act(() => dispatchKeydown({ key: '/' }));
-        act(() => dispatchKeydown({ key: '?' }));
-        expect(mockOpenModal).toHaveBeenCalledTimes(2);
     });
 
     test('register does not duplicate an identical array-key definition', () => {

@@ -5,10 +5,13 @@ import { createInertiaApp } from '@inertiajs/react';
 import * as Sentry from '@sentry/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import CommandPalette from '@/Components/Organisms/CommandPalette/CommandPalette';
+import GlobalCommands from '@/Components/Organisms/GlobalCommands/GlobalCommands';
 import { ModalContainer } from '@/Components/Organisms/Modal';
 import OnboardingGate from '@/Components/Organisms/OnboardingGate/OnboardingGate';
 import { AccentProvider } from '@/context/AccentContext';
 import { AlertProvider } from '@/context/AlertContext';
+import { CommandProvider } from '@/context/CommandContext';
 import { ModalProvider } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
 import { ThemeProvider } from '@/context/ThemeContext';
@@ -45,9 +48,16 @@ createInertiaApp({
                             <ModalProvider>
                                 <AlertProvider>
                                     <ShortcutProvider>
-                                        <ModalContainer />
-                                        <Component {...pageProps} key={key} />
-                                        <OnboardingGate />
+                                        <CommandProvider>
+                                            <GlobalCommands />
+                                            <ModalContainer />
+                                            <Component
+                                                {...pageProps}
+                                                key={key}
+                                            />
+                                            <OnboardingGate />
+                                            <CommandPalette />
+                                        </CommandProvider>
                                     </ShortcutProvider>
                                 </AlertProvider>
                             </ModalProvider>

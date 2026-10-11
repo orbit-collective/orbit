@@ -20,4 +20,6 @@ export interface ShortcutContextType {
     registerBatch: (shortcuts: ShortcutDefinition[]) => () => void;
     shortcuts: ShortcutDefinition[];
     triggerShortcut: (key: string) => void;
+    /** Opens the read-only shortcut reference (the `?` help view). */
+    openHelp: () => void;
 }
