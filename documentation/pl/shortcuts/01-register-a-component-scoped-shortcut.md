@@ -10,7 +10,7 @@ Przećwiczony przykład: dodanie skrótu `n` na stronie listy projektów, który
 | `modyfikator+klawisz` | `'ctrl+k'`, `'alt+p'` | Trzymany modyfikator + klawisz, sprawdzany względem flag eventu `ctrlKey`/`altKey`/`metaKey`/`shiftKey` |
 | `mod+klawisz` | `'mod+k'` | `mod` to `meta` (⌘) na macOS i `ctrl` gdzie indziej; chipy w pomocy pokazują `⌘` lub `CTRL` odpowiednio. Preferuj go zamiast na sztywno wpisanego `ctrl+…` dla skrótów w całej aplikacji |
 | Kombinacje Alt/Option | `'alt+p'` | Dopasowywane po fizycznym klawiszu (`event.code`), bo Option na macOS zmienia `event.key` (`Option+P` → `π`) |
-| Sekwencja rozdzielona spacją | `'g p'` | Dwa klawisze bez modyfikatora naciśnięte w ciągu 500ms od siebie (śledzone "combo" przez `comboRef`) — żaden skrót w kodzie faktycznie tego dziś nie używa, ale logika dopasowania już to wspiera |
+| Sekwencja rozdzielona spacją | `'g p'` | Dwa klawisze bez modyfikatora naciśnięte w ciągu 500ms od siebie (śledzone "combo" przez `comboRef`) — używają tego globalne komendy nawigacji (`g d` Dashboard, `g p` Projects, `g s` Settings, `g n` Notifications); wygrywa najdłuższy ciąg ostatnich klawiszy, więc `g p` bije jednoklawiszowe `p` |
 
 Zawsze małymi literami — `ShortcutContext` normalizuje zarówno zarejestrowany `key`, jak i naciśniętą kombinację do małych liter przed porównaniem, więc `'Ctrl+K'` i `'ctrl+k'` zachowują się identycznie, ale zapisz go małymi literami dla spójności z każdą istniejącą definicją.
 

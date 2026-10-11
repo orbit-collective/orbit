@@ -23,6 +23,7 @@ documentation/
     architecture/            <- angielskie tłumaczenie każdego przewodnika poniżej
     settings-tabs/           <- angielskie tłumaczenie każdego przewodnika poniżej
     shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
+    command-palette/         <- angielskie tłumaczenie każdego przewodnika poniżej
     content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -89,6 +90,11 @@ documentation/
       README.md              <- indeks tej kategorii
       01-register-a-component-scoped-shortcut.md
       02-register-a-global-shortcut.md
+    command-palette/
+      README.md              <- indeks tej kategorii
+      01-add-a-global-command.md
+      02-add-a-contextual-command-with-nested-steps.md
+      03-add-a-search-source.md
     content-moderation/
       README.md              <- indeks tej kategorii
       01-add-moderation-to-a-new-upload-point.md
