@@ -1,5 +1,57 @@
 # Changelog
 
+## [0.10.6](https://github.com/orbit-collective/orbit/compare/v0.10.5...v0.10.6) (2026-10-11)
+
+
+### Features
+
+* **cache:** add versioned cache keys for scope-wide invalidation ([abd45c0](https://github.com/orbit-collective/orbit/commit/abd45c02a22673ec02b3e29a81fd5266e9aac837))
+* **cache:** bump the issues and users versions when issue data changes ([d73a58a](https://github.com/orbit-collective/orbit/commit/d73a58adf104816a6e2dbb15d076b3da63368ca8))
+* **cache:** bump the membership version on every membership and role write ([5e9a716](https://github.com/orbit-collective/orbit/commit/5e9a71693374a3131d83cc38beea29a81b16db61))
+* **cache:** let a cached value depend on several version scopes ([2fa7bb1](https://github.com/orbit-collective/orbit/commit/2fa7bb1d27f213ccc54c9152467377f7df37db5f))
+* **docker:** add a Redis service and the phpredis extension ([f34dafb](https://github.com/orbit-collective/orbit/commit/f34dafb6824d0e14f20264f6b8ba897ee8a6089b))
+* **docker:** run Storybook in its own container behind the storybook profile ([c61f660](https://github.com/orbit-collective/orbit/commit/c61f6607d3afe652611f376112bf03029551a05e))
+* **sessions:** add a registry that lists and revokes sessions on non-database stores ([4c5155b](https://github.com/orbit-collective/orbit/commit/4c5155b02456d3c893b431ef16653eaa42e8ab13))
+* **storybook:** add dark/light theme and accent color toolbar switches ([8a8f969](https://github.com/orbit-collective/orbit/commit/8a8f9697545dad789473f031d71150187f9ee2d0))
+* **storybook:** add Molecule stories, ActivityLogItem to EditableLabelList ([655bb5c](https://github.com/orbit-collective/orbit/commit/655bb5c9561be49fc90ab506272064ff12800bdc))
+* **storybook:** add Molecule stories, EditableMarkdown to MentionSuggestions ([76de48c](https://github.com/orbit-collective/orbit/commit/76de48c0a9f2c42ac3cea15f23258f0bb32a7458))
+* **storybook:** add Molecule stories, ModalFooter to ProductivityTrendCard ([d0ec491](https://github.com/orbit-collective/orbit/commit/d0ec49167bdb28ebcfec55b2028b3a42ffecb2e1))
+* **storybook:** add Molecule stories, ProjectCard to VisualCardHeader ([cc846a4](https://github.com/orbit-collective/orbit/commit/cc846a4b9eba2c00654f16f4d3c28259653a1ae1))
+* **storybook:** add Organism stories, ActivityLogs to IssueBoard ([307bce5](https://github.com/orbit-collective/orbit/commit/307bce5a4f38f6ffbd815fdc060a7a0def6f8912))
+* **storybook:** add Organism stories, IssueChildrenPanel to OnboardingGate ([7297b29](https://github.com/orbit-collective/orbit/commit/7297b29f3e4f1c31f6a9020488adc69ca75a273b))
+* **storybook:** add Organism stories, PageHeader to the settings content tabs ([9b24e49](https://github.com/orbit-collective/orbit/commit/9b24e493fbb422d450b4701407bb50a96227974a))
+* **storybook:** add shared typed story fixtures ([5718607](https://github.com/orbit-collective/orbit/commit/571860710a0eda6d16aa508d94c0ee0da3dd15bc))
+* **storybook:** add stories for the first half of the Atoms ([c6e244f](https://github.com/orbit-collective/orbit/commit/c6e244f388ca3ebaa658fb1b497e12e453074316))
+* **storybook:** add stories for the remaining Atoms ([25c6607](https://github.com/orbit-collective/orbit/commit/25c66077ed6f0f39805d9ee7b37fd95e805c6eac))
+* **storybook:** add the Storybook config with a dedicated Vite setup ([79da5b3](https://github.com/orbit-collective/orbit/commit/79da5b3c3738ea95ae331d502ee32dce4616a59b))
+* **storybook:** mock Inertia, axios, fetch and route() so stories run without a backend ([89ee2fe](https://github.com/orbit-collective/orbit/commit/89ee2feb67e8230c694d2aa907a89dc16a12b612))
+
+
+### Bug Fixes
+
+* **cache:** cache model attributes instead of Eloquent objects ([0a358a0](https://github.com/orbit-collective/orbit/commit/0a358a03c682e4069a672c67941b47b3628f110d))
+* **commands:** make the people search tests deterministic ([deaaf71](https://github.com/orbit-collective/orbit/commit/deaaf71c7d803c33de36ba32456e31c26273c474))
+* **sessions:** keep the Security page working with Redis sessions ([4afc214](https://github.com/orbit-collective/orbit/commit/4afc21459239a5ffe806fe0f1127aacb8117e7e1))
+* **storybook:** remove an unused import from the account settings stories ([e996890](https://github.com/orbit-collective/orbit/commit/e9968902ce8b104c3e45422edd84a8e553a97aad))
+
+
+### Performance Improvements
+
+* **auth:** cache a user's role and permissions per project ([feb2c6f](https://github.com/orbit-collective/orbit/commit/feb2c6f7c0e2e6b0c4dfebbf9b6a3789c406f0f3))
+* **auth:** read project membership through the cached lookup in policies ([b354065](https://github.com/orbit-collective/orbit/commit/b35406577fe824afe1acc94a1917d3794b8a962a))
+* **ci:** run the Pest suite in parallel ([1482645](https://github.com/orbit-collective/orbit/commit/1482645d3fee40b3ed3911874203dffbed5d58d7))
+* **ci:** run Vitest on vmThreads and use every CI core ([0dc044e](https://github.com/orbit-collective/orbit/commit/0dc044e23db8402d6e0a51a5579b15b748c4e266))
+* **issues:** cache the dashboard, project and calendar issue lists in Redis ([ebb48f8](https://github.com/orbit-collective/orbit/commit/ebb48f85a44f2c67180c281757377422a30fb19d))
+* **notifications:** cache each user's notification list in Redis ([aee1666](https://github.com/orbit-collective/orbit/commit/aee1666d8c11aadb0357eee0a413edb66421a8f4))
+* **notifications:** load at most the newest 100 notifications per user ([39f79b3](https://github.com/orbit-collective/orbit/commit/39f79b3d1faeaedeb46868d11a93ce84cb8bbd73))
+* **projects:** cache each user's project list and has-projects flag ([2669cb0](https://github.com/orbit-collective/orbit/commit/2669cb05775a6dc6facda03e24a6d08fb1714735))
+* **tests:** seed permissions once per test database ([f7e4e41](https://github.com/orbit-collective/orbit/commit/f7e4e41fc06330e761365fd08132efcc871bcdcc))
+
+
+### Miscellaneous Chores
+
+* release 0.10.6 ([4834a6f](https://github.com/orbit-collective/orbit/commit/4834a6f86de0d5cc27d82f33e680d267001cdcd1))
+
 ## [0.10.5](https://github.com/orbit-collective/orbit/compare/v0.10.4...v0.10.5) (2026-10-11)
 
 
