@@ -1,6 +1,6 @@
 # Wyświetl log aktywności w UI
 
-`ActivityLogService::getRecentForUser()` już zasila panel "Recent Work Activity" na Dashboardzie, a `getRecentForProject()` już zasila widok issues **Activity** projektu (zobacz [`../issue-views/README.md`](../issue-views/README.md)) — oba renderują tę samą parę komponentów `ActivityLogs`/`ActivityLogItem` na bazie tego samego kształtu `ActivityLogEntry`. Ten przewodnik dodaje trzecią powierzchnię: panel "Recent account activity" w zakładce Ustawień konta Security & access, ponownie wykorzystujący `getRecentForUser()` (dokładnie tę samą metodę odczytu, którą wywołuje już Dashboard), zamiast dodawać nową.
+`ActivityLogService::paginateForUser()` już zasila panel "Recent Work Activity" na Dashboardzie, a `paginateForProject()` już zasila widok issues **Activity** projektu (zobacz [`../issue-views/README.md`](../issue-views/README.md)) — oba renderują tę samą parę komponentów `ActivityLogs`/`ActivityLogItem` na bazie tego samego kształtu `ActivityLogEntry`. Ten przewodnik dodaje trzecią powierzchnię: panel "Recent account activity" w zakładce Ustawień konta Security & access, ponownie wykorzystujący to samo zapytanie repozytorium co Dashboard, zamiast dodawać nowe. Używa niepaginowanego `getRecentForUser()`, bo panel to krótka lista o stałej długości; jeśli powierzchnia potrzebuje stronicowania, wywołaj `paginateForUser()` i wyrenderuj wspólną molekułę `Pagination` z parametrami `activityPage`/`activityPerPage`, tak jak robi to Dashboard.
 
 ## Krok 1 — Podłącz metodę odczytu do akcji Security & access
 
