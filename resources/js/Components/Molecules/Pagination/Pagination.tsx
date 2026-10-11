@@ -84,6 +84,10 @@ const Pagination = ({
     to,
     total,
     queryParams,
+    pageParam = 'page',
+    perPageParam = 'perPage',
+    defaultPerPage = rowsPerPageCounts[0],
+    preserveState = false,
 }: PaginationProps) => {
     const { addAlert } = useAlert();
 
@@ -99,13 +103,13 @@ const Pagination = ({
         return label;
     };
     const currentPerPage: string =
-        queryParams?.perPage || rowsPerPageCounts[0].toString();
+        queryParams?.[perPageParam] || defaultPerPage.toString();
 
     const handlePerPageChange = (newPerPage: number) => {
         const newParams = {
             ...queryParams,
-            perPage: newPerPage,
-            page: 1,
+            [perPageParam]: newPerPage,
+            [pageParam]: 1,
         };
 
         router.get(window.location.pathname, newParams, {
@@ -171,6 +175,7 @@ const Pagination = ({
             <Link
                 key={key}
                 href={link.url!}
+                preserveState={preserveState}
                 className={className}
                 aria-label={getLinkAriaLabel(link.label)}
                 aria-current={link.active ? 'page' : undefined}

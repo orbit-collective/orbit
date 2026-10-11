@@ -351,6 +351,18 @@ export interface PaginationProps {
     to: number;
     total: number;
     queryParams?: { perPage?: string; page?: string; [key: string]: any };
+    /** Query-string name of the page number. Override when the page also holds another pager. */
+    pageParam?: string;
+    /** Query-string name of the rows-per-page value. */
+    perPageParam?: string;
+    /** Rows per page the server uses when `perPageParam` is absent from the URL. */
+    defaultPerPage?: number;
+    /**
+     * Keep the page component mounted when following a page link, so local
+     * state (like the selected issue view) survives. Inertia's GET links
+     * remount by default.
+     */
+    preserveState?: boolean;
 }
 export interface ProjectCardProps {
     project: Project;

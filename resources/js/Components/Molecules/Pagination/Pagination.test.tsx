@@ -10,13 +10,20 @@ vi.mock('@inertiajs/react', () => ({
         children,
         href,
         className,
+        preserveState,
         ...rest
     }: {
         children: React.ReactNode;
         href?: string;
         className?: string;
+        preserveState?: boolean;
     }) => (
-        <a href={href} className={className} {...rest}>
+        <a
+            href={href}
+            className={className}
+            data-preserve-state={String(preserveState)}
+            {...rest}
+        >
             {children}
         </a>
     ),
@@ -250,5 +257,80 @@ describe('Pagination Component', () => {
 
         await userEvent.keyboard('{Escape}');
         expect(trigger).toHaveFocus();
+    });
+
+    test('uses custom page and per-page param names and default rows per page', async () => {
+        render(
+            <Pagination
+                links={buildLinks()}
+                from={1}
+                to={20}
+                total={45}
+                queryParams={{ page: '4', activityPage: '3' }}
+                pageParam="activityPage"
+                perPageParam="activityPerPage"
+                defaultPerPage={20}
+            />,
+        );
+
+        // The per-page trigger shows the configured default, not the first option.
+        expect(screen.getByRole('button')).toHaveTextContent('20');
+
+        await userEvent.click(screen.getByRole('button'));
+        await userEvent.click(screen.getByText('50 rows'));
+
+        expect(router.get).toHaveBeenLastCalledWith(
+            window.location.pathname,
+            {
+                page: '4',
+                activityPage: 1,
+                activityPerPage: 50,
+            },
+            expect.any(Object),
+        );
+    });
+
+    test('reads the current rows per page from the custom per-page param', () => {
+        render(
+            <Pagination
+                links={buildLinks()}
+                from={1}
+                to={50}
+                total={120}
+                queryParams={{ activityPerPage: '50' }}
+                perPageParam="activityPerPage"
+                defaultPerPage={20}
+            />,
+        );
+
+        expect(screen.getByRole('button')).toHaveTextContent('50');
+    });
+
+    test('remounts on page links by default', () => {
+        render(<Pagination links={buildLinks()} from={1} to={10} total={25} />);
+
+        const links = screen.getAllByRole('link');
+        expect(links.length).toBeGreaterThan(0);
+        links.forEach((link) =>
+            expect(link).toHaveAttribute('data-preserve-state', 'false'),
+        );
+    });
+
+    test('keeps the page mounted on page links when preserveState is set', () => {
+        render(
+            <Pagination
+                links={buildLinks()}
+                from={1}
+                to={10}
+                total={25}
+                preserveState
+            />,
+        );
+
+        const links = screen.getAllByRole('link');
+        expect(links.length).toBeGreaterThan(0);
+        links.forEach((link) =>
+            expect(link).toHaveAttribute('data-preserve-state', 'true'),
+        );
     });
 });
