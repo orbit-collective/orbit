@@ -27,4 +27,14 @@ describe('Keybind Component', () => {
         expect(screen.queryByText('Save changes')).not.toBeInTheDocument();
         expect(screen.getByText('Ctrl+S')).toBeInTheDocument();
     });
+
+    test('uses theme variables instead of hardcoded colors', () => {
+        render(<Keybind tooltipText="Save" keybind="S" tooltip={false} />);
+
+        const kbd = screen.getByText('S');
+        expect(kbd.className).toContain('var(--bg-light-color)');
+        expect(kbd.className).toContain('var(--border-color)');
+        expect(kbd.className).toContain('var(--text-muted-color)');
+        expect(kbd.className).not.toMatch(/#[0-9a-f]{3}/i);
+    });
 });
