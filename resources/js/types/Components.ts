@@ -219,6 +219,8 @@ export interface KeybindProps {
     tooltipText: string;
     keybind: string;
     tooltip?: boolean;
+    /** `solid` paints an opaque chip, for use on hover/active rows. */
+    surface?: 'default' | 'solid';
 }
 export interface CheckboxProps {
     checked: boolean;

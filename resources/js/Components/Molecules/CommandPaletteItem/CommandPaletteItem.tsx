@@ -27,7 +27,7 @@ const highlight = (title: string, ranges: MatchRange[]) => {
         parts.push(
             <mark
                 key={index}
-                className="rounded-sm bg-[var(--accent-color-opacity)] text-[var(--accent-color)]"
+                className="rounded-sm bg-[var(--accent-color-opacity)] font-semibold text-[var(--text-color)]"
             >
                 {title.slice(start, end)}
             </mark>,
@@ -64,7 +64,7 @@ function CommandPaletteItem({
             onClick={onSelect}
             onMouseMove={onHover}
             className={cn(
-                'flex h-10 cursor-pointer items-center gap-3 rounded-lg px-3 transition-colors',
+                'flex h-12 cursor-pointer items-center gap-3 rounded-lg px-3 transition-colors md:h-10',
                 active
                     ? 'bg-[var(--bg-light-color-hover)]'
                     : 'hover:bg-[var(--bg-light-color)]',
@@ -74,10 +74,10 @@ function CommandPaletteItem({
                 name={command.icon}
                 size={16}
                 color={command.iconColor}
-                className="shrink-0 text-[var(--text-muted-color)]"
+                className="shrink-0 text-[var(--text-gray-color)]"
             />
             {command.prefix && (
-                <span className="shrink-0 font-mono text-[12px] text-[var(--text-muted-color)]">
+                <span className="shrink-0 font-mono text-[12px] text-[var(--text-gray-color)]">
                     {command.prefix}
                 </span>
             )}
@@ -85,7 +85,7 @@ function CommandPaletteItem({
                 {highlight(command.title, ranges)}
             </span>
             {command.subtitle && (
-                <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--text-muted-color)]">
+                <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--text-gray-color)]">
                     {command.subtitle}
                 </span>
             )}
@@ -97,6 +97,7 @@ function CommandPaletteItem({
                             key={`${part}-${index}`}
                             tooltipText={command.title}
                             tooltip={false}
+                            surface="solid"
                             keybind={part}
                         />
                     ))}
@@ -106,7 +107,7 @@ function CommandPaletteItem({
                 <Icon
                     name="ChevronRight"
                     size={14}
-                    className="shrink-0 text-[var(--text-muted-color)]"
+                    className="shrink-0 text-[var(--text-gray-color)]"
                 />
             )}
         </div>

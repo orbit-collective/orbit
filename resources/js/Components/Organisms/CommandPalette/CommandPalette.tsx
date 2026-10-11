@@ -16,6 +16,7 @@ import { useCommandPalette } from '@/context/CommandContext';
 import { ModalContext } from '@/context/ModalContext';
 import { usePaletteSearch } from '@/hooks/usePaletteSearch';
 import { Command } from '@/types/Commands';
+import { cn } from '@/utils/cn';
 import {
     HistoryEntry,
     loadHistory,
@@ -27,7 +28,11 @@ import {
     searchCommands,
 } from '@/utils/commandSearch';
 import { fuzzyScore } from '@/utils/fuzzyScore';
-import { issueToCommand, projectToCommand } from '@/utils/paletteEntities';
+import {
+    issueToCommand,
+    personToCommand,
+    projectToCommand,
+} from '@/utils/paletteEntities';
 import { parsePaletteQuery } from '@/utils/paletteQuery';
 import { suspendShortcuts } from '@/utils/shortcutSuspension';
 
@@ -42,6 +47,10 @@ function CommandPalette() {
 
     const [query, setQuery] = useState('');
     const [activeIndex, setActiveIndex] = useState(0);
+    // Counts step changes while open; the list re-mounts on each so it slides
+    // in. Zero on open, so opening itself only plays the dialog's own entrance.
+    const [stepChanges, setStepChanges] = useState(0);
+    const previousSteps = useRef(0);
     const inputRef = useRef<HTMLInputElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
@@ -79,7 +88,8 @@ function CommandPalette() {
         const visible = source.filter(
             (command) => !command.when || command.when(),
         );
-        const result = searchCommands(scope === 'issues' ? [] : visible, text);
+        const entityOnly = scope === 'issues' || scope === 'people';
+        const result = searchCommands(entityOnly ? [] : visible, text);
 
         if (inRoot && scope === 'all' && text === '' && history.length > 0) {
             const recent = history.flatMap((entry): Command[] => {
@@ -120,6 +130,11 @@ function CommandPalette() {
                     'Projects',
                     search.projects.map((p) => projectToCommand(p)),
                 ],
+                [
+                    'people',
+                    'People',
+                    search.people.map((person) => personToCommand(person)),
+                ],
             ];
 
             entities.forEach(([group, label, items]) => {
@@ -152,6 +167,18 @@ function CommandPalette() {
         setQuery('');
         setActiveIndex(0);
     }, [pages.length]);
+
+    useEffect(() => {
+        if (!isOpen) {
+            previousSteps.current = 0;
+            setStepChanges(0);
+            return;
+        }
+        if (previousSteps.current !== pages.length) {
+            previousSteps.current = pages.length;
+            setStepChanges((count) => count + 1);
+        }
+    }, [isOpen, pages.length]);
 
     useEffect(() => {
         setActiveIndex(0);
@@ -273,18 +300,24 @@ function CommandPalette() {
     let rowIndex = 0;
 
     let emptyMessage = 'No commands available';
-    if (scope === 'issues' && inRoot && !parsed.serverQuery) {
+    if (
+        (scope === 'issues' || scope === 'people') &&
+        inRoot &&
+        !parsed.serverQuery
+    ) {
         emptyMessage =
-            text === ''
-                ? 'Type an issue number or title'
-                : 'Keep typing to search issues';
+            scope === 'people'
+                ? 'Type a name to find a teammate'
+                : text === ''
+                  ? 'Type an issue number or title'
+                  : 'Keep typing to search issues';
     } else if (hasQuery) {
         emptyMessage = `No results for "${query.trim()}"`;
     }
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[14vh]"
+            className="fixed inset-0 z-[100] flex items-start justify-center md:px-4 md:pt-[14vh]"
             onKeyDown={trapFocus}
         >
             <div
@@ -298,7 +331,7 @@ function CommandPalette() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Command palette"
-                className="relative flex max-h-[70vh] w-full max-w-[640px] flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-2xl"
+                className="relative flex max-h-[85vh] w-full animate-[palette-in_120ms_ease-out] flex-col overflow-hidden rounded-b-2xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-2xl motion-reduce:animate-none md:max-h-[70vh] md:max-w-[640px] md:rounded-2xl"
             >
                 <CommandPaletteInput
                     ref={inputRef}
@@ -313,6 +346,7 @@ function CommandPalette() {
                               : 'Type a command or search...'
                     }
                     listboxId={listboxId}
+                    expanded={flat.length > 0}
                     activeDescendantId={
                         flat.length > 0 ? optionId(activeIndex) : undefined
                     }
@@ -322,45 +356,59 @@ function CommandPalette() {
                     ]}
                 />
 
+                {/* The scroll area wraps the listbox so non-option content (empty
+                    state, skeleton) stays outside it: a listbox may only own
+                    options and groups. */}
                 <div
-                    ref={listRef}
-                    id={listboxId}
-                    role="listbox"
-                    aria-label="Commands"
+                    key={stepChanges}
                     // Keep focus in the input when a row is clicked, so the
                     // keyboard (Esc, Backspace, arrows) keeps working after.
                     onMouseDown={(event) => event.preventDefault()}
-                    className="min-h-0 flex-1 overflow-y-auto p-1.5"
+                    className={cn(
+                        'min-h-0 flex-1 overflow-y-auto p-1.5',
+                        stepChanges > 0 &&
+                            'motion-reduce:animate-none animate-[palette-step_80ms_ease-out]',
+                    )}
                 >
-                    {sections.length === 0 && !showSkeleton ? (
-                        <div className="py-10 text-center text-sm text-[var(--text-muted-color)]">
+                    {flat.length > 0 && (
+                        <div
+                            ref={listRef}
+                            id={listboxId}
+                            role="listbox"
+                            aria-label="Commands"
+                        >
+                            {sections.map((section) => (
+                                <CommandPaletteGroup
+                                    key={section.group}
+                                    id={`${baseId}-group-${section.group}`}
+                                    label={section.label}
+                                >
+                                    {section.items.map((item) => {
+                                        const index = rowIndex++;
+                                        return (
+                                            <CommandPaletteItem
+                                                key={item.command.id}
+                                                id={optionId(index)}
+                                                command={item.command}
+                                                ranges={item.ranges}
+                                                active={index === activeIndex}
+                                                onSelect={() =>
+                                                    run(item.command)
+                                                }
+                                                onHover={() =>
+                                                    setActiveIndex(index)
+                                                }
+                                            />
+                                        );
+                                    })}
+                                </CommandPaletteGroup>
+                            ))}
+                        </div>
+                    )}
+                    {flat.length === 0 && !showSkeleton && (
+                        <div className="py-10 text-center text-sm text-[var(--text-gray-color)]">
                             {emptyMessage}
                         </div>
-                    ) : (
-                        sections.map((section) => (
-                            <CommandPaletteGroup
-                                key={section.group}
-                                id={`${baseId}-group-${section.group}`}
-                                label={section.label}
-                            >
-                                {section.items.map((item) => {
-                                    const index = rowIndex++;
-                                    return (
-                                        <CommandPaletteItem
-                                            key={item.command.id}
-                                            id={optionId(index)}
-                                            command={item.command}
-                                            ranges={item.ranges}
-                                            active={index === activeIndex}
-                                            onSelect={() => run(item.command)}
-                                            onHover={() =>
-                                                setActiveIndex(index)
-                                            }
-                                        />
-                                    );
-                                })}
-                            </CommandPaletteGroup>
-                        ))
                     )}
                     {showSkeleton && (
                         <div
@@ -387,7 +435,7 @@ function CommandPalette() {
                 {search.status === 'error' && (
                     <div
                         role="status"
-                        className="border-t border-[var(--border-color)] px-4 py-2 text-[11px] text-[var(--text-muted-color)]"
+                        className="border-t border-[var(--border-color)] px-4 py-2 text-[11px] text-[var(--text-gray-color)]"
                     >
                         Issue and project search is unavailable. Showing
                         commands only.
@@ -407,7 +455,7 @@ function CommandPalette() {
                           : `${flat.length} ${flat.length === 1 ? 'result' : 'results'}`}
                 </div>
 
-                <div className="flex items-center gap-5 border-t border-[var(--border-color)] bg-[var(--bg-dark-color)] px-4 py-2.5 text-[10px] text-[var(--text-muted-color)]">
+                <div className="flex items-center gap-5 border-t border-[var(--border-color)] bg-[var(--bg-dark-color)] px-4 py-2.5 text-[10px] text-[var(--text-gray-color)]">
                     <span className="flex items-center gap-1.5">
                         <Keybind
                             tooltipText="Navigate"
@@ -449,6 +497,14 @@ function CommandPalette() {
                                     keybind="#"
                                 />
                                 issues
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <Keybind
+                                    tooltipText="People only"
+                                    tooltip={false}
+                                    keybind="@"
+                                />
+                                people
                             </span>
                         </span>
                     )}

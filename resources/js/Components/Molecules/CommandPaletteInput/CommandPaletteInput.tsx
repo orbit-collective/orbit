@@ -7,6 +7,8 @@ interface CommandPaletteInputProps {
     onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
     placeholder: string;
     listboxId: string;
+    /** Whether the listbox is shown; `aria-controls` only applies while it is. */
+    expanded: boolean;
     activeDescendantId?: string;
     /** Titles of the nested steps above the root list, e.g. `['#12', 'Change status']`. */
     breadcrumb?: string[];
@@ -23,16 +25,17 @@ const CommandPaletteInput = forwardRef<
             onKeyDown,
             placeholder,
             listboxId,
+            expanded,
             activeDescendantId,
             breadcrumb = [],
         },
         ref,
     ) => (
-        <div className="flex h-[52px] items-center gap-3 border-b border-[var(--border-color)] px-4">
+        <div className="flex h-14 items-center gap-3 border-b border-[var(--border-color)] px-4 md:h-[52px]">
             <Search
                 size={18}
                 aria-hidden="true"
-                className="shrink-0 text-[var(--text-muted-color)]"
+                className="shrink-0 text-[var(--text-gray-color)]"
             />
             {breadcrumb.length > 0 && (
                 <ol
@@ -48,7 +51,7 @@ const CommandPaletteInput = forwardRef<
                                 <ChevronRight
                                     size={12}
                                     aria-hidden="true"
-                                    className="text-[var(--text-muted-color)]"
+                                    className="text-[var(--text-gray-color)]"
                                 />
                             )}
                             <span>{title}</span>
@@ -57,7 +60,7 @@ const CommandPaletteInput = forwardRef<
                     <ChevronRight
                         size={12}
                         aria-hidden="true"
-                        className="text-[var(--text-muted-color)]"
+                        className="text-[var(--text-gray-color)]"
                     />
                 </ol>
             )}
@@ -66,8 +69,8 @@ const CommandPaletteInput = forwardRef<
                 type="text"
                 role="combobox"
                 aria-label="Search commands"
-                aria-expanded="true"
-                aria-controls={listboxId}
+                aria-expanded={expanded}
+                aria-controls={expanded ? listboxId : undefined}
                 aria-autocomplete="list"
                 aria-activedescendant={activeDescendantId}
                 autoComplete="off"
@@ -76,7 +79,7 @@ const CommandPaletteInput = forwardRef<
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 onKeyDown={onKeyDown}
-                className="min-w-0 flex-1 border-none bg-transparent text-[15px] text-[var(--text-color)] placeholder-[var(--text-muted-color)] outline-none focus:ring-0"
+                className="min-w-0 flex-1 border-none bg-transparent text-base text-[var(--text-color)] placeholder-[var(--text-gray-color)] outline-none focus:ring-0 md:text-[15px]"
             />
         </div>
     ),
