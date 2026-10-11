@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Enums\Permissions\RoleType;
 use App\Models\Project;
+use App\Support\Cache\CacheVersion;
 use App\Support\LikePattern;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -54,6 +55,7 @@ class ProjectRepository
     public function update(Project $project, array $data): Project
     {
         $project->update($data);
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
 
         return $project;
     }
@@ -68,6 +70,7 @@ class ProjectRepository
     public function attachMember(Project $project, int $userId, RoleType $role): void
     {
         $project->users()->attach($userId, ['role' => $role->value]);
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 
     /**
@@ -81,5 +84,6 @@ class ProjectRepository
     public function delete(Project $project): void
     {
         $project->delete();
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 }

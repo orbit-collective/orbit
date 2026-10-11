@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\Role;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -39,11 +40,13 @@ class RoleRepository
     public function delete(Role $role): void
     {
         $role->delete();
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 
     public function syncPermissions(Role $role, array $permissionIds): Role
     {
         $role->permissions()->sync($permissionIds);
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
 
         return $role->load('permissions');
     }

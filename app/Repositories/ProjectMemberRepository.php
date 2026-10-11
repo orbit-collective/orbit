@@ -6,6 +6,7 @@ use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\ProjectUser;
 use App\Models\Role;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Eloquent\Collection;
 
 class ProjectMemberRepository
@@ -41,11 +42,13 @@ class ProjectMemberRepository
     public function updateRole(Project $project, int $userId, RoleType $role): void
     {
         $project->users()->updateExistingPivot($userId, ['role' => $role->value]);
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 
     public function removeMember(Project $project, int $userId): void
     {
         $project->users()->detach($userId);
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 
     public function syncRoles(Project $project, int $userId, array $roleIds): void
@@ -53,6 +56,7 @@ class ProjectMemberRepository
         $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $userId)->first();
 
         $projectUser?->roles()->sync($roleIds);
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 
     /**
@@ -64,6 +68,7 @@ class ProjectMemberRepository
         $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $userId)->first();
 
         $projectUser?->roles()->syncWithoutDetaching($roleIds);
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 
     public function syncSystemRole(Project $project, int $userId, Role $targetSystemRole, array $systemRoleIds): void
@@ -76,5 +81,6 @@ class ProjectMemberRepository
 
         $projectUser->roles()->detach($systemRoleIds);
         $projectUser->roles()->attach($targetSystemRole->id);
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 }
