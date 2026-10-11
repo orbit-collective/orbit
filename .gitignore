@@ -31,3 +31,6 @@ Thumbs.db
 /.agents
 /.claude
 /backup
+
+# Static Storybook build (npm run build-storybook)
+/storybook-static
