@@ -26,7 +26,7 @@ const Checkbox = ({
                 checked={checked}
                 onChange={onChange}
                 disabled={isDisabled}
-                className="h-4 w-4 shrink-0 cursor-pointer rounded border-[var(--bg-light-color)] bg-transparent accent-[var(--accent-color)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)] focus:ring-offset-0 disabled:cursor-not-allowed"
+                className="h-4 w-4 shrink-0 cursor-pointer rounded border-[var(--bg-light-color)] bg-transparent text-[var(--accent-color)] accent-[var(--accent-color)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-color)] focus:ring-offset-0 disabled:cursor-not-allowed"
             />
             {label}
         </label>
