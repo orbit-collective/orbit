@@ -65,9 +65,31 @@ class IssueController extends Controller
             'linkedPullRequests' => $this->mapLinkedPullRequests($issueWithRelations->externalLinks),
             'githubRepositories' => $this->mapGithubRepositories($project),
             'githubDefaultBranchName' => $this->githubBranchService->defaultBranchName($issue),
+            'issueAbilities' => $this->issueAbilities($request, $issue),
             'canCreateGithubDevelopment' => $request->user()->can('createGithubDevelopment', $issue),
             'githubAccountLinked' => $request->user()->github_id !== null,
         ]);
+    }
+
+    /**
+     * What the acting user may do to this issue, mirroring the gates
+     * update() enforces: a change needs `update` plus the ability of the
+     * field it touches. The command palette hides actions that would be
+     * rejected, so it needs the same answers the controller will give.
+     *
+     * @return array<string, bool>
+     */
+    private function issueAbilities(Request $request, Issue $issue): array
+    {
+        $user = $request->user();
+
+        return [
+            'update' => $user->can('update', $issue),
+            'changeStatus' => $user->can('changeStatus', $issue),
+            'assign' => $user->can('assign', $issue),
+            'changePriority' => $user->can('changePriority', $issue),
+            'changeLabels' => $user->can('changeLabels', $issue),
+        ];
     }
 
     /**
