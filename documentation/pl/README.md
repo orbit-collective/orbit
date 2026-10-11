@@ -24,6 +24,7 @@ documentation/
     settings-tabs/           <- angielskie tłumaczenie każdego przewodnika poniżej
     shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
     command-palette/         <- angielskie tłumaczenie każdego przewodnika poniżej
+    storybook/               <- angielskie tłumaczenie każdego przewodnika poniżej
     content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -143,6 +144,12 @@ documentation/
     authentication/
       README.md              <- indeks tej kategorii
       01-add-an-oauth-provider.md
+    storybook/
+      README.md              <- indeks tej kategorii
+      01-write-a-story.md
+      02-mock-inertia-and-network.md
+      03-theme-accent-and-docker.md
+      04-stories-as-vitest-tests.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
