@@ -14,10 +14,13 @@
         "unused:fix": "oxlint resources/js -A all -W no-unused-vars --fix-suggestions",
         "unused:fix:dangerous": "oxlint resources/js -A all -W no-unused-vars --fix-dangerously && oxfmt resources/js",
         "cleanup": "npm run unused:fix && npm run knip:fix",
+        "storybook": "storybook dev -p 6006 --no-open",
+        "build-storybook": "storybook build",
         "hooks:install": "git config core.hooksPath .githooks",
         "test": "vitest",
         "test:watch": "vitest --watch",
-        "test:coverage": "vitest run --coverage"
+        "test:coverage": "vitest run --coverage --exclude 'resources/js/stories/**'",
+        "test:stories": "vitest run resources/js/stories"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
