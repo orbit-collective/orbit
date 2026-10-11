@@ -15,6 +15,7 @@ Redis to backend cache, sesji i kolejek w Orbit. Wszystko, co przechowuje, jest 
 | Powiadomienia użytkownika (najnowsze 100) | `NotificationService::getAllForUser` | store, update, delete, mark-all-read |
 | Lista projektów użytkownika i "ma projekty" | `ProjectService` | wersję członkostwa |
 | Rola i uprawnienia użytkownika w projekcie | `Project::membershipOf()` | wersję członkostwa |
+| Listy zgłoszeń: dashboard, strona tabeli projektu, kalendarz | `IssueService` | wersje zgłoszeń, użytkowników i członkostwa (TTL 2 minuty) |
 | Sesje, rate limiter, kolejka, blokady | sterowniki Laravela | nie dotyczy |
 
-Wszystkie trzy cache'owane odczyty to współdzielone propsy Inertia albo sprawdzenia uprawnień, które wykonują się przy (prawie) każdym żądaniu.
+Odczyty powiadomień, listy projektów i uprawnień to współdzielone propsy Inertia albo sprawdzenia uprawnień, które wykonują się przy (prawie) każdym żądaniu; listy zgłoszeń to najcięższe zapytania stron.
