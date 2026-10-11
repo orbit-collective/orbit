@@ -14,7 +14,21 @@ import CommandPaletteInput from '@/Components/Molecules/CommandPaletteInput/Comm
 import CommandPaletteItem from '@/Components/Molecules/CommandPaletteItem/CommandPaletteItem';
 import { useCommandPalette } from '@/context/CommandContext';
 import { ModalContext } from '@/context/ModalContext';
-import { flattenSections, searchCommands } from '@/utils/commandSearch';
+import { usePaletteSearch } from '@/hooks/usePaletteSearch';
+import { Command } from '@/types/Commands';
+import {
+    HistoryEntry,
+    loadHistory,
+    recordHistory,
+} from '@/utils/commandHistory';
+import {
+    CommandSection,
+    flattenSections,
+    searchCommands,
+} from '@/utils/commandSearch';
+import { fuzzyScore } from '@/utils/fuzzyScore';
+import { issueToCommand, projectToCommand } from '@/utils/paletteEntities';
+import { parsePaletteQuery } from '@/utils/paletteQuery';
 import { suspendShortcuts } from '@/utils/shortcutSuspension';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled])';
@@ -38,17 +52,89 @@ function CommandPalette() {
     const currentPage = pages[pages.length - 1];
     const source = currentPage ? currentPage.commands : commands;
 
-    const sections = useMemo(
-        () =>
-            searchCommands(
-                source.filter((command) => !command.when || command.when()),
-                query,
-            ),
-        // `isOpen` re-evaluates every `when()` each time the palette opens.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [source, query, isOpen],
+    const inRoot = !currentPage;
+    const parsed = useMemo(() => parsePaletteQuery(query), [query]);
+    // Prefixes (`>` commands, `#` issues) only exist on the root list.
+    const text = inRoot ? parsed.text : query.trim();
+    const scope = inRoot ? parsed.scope : 'all';
+    const search = usePaletteSearch(
+        isOpen && inRoot && parsed.scope !== 'commands'
+            ? parsed.serverQuery
+            : null,
     );
+    const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+    useEffect(() => {
+        if (isOpen) setHistory(loadHistory());
+    }, [isOpen]);
+
+    const sections = useMemo((): CommandSection[] => {
+        // `isOpen` re-evaluates every `when()` each time the palette opens.
+        const visible = source.filter(
+            (command) => !command.when || command.when(),
+        );
+        const result = searchCommands(scope === 'issues' ? [] : visible, text);
+
+        if (inRoot && scope === 'all' && text === '' && history.length > 0) {
+            const recent = history.flatMap((entry): Command[] => {
+                if (entry.type === 'issue') {
+                    return [issueToCommand(entry.issue, 'recent')];
+                }
+                const known = visible.find((c) => c.id === entry.id);
+                return known ? [{ ...known, group: 'recent' }] : [];
+            });
+
+            if (recent.length > 0) {
+                const afterSuggested = result[0]?.group === 'suggested' ? 1 : 0;
+                result.splice(afterSuggested, 0, {
+                    group: 'recent',
+                    label: 'Recent',
+                    items: recent.map((command) => ({
+                        command,
+                        score: 0,
+                        ranges: [],
+                    })),
+                });
+            }
+        }
+
+        if (inRoot && search.status === 'success') {
+            const highlight = (title: string) =>
+                /^\d+$/.test(text)
+                    ? []
+                    : (fuzzyScore(text, title)?.ranges ?? []);
+            const entities: [CommandSection['group'], string, Command[]][] = [
+                [
+                    'issues',
+                    'Issues',
+                    search.issues.map((i) => issueToCommand(i)),
+                ],
+                [
+                    'projects',
+                    'Projects',
+                    search.projects.map((p) => projectToCommand(p)),
+                ],
+            ];
+
+            entities.forEach(([group, label, items]) => {
+                if (items.length === 0) return;
+                result.push({
+                    group,
+                    label,
+                    items: items.map((command) => ({
+                        command,
+                        score: 0,
+                        ranges: highlight(command.title),
+                    })),
+                });
+            });
+        }
+
+        return result;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [source, text, scope, inRoot, history, search, isOpen]);
     const flat = useMemo(() => flattenSections(sections), [sections]);
+    const showSkeleton = inRoot && search.status === 'loading';
 
     useEffect(() => {
         if (!isOpen) return;
@@ -91,9 +177,22 @@ function CommandPalette() {
 
     if (!isOpen) return null;
 
+    // Only registered commands count towards "recently used": entity rows
+    // remember themselves, and nested steps are not worth coming back to.
+    const run = (command: Command) => {
+        if (
+            inRoot &&
+            !command.children &&
+            commands.some((registered) => registered.id === command.id)
+        ) {
+            recordHistory({ type: 'command', id: command.id });
+        }
+        runCommand(command);
+    };
+
     const runActive = () => {
         const target = flat[activeIndex];
-        if (target) runCommand(target.command);
+        if (target) run(target.command);
     };
 
     const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -167,6 +266,16 @@ function CommandPalette() {
     const hasQuery = query.trim().length > 0;
     let rowIndex = 0;
 
+    let emptyMessage = 'No commands available';
+    if (scope === 'issues' && inRoot && !parsed.serverQuery) {
+        emptyMessage =
+            text === ''
+                ? 'Type an issue number or title'
+                : 'Keep typing to search issues';
+    } else if (hasQuery) {
+        emptyMessage = `No results for "${query.trim()}"`;
+    }
+
     return createPortal(
         <div
             className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[14vh]"
@@ -214,11 +323,9 @@ function CommandPalette() {
                     onMouseDown={(event) => event.preventDefault()}
                     className="min-h-0 flex-1 overflow-y-auto p-1.5"
                 >
-                    {sections.length === 0 ? (
+                    {sections.length === 0 && !showSkeleton ? (
                         <div className="py-10 text-center text-sm text-[var(--text-muted-color)]">
-                            {hasQuery
-                                ? `No results for "${query.trim()}"`
-                                : 'No commands available'}
+                            {emptyMessage}
                         </div>
                     ) : (
                         sections.map((section) => (
@@ -236,9 +343,7 @@ function CommandPalette() {
                                             command={item.command}
                                             ranges={item.ranges}
                                             active={index === activeIndex}
-                                            onSelect={() =>
-                                                runCommand(item.command)
-                                            }
+                                            onSelect={() => run(item.command)}
                                             onHover={() =>
                                                 setActiveIndex(index)
                                             }
@@ -248,7 +353,37 @@ function CommandPalette() {
                             </CommandPaletteGroup>
                         ))
                     )}
+                    {showSkeleton && (
+                        <div
+                            aria-hidden="true"
+                            data-testid="command-palette-skeleton"
+                            className="px-3 py-1"
+                        >
+                            {[0, 1, 2].map((row) => (
+                                <div
+                                    key={row}
+                                    className="flex h-10 animate-pulse items-center gap-3 motion-reduce:animate-none"
+                                >
+                                    <div className="h-4 w-4 rounded bg-[var(--bg-light-color)]" />
+                                    <div
+                                        className="h-3 rounded bg-[var(--bg-light-color)]"
+                                        style={{ width: `${70 - row * 15}%` }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
+
+                {search.status === 'error' && (
+                    <div
+                        role="status"
+                        className="border-t border-[var(--border-color)] px-4 py-2 text-[11px] text-[var(--text-muted-color)]"
+                    >
+                        Issue and project search is unavailable. Showing
+                        commands only.
+                    </div>
+                )}
 
                 <div
                     role="status"
@@ -256,9 +391,11 @@ function CommandPalette() {
                     className="sr-only"
                     data-testid="command-palette-live"
                 >
-                    {flat.length === 0
-                        ? 'No results'
-                        : `${flat.length} ${flat.length === 1 ? 'result' : 'results'}`}
+                    {showSkeleton
+                        ? 'Searching'
+                        : flat.length === 0
+                          ? 'No results'
+                          : `${flat.length} ${flat.length === 1 ? 'result' : 'results'}`}
                 </div>
 
                 <div className="flex items-center gap-5 border-t border-[var(--border-color)] bg-[var(--bg-dark-color)] px-4 py-2.5 text-[10px] text-[var(--text-muted-color)]">
@@ -286,6 +423,26 @@ function CommandPalette() {
                         />
                         {pages.length > 0 ? 'back' : 'close'}
                     </span>
+                    {inRoot && (
+                        <span className="ml-auto hidden items-center gap-3 sm:flex">
+                            <span className="flex items-center gap-1.5">
+                                <Keybind
+                                    tooltipText="Commands only"
+                                    tooltip={false}
+                                    keybind=">"
+                                />
+                                commands
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                                <Keybind
+                                    tooltipText="Issues only"
+                                    tooltip={false}
+                                    keybind="#"
+                                />
+                                issues
+                            </span>
+                        </span>
+                    )}
                 </div>
             </div>
         </div>,
