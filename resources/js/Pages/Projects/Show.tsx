@@ -177,6 +177,7 @@ export default function Show({
                                             ACTIVITY_DEFAULT_PER_PAGE
                                         }
                                         preserveState
+                                        className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
                                     />
                                 </div>
                             )}

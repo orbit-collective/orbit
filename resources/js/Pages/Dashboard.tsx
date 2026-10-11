@@ -113,7 +113,7 @@ export default function Dashboard({
                         />
 
                         <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                            <div className="flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
+                            <div className="flex max-h-[min(720px,80vh)] min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
                                 <div className="mb-2 flex items-center justify-between">
                                     <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                                         Recent Work Activity
@@ -139,6 +139,7 @@ export default function Dashboard({
                                     perPageParam={ACTIVITY_PER_PAGE_PARAM}
                                     defaultPerPage={ACTIVITY_DEFAULT_PER_PAGE}
                                     preserveState
+                                    className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
                                 />
                             </div>
 

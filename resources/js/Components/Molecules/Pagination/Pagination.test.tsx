@@ -333,4 +333,21 @@ describe('Pagination Component', () => {
             expect(link).toHaveAttribute('data-preserve-state', 'true'),
         );
     });
+
+    test('merges a custom className over the default padding', () => {
+        const { container } = render(
+            <Pagination
+                links={buildLinks()}
+                from={1}
+                to={10}
+                total={25}
+                className="border-t px-0"
+            />,
+        );
+
+        const root = container.firstChild as HTMLElement;
+        expect(root).toHaveClass('px-0', 'border-t');
+        expect(root).not.toHaveClass('px-6');
+        expect(root).toHaveClass('py-4');
+    });
 });

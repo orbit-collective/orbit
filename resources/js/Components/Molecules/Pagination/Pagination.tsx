@@ -6,6 +6,7 @@ import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { useAlert } from '@/context/AlertContext';
 import { PaginationProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
+import { cn } from '@/utils/cn';
 import Icon from '../../Atoms/Icon/Icon';
 
 const paginationVariants = cva(
@@ -88,6 +89,7 @@ const Pagination = ({
     perPageParam = 'perPage',
     defaultPerPage = rowsPerPageCounts[0],
     preserveState = false,
+    className,
 }: PaginationProps) => {
     const { addAlert } = useAlert();
 
@@ -186,7 +188,12 @@ const Pagination = ({
     };
 
     return (
-        <div className="mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 lg:flex-row lg:gap-0">
+        <div
+            className={cn(
+                'mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 lg:flex-row lg:gap-0',
+                className,
+            )}
+        >
             <div className="text-center text-sm text-[var(--text-gray-color)] lg:text-left">
                 Showing{' '}
                 <span className="font-semibold text-[var(--text-color)]">
