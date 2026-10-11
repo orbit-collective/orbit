@@ -1,4 +1,4 @@
-.PHONY: setup up dev up-d down build ensure-env npm-install composer-install test test-coverage test-js test-js-coverage lint type-check knip knip-fix unused unused-fix unused-fix-dangerous cleanup logs shell tinker migrate fresh clean backup-now test-backup
+.PHONY: setup up dev up-d down build ensure-env npm-install composer-install test test-coverage test-js test-js-coverage lint type-check storybook storybook-d storybook-stop storybook-build test-stories logs-storybook knip knip-fix unused unused-fix unused-fix-dangerous cleanup logs shell tinker migrate fresh clean backup-now test-backup
 
 # Use Doppler to inject environment variables when this directory is linked
 # to a Doppler project/config (`doppler setup`). Third parties without
@@ -73,6 +73,51 @@ up-d: ensure-env
 down:
 	$(COMPOSE) down
 
+# Start Storybook (the component workshop) in its own container, in the
+# foreground (Ctrl+C to stop). It is not part of `make up`.
+
+storybook: ensure-env
+	@echo ""
+	@echo "  Storybook is starting — open it in your browser:"
+	@echo ""
+	@echo "    Storybook:       http://localhost:6006"
+	@echo ""
+	$(COMPOSE) --profile storybook up --build --renew-anon-volumes storybook
+
+
+# Start Storybook detached.
+
+storybook-d: ensure-env
+	$(COMPOSE) --profile storybook up -d --build --renew-anon-volumes storybook
+	@echo ""
+	@echo "  Storybook is running (detached): http://localhost:6006"
+	@echo ""
+
+
+# Stop Storybook.
+
+storybook-stop:
+	$(COMPOSE) --profile storybook stop storybook
+
+
+# Tail Storybook's logs.
+
+logs-storybook:
+	$(COMPOSE) --profile storybook logs -f storybook
+
+
+# Build the static Storybook (what CI checks) into ./storybook-static.
+
+storybook-build: ensure-env
+	$(COMPOSE) --profile storybook run --rm storybook npm run build-storybook
+
+
+# Run every story as a Vitest test (render + play function), once.
+
+test-stories: ensure-env
+	$(COMPOSE) --profile storybook run --rm storybook npm run test\:stories
+
+
 # Start the monitoring stack detached.
 
 up-monitoring:
@@ -98,6 +143,7 @@ build: ensure-env
 
 npm-install: ensure-env
 	$(COMPOSE) build vite
+	$(COMPOSE) --profile storybook build storybook
 	$(COMPOSE) up -d --renew-anon-volumes vite
 
 
