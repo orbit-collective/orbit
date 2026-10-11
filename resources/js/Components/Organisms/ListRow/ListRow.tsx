@@ -106,7 +106,7 @@ export const ListRow = ({
                         <input
                             type="checkbox"
                             className={cn(
-                                'h-3.5 w-3.5 cursor-pointer rounded border-[var(--border-color-strong)] bg-[var(--surface-color)] text-indigo-500 transition-opacity focus:ring-0',
+                                'h-3.5 w-3.5 cursor-pointer rounded border-[var(--border-color-strong)] bg-[var(--surface-color)] text-[var(--accent-color)] transition-opacity focus:ring-0',
                                 !issue?.isChecked &&
                                     'opacity-0 group-hover/row:opacity-100',
                                 isClosed && 'opacity-20',
