@@ -297,6 +297,41 @@ services:
         networks:
             - orbit-network
 
+    storybook:
+        # Same image as `vite` (the Dockerfile's `node` target), run as its own
+        # container so the component workshop never slows or restarts the app.
+        # Not part of a plain `docker compose up`; start it with `make storybook`.
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: node
+
+        profiles:
+            - storybook
+
+        command: ["npm", "run", "storybook", "--", "--host", "0.0.0.0", "--ci"]
+
+        ports:
+            - "6006:6006"
+
+        environment:
+            NODE_ENV: development
+
+            # Docker bind mounts do not deliver file events reliably.
+            STORYBOOK_USE_POLLING: "true"
+            STORYBOOK_DISABLE_TELEMETRY: "1"
+
+        volumes:
+            - .:/app
+            - /app/node_modules
+
+        restart: unless-stopped
+        tty: true
+        stdin_open: true
+
+        networks:
+            - orbit-network
+
     nsfwjs:
         image: andresribeiroo/nsfwjs
         restart: unless-stopped
