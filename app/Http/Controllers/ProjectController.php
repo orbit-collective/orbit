@@ -83,7 +83,7 @@ class ProjectController extends Controller
             'filters' => $filters,
             'savedFilters' => $project->savedFilters()->latest()->get(),
             'users' => $this->userService->getAssignableUsersForProject($project->id),
-            'activityLogs' => $this->activityLogService->getRecentForProject($project->id, 50)->map(fn ($entry) => [
+            'activityLogs' => $this->activityLogService->paginateForProject($project->id, $request->integer(ActivityLogService::PER_PAGE_NAME, 20))->through(fn ($entry) => [
                 'id' => $entry->id,
                 'body' => $entry->body,
                 'userId' => $entry->user_id,

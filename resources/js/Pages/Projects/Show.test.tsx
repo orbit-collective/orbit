@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SavedFilter } from '@/hooks/useSavedFilters';
-import { Issue, IssuePageLooks, PaginatedResponse } from '@/types/Issues';
+import { makePaginated } from '@/tests/paginated';
+import { Issue, IssuePageLooks } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import Show from './Show';
@@ -72,17 +73,35 @@ vi.mock('@/Components/Molecules/Pagination/Pagination', () => ({
         from,
         to,
         total,
+        pageParam,
+        perPageParam,
+        defaultPerPage,
+        preserveState,
     }: {
         from: number;
         to: number;
         total: number;
+        pageParam?: string;
+        perPageParam?: string;
+        defaultPerPage?: number;
+        preserveState?: boolean;
     }) => (
         <div
             data-testid="pagination"
             data-from={from}
             data-to={to}
             data-total={total}
+            data-page-param={pageParam}
+            data-per-page-param={perPageParam}
+            data-default-per-page={defaultPerPage}
+            data-preserve-state={String(preserveState)}
         />
+    ),
+}));
+
+vi.mock('@/Components/Organisms/ActivityLogs/ActivityLogs', () => ({
+    default: ({ logs }: { logs: { id: number }[] }) => (
+        <div data-testid="activity-logs" data-logs-count={logs.length} />
     ),
 }));
 
@@ -134,26 +153,6 @@ const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     ...overrides,
 });
 
-const makePaginated = (
-    data: Issue[],
-    overrides: Partial<PaginatedResponse<Issue>> = {},
-): PaginatedResponse<Issue> => ({
-    current_page: 1,
-    data,
-    first_page_url: '/projects/1?page=1',
-    from: 1,
-    last_page: 1,
-    last_page_url: '/projects/1?page=1',
-    links: [],
-    next_page_url: null,
-    path: '/projects/1',
-    per_page: 20,
-    prev_page_url: null,
-    to: data.length,
-    total: data.length,
-    ...overrides,
-});
-
 const makeUser = (overrides: Partial<AssignableUser> = {}): AssignableUser => ({
     id: 1,
     name: 'Jane Doe',
@@ -183,7 +182,7 @@ describe('Projects Show Page', () => {
                 projects={[project]}
                 savedFilters={savedFilters}
                 users={[makeUser()]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -207,7 +206,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -236,7 +235,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -256,7 +255,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -276,7 +275,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -302,7 +301,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -327,7 +326,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -348,7 +347,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -374,7 +373,7 @@ describe('Projects Show Page', () => {
                 projects={[]}
                 savedFilters={[]}
                 users={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
                 queryParams={queryParams}
             />,
         );
@@ -383,5 +382,50 @@ describe('Projects Show Page', () => {
             'data-query-params',
             JSON.stringify(queryParams),
         );
+    });
+
+    test('renders the activity view with a pager on the activity page params', () => {
+        localStorage.setItem('selectedLook', 'Activity');
+        const project = makeProject();
+        const entry = (id: number) => ({
+            id,
+            body: 'Created project: Roadmap',
+            userId: 1,
+            userName: 'Jane Doe',
+            userAvatar: null,
+            createdAt: '2026-01-01T10:00:00Z',
+        });
+        render(
+            <Show
+                project={project}
+                issues={makePaginated([])}
+                projects={[project]}
+                savedFilters={[]}
+                users={[makeUser()]}
+                activityLogs={makePaginated([entry(1), entry(2)], {
+                    from: 21,
+                    to: 22,
+                    total: 42,
+                })}
+            />,
+        );
+
+        expect(screen.getByTestId('activity-logs')).toHaveAttribute(
+            'data-logs-count',
+            '2',
+        );
+        const pagination = screen.getByTestId('pagination');
+        expect(pagination).toHaveAttribute('data-from', '21');
+        expect(pagination).toHaveAttribute('data-to', '22');
+        expect(pagination).toHaveAttribute('data-total', '42');
+        expect(pagination).toHaveAttribute('data-page-param', 'activityPage');
+        expect(pagination).toHaveAttribute(
+            'data-per-page-param',
+            'activityPerPage',
+        );
+        expect(pagination).toHaveAttribute('data-default-per-page', '20');
+        // Page links must not remount Show, or the Activity view would reset to the default look.
+        expect(pagination).toHaveAttribute('data-preserve-state', 'true');
+        expect(screen.queryByTestId('filter-bar')).not.toBeInTheDocument();
     });
 });
