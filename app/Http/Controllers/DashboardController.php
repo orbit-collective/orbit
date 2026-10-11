@@ -48,7 +48,8 @@ class DashboardController extends Controller
             'projects' => $projects,
             'productivity_trend' => $productivity_trend,
             'users' => $this->userService->getAssignableUsersForUserProjects($userId),
-            'activityLogs' => $this->activityLogService->getRecentForUser($userId, 15)->map(fn ($entry) => [
+            'queryParams' => $request->query() ?: null,
+            'activityLogs' => $this->activityLogService->paginateForUser($userId, $request->integer(ActivityLogService::PER_PAGE_NAME, 10))->through(fn ($entry) => [
                 'id' => $entry->id,
                 'body' => $entry->body,
                 'userId' => $entry->user_id,

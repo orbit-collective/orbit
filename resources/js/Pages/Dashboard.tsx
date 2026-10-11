@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { useMemo } from 'react';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
+import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import ProjectCard from '@/Components/Molecules/ProjectCard/ProjectCard';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
@@ -9,23 +10,35 @@ import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { ActivityLogEntry } from '@/types/ActivityLog';
-import { Issue, ProductivityTrendProps } from '@/types/Issues';
+import {
+    Issue,
+    PaginatedResponse,
+    ProductivityTrendProps,
+} from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
+import {
+    ACTIVITY_PAGE_PARAM,
+    ACTIVITY_PER_PAGE_PARAM,
+} from '@/utils/activityLog';
+
+const ACTIVITY_DEFAULT_PER_PAGE = 10;
 
 export default function Dashboard({
     issues,
     projects,
     productivity_trend,
     activityLogs,
+    queryParams = {},
     users = [],
     issueTypes = [],
 }: {
     issues: Issue[];
     projects: Project[];
     productivity_trend: ProductivityTrendProps[];
-    activityLogs: ActivityLogEntry[];
+    activityLogs: PaginatedResponse<ActivityLogEntry>;
+    queryParams?: Record<string, any> | null;
     users?: AssignableUser[];
     issueTypes?: IssueType[];
 }) {
@@ -105,18 +118,28 @@ export default function Dashboard({
                                     <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                                         Recent Work Activity
                                     </h3>
-                                    <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
-                                        Showing {activityLogs.length} latest
-                                        events
-                                    </span>
                                 </div>
-                                <div className="flex-1 overflow-y-auto">
+                                <div
+                                    key={activityLogs.current_page}
+                                    className="flex-1 overflow-y-auto"
+                                >
                                     <ActivityLogs
-                                        logs={activityLogs}
+                                        logs={activityLogs.data}
                                         users={users}
                                         issueTypes={issueTypes}
                                     />
                                 </div>
+                                <Pagination
+                                    links={activityLogs.links}
+                                    from={activityLogs.from}
+                                    to={activityLogs.to}
+                                    total={activityLogs.total}
+                                    queryParams={queryParams ?? {}}
+                                    pageParam={ACTIVITY_PAGE_PARAM}
+                                    perPageParam={ACTIVITY_PER_PAGE_PARAM}
+                                    defaultPerPage={ACTIVITY_DEFAULT_PER_PAGE}
+                                    preserveState
+                                />
                             </div>
 
                             <div className="flex flex-col gap-4 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">

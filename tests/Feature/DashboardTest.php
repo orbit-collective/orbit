@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
@@ -40,5 +41,31 @@ test('the dashboard renders the expected Inertia component and props', function 
         ->has('users')
         ->has('users.0.id')
         ->has('users.0.name')
+    );
+});
+
+test('the dashboard paginates the activity logs with the activity page params', function () {
+    $user = User::factory()->create();
+    ActivityLog::factory()->count(25)->create(['user_id' => $user->id]);
+    ActivityLog::factory()->count(3)->create(); // another user's logs
+
+    $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
+        ->has('activityLogs.data', 10)
+        ->where('activityLogs.total', 25)
+        ->where('activityLogs.current_page', 1)
+        ->has('activityLogs.data.0', fn (Assert $entry) => $entry
+            ->hasAll(['id', 'body', 'userId', 'userName', 'userAvatar', 'createdAt'])
+        )
+    );
+
+    $this->actingAs($user)->get('/?activityPage=3&activityPerPage=10')->assertInertia(fn (Assert $page) => $page
+        ->has('activityLogs.data', 5)
+        ->where('activityLogs.current_page', 3)
+        ->where('queryParams.activityPage', '3')
+        ->where('queryParams.activityPerPage', '10')
+    );
+
+    $this->actingAs($user)->get('/?activityPerPage=20')->assertInertia(fn (Assert $page) => $page
+        ->has('activityLogs.data', 20)
     );
 });

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { makePaginated } from '@/tests/paginated';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import { Issue, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
@@ -64,6 +65,37 @@ vi.mock('@/Components/Organisms/DashboardVisuals/DashboardVisuals', () => ({
     ),
 }));
 
+vi.mock('@/Components/Molecules/Pagination/Pagination', () => ({
+    default: ({
+        from,
+        to,
+        total,
+        pageParam,
+        perPageParam,
+        defaultPerPage,
+        preserveState,
+    }: {
+        from: number;
+        to: number;
+        total: number;
+        pageParam?: string;
+        perPageParam?: string;
+        defaultPerPage?: number;
+        preserveState?: boolean;
+    }) => (
+        <div
+            data-testid="pagination"
+            data-from={from}
+            data-to={to}
+            data-total={total}
+            data-page-param={pageParam}
+            data-per-page-param={perPageParam}
+            data-default-per-page={defaultPerPage}
+            data-preserve-state={String(preserveState)}
+        />
+    ),
+}));
+
 vi.mock('@/Components/Organisms/ActivityLogs/ActivityLogs', () => ({
     default: ({ logs }: { logs: ActivityLogEntry[] }) => (
         <div data-testid="activity-logs" data-logs-count={logs.length} />
@@ -100,7 +132,7 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={projects}
                 productivity_trend={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -126,7 +158,7 @@ describe('Dashboard Page', () => {
                 issues={issues}
                 projects={[makeProject()]}
                 productivity_trend={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -148,7 +180,7 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={[]}
                 productivity_trend={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -163,7 +195,7 @@ describe('Dashboard Page', () => {
                 issues={issues}
                 projects={[]}
                 productivity_trend={trend}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -188,7 +220,11 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={[]}
                 productivity_trend={[]}
-                activityLogs={activityLogs}
+                activityLogs={makePaginated(activityLogs, {
+                    from: 11,
+                    to: 11,
+                    total: 11,
+                })}
             />,
         );
 
@@ -196,7 +232,17 @@ describe('Dashboard Page', () => {
             'data-logs-count',
             '1',
         );
-        expect(screen.getByText('Showing 1 latest events')).toBeInTheDocument();
+        const pagination = screen.getByTestId('pagination');
+        expect(pagination).toHaveAttribute('data-from', '11');
+        expect(pagination).toHaveAttribute('data-to', '11');
+        expect(pagination).toHaveAttribute('data-total', '11');
+        expect(pagination).toHaveAttribute('data-page-param', 'activityPage');
+        expect(pagination).toHaveAttribute(
+            'data-per-page-param',
+            'activityPerPage',
+        );
+        expect(pagination).toHaveAttribute('data-default-per-page', '10');
+        expect(pagination).toHaveAttribute('data-preserve-state', 'true');
     });
 
     test('renders up to 3 projects and a "view all" link when there are more', () => {
@@ -211,7 +257,7 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={projects}
                 productivity_trend={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -230,7 +276,7 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={[makeProject({ id: 1 })]}
                 productivity_trend={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 
@@ -243,7 +289,7 @@ describe('Dashboard Page', () => {
                 issues={[]}
                 projects={[]}
                 productivity_trend={[]}
-                activityLogs={[]}
+                activityLogs={makePaginated([])}
             />,
         );
 

@@ -1,6 +1,10 @@
 import { icons } from 'lucide-react';
 import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 
+/** Query-string names of the activity log pager (mirrors ActivityLogService on the backend). */
+export const ACTIVITY_PAGE_PARAM = 'activityPage';
+export const ACTIVITY_PER_PAGE_PARAM = 'activityPerPage';
+
 export type ActivityLogColor =
     | 'accent'
     | 'success'
