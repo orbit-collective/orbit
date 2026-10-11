@@ -34,7 +34,10 @@ test('it can get all notifications for a user', function () {
 
     $result = $this->service->getAllForUser(5);
 
-    expect($result)->toBe($notifications);
+    expect($result)->toHaveCount(1)
+        ->and($result->first())->toBeInstanceOf(Notification::class)
+        ->and($result->first()->id)->toBe(1)
+        ->and($result->first()->exists)->toBeTrue();
 });
 
 test('it can store a new notification', function () {

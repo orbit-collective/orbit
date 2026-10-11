@@ -6,6 +6,7 @@ use App\Enums\Notifications\NotificationChannel;
 use App\Enums\Notifications\NotificationType;
 use App\Models\Notification;
 use App\Repositories\NotificationRepository;
+use App\Support\Cache\CachedModels;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
@@ -30,11 +31,13 @@ class NotificationService
      */
     public function getAllForUser(int $userId): Collection
     {
-        return Cache::remember(
+        $rows = Cache::remember(
             self::cacheKey($userId),
             self::CACHE_TTL,
-            fn () => $this->notificationRepository->getAllForUser($userId),
+            fn () => CachedModels::toRows($this->notificationRepository->getAllForUser($userId)),
         );
+
+        return CachedModels::hydrate(Notification::class, $rows);
     }
 
     public function store(array $data): Notification
@@ -73,7 +76,7 @@ class NotificationService
 
     private static function cacheKey(int $userId): string
     {
-        return "user:$userId:notifications";
+        return "user:$userId:notifications:rows";
     }
 
     private function forget(int $userId): void
