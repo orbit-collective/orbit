@@ -4,13 +4,13 @@ import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import EmptyStateCard from './EmptyStateCard';
 
-const { triggerShortcut } = vi.hoisted(() => ({
-    triggerShortcut: vi.fn(),
+const { runCommand } = vi.hoisted(() => ({
+    runCommand: vi.fn(),
 }));
 
-vi.mock('@/context/ShortcutContext', () => ({
-    useShortcuts: () => ({
-        triggerShortcut,
+vi.mock('@/context/CommandContext', () => ({
+    useCommandPalette: () => ({
+        runCommand,
     }),
 }));
 
@@ -61,7 +61,7 @@ describe('EmptyStateCard Component', () => {
         expect(screen.getByRole('link')).toHaveAttribute('href', '/issues/new');
     });
 
-    test('does not render the action label when neither actionHref nor actionShortcut is set', () => {
+    test('does not render the action label when neither actionHref nor actionCommand is set', () => {
         render(
             <EmptyStateCard
                 iconName="FolderPlus"
@@ -74,14 +74,14 @@ describe('EmptyStateCard Component', () => {
         expect(screen.queryByText('Create one')).not.toBeInTheDocument();
     });
 
-    test('renders the action label when only actionShortcut is set', () => {
+    test('renders the action label when only actionCommand is set', () => {
         render(
             <EmptyStateCard
                 iconName="FolderPlus"
                 title="Empty"
                 description="Nothing here"
                 actionLabel="Create one"
-                actionShortcut="c"
+                actionCommand="issue.create"
             />,
         );
 
@@ -102,14 +102,14 @@ describe('EmptyStateCard Component', () => {
         expect(screen.getByRole('link')).toBeInTheDocument();
     });
 
-    test('triggers the configured shortcut and prevents navigation when actionShortcut is set', async () => {
+    test('runs the configured command and prevents navigation when actionCommand is set', async () => {
         render(
             <EmptyStateCard
                 iconName="FolderPlus"
                 title="Empty"
                 description="Nothing here"
                 actionLabel="Create one"
-                actionShortcut="c"
+                actionCommand="issue.create"
             />,
         );
 
@@ -122,11 +122,11 @@ describe('EmptyStateCard Component', () => {
 
         link.dispatchEvent(clickEvent);
 
-        expect(triggerShortcut).toHaveBeenCalledWith('c');
+        expect(runCommand).toHaveBeenCalledWith('issue.create');
         expect(preventDefaultSpy).toHaveBeenCalled();
     });
 
-    test('does not trigger any shortcut when actionShortcut is not set', async () => {
+    test('does not run any command when actionCommand is not set', async () => {
         render(
             <EmptyStateCard
                 iconName="FolderPlus"
@@ -138,6 +138,6 @@ describe('EmptyStateCard Component', () => {
 
         await userEvent.click(screen.getByRole('link'));
 
-        expect(triggerShortcut).not.toHaveBeenCalled();
+        expect(runCommand).not.toHaveBeenCalled();
     });
 });

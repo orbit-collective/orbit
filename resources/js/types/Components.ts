@@ -440,7 +440,8 @@ export interface DashboardEmptyStateProps {
     description: string;
     actionLabel?: string;
     actionHref?: string;
-    actionShortcut?: string;
+    /** Id of the command to run on click, e.g. `project.create`. */
+    actionCommand?: string;
 }
 export interface SelectionDropdownProps {
     options: {

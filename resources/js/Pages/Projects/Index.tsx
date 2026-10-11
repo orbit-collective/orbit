@@ -4,11 +4,11 @@ import ProjectCard, {
 } from '@/Components/Molecules/ProjectCard/ProjectCard';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
-import { useShortcuts } from '@/context/ShortcutContext';
+import { useCommandPalette } from '@/context/CommandContext';
 import { Project } from '@/types/Projects';
 
 function Index({ projects }: { projects: Project[] }) {
-    const { triggerShortcut } = useShortcuts();
+    const { runCommand } = useCommandPalette();
 
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
@@ -20,7 +20,7 @@ function Index({ projects }: { projects: Project[] }) {
                     primaryAction={{
                         label: 'New project',
                         icon: 'Plus',
-                        onClick: () => triggerShortcut('p'),
+                        onClick: () => runCommand('project.create'),
                     }}
                 />
                 <main className="flex flex-1 flex-col gap-6 overflow-y-auto p-6">
@@ -43,7 +43,7 @@ function Index({ projects }: { projects: Project[] }) {
                             }
                             iconName={'FolderPlus'}
                             actionLabel={'Create Project'}
-                            actionShortcut={'p'}
+                            actionCommand={'project.create'}
                         />
                     )}
                 </main>

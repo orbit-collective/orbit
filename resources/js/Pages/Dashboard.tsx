@@ -8,7 +8,7 @@ import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
 import DashboardVisuals from '@/Components/Organisms/DashboardVisuals/DashboardVisuals';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
-import { useShortcuts } from '@/context/ShortcutContext';
+import { useCommandPalette } from '@/context/CommandContext';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import {
     Issue,
@@ -59,7 +59,7 @@ export default function Dashboard({
     }, [issues]);
 
     const hasProjects = projects && projects.length > 0;
-    const { triggerShortcut } = useShortcuts();
+    const { runCommand } = useCommandPalette();
 
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
@@ -71,7 +71,7 @@ export default function Dashboard({
                     primaryAction={{
                         label: 'New Project',
                         icon: 'Plus',
-                        onClick: () => triggerShortcut('p'),
+                        onClick: () => runCommand('project.create'),
                     }}
                 />
                 <div className="relative flex flex-1 overflow-hidden">
@@ -183,7 +183,7 @@ export default function Dashboard({
                                             }
                                             iconName={'FolderPlus'}
                                             actionLabel={'Create Project'}
-                                            actionShortcut={'p'}
+                                            actionCommand={'project.create'}
                                         />
                                     )}
                                 </div>

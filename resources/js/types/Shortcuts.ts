@@ -19,6 +19,10 @@ export interface ShortcutContextType {
     register: (shortcut: ShortcutDefinition) => () => void;
     registerBatch: (shortcuts: ShortcutDefinition[]) => () => void;
     shortcuts: ShortcutDefinition[];
+    /**
+     * @deprecated Couples a button to a keybinding. Run the command instead:
+     * `useCommandPalette().runCommand('project.create')`.
+     */
     triggerShortcut: (key: string) => void;
     /** Opens the read-only shortcut reference (the `?` help view). */
     openHelp: () => void;

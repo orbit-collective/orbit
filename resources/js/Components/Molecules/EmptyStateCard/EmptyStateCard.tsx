@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
-import { useShortcuts } from '@/context/ShortcutContext';
+import { useCommandPalette } from '@/context/CommandContext';
 import { DashboardEmptyStateProps } from '@/types/Components';
 
 function DashboardEmptyState({
@@ -10,18 +10,18 @@ function DashboardEmptyState({
     description,
     actionLabel,
     actionHref,
-    actionShortcut,
+    actionCommand,
 }: DashboardEmptyStateProps) {
-    const { triggerShortcut } = useShortcuts();
+    const { runCommand } = useCommandPalette();
 
     const handleClick = (e: React.MouseEvent) => {
-        if (actionShortcut) {
+        if (actionCommand) {
             e.preventDefault();
-            triggerShortcut(actionShortcut);
+            runCommand(actionCommand);
         }
     };
 
-    const showAction = actionLabel && (actionHref || actionShortcut);
+    const showAction = actionLabel && (actionHref || actionCommand);
 
     return (
         <Link
