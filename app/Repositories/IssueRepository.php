@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Issue;
 use App\Models\Project;
+use App\Support\Cache\CacheVersion;
 use App\Support\LikePattern;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -359,6 +360,9 @@ class IssueRepository
     public function bulkDelete(array $ids): void
     {
         Issue::whereIn('id', $ids)->delete();
+
+        // A query-builder delete fires no model events.
+        CacheVersion::bump(CacheVersion::ISSUES);
     }
 
     public function getMany(array $ids): Collection

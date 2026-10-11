@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BumpsIssueCache;
 use Database\Factories\IssueTypeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class IssueType extends Model
 {
     /** @use HasFactory<IssueTypeFactory> */
-    use HasFactory;
+    use BumpsIssueCache, HasFactory;
 
     protected $fillable = [
         'project_id',
