@@ -70,8 +70,10 @@ describe('useGlobalCommands', () => {
     test('navigation commands visit their pages and own their shortcuts', () => {
         render();
 
-        expect(byId('nav.dashboard').shortcut).toBe('alt+b');
-        expect(byId('nav.projects').shortcut).toBe('alt+p');
+        expect(byId('nav.dashboard').shortcut).toEqual(['g d', 'alt+b']);
+        expect(byId('nav.projects').shortcut).toEqual(['g p', 'alt+p']);
+        expect(byId('nav.notifications').shortcut).toBe('g n');
+        expect(byId('nav.settings').shortcut).toBe('g s');
 
         byId('nav.dashboard').perform?.();
         byId('nav.projects').perform?.();
