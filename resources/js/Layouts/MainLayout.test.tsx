@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { CommandProvider, useCommandPalette } from '@/context/CommandContext';
 import { ModalProvider } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
 import { PageHeaderProps } from '@/types/Components';
@@ -41,7 +42,9 @@ vi.mock('@/Components/Organisms/PageHeader/PageHeader', () => ({
 const renderWithShortcuts = (ui: React.ReactElement) =>
     render(
         <ModalProvider>
-            <ShortcutProvider>{ui}</ShortcutProvider>
+            <ShortcutProvider>
+                <CommandProvider>{ui}</CommandProvider>
+            </ShortcutProvider>
         </ModalProvider>,
     );
 
@@ -258,5 +261,105 @@ describe('MainLayout Component', () => {
         fireEvent.keyDown(window, { key: 'c' });
         expect(handler).toHaveBeenCalledTimes(1);
         window.removeEventListener(QUICK_ADD_ISSUE_EVENT, handler);
+    });
+
+    test('the header search button opens the command palette', () => {
+        let isOpen = false;
+        const Probe = () => {
+            isOpen = useCommandPalette().isOpen;
+            return null;
+        };
+        renderWithShortcuts(
+            <>
+                <Probe />
+                <MainLayout
+                    selectedLook="List"
+                    setSelectedLook={vi.fn()}
+                    projects={[makeProject()]}
+                    project={makeProject()}
+                    users={[makeUser()]}
+                >
+                    <div />
+                </MainLayout>
+            </>,
+        );
+        expect(isOpen).toBe(false);
+
+        fireEvent.click(
+            screen.getByRole('button', { name: 'Open command palette' }),
+        );
+
+        expect(isOpen).toBe(true);
+    });
+
+    test('registers project-scoped commands for create issue and each view', () => {
+        const Probe = () => {
+            const { commands } = useCommandPalette();
+            return (
+                <ul>
+                    {commands.map((c) => (
+                        <li key={c.id} data-scope={c.scope}>
+                            {c.id}
+                        </li>
+                    ))}
+                </ul>
+            );
+        };
+        renderWithShortcuts(
+            <>
+                <Probe />
+                <MainLayout
+                    selectedLook="List"
+                    setSelectedLook={vi.fn()}
+                    projects={[makeProject()]}
+                    project={makeProject()}
+                    users={[makeUser()]}
+                >
+                    <div />
+                </MainLayout>
+            </>,
+        );
+
+        [
+            'issue.create',
+            'view.list',
+            'view.board',
+            'view.calendar',
+            'view.activity',
+            'issue.search',
+        ].forEach((id) => {
+            expect(screen.getByText(id)).toHaveAttribute(
+                'data-scope',
+                'project',
+            );
+        });
+    });
+
+    test('the "Search issues" command focuses the filter input', () => {
+        const Probe = () => {
+            const { runCommand } = useCommandPalette();
+            return (
+                <button onClick={() => runCommand('issue.search')}>go</button>
+            );
+        };
+        renderWithShortcuts(
+            <>
+                <input id="global-search-input" />
+                <Probe />
+                <MainLayout
+                    selectedLook="List"
+                    setSelectedLook={vi.fn()}
+                    projects={[makeProject()]}
+                    project={makeProject()}
+                    users={[makeUser()]}
+                >
+                    <div />
+                </MainLayout>
+            </>,
+        );
+
+        fireEvent.click(screen.getByText('go'));
+
+        expect(document.getElementById('global-search-input')).toHaveFocus();
     });
 });
