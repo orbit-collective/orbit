@@ -18,6 +18,9 @@ import {
 } from '@/utils/shortcutKeys';
 import { areShortcutsSuspended } from '@/utils/shortcutSuspension';
 
+/** Longest key sequence the engine remembers (e.g. `g p` is 2). */
+const MAX_SEQUENCE_LENGTH = 3;
+
 const ShortcutContext = createContext<ShortcutContextType | undefined>(
     undefined,
 );
@@ -164,7 +167,9 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
 
             if (!isModifierCombo) {
                 if (key !== 'escape') {
-                    comboRef.current.push(key);
+                    comboRef.current = [...comboRef.current, key].slice(
+                        -MAX_SEQUENCE_LENGTH,
+                    );
                 } else {
                     comboRef.current = ['escape'];
                 }
@@ -177,9 +182,22 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
                 comboRef.current = [];
             }
 
-            const currentCombo = comboRef.current.join(' ');
-
-            const matchedShortcut = findMatch([currentCombo, pressedKey]);
+            // The longest run of recent keys wins, so a sequence ("g p") beats
+            // the single key it ends with ("p"), and an unrelated key pressed
+            // just before it ("x g p") doesn't spoil the match.
+            let matchedShortcut: ShortcutDefinition | undefined;
+            if (isModifierCombo) {
+                matchedShortcut = findMatch([pressedKey]);
+            } else {
+                const keys = comboRef.current;
+                for (
+                    let start = 0;
+                    start < keys.length && !matchedShortcut;
+                    start++
+                ) {
+                    matchedShortcut = findMatch([keys.slice(start).join(' ')]);
+                }
+            }
 
             if (matchedShortcut) {
                 event.preventDefault();
