@@ -131,6 +131,11 @@ documentation/
       02-mock-inertia-and-network.md
       03-theme-accent-and-docker.md
       04-stories-as-vitest-tests.md
+    redis/
+      README.md              <- index for this category
+      01-run-and-operate-redis.md
+      02-cache-a-value-and-invalidate-it.md
+      03-sessions-on-redis.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -145,6 +150,7 @@ documentation/
     shortcuts/               <- Polish translation of every guide above
     command-palette/         <- Polish translation of every guide above
     storybook/               <- Polish translation of every guide above
+    redis/                   <- Polish translation of every guide above
     content-moderation/      <- Polish translation of every guide above
     project-invitations/     <- Polish translation of every guide above
     activity-log/            <- Polish translation of every guide above
