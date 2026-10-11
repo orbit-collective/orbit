@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\SavedFilter;
@@ -331,4 +332,31 @@ test('guests cannot delete a project', function () {
     $response = $this->delete("/projects/$project->id");
 
     $response->assertRedirect(route('login'));
+});
+
+test('the project show page paginates the activity logs independently of the issue list', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    $project->users()->attach($user->id, ['role' => 'member']);
+    Issue::factory()->count(12)->create(['project_id' => $project->id]);
+    ActivityLog::factory()->count(45)->create(['project_id' => $project->id]);
+    ActivityLog::factory()->count(4)->create(); // another project
+
+    $this->actingAs($user)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->has('activityLogs.data', 20)
+        ->where('activityLogs.total', 45)
+        ->where('activityLogs.last_page', 3)
+        ->has('issues.data', 10)
+    );
+
+    $this->actingAs($user)->get("/projects/$project->id?activityPage=3&activityPerPage=20&page=2")->assertInertia(fn (Assert $page) => $page
+        ->has('activityLogs.data', 5)
+        ->where('activityLogs.current_page', 3)
+        ->where('issues.current_page', 2)
+        ->has('issues.data', 2)
+    );
+
+    $this->actingAs($user)->get("/projects/$project->id?activityPerPage=50")->assertInertia(fn (Assert $page) => $page
+        ->has('activityLogs.data', 45)
+    );
 });
