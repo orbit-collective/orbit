@@ -56,6 +56,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     const [isResizing, setIsResizing] = useState<string | null>(null);
     const [isResizingHeight, setIsResizingHeight] = useState(false);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const clearSelection = useCallback(() => setSelectedIds([]), []);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleMouseDown = (column: string, e: React.MouseEvent) => {
@@ -343,6 +344,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             <BulkActionBar
                 selectedCount={selectedIds.length}
                 onBulkDelete={handleBulkDelete}
+                onClear={clearSelection}
                 isDeleting={isDeleting}
             />
 

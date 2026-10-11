@@ -499,6 +499,7 @@ export interface OrbitRingProps {
 export interface BulkActionBarProps {
     selectedCount: number;
     onBulkDelete: () => void;
+    onClear?: () => void;
     isDeleting: boolean;
 }
 export interface TableHeaderCellProps {
