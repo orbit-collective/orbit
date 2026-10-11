@@ -1,62 +1,50 @@
 # Register a global shortcut
 
-Worked example: adding `alt+d` as a global "Go to Dashboard" shortcut
-alternative — wait, that one already exists as `alt+b`; the real
-worked example here is adding `alt+i` for "Go to my Issues" (a page
-that doesn't have a route yet, used purely to demonstrate the
-registration shape) — a shortcut that should work from anywhere in the
-app, not just one page, following the exact pattern `mod+k`/`alt+p`/
-`alt+b` already use.
+Worked example: adding `alt+i` for "Go to my Issues" (a page that
+doesn't have a route yet, used purely to demonstrate the registration
+shape) — a shortcut that should work from anywhere in the app, not
+just one page.
+
+Global shortcuts are **commands**. Since the command palette landed,
+`ShortcutProvider` registers no shortcuts of its own: every app-wide
+shortcut (`alt+b`, `alt+p`, `?`, `mod+k`, `/`) is declared as an
+attribute of a command, and the palette registers the keybinding for
+you. That keeps the palette entry, its shortcut chip and the help view
+in sync from one definition.
 
 ## When this is the right shape, vs. guide 1
 
-Register directly inside `ShortcutProvider` (this guide) only for a
-shortcut that's genuinely global — navigation between top-level areas,
-or an action meaningful regardless of what page is open (the help
-modal itself, `mod+k`). Everything else — an action specific to one
-page's content, like `Sidebar.tsx`'s `p` or a hypothetical per-issue
-shortcut — belongs in that component via `useShortcuts()` instead (see
+Add it to `useGlobalCommands` (this guide) only for something that is
+genuinely global — navigation between top-level areas, or an action
+meaningful regardless of what page is open. An action specific to one
+page's content, like `Sidebar.tsx`'s `p` or a per-issue action, belongs
+in that component via `useCommands()` with a `shortcut` (or
+`useShortcuts()` for a shortcut with no palette entry; see
 [`01-register-a-component-scoped-shortcut.md`](./01-register-a-component-scoped-shortcut.md)).
-Registering something page-specific here would make it fire even on
+Registering something page-specific globally would make it fire on
 pages where the action doesn't make sense.
 
-## Step — Add it to the existing global `registerBatch()` call
+## Step — Add a command with a `shortcut`
 
-File: `resources/js/context/ShortcutContext.tsx`
+File: `resources/js/hooks/useGlobalCommands.ts`
 
 ```tsx
-useEffect(() => {
-    return registerBatch([
-        {
-            key: 'alt+p',
-            description: 'Go to Projects',
-            category: 'Navigation',
-            action: () => router.visit('/projects'),
-        },
-        {
-            key: 'alt+b',
-            description: 'Go to Dashboard',
-            category: 'Navigation',
-            action: () => router.visit('/'),
-        },
-        {
-            key: 'alt+i',
-            description: 'Go to my Issues',
-            category: 'Navigation',
-            action: () => router.visit('/issues/mine'),
-        },
-    ]);
-}, [registerBatch]);
+{
+    id: 'nav.issues',
+    title: 'Go to my Issues',
+    group: 'navigation',
+    icon: 'ListChecks',
+    shortcut: 'alt+i',
+    category: 'Navigation',
+    perform: () => router.visit('/issues/mine'),
+},
 ```
 
-This is the **only** `useEffect` in `ShortcutProvider` that batches
-multiple navigation shortcuts together — the help-modal (`?`/`/`) and
-command-palette (`mod+k`) shortcuts each get their own dedicated
-`useEffect`/`register()` call instead, purely because they were added
-at different times, not because of any rule about which shape to use.
-Either is fine for a new global shortcut; adding to the existing
-`registerBatch()` array (shown above) is slightly less code for one
-more navigation-style entry.
+`shortcut` takes everything `ShortcutDefinition.key` does: `'alt+i'`,
+`'mod+k'`, an array (`['c', 'ctrl+i']`) or a sequence (`'g i'`). Add
+`scope: 'project' | 'issue'` for a shortcut that should win over a
+global one with the same key. `when()` hides the command and disables
+its shortcut together.
 
 `router.visit(...)` (the Inertia client-side navigation call) is the
 right primitive here, not `window.location.href = ...` — it keeps the
@@ -65,28 +53,24 @@ full page reload.
 
 ## Tests
 
-File: `resources/js/context/ShortcutContext.test.tsx`
+File: `resources/js/hooks/useGlobalCommands.test.ts`
 
-Add a case right next to `'alt+p navigates to /projects via the
-router'`/`'alt+b navigates to / via the router'`, following their
-exact shape — dispatch a real keydown (through whatever
-`dispatchKeydown()` helper the file already defines) rather than
-calling `.action()` directly, since the point of this file is to
-cover the actual key-matching logic too, not just that the definition
-exists:
+The file mocks `useCommands` and reads back the commands the hook
+registered, so assert the command and run its `perform()`:
 
 ```tsx
-test('alt+i navigates to /issues/mine via the router', () => {
-    renderHook(() => useShortcuts(), { wrapper });
+test('go to my issues has its own shortcut and visits the page', () => {
+    render();
 
-    act(() => {
-        dispatchKeydown({ key: 'i', altKey: true });
-    });
+    expect(byId('nav.issues').shortcut).toBe('alt+i');
 
-    expect(mockRouter.visit).toHaveBeenCalledWith('/issues/mine');
+    byId('nav.issues').perform?.();
+    expect(mocks.router.visit).toHaveBeenCalledWith('/issues/mine');
 });
 ```
 
-`mockRouter` here is the file's own hoisted `@inertiajs/react` mock
-(`vi.mock('@inertiajs/react', () => ({ router: mockRouter }))`) —
-reuse it as-is, don't add a second mock for the same module.
+The keydown-to-action path itself (including `mod`, Alt via
+`event.code`, scopes) is covered once in
+`resources/js/context/CommandContext.test.tsx` and
+`resources/js/context/ShortcutContext.test.tsx`; a new command does
+not need to repeat it.

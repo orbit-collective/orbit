@@ -1,6 +1,6 @@
 # Keyboard shortcuts
 
-Every keyboard shortcut in Orbit — `?`/`/` for help, `mod+k`, `alt+p`,
+Every keyboard shortcut in Orbit — `?` for help, `mod+k`, `alt+p`,
 a page-scoped `p` for "create project" — goes through one system:
 `ShortcutContext`. There's no per-component `keydown` listener
 anywhere in the app; a single global listener resolves every keypress
@@ -16,8 +16,8 @@ hand-maintained shortcuts-list to keep in sync.
    the same way `Sidebar.tsx`'s `p` ("Create project") already does.
 2. **[Register a global shortcut](./02-register-a-global-shortcut.md)**
    — worked example adding a shortcut that should exist everywhere in
-   the app, registered directly inside `ShortcutProvider` the same way
-   `mod+k`/`alt+p`/`alt+b` already are.
+   the app, declared as a global command with a `shortcut` the same way
+   `alt+p`/`alt+b`/`?` already are.
 
 ## The architecture in one paragraph
 
@@ -38,8 +38,11 @@ multi-key sequences like `g p`, though nothing currently registers one
 — see guide 1's key-format table), then looks for a `ShortcutDefinition`
 whose `key` matches either form. Shortcuts are ignored entirely while
 an `<input>`/`<textarea>`/`contenteditable` element has focus, except
-`Escape`. The help modal (`ShortcutHelpModal`, opened by the
-always-registered `?`/`/` shortcut) reads `shortcuts` from the same
+`Escape`. `ShortcutProvider` registers nothing itself: app-wide shortcuts are
+attributes of commands (`CommandContext`, `useGlobalCommands`), which
+hand their `shortcut` to `registerBatch()` while they are registered.
+The help modal (`ShortcutHelpModal`, opened by `?`, a read-only
+reference) reads `shortcuts` from the same
 context and groups/searches whatever's currently registered — it has
 no knowledge of any shortcut beyond what's live in the array at the
 moment it renders.
