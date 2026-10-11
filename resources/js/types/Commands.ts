@@ -61,6 +61,10 @@ export interface Command {
     /** Category the shortcut gets in the help view; defaults from `group`. */
     category?: ShortcutDefinition['category'];
     scope?: ShortcutScope;
+    /** Shown first in the breadcrumb of the step this command opens, e.g. `#12`. */
+    context?: string;
+    /** Run without closing the palette (multi-select steps such as labels). */
+    keepOpen?: boolean;
     /** Hide the command (and its shortcut) when this returns false. */
     when?: () => boolean;
     perform?: () => void;
@@ -69,8 +73,10 @@ export interface Command {
 }
 
 export interface PalettePage {
+    /** The id of the command that opened the step, so its list can be re-read. */
     id: string;
     title: string;
+    context?: string;
     commands: Command[];
 }
 

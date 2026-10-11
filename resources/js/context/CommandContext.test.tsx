@@ -261,6 +261,38 @@ describe('CommandContext', () => {
             ]);
         });
 
+        test('keepOpen runs the command without closing the palette', () => {
+            const perform = vi.fn();
+            const { result } = setup([
+                makeCommand({ id: 'toggle', perform, keepOpen: true }),
+            ]);
+
+            act(() => result.current.palette.openPalette());
+            act(() => result.current.palette.runCommand('toggle'));
+
+            expect(perform).toHaveBeenCalledTimes(1);
+            expect(result.current.palette.isOpen).toBe(true);
+        });
+
+        test('the page keeps the context of the command that opened it', () => {
+            const { result } = setup([
+                makeCommand({
+                    id: 'issue.status',
+                    title: 'Change status',
+                    context: '#12',
+                    children: () => [],
+                }),
+            ]);
+
+            act(() => result.current.palette.runCommand('issue.status'));
+
+            expect(result.current.palette.pages[0]).toMatchObject({
+                id: 'issue.status',
+                title: 'Change status',
+                context: '#12',
+            });
+        });
+
         test('a command with children opens a closed palette on its page', () => {
             const { result } = setup([
                 makeCommand({

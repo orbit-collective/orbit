@@ -50,7 +50,13 @@ function CommandPalette() {
     const optionId = (index: number) => `${baseId}-option-${index}`;
 
     const currentPage = pages[pages.length - 1];
-    const source = currentPage ? currentPage.commands : commands;
+    // A step re-reads its list from the command that opened it, so a toggle
+    // (labels) shows the new state once the page re-registers its commands.
+    const source = useMemo(() => {
+        if (!currentPage) return commands;
+        const opener = commands.find((c) => c.id === currentPage.id);
+        return opener?.children?.() ?? currentPage.commands;
+    }, [currentPage, commands]);
 
     const inRoot = !currentPage;
     const parsed = useMemo(() => parsePaletteQuery(query), [query]);
@@ -310,7 +316,10 @@ function CommandPalette() {
                     activeDescendantId={
                         flat.length > 0 ? optionId(activeIndex) : undefined
                     }
-                    breadcrumb={pages.map((page) => page.title)}
+                    breadcrumb={[
+                        ...(pages[0]?.context ? [pages[0].context] : []),
+                        ...pages.map((page) => page.title),
+                    ]}
                 />
 
                 <div
