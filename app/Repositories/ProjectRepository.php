@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Enums\Permissions\RoleType;
 use App\Models\Project;
+use App\Support\LikePattern;
 use Illuminate\Database\Eloquent\Collection;
 
 class ProjectRepository
@@ -13,6 +14,25 @@ class ProjectRepository
         return Project::query()
             ->whereHas('users', fn ($query) => $query->where('users.id', $userId))
             ->latest()
+            ->get();
+    }
+
+    /**
+     * Projects the user is a member of whose name contains the query, for the
+     * command palette. Name prefix ranks above a mere substring, then most
+     * recently updated.
+     */
+    public function searchForUser(int $userId, string $q, int $limit = 5): Collection
+    {
+        $escape = LikePattern::ESCAPE;
+
+        return Project::query()
+            ->whereHas('users', fn ($query) => $query->where('users.id', $userId))
+            ->whereRaw("LOWER(projects.name) LIKE ? ESCAPE '{$escape}'", [LikePattern::contains($q)])
+            ->orderByRaw("CASE WHEN LOWER(projects.name) LIKE ? ESCAPE '{$escape}' THEN 0 ELSE 1 END", [LikePattern::startsWith($q)])
+            ->orderByDesc('projects.updated_at')
+            ->orderByDesc('projects.id')
+            ->limit($limit)
             ->get();
     }
 

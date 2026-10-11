@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Issue;
 use App\Models\Project;
+use App\Support\LikePattern;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -101,6 +102,58 @@ class IssueRepository
             ->whereRaw("CAST(issues.number AS {$textType}) LIKE ?", [$idPrefix.'%'])
             ->with('assignee')
             ->orderBy('number')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Issues the user can see (every project they are a member of) for the
+     * command palette. Ranked exact "#number" > title prefix > title
+     * substring, then most recently updated; `$number` is the project-scoped
+     * "#12" the user typed, if any, and `$q` is the free-text title search
+     * ("" skips the title match, leaving a pure number lookup).
+     *
+     * @return Collection<array-key, Issue>
+     */
+    public function searchForUser(int $userId, string $q, int $limit = 8, ?int $number = null): Collection
+    {
+        $titleLower = 'LOWER(issues.title)';
+        $escape = LikePattern::ESCAPE;
+        $hasTitle = $q !== '';
+
+        $query = Issue::query()
+            ->whereIn('issues.project_id', fn ($members) => $members
+                ->select('project_id')
+                ->from('project_user')
+                ->where('user_id', $userId))
+            ->where(function (Builder $match) use ($q, $number, $hasTitle, $titleLower, $escape) {
+                if ($number !== null) {
+                    $match->orWhere('issues.number', $number);
+                }
+                if ($hasTitle) {
+                    $match->orWhereRaw("{$titleLower} LIKE ? ESCAPE '{$escape}'", [LikePattern::contains($q)]);
+                }
+            })
+            ->with(['issueType', 'workflowStatus', 'project']);
+
+        $rank = [];
+        $bindings = [];
+        if ($number !== null) {
+            $rank[] = 'WHEN issues.number = ? THEN 0';
+            $bindings[] = $number;
+        }
+        if ($hasTitle) {
+            $rank[] = "WHEN {$titleLower} LIKE ? ESCAPE '{$escape}' THEN 1";
+            $bindings[] = LikePattern::startsWith($q);
+        }
+
+        if ($rank !== []) {
+            $query->orderByRaw('CASE '.implode(' ', $rank).' ELSE 2 END', $bindings);
+        }
+
+        return $query
+            ->orderByDesc('issues.updated_at')
+            ->orderByDesc('issues.id')
             ->limit($limit)
             ->get();
     }
