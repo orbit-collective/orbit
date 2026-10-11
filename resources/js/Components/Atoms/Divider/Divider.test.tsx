@@ -21,4 +21,13 @@ describe('Divider Component', () => {
 
         expect(container.querySelector('hr')).toHaveClass('my-4');
     });
+
+    test('renders a vertical separator', () => {
+        render(<Divider orientation="vertical" />);
+
+        expect(screen.getByRole('separator')).toHaveAttribute(
+            'aria-orientation',
+            'vertical',
+        );
+    });
 });

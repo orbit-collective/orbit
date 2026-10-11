@@ -9,6 +9,7 @@ import React, {
     ReactNode,
 } from 'react';
 import { badgeVariants } from '@/Components/Atoms/Badge/Badge';
+import { buttonVariants } from '@/Components/Atoms/Button/Button';
 import { dropdownTriggerVariants } from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import { iconButtonVariants } from '@/Components/Atoms/IconButton/IconButton';
 import { inputVariants } from '@/Components/Atoms/Input/Input';
@@ -52,7 +53,10 @@ export interface BadgeProps
     tooltip?: boolean;
     tooltipText?: ReactNode;
 }
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+    extends
+        ButtonHTMLAttributes<HTMLButtonElement>,
+        VariantProps<typeof buttonVariants> {
     children: ReactNode;
     className?: string;
     isBox?: boolean;
@@ -229,6 +233,7 @@ export interface ShowcaseDotsProps {
     onSelect: (index: number) => void;
 }
 export interface DividerProps {
+    orientation?: 'horizontal' | 'vertical';
     label?: ReactNode;
     className?: string;
 }

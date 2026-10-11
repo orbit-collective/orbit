@@ -1,7 +1,24 @@
 import { DividerProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
-const Divider = ({ label, className }: DividerProps) => {
+const Divider = ({
+    label,
+    orientation = 'horizontal',
+    className,
+}: DividerProps) => {
+    if (orientation === 'vertical') {
+        return (
+            <span
+                role="separator"
+                aria-orientation="vertical"
+                className={cn(
+                    'h-5 w-px bg-[var(--border-color-strong)]',
+                    className,
+                )}
+            />
+        );
+    }
+
     if (!label) {
         return (
             <hr

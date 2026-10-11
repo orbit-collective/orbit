@@ -80,4 +80,12 @@ describe('Button Component', () => {
 
         expect(button).toHaveAttribute('type', 'submit');
     });
+
+    test('applies the danger variant styling', () => {
+        render(<Button variant="danger">Delete</Button>);
+
+        expect(screen.getByRole('button', { name: 'Delete' })).toHaveClass(
+            'bg-[var(--error-color)]',
+        );
+    });
 });
