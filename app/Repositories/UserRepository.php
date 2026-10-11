@@ -2,6 +2,7 @@
 namespace App\Repositories;
 
 use App\Models\User;
+use App\Support\LikePattern;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,38 @@ class UserRepository {
                 });
             })
             ->distinct()
+            ->get();
+    }
+
+    /**
+     * Members of the projects the user belongs to whose name contains the
+     * query, one row per (person, shared project) so a result can link to a
+     * project's issue list filtered to that assignee. Name prefix ranks above
+     * a substring; the user's own projects only, so nobody outside them leaks.
+     *
+     * @return SupportCollection<int, object{user_id: int, name: string, avatar: ?string, project_id: int, project_name: string}>
+     */
+    public function searchMembersForUser(int $userId, string $q, int $limit = 8): SupportCollection
+    {
+        $escape = LikePattern::ESCAPE;
+
+        return DB::table('project_user as theirs')
+            ->join('project_user as mine', 'mine.project_id', '=', 'theirs.project_id')
+            ->join('users', 'users.id', '=', 'theirs.user_id')
+            ->join('projects', 'projects.id', '=', 'theirs.project_id')
+            ->where('mine.user_id', $userId)
+            ->whereRaw("LOWER(users.name) LIKE ? ESCAPE '{$escape}'", [LikePattern::contains($q)])
+            ->select([
+                'users.id as user_id',
+                'users.name',
+                'users.avatar',
+                'projects.id as project_id',
+                'projects.name as project_name',
+            ])
+            ->orderByRaw("CASE WHEN LOWER(users.name) LIKE ? ESCAPE '{$escape}' THEN 0 ELSE 1 END", [LikePattern::startsWith($q)])
+            ->orderBy('users.name')
+            ->orderBy('projects.name')
+            ->limit($limit)
             ->get();
     }
 

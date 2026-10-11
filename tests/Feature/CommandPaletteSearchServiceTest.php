@@ -24,7 +24,8 @@ test('a "#n" query is a pure number lookup', function () {
     $result = $this->service->search($this->user->id, '#42');
 
     expect(collect($result['issues'])->pluck('id')->all())->toBe([$target->id])
-        ->and($result['projects'])->toBe([]);
+        ->and($result['projects'])->toBe([])
+        ->and($result['people'])->toBe([]);
 });
 
 test('a bare number is a number lookup plus a title search, number first', function () {
@@ -56,8 +57,8 @@ test('a "#" before free text searches issues only', function () {
 });
 
 test('blank or "#" only queries return nothing', function () {
-    expect($this->service->search($this->user->id, '   '))->toBe(['issues' => [], 'projects' => []])
-        ->and($this->service->search($this->user->id, '#'))->toBe(['issues' => [], 'projects' => []]);
+    expect($this->service->search($this->user->id, '   '))->toBe(['issues' => [], 'projects' => [], 'people' => []])
+        ->and($this->service->search($this->user->id, '#'))->toBe(['issues' => [], 'projects' => [], 'people' => []]);
 });
 
 test('results are capped at 8 issues and 5 projects', function () {
@@ -127,4 +128,72 @@ test('non-member projects never appear', function () {
 
     expect($text['issues'])->toBe([])->and($text['projects'])->toBe([])
         ->and($number['issues'])->toBe([]);
+});
+
+describe('people (@)', function () {
+    beforeEach(function () {
+        $this->ann = User::factory()->create(['name' => 'Ann Marlow']);
+        $this->project->users()->attach($this->ann->id, ['role' => 'member']);
+    });
+
+    test('an "@" query searches members of the user\'s projects and nothing else', function () {
+        Issue::factory()->create(['project_id' => $this->project->id, 'title' => 'Ann issue']);
+
+        $result = $this->service->search($this->user->id, '@ann');
+
+        expect($result['issues'])->toBe([])
+            ->and($result['projects'])->toBe([])
+            ->and($result['people'])->toHaveCount(1)
+            ->and($result['people'][0])->toBe([
+                'id' => $this->ann->id,
+                'name' => 'Ann Marlow',
+                'avatar' => $this->ann->avatar,
+                'project' => ['id' => $this->project->id, 'name' => 'Orbit'],
+                'url' => "/projects/{$this->project->id}?assignee={$this->ann->id}",
+            ]);
+    });
+
+    test('a person who shares two projects appears once per shared project', function () {
+        $second = Project::factory()->create(['name' => 'Beta']);
+        $second->users()->attach([$this->user->id => ['role' => 'member'], $this->ann->id => ['role' => 'member']]);
+
+        $people = $this->service->search($this->user->id, '@ann')['people'];
+
+        expect(collect($people)->pluck('project.name')->sort()->values()->all())->toBe(['Beta', 'Orbit']);
+    });
+
+    test('people who share no project with the user never appear', function () {
+        $stranger = User::factory()->create(['name' => 'Anna Stranger']);
+        Project::factory()->create()->users()->attach($stranger->id, ['role' => 'member']);
+
+        $names = collect($this->service->search($this->user->id, '@ann')['people'])->pluck('name');
+
+        expect($names->all())->toBe(['Ann Marlow']);
+    });
+
+    test('a name prefix ranks above a substring', function () {
+        $joann = User::factory()->create(['name' => 'Joann Smith']);
+        $this->project->users()->attach($joann->id, ['role' => 'member']);
+
+        $names = collect($this->service->search($this->user->id, '@ann')['people'])->pluck('name')->all();
+
+        expect($names)->toBe(['Ann Marlow', 'Joann Smith']);
+    });
+
+    test('a bare "@" and a blank name return nothing', function () {
+        expect($this->service->search($this->user->id, '@')['people'])->toBe([])
+            ->and($this->service->search($this->user->id, '@   ')['people'])->toBe([]);
+    });
+
+    test('is capped at 8 results and treats % literally', function () {
+        foreach (range(1, 10) as $i) {
+            $member = User::factory()->create(['name' => "Pat $i"]);
+            $this->project->users()->attach($member->id, ['role' => 'member']);
+        }
+        $odd = User::factory()->create(['name' => '100% Pat']);
+        $this->project->users()->attach($odd->id, ['role' => 'member']);
+
+        expect($this->service->search($this->user->id, '@pat')['people'])->toHaveCount(8)
+            ->and(collect($this->service->search($this->user->id, '@%')['people'])->pluck('name')->all())->toBe(['100% Pat']);
+    });
 });
