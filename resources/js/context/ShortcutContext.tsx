@@ -1,4 +1,3 @@
-import { router } from '@inertiajs/react';
 import React, {
     createContext,
     useCallback,
@@ -76,41 +75,6 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
 
         openModal('Keyboard Shortcuts', undefined, <ShortcutHelpModal />);
     }, [openModal]);
-
-    useEffect(() => {
-        return register({
-            key: ['?', '/'],
-            description: 'Show keyboard shortcuts',
-            category: 'Action',
-            action: handleOpenHelp,
-        });
-    }, [register, handleOpenHelp]);
-
-    useEffect(() => {
-        return register({
-            key: 'mod+k',
-            description: 'Open Command Palette',
-            category: 'Action',
-            action: handleOpenHelp,
-        });
-    }, [register, handleOpenHelp]);
-
-    useEffect(() => {
-        return registerBatch([
-            {
-                key: 'alt+p',
-                description: 'Go to Projects',
-                category: 'Navigation',
-                action: () => router.visit('/projects'),
-            },
-            {
-                key: 'alt+b',
-                description: 'Go to Dashboard',
-                category: 'Navigation',
-                action: () => router.visit('/'),
-            },
-        ]);
-    }, [registerBatch]);
 
     useEffect(() => {
         if (!import.meta.env.DEV) return;
@@ -238,7 +202,13 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return (
         <ShortcutContext.Provider
-            value={{ register, registerBatch, shortcuts, triggerShortcut }}
+            value={{
+                register,
+                registerBatch,
+                shortcuts,
+                triggerShortcut,
+                openHelp: handleOpenHelp,
+            }}
         >
             {children}
         </ShortcutContext.Provider>
