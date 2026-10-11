@@ -7,6 +7,7 @@ import { PageProps } from '@/types';
 import { PageHeaderProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
+import { requestOpenCommandPalette } from '@/utils/commandPaletteEvent';
 import { OPEN_NOTIFICATIONS_EVENT } from '@/utils/notificationsPopupEvent';
 import { formattedDate } from '@/utils/time';
 
@@ -134,6 +135,20 @@ function PageHeader({
                     )}
 
                     {children}
+
+                    <button
+                        type="button"
+                        onClick={requestOpenCommandPalette}
+                        aria-label="Open command palette"
+                        title="Open command palette"
+                        className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                    >
+                        <Icon
+                            name="Search"
+                            size={18}
+                            color="var(--text-gray-color)"
+                        />
+                    </button>
 
                     <a
                         className="hidden shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)] sm:flex"

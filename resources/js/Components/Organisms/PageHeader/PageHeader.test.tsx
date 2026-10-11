@@ -2,6 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { Notification } from '@/types/Notification';
+import { OPEN_COMMAND_PALETTE_EVENT } from '@/utils/commandPaletteEvent';
 import { requestOpenNotifications } from '@/utils/notificationsPopupEvent';
 import { formattedDate } from '@/utils/time';
 import PageHeader from './PageHeader';
@@ -87,6 +88,25 @@ describe('PageHeader Component', () => {
         expect(
             screen.queryByTestId('notifications-popup'),
         ).not.toBeInTheDocument();
+    });
+
+    test('has a search button that asks to open the command palette, icon only', async () => {
+        const user = userEvent.setup();
+        const opened = vi.fn();
+        window.addEventListener(OPEN_COMMAND_PALETTE_EVENT, opened);
+        render(<PageHeader title="Dashboard" />);
+
+        const button = screen.getByRole('button', {
+            name: 'Open command palette',
+        });
+        expect(button.querySelector('svg')).not.toBeNull();
+        expect(button.querySelector('kbd')).toBeNull();
+        expect(button).toHaveTextContent('');
+
+        await user.click(button);
+
+        expect(opened).toHaveBeenCalledTimes(1);
+        window.removeEventListener(OPEN_COMMAND_PALETTE_EVENT, opened);
     });
 
     test('opens the notifications popup when asked to by the command palette', () => {
