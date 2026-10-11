@@ -19,7 +19,7 @@ Orbit is an issue/project tracker built as a Laravel + Inertia.js + React (TypeS
 - `composer dev` — runs `php artisan serve`, the queue listener, log tail (`pail`), and `npm run dev` concurrently. Preferred way to run the app locally.
 - `composer setup` — one-time bootstrap: install deps, copy `.env`, generate key, migrate, build.
 - `composer test` — clears config then runs the PHP test suite.
-- `composer test-coverage` — runs the PHP test suite with code coverage (requires Xdebug or PCOV) and fails if `app/` line coverage drops below the threshold set in that script; this is what CI runs as the coverage gate.
+- `composer test-coverage` — runs the PHP test suite in parallel (`vendor/bin/pest --parallel`, one process per core) with code coverage (requires Xdebug or PCOV) and fails if `app/` line coverage drops below the threshold set in that script; this is what CI runs as the coverage gate. Use `vendor/bin/pest`, not `php artisan test`, for parallel coverage: `artisan test --parallel` silently skips coverage and `--min`.
 - Run a single PHP test: `php artisan test --filter=IssueServiceTest` (tests use Pest).
 - `php artisan migrate` / `php artisan migrate:fresh --seed`.
 

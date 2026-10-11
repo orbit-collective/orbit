@@ -83,18 +83,19 @@ jobs:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
       - run: composer install --no-interaction --prefer-dist
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --legacy-peer-deps
-      - run: npm run build
       - run: cp .env.example .env
       - run: php artisan key:generate
-      # `test-coverage` runs the full Pest suite and fails the build if line
-      # coverage of `app/` drops below the threshold in composer.json (see
-      # the "test-coverage" script, currently a 90% floor with real coverage
-      # at 100% as of this writing — a comfortable regression buffer).
+      # The feature tests render Inertia pages, and the Vite helper needs either
+      # a build manifest or a `hot` file to emit its asset tags. They only look
+      # at the HTML, so a `hot` file is enough: it saves `npm ci` and a full
+      # frontend build here (the Build verification job still builds for real).
+      - run: echo 'http://localhost:5173' > public/hot
+      # `test-coverage` runs the full Pest suite in parallel (paratest, one
+      # process per core) and fails the build if line coverage of `app/` drops
+      # below the threshold in composer.json (see the "test-coverage" script,
+      # currently a 90% floor with real coverage at 96% as of this writing).
+      # It calls `vendor/bin/pest` rather than `php artisan test`, because
+      # `artisan test --parallel` silently skips coverage and its `--min`.
       - run: composer test-coverage
       - uses: actions/upload-artifact@v7
         if: always()
