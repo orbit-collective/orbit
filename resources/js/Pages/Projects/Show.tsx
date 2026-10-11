@@ -26,6 +26,7 @@ import {
     ACTIVITY_PAGE_PARAM,
     ACTIVITY_PER_PAGE_PARAM,
 } from '@/utils/activityLog';
+import { cn } from '@/utils/cn';
 
 const ACTIVITY_DEFAULT_PER_PAGE = 20;
 
@@ -63,6 +64,7 @@ export default function Show({
     issueTypes?: IssueType[];
     nextIssueId?: number | null;
 }) {
+    const [filterPanelOpen, setFilterPanelOpen] = useState(false);
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('selectedLook');
@@ -94,6 +96,7 @@ export default function Show({
                             project={project}
                             savedFilters={savedFilters}
                             users={users}
+                            onPanelOpenChange={setFilterPanelOpen}
                         />
                     )}
                     <div
@@ -101,6 +104,15 @@ export default function Show({
                             'relative flex flex-1 overflow-hidden border-t border-solid border-[var(--bg-light-color)]'
                         }
                     >
+                        <div
+                            aria-hidden="true"
+                            className={cn(
+                                'pointer-events-none absolute inset-0 z-30 bg-black/10 backdrop-blur-[2px] transition-opacity duration-200 ease-out',
+                                filterPanelOpen && selectedLook !== 'Activity'
+                                    ? 'opacity-100'
+                                    : 'opacity-0',
+                            )}
+                        />
                         <div
                             className={
                                 'flex flex-1 flex-col overflow-hidden px-4'
