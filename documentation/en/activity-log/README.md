@@ -4,8 +4,8 @@ Every project-changing action across the app writes a plain-text
 `ActivityLog` row — "Changed Jane's role to admin", "Deleted the
 \"Owner\" role" — and it's read back in two places today: the
 Dashboard's "Recent Work Activity" panel (per-user, via
-`ActivityLogService::getRecentForUser()`) and a project's **Activity**
-issue view (per-project, via `getRecentForProject()`). This category
+`ActivityLogService::paginateForUser()`) and a project's **Activity**
+issue view (per-project, via `paginateForProject()`), both paginated. This category
 documents the write side (already used everywhere) and how to surface
 the read side in a third place.
 
@@ -33,14 +33,25 @@ Service calls as a side effect of whatever it's actually doing —
 `$userId` defaults to `auth()->id()` when omitted, which is why most
 call sites (see e.g. `RoleService`/`ProjectMemberService`) never pass
 it explicitly. On the read side, `ActivityLogRepository` has
-`getRecentForUser()` and `getRecentForProject()` (both
-`latest()->limit($limit)`, eager-loading `user`), each called from one
-Controller today: `DashboardController::index()` maps
-`getRecentForUser($userId, 15)` into an `activityLogs` prop, and
-`ProjectController::show()` maps `getRecentForProject($project->id, 50)`
+`paginateForUser()` and `paginateForProject()` (newest first with the
+id as a tie-breaker, eager-loading `user`, page size clamped to
+`ActivityLogRepository::MAX_PER_PAGE`), plus the unpaginated
+`getRecentForUser()` and `getRecentForProject()` (`latest()->limit($limit)`)
+for surfaces that only need a short list. `DashboardController::index()`
+maps `paginateForUser($userId, 10)` into an `activityLogs` prop, and
+`ProjectController::show()` maps `paginateForProject($project->id, 20)`
 into its own `activityLogs` prop for the Activity issue view (see
-[`../issue-views/README.md`](../issue-views/README.md)). Both
-Controllers map to the exact same shape —
+[`../issue-views/README.md`](../issue-views/README.md)). Those props are
+Laravel paginators (`{ data, links, from, to, total, ... }`, mapped with
+`->through()`), and the pager reads its page and size from
+`activityPage`/`activityPerPage`
+(`ActivityLogService::PAGE_NAME`/`PER_PAGE_NAME`) so it doesn't collide
+with the issue list's `page`/`perPage` on the project page. On the
+frontend both pages render the shared `Pagination` molecule under the
+list, passing `pageParam`, `perPageParam` and `defaultPerPage`
+(`ACTIVITY_PAGE_PARAM`/`ACTIVITY_PER_PAGE_PARAM` in
+`resources/js/utils/activityLog.ts`). Both Controllers map to the exact
+same entry shape —
 `{ id, body, userName, createdAt }`, `createdAt` already
 human-formatted server-side via `created_at->diffForHumans()` — typed
 once as `ActivityLogEntry` (`resources/js/types/ActivityLog.ts`) and

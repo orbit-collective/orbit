@@ -1,14 +1,18 @@
 # Surface the activity log in the UI
 
-`ActivityLogService::getRecentForUser()` already powers the Dashboard's
-"Recent Work Activity" panel, and `getRecentForProject()` already
+`ActivityLogService::paginateForUser()` already powers the Dashboard's
+"Recent Work Activity" panel, and `paginateForProject()` already
 powers a project's **Activity** issue view (see
 [`../issue-views/README.md`](../issue-views/README.md)) — both render
 the same `ActivityLogs`/`ActivityLogItem` component pair off the same
 `ActivityLogEntry` shape. This guide adds a third surface: a "Recent
 account activity" panel on the Account → Security & access settings
-tab, reusing `getRecentForUser()` (the exact same read method the
-Dashboard already calls) rather than adding a new one.
+tab, reusing the same repository query as the Dashboard rather than adding a
+new one. It uses the unpaginated `getRecentForUser()` because the panel
+is a short fixed list; if a surface needs paging, call
+`paginateForUser()` instead and render the shared `Pagination`
+molecule with the `activityPage`/`activityPerPage` params, as the
+Dashboard does.
 
 ## Step 1 — Thread the read method into the Security & access action
 
