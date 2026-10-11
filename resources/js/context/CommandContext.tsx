@@ -25,11 +25,14 @@ const GROUP_CATEGORY: Record<
     NonNullable<ShortcutDefinition['category']>
 > = {
     suggested: 'Action',
+    recent: 'Action',
     navigation: 'Navigation',
     creation: 'Creation',
     preferences: 'Action',
     account: 'Action',
     help: 'Action',
+    issues: 'Navigation',
+    projects: 'Navigation',
 };
 
 /** Latest registration wins per id, so a remounting page never doubles a command. */
