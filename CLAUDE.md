@@ -60,6 +60,7 @@ When adding a feature, keep this separation: query code goes in the Repository, 
 Two independent suites:
 - **PHP (Pest)** in `tests/` — `Feature/` tests extend `TestCase` with `RefreshDatabase` (see `tests/Pest.php`) and run against an in-memory SQLite DB (`phpunit.xml`). Coverage spans Models (`tests/Feature/Models/`), Repositories, Services and Controllers.
 - **React (Vitest + Testing Library)** — jsdom environment, globals enabled, setup in `resources/js/tests/setup.ts` (config in `vite.config.js`). Test files are colocated with components as `*.test.tsx`.
+  - Vitest runs with `pool: 'vmThreads'`: every test file gets its own VM context inside a long-lived worker thread rather than a fresh process, which roughly halves the run (creating jsdom per file was the biggest cost). Test files stay fully isolated, but a new test that needs a missing jsdom API must polyfill it in `setup.ts` (see the `window.performance.getEntriesByType` one). In CI, `maxWorkers` is set to every available core.
 
 ### CI coverage gate
 Both suites run with coverage in CI (`.github/workflows/ci.yml`) and fail the build below a threshold:
