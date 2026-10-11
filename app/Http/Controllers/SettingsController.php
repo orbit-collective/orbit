@@ -169,7 +169,7 @@ class SettingsController extends Controller
                 'description' => $selectedProject->description,
                 'color' => $selectedProject->color,
             ] : null,
-            'viewerRole' => $selectedProject?->users()->where('users.id', $user->id)->first()?->pivot->role,
+            'viewerRole' => $selectedProject?->roleOf($user),
             'members' => $selectedProject
                 ? $this->mapMembers($this->projectMemberService->getMembers($selectedProject))
                 : [],

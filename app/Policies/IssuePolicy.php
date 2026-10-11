@@ -15,7 +15,7 @@ class IssuePolicy
 
     public function view(User $user, Issue $issue): bool
     {
-        return $issue->project->users()->where('users.id', $user->id)->exists();
+        return $issue->project->hasMember($user);
     }
 
     public function create(User $user, Project $project): bool
@@ -34,7 +34,7 @@ class IssuePolicy
             return true;
         }
 
-        $role = $project->users()->where('users.id', $user->id)->first()?->pivot->role;
+        $role = $project->roleOf($user);
 
         return in_array($role, $issueType->restricted_role_types, true);
     }

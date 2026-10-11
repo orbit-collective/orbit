@@ -11,7 +11,7 @@ class ProjectPolicy
 {
     public function view(User $user, Project $project): bool
     {
-        return $project->users()->where('users.id', $user->id)->exists();
+        return $project->hasMember($user);
     }
 
     public function update(User $user, Project $project): bool
