@@ -13,8 +13,8 @@ use App\Models\Project;
 use App\Models\User;
 use App\Repositories\IssueRepository;
 use App\Services\Automation\AutomationDispatcher;
+use App\Support\Cache\CacheVersion;
 use BackedEnum;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -114,9 +114,28 @@ class IssueService
         return $issue;
     }
 
-    public function getAllForUser(int $userId): Collection
+    /**
+     * Seconds an issue list stays cached. Writes retire it at once through the
+     * ISSUES, USERS and MEMBERSHIP versions; the TTL only bounds a write that
+     * slipped past them (see BumpsIssueCache).
+     */
+    private const int LIST_CACHE_TTL = 120;
+
+    /**
+     * Every issue in the user's projects, as the plain arrays Inertia would
+     * serialise them to. Arrays rather than models: Redis cannot hand Eloquent
+     * objects back (see CachedModels), and the dashboard only renders them.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function getAllForUser(int $userId): array
     {
-        return $this->issueRepository->getAllForUser($userId);
+        return CacheVersion::remember(
+            [CacheVersion::ISSUES, CacheVersion::USERS, CacheVersion::MEMBERSHIP],
+            "user:$userId:issues",
+            self::LIST_CACHE_TTL,
+            fn () => $this->issueRepository->getAllForUser($userId)->toArray(),
+        );
     }
 
     /**
@@ -210,9 +229,21 @@ class IssueService
         return $issue;
     }
 
-    public function getAllByProjectID(int $projectID, array $sortParams = [], int $perPage = 20, array $searchParams = [], array $filters = []): LengthAwarePaginator
+    /**
+     * One page of a project's issues as the array a paginator serialises to
+     * (`data`, `links`, ...). The key includes the full URL because the page
+     * number and the pagination links come from the current request.
+     *
+     * @return array<string, mixed>
+     */
+    public function getAllByProjectID(int $projectID, array $sortParams = [], int $perPage = 20, array $searchParams = [], array $filters = []): array
     {
-        return $this->issueRepository->getAllPaginated($projectID, $perPage, $sortParams, $searchParams, $filters);
+        return CacheVersion::remember(
+            [CacheVersion::ISSUES, CacheVersion::USERS],
+            "project:$projectID:issues:page:".md5(json_encode([$sortParams, $perPage, $searchParams, $filters, request()->fullUrl()])),
+            self::LIST_CACHE_TTL,
+            fn () => $this->issueRepository->getAllPaginated($projectID, $perPage, $sortParams, $searchParams, $filters)->toArray(),
+        );
     }
 
     /**
@@ -220,9 +251,14 @@ class IssueService
      * box/filter chips - used by views (calendar, upcoming-deadlines) that need
      * every matching issue rather than one table page.
      */
-    public function getAllForProject(int $projectId, array $searchParams = [], array $filters = []): Collection
+    public function getAllForProject(int $projectId, array $searchParams = [], array $filters = []): array
     {
-        return $this->issueRepository->getForProject($projectId, $searchParams, $filters);
+        return CacheVersion::remember(
+            [CacheVersion::ISSUES, CacheVersion::USERS],
+            "project:$projectId:issues:all:".md5(json_encode([$searchParams, $filters])),
+            self::LIST_CACHE_TTL,
+            fn () => $this->issueRepository->getForProject($projectId, $searchParams, $filters)->toArray(),
+        );
     }
 
     public function getProductivityTrendForUser(int $userId): array
