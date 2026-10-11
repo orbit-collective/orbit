@@ -26,11 +26,11 @@ for a project page visit, seeded once from
 `localStorage.getItem('selectedLook')` on mount and rendered via a
 flat ternary chain (`selectedLook === 'List' ? <IssueTable /> :
 selectedLook === 'Board' ? <IssueBoard /> : selectedLook === 'Calendar'
-? <CalendarView /> : <ActivityLogs logs={activityLogs} />`) — List,
+? <CalendarView /> : <ActivityLogs logs={activityLogs.data} />`) — List,
 Board, and Calendar all receive the exact same `issues.data`, just
 presented differently, while Activity instead reads
-`activityLogs` (an `ActivityLogEntry[]`, threaded down from
-`ProjectController::show()` via `ActivityLogService::getRecentForProject()`
+`activityLogs` (a paginator of `ActivityLogEntry`, threaded down from
+`ProjectController::show()` via `ActivityLogService::paginateForProject()`
 — see [`../activity-log/README.md`](../activity-log/README.md) for
 that read path). **Non-obviously, switching the view from the project
 page's header only updates this page's React state — it never writes

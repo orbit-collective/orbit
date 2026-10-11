@@ -49,7 +49,7 @@ File: `resources/js/Pages/Projects/Show.tsx`
 ) : selectedLook === 'Calendar' ? (
     <CalendarView issues={issues.data} />
 ) : selectedLook === 'Activity' ? (
-    <ActivityLogs logs={activityLogs} />
+    <ActivityLogs logs={activityLogs.data} />
 ) : (
     <TimelineView issues={issues.data} />
 )}
