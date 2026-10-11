@@ -73,8 +73,14 @@ function CommandPaletteItem({
             <Icon
                 name={command.icon}
                 size={16}
+                color={command.iconColor}
                 className="shrink-0 text-[var(--text-muted-color)]"
             />
+            {command.prefix && (
+                <span className="shrink-0 font-mono text-[12px] text-[var(--text-muted-color)]">
+                    {command.prefix}
+                </span>
+            )}
             <span className="min-w-0 truncate text-[14px] text-[var(--text-color)]">
                 {highlight(command.title, ranges)}
             </span>

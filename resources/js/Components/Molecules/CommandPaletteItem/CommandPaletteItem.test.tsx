@@ -137,4 +137,23 @@ describe('CommandPaletteItem', () => {
             container.querySelector('svg.lucide-chevron-right'),
         ).not.toBeNull();
     });
+
+    test('renders the prefix before the title and tints the icon', () => {
+        const { container } = renderItem({
+            command: {
+                ...command,
+                prefix: '#12',
+                iconColor: '#ff0000',
+                icon: 'Bug',
+            },
+        });
+
+        const option = screen.getByRole('option');
+        expect(option.textContent?.indexOf('#12')).toBeLessThan(
+            option.textContent?.indexOf('Create issue') ?? 0,
+        );
+        expect(container.querySelector('svg')?.getAttribute('stroke')).toBe(
+            '#ff0000',
+        );
+    });
 });
