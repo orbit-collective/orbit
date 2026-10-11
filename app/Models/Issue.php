@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BumpsIssueCache;
 use Database\Factories\IssueFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 class Issue extends Model
 {
     /** @use HasFactory<IssueFactory> */
-    use HasFactory;
+    use BumpsIssueCache, HasFactory;
 
     /**
      * Serialize eager-loaded relations under their camelCase names so the

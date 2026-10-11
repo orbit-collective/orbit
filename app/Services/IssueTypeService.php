@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\WorkflowStatus;
 use App\Repositories\IssueTypeRepository;
 use App\Repositories\WorkflowRepository;
+use App\Support\Cache\CacheVersion;
 use App\Support\SystemIssueTypeDefaults;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -269,6 +270,7 @@ class IssueTypeService
         $issueType->transitions()->delete();
 
         WorkflowStatus::query()->whereIn('id', $obsolete->pluck('id'))->delete();
+        CacheVersion::bump(CacheVersion::ISSUES);
 
         foreach ($this->defaultTransitionPairs($definitions) as [$fromIndex, $toIndex]) {
             $this->workflowRepository->createTransition($issueType, $newStatuses[$fromIndex], $newStatuses[$toIndex]);
@@ -397,6 +399,7 @@ class IssueTypeService
             ->delete();
 
         WorkflowStatus::query()->whereIn('id', $leftoverIds)->delete();
+        CacheVersion::bump(CacheVersion::ISSUES);
 
         foreach ($catalog->values() as $index => $status) {
             $this->workflowRepository->updateStatus($status, [
