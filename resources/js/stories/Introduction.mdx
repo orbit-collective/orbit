@@ -1,0 +1,33 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# Orbit UI
+
+The component workshop for Orbit. Every component under `resources/js/Components`
+is shown here in isolation, grouped by atomic-design layer:
+
+- **Atoms** — the smallest building blocks (buttons, inputs, badges, icons).
+- **Molecules** — small compositions of atoms (form fields, cards, dropdowns).
+- **Organisms** — larger, page-level sections (headers, tables, boards, settings).
+
+## Theme and accent
+
+Use the toolbar above the canvas:
+
+- **Theme** switches between the dark and light themes.
+- **Accent** switches the accent color, the same choices as in the app's settings.
+
+Both drive the app's real `ThemeProvider` and `AccentProvider`, so what you see
+here is what users see.
+
+## Stories are tests
+
+Every story is also a Vitest test: it must render without errors and its `play`
+function must pass. Run them all with `npm run test:stories` (or `make test-stories`).
+
+## Data and mocks
+
+Stories run without a backend. `@inertiajs/react` and `axios` are mocked, and
+a story can set the page props and network responses through its `parameters`
+(`inertia` and `network`). Shared sample data lives in `resources/js/stories/fixtures.ts`.
