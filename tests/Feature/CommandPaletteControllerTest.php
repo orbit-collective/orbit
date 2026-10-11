@@ -73,7 +73,7 @@ test('the endpoint is rate limited per user', function () {
 });
 
 test('an "@" query returns people who share a project, linked to the filtered issue list', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['name' => 'Zed Viewer']);
     $ann = User::factory()->create(['name' => 'Ann Marlow']);
     $project = Project::factory()->create();
     $project->users()->attach([$user->id => ['role' => 'member'], $ann->id => ['role' => 'member']]);
