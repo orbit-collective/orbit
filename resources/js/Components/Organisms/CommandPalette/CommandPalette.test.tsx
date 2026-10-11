@@ -5,10 +5,11 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { Command, PaletteSearchIssue } from '@/types/Commands';
 
 const search = vi.hoisted(() => ({
-    state: { status: 'idle', issues: [], projects: [] } as {
+    state: { status: 'idle', issues: [], projects: [], people: [] } as {
         status: 'idle' | 'loading' | 'success' | 'error';
         issues: unknown[];
         projects: unknown[];
+        people: unknown[];
     },
     queries: [] as (string | null)[],
 }));
@@ -130,7 +131,7 @@ const lastQuery = () => search.queries[search.queries.length - 1];
 
 describe('CommandPalette', () => {
     beforeEach(() => {
-        search.state = { status: 'idle', issues: [], projects: [] };
+        search.state = { status: 'idle', issues: [], projects: [], people: [] };
         search.queries = [];
         mockVisit.mockClear();
     });
@@ -576,7 +577,12 @@ describe('CommandPalette', () => {
         });
 
         test('shows a skeleton while loading instead of a no-results state', async () => {
-            search.state = { status: 'loading', issues: [], projects: [] };
+            search.state = {
+                status: 'loading',
+                issues: [],
+                projects: [],
+                people: [],
+            };
             const user = setup(BASE);
             open();
 
@@ -598,6 +604,7 @@ describe('CommandPalette', () => {
                 status: 'success',
                 issues: [issue()],
                 projects: [project],
+                people: [],
             };
             const user = setup(BASE);
             open();
@@ -626,7 +633,12 @@ describe('CommandPalette', () => {
         });
 
         test('keeps local results working and says so when the request fails', async () => {
-            search.state = { status: 'error', issues: [], projects: [] };
+            search.state = {
+                status: 'error',
+                issues: [],
+                projects: [],
+                people: [],
+            };
             const user = setup(BASE);
             open();
 
@@ -660,6 +672,7 @@ describe('CommandPalette', () => {
                 status: 'success',
                 issues: [issue()],
                 projects: [],
+                people: [],
             };
             const user = setup(BASE);
             open();
@@ -679,6 +692,7 @@ describe('CommandPalette', () => {
                 status: 'success',
                 issues: [],
                 projects: [project],
+                people: [],
             };
             const user = setup(BASE);
             open();
@@ -897,6 +911,272 @@ describe('CommandPalette', () => {
 
             expect(perform).toHaveBeenCalledTimes(1);
             expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
+    });
+
+    describe('motion and layout', () => {
+        test('plays a short entrance animation that reduced-motion users skip', () => {
+            setup(BASE);
+            open();
+
+            const dialog = screen.getByRole('dialog');
+            expect(dialog.className).toContain(
+                'animate-[palette-in_120ms_ease-out]',
+            );
+            expect(dialog.className).toContain('motion-reduce:animate-none');
+        });
+
+        test('a nested step slides in, but opening the palette does not slide the list', async () => {
+            const user = setup([
+                makeCommand({
+                    id: 'issue.status',
+                    title: 'Change status',
+                    children: () => [makeCommand({ id: 'x', title: 'Doing' })],
+                }),
+            ]);
+            open();
+            expect(
+                screen.getByRole('listbox').parentElement?.className,
+            ).not.toContain('palette-step');
+
+            await user.click(screen.getByText('Change status'));
+
+            const list = screen.getByRole('listbox')
+                .parentElement as HTMLElement;
+            expect(list.className).toContain(
+                'animate-[palette-step_80ms_ease-out]',
+            );
+            expect(list.className).toContain('motion-reduce:animate-none');
+        });
+
+        test('going back also slides, and closing resets the animation', async () => {
+            const user = setup([
+                makeCommand({
+                    id: 'issue.status',
+                    title: 'Change status',
+                    children: () => [makeCommand({ id: 'x', title: 'Doing' })],
+                }),
+            ]);
+            open();
+            await user.click(screen.getByText('Change status'));
+            await user.keyboard('{Escape}');
+            expect(
+                screen.getByRole('listbox').parentElement?.className,
+            ).toContain('palette-step');
+
+            await user.keyboard('{Escape}');
+            open();
+
+            expect(
+                screen.getByRole('listbox').parentElement?.className,
+            ).not.toContain('palette-step');
+        });
+
+        test('is a full-width sheet on small screens and a 640px dialog from md up', () => {
+            setup(BASE);
+            open();
+
+            const dialog = screen.getByRole('dialog');
+            expect(dialog.className).toContain('w-full');
+            expect(dialog.className).toContain('md:max-w-[640px]');
+            expect(dialog.className).toContain('md:rounded-2xl');
+            expect(dialog.className).toContain('rounded-b-2xl');
+            expect(dialog.parentElement?.className).toContain('md:pt-[14vh]');
+        });
+
+        test('uses bigger touch targets on small screens', () => {
+            setup(BASE);
+            open();
+
+            expect(screen.getAllByRole('option')[0].className).toContain(
+                'h-12',
+            );
+            expect(screen.getAllByRole('option')[0].className).toContain(
+                'md:h-10',
+            );
+            expect(
+                screen.getByRole('combobox').parentElement?.className,
+            ).toContain('h-14');
+            // 16px on mobile stops iOS from zooming into the field.
+            expect(screen.getByRole('combobox').className).toContain(
+                'text-base',
+            );
+        });
+    });
+
+    describe('people (@)', () => {
+        const person = {
+            id: 9,
+            name: 'Ann Marlow',
+            avatar: null,
+            project: { id: 1, name: 'Orbit' },
+            url: '/projects/1?assignee=9',
+        };
+
+        test('the "@" prefix sends the name to the server and hides commands', async () => {
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), '@an');
+
+            expect(lastQuery()).toBe('@an');
+            expect(screen.queryByRole('option')).not.toBeInTheDocument();
+        });
+
+        test('a bare "@" waits for a name', async () => {
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), '@');
+
+            expect(lastQuery()).toBeNull();
+            expect(
+                screen.getByText('Type a name to find a teammate'),
+            ).toBeInTheDocument();
+        });
+
+        test('shows a People group and opens the filtered issue list', async () => {
+            search.state = {
+                status: 'success',
+                issues: [],
+                projects: [],
+                people: [person],
+            };
+            const user = setup(BASE);
+            open();
+            await user.type(screen.getByRole('combobox'), '@ann');
+
+            const row = screen.getByRole('option', {
+                name: /Show issues assigned to Ann Marlow/,
+            });
+            expect(row).toHaveTextContent('Orbit');
+            expect(
+                screen.getByRole('group', { name: 'People' }),
+            ).toBeInTheDocument();
+
+            await user.click(row);
+
+            expect(mockVisit).toHaveBeenCalledWith('/projects/1?assignee=9');
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
+
+        test('people are not remembered in the recent list', async () => {
+            search.state = {
+                status: 'success',
+                issues: [],
+                projects: [],
+                people: [person],
+            };
+            const user = setup(BASE);
+            open();
+            await user.type(screen.getByRole('combobox'), '@ann');
+            await user.click(screen.getByRole('option'));
+
+            expect(loadHistory()).toEqual([]);
+        });
+
+        test('the footer advertises all three prefixes', () => {
+            setup(BASE);
+            open();
+
+            ['>', '#', '@'].forEach((prefix) =>
+                expect(screen.getByText(prefix)).toBeInTheDocument(),
+            );
+        });
+    });
+
+    describe('screen reader wiring', () => {
+        test('the combobox controls an existing listbox and points at a real option', async () => {
+            const user = setup(BASE);
+            open();
+            await user.keyboard('{ArrowDown}');
+
+            const input = screen.getByRole('combobox');
+            const listbox = document.getElementById(
+                input.getAttribute('aria-controls') as string,
+            );
+            expect(listbox).toBe(screen.getByRole('listbox'));
+            expect(input).toHaveAttribute('aria-expanded', 'true');
+
+            const active = document.getElementById(
+                input.getAttribute('aria-activedescendant') as string,
+            );
+            expect(active).toHaveAttribute('role', 'option');
+            expect(listbox).toContainElement(active);
+            expect(active).toHaveAttribute('aria-selected', 'true');
+        });
+
+        test('exactly one option is selected at a time', async () => {
+            const user = setup(BASE);
+            open();
+            await user.keyboard('{ArrowDown}{ArrowDown}');
+
+            const selected = screen
+                .getAllByRole('option')
+                .filter((o) => o.getAttribute('aria-selected') === 'true');
+            expect(selected).toHaveLength(1);
+        });
+
+        test('the listbox owns only labelled groups, and every option is inside one', () => {
+            setup(BASE);
+            open();
+
+            const listbox = screen.getByRole('listbox');
+            Array.from(listbox.children).forEach((child) => {
+                expect(child).toHaveAttribute('role', 'group');
+                const label = document.getElementById(
+                    child.getAttribute('aria-labelledby') as string,
+                );
+                expect(label?.textContent).toBeTruthy();
+            });
+            screen.getAllByRole('option').forEach((option) => {
+                expect(option.closest('[role="group"]')).not.toBeNull();
+            });
+        });
+
+        test('with no results the combobox is collapsed and the message is outside any listbox', async () => {
+            const user = setup(BASE);
+            open();
+
+            await user.type(screen.getByRole('combobox'), '>zzzzz');
+
+            const input = screen.getByRole('combobox');
+            expect(input).toHaveAttribute('aria-expanded', 'false');
+            expect(input).not.toHaveAttribute('aria-controls');
+            expect(input).not.toHaveAttribute('aria-activedescendant');
+            expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+            expect(screen.getByText(/No results for/)).toBeInTheDocument();
+        });
+
+        test('the loading skeleton is hidden from assistive technology', async () => {
+            search.state = {
+                status: 'loading',
+                issues: [],
+                projects: [],
+                people: [],
+            };
+            const user = setup(BASE);
+            open();
+            await user.type(screen.getByRole('combobox'), 'zzzzz');
+
+            expect(
+                screen.getByTestId('command-palette-skeleton'),
+            ).toHaveAttribute('aria-hidden', 'true');
+            expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+        });
+
+        test('the dialog is modal, named, and the result count is announced politely', () => {
+            setup(BASE);
+            open();
+
+            const dialog = screen.getByRole('dialog', {
+                name: 'Command palette',
+            });
+            expect(dialog).toHaveAttribute('aria-modal', 'true');
+            expect(screen.getByTestId('command-palette-live')).toHaveAttribute(
+                'aria-live',
+                'polite',
+            );
         });
     });
 });

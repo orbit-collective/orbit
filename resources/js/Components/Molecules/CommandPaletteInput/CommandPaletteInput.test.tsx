@@ -10,6 +10,7 @@ const baseProps = {
     onKeyDown: vi.fn(),
     placeholder: 'Type a command...',
     listboxId: 'list-1',
+    expanded: true,
 };
 
 describe('CommandPaletteInput', () => {
@@ -75,5 +76,21 @@ describe('CommandPaletteInput', () => {
         render(<CommandPaletteInput {...baseProps} />);
 
         expect(screen.queryByRole('list')).not.toBeInTheDocument();
+    });
+
+    test('is collapsed and controls nothing while there are no results', () => {
+        render(<CommandPaletteInput {...baseProps} expanded={false} />);
+
+        const input = screen.getByRole('combobox');
+        expect(input).toHaveAttribute('aria-expanded', 'false');
+        expect(input).not.toHaveAttribute('aria-controls');
+    });
+
+    test('is expanded and controls the listbox while results are shown', () => {
+        render(<CommandPaletteInput {...baseProps} />);
+
+        const input = screen.getByRole('combobox');
+        expect(input).toHaveAttribute('aria-expanded', 'true');
+        expect(input).toHaveAttribute('aria-controls', 'list-1');
     });
 });

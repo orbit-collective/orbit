@@ -16,7 +16,7 @@ function CommandPaletteGroup({
         <div role="group" aria-labelledby={id} className="mb-1 last:mb-0">
             <div
                 id={id}
-                className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--text-muted-color)]"
+                className="px-3 pb-1 pt-2 text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--text-gray-color)]"
             >
                 {label}
             </div>
