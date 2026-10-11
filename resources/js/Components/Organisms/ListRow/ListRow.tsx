@@ -13,7 +13,7 @@ import { DropdownOptionItem } from '@/types/Dropdown';
 import { cn } from '@/utils/cn';
 import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
 import { formatStatusLabel } from '@/utils/text';
-import { formatTimeAgo } from '@/utils/time';
+import { formatTimeAgo, formatWeekdayDate } from '@/utils/time';
 
 const rowMenuOptions = (removeDisabled: boolean): DropdownOptionItem[] => [
     { value: 'open', label: 'Open issue', icon: 'Maximize2' },
@@ -247,7 +247,10 @@ export const ListRow = ({
                         )}
                         data-column="updated"
                     >
-                        {formatTimeAgo(issue.updated_at)} ago
+                        <div className={'flex items-center gap-1'}>
+                            <Icon name="Clock" size={12} />
+                            {formatTimeAgo(issue.updated_at)} ago
+                        </div>
                     </td>
                 )}
                 {enabledColumns.start_date && (
@@ -258,7 +261,23 @@ export const ListRow = ({
                         )}
                         data-column="start_date"
                     >
-                        {issue.start_date}
+                        <div className={'flex items-center gap-1'}>
+                            <Icon
+                                name={
+                                    issue.start_date
+                                        ? 'CalendarDays'
+                                        : 'CalendarX2'
+                                }
+                                size={12}
+                            />
+                            {issue.start_date ? (
+                                formatWeekdayDate(issue.start_date)
+                            ) : (
+                                <span className="text-[var(--text-muted-color)]">
+                                    No date
+                                </span>
+                            )}
+                        </div>
                     </td>
                 )}
                 {enabledColumns.end_date && (
@@ -269,7 +288,23 @@ export const ListRow = ({
                         )}
                         data-column="end_date"
                     >
-                        {issue.end_date}
+                        <div className={'flex items-center gap-1'}>
+                            <Icon
+                                name={
+                                    issue.end_date
+                                        ? 'CalendarDays'
+                                        : 'CalendarX2'
+                                }
+                                size={12}
+                            />
+                            {issue.end_date ? (
+                                formatWeekdayDate(issue.end_date)
+                            ) : (
+                                <span className="text-[var(--text-muted-color)]">
+                                    No date
+                                </span>
+                            )}
+                        </div>
                     </td>
                 )}
                 <td className={cellBase} aria-hidden="true" />
