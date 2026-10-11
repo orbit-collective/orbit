@@ -16,6 +16,18 @@ the shared Inertia prop instead (see
 Don't take an existing JSON-returning endpoint as precedent for a new
 API surface.
 
+**One deliberate, internal exception:** `GET /command-palette/search`
+(`CommandPaletteController@search`, route name `command-palette.search`).
+The command palette is a global overlay that lives outside any page, so
+Inertia partial reloads (`only: [...]`) would mean adding a search prop
+to every page. It is a private endpoint of the frontend, not an API: it
+is behind `auth`, throttled (`throttle:command-palette`), scoped to the
+user's project memberships, has no versioning or stability promise, and
+is registered in `bootstrap/app.php`'s `shouldRenderJsonWhen` so a guest
+gets 401 and a bad `q` gets 422 as JSON instead of a redirect. This
+exception covers that one route only; a new JSON endpoint still needs
+its own justification.
+
 ## `laravel/sanctum` is a dependency, not a feature
 
 It's in `composer.json` and nowhere else — no `Sanctum::` config, no
