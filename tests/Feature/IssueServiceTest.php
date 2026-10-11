@@ -49,7 +49,7 @@ test('getAllForProject delegates to the repository', function () {
 
     $result = $this->service->getAllForProject(7);
 
-    expect($result)->toBe($issues);
+    expect($result)->toBe($issues->toArray());
 });
 
 test('getAllForProject passes search and filters through to the repository', function () {
@@ -64,7 +64,7 @@ test('getAllForProject passes search and filters through to the repository', fun
 
     $result = $this->service->getAllForProject(7, $searchParams, $filters);
 
-    expect($result)->toBe($issues);
+    expect($result)->toBe($issues->toArray());
 });
 
 test('it can create an issue and log activity', function () {
