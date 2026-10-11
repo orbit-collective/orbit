@@ -36,20 +36,24 @@ describe('ShortcutHelpModal Component', () => {
                 key: 'g i',
                 description: 'Go to issues',
                 category: 'Navigation',
+                scope: 'project',
                 action: vi.fn(),
             },
         ];
     });
 
-    test('renders every shortcut grouped by category', () => {
+    test('renders every shortcut grouped by the scope it applies in', () => {
         render(<ShortcutHelpModal />);
 
         expect(
-            screen.getByRole('heading', { name: 'Action' }),
+            screen.getByRole('heading', { name: 'Global' }),
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('heading', { name: 'Navigation' }),
+            screen.getByRole('heading', { name: 'Project' }),
         ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('heading', { name: 'Issue' }),
+        ).not.toBeInTheDocument();
         expect(screen.getByText('Show keyboard shortcuts')).toBeInTheDocument();
         expect(screen.getByText('Go to Projects')).toBeInTheDocument();
         expect(screen.getByText('Go to issues')).toBeInTheDocument();
@@ -198,7 +202,7 @@ describe('ShortcutHelpModal Component', () => {
         expect(avatars.length).toBe(shortcutsHolder.shortcuts.length);
     });
 
-    test('renders an "All" tab plus one tab per category', () => {
+    test('renders an "All" tab plus one tab per scope in use', () => {
         render(<ShortcutHelpModal />);
 
         expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute(
@@ -206,55 +210,99 @@ describe('ShortcutHelpModal Component', () => {
             'true',
         );
         expect(
-            screen.getByRole('button', { name: 'Action' }),
+            screen.getByRole('button', { name: 'Global' }),
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('button', { name: 'Navigation' }),
+            screen.getByRole('button', { name: 'Project' }),
         ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('button', { name: 'Issue' }),
+        ).not.toBeInTheDocument();
     });
 
-    test('filters to a single category when its tab is clicked', async () => {
+    test('filters to a single scope when its tab is clicked', async () => {
         const user = userEvent.setup();
         render(<ShortcutHelpModal />);
 
-        await user.click(screen.getByRole('button', { name: 'Navigation' }));
+        await user.click(screen.getByRole('button', { name: 'Project' }));
 
-        expect(
-            screen.getByRole('button', { name: 'Navigation' }),
-        ).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByText('Go to Projects')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Project' })).toHaveAttribute(
+            'aria-pressed',
+            'true',
+        );
         expect(screen.getByText('Go to issues')).toBeInTheDocument();
+        expect(screen.queryByText('Go to Projects')).not.toBeInTheDocument();
         expect(
-            screen.queryByText('Show keyboard shortcuts'),
-        ).not.toBeInTheDocument();
-        expect(
-            screen.queryByRole('heading', { name: 'Action' }),
+            screen.queryByRole('heading', { name: 'Global' }),
         ).not.toBeInTheDocument();
     });
 
-    test('clicking "All" clears the active category filter', async () => {
+    test('clicking "All" clears the active scope filter', async () => {
         const user = userEvent.setup();
         render(<ShortcutHelpModal />);
 
-        await user.click(screen.getByRole('button', { name: 'Navigation' }));
+        await user.click(screen.getByRole('button', { name: 'Project' }));
         await user.click(screen.getByRole('button', { name: 'All' }));
 
         expect(screen.getByText('Show keyboard shortcuts')).toBeInTheDocument();
-        expect(screen.getByText('Go to Projects')).toBeInTheDocument();
+        expect(screen.getByText('Go to issues')).toBeInTheDocument();
     });
 
-    test('combines the category filter with the search query', async () => {
+    test('combines the scope filter with the search query', async () => {
         const user = userEvent.setup();
         render(<ShortcutHelpModal />);
 
-        await user.click(screen.getByRole('button', { name: 'Navigation' }));
+        await user.click(screen.getByRole('button', { name: 'Global' }));
         await user.type(
             screen.getByPlaceholderText('Search shortcuts...'),
-            'issues',
+            'projects',
+        );
+
+        expect(screen.getByText('Go to Projects')).toBeInTheDocument();
+        expect(screen.queryByText('Go to issues')).not.toBeInTheDocument();
+    });
+
+    test('searching by scope name finds that scope', async () => {
+        const user = userEvent.setup();
+        render(<ShortcutHelpModal />);
+
+        await user.type(
+            screen.getByPlaceholderText('Search shortcuts...'),
+            'project',
         );
 
         expect(screen.getByText('Go to issues')).toBeInTheDocument();
-        expect(screen.queryByText('Go to Projects')).not.toBeInTheDocument();
+    });
+
+    test('shows an issue-scoped shortcut under its own heading', () => {
+        shortcutsHolder.shortcuts = [
+            {
+                key: 's',
+                description: 'Change status',
+                scope: 'issue',
+                action: vi.fn(),
+            },
+        ];
+        render(<ShortcutHelpModal />);
+
+        expect(
+            screen.getByRole('heading', { name: 'Issue' }),
+        ).toBeInTheDocument();
+    });
+
+    test('lists a sequence as keys joined by "then"', () => {
+        shortcutsHolder.shortcuts = [
+            {
+                key: 'g d',
+                description: 'Go to Dashboard',
+                action: vi.fn(),
+            },
+        ];
+        render(<ShortcutHelpModal />);
+
+        expect(screen.getByText('G')).toBeInTheDocument();
+        expect(screen.getByText('then')).toBeInTheDocument();
+        expect(screen.getByText('D')).toBeInTheDocument();
     });
 
     test('does not render a border on the modal shell, header, or footer', () => {
