@@ -1,60 +1,48 @@
 # Zarejestruj skrót globalny
 
-Przećwiczony przykład: dodanie `alt+i` jako globalnego skrótu "Go to my Issues" (strona, która jeszcze nie ma trasy, użyta czysto do zademonstrowania kształtu rejestracji) — skrót, który powinien działać z dowolnego miejsca w aplikacji, nie tylko jednej strony, na wzór dokładnie tego, jak już działają `mod+k`/`alt+p`/`alt+b`.
+Przećwiczony przykład: dodanie `alt+i` dla "Go to my Issues" (strona, która jeszcze nie ma trasy, użyta czysto do zademonstrowania kształtu rejestracji) — skrót, który powinien działać z dowolnego miejsca w aplikacji, nie tylko jednej strony.
+
+Skróty globalne to **komendy**. Od czasu palety komend `ShortcutProvider` nie rejestruje własnych skrótów: każdy skrót obejmujący całą aplikację (`alt+b`, `alt+p`, `?`, `mod+k`, `/`) jest zadeklarowany jako atrybut komendy, a paleta sama rejestruje keybinding. Dzięki temu wpis w palecie, jego chip ze skrótem i widok pomocy są zsynchronizowane z jednej definicji.
 
 ## Kiedy to jest właściwy kształt, a kiedy przewodnik 1
 
-Rejestruj bezpośrednio wewnątrz `ShortcutProvider` (ten przewodnik) tylko dla skrótu, który jest faktycznie globalny — nawigacja między obszarami najwyższego poziomu, albo akcja mająca sens niezależnie od tego, jaka strona jest otwarta (sam modal pomocy, `mod+k`). Wszystko inne — akcja specyficzna dla treści jednej strony, jak `p` w `Sidebar.tsx` albo hipotetyczny skrót per-issue — należy zamiast tego do tego komponentu przez `useShortcuts()` (zobacz [`01-register-a-component-scoped-shortcut.md`](./01-register-a-component-scoped-shortcut.md)). Zarejestrowanie tutaj czegoś specyficznego dla strony sprawiłoby, że wystrzeliwałby nawet na stronach, gdzie akcja nie ma sensu.
+Dodawaj do `useGlobalCommands` (ten przewodnik) tylko coś, co jest faktycznie globalne — nawigację między obszarami najwyższego poziomu albo akcję mającą sens niezależnie od tego, jaka strona jest otwarta. Akcja specyficzna dla treści jednej strony, jak `p` w `Sidebar.tsx` albo akcja per-issue, należy do tego komponentu przez `useCommands()` ze `shortcut` (albo `useShortcuts()` dla skrótu bez wpisu w palecie; zobacz [`01-register-a-component-scoped-shortcut.md`](./01-register-a-component-scoped-shortcut.md)). Zarejestrowanie czegoś specyficznego dla strony globalnie sprawiłoby, że wystrzeliwałoby na stronach, gdzie akcja nie ma sensu.
 
-## Krok — Dodaj go do istniejącego globalnego wywołania `registerBatch()`
+## Krok — Dodaj komendę ze `shortcut`
 
-Plik: `resources/js/context/ShortcutContext.tsx`
+Plik: `resources/js/hooks/useGlobalCommands.ts`
 
 ```tsx
-useEffect(() => {
-    return registerBatch([
-        {
-            key: 'alt+p',
-            description: 'Go to Projects',
-            category: 'Navigation',
-            action: () => router.visit('/projects'),
-        },
-        {
-            key: 'alt+b',
-            description: 'Go to Dashboard',
-            category: 'Navigation',
-            action: () => router.visit('/'),
-        },
-        {
-            key: 'alt+i',
-            description: 'Go to my Issues',
-            category: 'Navigation',
-            action: () => router.visit('/issues/mine'),
-        },
-    ]);
-}, [registerBatch]);
+{
+    id: 'nav.issues',
+    title: 'Go to my Issues',
+    group: 'navigation',
+    icon: 'ListChecks',
+    shortcut: 'alt+i',
+    category: 'Navigation',
+    perform: () => router.visit('/issues/mine'),
+},
 ```
 
-To **jedyny** `useEffect` w `ShortcutProvider`, który grupuje razem wiele skrótów nawigacyjnych — skróty modalu pomocy (`?`/`/`) i palety komend (`mod+k`) mają zamiast tego każdy swoje dedykowane wywołanie `useEffect`/`register()`, czysto dlatego, że zostały dodane w różnym czasie, nie z powodu żadnej zasady o tym, jakiego kształtu użyć. Oba są w porządku dla nowego globalnego skrótu; dodanie do istniejącej tablicy `registerBatch()` (pokazane powyżej) to nieco mniej kodu dla jeszcze jednego wpisu w stylu nawigacyjnym.
+`shortcut` przyjmuje wszystko, co `ShortcutDefinition.key`: `'alt+i'`, `'mod+k'`, tablicę (`['c', 'ctrl+i']`) albo sekwencję (`'g i'`). Dodaj `scope: 'project' | 'issue'` dla skrótu, który ma wygrywać z globalnym o tym samym klawiszu. `when()` ukrywa komendę i wyłącza jej skrót jednocześnie.
 
-`router.visit(...)` (kliencka nawigacja Inertii) to właściwy prymityw tutaj, nie `window.location.href = ...` — trzyma nawigację wewnątrz routingu Inertii w stylu SPA zamiast wymuszać pełne przeładowanie strony.
+`router.visit(...)` (wywołanie nawigacji po stronie klienta Inertii) to tu właściwy prymityw, nie `window.location.href = ...` — zostawia nawigację w routingu Inertii w stylu SPA zamiast wymuszać pełne przeładowanie strony.
 
 ## Testy
 
-Plik: `resources/js/context/ShortcutContext.test.tsx`
+Plik: `resources/js/hooks/useGlobalCommands.test.ts`
 
-Dodaj przypadek tuż obok `'alt+p navigates to /projects via the router'`/`'alt+b navigates to / via the router'`, na wzór ich dokładnego kształtu — wystrzel prawdziwy keydown (przez jakikolwiek helper `dispatchKeydown()`, jaki plik już definiuje) zamiast wywoływać `.action()` bezpośrednio, ponieważ celem tego pliku jest pokrycie też faktycznej logiki dopasowania klucza, nie tylko tego, że definicja istnieje:
+Plik mockuje `useCommands` i odczytuje komendy zarejestrowane przez hook, więc asertuj komendę i uruchom jej `perform()`:
 
 ```tsx
-test('alt+i navigates to /issues/mine via the router', () => {
-    renderHook(() => useShortcuts(), { wrapper });
+test('go to my issues has its own shortcut and visits the page', () => {
+    render();
 
-    act(() => {
-        dispatchKeydown({ key: 'i', altKey: true });
-    });
+    expect(byId('nav.issues').shortcut).toBe('alt+i');
 
-    expect(mockRouter.visit).toHaveBeenCalledWith('/issues/mine');
+    byId('nav.issues').perform?.();
+    expect(mocks.router.visit).toHaveBeenCalledWith('/issues/mine');
 });
 ```
 
-`mockRouter` tutaj to własny hoistowany mock pliku dla `@inertiajs/react` (`vi.mock('@inertiajs/react', () => ({ router: mockRouter }))`) — użyj go ponownie tak jak jest, nie dodawaj drugiego mocka dla tego samego modułu.
+Sama ścieżka keydown → akcja (w tym `mod`, Alt przez `event.code`, scope'y) jest pokryta raz w `resources/js/context/CommandContext.test.tsx` i `resources/js/context/ShortcutContext.test.tsx`; nowa komenda nie musi jej powtarzać.
