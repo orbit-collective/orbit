@@ -373,3 +373,122 @@ test('it can filter issues by assignee given as an array instead of a comma stri
 
     expect($results->items())->toHaveCount(2);
 });
+
+function memberProject(User $user, array $attributes = []): Project
+{
+    $project = Project::factory()->create($attributes);
+    $project->users()->attach($user->id, ['role' => 'member']);
+
+    return $project;
+}
+
+test('searchForUser finds issues by title across every project the user belongs to', function () {
+    $user = User::factory()->create();
+    $one = memberProject($user);
+    $two = memberProject($user);
+    Issue::factory()->create(['project_id' => $one->id, 'title' => 'Fix login bug']);
+    Issue::factory()->create(['project_id' => $two->id, 'title' => 'Login page redesign']);
+    Issue::factory()->create(['project_id' => $one->id, 'title' => 'Unrelated']);
+
+    $titles = $this->repository->searchForUser($user->id, 'login')->pluck('title');
+
+    expect($titles)->toHaveCount(2)
+        ->and($titles)->toContain('Fix login bug', 'Login page redesign');
+});
+
+test('searchForUser never returns issues from projects the user is not a member of', function () {
+    $user = User::factory()->create();
+    $mine = memberProject($user);
+    $foreign = Project::factory()->create();
+    Issue::factory()->create(['project_id' => $mine->id, 'title' => 'Login mine']);
+    Issue::factory()->create(['project_id' => $foreign->id, 'title' => 'Login foreign']);
+
+    $titles = $this->repository->searchForUser($user->id, 'login')->pluck('title');
+
+    expect($titles->all())->toBe(['Login mine']);
+});
+
+test('searchForUser is case-insensitive', function () {
+    $user = User::factory()->create();
+    Issue::factory()->create(['project_id' => memberProject($user)->id, 'title' => 'Fix LOGIN bug']);
+
+    expect($this->repository->searchForUser($user->id, 'login'))->toHaveCount(1);
+});
+
+test('searchForUser ranks exact number, then title prefix, then substring', function () {
+    $user = User::factory()->create();
+    $project = memberProject($user);
+    $substring = Issue::factory()->create(['project_id' => $project->id, 'title' => 'The 2 things']);
+    $prefix = Issue::factory()->create(['project_id' => $project->id, 'title' => '2 factor auth']);
+    $exact = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Plain', 'number' => 200]);
+
+    $ids = $this->repository->searchForUser($user->id, '2', 8, 200)->pluck('id')->all();
+
+    expect($ids)->toBe([$exact->id, $prefix->id, $substring->id]);
+});
+
+test('searchForUser with a number and no title is a pure number lookup', function () {
+    $user = User::factory()->create();
+    $project = memberProject($user);
+    $target = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Target', 'number' => 42]);
+    Issue::factory()->create(['project_id' => $project->id, 'title' => '42 is the answer', 'number' => 7]);
+
+    $ids = $this->repository->searchForUser($user->id, '', 8, 42)->pluck('id')->all();
+
+    expect($ids)->toBe([$target->id]);
+});
+
+test('searchForUser matches a number in every project the user can see', function () {
+    $user = User::factory()->create();
+    $one = memberProject($user);
+    $two = memberProject($user);
+    Issue::factory()->create(['project_id' => $one->id, 'number' => 5]);
+    Issue::factory()->create(['project_id' => $two->id, 'number' => 5]);
+    Issue::factory()->create(['project_id' => Project::factory()->create()->id, 'number' => 5]);
+
+    expect($this->repository->searchForUser($user->id, '', 8, 5))->toHaveCount(2);
+});
+
+test('searchForUser orders ties by most recently updated', function () {
+    $user = User::factory()->create();
+    $project = memberProject($user);
+    $older = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Alpha one']);
+    $newer = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Alpha two']);
+    $older->forceFill(['updated_at' => now()->subDay()])->saveQuietly();
+    $newer->forceFill(['updated_at' => now()])->saveQuietly();
+
+    $ids = $this->repository->searchForUser($user->id, 'alpha')->pluck('id')->all();
+
+    expect($ids)->toBe([$newer->id, $older->id]);
+});
+
+test('searchForUser respects the limit', function () {
+    $user = User::factory()->create();
+    $project = memberProject($user);
+    Issue::factory()->count(5)->create(['project_id' => $project->id, 'title' => 'Match me']);
+
+    expect($this->repository->searchForUser($user->id, 'match', 3))->toHaveCount(3);
+});
+
+test('searchForUser treats % and _ in the query literally', function () {
+    $user = User::factory()->create();
+    $project = memberProject($user);
+    Issue::factory()->create(['project_id' => $project->id, 'title' => '100% done']);
+    Issue::factory()->create(['project_id' => $project->id, 'title' => '100 apples']);
+    Issue::factory()->create(['project_id' => $project->id, 'title' => 'snake_case name']);
+    Issue::factory()->create(['project_id' => $project->id, 'title' => 'snakeXcase name']);
+
+    expect($this->repository->searchForUser($user->id, '%')->pluck('title')->all())->toBe(['100% done'])
+        ->and($this->repository->searchForUser($user->id, 'snake_case')->pluck('title')->all())->toBe(['snake_case name']);
+});
+
+test('searchForUser eager-loads the type, status and project', function () {
+    $user = User::factory()->create();
+    Issue::factory()->create(['project_id' => memberProject($user)->id, 'title' => 'Loaded']);
+
+    $issue = $this->repository->searchForUser($user->id, 'loaded')->first();
+
+    expect($issue->relationLoaded('issueType'))->toBeTrue()
+        ->and($issue->relationLoaded('workflowStatus'))->toBeTrue()
+        ->and($issue->relationLoaded('project'))->toBeTrue();
+});

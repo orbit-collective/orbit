@@ -92,3 +92,38 @@ test('it can get the member ids of a project', function () {
 
     expect($ids)->toEqualCanonicalizing($members->pluck('id')->all());
 });
+
+test('searchForUser only returns projects the user is a member of', function () {
+    $user = User::factory()->create();
+    $mine = Project::factory()->create(['name' => 'Orbit Core']);
+    $mine->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+    Project::factory()->create(['name' => 'Orbit Foreign']);
+
+    $names = $this->repository->searchForUser($user->id, 'orbit')->pluck('name')->all();
+
+    expect($names)->toBe(['Orbit Core']);
+});
+
+test('searchForUser ranks a name prefix above a substring', function () {
+    $user = User::factory()->create();
+    foreach (['My Orbit', 'Orbit Web'] as $name) {
+        Project::factory()->create(['name' => $name])
+            ->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+    }
+
+    $names = $this->repository->searchForUser($user->id, 'orbit')->pluck('name')->all();
+
+    expect($names)->toBe(['Orbit Web', 'My Orbit']);
+});
+
+test('searchForUser is case-insensitive, honours the limit and escapes wildcards', function () {
+    $user = User::factory()->create();
+    foreach (['Alpha 100%', 'Alpha 100x', 'alpha three', 'ALPHA four'] as $name) {
+        Project::factory()->create(['name' => $name])
+            ->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+    }
+
+    expect($this->repository->searchForUser($user->id, 'alpha'))->toHaveCount(4)
+        ->and($this->repository->searchForUser($user->id, 'alpha', 2))->toHaveCount(2)
+        ->and($this->repository->searchForUser($user->id, '100%')->pluck('name')->all())->toBe(['Alpha 100%']);
+});
