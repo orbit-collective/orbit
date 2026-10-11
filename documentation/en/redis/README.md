@@ -23,7 +23,9 @@ source of truth.
 | A user's notifications (newest 100) | `NotificationService::getAllForUser` | store, update, delete, mark-all-read |
 | A user's project list and "has projects" | `ProjectService` | the membership version |
 | A user's role and permissions on a project | `Project::membershipOf()` | the membership version |
+| Issue lists: dashboard, a project's table page, the calendar | `IssueService` | the issues, users and membership versions (2-minute TTL) |
 | Sessions, rate limiter, queue, locks | Laravel drivers | not applicable |
 
-All three cached reads are shared Inertia props or authorization checks that
-run on (almost) every request.
+The notification, project-list and permission reads are shared Inertia props or
+authorization checks that run on (almost) every request; the issue lists are the
+heaviest page queries.
