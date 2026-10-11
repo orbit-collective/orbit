@@ -45,6 +45,26 @@ the version there.** A missed bump means a stale permission for up to the TTL
 updates and `attach()/sync()` on pivots fire no model events, which is why the
 bumps live in the repositories and not in observers.
 
+## Issue lists
+
+`IssueService` caches the lists as the plain arrays Inertia serialises (never as
+Eloquent models: `config/cache.php` sets `serializable_classes` to `false`, so
+Redis hands objects back as incomplete classes; for model lists use
+`CachedModels`). They depend on three scopes:
+
+- `CacheVersion::ISSUES` is bumped on every save/delete of an `Issue`, `IssueType`
+  or `WorkflowStatus` (the `BumpsIssueCache` trait). Query-builder updates and
+  deletes fire no model events, so those bump it by hand
+  (`IssueRepository::bulkDelete`, the workflow reset in `IssueTypeService`).
+- `CacheVersion::USERS` is bumped when a user's name or avatar changes or the user
+  is deleted (the `BumpsUserCache` trait), because lists embed people.
+- `CacheVersion::MEMBERSHIP` (the dashboard only), because it lists every project
+  the user belongs to.
+
+**If you add a write to issues, issue types or statuses that bypasses model
+events (`Issue::query()->update(...)`, raw SQL), bump `CacheVersion::ISSUES`.**
+If a list starts embedding a new related model, give it `BumpsIssueCache` too.
+
 ## 3. Test both directions
 
 Add the write to `tests/Feature/MembershipCacheInvalidationTest.php` (the version
