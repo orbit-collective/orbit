@@ -292,6 +292,27 @@ describe('MainLayout Component', () => {
         expect(isOpen).toBe(true);
     });
 
+    test('the header search button is just an icon, with no shortcut chips', () => {
+        renderWithShortcuts(
+            <MainLayout
+                selectedLook="List"
+                setSelectedLook={vi.fn()}
+                projects={[makeProject()]}
+                project={makeProject()}
+                users={[makeUser()]}
+            >
+                <div />
+            </MainLayout>,
+        );
+
+        const button = screen.getByRole('button', {
+            name: 'Open command palette',
+        });
+        expect(button.querySelector('svg')).not.toBeNull();
+        expect(button.querySelector('kbd')).toBeNull();
+        expect(button).toHaveTextContent('');
+    });
+
     test('registers project-scoped commands for create issue and each view', () => {
         const Probe = () => {
             const { commands } = useCommandPalette();
