@@ -7,7 +7,12 @@ interface SearchState extends PaletteSearchResults {
     status: PaletteSearchStatus;
 }
 
-const IDLE: SearchState = { status: 'idle', issues: [], projects: [] };
+const IDLE: SearchState = {
+    status: 'idle',
+    issues: [],
+    projects: [],
+    people: [],
+};
 
 /**
  * Debounced server search for the palette. `query` is already validated for
@@ -25,7 +30,7 @@ export const usePaletteSearch = (query: string | null): SearchState => {
             return;
         }
 
-        setState({ status: 'loading', issues: [], projects: [] });
+        setState({ ...IDLE, status: 'loading' });
 
         const controller = new AbortController();
         const timer = setTimeout(async () => {
@@ -51,10 +56,11 @@ export const usePaletteSearch = (query: string | null): SearchState => {
                     status: 'success',
                     issues: data.issues ?? [],
                     projects: data.projects ?? [],
+                    people: data.people ?? [],
                 });
             } catch {
                 if (controller.signal.aborted) return;
-                setState({ status: 'error', issues: [], projects: [] });
+                setState({ ...IDLE, status: 'error' });
             }
         }, SEARCH_DEBOUNCE_MS);
 

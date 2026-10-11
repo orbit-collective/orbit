@@ -4,6 +4,7 @@ import {
     Command,
     CommandGroup,
     PaletteSearchIssue,
+    PaletteSearchPerson,
     PaletteSearchProject,
 } from '@/types/Commands';
 import { recordHistory } from '@/utils/commandHistory';
@@ -40,4 +41,14 @@ export const projectToCommand = (project: PaletteSearchProject): Command => ({
     group: 'projects',
     icon: 'FolderGit2',
     perform: () => router.visit(project.url),
+});
+
+/** A teammate as "Show issues assigned to ...", opening the filtered issue list. */
+export const personToCommand = (person: PaletteSearchPerson): Command => ({
+    id: `person.${person.id}.${person.project.id}`,
+    title: `Show issues assigned to ${person.name}`,
+    subtitle: person.project.name,
+    group: 'people',
+    icon: 'UserSearch',
+    perform: () => router.visit(person.url),
 });

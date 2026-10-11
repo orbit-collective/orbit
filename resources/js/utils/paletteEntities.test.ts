@@ -5,7 +5,11 @@ const mockVisit = vi.hoisted(() => vi.fn());
 vi.mock('@inertiajs/react', () => ({ router: { visit: mockVisit } }));
 
 import { loadHistory } from './commandHistory';
-import { issueToCommand, projectToCommand } from './paletteEntities';
+import {
+    issueToCommand,
+    personToCommand,
+    projectToCommand,
+} from './paletteEntities';
 
 const issue: PaletteSearchIssue = {
     id: 5,
@@ -89,5 +93,36 @@ describe('projectToCommand', () => {
         projectToCommand(project).perform?.();
 
         expect(mockVisit).toHaveBeenCalledWith('/projects/3');
+    });
+});
+
+describe('personToCommand', () => {
+    const person = {
+        id: 9,
+        name: 'Ann Marlow',
+        avatar: null,
+        project: { id: 1, name: 'Orbit' },
+        url: '/projects/1?assignee=9',
+    };
+
+    test('is a "Show issues assigned to" row for one person in one project', () => {
+        expect(personToCommand(person)).toMatchObject({
+            id: 'person.9.1',
+            title: 'Show issues assigned to Ann Marlow',
+            subtitle: 'Orbit',
+            group: 'people',
+        });
+    });
+
+    test('the same person in two projects gets two distinct ids', () => {
+        expect(
+            personToCommand({ ...person, project: { id: 2, name: 'Beta' } }).id,
+        ).toBe('person.9.2');
+    });
+
+    test('running it opens the project list filtered to the assignee', () => {
+        personToCommand(person).perform?.();
+
+        expect(mockVisit).toHaveBeenCalledWith('/projects/1?assignee=9');
     });
 });

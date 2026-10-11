@@ -33,6 +33,7 @@ const GROUP_CATEGORY: Record<
     help: 'Action',
     issues: 'Navigation',
     projects: 'Navigation',
+    people: 'Navigation',
 };
 
 /** Latest registration wins per id, so a remounting page never doubles a command. */
