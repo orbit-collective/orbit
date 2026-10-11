@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.10.5](https://github.com/orbit-collective/orbit/compare/v0.10.4...v0.10.5) (2026-10-11)
+
+
+### Features
+
+* **commands:** add command palette search endpoint ([e13337f](https://github.com/orbit-collective/orbit/commit/e13337f3e00c9d0e1f337f04c1f041670154cd76)), closes [#307](https://github.com/orbit-collective/orbit/issues/307)
+* **commands:** add command registry and palette ([a4fdf66](https://github.com/orbit-collective/orbit/commit/a4fdf66b303573486ff8d498bb05b174959ca3aa)), closes [#306](https://github.com/orbit-collective/orbit/issues/306)
+* **commands:** add command types and fuzzy search ([6df5156](https://github.com/orbit-collective/orbit/commit/6df5156c685bf7833cf2df0d0327c3dc660afd1b)), closes [#306](https://github.com/orbit-collective/orbit/issues/306)
+* **commands:** add contextual issue commands ([d8125eb](https://github.com/orbit-collective/orbit/commit/d8125eb232a9a720e7d79fe9867d2cd04faaf95b)), closes [#308](https://github.com/orbit-collective/orbit/issues/308)
+* **commands:** add g-sequence navigation shortcuts ([f494eed](https://github.com/orbit-collective/orbit/commit/f494eed8adc9ec55f09546f61757b831a170edc0)), closes [#309](https://github.com/orbit-collective/orbit/issues/309)
+* **commands:** add issue and project search queries ([1931285](https://github.com/orbit-collective/orbit/commit/19312852e5a4982b541e0b17dae7b41afb7922fc)), closes [#307](https://github.com/orbit-collective/orbit/issues/307)
+* **commands:** add palette search hook and helpers ([7bb5d77](https://github.com/orbit-collective/orbit/commit/7bb5d77e5c05b66e955dd96b473c2eb12a58b930)), closes [#307](https://github.com/orbit-collective/orbit/issues/307)
+* **commands:** add people search to the palette client ([3f6cdff](https://github.com/orbit-collective/orbit/commit/3f6cdffb24b764b59f1de9b50d3952e1e94369db)), closes [#309](https://github.com/orbit-collective/orbit/issues/309)
+* **commands:** add project commands and header search ([99ea6a6](https://github.com/orbit-collective/orbit/commit/99ea6a6c48f702a8bff1c55fde244b341179df77)), closes [#306](https://github.com/orbit-collective/orbit/issues/306)
+* **commands:** search issues and projects in the palette ([166f8e8](https://github.com/orbit-collective/orbit/commit/166f8e8b895de427b1e21abc79be3e0a8d8fa94b)), closes [#307](https://github.com/orbit-collective/orbit/issues/307)
+* **commands:** search people in the palette endpoint ([f2a787f](https://github.com/orbit-collective/orbit/commit/f2a787f958a91a1ab796d06bb4bb001739614daf)), closes [#309](https://github.com/orbit-collective/orbit/issues/309)
+* **commands:** support multi-select and contextual steps ([0b4b7fa](https://github.com/orbit-collective/orbit/commit/0b4b7fad12272ff4084faffe7ca009c245a6d25b)), closes [#308](https://github.com/orbit-collective/orbit/issues/308)
+* **filter-bar:** add onPanelOpenChange prop to manage filter panel state ([092aaaa](https://github.com/orbit-collective/orbit/commit/092aaaae97e0a264ee1d0a20d4c0518bf4aca299))
+* **issues:** add reachable workflow status helper ([ce064ca](https://github.com/orbit-collective/orbit/commit/ce064ca02816077e43ec50955c4956728ca2c73f)), closes [#308](https://github.com/orbit-collective/orbit/issues/308)
+* **issues:** animate bulk action bar in and out ([ad0a460](https://github.com/orbit-collective/orbit/commit/ad0a4603fb119f9ba2b567335f5ca2a0b3914632))
+* **issues:** expose what the user may change on an issue ([d23a699](https://github.com/orbit-collective/orbit/commit/d23a6990b5f23c57bbea0400cb7bda259b14efae)), closes [#308](https://github.com/orbit-collective/orbit/issues/308)
+* **issues:** redesign bulk action bar as a floating island ([09290c5](https://github.com/orbit-collective/orbit/commit/09290c544eb9fcf8754833ee24070baff317199e))
+* **shortcuts:** add mod key, scopes and array keys ([0eefb98](https://github.com/orbit-collective/orbit/commit/0eefb986d51bd3b47dfe3970466a003790a35b39)), closes [#305](https://github.com/orbit-collective/orbit/issues/305)
+* **shortcuts:** group the shortcut help by scope ([14570fe](https://github.com/orbit-collective/orbit/commit/14570fec9488dd22820c90d9d121f63ac8ec45b8)), closes [#309](https://github.com/orbit-collective/orbit/issues/309)
+* **shortcuts:** support key sequences ([45420a8](https://github.com/orbit-collective/orbit/commit/45420a8e2e29dc061b3c72768eb63e2ecac8faf8)), closes [#309](https://github.com/orbit-collective/orbit/issues/309)
+* **time:** add formatWeekdayDate function and tests ([8f20eac](https://github.com/orbit-collective/orbit/commit/8f20eac1184a829c0fcd0d213f3b52240998ac66))
+* **ui:** add command palette input, group and item ([807e156](https://github.com/orbit-collective/orbit/commit/807e156b26fb7cb6cca4ca0b5f262734a8ce2f47)), closes [#306](https://github.com/orbit-collective/orbit/issues/306)
+* **ui:** add danger button variant and vertical divider ([fc1ed55](https://github.com/orbit-collective/orbit/commit/fc1ed55567d16a7d2c492e0dca9a2d677e4258b9))
+* **ui:** add iconColors prop to PageHeader component ([5024c58](https://github.com/orbit-collective/orbit/commit/5024c588c1c452748ff1411c435f2738a638e60c))
+* **ui:** add the command palette button to every page header ([0485368](https://github.com/orbit-collective/orbit/commit/048536856d595a9b6c09b7136564feaa7e5e2ed0))
+* **ui:** enhance ListRow with date formatting and icons ([b1ac7f9](https://github.com/orbit-collective/orbit/commit/b1ac7f9c1a34015142e0b495138d47a7b3531a84))
+* **ui:** polish the command palette for motion, mobile and a11y ([d0ee036](https://github.com/orbit-collective/orbit/commit/d0ee036bb2815e4142feb8c76db0bd2074f3f51b)), closes [#309](https://github.com/orbit-collective/orbit/issues/309)
+* **ui:** show issue number and type color in palette rows ([6de7fd0](https://github.com/orbit-collective/orbit/commit/6de7fd0e10f6af89f6da6dbcfa22062d19377f7a)), closes [#307](https://github.com/orbit-collective/orbit/issues/307)
+
+
+### Bug Fixes
+
+* **commands:** open the notifications popup from the palette ([1840ea3](https://github.com/orbit-collective/orbit/commit/1840ea3387badcecfcb92a8b2df04fed64c4c31a))
+* **ui:** drop stale Cmd+F hint from filter bar ([11ec6b2](https://github.com/orbit-collective/orbit/commit/11ec6b2b43ff40be9f7918757ee1c6ab24f41317)), closes [#305](https://github.com/orbit-collective/orbit/issues/305)
+* **ui:** make NavItem icon optional and handle absence ([4376baa](https://github.com/orbit-collective/orbit/commit/4376baad2a72a7ea97a812967d7a49cd02de9e6b))
+* **ui:** make the command palette easier to use on touch ([61fff85](https://github.com/orbit-collective/orbit/commit/61fff859a743ecd38f7493c4a4f7f9a02d282bc4))
+* **ui:** show only the search icon in the header button ([8a0d6af](https://github.com/orbit-collective/orbit/commit/8a0d6af6f4da4742491d2abb9960ea398fd162b8))
+* **ui:** use accent color for issue row checkbox ([e08dbc0](https://github.com/orbit-collective/orbit/commit/e08dbc0535a99a46a1986f9729b627e544f14f10))
+
+
+### Miscellaneous Chores
+
+* release 0.10.5 ([59eb94d](https://github.com/orbit-collective/orbit/commit/59eb94d505640ad35a075b9211b763a671b84cf8))
+
 ## [0.10.4](https://github.com/orbit-collective/orbit/compare/v0.10.3...v0.10.4) (2026-10-11)
 
 
