@@ -6,6 +6,7 @@ use App\Models\Issue;
 use App\Models\Project;
 use App\Repositories\IssueRepository;
 use App\Repositories\ProjectRepository;
+use App\Repositories\UserRepository;
 
 class CommandPaletteSearchService
 {
@@ -13,27 +14,36 @@ class CommandPaletteSearchService
 
     public const PROJECT_LIMIT = 5;
 
+    public const PEOPLE_LIMIT = 8;
+
     public function __construct(
         protected IssueRepository $issueRepository,
         protected ProjectRepository $projectRepository,
+        protected UserRepository $userRepository,
     ) {}
 
     /**
      * "#12" is a pure number lookup, a bare "12" is a number lookup plus a
      * title search (a title can start with digits), and anything else is a
      * title search. A "#" in front of free text only marks "issues" and is
-     * dropped. Projects are only searched for free text.
+     * dropped. Projects are only searched for free text. A leading "@" searches
+     * people (members of the user's projects) and nothing else.
      *
-     * @return array{issues: list<array<string, mixed>>, projects: list<array<string, mixed>>}
+     * @return array{issues: list<array<string, mixed>>, projects: list<array<string, mixed>>, people: list<array<string, mixed>>}
      */
     public function search(int $userId, string $query): array
     {
         $query = trim($query);
+
+        if (str_starts_with($query, '@')) {
+            return $this->searchPeople($userId, trim(substr($query, 1)));
+        }
+
         $hashed = str_starts_with($query, '#');
         $text = trim($hashed ? substr($query, 1) : $query);
 
         if ($text === '') {
-            return ['issues' => [], 'projects' => []];
+            return ['issues' => [], 'projects' => [], 'people' => []];
         }
 
         $isNumber = ctype_digit($text);
@@ -48,6 +58,30 @@ class CommandPaletteSearchService
         return [
             'issues' => $issues->map(fn (Issue $issue) => $this->issuePayload($issue))->values()->all(),
             'projects' => $projects->map(fn (Project $project) => $this->projectPayload($project))->values()->all(),
+            'people' => [],
+        ];
+    }
+
+    /**
+     * @return array{issues: list<array<string, mixed>>, projects: list<array<string, mixed>>, people: list<array<string, mixed>>}
+     */
+    private function searchPeople(int $userId, string $text): array
+    {
+        $people = $text === ''
+            ? collect()
+            : $this->userRepository->searchMembersForUser($userId, $text, self::PEOPLE_LIMIT);
+
+        return [
+            'issues' => [],
+            'projects' => [],
+            'people' => $people->map(fn (object $row) => [
+                'id' => $row->user_id,
+                'name' => $row->name,
+                'avatar' => $row->avatar,
+                'project' => ['id' => $row->project_id, 'name' => $row->project_name],
+                // The project's issue list with only this person's issues.
+                'url' => route('projects.show', ['project' => $row->project_id], false).'?assignee='.$row->user_id,
+            ])->values()->all(),
         ];
     }
 

@@ -55,7 +55,7 @@ test('a non-member never sees another project\'s issues or projects', function (
 
     $this->actingAs($outsider)->getJson('/command-palette/search?q=login')
         ->assertOk()
-        ->assertExactJson(['issues' => [], 'projects' => []]);
+        ->assertExactJson(['issues' => [], 'projects' => [], 'people' => []]);
     $this->actingAs($outsider)->getJson('/command-palette/search?q='.urlencode('#3'))
         ->assertOk()
         ->assertJsonPath('issues', []);
@@ -70,4 +70,27 @@ test('the endpoint is rate limited per user', function () {
     }
 
     $this->actingAs($user)->getJson('/command-palette/search?q=ab')->assertStatus(429);
+});
+
+test('an "@" query returns people who share a project, linked to the filtered issue list', function () {
+    $user = User::factory()->create();
+    $ann = User::factory()->create(['name' => 'Ann Marlow']);
+    $project = Project::factory()->create();
+    $project->users()->attach([$user->id => ['role' => 'member'], $ann->id => ['role' => 'member']]);
+
+    $this->actingAs($user)->getJson('/command-palette/search?q='.urlencode('@ann'))
+        ->assertOk()
+        ->assertJsonCount(0, 'issues')
+        ->assertJsonPath('people.0.name', 'Ann Marlow')
+        ->assertJsonPath('people.0.url', "/projects/{$project->id}?assignee={$ann->id}");
+});
+
+test('an "@" query never exposes people from projects the user is not in', function () {
+    $user = User::factory()->create();
+    $stranger = User::factory()->create(['name' => 'Ann Hidden']);
+    Project::factory()->create()->users()->attach($stranger->id, ['role' => 'member']);
+
+    $this->actingAs($user)->getJson('/command-palette/search?q='.urlencode('@ann'))
+        ->assertOk()
+        ->assertJsonPath('people', []);
 });
