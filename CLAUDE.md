@@ -30,7 +30,7 @@ Orbit is an issue/project tracker built as a Laravel + Inertia.js + React (TypeS
 - `php artisan migrate` / `php artisan migrate:fresh --seed`.
 
 ### Docker (Makefile wraps docker compose)
-The full stack also runs in Docker — two services, `app` (Laravel on :8000) and `vite` (assets on :5173). The `Makefile` is the entry point; targets run inside the containers:
+The full stack also runs in Docker — two main services, `app` (Laravel on :8000) and `vite` (assets on :5173), plus `redis` (cache, sessions and queues; internal only, no published port) and the `queue`/`scheduler` workers. The `Makefile` is the entry point; targets run inside the containers:
 - `make setup` — build images (no cache) and start detached. `make up`/`make dev` — foreground; `make down` — detached; `make clean` — stop and drop volumes.
 - `make test` (PHP/Pest), `make test-js` (Vitest once), `make test-coverage` (PHP with the coverage gate), `make test-js-coverage` (Vitest with the coverage gate), `make lint`, `make type-check` — run the suites inside the containers. The `app` image includes PCOV so PHP coverage works out of the box.
 - `make knip`, `make knip-fix`, `make unused`, `make unused-fix`, `make unused-fix-dangerous`, `make cleanup` — the unused-code commands above, run inside the `vite` container (run `make npm-install` once after pulling, since knip is a new dependency).
@@ -85,6 +85,8 @@ When adding a feature, add tests alongside it rather than relying on the gate to
 - oxfmt (`.oxfmtrc.json`) is configured with single quotes and auto-organizes imports + Tailwind class ordering; run `npm run format` before committing. `.githooks/pre-push` runs `oxfmt --check` and blocks unformatted pushes; enable it once per clone with `npm run hooks:install`.
 
 - **Issue identity is two-part.** `issues.id` is the global primary key used for routes, relations, `<!-- orbit-issue:ID -->` PR markers and `#[title](id)` comment tokens; `issues.number` is the project-scoped number users see as `#12` (assigned in `Issue::booted()` from `projects.next_issue_number`, unique per `(project_id, number)`, never reused). Show/search/log/notify/branch-name `#N` text uses `number`; links and lookups use `id`. Issues that predate the column have `number = id`, so old `#N` references stay valid.
+
+- **Redis is the cache, session and queue backend** (`CACHE_STORE`/`SESSION_DRIVER`/`QUEUE_CONNECTION=redis`; tests force `array`/`array`/`sync`). Cached reads live in Services (or `Project::membershipOf()`), never in Repositories. A value that many writers can affect is cached with `CacheVersion::remember(scope, key, ttl, fn)` and every write that changes it calls `CacheVersion::bump(scope)` — **any new way to change project membership, a role or a role's permissions must bump `CacheVersion::MEMBERSHIP`** or users keep a stale permission for up to 10 minutes. Never read `DB::table('sessions')` directly (empty under Redis); use `UserRepository` / `SessionRegistry`. See `documentation/en/redis/`.
 
 ## Documentation
 
