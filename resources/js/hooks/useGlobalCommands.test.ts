@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { Command } from '@/types/Commands';
 import { SETTINGS_TABS } from '@/types/Settings';
+import { OPEN_NOTIFICATIONS_EVENT } from '@/utils/notificationsPopupEvent';
 
 const mocks = vi.hoisted(() => ({
     router: {
@@ -77,13 +78,23 @@ describe('useGlobalCommands', () => {
 
         byId('nav.dashboard').perform?.();
         byId('nav.projects').perform?.();
-        byId('nav.notifications').perform?.();
         byId('nav.settings').perform?.();
 
         expect(mocks.router.visit).toHaveBeenCalledWith('/');
         expect(mocks.router.visit).toHaveBeenCalledWith('/projects');
-        expect(mocks.router.visit).toHaveBeenCalledWith('/notifications');
         expect(mocks.router.visit).toHaveBeenCalledWith('/settings');
+    });
+
+    test('Go to Notifications opens the bell popup instead of visiting the JSON endpoint', () => {
+        const opened = vi.fn();
+        window.addEventListener(OPEN_NOTIFICATIONS_EVENT, opened);
+        render();
+
+        byId('nav.notifications').perform?.();
+
+        expect(opened).toHaveBeenCalledTimes(1);
+        expect(mocks.router.visit).not.toHaveBeenCalledWith('/notifications');
+        window.removeEventListener(OPEN_NOTIFICATIONS_EVENT, opened);
     });
 
     test('has one command per enabled settings tab and none for disabled ones', () => {

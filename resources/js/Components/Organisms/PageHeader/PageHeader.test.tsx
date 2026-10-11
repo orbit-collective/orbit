@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { Notification } from '@/types/Notification';
+import { requestOpenNotifications } from '@/utils/notificationsPopupEvent';
 import { formattedDate } from '@/utils/time';
 import PageHeader from './PageHeader';
 
@@ -83,6 +84,24 @@ describe('PageHeader Component', () => {
         expect(screen.getByTestId('notifications-popup')).toBeInTheDocument();
 
         await user.click(bellButton);
+        expect(
+            screen.queryByTestId('notifications-popup'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('opens the notifications popup when asked to by the command palette', () => {
+        render(<PageHeader title="Dashboard" />);
+
+        act(() => requestOpenNotifications());
+
+        expect(screen.getByTestId('notifications-popup')).toBeInTheDocument();
+    });
+
+    test('stops listening for that request once unmounted', () => {
+        const { unmount } = render(<PageHeader title="Dashboard" />);
+        unmount();
+
+        expect(() => act(() => requestOpenNotifications())).not.toThrow();
         expect(
             screen.queryByTestId('notifications-popup'),
         ).not.toBeInTheDocument();

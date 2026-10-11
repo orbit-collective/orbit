@@ -8,6 +8,7 @@ import { Command } from '@/types/Commands';
 import { SETTINGS_TABS } from '@/types/Settings';
 import { ThemeMode } from '@/types/Theme';
 import { DOCS_URL, LEARN_URL, openExternal } from '@/utils/externalLinks';
+import { requestOpenNotifications } from '@/utils/notificationsPopupEvent';
 
 const THEMES: { mode: ThemeMode; title: string; icon: Command['icon'] }[] = [
     { mode: 'dark', title: 'Switch to dark theme', icon: 'Moon' },
@@ -60,7 +61,7 @@ export const useGlobalCommands = (): void => {
                 shortcut: 'g n',
                 category: 'Navigation',
                 keywords: ['inbox'],
-                perform: () => router.visit('/notifications'),
+                perform: requestOpenNotifications,
             },
             {
                 id: 'nav.settings',
