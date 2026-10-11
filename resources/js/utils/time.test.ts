@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { formatDate, formatTimeAgo, formattedDate, parseDateKey } from './time';
+import {
+    formatDate,
+    formatTimeAgo,
+    formatWeekdayDate,
+    formattedDate,
+    parseDateKey,
+} from './time';
 
 const NOW = new Date('2026-07-08T12:00:00.000Z').getTime();
 const SECOND = 1000;
@@ -77,6 +83,22 @@ describe('formattedDate', () => {
         const result = formattedDate();
         expect(result).toContain('2027');
         expect(result).toContain('March');
+    });
+});
+
+describe('formatWeekdayDate', () => {
+    test('formats a "YYYY-MM-DD" string as "Ddd, D Mon YYYY"', () => {
+        expect(formatWeekdayDate('2026-10-11')).toBe('Sun, 11 Oct 2026');
+    });
+
+    test('does not zero-pad the day of the month', () => {
+        expect(formatWeekdayDate('2026-01-05')).toBe('Mon, 5 Jan 2026');
+    });
+
+    test('ignores the time part of a full ISO string', () => {
+        expect(formatWeekdayDate('2026-10-11T23:59:59.000Z')).toBe(
+            'Sun, 11 Oct 2026',
+        );
     });
 });
 

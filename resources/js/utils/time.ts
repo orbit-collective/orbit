@@ -42,6 +42,14 @@ export function parseDateKey(dateString: string): Date {
     const [year, month, day] = dateString.split('-').map(Number);
     return new Date(year, month - 1, day);
 }
+/** Formats a "YYYY-MM-DD" string as e.g. "Sun, 11 Oct 2026". */
+export function formatWeekdayDate(dateString: string): string {
+    const date = parseDateKey(dateString.slice(0, 10));
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+    const month = date.toLocaleDateString('en-US', { month: 'short' });
+
+    return `${weekday}, ${date.getDate()} ${month} ${date.getFullYear()}`;
+}
 export const formattedDate = () => {
     const options: Intl.DateTimeFormatOptions = {
         weekday: 'long',
