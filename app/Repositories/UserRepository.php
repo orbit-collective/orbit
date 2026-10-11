@@ -3,6 +3,7 @@ namespace App\Repositories;
 
 use App\Models\User;
 use App\Support\LikePattern;
+use App\Support\Sessions\SessionRegistry;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
@@ -94,11 +95,19 @@ class UserRepository {
     }
     public function getUserSessions(User $user): SupportCollection
     {
+        if ($this->sessionRegistry()->enabled()) {
+            return $this->sessionRegistry()->forUser($user->id);
+        }
+
         return DB::table('sessions')->where('user_id', $user->id)->orderByDesc('last_activity')->get();
     }
 
     public function deleteSession(User $user, string $sessionId): bool
     {
+        if ($this->sessionRegistry()->enabled()) {
+            return $this->sessionRegistry()->revoke($user->id, $sessionId);
+        }
+
         return DB::table('sessions')
             ->where('id', $sessionId)
             ->where('user_id', $user->id)
@@ -107,10 +116,19 @@ class UserRepository {
 
     public function deleteOtherSessions(User $user, string $currentSessionId): int
     {
+        if ($this->sessionRegistry()->enabled()) {
+            return $this->sessionRegistry()->revokeOthers($user->id, $currentSessionId);
+        }
+
         return DB::table('sessions')
             ->where('user_id', $user->id)
             ->where('id', '!=', $currentSessionId)
             ->delete();
+    }
+
+    private function sessionRegistry(): SessionRegistry
+    {
+        return app(SessionRegistry::class);
     }
 
     public function updateSessionLifetime(User $user, int $lifetime): User {

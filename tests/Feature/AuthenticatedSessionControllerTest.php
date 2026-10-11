@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\Sessions\SessionRegistry;
 
 test('guests can view the login page', function () {
     $response = $this->get('/login');
@@ -180,4 +181,15 @@ test('guests are redirected to login when accessing a protected route', function
     $response = $this->get('/');
 
     $response->assertRedirect(route('login'));
+});
+
+test('logging out removes the session from the registry when one is in use', function () {
+    $user = User::factory()->create();
+    $registry = Mockery::mock(SessionRegistry::class);
+    $registry->shouldReceive('enabled')->andReturnTrue();
+    $registry->shouldReceive('touch');
+    $registry->shouldReceive('forget')->once()->with($user->id, Mockery::type('string'));
+    $this->app->instance(SessionRegistry::class, $registry);
+
+    $this->actingAs($user)->post('/logout')->assertRedirect('/');
 });

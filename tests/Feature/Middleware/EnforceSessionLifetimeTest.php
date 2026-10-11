@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\Sessions\SessionRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 
@@ -70,4 +71,35 @@ test('guests are unaffected by the session lifetime check', function () {
     $response = $this->get('/settings/preferences');
 
     $response->assertRedirect(route('login'));
+});
+
+test('the session is registered for the Security page when the session store needs a registry', function () {
+    $user = User::factory()->create();
+    $registry = Mockery::mock(SessionRegistry::class);
+    $registry->shouldReceive('enabled')->andReturnTrue();
+    $registry->shouldReceive('touch')->once()->with($user->id, Mockery::type('string'), Mockery::any(), Mockery::any());
+    $this->app->instance(SessionRegistry::class, $registry);
+
+    $this->actingAs($user)->get('/settings/preferences');
+});
+
+test('a session registered under another id is registered again', function () {
+    $user = User::factory()->create();
+    $registry = Mockery::mock(SessionRegistry::class);
+    $registry->shouldReceive('enabled')->andReturnTrue();
+    $registry->shouldReceive('touch')->once();
+    $this->app->instance(SessionRegistry::class, $registry);
+
+    $this->withSession(['session_registry' => ['id' => 'an-older-id', 'at' => now()->getTimestamp()]])
+        ->actingAs($user)
+        ->get('/settings/preferences');
+});
+
+test('nothing is registered when the session store lists its own sessions', function () {
+    $registry = Mockery::mock(SessionRegistry::class);
+    $registry->shouldReceive('enabled')->andReturnFalse();
+    $registry->shouldNotReceive('touch');
+    $this->app->instance(SessionRegistry::class, $registry);
+
+    $this->actingAs(User::factory()->create())->get('/settings/preferences');
 });
