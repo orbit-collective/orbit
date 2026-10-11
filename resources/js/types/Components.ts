@@ -23,6 +23,7 @@ import {
     Comment,
     GithubDevelopmentRepository,
     Issue,
+    IssueAbilities,
     IssueLabel,
     IssuePageLooks,
     IssuePriority,
@@ -582,6 +583,7 @@ export interface IssuePageProps {
     githubDefaultBranchName?: string;
     canCreateGithubDevelopment?: boolean;
     githubAccountLinked?: boolean;
+    issueAbilities?: IssueAbilities;
 }
 export interface IssuePageHeaderProps {
     project: Project;

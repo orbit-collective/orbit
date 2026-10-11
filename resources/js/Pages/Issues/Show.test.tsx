@@ -36,6 +36,9 @@ vi.mock('@inertiajs/react', async () => {
     };
 });
 
+const mockUseCommands = vi.hoisted(() => vi.fn());
+vi.mock('@/hooks/useCommands', () => ({ useCommands: mockUseCommands }));
+
 vi.mock('@/Components/Organisms/Sidebar/Sidebar', () => ({
     default: () => <div data-testid="sidebar" />,
 }));
@@ -873,5 +876,105 @@ describe('Issues/Show custom fields', () => {
         );
 
         expect(screen.queryByText('Severity *')).not.toBeInTheDocument();
+    });
+
+    describe('issue commands', () => {
+        const registered = () =>
+            mockUseCommands.mock.calls[
+                mockUseCommands.mock.calls.length - 1
+            ][0] as {
+                id: string;
+                when?: () => boolean;
+                children?: () => { id: string; perform?: () => void }[];
+            }[];
+
+        test('registers the contextual issue commands for the page', () => {
+            render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                    issueAbilities={{
+                        update: true,
+                        changeStatus: true,
+                        assign: true,
+                        changePriority: true,
+                        changeLabels: true,
+                    }}
+                />,
+            );
+
+            expect(registered().map((c) => c.id)).toEqual(
+                expect.arrayContaining([
+                    'issue.status',
+                    'issue.priority',
+                    'issue.assign',
+                    'issue.labels',
+                    'issue.copy-link',
+                    'issue.copy-id',
+                ]),
+            );
+        });
+
+        test('hides every mutating command without abilities', () => {
+            render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                    labels={[
+                        {
+                            id: 1,
+                            name: 'bug',
+                            color: '#f00',
+                            description: null,
+                            isSystem: true,
+                        },
+                    ]}
+                />,
+            );
+
+            const mutating = registered().filter((c) =>
+                [
+                    'issue.status',
+                    'issue.priority',
+                    'issue.assign',
+                    'issue.labels',
+                ].includes(c.id),
+            );
+            expect(mutating.length).toBe(4);
+            mutating.forEach((c) => expect(c.when?.()).toBe(false));
+        });
+
+        test('a palette edit goes through the same issues.update route', () => {
+            render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                    issueAbilities={{
+                        update: true,
+                        changeStatus: true,
+                        assign: true,
+                        changePriority: true,
+                        changeLabels: true,
+                    }}
+                />,
+            );
+
+            const priority = registered().find(
+                (c) => c.id === 'issue.priority',
+            );
+            priority?.children?.()[0].perform?.();
+
+            expect(mockPatch).toHaveBeenCalledWith(
+                '/issues.update/42',
+                { priority: 'medium' },
+                { preserveScroll: true },
+            );
+        });
     });
 });
