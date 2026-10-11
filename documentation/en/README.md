@@ -125,6 +125,12 @@ documentation/
     authentication/
       README.md              <- index for this category
       01-add-an-oauth-provider.md
+    storybook/
+      README.md              <- index for this category
+      01-write-a-story.md
+      02-mock-inertia-and-network.md
+      03-theme-accent-and-docker.md
+      04-stories-as-vitest-tests.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -138,6 +144,7 @@ documentation/
     settings-tabs/           <- Polish translation of every guide above
     shortcuts/               <- Polish translation of every guide above
     command-palette/         <- Polish translation of every guide above
+    storybook/               <- Polish translation of every guide above
     content-moderation/      <- Polish translation of every guide above
     project-invitations/     <- Polish translation of every guide above
     activity-log/            <- Polish translation of every guide above
