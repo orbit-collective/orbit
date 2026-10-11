@@ -52,7 +52,11 @@ const NavItem: React.FC<NavItemProps> = ({
     const content = (
         <>
             <div className={cn('flex items-center', !collapsed && 'gap-2.5')}>
-                <Icon name={icon} size={16} className={iconClassName} />
+                {icon ? (
+                    <Icon name={icon} size={16} className={iconClassName} />
+                ) : (
+                    <div className={`w-2 h-2 rounded-full ${iconClassName}`} />
+                )}
                 {!collapsed && (
                     <span className={'text-sm font-normal'}>{label}</span>
                 )}

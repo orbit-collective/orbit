@@ -331,7 +331,7 @@ export interface ModalHeaderProps {
     icon?: ReactNode;
 }
 export interface NavItemProps {
-    icon: keyof typeof icons;
+    icon?: keyof typeof icons;
     label: string;
     isActive?: boolean;
     badge?: string | number;

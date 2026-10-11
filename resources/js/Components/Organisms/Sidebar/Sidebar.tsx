@@ -322,12 +322,11 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                             <NavItem
                                                 key={projectElement.id}
                                                 title={projectElement.name}
-                                                icon="FolderGit2"
                                                 iconClassName={`${
                                                     getColorTheme(
                                                         projectElement.color,
                                                     ).accent
-                                                } h-5 w-5 rounded-md p-1`}
+                                                }`}
                                                 label={
                                                     projectElement.name.length >
                                                     16
