@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.4](https://github.com/orbit-collective/orbit/compare/v0.10.3...v0.10.4) (2026-10-11)
+
+
+### Bug Fixes
+
+* **hooks:** check pushed commits and fall back to the vite container ([fc7e0b8](https://github.com/orbit-collective/orbit/commit/fc7e0b8dded881d0a76b6e180d246767090bec29))
+* **hooks:** check the pushed tree with its own oxfmt settings ([4151193](https://github.com/orbit-collective/orbit/commit/41511931976a0c8d3b0d3499b23c5b5326c1175a))
+* **ui:** update default banner image source ([bc8a972](https://github.com/orbit-collective/orbit/commit/bc8a972993a1ad7ec84a5d5883d77da9a489b614))
+
 ## [0.10.3](https://github.com/orbit-collective/orbit/compare/v0.10.2...v0.10.3) (2026-10-10)
 
 
