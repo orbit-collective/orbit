@@ -156,4 +156,19 @@ describe('CommandPaletteItem', () => {
             '#ff0000',
         );
     });
+
+    test('exposes the full title and subtitle when they are truncated', () => {
+        renderItem({
+            command: { ...command, subtitle: 'A very long project name' },
+        });
+
+        expect(screen.getByText('Create issue')).toHaveAttribute(
+            'title',
+            'Create issue',
+        );
+        expect(screen.getByText('A very long project name')).toHaveAttribute(
+            'title',
+            'A very long project name',
+        );
+    });
 });

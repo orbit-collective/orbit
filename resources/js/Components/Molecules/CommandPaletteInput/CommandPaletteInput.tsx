@@ -1,5 +1,6 @@
 import { ChevronRight, Search } from 'lucide-react';
 import { forwardRef, KeyboardEvent } from 'react';
+import IconButton from '@/Components/Atoms/IconButton/IconButton';
 
 interface CommandPaletteInputProps {
     value: string;
@@ -12,6 +13,8 @@ interface CommandPaletteInputProps {
     activeDescendantId?: string;
     /** Titles of the nested steps above the root list, e.g. `['#12', 'Change status']`. */
     breadcrumb?: string[];
+    /** Shows a close button below `md`, where there is no Esc key. */
+    onClose?: () => void;
 }
 
 const CommandPaletteInput = forwardRef<
@@ -28,6 +31,7 @@ const CommandPaletteInput = forwardRef<
             expanded,
             activeDescendantId,
             breadcrumb = [],
+            onClose,
         },
         ref,
     ) => (
@@ -81,6 +85,19 @@ const CommandPaletteInput = forwardRef<
                 onKeyDown={onKeyDown}
                 className="min-w-0 flex-1 border-none bg-transparent text-base text-[var(--text-color)] placeholder-[var(--text-gray-color)] outline-none focus:ring-0 md:text-[15px]"
             />
+            {onClose && (
+                // Touch has no Esc. Out of the Tab order: keyboard users already
+                // have Esc, and a second tab stop would let Tab leave the dialog.
+                <IconButton
+                    type="button"
+                    iconName="X"
+                    iconSize={18}
+                    ariaLabel="Close command palette"
+                    tabIndex={-1}
+                    onClick={onClose}
+                    className="-mr-2 shrink-0 text-[var(--text-gray-color)] md:hidden"
+                />
+            )}
         </div>
     ),
 );
