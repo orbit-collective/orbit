@@ -3,17 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ShortcutDefinition } from '@/types/Shortcuts';
 
-const mockCloseAllModals = vi.hoisted(() => vi.fn());
 const shortcutsHolder = vi.hoisted(() => ({
     shortcuts: [] as ShortcutDefinition[],
 }));
 
 vi.mock('@/context/ShortcutContext', () => ({
     useShortcuts: () => ({ shortcuts: shortcutsHolder.shortcuts }),
-}));
-
-vi.mock('@/context/ModalContext', () => ({
-    useModal: () => ({ closeAllModals: mockCloseAllModals }),
 }));
 
 import { ShortcutHelpModal } from './ShortcutHelpModal';
@@ -106,66 +101,86 @@ describe('ShortcutHelpModal Component', () => {
         ).toBeInTheDocument();
     });
 
-    test('pressing Enter without navigating triggers the first shortcut and closes all modals', async () => {
+    test('is a read-only reference: Enter and arrows never run a shortcut', async () => {
         const user = userEvent.setup();
         render(<ShortcutHelpModal />);
 
         const input = screen.getByPlaceholderText('Search shortcuts...');
         await user.click(input);
-        await user.keyboard('{Enter}');
+        await user.keyboard('{ArrowDown}{ArrowUp}{Enter}');
 
-        expect(shortcutsHolder.shortcuts[0].action).toHaveBeenCalledTimes(1);
-        expect(mockCloseAllModals).toHaveBeenCalledTimes(1);
+        shortcutsHolder.shortcuts.forEach((shortcut) => {
+            expect(shortcut.action).not.toHaveBeenCalled();
+        });
     });
 
-    test('ArrowDown moves the selection to the next shortcut before Enter triggers it', async () => {
+    test('clicking a row does not run its shortcut', async () => {
         const user = userEvent.setup();
         render(<ShortcutHelpModal />);
 
-        const input = screen.getByPlaceholderText('Search shortcuts...');
-        await user.click(input);
-        await user.keyboard('{ArrowDown}');
-        await user.keyboard('{Enter}');
+        await user.click(screen.getByText('Go to Projects'));
 
-        expect(shortcutsHolder.shortcuts[1].action).toHaveBeenCalledTimes(1);
-        expect(shortcutsHolder.shortcuts[0].action).not.toHaveBeenCalled();
+        expect(shortcutsHolder.shortcuts[1].action).not.toHaveBeenCalled();
     });
 
-    test('ArrowDown does not move past the last shortcut', async () => {
-        const user = userEvent.setup();
+    test('shows every binding of an array-key shortcut separated by "or"', () => {
+        shortcutsHolder.shortcuts = [
+            {
+                key: ['c', 'ctrl+i'],
+                description: 'Create issue',
+                category: 'Creation',
+                action: vi.fn(),
+            },
+        ];
         render(<ShortcutHelpModal />);
 
-        const input = screen.getByPlaceholderText('Search shortcuts...');
-        await user.click(input);
-        await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}');
-        await user.keyboard('{Enter}');
-
-        expect(shortcutsHolder.shortcuts[2].action).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('or')).toBeInTheDocument();
+        expect(screen.getByText('C')).toBeInTheDocument();
+        expect(screen.getByText('CTRL')).toBeInTheDocument();
+        expect(screen.getByText('I')).toBeInTheDocument();
     });
 
-    test('ArrowUp moves the selection back up and does not go below the first shortcut', async () => {
+    test('searches across every binding of an array-key shortcut', async () => {
         const user = userEvent.setup();
+        shortcutsHolder.shortcuts = [
+            {
+                key: ['c', 'ctrl+i'],
+                description: 'Create issue',
+                category: 'Creation',
+                action: vi.fn(),
+            },
+            {
+                key: 'alt+p',
+                description: 'Go to Projects',
+                category: 'Navigation',
+                action: vi.fn(),
+            },
+        ];
         render(<ShortcutHelpModal />);
 
-        const input = screen.getByPlaceholderText('Search shortcuts...');
-        await user.click(input);
-        await user.keyboard('{ArrowDown}{ArrowUp}{ArrowUp}{ArrowUp}');
-        await user.keyboard('{Enter}');
+        await user.type(
+            screen.getByPlaceholderText('Search shortcuts...'),
+            'ctrl+i',
+        );
 
-        expect(shortcutsHolder.shortcuts[0].action).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('Create issue')).toBeInTheDocument();
+        expect(screen.queryByText('Go to Projects')).not.toBeInTheDocument();
     });
 
-    test('typing a search query resets the selection back to the first match', async () => {
-        const user = userEvent.setup();
+    test('renders mod combos with platform-aware chips', () => {
+        vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
+        shortcutsHolder.shortcuts = [
+            {
+                key: 'mod+k',
+                description: 'Open command palette',
+                category: 'Action',
+                action: vi.fn(),
+            },
+        ];
         render(<ShortcutHelpModal />);
 
-        const input = screen.getByPlaceholderText('Search shortcuts...');
-        await user.click(input);
-        await user.keyboard('{ArrowDown}{ArrowDown}');
-        await user.type(input, 'navigation');
-        await user.keyboard('{Enter}');
-
-        expect(shortcutsHolder.shortcuts[1].action).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('⌘')).toBeInTheDocument();
+        expect(screen.getByText('K')).toBeInTheDocument();
     });
 
     test('renders single-key shortcuts and multi-key combo shortcuts', () => {
