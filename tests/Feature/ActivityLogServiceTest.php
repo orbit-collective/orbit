@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ActivityLog;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ActivityLogRepository;
@@ -68,4 +69,30 @@ test('it can log account-level activity without a project', function () {
         'user_id' => $user->id,
         'body' => 'Changed account password',
     ]);
+});
+
+test('it paginates project and user logs using the activity page name', function () {
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+    ActivityLog::factory()->count(3)->create(['project_id' => $project->id, 'user_id' => $user->id]);
+
+    request()->merge([ActivityLogService::PAGE_NAME => 2]);
+
+    $projectPage = $this->service->paginateForProject($project->id, 2);
+    $userPage = $this->service->paginateForUser($user->id, 2);
+
+    expect($projectPage->currentPage())->toBe(2)
+        ->and($projectPage->items())->toHaveCount(1)
+        ->and($userPage->currentPage())->toBe(2)
+        ->and($userPage->items())->toHaveCount(1);
+});
+
+test('it returns a limited list of recent logs for a project and a user', function () {
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+    ActivityLog::factory()->count(4)->create(['project_id' => $project->id, 'user_id' => $user->id]);
+    ActivityLog::factory()->count(2)->create(); // unrelated
+
+    expect($this->service->getRecentForProject($project->id, 3))->toHaveCount(3)
+        ->and($this->service->getRecentForUser($user->id, 3))->toHaveCount(3);
 });
