@@ -3,29 +3,38 @@ import { ShortcutDefinition, ShortcutScope } from '@/types/Shortcuts';
 
 export type CommandGroup =
     | 'suggested'
+    | 'recent'
     | 'navigation'
     | 'creation'
     | 'preferences'
     | 'account'
-    | 'help';
+    | 'help'
+    | 'issues'
+    | 'projects';
 
 /** On-screen order of the groups when the query is empty. */
 export const COMMAND_GROUP_ORDER: CommandGroup[] = [
     'suggested',
+    'recent',
     'navigation',
     'creation',
     'preferences',
     'account',
     'help',
+    'issues',
+    'projects',
 ];
 
 export const COMMAND_GROUP_LABELS: Record<CommandGroup, string> = {
     suggested: 'Suggested',
+    recent: 'Recent',
     navigation: 'Navigation',
     creation: 'Creation',
     preferences: 'Preferences',
     account: 'Account',
     help: 'Help',
+    issues: 'Issues',
+    projects: 'Projects',
 };
 
 export type PaletteMode = 'default' | 'search';
@@ -41,6 +50,10 @@ export interface Command {
     subtitle?: string;
     group: CommandGroup;
     icon: keyof typeof icons;
+    /** CSS color for the icon (e.g. an issue type's color); defaults to muted. */
+    iconColor?: string;
+    /** Muted text before the title, e.g. an issue's `#12`. */
+    prefix?: string;
     /** Extra words the fuzzy search matches against (never highlighted). */
     keywords?: string[];
     /** Registered with the shortcut engine while the command is registered. */
@@ -77,3 +90,31 @@ export interface CommandContextType {
     pushPage: (page: PalettePage) => void;
     popPage: () => void;
 }
+
+/** One issue returned by `GET /command-palette/search`. */
+export interface PaletteSearchIssue {
+    id: number;
+    /** The project-scoped number users see as `#12`. */
+    number: number;
+    title: string;
+    url: string;
+    project: { id: number; name: string };
+    type: { name: string; icon: string; color: string } | null;
+    status: { name: string; color: string | null } | null;
+}
+
+/** One project returned by `GET /command-palette/search`. */
+export interface PaletteSearchProject {
+    id: number;
+    name: string;
+    slug: string;
+    color: string;
+    url: string;
+}
+
+export interface PaletteSearchResults {
+    issues: PaletteSearchIssue[];
+    projects: PaletteSearchProject[];
+}
+
+export type PaletteSearchStatus = 'idle' | 'loading' | 'success' | 'error';
