@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import { Session } from '@/types/Users';
 import AccountSettingsAvatarLibrary from './AccountSettingsAvatarLibrary';
 import AccountSettingsDeleteAccountModal from './AccountSettingsDeleteAccountModal';
