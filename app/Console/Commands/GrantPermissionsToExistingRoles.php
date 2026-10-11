@@ -6,6 +6,7 @@ use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
 use App\Models\Permission;
 use App\Models\Project;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Console\Command;
 
 /**
@@ -71,6 +72,8 @@ class GrantPermissionsToExistingRoles extends Command
                 }
             }
         });
+
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
 
         $this->info("Granted ".implode(', ', $keys)." to $rolesGranted existing role(s).");
 

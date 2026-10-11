@@ -2,6 +2,7 @@
 namespace App\Repositories;
 
 use App\Models\User;
+use App\Support\Cache\CacheVersion;
 use App\Support\LikePattern;
 use App\Support\Sessions\SessionRegistry;
 use Illuminate\Database\Eloquent\Collection;
@@ -138,6 +139,9 @@ class UserRepository {
     }
 
     public function delete(User $user): bool {
+        // Deleting the account cascades its project memberships.
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
+
         return $user->delete();
     }
     public function findById(int $id): ?User {

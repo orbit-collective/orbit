@@ -9,6 +9,7 @@ use App\Models\ProjectInvitation;
 use App\Models\User;
 use App\Repositories\ProjectInvitationRepository;
 use App\Repositories\ProjectMemberRepository;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -110,6 +111,7 @@ class ProjectInvitationService
 
         if (! $this->projectMemberRepository->isMember($project, $user->id)) {
             $project->users()->attach($user->id, ['role' => $invitation->role->value]);
+            CacheVersion::bump(CacheVersion::MEMBERSHIP);
             $this->roleService->syncSystemRoleForMember($project, $user->id, $invitation->role);
 
             $invitedRoleIds = $invitation->roles()->pluck('roles.id')->all();
