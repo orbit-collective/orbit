@@ -1,11 +1,11 @@
 # Skróty klawiszowe
 
-Każdy skrót klawiszowy w Orbicie — `?`/`/` po pomoc, `ctrl+k`, `alt+p`, scope'owane do strony `p` po "utwórz projekt" — przechodzi przez jeden system: `ShortcutContext`. Nie ma żadnego per-komponentowego listenera `keydown` nigdzie w aplikacji; jeden globalny listener rozstrzyga każde naciśnięcie klawisza względem zbudowanego w runtime rejestru, a modal pomocy (`?`) jest generowany w całości z tego samego rejestru — nie ma osobnej, ręcznie utrzymywanej listy skrótów do utrzymywania w zgodzie.
+Każdy skrót klawiszowy w Orbicie — `?`/`/` po pomoc, `mod+k`, `alt+p`, scope'owane do strony `p` po "utwórz projekt" — przechodzi przez jeden system: `ShortcutContext`. Nie ma żadnego per-komponentowego listenera `keydown` nigdzie w aplikacji; jeden globalny listener rozstrzyga każde naciśnięcie klawisza względem zbudowanego w runtime rejestru, a modal pomocy (`?`) jest generowany w całości z tego samego rejestru — nie ma osobnej, ręcznie utrzymywanej listy skrótów do utrzymywania w zgodzie.
 
 ## Przewodniki, w kolejności, w jakiej faktycznie będziesz ich potrzebować
 
 1. **[Zarejestruj skrót zakresu komponentu](./01-register-a-component-scoped-shortcut.md)** — przećwiczony przykład dodania skrótu, który ma sens tylko, gdy konkretna strona/komponent jest zamontowany, używając hooka `useShortcuts()` w ten sam sposób, w jaki już robi to `p` ("Create project") w `Sidebar.tsx`.
-2. **[Zarejestruj skrót globalny](./02-register-a-global-shortcut.md)** — przećwiczony przykład dodania skrótu, który powinien istnieć wszędzie w aplikacji, zarejestrowanego bezpośrednio wewnątrz `ShortcutProvider` w ten sam sposób, w jaki już są `ctrl+k`/`alt+p`/`alt+b`.
+2. **[Zarejestruj skrót globalny](./02-register-a-global-shortcut.md)** — przećwiczony przykład dodania skrótu, który powinien istnieć wszędzie w aplikacji, zarejestrowanego bezpośrednio wewnątrz `ShortcutProvider` w ten sam sposób, w jaki już są `mod+k`/`alt+p`/`alt+b`.
 
 ## Architektura w jednym akapicie
 
