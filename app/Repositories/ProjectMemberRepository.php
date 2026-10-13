@@ -50,11 +50,19 @@ class ProjectMemberRepository
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 
+    /**
+     * Replaces the member's custom roles with the given ones. Their system
+     * role (the tier) is kept as it is.
+     */
     public function syncRoles(Project $project, int $userId, array $roleIds): void
     {
         $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $userId)->first();
 
-        $projectUser?->roles()->sync($roleIds);
+        if ($projectUser) {
+            $systemRoleIds = $projectUser->roles()->where('is_system', true)->pluck('roles.id')->all();
+            $projectUser->roles()->sync([...$systemRoleIds, ...$roleIds]);
+        }
+
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 

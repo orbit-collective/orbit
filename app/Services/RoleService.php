@@ -82,6 +82,18 @@ class RoleService
         return $this->roleRepository->getForProject($project);
     }
 
+    /**
+     * Narrows ids to the project's custom roles, which are the only ones that
+     * may be assigned freely.
+     *
+     * @param  list<int>  $roleIds
+     * @return list<int>
+     */
+    public function customRoleIds(Project $project, array $roleIds): array
+    {
+        return $this->roleRepository->customRoleIds($project, $roleIds);
+    }
+
     public function createRole(Project $project, array $data): Role
     {
         $role = $this->roleRepository->create($project, $data);

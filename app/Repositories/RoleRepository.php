@@ -17,6 +17,23 @@ class RoleRepository
         return $project->roles()->with('permissions')->get();
     }
 
+    /**
+     * Narrows ids to this project's custom roles. A member's tier is their one
+     * system role, which only changes through the role-change and ownership
+     * flows, so system roles are never accepted from a free-form assignment.
+     *
+     * @param  list<int>  $roleIds
+     * @return list<int>
+     */
+    public function customRoleIds(Project $project, array $roleIds): array
+    {
+        return $project->roles()
+            ->where('is_system', false)
+            ->whereIn('id', $roleIds)
+            ->pluck('id')
+            ->all();
+    }
+
     public function firstOrCreateSystemRole(Project $project, RoleType $role): Model
     {
         return $project->roles()->firstOrCreate(

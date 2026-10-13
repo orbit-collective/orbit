@@ -97,7 +97,8 @@ test('it can sync a member\'s custom roles', function () {
     $this->repository->syncRoles($project, $member->id, [$role->id]);
 
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
-    expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
+    expect($projectUser->roles()->where('is_system', false)->pluck('roles.id')->all())->toBe([$role->id])
+        ->and($projectUser->roles()->where('is_system', true)->count())->toBe(1);
 });
 
 test('attachRoles adds custom roles without detaching an existing system role', function () {
