@@ -35,33 +35,33 @@ class ProjectPolicy
             Permission::ISSUE_TYPES_UPDATE,
         ];
 
-        return array_any($writeGates, fn ($permission) => $project->hasPermissionOrTier($user, $permission, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]));
+        return array_any($writeGates, fn ($permission) => $project->hasPermission($user, $permission));
 
     }
 
     public function updateDetails(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::PROJECT_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::PROJECT_UPDATE);
     }
 
     public function delete(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::PROJECT_DELETE, [RoleType::OWNER]);
+        return $project->hasPermission($user, Permission::PROJECT_DELETE);
     }
 
     public function inviteMembers(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::MEMBERS_INVITE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::MEMBERS_INVITE);
     }
 
     public function updateMemberRole(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::MEMBERS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::MEMBERS_UPDATE);
     }
 
     public function removeMember(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::MEMBERS_DELETE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::MEMBERS_DELETE);
     }
 
     public function transferOwnership(User $user, Project $project): bool
@@ -71,66 +71,66 @@ class ProjectPolicy
 
     public function viewIntegrations(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]);
+        return $project->hasPermission($user, Permission::INTEGRATIONS_VIEW);
     }
 
     public function updateIntegrations(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::INTEGRATIONS_UPDATE);
     }
 
     public function viewAutomation(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::AUTOMATION_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]);
+        return $project->hasPermission($user, Permission::AUTOMATION_VIEW);
     }
 
     public function updateAutomation(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::AUTOMATION_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::AUTOMATION_UPDATE);
     }
 
     public function viewLabels(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::LABELS_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER]);
+        return $project->hasPermission($user, Permission::LABELS_VIEW);
     }
 
     public function createLabels(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::LABELS_CREATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::LABELS_CREATE);
     }
 
     public function updateLabels(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::LABELS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::LABELS_UPDATE);
     }
 
     public function deleteLabels(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::LABELS_DELETE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::LABELS_DELETE);
     }
 
     public function viewIssueTypes(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::ISSUE_TYPES_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER]);
+        return $project->hasPermission($user, Permission::ISSUE_TYPES_VIEW);
     }
 
     public function createIssueTypes(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::ISSUE_TYPES_CREATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::ISSUE_TYPES_CREATE);
     }
 
     public function updateIssueTypes(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::ISSUE_TYPES_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::ISSUE_TYPES_UPDATE);
     }
 
     public function deleteIssueTypes(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::ISSUE_TYPES_DELETE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::ISSUE_TYPES_DELETE);
     }
 
     public function updateWorkflow(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::WORKFLOW_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+        return $project->hasPermission($user, Permission::WORKFLOW_UPDATE);
     }
 }

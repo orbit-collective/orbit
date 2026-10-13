@@ -37,7 +37,7 @@ test('membership is looked up once and then served from the cache', function () 
         $this->project->hasMember($this->user);
         $this->project->roleOf($this->user);
         $this->project->hasPermission($this->user, Permission::ISSUES_CREATE);
-        $this->project->hasPermissionOrTier($this->user, Permission::ISSUES_CREATE, [RoleType::MEMBER]);
+        $this->project->hasPermission($this->user, Permission::ISSUES_CREATE);
     });
 
     expect($queries)->toBe(0);
@@ -75,7 +75,7 @@ test('removing a member takes effect immediately', function () {
     (new ProjectMemberRepository)->removeMember($this->project, $this->user->id);
 
     expect($this->project->hasMember($this->user))->toBeFalse()
-        ->and($this->project->hasPermissionOrTier($this->user, Permission::ISSUES_CREATE, [RoleType::MEMBER]))->toBeFalse();
+        ->and($this->project->hasPermission($this->user, Permission::ISSUES_CREATE))->toBeFalse();
 });
 
 test('changing a member\'s role takes effect immediately', function () {

@@ -3,7 +3,6 @@
 namespace App\Policies;
 
 use App\Enums\Permissions\Permission;
-use App\Enums\Permissions\RoleType;
 use App\Models\Issue;
 use App\Models\IssueType;
 use App\Models\Project;
@@ -11,8 +10,6 @@ use App\Models\User;
 
 class IssuePolicy
 {
-    private const array MODIFY_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-
     public function view(User $user, Issue $issue): bool
     {
         return $issue->project->hasMember($user);
@@ -20,7 +17,7 @@ class IssuePolicy
 
     public function create(User $user, Project $project): bool
     {
-        return $project->hasPermissionOrTier($user, Permission::ISSUES_CREATE, self::MODIFY_TIERS);
+        return $project->hasPermission($user, Permission::ISSUES_CREATE);
     }
 
     /**
@@ -41,32 +38,32 @@ class IssuePolicy
 
     public function update(User $user, Issue $issue): bool
     {
-        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_UPDATE, self::MODIFY_TIERS);
+        return $issue->project->hasPermission($user, Permission::ISSUES_UPDATE);
     }
 
     public function delete(User $user, Issue $issue): bool
     {
-        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_DELETE, self::MODIFY_TIERS);
+        return $issue->project->hasPermission($user, Permission::ISSUES_DELETE);
     }
 
     public function assign(User $user, Issue $issue): bool
     {
-        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_ASSIGN, self::MODIFY_TIERS);
+        return $issue->project->hasPermission($user, Permission::ISSUES_ASSIGN);
     }
 
     public function changeStatus(User $user, Issue $issue): bool
     {
-        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_CHANGE_STATUS, self::MODIFY_TIERS);
+        return $issue->project->hasPermission($user, Permission::ISSUES_CHANGE_STATUS);
     }
 
     public function changePriority(User $user, Issue $issue): bool
     {
-        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_CHANGE_PRIORITY, self::MODIFY_TIERS);
+        return $issue->project->hasPermission($user, Permission::ISSUES_CHANGE_PRIORITY);
     }
 
     public function changeLabels(User $user, Issue $issue): bool
     {
-        return $issue->project->hasPermissionOrTier($user, Permission::ISSUES_CHANGE_LABELS, self::MODIFY_TIERS);
+        return $issue->project->hasPermission($user, Permission::ISSUES_CHANGE_LABELS);
     }
 
     /**
@@ -76,6 +73,6 @@ class IssuePolicy
      */
     public function createGithubDevelopment(User $user, Issue $issue): bool
     {
-        return $issue->project->hasPermissionOrTier($user, Permission::GITHUB_DEVELOPMENT_CREATE, self::MODIFY_TIERS);
+        return $issue->project->hasPermission($user, Permission::GITHUB_DEVELOPMENT_CREATE);
     }
 }
