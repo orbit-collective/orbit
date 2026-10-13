@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
+use App\Models\Permission;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\User;
@@ -18,7 +20,7 @@ beforeEach(function () {
 test('an admin can invite someone by email', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/invitations", [
         'email' => 'invitee@example.com',
@@ -32,7 +34,7 @@ test('an admin can invite someone by email', function () {
 test('an owner can invite someone with a custom role attached', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
     $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($owner)->post("/projects/$project->id/invitations", [
@@ -49,8 +51,10 @@ test('an owner can invite someone with a custom role attached', function () {
 test('an admin without the roles.assign permission cannot invite with a custom role attached', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $project->roles()->where('slug', 'admin')->first()->permissions()
+        ->detach(Permission::whereIn('key', [PermissionEnum::ROLES_ASSIGN->value, PermissionEnum::SETTINGS_UPDATE->value])->pluck('id')->all());
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/invitations", [
         'email' => 'invitee@example.com',
@@ -65,7 +69,7 @@ test('inviting with a role from another project is rejected', function () {
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
     $foreignRole = $otherProject->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($owner)->post("/projects/$project->id/invitations", [
@@ -80,7 +84,7 @@ test('inviting with a role from another project is rejected', function () {
 test('a member cannot invite anyone', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post("/projects/$project->id/invitations", [
         'email' => 'invitee@example.com',
@@ -95,7 +99,7 @@ test('invitations are blocked when email is not configured', function () {
 
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/invitations", [
         'email' => 'invitee@example.com',
@@ -109,7 +113,7 @@ test('invitations are blocked when email is not configured', function () {
 test('an admin can revoke a pending invitation', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->actingAs($admin)->delete("/projects/$project->id/invitations/$invitation->id");
@@ -123,8 +127,8 @@ test('revoking an invitation via the wrong project returns a 404', function () {
     $projectB = Project::factory()->create();
     $admin = User::factory()->create();
     $project = User::factory()->create();
-    $projectA->users()->attach($admin->id, ['role' => 'admin']);
-    $projectB->users()->attach($project->id, ['role' => 'admin']);
+    addProjectMember($projectA, $admin->id, 'admin');
+    addProjectMember($projectB, $project->id, 'admin');
     $invitation = app(ProjectInvitationService::class)->invite($projectB, 'invitee@example.com', RoleType::MEMBER, $project);
 
     $response = $this->actingAs($admin)->delete("/projects/$projectA->id/invitations/$invitation->id");
@@ -136,8 +140,8 @@ test('a member cannot revoke an invitation', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->actingAs($member)->delete("/projects/$project->id/invitations/$invitation->id");
@@ -148,7 +152,7 @@ test('a member cannot revoke an invitation', function () {
 test('clicking the invitation link while logged in with the matching email joins the project', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
@@ -161,7 +165,7 @@ test('clicking the invitation link while logged in with the matching email joins
 test('clicking the invitation link while logged out redirects to login and remembers the token', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
     $response = $this->get("/invitations/$invitation->token");
@@ -181,7 +185,7 @@ test('clicking an unknown invitation link redirects to login with an error, with
 test('clicking an expired invitation link while logged in redirects to the dashboard with an error', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
     $invitation->update(['expires_at' => now()->subDay()]);
@@ -195,7 +199,7 @@ test('clicking an expired invitation link while logged in redirects to the dashb
 test('clicking the invitation link with a mismatched account email surfaces the specific error', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $wrongUser = User::factory()->create(['email' => 'someone-else@example.com']);
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
@@ -208,7 +212,7 @@ test('clicking the invitation link with a mismatched account email surfaces the 
 test('logging in after clicking an invitation link accepts it automatically', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $invitee = User::factory()->create(['email' => 'invitee@example.com', 'password' => 'password123']);
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
@@ -226,7 +230,7 @@ test('logging in after clicking an invitation link accepts it automatically', fu
 test('logging in with a mismatched email after clicking an invitation link surfaces the specific error', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $wrongUser = User::factory()->create(['email' => 'someone-else@example.com', 'password' => 'password123']);
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 
@@ -244,7 +248,7 @@ test('logging in with a mismatched email after clicking an invitation link surfa
 test('registering after clicking an invitation link accepts it automatically', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $invitation = app(ProjectInvitationService::class)->invite($project, 'new-person@example.com', RoleType::MEMBER, $admin);
 
     $this->get("/invitations/$invitation->token");
@@ -264,7 +268,7 @@ test('registering after clicking an invitation link accepts it automatically', f
 test('a logged-in user can manually accept an invitation by pasting its token', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $invitee = User::factory()->create(['email' => 'invitee@example.com']);
     $invitation = app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
 

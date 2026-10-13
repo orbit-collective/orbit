@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Support\Cache\CacheVersion;
 use App\Support\LikePattern;
@@ -67,9 +66,9 @@ class ProjectRepository
             ->exists();
     }
 
-    public function attachMember(Project $project, int $userId, RoleType $role): void
+    public function attachMember(Project $project, int $userId): void
     {
-        $project->users()->attach($userId, ['role' => $role->value]);
+        $project->users()->attach($userId);
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
     }
 

@@ -16,7 +16,7 @@ beforeEach(function () {
     // searches below, because the searching user shares their own projects.
     $this->user = User::factory()->create(['name' => 'Zed Viewer']);
     $this->project = Project::factory()->create(['name' => 'Orbit']);
-    $this->project->users()->attach($this->user->id, ['role' => 'member']);
+    addProjectMember($this->project, $this->user->id, 'member');
 });
 
 test('a "#n" query is a pure number lookup', function () {
@@ -66,7 +66,7 @@ test('blank or "#" only queries return nothing', function () {
 test('results are capped at 8 issues and 5 projects', function () {
     Issue::factory()->count(12)->create(['project_id' => $this->project->id, 'title' => 'Common word']);
     foreach (range(1, 7) as $i) {
-        Project::factory()->create(['name' => "Common $i"])->users()->attach($this->user->id, ['role' => 'member']);
+        addProjectMember(Project::factory()->create(['name' => "Common $i"]), $this->user->id, 'member');
     }
 
     $result = $this->service->search($this->user->id, 'common');
@@ -135,7 +135,7 @@ test('non-member projects never appear', function () {
 describe('people (@)', function () {
     beforeEach(function () {
         $this->ann = User::factory()->create(['name' => 'Ann Marlow']);
-        $this->project->users()->attach($this->ann->id, ['role' => 'member']);
+        addProjectMember($this->project, $this->ann->id, 'member');
     });
 
     test('an "@" query searches members of the user\'s projects and nothing else', function () {
@@ -157,7 +157,8 @@ describe('people (@)', function () {
 
     test('a person who shares two projects appears once per shared project', function () {
         $second = Project::factory()->create(['name' => 'Beta']);
-        $second->users()->attach([$this->user->id => ['role' => 'member'], $this->ann->id => ['role' => 'member']]);
+        addProjectMember($second, $this->user->id, 'member');
+        addProjectMember($second, $this->ann->id, 'member');
 
         $people = $this->service->search($this->user->id, '@ann')['people'];
 
@@ -166,7 +167,7 @@ describe('people (@)', function () {
 
     test('people who share no project with the user never appear', function () {
         $stranger = User::factory()->create(['name' => 'Anna Stranger']);
-        Project::factory()->create()->users()->attach($stranger->id, ['role' => 'member']);
+        addProjectMember(Project::factory()->create(), $stranger->id, 'member');
 
         $names = collect($this->service->search($this->user->id, '@ann')['people'])->pluck('name');
 
@@ -175,7 +176,7 @@ describe('people (@)', function () {
 
     test('a name prefix ranks above a substring', function () {
         $joann = User::factory()->create(['name' => 'Joann Smith']);
-        $this->project->users()->attach($joann->id, ['role' => 'member']);
+        addProjectMember($this->project, $joann->id, 'member');
 
         $names = collect($this->service->search($this->user->id, '@ann')['people'])->pluck('name')->all();
 
@@ -190,10 +191,10 @@ describe('people (@)', function () {
     test('is capped at 8 results and treats % literally', function () {
         foreach (range(1, 10) as $i) {
             $member = User::factory()->create(['name' => "Pat $i"]);
-            $this->project->users()->attach($member->id, ['role' => 'member']);
+            addProjectMember($this->project, $member->id, 'member');
         }
         $odd = User::factory()->create(['name' => '100% Pat']);
-        $this->project->users()->attach($odd->id, ['role' => 'member']);
+        addProjectMember($this->project, $odd->id, 'member');
 
         expect($this->service->search($this->user->id, '@pat')['people'])->toHaveCount(8)
             ->and(collect($this->service->search($this->user->id, '@%')['people'])->pluck('name')->all())->toBe(['100% Pat']);

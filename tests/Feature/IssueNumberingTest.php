@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 function memberOfProject(Project $project): User
 {
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     return $user;
 }

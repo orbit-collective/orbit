@@ -1,10 +1,12 @@
 <?php
 
+use App\DataTransferObjects\Github\GithubRelayEventDTO;
 use App\Models\ExternalIssueLink;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
+use App\Services\Integrations\Github\GithubRelayEventProcessor;
 use App\Services\IssueTypeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -13,7 +15,7 @@ uses(RefreshDatabase::class);
 function actingAsProjectMember(Project $project, string $role = 'member'): User
 {
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['role' => $role]);
+    addProjectMember($project, $user->id, $role);
 
     return $user;
 }
@@ -328,7 +330,7 @@ test('a lifecycle sync for one pull request never touches another pull request o
         'status' => 'open',
     ]);
 
-    $event = new App\DataTransferObjects\Github\GithubRelayEventDTO(
+    $event = new GithubRelayEventDTO(
         id: 'evt_1',
         type: 'pull_request',
         action: 'closed',
@@ -352,7 +354,7 @@ test('a lifecycle sync for one pull request never touches another pull request o
         createdAt: now()->toIso8601String(),
     );
 
-    app(App\Services\Integrations\Github\GithubRelayEventProcessor::class)->process($event, $projectIntegration);
+    app(GithubRelayEventProcessor::class)->process($event, $projectIntegration);
 
     $otherLink->refresh();
 
@@ -1034,7 +1036,7 @@ test('guests cannot bulk delete issues', function () {
 test('an issue can be moved to a custom workflow status by id', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     app(IssueTypeService::class)->ensureSystemIssueTypes($project);
     $type = $project->issueTypes()->where('name', 'Task')->first();
     $inReview = $type->statuses()->create([
@@ -1062,7 +1064,7 @@ test('an issue can be moved to a custom workflow status by id', function () {
 test('a workflow status from another issue type is rejected', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     app(IssueTypeService::class)->ensureSystemIssueTypes($project);
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
@@ -1083,7 +1085,7 @@ test('a workflow status from another issue type is rejected', function () {
 test('a workflow status with no transition from the current one is rejected', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     app(IssueTypeService::class)->ensureSystemIssueTypes($project);
     $type = $project->issueTypes()->where('name', 'Task')->first();
     $initial = $type->statuses()->where('is_initial', true)->first();
@@ -1107,7 +1109,7 @@ test('a workflow status with no transition from the current one is rejected', fu
 test('changing the issue type and picking a status of the new type in one request works', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     app(IssueTypeService::class)->ensureSystemIssueTypes($project);
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
@@ -1135,7 +1137,7 @@ test('issue search returns only this project\'s issues whose id starts with the 
     $project = Project::factory()->create();
     $other = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $mine = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Mine']);
     Issue::factory()->create(['project_id' => $other->id, 'title' => 'Foreign']);
@@ -1149,7 +1151,7 @@ test('issue search returns only this project\'s issues whose id starts with the 
 test('issue search returns an empty list for a non-numeric or unmatched query', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $this->actingAs($member)->getJson("/projects/$project->id/issue-search?q=abc")->assertOk()->assertExactJson([]);
     $this->actingAs($member)->getJson("/projects/$project->id/issue-search?q=999999")->assertOk()->assertExactJson([]);
@@ -1165,7 +1167,7 @@ test('issue search is forbidden to non-members', function () {
 test('issue preview returns the card data for an issue in the project', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Fix login', 'assignee_id' => $member->id]);
 
     $this->actingAs($member)->getJson("/projects/$project->id/issues/$issue->id/preview")
@@ -1178,7 +1180,7 @@ test('issue preview returns the card data for an issue in the project', function
 test('issue preview 404s for an issue of another project', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $foreign = Issue::factory()->create(['project_id' => Project::factory()->create()->id]);
 
     $this->actingAs($member)->getJson("/projects/$project->id/issues/$foreign->id/preview")->assertNotFound();

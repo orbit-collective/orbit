@@ -30,7 +30,7 @@ test('a role can have many permissions', function () {
 test('a role can have many members', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();

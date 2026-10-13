@@ -125,7 +125,8 @@ test('addComment fires IssueMentioned for each mentioned project member', functi
     $author = User::factory()->create();
     $project = Project::factory()->create();
     $mentioned = User::factory()->create();
-    $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    addProjectMember($project, $author->id, 'member');
+    addProjectMember($project, $mentioned->id, 'member');
     $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
     $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
 
@@ -153,7 +154,8 @@ test('addComment ignores a mentioned id with no matching mention token in the bo
     $author = User::factory()->create();
     $project = Project::factory()->create();
     $mentioned = User::factory()->create();
-    $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    addProjectMember($project, $author->id, 'member');
+    addProjectMember($project, $mentioned->id, 'member');
     $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
     $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
 
@@ -173,7 +175,7 @@ test('addComment ignores a mentioned id with no matching mention token in the bo
 test('addComment ignores mentioned ids that are not project members', function () {
     $author = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($project, $author->id, 'member');
     $outsider = User::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
     $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
@@ -194,7 +196,7 @@ test('addComment ignores mentioned ids that are not project members', function (
 test('addComment does not fire IssueMentioned for mentioning yourself', function () {
     $author = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($project, $author->id, 'member');
     $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
     $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
 
@@ -215,7 +217,8 @@ test('updateComment fires IssueMentioned for newly mentioned project members', f
     $author = User::factory()->create();
     $project = Project::factory()->create();
     $mentioned = User::factory()->create();
-    $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    addProjectMember($project, $author->id, 'member');
+    addProjectMember($project, $mentioned->id, 'member');
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
 
@@ -241,7 +244,8 @@ test('updateComment does not re-fire IssueMentioned for a mention that was alrea
     $author = User::factory()->create();
     $project = Project::factory()->create();
     $mentioned = User::factory()->create();
-    $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    addProjectMember($project, $author->id, 'member');
+    addProjectMember($project, $mentioned->id, 'member');
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $comment = Comment::factory()->create([
         'issue_id' => $issue->id,
@@ -267,11 +271,9 @@ test('updateComment fires IssueMentioned only for a newly added mention alongsid
     $project = Project::factory()->create();
     $alreadyMentioned = User::factory()->create();
     $newlyMentioned = User::factory()->create();
-    $project->users()->attach([
-        $author->id => ['role' => 'member'],
-        $alreadyMentioned->id => ['role' => 'member'],
-        $newlyMentioned->id => ['role' => 'member'],
-    ]);
+    addProjectMember($project, $author->id, 'member');
+    addProjectMember($project, $alreadyMentioned->id, 'member');
+    addProjectMember($project, $newlyMentioned->id, 'member');
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $comment = Comment::factory()->create([
         'issue_id' => $issue->id,

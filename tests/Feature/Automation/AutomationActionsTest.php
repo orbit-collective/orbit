@@ -110,7 +110,7 @@ test('ChangePriorityAction ignores an invalid priority', function () {
 test('AssignUserAction assigns a project member', function () {
     $issue = Issue::factory()->create();
     $user = User::factory()->create();
-    $issue->project->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+    addProjectMember($issue->project, $user->id, RoleType::MEMBER->value);
 
     app(AssignUserAction::class)->handle($issue, ['user_id' => $user->id]);
 

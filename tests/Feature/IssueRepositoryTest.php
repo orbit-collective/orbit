@@ -377,7 +377,7 @@ test('it can filter issues by assignee given as an array instead of a comma stri
 function memberProject(User $user, array $attributes = []): Project
 {
     $project = Project::factory()->create($attributes);
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     return $project;
 }

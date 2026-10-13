@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 test('a saved filter can be created', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->post('/saved-filters', [
         'project_id' => $project->id,
@@ -60,7 +60,7 @@ test('creating a saved filter requires the project_id to reference a real projec
 test('creating a saved filter enforces a 20 character max length on the name', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->post('/saved-filters', [
         'project_id' => $project->id,
@@ -81,7 +81,7 @@ test('guests cannot create a saved filter', function () {
 test('a saved filter can be deleted', function () {
     $user = User::factory()->create();
     $filter = SavedFilter::factory()->create(['project_id' => Project::factory()]);
-    $filter->project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($filter->project, $user->id, 'member');
 
     $response = $this->actingAs($user)->delete("/saved-filters/$filter->id");
 

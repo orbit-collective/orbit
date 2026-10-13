@@ -27,7 +27,6 @@ class ProjectMemberService
         $this->assertIsMember($project, $member);
         $this->assertNotOwner($project, $member, 'role', "The project owner's role cannot be changed.");
 
-        $this->projectMemberRepository->updateRole($project, $member->id, $newRole);
         $this->roleService->syncSystemRoleForMember($project, $member->id, $newRole);
         $this->activityLogService->log($project->id, "Changed $member->name's role to $newRole->value");
     }
@@ -65,8 +64,6 @@ class ProjectMemberService
             ]);
         }
 
-        $this->projectMemberRepository->updateRole($project, $currentOwner->id, RoleType::ADMIN);
-        $this->projectMemberRepository->updateRole($project, $newOwner->id, RoleType::OWNER);
         $this->roleService->syncSystemRoleForMember($project, $currentOwner->id, RoleType::ADMIN);
         $this->roleService->syncSystemRoleForMember($project, $newOwner->id, RoleType::OWNER);
 

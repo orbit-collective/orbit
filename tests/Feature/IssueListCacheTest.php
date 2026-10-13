@@ -6,7 +6,6 @@ use App\Models\Project;
 use App\Models\User;
 use App\Repositories\IssueRepository;
 use App\Repositories\ProjectMemberRepository;
-use App\Repositories\ProjectRepository;
 use App\Services\IssueService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +15,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->user = User::factory()->create();
     $this->project = Project::factory()->create();
-    app(ProjectRepository::class)->attachMember($this->project, $this->user->id, RoleType::OWNER);
+    addProjectMember($this->project, $this->user->id, RoleType::OWNER);
     $this->issues = Issue::factory()->count(3)->create(['project_id' => $this->project->id, 'user_id' => $this->user->id]);
     $this->service = app(IssueService::class);
 });

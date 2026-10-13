@@ -23,7 +23,7 @@ test('a missing, empty or over-long q is a 422', function () {
 test('it returns the issues and projects of the user\'s memberships as JSON', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create(['name' => 'Login Portal']);
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
     $issue = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Fix login redirect']);
 
     $this->actingAs($user)->getJson('/command-palette/search?q=login')
@@ -37,7 +37,7 @@ test('it returns the issues and projects of the user\'s memberships as JSON', fu
 test('typing #42 returns issue 42 first if the user can see it', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
     Issue::factory()->create(['project_id' => $project->id, 'title' => 'Other', 'number' => 7]);
     $target = Issue::factory()->create(['project_id' => $project->id, 'title' => 'Target', 'number' => 42]);
 
@@ -76,7 +76,8 @@ test('an "@" query returns people who share a project, linked to the filtered is
     $user = User::factory()->create(['name' => 'Zed Viewer']);
     $ann = User::factory()->create(['name' => 'Ann Marlow']);
     $project = Project::factory()->create();
-    $project->users()->attach([$user->id => ['role' => 'member'], $ann->id => ['role' => 'member']]);
+    addProjectMember($project, $user->id, 'member');
+    addProjectMember($project, $ann->id, 'member');
 
     $this->actingAs($user)->getJson('/command-palette/search?q='.urlencode('@ann'))
         ->assertOk()
@@ -88,7 +89,7 @@ test('an "@" query returns people who share a project, linked to the filtered is
 test('an "@" query never exposes people from projects the user is not in', function () {
     $user = User::factory()->create();
     $stranger = User::factory()->create(['name' => 'Ann Hidden']);
-    Project::factory()->create()->users()->attach($stranger->id, ['role' => 'member']);
+    addProjectMember(Project::factory()->create(), $stranger->id, 'member');
 
     $this->actingAs($user)->getJson('/command-palette/search?q='.urlencode('@ann'))
         ->assertOk()

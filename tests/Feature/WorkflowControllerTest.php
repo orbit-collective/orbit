@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 test('an admin can add a status to an issue type workflow', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types/$issueType->id/statuses", [
@@ -28,7 +28,7 @@ test('an admin can add a status to an issue type workflow', function () {
 test('a member without the workflow permission cannot add a status', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($member)->post("/projects/$project->id/issue-types/$issueType->id/statuses", [
@@ -44,7 +44,7 @@ test('an issue type from another project cannot be used to add a status', functi
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $otherProject->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types/$issueType->id/statuses", [
@@ -59,7 +59,7 @@ test('an issue type from another project cannot be used to add a status', functi
 test('an admin can update a status', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $status = WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id, 'name' => 'To Do']);
 
@@ -76,7 +76,7 @@ test('an admin can update a status', function () {
 test('a status from a different issue type cannot be updated through a mismatched type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueTypeA = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $issueTypeB = $project->issueTypes()->create(['name' => 'Feature', 'icon' => 'Sparkles', 'color' => '#2196f3']);
     $status = WorkflowStatus::factory()->create(['issue_type_id' => $issueTypeB->id]);
@@ -93,7 +93,7 @@ test('a status from a different issue type cannot be updated through a mismatche
 test('an admin can delete an unused status', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id]);
     $status = WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id]);
@@ -107,7 +107,7 @@ test('an admin can delete an unused status', function () {
 test('an admin can add and remove a transition between two statuses', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $from = WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id]);
     $to = WorkflowStatus::factory()->create(['issue_type_id' => $issueType->id]);
@@ -129,7 +129,7 @@ test('an admin can add and remove a transition between two statuses', function (
 test('a transition cannot reference a status belonging to a different issue type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueTypeA = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $issueTypeB = $project->issueTypes()->create(['name' => 'Feature', 'icon' => 'Sparkles', 'color' => '#2196f3']);
     $from = WorkflowStatus::factory()->create(['issue_type_id' => $issueTypeA->id]);
@@ -156,7 +156,7 @@ test('guests cannot manage a project workflow', function () {
 test('an admin can pick which workflow status new issues start in', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $first = WorkflowStatus::factory()->create([
         'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'is_initial' => true,
@@ -175,7 +175,7 @@ test('an admin can pick which workflow status new issues start in', function () 
 test('a member cannot change which workflow status is the starting one', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $status = WorkflowStatus::factory()->create([
         'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'is_initial' => false,
@@ -190,7 +190,7 @@ test('a member cannot change which workflow status is the starting one', functio
 test('an admin can reorder the statuses of a workflow', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $first = WorkflowStatus::factory()->create([
         'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'sort_order' => 0,
@@ -212,7 +212,7 @@ test('an admin can reorder the statuses of a workflow', function () {
 test('reordering ignores status ids that belong to another issue type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $otherType = $project->issueTypes()->create(['name' => 'Task', 'icon' => 'SquareCheck', 'color' => '#3b82f6']);
     $own = WorkflowStatus::factory()->create([
@@ -235,7 +235,7 @@ test('reordering ignores status ids that belong to another issue type', function
 test('a member cannot reorder a workflow', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $status = WorkflowStatus::factory()->create([
         'issue_type_id' => $issueType->id, 'category' => WorkflowStatusCategory::TODO, 'sort_order' => 3,

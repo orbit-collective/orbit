@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\Permissions\RoleType;
+use App\Models\Project;
+use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +47,14 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Adds a user to a project the way the app does: the membership row plus the
+ * matching system role (owner, admin, member or viewer).
+ */
+function addProjectMember(Project $project, int $userId, RoleType|string $role = RoleType::MEMBER): void
 {
-    // ..
+    $tier = $role instanceof RoleType ? $role : RoleType::from($role);
+
+    $project->users()->attach($userId, ['role' => $tier->value]);
+    app(RoleService::class)->syncSystemRoleForMember($project, $userId, $tier);
 }
