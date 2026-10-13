@@ -34,12 +34,35 @@ class RoleRepository
             ->all();
     }
 
+    /**
+     * Roles are unique per project by slug, and a project predating its
+     * system roles may already hold a custom role under one of their slugs
+     * (e.g. "viewer"). That role must not be mistaken for the system role, so
+     * it is moved to a free "<slug>-custom" slug first.
+     */
     public function firstOrCreateSystemRole(Project $project, RoleType $role): Model
     {
+        $holder = $project->roles()->where('slug', $role->value)->first();
+
+        if ($holder && ! $holder->is_system) {
+            $holder->update(['slug' => $this->freeSlug($project, "$role->value-custom")]);
+        }
+
         return $project->roles()->firstOrCreate(
             ['slug' => $role->value],
             ['name' => Str::title($role->value), 'role' => $role->value, 'is_system' => true],
         );
+    }
+
+    private function freeSlug(Project $project, string $base): string
+    {
+        $slug = $base;
+
+        for ($suffix = 2; $project->roles()->where('slug', $slug)->exists(); $suffix++) {
+            $slug = "$base-$suffix";
+        }
+
+        return $slug;
     }
 
     public function create(Project $project, array $data): Role
