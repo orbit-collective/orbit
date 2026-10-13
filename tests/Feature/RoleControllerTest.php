@@ -26,6 +26,21 @@ test('an admin can create a role', function () {
     $this->assertDatabaseHas('roles', ['project_id' => $project->id, 'name' => 'QA']);
 });
 
+test('a role can only be created as a custom role', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    addProjectMember($project, $owner->id, 'owner');
+
+    $response = $this->actingAs($owner)->post("/projects/$project->id/roles", [
+        'name' => 'Boss',
+        'slug' => 'boss',
+        'role' => 'owner',
+    ]);
+
+    $response->assertSessionHasErrors('role');
+    $this->assertDatabaseMissing('roles', ['slug' => 'boss']);
+});
+
 test('a member without the roles.create permission cannot create a role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();

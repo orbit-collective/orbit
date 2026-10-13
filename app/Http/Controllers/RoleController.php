@@ -24,7 +24,8 @@ class RoleController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', Rule::unique('roles')->where('project_id', $project->id)],
-            'role' => ['required', Rule::enum(RoleType::class)],
+            // Only custom roles can be created; the four system roles are made by the app.
+            'role' => ['required', Rule::in([RoleType::CUSTOM->value])],
         ]);
 
         $this->roleService->createRole($project, $validated);
