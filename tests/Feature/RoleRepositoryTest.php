@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Permissions\RoleType;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Repositories\RoleRepository;
@@ -71,4 +72,38 @@ test('it can sync the permissions of a role', function () {
     $this->repository->syncPermissions($role, [$permissionB->id]);
 
     expect($role->permissions()->pluck('permissions.id')->all())->toBe([$permissionB->id]);
+});
+
+test('a custom role holding a system slug is renamed instead of being taken for the system role', function () {
+    $project = Project::factory()->create();
+    $custom = $project->roles()->create(['name' => 'Viewer', 'slug' => 'viewer', 'role' => 'custom']);
+
+    $system = $this->repository->firstOrCreateSystemRole($project, RoleType::VIEWER);
+
+    expect($system->id)->not->toBe($custom->id)
+        ->and($system->is_system)->toBeTrue()
+        ->and($system->role)->toBe('viewer')
+        ->and($custom->fresh()->slug)->toBe('viewer-custom')
+        ->and($custom->fresh()->is_system)->toBeFalse();
+});
+
+test('the renamed slug stays unique when it is already taken', function () {
+    $project = Project::factory()->create();
+    $project->roles()->create(['name' => 'Admin', 'slug' => 'admin', 'role' => 'custom']);
+    $project->roles()->create(['name' => 'Admin 2', 'slug' => 'admin-custom', 'role' => 'custom']);
+
+    $this->repository->firstOrCreateSystemRole($project, RoleType::ADMIN);
+
+    expect($project->roles()->pluck('slug')->sort()->values()->all())
+        ->toBe(['admin', 'admin-custom', 'admin-custom-2']);
+});
+
+test('an existing system role is returned as it is', function () {
+    $project = Project::factory()->create();
+
+    $first = $this->repository->firstOrCreateSystemRole($project, RoleType::MEMBER);
+    $second = $this->repository->firstOrCreateSystemRole($project, RoleType::MEMBER);
+
+    expect($second->id)->toBe($first->id)
+        ->and($project->roles()->count())->toBe(1);
 });

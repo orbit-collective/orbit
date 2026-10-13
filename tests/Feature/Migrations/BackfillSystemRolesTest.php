@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Models\ProjectInvitation;
@@ -171,4 +172,19 @@ test('an empty project is not given an owner', function () {
     runRoleBackfill();
 
     expect(DB::table('project_user')->where('project_id', $project->id)->count())->toBe(0);
+});
+
+test('a custom role whose slug collides with a system role does not become anyone\'s tier', function () {
+    $project = Project::factory()->create();
+    [$owner, $viewer] = User::factory()->count(2)->create();
+    $project->users()->attach($owner->id, ['role' => 'owner']);
+    $project->users()->attach($viewer->id, ['role' => 'viewer']);
+    $project->roles()->create(['name' => 'Owner', 'slug' => 'owner', 'role' => 'custom']);
+    $project->roles()->create(['name' => 'Viewer', 'slug' => 'viewer', 'role' => 'custom']);
+
+    runRoleBackfill();
+
+    expect(systemRoleKeysOf($project, $owner))->toBe(['owner'])
+        ->and(systemRoleKeysOf($project, $viewer))->toBe(['viewer'])
+        ->and($project->hasPermission($owner, PermissionEnum::ROLES_DELETE))->toBeTrue();
 });
