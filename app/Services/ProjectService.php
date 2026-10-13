@@ -30,7 +30,7 @@ class ProjectService
     {
         $data['slug'] = Str::slug($data['name']);
         $project = $this->projectRepository->store($data);
-        $this->projectRepository->attachMember($project, $creatorId, RoleType::OWNER);
+        $this->projectRepository->attachMember($project, $creatorId);
         $this->roleService->syncSystemRoleForMember($project, $creatorId, RoleType::OWNER);
         $this->activityLogService->log($project->id, "Created project: $project->name");
 

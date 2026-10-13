@@ -67,7 +67,7 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class)
             ->using(ProjectUser::class)
-            ->withPivot('id', 'role')
+            ->withPivot('id')
             ->withTimestamps();
     }
 
@@ -102,8 +102,8 @@ class Project extends Model
     }
 
     /**
-     * Whether the user belongs to this project, and with which role and
-     * granular permissions. Every authorization check starts here, so the
+     * Whether the user belongs to this project, with which system role (the
+     * tier: owner, admin, member or viewer) and which granular permissions. Every authorization check starts here, so the
      * answer is cached per project and user under the membership version
      * (see CacheVersion::MEMBERSHIP), which every write to membership, roles
      * and role permissions moves.
@@ -117,16 +117,20 @@ class Project extends Model
             "project:$this->id:user:$user->id:membership",
             self::MEMBERSHIP_CACHE_TTL,
             function () use ($user) {
-                $member = $this->users()->where('users.id', $user->id)->first();
+                $membership = ProjectUser::query()
+                    ->where('project_id', $this->id)
+                    ->where('user_id', $user->id)
+                    ->with('roles.permissions')
+                    ->first();
 
-                if (! $member) {
+                if (! $membership) {
                     return ['member' => false, 'role' => null, 'permissions' => []];
                 }
 
                 return [
                     'member' => true,
-                    'role' => $member->pivot->role,
-                    'permissions' => $member->pivot->roles()->with('permissions')->get()
+                    'role' => $membership->roles->firstWhere('is_system', true)?->role,
+                    'permissions' => $membership->roles
                         ->flatMap(fn ($role) => $role->permissions->pluck('key'))
                         ->unique()
                         ->values()
@@ -141,7 +145,7 @@ class Project extends Model
         return $this->membershipOf($user)['member'];
     }
 
-    /** The user's system role on this project (owner, admin, ...), or null for a non-member. */
+    /** The user's system role tier on this project (owner, admin, ...), or null without one. */
     public function roleOf(User $user): ?string
     {
         return $this->membershipOf($user)['role'];

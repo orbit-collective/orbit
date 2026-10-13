@@ -2,8 +2,8 @@
 
 use App\Models\Project;
 use App\Models\User;
-use App\Support\Sessions\SessionRegistry;
 use App\Repositories\UserRepository;
+use App\Support\Sessions\SessionRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Hash;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->repository = new UserRepository();
+    $this->repository = new UserRepository;
 });
 
 test('it can get assignable users scoped to a project', function () {
@@ -19,7 +19,7 @@ test('it can get assignable users scoped to a project', function () {
     $members = User::factory()->count(3)->create();
 
     foreach ($members as $member) {
-        $project->users()->attach($member->id, ['role' => 'member']);
+        addProjectMember($project, $member->id, 'member');
     }
 
     User::factory()->count(2)->create();
@@ -34,13 +34,13 @@ test('it can get assignable users across every project a user belongs to', funct
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
-    $projectA->users()->attach($user->id, ['role' => 'member']);
-    $projectB->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($projectA, $user->id, 'member');
+    addProjectMember($projectB, $user->id, 'member');
 
     $memberOfA = User::factory()->create();
-    $projectA->users()->attach($memberOfA->id, ['role' => 'member']);
+    addProjectMember($projectA, $memberOfA->id, 'member');
     $memberOfB = User::factory()->create();
-    $projectB->users()->attach($memberOfB->id, ['role' => 'member']);
+    addProjectMember($projectB, $memberOfB->id, 'member');
 
     User::factory()->create();
 

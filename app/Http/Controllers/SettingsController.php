@@ -13,7 +13,6 @@ use App\Models\Permission as PermissionModel;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use App\Services\Automation\AutomationRuleService;
 use App\Services\Integrations\Github\GithubIntegrationService;
 use App\Services\Integrations\Jira\JiraIntegrationService;
@@ -27,6 +26,7 @@ use App\Services\ProjectMemberService;
 use App\Services\ProjectService;
 use App\Services\RoleService;
 use App\Services\UserService;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -365,7 +365,7 @@ class SettingsController extends Controller
             'name' => $member->name,
             'email' => $member->email,
             'avatar' => $member->avatar,
-            'role' => $member->pivot->role,
+            'role' => $member->pivot->roles->firstWhere('is_system', true)?->role,
             'joinedAt' => $member->pivot->created_at,
             'roleIds' => $member->pivot->roles->pluck('id')->values()->all(),
         ])->values()->all();

@@ -13,7 +13,7 @@ beforeEach(function () {
     $this->project = Project::factory()->create();
     $this->issue = Issue::factory()->create(['project_id' => $this->project->id]);
     $this->member = User::factory()->create(['github_id' => '123', 'github_username' => 'octocat']);
-    $this->project->users()->attach($this->member->id, ['role' => 'member']);
+    addProjectMember($this->project, $this->member->id, 'member');
 });
 
 test('a project member can create a branch for an issue', function () {
@@ -103,7 +103,7 @@ test('a non-member cannot create a pull request', function () {
 
 test('a viewer cannot create a branch', function () {
     $viewer = User::factory()->create();
-    $this->project->users()->attach($viewer->id, ['role' => 'viewer']);
+    addProjectMember($this->project, $viewer->id, 'viewer');
 
     $response = $this->actingAs($viewer)->post("/issues/{$this->issue->id}/github/branches", [
         'repository_id' => 1,
@@ -115,7 +115,7 @@ test('a viewer cannot create a branch', function () {
 
 test('a viewer cannot create a pull request', function () {
     $viewer = User::factory()->create();
-    $this->project->users()->attach($viewer->id, ['role' => 'viewer']);
+    addProjectMember($this->project, $viewer->id, 'viewer');
 
     $response = $this->actingAs($viewer)->post("/issues/{$this->issue->id}/github/pull-requests", [
         'repository_id' => 1,

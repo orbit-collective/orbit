@@ -13,7 +13,7 @@ function projectWithTypes(string $role = 'admin'): array
 {
     $project = Project::factory()->create();
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['role' => $role]);
+    addProjectMember($project, $user->id, $role);
     app(IssueTypeService::class)->ensureSystemIssueTypes($project);
 
     return [$project, $user, $project->issueTypes()->where('name', 'Bug')->first()];

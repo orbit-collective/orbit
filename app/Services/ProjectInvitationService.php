@@ -110,7 +110,7 @@ class ProjectInvitationService
         $project = $invitation->project;
 
         if (! $this->projectMemberRepository->isMember($project, $user->id)) {
-            $project->users()->attach($user->id, ['role' => $invitation->role->value]);
+            $project->users()->attach($user->id);
             CacheVersion::bump(CacheVersion::MEMBERSHIP);
             $this->roleService->syncSystemRoleForMember($project, $user->id, $invitation->role);
 

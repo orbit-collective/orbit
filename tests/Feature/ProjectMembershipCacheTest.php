@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->project = Project::factory()->create();
     $this->user = User::factory()->create();
-    $this->project->users()->attach($this->user->id, ['role' => 'member']);
+    addProjectMember($this->project, $this->user->id, 'member');
 });
 
 function queryCount(Closure $callback): int
@@ -64,7 +64,7 @@ test('membership is cached per project and per user', function () {
 
 test('the owner has every permission without any granular grant', function () {
     $owner = User::factory()->create();
-    $this->project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($this->project, $owner->id, 'owner');
 
     expect($this->project->hasPermission($owner, Permission::PROJECT_DELETE))->toBeTrue();
 });
@@ -81,49 +81,49 @@ test('removing a member takes effect immediately', function () {
 test('changing a member\'s role takes effect immediately', function () {
     expect($this->project->roleOf($this->user))->toBe('member');
 
-    (new ProjectMemberRepository)->updateRole($this->project, $this->user->id, RoleType::ADMIN);
+    app(RoleService::class)->syncSystemRoleForMember($this->project, $this->user->id, RoleType::ADMIN);
 
     expect($this->project->roleOf($this->user))->toBe('admin');
 });
 
 test('granting and revoking a custom role\'s permission takes effect immediately', function () {
     $role = $this->project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
-    $permission = DB::table('permissions')->where('key', Permission::LABELS_VIEW->value)->first();
+    $permission = DB::table('permissions')->where('key', Permission::LABELS_CREATE->value)->first();
     $projectUser = ProjectUser::where('project_id', $this->project->id)->where('user_id', $this->user->id)->first();
     $projectUser->roles()->attach($role->id);
 
-    expect($this->project->hasPermission($this->user, Permission::LABELS_VIEW))->toBeFalse();
+    expect($this->project->hasPermission($this->user, Permission::LABELS_CREATE))->toBeFalse();
 
     (new RoleRepository)->syncPermissions($role, [$permission->id]);
 
-    expect($this->project->hasPermission($this->user, Permission::LABELS_VIEW))->toBeTrue();
+    expect($this->project->hasPermission($this->user, Permission::LABELS_CREATE))->toBeTrue();
 
     (new RoleRepository)->syncPermissions($role, []);
 
-    expect($this->project->hasPermission($this->user, Permission::LABELS_VIEW))->toBeFalse();
+    expect($this->project->hasPermission($this->user, Permission::LABELS_CREATE))->toBeFalse();
 });
 
 test('assigning a custom role to a member takes effect immediately', function () {
     $role = $this->project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
-    $permission = DB::table('permissions')->where('key', Permission::LABELS_VIEW->value)->first();
+    $permission = DB::table('permissions')->where('key', Permission::LABELS_CREATE->value)->first();
     (new RoleRepository)->syncPermissions($role, [$permission->id]);
 
-    expect($this->project->hasPermission($this->user, Permission::LABELS_VIEW))->toBeFalse();
+    expect($this->project->hasPermission($this->user, Permission::LABELS_CREATE))->toBeFalse();
 
     (new ProjectMemberRepository)->attachRoles($this->project, $this->user->id, [$role->id]);
 
-    expect($this->project->hasPermission($this->user, Permission::LABELS_VIEW))->toBeTrue();
+    expect($this->project->hasPermission($this->user, Permission::LABELS_CREATE))->toBeTrue();
 });
 
 test('deleting a role takes its permissions away immediately', function () {
     $role = $this->project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
-    $permission = DB::table('permissions')->where('key', Permission::LABELS_VIEW->value)->first();
+    $permission = DB::table('permissions')->where('key', Permission::LABELS_CREATE->value)->first();
     (new RoleRepository)->syncPermissions($role, [$permission->id]);
     (new ProjectMemberRepository)->attachRoles($this->project, $this->user->id, [$role->id]);
 
-    expect($this->project->hasPermission($this->user, Permission::LABELS_VIEW))->toBeTrue();
+    expect($this->project->hasPermission($this->user, Permission::LABELS_CREATE))->toBeTrue();
 
     app(RoleService::class)->deleteRole($this->project, $role);
 
-    expect($this->project->hasPermission($this->user, Permission::LABELS_VIEW))->toBeFalse();
+    expect($this->project->hasPermission($this->user, Permission::LABELS_CREATE))->toBeFalse();
 });

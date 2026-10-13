@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 test('an admin can create a label', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/labels", [
         'name' => 'urgent',
@@ -26,7 +26,7 @@ test('an admin can create a label', function () {
 test('creating a label requires a name and a hex color', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/labels", [
         'color' => 'not-a-hex-color',
@@ -38,7 +38,7 @@ test('creating a label requires a name and a hex color', function () {
 test('creating a label rejects a duplicate name within the same project', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $project->labels()->create(['name' => 'urgent', 'color' => '#ff0000']);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/labels", [
@@ -52,7 +52,7 @@ test('creating a label rejects a duplicate name within the same project', functi
 test('creating a label seeds the project\'s starter taxonomy first, so a custom label cannot shadow a system one', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/labels", [
         'name' => 'bug',
@@ -66,7 +66,7 @@ test('creating a label seeds the project\'s starter taxonomy first, so a custom 
 test('a member with a custom role granting only labels.create can create but not update or delete labels', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $permission = Permission::where('key', 'projects.labels.create')->first();
     $role = $project->roles()->create(['name' => 'Label Creator', 'slug' => 'label-creator', 'role' => 'custom']);
     $role->permissions()->attach($permission);
@@ -92,7 +92,7 @@ test('a member with a custom role granting only labels.create can create but not
 test('a member without the labels.update permission cannot create a label', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post("/projects/$project->id/labels", [
         'name' => 'urgent',
@@ -117,7 +117,7 @@ test('an outsider cannot create a label', function () {
 test('an admin can update a label, including a system label', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $label = $project->labels()->create(['name' => 'bug', 'color' => '#f44336', 'is_system' => true]);
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/labels/$label->id", [
@@ -134,7 +134,7 @@ test('a label from another project cannot be updated through a mismatched projec
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $label = $otherProject->labels()->create(['name' => 'bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/labels/$label->id", [
@@ -148,7 +148,7 @@ test('a label from another project cannot be updated through a mismatched projec
 test('a member without the labels.update permission cannot update a label', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $label = $project->labels()->create(['name' => 'bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($member)->patch("/projects/$project->id/labels/$label->id", [
@@ -162,7 +162,7 @@ test('a member without the labels.update permission cannot update a label', func
 test('an admin can delete a label, including a system label', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $label = $project->labels()->create(['name' => 'bug', 'color' => '#f44336', 'is_system' => true]);
 
     $response = $this->actingAs($admin)->delete("/projects/$project->id/labels/$label->id");
@@ -174,7 +174,7 @@ test('an admin can delete a label, including a system label', function () {
 test('a member without the labels.update permission cannot delete a label', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $label = $project->labels()->create(['name' => 'bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($member)->delete("/projects/$project->id/labels/$label->id");
@@ -187,7 +187,7 @@ test('a label from another project cannot be deleted through a mismatched projec
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $label = $otherProject->labels()->create(['name' => 'bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->delete("/projects/$project->id/labels/$label->id");

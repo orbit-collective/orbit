@@ -17,8 +17,8 @@ beforeEach(function () {
     $this->actor = User::factory()->create();
     $this->member = User::factory()->create();
     $this->outsider = User::factory()->create();
-    $this->project->users()->attach($this->actor->id, ['role' => 'member']);
-    $this->project->users()->attach($this->member->id, ['role' => 'member']);
+    addProjectMember($this->project, $this->actor->id, 'member');
+    addProjectMember($this->project, $this->member->id, 'member');
     $this->listener = app(NotifyDescriptionMentions::class);
     Event::fake([IssueMentioned::class]);
 });
@@ -54,7 +54,7 @@ test('the actor and users outside the project are never notified', function () {
 
 test('only mentions added by an edit are notified, not ones already in the description', function () {
     $other = User::factory()->create();
-    $this->project->users()->attach($other->id, ['role' => 'member']);
+    addProjectMember($this->project, $other->id, 'member');
     $old = 'hi '.mentionToken($this->member);
     $issue = Issue::factory()->create([
         'project_id' => $this->project->id,

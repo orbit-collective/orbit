@@ -34,15 +34,14 @@ class ProjectMemberRepository
 
     public function roleOf(Project $project, int $userId): ?RoleType
     {
-        $pivot = $project->users()->where('users.id', $userId)->first()?->pivot;
+        $role = Role::query()
+            ->where('is_system', true)
+            ->whereHas('members', fn ($query) => $query
+                ->where('project_user.project_id', $project->id)
+                ->where('project_user.user_id', $userId))
+            ->value('role');
 
-        return $pivot ? RoleType::from($pivot->role) : null;
-    }
-
-    public function updateRole(Project $project, int $userId, RoleType $role): void
-    {
-        $project->users()->updateExistingPivot($userId, ['role' => $role->value]);
-        CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        return $role ? RoleType::from($role) : null;
     }
 
     public function removeMember(Project $project, int $userId): void

@@ -12,7 +12,7 @@ uses(RefreshDatabase::class);
 test('an admin can create an issue type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types", [
         'name' => 'Marketing Campaign',
@@ -27,7 +27,7 @@ test('an admin can create an issue type', function () {
 test('creating an issue type requires a name, icon and a hex color', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types", [
         'color' => 'not-a-hex-color',
@@ -39,7 +39,7 @@ test('creating an issue type requires a name, icon and a hex color', function ()
 test('creating an issue type rejects a duplicate name within the same project', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $project->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#ff0000']);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types", [
@@ -54,7 +54,7 @@ test('creating an issue type rejects a duplicate name within the same project', 
 test('creating an issue type seeds the project\'s starter catalog first, so a custom type cannot shadow a system one', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types", [
         'name' => 'Bug',
@@ -69,7 +69,7 @@ test('creating an issue type seeds the project\'s starter catalog first, so a cu
 test('a member with a custom role granting only issue_types.create can create but not update or delete issue types', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $permission = Permission::where('key', 'projects.issue_types.create')->first();
     $role = $project->roles()->create(['name' => 'Type Creator', 'slug' => 'type-creator', 'role' => 'custom']);
     $role->permissions()->attach($permission);
@@ -109,7 +109,7 @@ test('an outsider cannot create an issue type', function () {
 test('an admin can update an issue type, including a system type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336', 'is_system' => true]);
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id", [
@@ -126,7 +126,7 @@ test('an admin can update an issue type, including a system type', function () {
 test('an admin can set required fields and restricted role types on an issue type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id", [
@@ -145,7 +145,7 @@ test('an admin can set required fields and restricted role types on an issue typ
 test('setting an invalid restricted role type is rejected', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id", [
@@ -162,7 +162,7 @@ test('an issue type from another project cannot be updated through a mismatched 
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $otherProject->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id", [
@@ -177,7 +177,7 @@ test('an issue type from another project cannot be updated through a mismatched 
 test('a member without the issue_types.update permission cannot update an issue type', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($member)->patch("/projects/$project->id/issue-types/$issueType->id", [
@@ -192,7 +192,7 @@ test('a member without the issue_types.update permission cannot update an issue 
 test('an admin can delete a custom issue type not referenced by any issue', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->delete("/projects/$project->id/issue-types/$issueType->id");
@@ -204,7 +204,7 @@ test('an admin can delete a custom issue type not referenced by any issue', func
 test('an admin cannot delete a system issue type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336', 'is_system' => true]);
 
     $response = $this->actingAs($admin)->delete("/projects/$project->id/issue-types/$issueType->id");
@@ -216,7 +216,7 @@ test('an admin cannot delete a system issue type', function () {
 test('an admin cannot delete a custom issue type still referenced by an issue', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#f44336']);
     Issue::factory()->create(['project_id' => $project->id, 'issue_type_id' => $issueType->id]);
 
@@ -229,7 +229,7 @@ test('an admin cannot delete a custom issue type still referenced by an issue', 
 test('a member without the issue_types.delete permission cannot delete an issue type', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $issueType = $project->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($member)->delete("/projects/$project->id/issue-types/$issueType->id");
@@ -242,7 +242,7 @@ test('an issue type from another project cannot be deleted through a mismatched 
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $otherProject->issueTypes()->create(['name' => 'Custom', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->delete("/projects/$project->id/issue-types/$issueType->id");
@@ -254,7 +254,7 @@ test('an issue type from another project cannot be deleted through a mismatched 
 test('an admin can set which types are allowed as sub-issues of another type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $epicType = $project->issueTypes()->create(['name' => 'Epic', 'icon' => 'Zap', 'color' => '#a855f7', 'allows_children' => true]);
     $storyType = $project->issueTypes()->create(['name' => 'Story', 'icon' => 'BookOpen', 'color' => '#22c55e']);
 
@@ -270,7 +270,7 @@ test('setting allowed children rejects an issue type id from another project', f
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $epicType = $project->issueTypes()->create(['name' => 'Epic', 'icon' => 'Zap', 'color' => '#a855f7', 'allows_children' => true]);
     $foreignType = $otherProject->issueTypes()->create(['name' => 'Story', 'icon' => 'BookOpen', 'color' => '#22c55e']);
 
@@ -284,7 +284,7 @@ test('setting allowed children rejects an issue type id from another project', f
 test('a member without the issue_types.update permission cannot set allowed children', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $epicType = $project->issueTypes()->create(['name' => 'Epic', 'icon' => 'Zap', 'color' => '#a855f7', 'allows_children' => true]);
     $storyType = $project->issueTypes()->create(['name' => 'Story', 'icon' => 'BookOpen', 'color' => '#22c55e']);
 

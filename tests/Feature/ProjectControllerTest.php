@@ -14,11 +14,11 @@ test('the projects index page lists only the projects the user is a member of, w
     $user = User::factory()->create();
 
     $projectWithIssues = Project::factory()->create(['name' => 'Has issues']);
-    $projectWithIssues->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($projectWithIssues, $user->id, 'admin');
     Issue::factory()->count(2)->create(['project_id' => $projectWithIssues->id]);
 
     $memberProject = Project::factory()->create(['name' => 'No issues']);
-    $memberProject->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($memberProject, $user->id, 'member');
 
     Project::factory()->create(['name' => 'Not a member of this one']);
 
@@ -60,7 +60,7 @@ test('the creator of a project is automatically attached to it as owner', functi
 
     $project = Project::where('name', 'Owned Project')->firstOrFail();
 
-    expect($project->users()->where('users.id', $user->id)->first()->pivot->role)->toBe('owner');
+    expect($project->roleOf($user))->toBe('owner');
 });
 
 test('creating a project always slugifies the name, ignoring any client-submitted slug', function () {
@@ -113,7 +113,7 @@ test('guests cannot create a project', function () {
 test('the project show page returns the expected Inertia props', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
     Issue::factory()->count(3)->create(['project_id' => $project->id]);
     $filter = SavedFilter::factory()->create(['project_id' => $project->id]);
 
@@ -132,7 +132,7 @@ test('the project show page returns the expected Inertia props', function () {
 test('the project show page defaults to 10 issues per page', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
     Issue::factory()->count(12)->create(['project_id' => $project->id]);
 
     $response = $this->actingAs($user)->get("/projects/$project->id");
@@ -145,7 +145,7 @@ test('the project show page defaults to 10 issues per page', function () {
 test('the project show page respects a custom perPage query parameter', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
     Issue::factory()->count(12)->create(['project_id' => $project->id]);
 
     $response = $this->actingAs($user)->get("/projects/$project->id?perPage=5");
@@ -158,7 +158,7 @@ test('the project show page respects a custom perPage query parameter', function
 test('the project show page parses comma-separated status, priority and label filters into arrays', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)
         ->get("/projects/$project->id?status=open,closed&priority=high&labels=bug,design");
@@ -173,7 +173,7 @@ test('the project show page parses comma-separated status, priority and label fi
 test('the project show page exposes the raw query params when present', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)
         ->get("/projects/$project->id?search=foo");
@@ -208,7 +208,7 @@ test('a non-member cannot view a project', function () {
 test('a project\'s visible columns can be updated', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create(['columns' => ['id' => true, 'title' => true]]);
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->patch("/projects/$project->id/columns", [
         'columns' => ['title' => false, 'status' => true],
@@ -224,7 +224,7 @@ test('a project\'s visible columns can be updated', function () {
 test('the type column can be toggled', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create(['columns' => ['id' => true]]);
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->patch("/projects/$project->id/columns", [
         'columns' => ['type' => true],
@@ -237,7 +237,7 @@ test('the type column can be toggled', function () {
 test('updating columns requires the columns field to be an array', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->patch("/projects/$project->id/columns", [
         'columns' => 'not-an-array',
@@ -249,7 +249,7 @@ test('updating columns requires the columns field to be an array', function () {
 test('updating columns rejects non-boolean column values', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->patch("/projects/$project->id/columns", [
         'columns' => ['title' => 'not-a-boolean'],
@@ -279,7 +279,7 @@ test('guests cannot update project columns', function () {
 test('an owner can update project details', function () {
     $owner = User::factory()->create();
     $project = Project::factory()->create(['name' => 'Old Name']);
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $response = $this->actingAs($owner)->patch("/projects/$project->id/details", [
         'name' => 'New Name',
@@ -294,7 +294,7 @@ test('an owner can update project details', function () {
 test('a plain member cannot update project details', function () {
     $member = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->patch("/projects/$project->id/details", [
         'name' => 'New Name',
@@ -307,7 +307,7 @@ test('a plain member cannot update project details', function () {
 test('an owner can delete a project', function () {
     $owner = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $response = $this->actingAs($owner)->delete("/projects/$project->id");
 
@@ -318,7 +318,7 @@ test('an owner can delete a project', function () {
 test('a plain member cannot delete a project', function () {
     $member = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->delete("/projects/$project->id");
 
@@ -337,7 +337,7 @@ test('guests cannot delete a project', function () {
 test('the project show page paginates the activity logs independently of the issue list', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
     Issue::factory()->count(12)->create(['project_id' => $project->id]);
     ActivityLog::factory()->count(45)->create(['project_id' => $project->id]);
     ActivityLog::factory()->count(4)->create(); // another project

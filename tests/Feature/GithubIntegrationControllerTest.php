@@ -4,6 +4,7 @@ use App\Jobs\SyncGithubIntegrationJob;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
+use App\Repositories\GithubRepositoryRepository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +15,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->project = Project::factory()->create();
     $this->admin = User::factory()->create();
-    $this->project->users()->attach($this->admin->id, ['role' => 'admin']);
+    addProjectMember($this->project, $this->admin->id, 'admin');
 });
 
 test('an admin can start connecting GitHub', function () {
@@ -39,7 +40,7 @@ test('an admin can start connecting GitHub', function () {
 
 test('a member without the integrations.update permission cannot connect GitHub', function () {
     $member = User::factory()->create();
-    $this->project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($this->project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post("/projects/{$this->project->id}/integrations/github/connect");
 
@@ -75,7 +76,7 @@ test('an admin can disconnect GitHub', function () {
 
 test('a member without the integrations.update permission cannot disconnect GitHub', function () {
     $member = User::factory()->create();
-    $this->project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($this->project, $member->id, 'member');
 
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
@@ -111,7 +112,7 @@ test('an admin can retry a degraded sync', function () {
 
 test('a member without the integrations.update permission cannot retry a sync', function () {
     $member = User::factory()->create();
-    $this->project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($this->project, $member->id, 'member');
 
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
@@ -188,7 +189,7 @@ test('an admin can add a repository', function () {
 
 test('a member cannot add a repository', function () {
     $member = User::factory()->create();
-    $this->project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($this->project, $member->id, 'member');
 
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
@@ -216,7 +217,7 @@ test('an admin can remove a repository', function () {
         'github_relay_token' => 'orb_local_secret',
         'github_status' => 'connected',
     ]);
-    app(\App\Repositories\GithubRepositoryRepository::class)
+    app(GithubRepositoryRepository::class)
         ->create($projectIntegration, 2, 'orbit-collective', 'orbit-api');
 
     Http::fake(['*/v1/github/repositories/2' => Http::response([
@@ -281,7 +282,7 @@ test('an admin can fetch the repositories available to add', function () {
 
 test('a member without the integrations.update permission cannot fetch available repositories', function () {
     $member = User::factory()->create();
-    $this->project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($this->project, $member->id, 'member');
 
     $response = $this->actingAs($member)->get("/projects/{$this->project->id}/integrations/github/repositories/available");
 

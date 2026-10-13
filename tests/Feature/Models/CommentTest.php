@@ -78,7 +78,7 @@ test('can_edit and can_delete are false with no authenticated user', function ()
 test('can_edit and can_delete are true for the comment author', function () {
     $user = User::factory()->create();
     $comment = Comment::factory()->create(['user_id' => $user->id]);
-    $comment->issue->project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($comment->issue->project, $user->id, 'member');
     $this->actingAs($user);
 
     expect($comment->can_edit)->toBeTrue()
@@ -89,10 +89,10 @@ test('can_edit and can_delete are false for another plain member', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $author = User::factory()->create();
-    $project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($project, $author->id, 'member');
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
     $otherMember = User::factory()->create();
-    $project->users()->attach($otherMember->id, ['role' => 'member']);
+    addProjectMember($project, $otherMember->id, 'member');
     $this->actingAs($otherMember);
 
     expect($comment->can_edit)->toBeFalse()

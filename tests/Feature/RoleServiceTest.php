@@ -150,7 +150,7 @@ test('ensureSystemRoles always resets the owner role back to every permission', 
 test('syncSystemRoleForMember assigns the matching system role and keeps custom roles', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     $projectUser->roles()->attach($customRole->id);
@@ -163,7 +163,7 @@ test('syncSystemRoleForMember assigns the matching system role and keeps custom 
 test('syncSystemRoleForMember swaps the previous system role when promoted', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     $this->service->syncSystemRoleForMember($project, $member->id, RoleType::MEMBER);
 

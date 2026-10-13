@@ -14,7 +14,7 @@ test('a project member can comment on an issue', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
         'body' => 'This looks great!',
@@ -32,7 +32,7 @@ test('commenting on an issue redirects back with a success flash message and an 
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
         'body' => 'Nice work',
@@ -45,7 +45,7 @@ test('commenting on an issue redirects back with a success flash message and an 
 test('commenting on an issue requires a body', function () {
     $user = User::factory()->create();
     $issue = Issue::factory()->create();
-    $issue->project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($issue->project, $user->id, 'member');
 
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments");
 
@@ -58,7 +58,8 @@ test('commenting with mentioned_user_ids fires IssueMentioned for that member', 
     $mentioned = User::factory()->create();
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
-    $project->users()->attach([$user->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    addProjectMember($project, $user->id, 'member');
+    addProjectMember($project, $mentioned->id, 'member');
 
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
         'body' => "Hi @[$mentioned->name]($mentioned->id)",
@@ -78,7 +79,8 @@ test('commenting ignores a mentioned_user_ids entry with no matching mention tok
     $mentioned = User::factory()->create();
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
-    $project->users()->attach([$user->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+    addProjectMember($project, $user->id, 'member');
+    addProjectMember($project, $mentioned->id, 'member');
 
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
         'body' => 'This body never actually mentions anyone',
@@ -93,7 +95,7 @@ test('commenting rejects a mentioned_user_ids entry that is not a real user', fu
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
         'body' => 'Hi @there',
@@ -107,7 +109,7 @@ test('a viewer cannot comment on an issue', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'viewer']);
+    addProjectMember($project, $user->id, 'viewer');
 
     $response = $this->actingAs($user)->post("/issues/$issue->id/comments", [
         'body' => 'Not allowed',
@@ -120,7 +122,7 @@ test('an Inertia request denied from commenting redirects back with a flash erro
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'viewer']);
+    addProjectMember($project, $user->id, 'viewer');
 
     $response = $this->actingAs($user)
         ->withHeaders(['X-Inertia' => 'true'])
@@ -169,7 +171,7 @@ test('guests cannot comment on an issue', function () {
 test('the comment author can delete their own comment', function () {
     $user = User::factory()->create();
     $comment = Comment::factory()->create(['user_id' => $user->id]);
-    $comment->issue->project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($comment->issue->project, $user->id, 'member');
 
     $response = $this->actingAs($user)->delete("/comments/$comment->id");
 
@@ -190,10 +192,10 @@ test('a plain member cannot delete another member\'s comment', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $author = User::factory()->create();
-    $project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($project, $author->id, 'member');
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
     $otherMember = User::factory()->create();
-    $project->users()->attach($otherMember->id, ['role' => 'member']);
+    addProjectMember($project, $otherMember->id, 'member');
 
     $response = $this->actingAs($otherMember)->delete("/comments/$comment->id");
 
@@ -205,10 +207,10 @@ test('a project owner can delete another member\'s comment', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $author = User::factory()->create();
-    $project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($project, $author->id, 'member');
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $response = $this->actingAs($owner)->delete("/comments/$comment->id");
 
@@ -220,10 +222,10 @@ test('a project admin can delete another member\'s comment', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $author = User::factory()->create();
-    $project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($project, $author->id, 'member');
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id]);
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->delete("/comments/$comment->id");
 
@@ -242,7 +244,7 @@ test('guests cannot delete a comment', function () {
 test('the comment author can edit their own comment', function () {
     $user = User::factory()->create();
     $comment = Comment::factory()->create(['user_id' => $user->id, 'body' => 'Original']);
-    $comment->issue->project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($comment->issue->project, $user->id, 'member');
 
     $response = $this->actingAs($user)->patch("/comments/$comment->id", [
         'body' => 'Edited',
@@ -256,10 +258,10 @@ test('a plain member cannot edit another member\'s comment', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $author = User::factory()->create();
-    $project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($project, $author->id, 'member');
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id, 'body' => 'Original']);
     $otherMember = User::factory()->create();
-    $project->users()->attach($otherMember->id, ['role' => 'member']);
+    addProjectMember($project, $otherMember->id, 'member');
 
     $response = $this->actingAs($otherMember)->patch("/comments/$comment->id", [
         'body' => 'Edited',
@@ -273,10 +275,10 @@ test('a project owner can edit another member\'s comment', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $author = User::factory()->create();
-    $project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($project, $author->id, 'member');
     $comment = Comment::factory()->create(['issue_id' => $issue->id, 'user_id' => $author->id, 'body' => 'Original']);
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $response = $this->actingAs($owner)->patch("/comments/$comment->id", [
         'body' => 'Edited by owner',
@@ -289,7 +291,7 @@ test('a project owner can edit another member\'s comment', function () {
 test('editing a comment requires a body', function () {
     $user = User::factory()->create();
     $comment = Comment::factory()->create(['user_id' => $user->id]);
-    $comment->issue->project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($comment->issue->project, $user->id, 'member');
 
     $response = $this->actingAs($user)->patch("/comments/$comment->id");
 
@@ -308,7 +310,7 @@ test('a comment body carrying a markdown image link round-trips unchanged', func
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $body = "Repro: ![shot.png](/storage/attachments/$project->id/shot.png)";
 
@@ -325,7 +327,7 @@ test('a comment body carrying a markdown image link round-trips unchanged', func
 test('editing a comment keeps a markdown image link intact', function () {
     $author = User::factory()->create();
     $comment = Comment::factory()->create(['user_id' => $author->id, 'body' => 'No image yet']);
-    $comment->issue->project->users()->attach($author->id, ['role' => 'member']);
+    addProjectMember($comment->issue->project, $author->id, 'member');
 
     $body = 'Now with ![shot.png](/storage/attachments/1/shot.png) added';
 

@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->project = Project::factory()->create();
     $this->admin = User::factory()->create();
-    $this->project->users()->attach($this->admin->id, ['role' => 'admin']);
+    addProjectMember($this->project, $this->admin->id, 'admin');
 });
 
 test('an admin can connect Jira with valid credentials', function () {
@@ -52,7 +52,7 @@ test('connect requires all credential fields', function () {
 
 test('a member without the integrations.update permission cannot connect Jira', function () {
     $member = User::factory()->create();
-    $this->project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($this->project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post("/projects/{$this->project->id}/integrations/jira/connect", [
         'instance_url' => 'https://example.atlassian.net',
@@ -150,7 +150,7 @@ test('an admin can trigger an import once Jira is connected', function () {
 
 test('a member without the integrations.update permission cannot trigger an import', function () {
     $member = User::factory()->create();
-    $this->project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($this->project, $member->id, 'member');
     ProjectIntegration::query()->create([
         'project_id' => $this->project->id,
         'integration' => 'jira',

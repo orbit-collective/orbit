@@ -14,23 +14,23 @@ test('an admin can change a member\'s role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/members/$member->id", [
         'role' => 'admin',
     ]);
 
     $response->assertRedirect();
-    expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('admin');
+    expect($project->roleOf($member))->toBe('admin');
 });
 
 test('a member cannot change another member\'s role', function () {
     $project = Project::factory()->create();
     $memberA = User::factory()->create();
     $memberB = User::factory()->create();
-    $project->users()->attach($memberA->id, ['role' => 'member']);
-    $project->users()->attach($memberB->id, ['role' => 'member']);
+    addProjectMember($project, $memberA->id, 'member');
+    addProjectMember($project, $memberB->id, 'member');
 
     $response = $this->actingAs($memberA)->patch("/projects/$project->id/members/$memberB->id", [
         'role' => 'admin',
@@ -42,7 +42,7 @@ test('a member cannot change another member\'s role', function () {
 test('an outsider cannot change a project\'s member roles', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs(User::factory()->create())->patch("/projects/$project->id/members/$member->id", [
         'role' => 'admin',
@@ -55,8 +55,8 @@ test('changing a role requires a valid role value', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/members/$member->id", [
         'role' => 'owner',
@@ -68,7 +68,7 @@ test('changing a role requires a valid role value', function () {
 test('changing the owner\'s role fails with a validation error', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $response = $this->actingAs($owner)->patch("/projects/$project->id/members/$owner->id", [
         'role' => 'member',
@@ -81,8 +81,8 @@ test('an admin can remove a member', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($admin)->delete("/projects/$project->id/members/$member->id");
 
@@ -94,8 +94,8 @@ test('a member cannot remove another member', function () {
     $project = Project::factory()->create();
     $memberA = User::factory()->create();
     $memberB = User::factory()->create();
-    $project->users()->attach($memberA->id, ['role' => 'member']);
-    $project->users()->attach($memberB->id, ['role' => 'member']);
+    addProjectMember($project, $memberA->id, 'member');
+    addProjectMember($project, $memberB->id, 'member');
 
     $response = $this->actingAs($memberA)->delete("/projects/$project->id/members/$memberB->id");
 
@@ -105,7 +105,7 @@ test('a member cannot remove another member', function () {
 test('removing the owner fails with a validation error', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $response = $this->actingAs($owner)->delete("/projects/$project->id/members/$owner->id");
 
@@ -115,7 +115,7 @@ test('removing the owner fails with a validation error', function () {
 test('guests cannot manage project members', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->delete("/projects/$project->id/members/$member->id");
 
@@ -126,8 +126,8 @@ test('an admin can assign a custom role to a member', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
@@ -144,8 +144,8 @@ test('a member with the roles.assign permission can assign a custom role', funct
     $project = Project::factory()->create();
     $member = User::factory()->create();
     $target = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
-    $project->users()->attach($target->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
+    addProjectMember($project, $target->id, 'member');
 
     $permission = Permission::where('key', 'projects.roles.assign')->first();
     $grantingRole = $project->roles()->create(['name' => 'Role Manager', 'slug' => 'role-manager', 'role' => 'custom']);
@@ -166,8 +166,8 @@ test('a member without the roles.assign permission cannot assign a custom role',
     $project = Project::factory()->create();
     $member = User::factory()->create();
     $target = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
-    $project->users()->attach($target->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
+    addProjectMember($project, $target->id, 'member');
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($member)->patch("/projects/$project->id/members/$target->id/roles", [
@@ -181,8 +181,8 @@ test('assigning roles accepts an empty array to clear all custom roles', functio
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
@@ -201,8 +201,8 @@ test('assigning a role from another project is rejected', function () {
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $foreignRole = $otherProject->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
@@ -217,24 +217,24 @@ test('an owner can transfer ownership to another member', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $owner->id, 'owner');
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($owner)->patch("/projects/$project->id/transfer-ownership", [
         'user_id' => $member->id,
     ]);
 
     $response->assertRedirect();
-    expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('owner')
-        ->and($project->users()->where('users.id', $owner->id)->first()->pivot->role)->toBe('admin');
+    expect($project->roleOf($member))->toBe('owner')
+        ->and($project->roleOf($owner))->toBe('admin');
 });
 
 test('an admin cannot transfer ownership', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/transfer-ownership", [
         'user_id' => $member->id,
@@ -247,7 +247,7 @@ test('ownership cannot be transferred to a non-member', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $outsider = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $response = $this->actingAs($owner)->patch("/projects/$project->id/transfer-ownership", [
         'user_id' => $outsider->id,
@@ -260,8 +260,8 @@ test('guests cannot transfer ownership', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $owner->id, 'owner');
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->patch("/projects/$project->id/transfer-ownership", [
         'user_id' => $member->id,

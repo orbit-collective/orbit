@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 test('creating an issue without an issue_type_id defaults to the Task system type and maps status to the matching workflow status', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post('/issues', [
         'title' => 'Fix the thing',
@@ -34,7 +34,7 @@ test('creating an issue without an issue_type_id defaults to the Task system typ
 test('creating an issue with an explicit issue_type_id assigns that type and its matching workflow status', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     // Seed the catalog first so the Bug type exists to reference.
     $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
@@ -60,7 +60,7 @@ test('creating an issue with an explicit issue_type_id assigns that type and its
 test('an issue type restricted to certain role types blocks a member outside those roles from creating it', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $restrictedType = $project->issueTypes()->create([
         'name' => 'Security',
         'icon' => 'Shield',
@@ -83,7 +83,7 @@ test('an issue type restricted to certain role types blocks a member outside tho
 test('an owner can create an issue of a role-restricted type', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
     $restrictedType = $project->issueTypes()->create([
         'name' => 'Security',
         'icon' => 'Shield',
@@ -106,7 +106,7 @@ test('an owner can create an issue of a role-restricted type', function () {
 test('updating status moves the workflow_status_id to the matching status of the issue\'s current type', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'A task', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $issue = $project->issues()->first();
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
@@ -121,7 +121,7 @@ test('updating status moves the workflow_status_id to the matching status of the
 test('updating status to a value with no transition defined in the workflow is rejected', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'A task', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $issue = $project->issues()->first();
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
@@ -138,7 +138,7 @@ test('updating status to a value with no transition defined in the workflow is r
 test('updating issue_type_id moves the issue to the new type and resets its workflow status to the new type\'s initial status', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'A task', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'closed']);
     $issue = $project->issues()->first();
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
@@ -154,7 +154,7 @@ test('updating issue_type_id moves the issue to the new type and resets its work
 test('a member cannot move an issue into a role-restricted issue type', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'A task', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $issue = $project->issues()->first();
     $restrictedType = $project->issueTypes()->create([
@@ -172,7 +172,7 @@ test('a member cannot move an issue into a role-restricted issue type', function
 test('creating an issue of a type with required fields rejects a request missing one', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
     $bugType->update(['required_fields' => ['description', 'assignee']]);
@@ -194,7 +194,7 @@ test('creating an issue of a type with required fields rejects a request missing
 test('a required description is still enforced for a type with no template', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $customType = $project->issueTypes()->create([
         'name' => 'Compliance', 'icon' => 'Scale', 'color' => '#0ea5e9',
@@ -212,7 +212,7 @@ test('a required description is still enforced for a type with no template', fun
 test('creating an issue satisfying its type\'s required fields succeeds', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
     $bugType->update(['required_fields' => ['description']]);
@@ -233,7 +233,7 @@ test('creating an issue satisfying its type\'s required fields succeeds', functi
 test('updating an issue to clear a field required by its type is rejected', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
     $bugType->update(['required_fields' => ['description']]);
@@ -251,7 +251,7 @@ test('updating an issue to clear a field required by its type is rejected', func
 test('creating an issue with a template_id prefills description and labels when not provided', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
     $template = $bugType->templates()->create([

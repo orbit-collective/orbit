@@ -13,7 +13,7 @@ uses(RefreshDatabase::class);
 test('an admin can create a role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/roles", [
@@ -29,7 +29,7 @@ test('an admin can create a role', function () {
 test('a member without the roles.create permission cannot create a role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post("/projects/$project->id/roles", [
         'name' => 'QA',
@@ -43,7 +43,7 @@ test('a member without the roles.create permission cannot create a role', functi
 test('an Inertia request denied by a policy redirects back with a flash error instead of a 403 page', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)
         ->withHeaders(['X-Inertia' => 'true'])
@@ -60,7 +60,7 @@ test('an Inertia request denied by a policy redirects back with a flash error in
 test('a member with a custom role granting roles.create can create a role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $permission = Permission::where('key', 'projects.roles.create')->first();
     $grantingRole = $project->roles()->create(['name' => 'Role Manager', 'slug' => 'role-manager', 'role' => 'custom']);
@@ -82,7 +82,7 @@ test('a member with a custom role granting roles.create can create a role', func
 test('a member with a custom role granting only settings.update can create a role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $permission = Permission::where('key', 'projects.settings.update')->first();
     $grantingRole = $project->roles()->create(['name' => 'Settings Manager', 'slug' => 'settings-manager', 'role' => 'custom']);
@@ -116,7 +116,7 @@ test('an outsider cannot create a role', function () {
 test('a role slug must be unique within the project', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
@@ -133,8 +133,8 @@ test('the same slug can be reused across different projects', function () {
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
     $admin = User::factory()->create();
-    $projectA->users()->attach($admin->id, ['role' => 'admin']);
-    $projectB->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($projectA, $admin->id, 'admin');
+    addProjectMember($projectB, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($projectA, $admin->id, RoleType::ADMIN);
     app(RoleService::class)->syncSystemRoleForMember($projectB, $admin->id, RoleType::ADMIN);
     $projectA->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
@@ -152,7 +152,7 @@ test('the same slug can be reused across different projects', function () {
 test('updating a role can keep its own slug without a uniqueness conflict', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
@@ -167,7 +167,7 @@ test('updating a role can keep its own slug without a uniqueness conflict', func
 test('updating a role rejects a slug already used by another role in the project', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $roleToRename = $project->roles()->create(['name' => 'Support', 'slug' => 'support', 'role' => 'custom']);
@@ -183,7 +183,7 @@ test('updating a role rejects a slug already used by another role in the project
 test('an admin can sync permissions for a role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $permission = Permission::where('key', 'issues.view')->first();
@@ -199,7 +199,7 @@ test('an admin can sync permissions for a role', function () {
 test('syncing permissions accepts an empty array to clear all permissions', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $permission = Permission::where('key', 'issues.view')->first();
@@ -216,7 +216,7 @@ test('syncing permissions accepts an empty array to clear all permissions', func
 test('syncing permissions rejects an id that does not exist', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
@@ -230,7 +230,7 @@ test('syncing permissions rejects an id that does not exist', function () {
 test('a member without the roles.update permission cannot sync permissions', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $permission = Permission::where('key', 'issues.view')->first();
 
@@ -244,7 +244,7 @@ test('a member without the roles.update permission cannot sync permissions', fun
 test('creating a role requires a name, slug and valid role type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/roles", [
@@ -257,7 +257,7 @@ test('creating a role requires a name, slug and valid role type', function () {
 test('an admin can update a role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
@@ -273,7 +273,7 @@ test('an admin can update a role', function () {
 test('an owner can rename a non-owner system role and its permissions', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
     $systemRoles = app(RoleService::class)->ensureSystemRoles($project);
     $adminRole = $systemRoles['member'];
     $permission = Permission::where('key', 'issues.view')->first();
@@ -298,7 +298,7 @@ test('an owner can rename a non-owner system role and its permissions', function
 test('the owner role cannot be renamed', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
     $systemRoles = app(RoleService::class)->ensureSystemRoles($project);
     $ownerRole = $systemRoles['owner'];
 
@@ -313,7 +313,7 @@ test('the owner role cannot be renamed', function () {
 test('the owner role\'s permissions cannot be changed', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
     $systemRoles = app(RoleService::class)->ensureSystemRoles($project);
     $ownerRole = $systemRoles['owner'];
     $permission = Permission::where('key', 'issues.view')->first();
@@ -328,7 +328,7 @@ test('the owner role\'s permissions cannot be changed', function () {
 test('a non-owner system role still cannot be deleted', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
     $systemRoles = app(RoleService::class)->ensureSystemRoles($project);
     $memberRole = $systemRoles['member'];
 
@@ -341,7 +341,7 @@ test('a non-owner system role still cannot be deleted', function () {
 test('a member without the roles.update permission cannot update a role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($member)->patch("/projects/$project->id/roles/$role->id", [
@@ -356,7 +356,7 @@ test('a role from another project cannot be updated through a mismatched project
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $otherProject->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
@@ -371,7 +371,7 @@ test('a role from another project cannot be updated through a mismatched project
 test('an admin can delete a custom role', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
@@ -384,7 +384,7 @@ test('an admin can delete a custom role', function () {
 test('a member without the roles.delete permission cannot delete a role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $response = $this->actingAs($member)->delete("/projects/$project->id/roles/$role->id");

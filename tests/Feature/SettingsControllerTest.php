@@ -39,7 +39,7 @@ test('authenticated user can view the preferences page', function () {
 test('each settings page only ships its own tab data', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'owner']);
+    addProjectMember($project, $user->id, 'owner');
 
     $this->actingAs($user)->get('/settings/preferences')
         ->assertInertia(fn (Assert $page) => $page
@@ -143,8 +143,8 @@ test('settings page defaults to the user\'s first project and lists its members'
     $user = User::factory()->create();
     $otherMember = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
-    $project->users()->attach($otherMember->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'admin');
+    addProjectMember($project, $otherMember->id, 'member');
 
     $response = $this->actingAs($user)->get('/settings/members');
 
@@ -159,7 +159,7 @@ test('settings page defaults to the user\'s first project and lists its members'
 test('settings page grants an owner all granular role permissions', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'owner']);
+    addProjectMember($project, $user->id, 'owner');
 
     $response = $this->actingAs($user)->get('/settings/roles-management');
 
@@ -176,7 +176,7 @@ test('settings page grants an owner all granular role permissions', function () 
 test('settings page denies a plain member all granular role permissions', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->get('/settings/roles-management');
 
@@ -193,7 +193,7 @@ test('settings page denies a plain member all granular role permissions', functi
 test('settings page hides roles and permissions data from a viewer', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'viewer']);
+    addProjectMember($project, $user->id, 'viewer');
 
     $response = $this->actingAs($user)->get('/settings/roles-management');
 
@@ -210,7 +210,7 @@ test('settings page hides roles and permissions data from a viewer', function ()
 test('settings page exposes roles and permissions data to a member', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->get('/settings/roles-management');
 
@@ -223,7 +223,7 @@ test('settings page exposes roles and permissions data to a member', function ()
 test('settings page grants an owner control over project details', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'owner']);
+    addProjectMember($project, $user->id, 'owner');
 
     $response = $this->actingAs($user)->get('/settings/members');
 
@@ -236,7 +236,7 @@ test('settings page grants an owner control over project details', function () {
 test('settings page grants an admin access to view and update integrations', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
 
     $response = $this->actingAs($user)->get('/settings/integrations');
 
@@ -250,7 +250,7 @@ test('settings page grants an admin access to view and update integrations', fun
 test('settings page grants a plain member view-only access to integrations', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->get('/settings/integrations');
 
@@ -261,10 +261,12 @@ test('settings page grants a plain member view-only access to integrations', fun
     );
 });
 
-test('settings page hides integrations data from a viewer with no view tier match', function () {
+test('settings page hides integrations data from a viewer whose role lacks the view permission', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'viewer']);
+    addProjectMember($project, $user->id, 'viewer');
+    $project->roles()->where('slug', 'viewer')->first()->permissions()
+        ->detach(Permission::where('key', PermissionEnum::INTEGRATIONS_VIEW->value)->value('id'));
 
     $response = $this->actingAs($user)->get('/settings/integrations');
 
@@ -278,7 +280,7 @@ test('settings page hides integrations data from a viewer with no view tier matc
 test('settings page reflects an enabled integration for the selected project', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'owner']);
+    addProjectMember($project, $user->id, 'owner');
     app(ProjectIntegrationService::class)->setEnabled($project, 'discord', true);
 
     $response = $this->actingAs($user)->get('/settings/integrations');
@@ -291,7 +293,7 @@ test('settings page reflects an enabled integration for the selected project', f
 test('settings page exposes the webhook url to an admin who can update integrations', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
     app(ProjectIntegrationService::class)->updateSettings($project, 'discord', [
         'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
     ]);
@@ -310,7 +312,7 @@ test('settings page exposes the webhook url to an admin who can update integrati
 test('settings page masks the webhook url from a member who cannot update integrations', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
     app(ProjectIntegrationService::class)->updateSettings($project, 'discord', [
         'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
     ]);
@@ -327,8 +329,8 @@ test('settings page respects the project query parameter', function () {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
-    $projectA->users()->attach($user->id, ['role' => 'admin']);
-    $projectB->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($projectA, $user->id, 'admin');
+    addProjectMember($projectB, $user->id, 'member');
 
     $response = $this->actingAs($user)->get("/settings/members?project=$projectB->id");
 
@@ -344,7 +346,7 @@ test('settings page lists pending invitations for the selected project', functio
 
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
     app(ProjectInvitationService::class)->invite($project, 'invitee@example.com', RoleType::MEMBER, $user);
 
     $response = $this->actingAs($user)->get('/settings/members');
@@ -382,7 +384,7 @@ test('settings page reflects saved notification setting overrides', function () 
 test('a viewer has label view access but no create, update or delete access', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'viewer']);
+    addProjectMember($project, $user->id, 'viewer');
 
     $response = $this->actingAs($user)->get('/settings/labels');
 
@@ -397,7 +399,7 @@ test('a viewer has label view access but no create, update or delete access', fu
 test('a member without any labels permission cannot create, update or delete labels', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->get('/settings/labels');
 
@@ -412,7 +414,7 @@ test('a member without any labels permission cannot create, update or delete lab
 test('a member with a custom role granting only labels.delete can delete but not create or update labels', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $permission = Permission::where('key', 'projects.labels.delete')->first();
     $role = $project->roles()->create(['name' => 'Label Cleaner', 'slug' => 'label-cleaner', 'role' => 'custom']);
@@ -431,7 +433,7 @@ test('a member with a custom role granting only labels.delete can delete but not
 test('the profile page renders with the sidebar projects', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->get('/settings/profile');
 
@@ -446,7 +448,7 @@ test('the profile page renders with the sidebar projects', function () {
 test('the issue types page exposes the project catalog to an owner', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'owner']);
+    addProjectMember($project, $user->id, 'owner');
 
     $response = $this->actingAs($user)->get('/settings/issue-types');
 

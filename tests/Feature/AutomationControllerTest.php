@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Models\AutomationRule;
+use App\Models\Permission;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -11,7 +13,7 @@ uses(RefreshDatabase::class);
 test('settings page grants an admin access to view and update automation', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
 
     $response = $this->actingAs($user)->get('/settings/automation');
 
@@ -24,7 +26,7 @@ test('settings page grants an admin access to view and update automation', funct
 test('settings page grants a plain member view-only access to automation', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->get('/settings/automation');
 
@@ -34,10 +36,12 @@ test('settings page grants a plain member view-only access to automation', funct
     );
 });
 
-test('settings page hides automation data from a viewer with no view tier match', function () {
+test('settings page hides automation data from a viewer whose role lacks the view permission', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'viewer']);
+    addProjectMember($project, $user->id, 'viewer');
+    $project->roles()->where('slug', 'viewer')->first()->permissions()
+        ->detach(Permission::where('key', PermissionEnum::AUTOMATION_VIEW->value)->value('id'));
 
     $response = $this->actingAs($user)->get('/settings/automation');
 
@@ -50,7 +54,7 @@ test('settings page hides automation data from a viewer with no view tier match'
 test('an admin can create an automation rule with a condition and an action', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
 
     $response = $this->actingAs($user)->post("/projects/$project->id/automation-rules", [
         'name' => 'Merge to done',
@@ -81,7 +85,7 @@ test('an admin can create an automation rule with a condition and an action', fu
 test('a member cannot create an automation rule', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'member']);
+    addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)->post("/projects/$project->id/automation-rules", [
         'name' => 'Merge to done',
@@ -96,7 +100,7 @@ test('a member cannot create an automation rule', function () {
 test('an admin can update an automation rule', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
     $rule = AutomationRule::query()->create([
         'project_id' => $project->id,
         'name' => 'Original',
@@ -124,7 +128,7 @@ test('an admin can update an automation rule', function () {
 test('toggling only the enabled state logs a distinct enabled/disabled message', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
     $rule = AutomationRule::query()->create([
         'project_id' => $project->id,
         'name' => 'Toggleable',
@@ -156,7 +160,7 @@ test('a rule belonging to another project cannot be updated', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
     $rule = AutomationRule::query()->create([
         'project_id' => $otherProject->id,
         'name' => 'Foreign rule',
@@ -177,7 +181,7 @@ test('a rule belonging to another project cannot be updated', function () {
 test('an admin can delete an automation rule', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
     $rule = AutomationRule::query()->create([
         'project_id' => $project->id,
         'name' => 'Deletable',

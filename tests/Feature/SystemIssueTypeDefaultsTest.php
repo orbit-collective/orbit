@@ -158,7 +158,7 @@ test('upgrading a workflow whose new statuses reuse an existing name does not co
 test('an issue sitting on a replaced status is moved onto the new equivalent', function () {
     $project = Project::factory()->create();
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'admin']);
+    addProjectMember($project, $user->id, 'admin');
     app(IssueTypeService::class)->ensureSystemIssueTypes($project);
 
     $bug = $project->issueTypes()->where('name', 'Bug')->first();
@@ -285,7 +285,7 @@ test('the stock board left mixed into a type own workflow is cleaned out', funct
 test('an issue parked on a leftover stock status is moved onto the catalog one', function () {
     $project = Project::factory()->create();
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'owner']);
+    addProjectMember($project, $user->id, 'owner');
     app(IssueTypeService::class)->ensureSystemIssueTypes($project);
     $bug = $project->issueTypes()->where('name', 'Bug')->first();
     $leftover = $bug->statuses()->create([

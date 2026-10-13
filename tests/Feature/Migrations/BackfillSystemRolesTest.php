@@ -5,6 +5,7 @@ use App\Models\Project;
 use App\Models\ProjectInvitation;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -32,10 +33,10 @@ test('every member receives the system role matching their legacy tier', functio
     $project = Project::factory()->create();
     [$owner, $admin, $member, $viewer] = User::factory()->count(4)->create();
 
-    $project->users()->attach($owner->id, ['role' => 'owner']);
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
-    $project->users()->attach($viewer->id, ['role' => 'viewer']);
+    addProjectMember($project, $owner->id, 'owner');
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
+    addProjectMember($project, $viewer->id, 'viewer');
 
     runRoleBackfill();
 
@@ -48,7 +49,7 @@ test('every member receives the system role matching their legacy tier', functio
 test('running it twice changes nothing', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     runRoleBackfill();
     $roles = Role::count();
@@ -64,8 +65,8 @@ test('a custom role a member already holds is kept', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $owner->id, 'owner');
+    addProjectMember($project, $member->id, 'member');
 
     $custom = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $pivotId = DB::table('project_user')->where('user_id', $member->id)->value('id');
@@ -81,10 +82,11 @@ test('a custom role a member already holds is kept', function () {
 test('a customised member role keeps its permissions while owner and admin gain missing ones', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
-    $member = $project->roles()->create(['name' => 'Member', 'slug' => 'member', 'role' => 'member', 'is_system' => true]);
-    $admin = $project->roles()->create(['name' => 'Admin', 'slug' => 'admin', 'role' => 'admin', 'is_system' => true]);
+    $roles = app(RoleService::class)->ensureSystemRoles($project);
+    $member = $roles['member'];
+    $admin = $roles['admin'];
     $one = Permission::query()->where('key', 'issues.view')->value('id');
     $member->permissions()->sync([$one]);
     $admin->permissions()->sync([$one]);
@@ -100,8 +102,8 @@ test('a project without an owner promotes its earliest member', function () {
     $late = User::factory()->create(['name' => 'Aaron']);
     $early = User::factory()->create(['name' => 'Zed']);
 
-    $project->users()->attach($late->id, ['role' => 'admin']);
-    $project->users()->attach($early->id, ['role' => 'member']);
+    addProjectMember($project, $late->id, 'admin');
+    addProjectMember($project, $early->id, 'member');
     DB::table('project_user')->where('user_id', $late->id)->update(['created_at' => '2026-02-01 00:00:00']);
     DB::table('project_user')->where('user_id', $early->id)->update(['created_at' => '2026-01-01 00:00:00']);
 
@@ -116,8 +118,8 @@ test('ties on the join date fall back to the alphabetical name', function () {
     $zed = User::factory()->create(['name' => 'Zed', 'created_at' => '2026-01-01 00:00:00']);
     $amy = User::factory()->create(['name' => 'Amy', 'created_at' => '2026-01-01 00:00:00']);
 
-    $project->users()->attach($zed->id, ['role' => 'member']);
-    $project->users()->attach($amy->id, ['role' => 'member']);
+    addProjectMember($project, $zed->id, 'member');
+    addProjectMember($project, $amy->id, 'member');
     DB::table('project_user')->update(['created_at' => '2026-01-01 00:00:00']);
 
     runRoleBackfill();
@@ -130,8 +132,8 @@ test('a project that already has an owner is left alone', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $other = User::factory()->create();
-    $project->users()->attach($other->id, ['role' => 'admin']);
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $other->id, 'admin');
+    addProjectMember($project, $owner->id, 'owner');
 
     runRoleBackfill();
 
@@ -142,7 +144,7 @@ test('a project that already has an owner is left alone', function () {
 test('pending invitations get their tier as a system role, accepted ones are skipped', function () {
     $project = Project::factory()->create();
     $inviter = User::factory()->create();
-    $project->users()->attach($inviter->id, ['role' => 'owner']);
+    addProjectMember($project, $inviter->id, 'owner');
 
     $pending = ProjectInvitation::create([
         'project_id' => $project->id, 'invited_by' => $inviter->id, 'email' => 'a@example.com',

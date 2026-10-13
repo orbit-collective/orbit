@@ -12,7 +12,7 @@ function templateProject(): array
 {
     $project = Project::factory()->create();
     $user = User::factory()->create();
-    $project->users()->attach($user->id, ['role' => 'owner']);
+    addProjectMember($project, $user->id, 'owner');
     app(IssueTypeService::class)->ensureSystemIssueTypes($project);
     app(LabelService::class)->ensureSystemLabels($project);
 

@@ -18,7 +18,7 @@ beforeEach(function () {
 test('it can list the members of a project', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     expect($this->service->getMembers($project))->toHaveCount(1);
 });
@@ -27,20 +27,20 @@ test('it can promote a member to admin', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
 
     $this->service->updateRole($project, $member, RoleType::ADMIN);
 
-    expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('admin');
+    expect($project->roleOf($member))->toBe('admin');
 });
 
 test('promoting a member swaps their system role while keeping custom roles', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
     $customRole = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $projectUser->roles()->attach($customRole->id);
@@ -55,18 +55,18 @@ test('it allows demoting an admin freely since the owner remains the permanent m
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $owner->id, 'owner');
+    addProjectMember($project, $admin->id, 'admin');
 
     $this->service->updateRole($project, $admin, RoleType::MEMBER);
 
-    expect($project->users()->where('users.id', $admin->id)->first()->pivot->role)->toBe('member');
+    expect($project->roleOf($admin))->toBe('member');
 });
 
 test('it prevents changing the owner\'s role', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $this->service->updateRole($project, $owner, RoleType::ADMIN);
 })->throws(ValidationException::class);
@@ -82,8 +82,8 @@ test('it can remove a member from a project', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
 
     $this->service->removeMember($project, $member);
 
@@ -93,7 +93,7 @@ test('it can remove a member from a project', function () {
 test('it prevents removing the owner from the project', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $this->service->removeMember($project, $owner);
 })->throws(ValidationException::class);
@@ -108,7 +108,7 @@ test('it throws when removing someone who is not a member', function () {
 test('it can sync a member\'s custom roles and logs the change', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $role = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
 
     $this->service->syncRoles($project, $member, [$role->id]);
@@ -130,13 +130,13 @@ test('it can transfer ownership to another member and demotes the previous owner
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $owner->id, 'owner');
+    addProjectMember($project, $member->id, 'member');
 
     $this->service->transferOwnership($project, $owner, $member);
 
-    expect($project->users()->where('users.id', $member->id)->first()->pivot->role)->toBe('owner')
-        ->and($project->users()->where('users.id', $owner->id)->first()->pivot->role)->toBe('admin');
+    expect($project->roleOf($member))->toBe('owner')
+        ->and($project->roleOf($owner))->toBe('admin');
     $this->assertDatabaseHas('activity_logs', [
         'project_id' => $project->id,
         'body' => "Transferred project ownership from $owner->name to $member->name",
@@ -147,8 +147,8 @@ test('transferring ownership swaps system roles for both parties', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $owner->id, 'owner');
+    addProjectMember($project, $member->id, 'member');
 
     $this->service->transferOwnership($project, $owner, $member);
 
@@ -162,8 +162,8 @@ test('only the current owner can transfer ownership', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
 
     $this->service->transferOwnership($project, $admin, $member);
 })->throws(ValidationException::class);
@@ -172,7 +172,7 @@ test('ownership cannot be transferred to someone who is not a member', function 
     $project = Project::factory()->create();
     $owner = User::factory()->create();
     $outsider = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $this->service->transferOwnership($project, $owner, $outsider);
 })->throws(ValidationException::class);
@@ -180,7 +180,7 @@ test('ownership cannot be transferred to someone who is not a member', function 
 test('an owner cannot transfer ownership to themselves', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     $this->service->transferOwnership($project, $owner, $owner);
 })->throws(ValidationException::class);

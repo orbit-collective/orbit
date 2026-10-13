@@ -9,7 +9,7 @@ uses(RefreshDatabase::class);
 test('an admin can create a template for an issue type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types/$issueType->id/templates", [
@@ -24,7 +24,7 @@ test('an admin can create a template for an issue type', function () {
 test('a member without the issue_types.update permission cannot create a template', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($member)->post("/projects/$project->id/issue-types/$issueType->id/templates", [
@@ -37,7 +37,7 @@ test('a member without the issue_types.update permission cannot create a templat
 test('an admin can update and delete a template', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $template = $issueType->templates()->create(['name' => 'Standard']);
 
@@ -55,7 +55,7 @@ test('an admin can update and delete a template', function () {
 test('a template belonging to a different issue type cannot be updated through a mismatched type', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueTypeA = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $issueTypeB = $project->issueTypes()->create(['name' => 'Feature', 'icon' => 'Sparkles', 'color' => '#2196f3']);
     $template = $issueTypeB->templates()->create(['name' => 'Standard']);
@@ -80,7 +80,7 @@ test('guests cannot manage issue type templates', function () {
 test('a template description carrying a markdown image link round-trips unchanged', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $description = "Repro: ![shot.png](/storage/attachments/$project->id/shot.png)";
@@ -99,7 +99,7 @@ test('a template description carrying a markdown image link round-trips unchange
 test('updating a template keeps a markdown image link intact', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
     $template = $issueType->templates()->create(['name' => 'Standard', 'description' => 'No image yet']);
 

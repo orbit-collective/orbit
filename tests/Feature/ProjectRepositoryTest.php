@@ -18,7 +18,7 @@ test('it can get all projects for a user', function () {
     $projects = Project::factory()->count(3)->create();
 
     foreach ($projects as $project) {
-        $project->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+        addProjectMember($project, $user->id, RoleType::MEMBER->value);
     }
 
     Project::factory()->create();
@@ -64,18 +64,18 @@ test('it reports no projects exist for a user when they belong to none', functio
 test('it reports projects exist once the user has been attached to one', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
-    $project->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+    addProjectMember($project, $user->id, RoleType::MEMBER->value);
 
     expect($this->repository->hasAnyProjectsForUser($user->id))->toBeTrue();
 });
 
-test('it can attach a member with a role to a project', function () {
+test('it can attach a member to a project', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
 
-    $this->repository->attachMember($project, $user->id, RoleType::ADMIN);
+    $this->repository->attachMember($project, $user->id);
 
-    expect($project->users()->first()->pivot->role)->toBe(RoleType::ADMIN->value);
+    expect($project->users()->pluck('users.id')->all())->toBe([$user->id]);
 });
 
 test('it can get the member ids of a project', function () {
@@ -83,7 +83,7 @@ test('it can get the member ids of a project', function () {
     $members = User::factory()->count(2)->create();
 
     foreach ($members as $member) {
-        $project->users()->attach($member->id, ['role' => RoleType::MEMBER->value]);
+        addProjectMember($project, $member->id, RoleType::MEMBER->value);
     }
 
     User::factory()->create();
@@ -96,7 +96,7 @@ test('it can get the member ids of a project', function () {
 test('searchForUser only returns projects the user is a member of', function () {
     $user = User::factory()->create();
     $mine = Project::factory()->create(['name' => 'Orbit Core']);
-    $mine->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+    addProjectMember($mine, $user->id, RoleType::MEMBER->value);
     Project::factory()->create(['name' => 'Orbit Foreign']);
 
     $names = $this->repository->searchForUser($user->id, 'orbit')->pluck('name')->all();
@@ -108,7 +108,7 @@ test('searchForUser ranks a name prefix above a substring', function () {
     $user = User::factory()->create();
     foreach (['My Orbit', 'Orbit Web'] as $name) {
         Project::factory()->create(['name' => $name])
-            ->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+            ->users()->attach($user->id);
     }
 
     $names = $this->repository->searchForUser($user->id, 'orbit')->pluck('name')->all();
@@ -120,7 +120,7 @@ test('searchForUser is case-insensitive, honours the limit and escapes wildcards
     $user = User::factory()->create();
     foreach (['Alpha 100%', 'Alpha 100x', 'alpha three', 'ALPHA four'] as $name) {
         Project::factory()->create(['name' => $name])
-            ->users()->attach($user->id, ['role' => RoleType::MEMBER->value]);
+            ->users()->attach($user->id);
     }
 
     expect($this->repository->searchForUser($user->id, 'alpha'))->toHaveCount(4)

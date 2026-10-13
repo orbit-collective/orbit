@@ -10,7 +10,7 @@ uses(RefreshDatabase::class);
 test('an admin can enable an available integration', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/integrations/discord", [
         'enabled' => true,
@@ -27,7 +27,7 @@ test('an admin can enable an available integration', function () {
 test('an owner can disable an integration', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
     $this->actingAs($owner)->patch("/projects/$project->id/integrations/discord", ['enabled' => true]);
 
     $response = $this->actingAs($owner)->patch("/projects/$project->id/integrations/discord", [
@@ -45,7 +45,7 @@ test('an owner can disable an integration', function () {
 test('a member without the integrations.update permission cannot toggle an integration', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->patch("/projects/$project->id/integrations/discord", [
         'enabled' => true,
@@ -68,7 +68,7 @@ test('an outsider cannot toggle an integration', function () {
 test('an admin cannot enable an integration that is not available yet', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/integrations/slack", [
         'enabled' => true,
@@ -81,7 +81,7 @@ test('an admin cannot enable an integration that is not available yet', function
 test('toggling an integration requires a boolean enabled value', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/integrations/discord", []);
 
@@ -99,7 +99,7 @@ test('guests cannot toggle a project integration', function () {
 test('an admin can save a discord webhook url and options', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/integrations/discord/settings", [
         'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
@@ -119,7 +119,7 @@ test('an admin can save a discord webhook url and options', function () {
 test('saving settings rejects a malformed discord webhook url', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $response = $this->actingAs($admin)->patch("/projects/$project->id/integrations/discord/settings", [
         'webhook_url' => 'https://example.com/not-a-webhook',
@@ -131,7 +131,7 @@ test('saving settings rejects a malformed discord webhook url', function () {
 test('a member without the integrations.update permission cannot save settings', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->patch("/projects/$project->id/integrations/discord/settings", [
         'options' => ['issue-activity' => true],

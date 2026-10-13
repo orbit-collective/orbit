@@ -33,7 +33,7 @@ function expectMembershipBump(Closure $write): void
 beforeEach(function () {
     $this->project = Project::factory()->create();
     $this->user = User::factory()->create();
-    $this->project->users()->attach($this->user->id, ['role' => 'member']);
+    addProjectMember($this->project, $this->user->id, 'member');
     $this->members = new ProjectMemberRepository;
     $this->roles = new RoleRepository;
 });
@@ -41,14 +41,13 @@ beforeEach(function () {
 test('attaching a member bumps the membership version', function () {
     $other = User::factory()->create();
 
-    expectMembershipBump(fn () => (new ProjectRepository)->attachMember($this->project, $other->id, RoleType::MEMBER));
+    expectMembershipBump(fn () => (new ProjectRepository)->attachMember($this->project, $other->id));
 });
 
 test('changing, removing or re-roling a member bumps the membership version', function () {
     $custom = $this->project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
     $system = $this->roles->firstOrCreateSystemRole($this->project, RoleType::ADMIN);
 
-    expectMembershipBump(fn () => $this->members->updateRole($this->project, $this->user->id, RoleType::ADMIN));
     expectMembershipBump(fn () => $this->members->syncRoles($this->project, $this->user->id, [$custom->id]));
     expectMembershipBump(fn () => $this->members->attachRoles($this->project, $this->user->id, [$custom->id]));
     expectMembershipBump(fn () => $this->members->syncSystemRole($this->project, $this->user->id, $system, [$system->id]));

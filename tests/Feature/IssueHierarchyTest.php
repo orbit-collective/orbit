@@ -16,7 +16,7 @@ function seedTypesFor(Project $project, User $user): void
 test('an issue can be created as a sub-issue of an Epic', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $epic = $project->issues()->create([
@@ -40,7 +40,7 @@ test('an issue can be created as a sub-issue of an Epic', function () {
 test('an issue cannot be created under a parent whose type does not allow children', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $task = $project->issues()->create([
@@ -59,7 +59,7 @@ test('an issue cannot be created under a parent from another project', function 
     $project = Project::factory()->create();
     $otherProject = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($otherProject, $member);
     $epicType = $otherProject->issueTypes()->where('name', 'Epic')->first();
     $foreignEpic = $otherProject->issues()->create([
@@ -77,7 +77,7 @@ test('an issue cannot be created under a parent from another project', function 
 test('an issue cannot be updated to become its own parent', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $issue = $project->issues()->create([
@@ -93,7 +93,7 @@ test('an issue cannot be updated to become its own parent', function () {
 test('an issue cannot be moved under its own descendant, preventing a cycle', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $epic = $project->issues()->create([
@@ -117,7 +117,7 @@ test('an issue cannot be moved under its own descendant, preventing a cycle', fu
 test('a parent type with no configured allowed children accepts any child type', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
@@ -138,7 +138,7 @@ test('a parent type with no configured allowed children accepts any child type',
 test('a parent type restricted to specific allowed children rejects an unlisted child type', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $storyType = $project->issueTypes()->where('name', 'Story')->first();
@@ -160,7 +160,7 @@ test('a parent type restricted to specific allowed children rejects an unlisted 
 test('a parent type restricted to specific allowed children accepts a listed child type', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $storyType = $project->issueTypes()->where('name', 'Story')->first();
@@ -182,7 +182,7 @@ test('a parent type restricted to specific allowed children accepts a listed chi
 test('updating an issue to move it under a valid parent succeeds', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $epic = $project->issues()->create([
@@ -204,7 +204,7 @@ test('updating an issue to move it under a valid parent succeeds', function () {
 test('an issue whose type is sub-issue only cannot be created at the top level', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $spikeType = $project->issueTypes()->where('name', 'Spike')->first();
 
@@ -219,7 +219,7 @@ test('an issue whose type is sub-issue only cannot be created at the top level',
 test('a sub-issue only type can still be created underneath an allowed parent', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $spikeType = $project->issueTypes()->where('name', 'Spike')->first();
@@ -240,7 +240,7 @@ test('a sub-issue only type can still be created underneath an allowed parent', 
 test('the core system types stay creatable at the top level', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
 
     $topLevel = $project->issueTypes()->where('is_top_level', true)->pluck('name')->sort()->values()->all();
@@ -251,7 +251,7 @@ test('the core system types stay creatable at the top level', function () {
 test('the issue detail view exposes the ancestors of a nested issue, root first', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
@@ -276,7 +276,7 @@ test('the issue detail view exposes the ancestors of a nested issue, root first'
 test('a root issue has no ancestors', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $issue = $project->issues()->create([
         'title' => 'Loose', 'project_id' => $project->id, 'user_id' => $member->id,
@@ -290,7 +290,7 @@ test('a root issue has no ancestors', function () {
 test('a Bug can be created as a sub-issue of a Task, which now accepts one', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
@@ -311,7 +311,7 @@ test('a Bug can be created as a sub-issue of a Task, which now accepts one', fun
 test('a type the parent does not list as an allowed child is still rejected', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     seedTypesFor($project, $member);
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $storyType = $project->issueTypes()->where('name', 'Story')->first();

@@ -106,7 +106,7 @@ test('deleting a project cascades to delete its saved filters and activity logs'
 test('hasPermission() grants everything to an owner', function () {
     $project = Project::factory()->create();
     $owner = User::factory()->create();
-    $project->users()->attach($owner->id, ['role' => 'owner']);
+    addProjectMember($project, $owner->id, 'owner');
 
     expect($project->hasPermission($owner, PermissionEnum::ROLES_DELETE))->toBeTrue();
 });
@@ -114,24 +114,16 @@ test('hasPermission() grants everything to an owner', function () {
 test('hasPermission() grants everything to an admin once their system role is synced', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     app(RoleService::class)->syncSystemRoleForMember($project, $admin->id, RoleType::ADMIN);
 
     expect($project->hasPermission($admin, PermissionEnum::ROLES_DELETE))->toBeTrue();
 });
 
-test('hasPermission() denies an admin whose system role has not been synced yet', function () {
-    $project = Project::factory()->create();
-    $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
-
-    expect($project->hasPermission($admin, PermissionEnum::ROLES_DELETE))->toBeFalse();
-});
-
 test('hasPermission() denies a member without a matching role', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     expect($project->hasPermission($member, PermissionEnum::ROLES_DELETE))->toBeFalse();
 });
@@ -145,7 +137,7 @@ test('hasPermission() denies a non-member', function () {
 test('hasPermission() grants access through a custom role holding the permission', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $permission = Permission::where('key', 'projects.roles.delete')->first();
     $role = $project->roles()->create(['name' => 'Role Manager', 'slug' => 'role-manager', 'role' => 'custom']);

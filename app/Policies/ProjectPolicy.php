@@ -35,7 +35,7 @@ class ProjectPolicy
             Permission::ISSUE_TYPES_UPDATE,
         ];
 
-        return array_any($writeGates, fn($permission) => $project->hasPermissionOrTier($user, $permission, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]));
+        return array_any($writeGates, fn ($permission) => $project->hasPermissionOrTier($user, $permission, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]));
 
     }
 
@@ -66,10 +66,7 @@ class ProjectPolicy
 
     public function transferOwnership(User $user, Project $project): bool
     {
-        return $project->users()
-            ->where('users.id', $user->id)
-            ->wherePivot('role', RoleType::OWNER->value)
-            ->exists();
+        return $project->roleOf($user) === RoleType::OWNER->value;
     }
 
     public function viewIntegrations(User $user, Project $project): bool

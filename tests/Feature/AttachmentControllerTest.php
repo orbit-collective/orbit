@@ -25,7 +25,7 @@ test('a project member can upload an image and gets its url back', function () {
 
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post("/projects/$project->id/attachments", [
         'file' => UploadedFile::fake()->create('screenshot.png', 100, 'image/png'),
@@ -54,7 +54,7 @@ test('an unsafe image is rejected and never stored', function () {
 
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post("/projects/$project->id/attachments", [
         'file' => UploadedFile::fake()->create('nope.png', 100, 'image/png'),
@@ -75,7 +75,7 @@ test('a moderation service failure fails closed with a retry message', function 
 
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post("/projects/$project->id/attachments", [
         'file' => UploadedFile::fake()->create('shot.png', 100, 'image/png'),
@@ -91,7 +91,7 @@ test('a non image upload is rejected by validation', function () {
 
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $response = $this->actingAs($member)->post(
         "/projects/$project->id/attachments",
@@ -109,7 +109,7 @@ test('a read only viewer cannot upload', function () {
 
     $project = Project::factory()->create();
     $viewer = User::factory()->create();
-    $project->users()->attach($viewer->id, ['role' => 'viewer']);
+    addProjectMember($project, $viewer->id, 'viewer');
 
     $response = $this->actingAs($viewer)->post("/projects/$project->id/attachments", [
         'file' => UploadedFile::fake()->create('shot.png', 100, 'image/png'),
@@ -126,7 +126,7 @@ test('a project admin can upload', function () {
 
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
 
     $this->actingAs($admin)->post("/projects/$project->id/attachments", [
         'file' => UploadedFile::fake()->create('shot.png', 100, 'image/png'),
@@ -139,7 +139,7 @@ test('a viewer with a custom role granting comments.create can upload', function
 
     $project = Project::factory()->create();
     $viewer = User::factory()->create();
-    $project->users()->attach($viewer->id, ['role' => 'viewer']);
+    addProjectMember($project, $viewer->id, 'viewer');
 
     $permission = Permission::where('key', 'comments.create')->first();
     $grantingRole = $project->roles()->create(['name' => 'Commenter', 'slug' => 'commenter', 'role' => 'custom']);
@@ -182,7 +182,7 @@ test('a project member can fetch an attachment through the authorized route', fu
 
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $this->actingAs($member)->post("/projects/$project->id/attachments", [
         'file' => UploadedFile::fake()->create('screenshot.png', 100, 'image/png'),
@@ -200,7 +200,7 @@ test('a non-member cannot fetch an attachment', function () {
 
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $outsider = User::factory()->create();
 
     $this->actingAs($member)->post("/projects/$project->id/attachments", [
@@ -219,7 +219,7 @@ test('a guest fetching an attachment is redirected to login', function () {
 
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
 
     $this->actingAs($member)->post("/projects/$project->id/attachments", [
         'file' => UploadedFile::fake()->create('screenshot.png', 100, 'image/png'),
@@ -239,8 +239,8 @@ test('an attachment id from another project 404s instead of leaking through', fu
     $projectA = Project::factory()->create();
     $projectB = Project::factory()->create();
     $member = User::factory()->create();
-    $projectA->users()->attach($member->id, ['role' => 'member']);
-    $projectB->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($projectA, $member->id, 'member');
+    addProjectMember($projectB, $member->id, 'member');
 
     $this->actingAs($member)->post("/projects/$projectA->id/attachments", [
         'file' => UploadedFile::fake()->create('screenshot.png', 100, 'image/png'),

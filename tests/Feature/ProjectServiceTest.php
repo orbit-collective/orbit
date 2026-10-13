@@ -37,7 +37,7 @@ test('it can create a project, attach the creator as owner and log activity', fu
 
     $this->projectRepository->shouldReceive('attachMember')
         ->once()
-        ->with($project, $user->id, RoleType::OWNER);
+        ->with($project, $user->id);
 
     $this->roleService->shouldReceive('syncSystemRoleForMember')
         ->once()
@@ -117,7 +117,7 @@ test('joining a project shows up in the cached project list straight away', func
     expect($service->getAllForUser($user->id))->toHaveCount(0)
         ->and($service->hasAnyProjectsForUser($user->id))->toBeFalse();
 
-    app(ProjectRepository::class)->attachMember($project, $user->id, RoleType::MEMBER);
+    app(ProjectRepository::class)->attachMember($project, $user->id);
 
     expect($service->getAllForUser($user->id))->toHaveCount(1)
         ->and($service->hasAnyProjectsForUser($user->id))->toBeTrue();
