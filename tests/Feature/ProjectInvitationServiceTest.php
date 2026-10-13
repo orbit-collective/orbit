@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\NotificationMail;
 use App\Notifications\ProjectInvitationMail;
 use App\Services\ProjectInvitationService;
+use App\Services\RoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
@@ -316,4 +317,23 @@ test('it lists only pending, unexpired invitations for a project', function () {
     $results = $this->service->getPending($project);
 
     expect($results->pluck('id')->all())->toBe([$pending->id]);
+});
+
+test('a failed role assignment while accepting leaves no member without a tier', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    addProjectMember($project, $admin->id, 'admin');
+    $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+    $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin);
+
+    $this->partialMock(RoleService::class, fn ($mock) => $mock
+        ->shouldReceive('syncSystemRoleForMember')->andThrow(new RuntimeException('boom')));
+
+    expect(fn () => app(ProjectInvitationService::class)->acceptByToken($invitation->token, $invitee))
+        ->toThrow(RuntimeException::class);
+
+    expect($project->users()->where('users.id', $invitee->id)->exists())->toBeFalse()
+        ->and($invitation->fresh()->isAccepted())->toBeFalse();
 });

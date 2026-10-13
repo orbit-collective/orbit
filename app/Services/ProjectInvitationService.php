@@ -12,6 +12,7 @@ use App\Repositories\ProjectMemberRepository;
 use App\Support\Cache\CacheVersion;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -107,20 +108,24 @@ class ProjectInvitationService
 
         $project = $invitation->project;
 
-        if (! $this->projectMemberRepository->isMember($project, $user->id)) {
-            $project->users()->attach($user->id);
-            CacheVersion::bump(CacheVersion::MEMBERSHIP);
-            $this->roleService->syncSystemRoleForMember($project, $user->id, $invitation->tier());
+        // A member without a system role has no access at all, so joining and
+        // being given the tier must happen together or not at all.
+        DB::transaction(function () use ($project, $user, $invitation) {
+            if (! $this->projectMemberRepository->isMember($project, $user->id)) {
+                $project->users()->attach($user->id);
+                $this->roleService->syncSystemRoleForMember($project, $user->id, $invitation->tier());
 
-            $invitedRoleIds = $invitation->customRoleIds();
-            if (! empty($invitedRoleIds)) {
-                $this->projectMemberRepository->attachRoles($project, $user->id, $invitedRoleIds);
+                $invitedRoleIds = $invitation->customRoleIds();
+                if (! empty($invitedRoleIds)) {
+                    $this->projectMemberRepository->attachRoles($project, $user->id, $invitedRoleIds);
+                }
+
+                $this->activityLogService->log($project->id, "$user->name joined the project", $user->id);
             }
 
-            $this->activityLogService->log($project->id, "$user->name joined the project", $user->id);
-        }
-
-        $this->projectInvitationRepository->markAccepted($invitation);
+            $this->projectInvitationRepository->markAccepted($invitation);
+        });
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
 
         return $project;
     }
