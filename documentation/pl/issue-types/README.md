@@ -151,13 +151,15 @@ issue przeniesione na nowy status o tej samej kategorii co stary
 (`replaceGenericWorkflow()`).
 
 Uprawnienia idą za tym samym wzorcem enuma `Permission` /
-`ProjectPolicy` / poziomów `RoleService`, co labele:
-`ISSUE_TYPES_VIEW/CREATE/UPDATE/DELETE` i `WORKFLOW_UPDATE` (podgląd:
-owner/admin/member/viewer; każda mutacja: tylko owner/admin — zobacz
+`ProjectPolicy` / domyślnych uprawnień `RoleService`, co labele:
+`ISSUE_TYPES_VIEW/CREATE/UPDATE/DELETE` i `WORKFLOW_UPDATE` (domyślnie podgląd:
+owner/admin/member/viewer; każda mutacja: tylko owner/admin, wszystko sprawdzane przez `Project::hasPermission()` — zobacz
 [`../permissions/README.md`](../permissions/README.md), jeśli
 potrzebujesz dodać własne, nowe uprawnienie). Ponad tą ogólnoprojektową
 bramką, każdy typ issue może nieść własne `restricted_role_types`
-(tablica JSON wartości `owner`/`admin`/`member`/`viewer`) —
+(tablica JSON wartości `owner`/`admin`/`member`/`viewer` — nadal zwykłe
+stringi poziomów, porównywane z `Project::roleOf()`, które wyprowadza
+poziom z roli systemowej członka) —
 `App\Policies\IssuePolicy::createOfType()` to drugie, węższe
 sprawdzenie, stosowane tylko przy faktycznym tworzeniu issue tego
 konkretnego typu, ponad ogólnym sprawdzeniem `issues.create`; pusta

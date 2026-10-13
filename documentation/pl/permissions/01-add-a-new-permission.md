@@ -25,7 +25,7 @@ enum Permission: string
 
 Plik: `app/Services/RoleService.php`
 
-Każdy projekt ma cztery role systemowe (Owner, Admin, Member, Viewer). Owner i Admin **automatycznie dostają każde istniejące uprawnienie** — `defaultPermissionIdsFor()` przyznaje im pełne `Permission::cases()`, więc nigdy nie musisz niczego dotykać dla tych dwóch poziomów. Decydujesz jedynie, co domyślnie dostają **Member** i **Viewer**, dodając nowy przypadek(i) do odpowiedniej stałej `*_DEFAULT_PERMISSIONS`:
+Każdy projekt ma cztery role systemowe (Owner, Admin, Member, Viewer). Owner i Admin dostają **każde istniejące uprawnienie** — `defaultPermissionIdsFor()` przyznaje im pełne `Permission::cases()`, więc w `RoleService` nie musisz niczego dotykać dla tych dwóch poziomów *w nowych projektach*. Projekty, w których role systemowe już istnieją, nie są jednak uzupełniane automatycznie — zobacz krok 6, jak to naprawić jednym poleceniem. Decydujesz, co domyślnie dostają **Member** i **Viewer**, dodając nowy przypadek(i) do odpowiedniej stałej `*_DEFAULT_PERMISSIONS`:
 
 ```php
 private const array MEMBER_DEFAULT_PERMISSIONS = [
@@ -47,7 +47,7 @@ private const array VIEWER_DEFAULT_PERMISSIONS = [
 ];
 ```
 
-Zasada stosowana w całym tym repozytorium: dawaj Member/Viewer domyślnie połowę `*_VIEW` pary, nigdy połowy `*_UPDATE`/`*_CREATE`/`*_DELETE` — zdolności mutujące są tylko dla Owner/Admin (albo nadawane jawnie przez rolę niestandardową), chyba że masz konkretny powód, by otworzyć je szerzej.
+Zasada stosowana w całym tym repozytorium: dawaj Member/Viewer domyślnie połowę `*_VIEW` pary, nigdy połowy `*_UPDATE`/`*_CREATE`/`*_DELETE` — zdolności mutujące są tylko dla Owner/Admin (albo nadawane jawnie przez rolę niestandardową), chyba że masz konkretny powód, by otworzyć je szerzej. Te wartości domyślne są zasiewane tylko wtedy, gdy rola systemowa projektu jest tworzona po raz pierwszy (`ensureSystemRoles()`), więc nowy wpis trafia wyłącznie do nowych projektów; istniejące projekty zachowują to, co skonfigurowali ich administratorzy.
 
 ## Krok 3 — Dodaj sprawdzenie autoryzacji
 
@@ -58,16 +58,16 @@ Dwie opcje, wybierz w zależności od tego, czy zdolność dotyczy istniejącego
 ```php
 public function viewIntegrations(User $user, Project $project): bool
 {
-    return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]);
+    return $project->hasPermission($user, Permission::INTEGRATIONS_VIEW);
 }
 
 public function updateIntegrations(User $user, Project $project): bool
 {
-    return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    return $project->hasPermission($user, Permission::INTEGRATIONS_UPDATE);
 }
 ```
 
-`hasPermissionOrTier()` (na `App\Models\Project`) robi dwa sprawdzenia po kolei: czy własny poziom członkostwa użytkownika (`owner`/`admin`/`member`/`viewer`) znajduje się na podanej liście dozwolonych — jeśli tak, przyznaje natychmiast, bez odpytywania bazy o uprawnienia ról niestandardowych; w przeciwnym razie przechodzi do `hasPermission()`, które sprawdza, czy jakakolwiek rola niestandardowa posiadana przez użytkownika ma nadane konkretne `Permission` poprzez łańcuch pivotów `project_user_role`/`role_permission`. Dlatego Owner i Admin "po prostu działają" dla zdolności zależnych od poziomu, jeszcze zanim `ensureSystemRoles()` zsynchronizuje uprawnienia ich roli systemowej z tabelą pivot.
+`hasPermission()` (na `App\Models\Project`) to **jedyne** sprawdzenie — nie ma listy dozwolonych poziomów do utrzymywania. Owner zawsze przechodzi; każdy inny członek przechodzi, gdy którakolwiek z jego ról (rola systemowa lub niestandardowa) ma nadane konkretne `Permission` przez pivot `permission_role`. To, co mogą Admin/Member/Viewer, wynika więc wyłącznie z uprawnień na tych rolach (wartości domyślne z kroku 2, edytowane w Settings → Roles).
 
 Wywołaj to z kontrolera przez `$this->authorize('updateIntegrations', $project);` (Laravel automatycznie rozwiązuje `ProjectPolicy::updateIntegrations` — nie trzeba jawnej rejestracji Policy, zobacz `app/Policies/*.php` po istniejącą konwencję).
 
@@ -92,15 +92,15 @@ Użyj opcji B tylko wtedy, gdy nie ma jeszcze instancji, względem której możn
 
 Plik: `app/Http/Controllers/SettingsController.php`
 
-Oblicz wartość boolean **bezpośrednio z modelu `Project`** (`hasPermissionOrTier`/`hasPermission`) w akcji tej zakładki, która jej potrzebuje — każda zakładka ustawień ma własną akcję (zobacz [`../settings-tabs/README.md`](../settings-tabs/README.md)) — i nie przechodź tu przez Policy; Policy tutaj są zarezerwowane do autoryzacji rzeczywistych żądań mutujących (`$this->authorize(...)` w akcji kontrolera), podczas gdy `SettingsController` oblicza zwykłe wartości boolean, żeby UI mógł warunkowo renderować:
+Oblicz wartość boolean **bezpośrednio z modelu `Project`** (`hasPermission`) w akcji tej zakładki, która jej potrzebuje — każda zakładka ustawień ma własną akcję (zobacz [`../settings-tabs/README.md`](../settings-tabs/README.md)) — i nie przechodź tu przez Policy; Policy tutaj są zarezerwowane do autoryzacji rzeczywistych żądań mutujących (`$this->authorize(...)` w akcji kontrolera), podczas gdy `SettingsController` oblicza zwykłe wartości boolean, żeby UI mógł warunkowo renderować:
 
 ```php
-$hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, self::VIEW_TIERS) ?? false;
+$hasIntegrationsAccess = $selectedProject?->hasPermission($user, PermissionEnum::INTEGRATIONS_VIEW) ?? false;
 $canUpdateIntegrations = $hasIntegrationsAccess
-    && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, self::MANAGE_TIERS);
+    && $selectedProject->hasPermission($user, PermissionEnum::INTEGRATIONS_UPDATE);
 ```
 
-`self::VIEW_TIERS` / `self::MANAGE_TIERS` to współdzielone stałe tierów na Controllerze, a `can()` opakowuje sprawdzenie `MANAGE_TIERS` dla najczęstszego przypadku. Dodaj obie wartości do tablicy props `Inertia::render(...)` **tej** akcji — i tylko tej, żeby żadna inna zakładka za nie nie płaciła — a potem przeprowadź je przez stronę zakładki (np. `Settings/Integrations.tsx`) do Twojego komponentu zakładki dokładnie tak, jak robi to już `canUpdateIntegrations` (zobacz [`../integrations/04-frontend-backend-wiring-overview.md`](../integrations/04-frontend-backend-wiring-overview.md) po pełną listę przekazywania propsów).
+Prywatny helper `can()` w Controllerze opakowuje to samo wywołanie `hasPermission()` (bezpieczne wobec braku wybranego projektu) dla najczęstszego przypadku. Dodaj obie wartości do tablicy props `Inertia::render(...)` **tej** akcji — i tylko tej, żeby żadna inna zakładka za nie nie płaciła — a potem przeprowadź je przez stronę zakładki (np. `Settings/Integrations.tsx`) do Twojego komponentu zakładki dokładnie tak, jak robi to już `canUpdateIntegrations` (zobacz [`../integrations/04-frontend-backend-wiring-overview.md`](../integrations/04-frontend-backend-wiring-overview.md) po pełną listę przekazywania propsów).
 
 ## Krok 5 — Spraw, żeby dobrze się renderowało w Settings → Roles & management
 
@@ -138,7 +138,16 @@ Musisz dotknąć `resources/js/utils/permissionGroups.ts` (`GROUP_META`) tylko w
   ```
   Jest to idempotentne (`updateOrCreate` kluczowane po `key`) — bezpieczne do uruchamiania tak często, jak chcesz, także na produkcji po deployu, który dodaje nowe przypadki uprawnień.
 
-Jeśli to pominiesz, `getPermissionLabel`/cały interfejs Roles nie będzie "zepsuty" — uprawnienie po prostu w ogóle nie będzie istnieć jako wiersz, więc po cichu nigdy nie pojawi się na liście, i żadna rola nigdy nie będzie mogła go otrzymać. Jeśli kiedykolwiek zobaczysz "dodałem uprawnienie, ale nigdzie go nie ma w UI", to prawie zawsze jest tego powodem — sprawdź przez:
+Zasianie tworzy tylko wiersz w `permissions`. Role systemowe Owner i Admin w istniejących projektach **nie** dostają go automatycznie (są wypełniane tylko przy pierwszym utworzeniu), więc przyznaj je też im:
+
+```bash
+php artisan permissions:grant-to-existing-roles projects.integrations.view projects.integrations.update
+# default is --roles=owner,admin; the command is additive and safe to re-run
+```
+
+(Zaimplementowane w `app/Console/Commands/GrantPermissionsToExistingRoles.php`.) Jeśli to pominiesz, Admini istniejących projektów nie dostaną nowej zdolności, dopóki ktoś nie zaznaczy jej w Settings → Roles. Owner nigdy nie jest dotknięty — przechodzi każde sprawdzenie `hasPermission()` bezwarunkowo.
+
+Jeśli pominiesz samo zasianie, `getPermissionLabel`/cały interfejs Roles nie będzie "zepsuty" — uprawnienie po prostu w ogóle nie będzie istnieć jako wiersz, więc po cichu nigdy nie pojawi się na liście, i żadna rola nigdy nie będzie mogła go otrzymać. Jeśli kiedykolwiek zobaczysz "dodałem uprawnienie, ale nigdzie go nie ma w UI", to prawie zawsze jest tego powodem — sprawdź przez:
 
 ```bash
 php artisan tinker --execute="App\Models\Permission::where('key', 'like', 'projects.integrations%')->get(['key','group'])"

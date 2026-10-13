@@ -116,7 +116,7 @@ Zamień jednolinijkowy `Input` na wieloliniową textareę i zaktualizuj nazwy pr
 ```tsx
 interface InviteByEmailPanelProps {
     emailEnabled: boolean;
-    isManager: boolean;
+    canInvite: boolean;
     canAssignRoles: boolean;
     assignableRoles: WorkspaceRole[];
     emails: string;
