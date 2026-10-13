@@ -165,21 +165,4 @@ class Project extends Model
 
         return in_array($permission->value, $membership['permissions'], true);
     }
-
-    /**
-     * The tiers listed keep working regardless of whether their system role has
-     * been synced onto the project_user_role pivot yet — only a tier outside the
-     * list (and anyone whose system role hasn't synced) falls through to the
-     * granular permission, which a custom role can still grant them.
-     */
-    public function hasPermissionOrTier(User $user, PermissionEnum $permission, array $tiers): bool
-    {
-        $role = $this->roleOf($user);
-
-        if (in_array($role, array_map(fn (RoleType $tier) => $tier->value, $tiers), true)) {
-            return true;
-        }
-
-        return $this->hasPermission($user, $permission);
-    }
 }

@@ -11,6 +11,7 @@ use App\Models\ProjectUser;
 use App\Models\SavedFilter;
 use App\Models\User;
 use App\Services\RoleService;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -148,4 +149,27 @@ test('hasPermission() grants access through a custom role holding the permission
 
     expect($project->hasPermission($member, PermissionEnum::ROLES_DELETE))->toBeTrue()
         ->and($project->hasPermission($member, PermissionEnum::ROLES_CREATE))->toBeFalse();
+});
+
+test('hasPermission() honours a customised system role instead of the tier it belongs to', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+
+    expect($project->hasPermission($member, PermissionEnum::ISSUES_CREATE))->toBeTrue();
+
+    $project->roles()->where('slug', 'member')->first()->permissions()
+        ->detach(Permission::where('key', PermissionEnum::ISSUES_CREATE->value)->value('id'));
+    CacheVersion::bump(CacheVersion::MEMBERSHIP);
+
+    expect($project->hasPermission($member, PermissionEnum::ISSUES_CREATE))->toBeFalse();
+});
+
+test('a viewer cannot create issues but can read them', function () {
+    $project = Project::factory()->create();
+    $viewer = User::factory()->create();
+    addProjectMember($project, $viewer->id, 'viewer');
+
+    expect($project->hasPermission($viewer, PermissionEnum::ISSUES_VIEW))->toBeTrue()
+        ->and($project->hasPermission($viewer, PermissionEnum::ISSUES_CREATE))->toBeFalse();
 });

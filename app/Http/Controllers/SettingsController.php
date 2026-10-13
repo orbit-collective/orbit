@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Enums\AutomationActionType;
 use App\Enums\AutomationTriggerType;
 use App\Enums\Permissions\Permission as PermissionEnum;
-use App\Enums\Permissions\RoleType;
 use App\Models\AutomationAction;
 use App\Models\AutomationRule;
 use App\Models\Label;
@@ -44,20 +43,6 @@ use Inertia\Response;
  */
 class SettingsController extends Controller
 {
-    /**
-     * Tiers that are allowed to view settings regardless of any explicit
-     * permission grant.
-     */
-    private const array VIEW_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-
-    /**
-     * Labels and issue types are readable a tier wider than the general
-     * settings tabs (see ProjectPolicy::viewLabels()).
-     */
-    private const array CATALOG_VIEW_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::VIEWER];
-
-    private const array MANAGE_TIERS = [RoleType::OWNER, RoleType::ADMIN];
-
     public function __construct(
         protected UserService $userService,
         protected NotificationSettingService $notificationSettingService,
@@ -110,7 +95,7 @@ class SettingsController extends Controller
         $projects = $this->projects($request);
         $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
 
-        $hasLabelsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_VIEW, self::CATALOG_VIEW_TIERS) ?? false;
+        $hasLabelsAccess = $selectedProject?->hasPermission($user, PermissionEnum::LABELS_VIEW) ?? false;
 
         return Inertia::render('Settings/Labels', [
             ...$this->projectScope($projects, $selectedProject),
@@ -133,8 +118,8 @@ class SettingsController extends Controller
         $projects = $this->projects($request);
         $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
 
-        $hasIssueTypesAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::ISSUE_TYPES_VIEW, self::CATALOG_VIEW_TIERS) ?? false;
-        $hasLabelsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::LABELS_VIEW, self::CATALOG_VIEW_TIERS) ?? false;
+        $hasIssueTypesAccess = $selectedProject?->hasPermission($user, PermissionEnum::ISSUE_TYPES_VIEW) ?? false;
+        $hasLabelsAccess = $selectedProject?->hasPermission($user, PermissionEnum::LABELS_VIEW) ?? false;
 
         return Inertia::render('Settings/IssueTypes', [
             ...$this->projectScope($projects, $selectedProject),
@@ -185,7 +170,7 @@ class SettingsController extends Controller
                 : false,
             'canUpdateProjectDetails' => $this->can($selectedProject, $user, PermissionEnum::PROJECT_UPDATE),
             'canDeleteProject' => $selectedProject
-                ? $selectedProject->hasPermissionOrTier($user, PermissionEnum::PROJECT_DELETE, [RoleType::OWNER])
+                ? $selectedProject->hasPermission($user, PermissionEnum::PROJECT_DELETE)
                 : false,
         ]);
     }
@@ -196,7 +181,7 @@ class SettingsController extends Controller
         $projects = $this->projects($request);
         $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
 
-        $hasSettingsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::SETTINGS_VIEW, self::VIEW_TIERS) ?? false;
+        $hasSettingsAccess = $selectedProject?->hasPermission($user, PermissionEnum::SETTINGS_VIEW) ?? false;
         $hasRolesAccess = $this->hasRolesAccess($selectedProject, $user);
 
         return Inertia::render('Settings/RolesManagement', [
@@ -220,9 +205,9 @@ class SettingsController extends Controller
         $projects = $this->projects($request);
         $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
 
-        $hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, self::VIEW_TIERS) ?? false;
+        $hasIntegrationsAccess = $selectedProject?->hasPermission($user, PermissionEnum::INTEGRATIONS_VIEW) ?? false;
         $canUpdateIntegrations = $hasIntegrationsAccess
-            && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, self::MANAGE_TIERS);
+            && $selectedProject->hasPermission($user, PermissionEnum::INTEGRATIONS_UPDATE);
 
         return Inertia::render('Settings/Integrations', [
             ...$this->projectScope($projects, $selectedProject),
@@ -269,9 +254,9 @@ class SettingsController extends Controller
         $projects = $this->projects($request);
         $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
 
-        $hasAutomationAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::AUTOMATION_VIEW, self::VIEW_TIERS) ?? false;
+        $hasAutomationAccess = $selectedProject?->hasPermission($user, PermissionEnum::AUTOMATION_VIEW) ?? false;
         $canUpdateAutomation = $hasAutomationAccess
-            && $selectedProject->hasPermissionOrTier($user, PermissionEnum::AUTOMATION_UPDATE, self::MANAGE_TIERS);
+            && $selectedProject->hasPermission($user, PermissionEnum::AUTOMATION_UPDATE);
 
         return Inertia::render('Settings/Automation', [
             ...$this->projectScope($projects, $selectedProject),
@@ -340,13 +325,13 @@ class SettingsController extends Controller
 
     private function can(?Project $project, User $user, PermissionEnum $permission): bool
     {
-        return $project?->hasPermissionOrTier($user, $permission, self::MANAGE_TIERS) ?? false;
+        return $project?->hasPermission($user, $permission) ?? false;
     }
 
     private function hasRolesAccess(?Project $project, User $user): bool
     {
-        return ($project?->hasPermissionOrTier($user, PermissionEnum::SETTINGS_VIEW, self::VIEW_TIERS) ?? false)
-            && $project->hasPermissionOrTier($user, PermissionEnum::ROLES_VIEW, self::VIEW_TIERS);
+        return ($project?->hasPermission($user, PermissionEnum::SETTINGS_VIEW) ?? false)
+            && $project->hasPermission($user, PermissionEnum::ROLES_VIEW);
     }
 
     private function resolveSelectedProject(Collection $projects, ?string $projectId): ?Project
