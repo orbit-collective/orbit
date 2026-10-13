@@ -26,19 +26,10 @@ class Project extends Model
         'description',
         'color',
         'columns',
-        'role',
-        'is_system',
         'labels_seeded_at',
         'issue_types_seeded_at',
         'issue_type_defaults_version',
-        'icon',
-        'allows_children',
-        'required_fields',
-        'restricted_role_types',
-        'is_top_level',
-        'sort_order',
         'next_issue_number',
-        'integration',
     ];
 
     protected $casts = [
