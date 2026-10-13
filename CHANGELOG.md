@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.10.7](https://github.com/orbit-collective/orbit/compare/v0.10.6...v0.10.7) (2026-10-13)
+
+
+### Features
+
+* **roles:** backfill system roles for existing members ([0e402fe](https://github.com/orbit-collective/orbit/commit/0e402fe61106e815d0209cd7ef62ffef19c30197))
+
+
+### Bug Fixes
+
+* **roles:** keep a member tier out of free-form role assignment ([f633495](https://github.com/orbit-collective/orbit/commit/f633495eb2aef19234a2003ce9c2ee0a85a77913))
+* **roles:** make joining and ownership changes atomic ([f4a8148](https://github.com/orbit-collective/orbit/commit/f4a8148ad1a095ecbe844db99b1b809ba823a1d3))
+* **roles:** never mistake a custom role for a system role ([114dd38](https://github.com/orbit-collective/orbit/commit/114dd38e11c2ca0cc18329ddec40f325016f26ec))
+* **roles:** only allow creating custom roles ([a3c8f16](https://github.com/orbit-collective/orbit/commit/a3c8f1639e430190a7c50854379584808388317b))
+
+
+### Miscellaneous Chores
+
+* release 0.10.7 ([877d9d5](https://github.com/orbit-collective/orbit/commit/877d9d55e32cff940d3deec765f8dfbd6bdc7c12))
+
 ## [0.10.6](https://github.com/orbit-collective/orbit/compare/v0.10.5...v0.10.6) (2026-10-11)
 
 
