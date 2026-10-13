@@ -3,19 +3,23 @@
 Przećwiczony przykład: dodanie piątego poziomu, **Contributor**,
 znajdującego się pomiędzy Member a Viewer — może widzieć wszystko to,
 co Member, oraz tworzyć issues/komentarze, ale nie może niczego usuwać
-ani zarządzać członkami/rolami/ustawieniami. W tym przewodniku nigdzie
-nie jest potrzebna migracja: kolumna `role` roli to zwykły string,
-więc nowy przypadek `RoleType` jest poprawny w momencie, gdy enum o
-nim wie.
+ani zarządzać członkami/rolami/ustawieniami.
 
-Poziomy są celowo zapisane na sztywno w kilku miejscach zamiast być
-sterowane uporządkowaną tabelą, więc ten przewodnik dotyka więcej
-plików niż dodanie zwykłego uprawnienia (zobacz
-[`./01-add-a-new-permission.md`](./01-add-a-new-permission.md)
-po ten, znacznie krótszy, przewodnik). Wykonaj każdy krok poniżej —
-pominięcie jednego niczego nie wywala, po prostu zostawia Contributor
-bez możliwości zrobienia czegoś, co jest zbliżone do Membera, a
-powinno być dostępne.
+Poziom to po prostu **rola systemowa** (`roles.is_system = true`,
+`roles.role = <wartość RoleType>`), której dokładnie jeden wiersz ma
+każdy projekt, więc dodanie go to głównie dane: nowy przypadek
+`RoleType`, jego domyślny zestaw uprawnień w `RoleService` oraz
+migracja danych tworząca nową rolę systemową w każdym *istniejącym*
+projekcie (nowe projekty dostają ją automatycznie z
+`ensureSystemRoles()`). **Nie ma list poziomów do utrzymywania w
+Policy ani Controllerach** — każde sprawdzenie to
+`Project::hasPermission($user, Permission::X)`, więc nowy poziom jest
+autoryzowany wyłącznie uprawnieniami swojej roli. Zmiana schematu też
+nie jest potrzebna: `roles.role` to zwykły string, więc nowy przypadek
+`RoleType` jest poprawny w momencie, gdy enum o nim wie.
+
+Po znacznie krótszy przewodnik o zabezpieczaniu nowej akcji zobacz
+[`./01-add-a-new-permission.md`](./01-add-a-new-permission.md).
 
 ## Krok 1 — Dodaj przypadek enuma
 
@@ -93,37 +97,29 @@ Nic więcej w `RoleService` nie musi się zmienić —
 `syncPermissions()` oraz zabezpieczenia dla Ownera/ról systemowych
 operują na `SYSTEM_ROLE_TYPES`/`RoleType` w sposób ogólny.
 
-## Krok 3 — Przejrzyj każde sprawdzenie w Policy zależne od poziomu
+## Krok 3 — Policy nie wymagają zmian
 
-Każde wywołanie `hasPermissionOrTier($user, $permission, $tiers)` ma
-zapisaną na sztywno własną listę dozwolonych poziomów, więc nowy
-poziom jest niewidoczny dla sprawdzenia, dopóki jawnie nie zdecydujesz,
-że tam należy. Oto każde istniejące miejsce wywołania — przejdź przez
-każde i zdecyduj, czy Contributor powinien się na nim znaleźć:
+W przeciwieństwie do starego modelu z listami poziomów, nie ma tu nic
+do przeglądania: `IssuePolicy`, `CommentPolicy`, `ProjectPolicy` i
+`SettingsController` wywołują wyłącznie `hasPermission()`, więc
+Contributor może tworzyć issues i komentarze (oraz edytować własne
+komentarze), ponieważ `CONTRIBUTOR_DEFAULT_PERMISSIONS` z kroku 2
+zawiera `ISSUES_CREATE`, `ISSUES_UPDATE`, `COMMENTS_CREATE` i
+`COMMENTS_UPDATE_OWN`, a nie może niczego usuwać ani zarządzać, bo
+tych uprawnień nie zawiera. Decyzja, którą kiedyś trzeba było
+powtarzać w każdej Policy, żyje teraz w jednym miejscu: w domyślnym
+zestawie uprawnień wybranym w kroku 2 (który administratorzy mogą
+potem dostosować per projekt w Settings → Roles — edycja dowolnej
+roli systemowej poza Owner naprawdę zmienia to, co mogą jej
+członkowie).
 
-- `app/Policies/IssuePolicy.php` — `MODIFY_TIERS = [OWNER, ADMIN, MEMBER]`
-- `app/Policies/CommentPolicy.php` — `OWN_TIERS = [OWNER, ADMIN, MEMBER]`, `ANY_TIERS = [OWNER, ADMIN]`
-- `app/Policies/ProjectPolicy.php` — `updateDetails`, `inviteMembers`, `updateMemberRole`, `removeMember`, `viewIntegrations`, `updateIntegrations`
-- `app/Http/Controllers/SettingsController.php` — `VIEW_TIERS`, `CATALOG_VIEW_TIERS`, `MANAGE_TIERS` oraz osadzona w kodzie tablica `[RoleType::OWNER]` dla `PROJECT_DELETE`
-
-W tym przećwiczonym przykładzie Contributor dostaje tworzenie
-issues/komentarzy oraz edycję własnych, ale nie moderację ani
-usuwanie, więc:
-
-```php
-// app/Policies/IssuePolicy.php
-private const array MODIFY_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER, RoleType::CONTRIBUTOR];
-```
-
-pozostaw `CommentPolicy::ANY_TIERS` oraz każdą listę poziomów w
-`ProjectPolicy`/`SettingsController` **bez zmian** — Contributor
-polega na swoich `CONTRIBUTOR_DEFAULT_PERMISSIONS`
-(`COMMENTS_CREATE`, `COMMENTS_UPDATE_OWN`) w kwestii komentarzy zamiast
-na skrócie poziomowym, i nie ma żadnego powodu, by zarządzać
-członkami/ustawieniami/integracjami. To jest właśnie decyzja, dla
-której istnieje ten krok: poziom nie musi pojawiać się na każdej
-liście dozwolonych, tylko na tych, które odpowiadają temu, co
-zdecydowałeś, że może robić w kroku 2.
+Dwa miejsca nadal patrzą na sam string poziomu, przez
+`Project::roleOf()`: `restricted_role_types` typu issue
+(`IssuePolicy::createOfType()`) przechowuje stringi poziomów, więc nowy
+poziom po prostu staje się dodatkową wartością, którą admin może tam
+wybrać, oraz kod wyświetlający (odznaki, listy rozwijane) odczytujący
+poziom. Sprawdź obsługę `restricted_role_types`, jeśli Contributor
+ma być tam wybieralny.
 
 ## Krok 4 — Spraw, by dało się go przypisać
 
@@ -181,16 +177,47 @@ contributor: {
 },
 ```
 
-## Krok 6 — Zasiej uprawnienia przed ręcznym testowaniem
+## Krok 6 — Uzupełnij rolę systemową w istniejących projektach
 
-Tabela `permissions` nie wymaga żadnych zmian dla nowego poziomu (jest
-już w pełni zasiana przez `PermissionSeeder`, zobacz
+`ensureSystemRoles()` tworzy rolę Contributor w projekcie przy
+najbliższym uruchomieniu (utworzenie projektu, zmiana roli członka,
+zaproszenie), ale do tego czasu istniejący projekt po prostu nie ma
+roli Contributor i admin nie mógłby jej wybrać. Utwórz ją wszędzie
+migracją danych, na wzór
+`database/migrations/2026_10_13_100000_backfill_system_roles_for_existing_members.php`:
+
+```php
+return new class extends Migration
+{
+    public function up(): void
+    {
+        $roleService = app(RoleService::class);
+
+        Project::query()->chunkById(100, function ($projects) use ($roleService) {
+            foreach ($projects as $project) {
+                $roleService->ensureSystemRoles($project);
+            }
+        });
+
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
+    }
+
+    public function down(): void {}
+};
+```
+
+`ensureSystemRoles()` jest idempotentne: zasiewa domyślne uprawnienia
+tylko dla roli, którą *właśnie utworzyło*, więc istniejące role
+Owner/Admin/Member/Viewer — i wszelkie ich dostosowania przez adminów —
+zostają nietknięte. Ta migracja nikomu nie przypisuje nowej roli;
+członkowie przechodzą na nią zwykłym przepływem zmiany roli
+(`RoleService::syncSystemRoleForMember()`).
+
+Sama tabela `permissions` nie wymaga żadnych zmian dla nowego poziomu
+(jest już w pełni zasiana przez `PermissionSeeder`, zobacz
 [`./01-add-a-new-permission.md`](./01-add-a-new-permission.md)
-krok 6) — wiersz Contributora zostaje utworzony, a jego domyślne
-uprawnienia zsynchronizowane automatycznie, przy pierwszym uruchomieniu
-`ensureSystemRoles()` dla dowolnego projektu (przy tworzeniu projektu
-albo przy najbliższej zmianie roli któregokolwiek członka). Aby zobaczyć
-to od razu w istniejącym lokalnym projekcie:
+krok 6). Aby zobaczyć rolę od razu w istniejącym lokalnym projekcie
+bez migrowania:
 
 ```bash
 php artisan tinker --execute="app(App\Services\RoleService::class)->ensureSystemRoles(App\Models\Project::first())"
@@ -212,14 +239,18 @@ php artisan tinker --execute="app(App\Services\RoleService::class)->ensureSystem
   `tests/Feature/ProjectMemberControllerTest.php` — dodaj test "can
   promote a member to contributor" na wzór istniejącego "can promote a
   member to admin" i potwierdź, że `syncSystemRoleForMember` poprawnie
-  podmienia pivot dla nowego poziomu.
+  podmienia pivot dla nowego poziomu. W testach dodawaj członków przez
+  `addProjectMember($project, $userId, 'contributor')` z
+  `tests/Pest.php` (wiersz członkostwa + rola systemowa), nigdy przez
+  `attach(['role' => ...])`.
 - `tests/Feature/Models/RoleTest.php` — jeśli gdzieś wylicza przypadki
   `RoleType`, dodaj Contributora do oczekiwanej listy.
-- Każde zachowanie Policy zmienione w kroku 3
-  (`IssuePolicy::MODIFY_TIERS` w tym przykładzie) jest pokryte
-  pośrednio przez `tests/Feature/IssueControllerTest.php` — dodaj tam
-  test "a contributor can create an issue but cannot delete one", na
-  wzór istniejących testów dla poziomu Member.
+- Zachowanie samego poziomu jest pokryte przez testy Controllerów
+  akcji, które może/nie może wykonywać — dodaj "a contributor can
+  create an issue but cannot delete one" do
+  `tests/Feature/IssueControllerTest.php`, na wzór istniejących testów
+  dla poziomu Member. Żadna Policy nie została zmieniona, więc to
+  ćwiczy `CONTRIBUTOR_DEFAULT_PERMISSIONS` od początku do końca.
 - `resources/js/utils/roleTheme.test.ts` (jeśli istnieje) lub
   którykolwiek test iterujący po `ROLE_TYPE_THEME`/`RoleTypeValue` —
   dodaj `contributor`, żeby brakujący wpis w motywie zawiódł głośno

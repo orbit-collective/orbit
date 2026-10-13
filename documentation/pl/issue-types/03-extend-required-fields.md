@@ -129,7 +129,7 @@ fields rejects a request missing one'`:
 test('creating an issue of a type requiring a parent rejects a request without one', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
-    $project->users()->attach($member->id, ['role' => 'member']);
+    addProjectMember($project, $member->id, 'member');
     $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open']);
     $subtaskType = $project->issueTypes()->create(['name' => 'Sub-task', 'icon' => 'Bug', 'color' => '#000000', 'required_fields' => ['parent']]);
 

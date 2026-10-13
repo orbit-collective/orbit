@@ -743,7 +743,8 @@ krok 5, jeśli dodajesz *nowy* typ zamiast używać istniejącego).
       $author = User::factory()->create();
       $project = Project::factory()->create();
       $mentioned = User::factory()->create();
-      $project->users()->attach([$author->id => ['role' => 'member'], $mentioned->id => ['role' => 'member']]);
+      addProjectMember($project, $author->id, 'member');
+      addProjectMember($project, $mentioned->id, 'member');
       $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
       $comment = Comment::factory()->make(['issue_id' => $issue->id, 'user_id' => $author->id]);
 

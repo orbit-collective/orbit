@@ -7,23 +7,19 @@ Przećwiczony przykład: nadanie `SavedFilter` tego samego kształtu "zawsze mo�
 Plik: `app/Policies/CommentPolicy.php`
 
 ```php
-private const array OWN_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-
-private const array ANY_TIERS = [RoleType::OWNER, RoleType::ADMIN];
-
 public function update(User $user, Comment $comment): bool
 {
     $project = $comment->issue->project;
 
     if ($comment->user_id === $user->id) {
-        return $project->hasPermissionOrTier($user, Permission::COMMENTS_UPDATE_OWN, self::OWN_TIERS);
+        return $project->hasPermission($user, Permission::COMMENTS_UPDATE_OWN);
     }
 
-    return $project->hasPermissionOrTier($user, Permission::COMMENTS_UPDATE_ANY, self::ANY_TIERS);
+    return $project->hasPermission($user, Permission::COMMENTS_UPDATE_ANY);
 }
 ```
 
-Kształt jest zawsze ten sam: sprawdź najpierw, kto jest właścicielem zasobu, a potem rozgałęź się do jednego z **dwóch osobnych uprawnień** — `*_own` z szerszą listą dozwolonych poziomów (każdy poziom, który może w ogóle działać) i `*_any` z węższą (tylko poziomy zaufane, żeby dotykać cudzych rzeczy) — nigdy pojedyncze uprawnienie z doklejonym inline sprawdzeniem własności. To właśnie pozwala roli niestandardowej przyznać "edytuj własne komentarze" bez jednoczesnego przyznawania "edytuj czyjekolwiek."
+Kształt jest zawsze ten sam: sprawdź najpierw, kto jest właścicielem zasobu, a potem rozgałęź się do jednego z **dwóch osobnych uprawnień** — `*_own`, które Member dostaje domyślnie, i `*_any`, które domyślnie dostają tylko Owner/Admin (role zaufane, żeby dotykać cudzych rzeczy) — nigdy pojedyncze uprawnienie z doklejonym inline sprawdzeniem własności. To właśnie pozwala roli niestandardowej przyznać "edytuj własne komentarze" bez jednoczesnego przyznawania "edytuj czyjekolwiek."
 
 ## Krok 1 — Dodaj kolumnę właściciela
 
@@ -57,6 +53,8 @@ private const array MEMBER_DEFAULT_PERMISSIONS = [
 
 Tylko `_OWN` trafia do `MEMBER_DEFAULT_PERMISSIONS` (Viewer nie dostaje żadnego, zgodnie ze swoją domyślną postawą tylko-do-odczytu) — `_ANY` jest celowo pominięte w każdej domyślnej wartości poza Owner/Admin, dokładnie zgodnie z precedensem uprawnień komentarzy.
 
+Ponieważ wartości domyślne są zasiewane tylko przy pierwszym utworzeniu ról systemowych projektu, uruchom też `php artisan permissions:grant-to-existing-roles saved_filters.delete_own saved_filters.delete_any`, żeby role Owner/Admin istniejących projektów dostały oba (zobacz [`01-add-a-new-permission.md`](./01-add-a-new-permission.md) krok 6).
+
 ## Krok 3 — Napisz Policy
 
 Nowy plik: `app/Policies/SavedFilterPolicy.php`
@@ -67,25 +65,20 @@ Nowy plik: `app/Policies/SavedFilterPolicy.php`
 namespace App\Policies;
 
 use App\Enums\Permissions\Permission;
-use App\Enums\Permissions\RoleType;
 use App\Models\SavedFilter;
 use App\Models\User;
 
 class SavedFilterPolicy
 {
-    private const array OWN_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-
-    private const array ANY_TIERS = [RoleType::OWNER, RoleType::ADMIN];
-
     public function delete(User $user, SavedFilter $savedFilter): bool
     {
         $project = $savedFilter->project;
 
         if ($savedFilter->user_id === $user->id) {
-            return $project->hasPermissionOrTier($user, Permission::SAVED_FILTERS_DELETE_OWN, self::OWN_TIERS);
+            return $project->hasPermission($user, Permission::SAVED_FILTERS_DELETE_OWN);
         }
 
-        return $project->hasPermissionOrTier($user, Permission::SAVED_FILTERS_DELETE_ANY, self::ANY_TIERS);
+        return $project->hasPermission($user, Permission::SAVED_FILTERS_DELETE_ANY);
     }
 }
 ```
