@@ -38,7 +38,7 @@ const meta = {
     ],
     args: {
         emailEnabled: true,
-        isManager: true,
+        canInvite: true,
         canAssignRoles: true,
         assignableRoles,
         email: '',
@@ -96,8 +96,8 @@ export const Inviting: Story = {
     args: { email: 'jane@orbit.dev', isInviting: true },
 };
 
-export const NotAManager: Story = {
-    args: { isManager: false },
+export const CannotInvite: Story = {
+    args: { canInvite: false },
 };
 
 /** Without outgoing email configured, invitations are switched off. */

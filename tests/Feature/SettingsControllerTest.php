@@ -133,7 +133,8 @@ test('settings page has no selected project when the user belongs to none', func
     $response->assertInertia(fn (Assert $page) => $page
         ->where('memberProjects', [])
         ->where('selectedProjectId', null)
-        ->where('viewerRole', null)
+        ->where('canInviteMembers', false)
+        ->where('canTransferOwnership', false)
         ->where('members', [])
         ->where('pendingInvitations', [])
     );
@@ -150,7 +151,10 @@ test('settings page defaults to the user\'s first project and lists its members'
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('selectedProjectId', $project->id)
-        ->where('viewerRole', 'admin')
+        ->where('canInviteMembers', true)
+        ->where('canUpdateMemberRoles', true)
+        ->where('canRemoveMembers', true)
+        ->where('canTransferOwnership', false)
         ->has('members', 2)
         ->where('memberProjects.0.id', $project->id)
     );
@@ -325,6 +329,30 @@ test('settings page masks the webhook url from a member who cannot update integr
     );
 });
 
+test('settings page offers ownership transfer to the owner only', function () {
+    $owner = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $owner->id, 'owner');
+
+    $this->actingAs($owner)->get('/settings/members')->assertInertia(fn (Assert $page) => $page
+        ->where('canTransferOwnership', true)
+    );
+});
+
+test('settings page follows a custom role granting member management', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'member');
+    $role = $project->roles()->create(['name' => 'Recruiter', 'slug' => 'recruiter', 'role' => 'custom']);
+    $role->permissions()->sync(Permission::where('key', PermissionEnum::MEMBERS_INVITE->value)->pluck('id'));
+    ProjectUser::where('user_id', $user->id)->first()->roles()->attach($role->id);
+
+    $this->actingAs($user)->get('/settings/members')->assertInertia(fn (Assert $page) => $page
+        ->where('canInviteMembers', true)
+        ->where('canRemoveMembers', false)
+    );
+});
+
 test('settings page respects the project query parameter', function () {
     $user = User::factory()->create();
     $projectA = Project::factory()->create();
@@ -336,7 +364,9 @@ test('settings page respects the project query parameter', function () {
 
     $response->assertInertia(fn (Assert $page) => $page
         ->where('selectedProjectId', $projectB->id)
-        ->where('viewerRole', 'member')
+        ->where('canInviteMembers', false)
+        ->where('canUpdateMemberRoles', false)
+        ->where('canRemoveMembers', false)
     );
 });
 

@@ -17,7 +17,6 @@ import {
     PendingProjectInvitation,
     ProjectDetails,
     ProjectMember,
-    ProjectMemberRole,
 } from '@/types/ProjectMembers';
 import { WorkspaceRole } from '@/types/Roles';
 import WorkspaceSettingsDeleteProjectModal from './WorkspaceSettingsDeleteProjectModal';
@@ -26,11 +25,14 @@ import WorkspaceSettingsTransferOwnershipModal from './WorkspaceSettingsTransfer
 interface WorkspaceSettingsMembersTabProps {
     memberProjects?: MemberProjectSummary[];
     selectedProjectId?: number | null;
-    viewerRole?: ProjectMemberRole | null;
     members?: ProjectMember[];
     pendingInvitations?: PendingProjectInvitation[];
     roles?: WorkspaceRole[];
     canAssignRoles?: boolean;
+    canInviteMembers?: boolean;
+    canUpdateMemberRoles?: boolean;
+    canRemoveMembers?: boolean;
+    canTransferOwnership?: boolean;
     selectedProjectDetails?: ProjectDetails | null;
     canUpdateProjectDetails?: boolean;
     canDeleteProject?: boolean;
@@ -39,18 +41,20 @@ interface WorkspaceSettingsMembersTabProps {
 export default function WorkspaceSettingsMembersTab({
     memberProjects = [],
     selectedProjectId = null,
-    viewerRole = null,
     members = [],
     pendingInvitations = [],
     roles = [],
     canAssignRoles = false,
+    canInviteMembers = false,
+    canUpdateMemberRoles = false,
+    canRemoveMembers = false,
+    canTransferOwnership = false,
     selectedProjectDetails = null,
     canUpdateProjectDetails = false,
     canDeleteProject = false,
 }: WorkspaceSettingsMembersTabProps) {
     const { props } = usePage<PageProps>();
     const emailEnabled = props.emailEnabled;
-    const isManager = viewerRole === 'owner' || viewerRole === 'admin';
     const assignableRoles = roles.filter((role) => !role.isSystem);
 
     const {
@@ -152,7 +156,8 @@ export default function WorkspaceSettingsMembersTab({
             >
                 <MemberList
                     members={members}
-                    isManager={isManager}
+                    canUpdateRoles={canUpdateMemberRoles}
+                    canRemoveMembers={canRemoveMembers}
                     canAssignRoles={canAssignRoles}
                     assignableRoles={assignableRoles}
                     onChangeRole={changeMemberRole}
@@ -176,7 +181,7 @@ export default function WorkspaceSettingsMembersTab({
                 </SettingsPanel>
             )}
 
-            {viewerRole === 'owner' && (
+            {canTransferOwnership && (
                 <OwnershipPanel
                     onTransferRequest={() =>
                         setIsTransferOwnershipModalOpen(true)
@@ -193,7 +198,7 @@ export default function WorkspaceSettingsMembersTab({
 
             <InviteByEmailPanel
                 emailEnabled={emailEnabled}
-                isManager={isManager}
+                canInvite={canInviteMembers}
                 canAssignRoles={canAssignRoles}
                 assignableRoles={assignableRoles}
                 email={inviteEmail}
@@ -207,7 +212,7 @@ export default function WorkspaceSettingsMembersTab({
                 onSubmit={submitInvite}
             />
 
-            {emailEnabled && isManager && (
+            {emailEnabled && canInviteMembers && (
                 <PendingInvitationsPanel
                     invitations={pendingInvitations}
                     assignableRoles={assignableRoles}
@@ -223,7 +228,7 @@ export default function WorkspaceSettingsMembersTab({
                 onSubmit={submitManualAccept}
             />
 
-            {viewerRole === 'owner' && (
+            {canTransferOwnership && (
                 <WorkspaceSettingsTransferOwnershipModal
                     isOpen={isTransferOwnershipModalOpen}
                     onClose={() => setIsTransferOwnershipModalOpen(false)}

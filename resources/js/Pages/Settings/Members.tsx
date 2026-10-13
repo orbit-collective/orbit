@@ -5,7 +5,6 @@ import {
     PendingProjectInvitation,
     ProjectDetails,
     ProjectMember,
-    ProjectMemberRole,
 } from '@/types/ProjectMembers';
 import { Project } from '@/types/Projects';
 import { WorkspaceRole } from '@/types/Roles';
@@ -14,11 +13,14 @@ interface SettingsMembersProps {
     projects?: Project[];
     memberProjects?: MemberProjectSummary[];
     selectedProjectId?: number | null;
-    viewerRole?: ProjectMemberRole | null;
     members?: ProjectMember[];
     pendingInvitations?: PendingProjectInvitation[];
     roles?: WorkspaceRole[];
     canAssignRoles?: boolean;
+    canInviteMembers?: boolean;
+    canUpdateMemberRoles?: boolean;
+    canRemoveMembers?: boolean;
+    canTransferOwnership?: boolean;
     selectedProjectDetails?: ProjectDetails | null;
     canUpdateProjectDetails?: boolean;
     canDeleteProject?: boolean;
@@ -28,11 +30,14 @@ export default function SettingsMembers({
     projects = [],
     memberProjects = [],
     selectedProjectId = null,
-    viewerRole = null,
     members = [],
     pendingInvitations = [],
     roles = [],
     canAssignRoles = false,
+    canInviteMembers = false,
+    canUpdateMemberRoles = false,
+    canRemoveMembers = false,
+    canTransferOwnership = false,
     selectedProjectDetails = null,
     canUpdateProjectDetails = false,
     canDeleteProject = false,
@@ -42,11 +47,14 @@ export default function SettingsMembers({
             <WorkspaceSettingsMembersTab
                 memberProjects={memberProjects}
                 selectedProjectId={selectedProjectId}
-                viewerRole={viewerRole}
                 members={members}
                 pendingInvitations={pendingInvitations}
                 roles={roles}
                 canAssignRoles={canAssignRoles}
+                canInviteMembers={canInviteMembers}
+                canUpdateMemberRoles={canUpdateMemberRoles}
+                canRemoveMembers={canRemoveMembers}
+                canTransferOwnership={canTransferOwnership}
                 selectedProjectDetails={selectedProjectDetails}
                 canUpdateProjectDetails={canUpdateProjectDetails}
                 canDeleteProject={canDeleteProject}

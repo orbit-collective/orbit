@@ -154,7 +154,6 @@ class SettingsController extends Controller
                 'description' => $selectedProject->description,
                 'color' => $selectedProject->color,
             ] : null,
-            'viewerRole' => $selectedProject?->roleOf($user),
             'members' => $selectedProject
                 ? $this->mapMembers($this->projectMemberService->getMembers($selectedProject))
                 : [],
@@ -168,6 +167,10 @@ class SettingsController extends Controller
             'canAssignRoles' => $selectedProject
                 ? $selectedProject->hasPermission($user, PermissionEnum::ROLES_ASSIGN)
                 : false,
+            'canInviteMembers' => $this->can($selectedProject, $user, PermissionEnum::MEMBERS_INVITE),
+            'canUpdateMemberRoles' => $this->can($selectedProject, $user, PermissionEnum::MEMBERS_UPDATE),
+            'canRemoveMembers' => $this->can($selectedProject, $user, PermissionEnum::MEMBERS_DELETE),
+            'canTransferOwnership' => $selectedProject ? $user->can('transferOwnership', $selectedProject) : false,
             'canUpdateProjectDetails' => $this->can($selectedProject, $user, PermissionEnum::PROJECT_UPDATE),
             'canDeleteProject' => $selectedProject
                 ? $selectedProject->hasPermission($user, PermissionEnum::PROJECT_DELETE)
