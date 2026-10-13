@@ -38,13 +38,17 @@ ProjectMemberController::updateRole()
         ▼
 ProjectMemberService::updateRole()
   - assertIsMember() / assertNotOwner()                   [business rules]
-  - $this->projectMemberRepository->updateRole(...)       [data access]
   - $this->roleService->syncSystemRoleForMember(...)      [another Service]
   - $this->activityLogService->log(...)                   [side effect]
         │
         ▼
-ProjectMemberRepository::updateRole()
-  - $project->users()->updateExistingPivot($userId, ['role' => $role->value])
+RoleService::syncSystemRoleForMember()
+  - ensureSystemRoles($project)                           [find/create tier roles]
+  - $this->projectMemberRepository->syncSystemRole(...)   [data access]
+        │
+        ▼
+ProjectMemberRepository::syncSystemRole()
+  - swaps the member's system role in the project_user_role pivot
         │
         ▼ (back up through Service, back up through Controller)
 redirect()->back()->with('success', "...")
@@ -60,7 +64,7 @@ Controller never calls a Repository, and the Repository never knows a
 chain above — a Policy is only ever called from a Controller
 (`$this->authorize(...)`) or, for computing a plain UI-facing boolean
 prop rather than gating a mutating request, directly off a Model
-method (`Project::hasPermission()`/`hasPermissionOrTier()` — see
+method (`Project::hasPermission()` — see
 [`../permissions/README.md`](../permissions/README.md)'s architecture
 section for exactly when to use which).
 
@@ -83,7 +87,7 @@ example than `Issue`):
    calling the Repository and firing whatever `Event`/`ActivityLog`
    entry the use case implies.
 4. **Policy** (`app/Policies/`) — one method per ability, following
-   the `hasPermissionOrTier()`/`hasPermission()` pattern if the
+   the `hasPermission()` pattern if the
    resource is project-scoped (see
    [`../permissions/01-add-a-new-permission.md`](../permissions/01-add-a-new-permission.md)).
 5. **Controller** (`app/Http/Controllers/`) — one action per route,

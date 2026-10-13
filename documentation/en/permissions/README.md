@@ -17,9 +17,9 @@ new place in the app that grants a role.
    new action behind its own permission."
 2. **[Add a new system role tier](./02-add-a-new-role-tier.md)** —
    worked example adding a fifth tier (`Contributor`, between Member
-   and Viewer) end to end: the enum, default permissions, every
-   tier-gated Policy check, the frontend types, and the tests that
-   pin down the tier list.
+   and Viewer) end to end: the enum, its default permission set, the
+   backfill of a system role for every existing project, the frontend
+   types, and the tests that pin down the tier list.
 3. **[Grant a custom role in bulk](./03-grant-a-custom-role-in-bulk.md)**
    — worked example adding a new place that assigns a custom role to
    members (a "grant to all current members" action), covering the
@@ -37,23 +37,63 @@ A project's four system tiers (`App\Enums\Permissions\RoleType`: Owner,
 Admin, Member, Viewer) are lazily materialized as real `roles` rows
 (`is_system = true`) by `RoleService::ensureSystemRoles()` — so a
 tier's permissions live in the exact same `permission_role` pivot table
-as any user-created **custom role** (`role = 'custom'`), just seeded
-with sensible defaults the first time the tier's row is created.
-Membership itself is a single string column, `project_user.role`,
-holding the member's base tier; everything they're actually *granted*
-is resolved separately by walking
-`project_user` → `project_user_role` → `roles` → `permission_role` →
-`permissions` (see `Project::hasPermission()`). Because that walk is a
-few joins deep, most authorization checks don't call it directly —
-they call `Project::hasPermissionOrTier($user, $permission, $tiers)`,
-which first checks the member's base tier against a cheap allow-list
-(no query beyond the membership row) and only falls through to the
-full permission walk for members whose tier isn't in that list, or who
-hold a custom role on top of their tier. Owner is special-cased to
-always pass every check, both for performance and because the Owner
-system role is reset back to "every permission" on every
-`ensureSystemRoles()` call and can never be edited (`RoleService::assertNotOwnerRole()`).
-A member can hold their one base tier *and* any number of custom
-roles simultaneously — `ProjectMemberService::syncRoles()` /
-`ProjectInvitationService::invite()`'s `roleIds` only ever touch the
-custom-role side of `project_user_role`, never the tier.
+as any user-created **custom role** (`role = 'custom'`,
+`is_system = false`), just seeded with sensible defaults
+(`RoleService`'s `MEMBER_DEFAULT_PERMISSIONS`/
+`VIEWER_DEFAULT_PERMISSIONS`; Owner and Admin get every permission)
+the first time the tier's row is created. There is no separate
+"tier" column anywhere: a member's tier **is** their single *system
+role*, assigned through the same `project_user_role` pivot as their
+custom roles (`project_user` → `project_user_role` → `roles` →
+`permission_role` → `permissions`). A pending invitation works the
+same way — its tier is stored as a system role in
+`project_invitation_role`, next to any custom roles
+(`ProjectInvitation::tier()` / `customRoleIds()`). The legacy string
+columns `project_user.role` and `project_invitations.role` no longer
+exist.
+
+Every authorization check goes through one method,
+`Project::hasPermission($user, Permission::X)`: Owner short-circuits
+to `true` (and the Owner system role is reset back to "every
+permission" on every `ensureSystemRoles()` call and can never be
+edited — `RoleService::assertNotOwnerRole()`), and everything else is
+the union of the permissions of all the member's roles, resolved from
+a per-user membership cache (`Project::membershipOf()`, invalidated
+via `CacheVersion::MEMBERSHIP`). There are no tier allow-lists in
+Policies or Controllers: editing a system role (anything but Owner)
+in Settings → Roles really changes what its members can do.
+`Project::roleOf()` still returns the tier string
+(`owner`/`admin`/`member`/`viewer`), derived from the system role —
+it is for display and for the few places that really are tier based
+(e.g. an issue type's `restricted_role_types`, which still stores tier
+strings and is compared against `roleOf()`).
+
+A member can hold their one system role *and* any number of custom
+roles simultaneously. Tier changes only go through
+`RoleService::syncSystemRoleForMember()` (member role change,
+ownership transfer, project creation, invitation accept); the
+free-form roles sync endpoint and an invitation's `roleIds` only
+accept custom roles (`RoleService::customRoleIds()`), and
+`ProjectMemberRepository::syncRoles()` keeps the member's system role
+untouched.
+
+## Upgrading from the old model
+
+Before the role migration, the tier was a string column
+(`project_user.role`, `project_invitations.role`) and Policies called
+`hasPermissionOrTier($user, $permission, $tiers)` with hardcoded
+`*_TIERS` allow-lists. Two migrations moved existing data over:
+
+- `2026_10_13_100000_backfill_system_roles_for_existing_members.php`
+  created the four system roles for **every existing project**,
+  assigned every member and every pending invitation the system role
+  matching its old tier, topped up Owner/Admin with every permission,
+  and gave ownerless projects an owner (the earliest member, then
+  alphabetical).
+- `2026_10_13_110000_drop_legacy_role_columns.php` dropped the two
+  legacy columns.
+
+`Project::hasPermissionOrTier()` and every `*_TIERS` constant were
+removed. In tests, add members with `addProjectMember()` from
+`tests/Pest.php` (membership row + system role), never
+`attach(['role' => ...])`.
