@@ -68,7 +68,8 @@ const meta = {
     ],
     args: {
         members,
-        isManager: true,
+        canUpdateRoles: true,
+        canRemoveMembers: true,
         canAssignRoles: true,
         assignableRoles,
         onChangeRole: fn(),
@@ -95,7 +96,8 @@ export const AsManager: Story = {
 /** Plain members only see role badges when no custom roles exist. */
 export const AsMember: Story = {
     args: {
-        isManager: false,
+        canUpdateRoles: false,
+        canRemoveMembers: false,
         canAssignRoles: false,
         assignableRoles: [],
     },

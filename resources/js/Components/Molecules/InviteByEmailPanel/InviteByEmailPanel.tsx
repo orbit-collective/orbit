@@ -9,7 +9,7 @@ import { WorkspaceRole } from '@/types/Roles';
 
 interface InviteByEmailPanelProps {
     emailEnabled: boolean;
-    isManager: boolean;
+    canInvite: boolean;
     canAssignRoles: boolean;
     assignableRoles: WorkspaceRole[];
     email: string;
@@ -25,7 +25,7 @@ interface InviteByEmailPanelProps {
 
 export default function InviteByEmailPanel({
     emailEnabled,
-    isManager,
+    canInvite,
     canAssignRoles,
     assignableRoles,
     email,
@@ -53,7 +53,7 @@ export default function InviteByEmailPanel({
                     title="Invitations unavailable"
                     description="Ask an administrator to configure outgoing email to enable project invitations."
                 />
-            ) : isManager ? (
+            ) : canInvite ? (
                 <form
                     onSubmit={onSubmit}
                     className="flex flex-col gap-2 px-4 py-4 sm:px-5"
@@ -93,8 +93,8 @@ export default function InviteByEmailPanel({
                 </form>
             ) : (
                 <SettingsPanelRow
-                    title="Only admins can invite"
-                    description="Ask a project admin to invite new teammates."
+                    title="You don't have permission to invite"
+                    description="Ask someone who can manage members to invite new teammates."
                 />
             )}
         </SettingsPanel>

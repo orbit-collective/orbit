@@ -11,7 +11,8 @@ import { WorkspaceRole } from '@/types/Roles';
 
 interface MemberListProps {
     members: ProjectMember[];
-    isManager: boolean;
+    canUpdateRoles: boolean;
+    canRemoveMembers: boolean;
     canAssignRoles: boolean;
     assignableRoles: WorkspaceRole[];
     onChangeRole: (memberId: number, role: AssignableProjectMemberRole) => void;
@@ -25,7 +26,8 @@ interface MemberListProps {
 
 export default function MemberList({
     members,
-    isManager,
+    canUpdateRoles,
+    canRemoveMembers,
     canAssignRoles,
     assignableRoles,
     onChangeRole,
@@ -36,7 +38,9 @@ export default function MemberList({
         <>
             <TeamAvatarStack members={members} />
             {members.map((member) => {
-                const canChangeRole = isManager && member.role !== 'owner';
+                const isOwner = member.role === 'owner';
+                const canChangeRole = canUpdateRoles && !isOwner;
+                const canRemove = canRemoveMembers && !isOwner;
                 const hasRoleControl =
                     canChangeRole || assignableRoles.length > 0;
 
@@ -59,7 +63,7 @@ export default function MemberList({
                         ) : (
                             <RoleBadge role={member.role} />
                         )}
-                        {canChangeRole && (
+                        {canRemove && (
                             <button
                                 type="button"
                                 title="Remove from project"

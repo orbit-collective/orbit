@@ -190,7 +190,10 @@ export const Members: Story = {
     render: () => (
         <WorkspaceSettingsMembersTab
             {...projectScope}
-            viewerRole="owner"
+            canInviteMembers
+            canUpdateMemberRoles
+            canRemoveMembers
+            canTransferOwnership
             members={members}
             pendingInvitations={pendingInvitations}
             roles={roles}
@@ -210,7 +213,6 @@ export const MembersAsViewer: Story = {
     render: () => (
         <WorkspaceSettingsMembersTab
             {...projectScope}
-            viewerRole="viewer"
             members={members}
             roles={roles}
         />

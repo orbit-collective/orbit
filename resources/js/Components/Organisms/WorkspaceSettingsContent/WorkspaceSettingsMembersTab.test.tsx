@@ -104,7 +104,9 @@ const renderTab = (
             <WorkspaceSettingsMembersTab
                 memberProjects={[project]}
                 selectedProjectId={project.id}
-                viewerRole="admin"
+                canInviteMembers
+                canUpdateMemberRoles
+                canRemoveMembers
                 members={[admin, member]}
                 pendingInvitations={[]}
                 {...props}
@@ -197,9 +199,15 @@ describe('WorkspaceSettingsMembersTab', () => {
     });
 
     test('non-admins cannot see invite or remove controls', () => {
-        renderTab({ viewerRole: 'member' });
+        renderTab({
+            canInviteMembers: false,
+            canUpdateMemberRoles: false,
+            canRemoveMembers: false,
+        });
 
-        expect(screen.getByText('Only admins can invite')).toBeInTheDocument();
+        expect(
+            screen.getByText("You don't have permission to invite"),
+        ).toBeInTheDocument();
         expect(screen.queryAllByTitle('Remove from project')).toHaveLength(0);
     });
 
@@ -291,21 +299,25 @@ describe('WorkspaceSettingsMembersTab', () => {
     });
 
     test('non-admins see a static role badge instead of a dropdown', () => {
-        renderTab({ viewerRole: 'member' });
+        renderTab({
+            canInviteMembers: false,
+            canUpdateMemberRoles: false,
+            canRemoveMembers: false,
+        });
 
         expect(screen.getAllByText('Admin')).toHaveLength(1);
         expect(screen.getAllByText('Member')).toHaveLength(1);
     });
 
     test('a non-owner does not see the transfer ownership panel', () => {
-        renderTab({ viewerRole: 'admin' });
+        renderTab({ canTransferOwnership: false });
 
         expect(screen.queryByText('Ownership')).not.toBeInTheDocument();
     });
 
     test('an owner can transfer ownership to another member', async () => {
         const user = userEvent.setup();
-        renderTab({ viewerRole: 'owner' });
+        renderTab({ canTransferOwnership: true });
 
         await user.click(
             screen.getByRole('button', { name: 'Transfer ownership' }),
@@ -466,7 +478,10 @@ describe('WorkspaceSettingsMembersTab', () => {
             invitedByName: 'Ada Admin',
             expiresAt: new Date().toISOString(),
         };
-        renderTab({ viewerRole: 'member', pendingInvitations: [invitation] });
+        renderTab({
+            canInviteMembers: false,
+            pendingInvitations: [invitation],
+        });
 
         expect(
             screen.queryByText('invitee@example.com'),
