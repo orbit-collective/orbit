@@ -53,13 +53,11 @@ class ProjectInvitationService
             'invited_by' => $invitedBy->id,
             'email' => $email,
             'token' => Str::random(64),
-            'role' => $role->value,
             'expires_at' => Carbon::now()->addDays(self::EXPIRES_IN_DAYS),
         ]);
 
-        if (! empty($roleIds)) {
-            $this->projectInvitationRepository->syncRoles($invitation, $roleIds);
-        }
+        $systemRole = $this->roleService->ensureSystemRoles($project)[$role->value];
+        $this->projectInvitationRepository->syncRoles($invitation, [$systemRole->id, ...$roleIds]);
 
         $this->sendInvitationNotification($invitation, $project, $email, $invitedBy);
 
@@ -112,9 +110,9 @@ class ProjectInvitationService
         if (! $this->projectMemberRepository->isMember($project, $user->id)) {
             $project->users()->attach($user->id);
             CacheVersion::bump(CacheVersion::MEMBERSHIP);
-            $this->roleService->syncSystemRoleForMember($project, $user->id, $invitation->role);
+            $this->roleService->syncSystemRoleForMember($project, $user->id, $invitation->tier());
 
-            $invitedRoleIds = $invitation->roles()->pluck('roles.id')->all();
+            $invitedRoleIds = $invitation->customRoleIds();
             if (! empty($invitedRoleIds)) {
                 $this->projectMemberRepository->attachRoles($project, $user->id, $invitedRoleIds);
             }

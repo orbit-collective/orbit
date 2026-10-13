@@ -45,7 +45,8 @@ test('an owner can invite someone with a custom role attached', function () {
 
     $response->assertRedirect();
     $invitation = ProjectInvitation::where('email', 'invitee@example.com')->first();
-    expect($invitation->roles()->pluck('roles.id')->all())->toBe([$customRole->id]);
+    expect($invitation->customRoleIds())->toBe([$customRole->id])
+        ->and($invitation->tier())->toBe(RoleType::MEMBER);
 });
 
 test('an admin without the roles.assign permission cannot invite with a custom role attached', function () {

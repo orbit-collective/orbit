@@ -194,7 +194,21 @@ test('invite() attaches the given custom roles to the invitation', function () {
 
     $invitation = $this->service->invite($project, 'invitee@example.com', RoleType::MEMBER, $admin, [$customRole->id]);
 
-    expect($invitation->roles()->pluck('roles.id')->all())->toBe([$customRole->id]);
+    expect($invitation->customRoleIds())->toBe([$customRole->id])
+        ->and($invitation->tier())->toBe(RoleType::MEMBER);
+});
+
+test('invite() stores the invited tier as a system role on the invitation', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    addProjectMember($project, $admin->id, 'admin');
+
+    $invitation = $this->service->invite($project, 'viewer@example.com', RoleType::VIEWER, $admin);
+
+    expect($invitation->tier())->toBe(RoleType::VIEWER)
+        ->and($invitation->customRoleIds())->toBe([]);
 });
 
 test('accepting an invitation with custom roles grants them to the new member', function () {

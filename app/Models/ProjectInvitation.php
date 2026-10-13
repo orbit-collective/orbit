@@ -14,7 +14,6 @@ class ProjectInvitation extends Model
         'invited_by',
         'email',
         'token',
-        'role',
         'expires_at',
         'accepted_at',
     ];
@@ -22,7 +21,6 @@ class ProjectInvitation extends Model
     protected function casts(): array
     {
         return [
-            'role' => RoleType::class,
             'expires_at' => 'datetime',
             'accepted_at' => 'datetime',
         ];
@@ -41,6 +39,20 @@ class ProjectInvitation extends Model
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'project_invitation_role');
+    }
+
+    /** The system role tier the invitee will join with (member when none is stored). */
+    public function tier(): RoleType
+    {
+        $role = $this->roles->firstWhere('is_system', true)?->role;
+
+        return RoleType::tryFrom($role ?? '') ?? RoleType::MEMBER;
+    }
+
+    /** @return list<int> ids of the custom (non-system) roles granted on top of the tier */
+    public function customRoleIds(): array
+    {
+        return $this->roles->where('is_system', false)->pluck('id')->values()->all();
     }
 
     public function isExpired(): bool
