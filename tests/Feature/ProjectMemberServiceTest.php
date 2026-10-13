@@ -202,3 +202,29 @@ test('an owner cannot transfer ownership to themselves', function () {
 
     $this->service->transferOwnership($project, $owner, $owner);
 })->throws(ValidationException::class);
+
+test('a failure halfway through an ownership transfer leaves the previous owner in place', function () {
+    $project = Project::factory()->create();
+    $owner = User::factory()->create();
+    $member = User::factory()->create();
+    addProjectMember($project, $owner->id, 'owner');
+    addProjectMember($project, $member->id, 'member');
+
+    $real = app(RoleService::class);
+    $calls = 0;
+    $this->partialMock(RoleService::class, fn ($mock) => $mock
+        ->shouldReceive('syncSystemRoleForMember')
+        ->andReturnUsing(function (...$arguments) use ($real, &$calls) {
+            if (++$calls > 1) {
+                throw new RuntimeException('boom');
+            }
+
+            $real->syncSystemRoleForMember(...$arguments);
+        }));
+
+    expect(fn () => app(ProjectMemberService::class)->transferOwnership($project, $owner, $member))
+        ->toThrow(RuntimeException::class);
+
+    expect($project->roleOf($owner))->toBe('owner')
+        ->and($project->roleOf($member))->toBe('member');
+});

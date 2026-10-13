@@ -8,6 +8,7 @@ use App\Repositories\ProjectRepository;
 use App\Support\Cache\CachedModels;
 use App\Support\Cache\CacheVersion;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -29,9 +30,17 @@ class ProjectService
     public function createProject(array $data, int $creatorId): Project
     {
         $data['slug'] = Str::slug($data['name']);
-        $project = $this->projectRepository->store($data);
-        $this->projectRepository->attachMember($project, $creatorId);
-        $this->roleService->syncSystemRoleForMember($project, $creatorId, RoleType::OWNER);
+
+        // A project whose creator has no owner role would be unreachable, so
+        // the project, the membership and the role are created together.
+        $project = DB::transaction(function () use ($data, $creatorId) {
+            $project = $this->projectRepository->store($data);
+            $this->projectRepository->attachMember($project, $creatorId);
+            $this->roleService->syncSystemRoleForMember($project, $creatorId, RoleType::OWNER);
+
+            return $project;
+        });
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
         $this->activityLogService->log($project->id, "Created project: $project->name");
 
         return $project;

@@ -122,3 +122,15 @@ test('joining a project shows up in the cached project list straight away', func
     expect($service->getAllForUser($user->id))->toHaveCount(1)
         ->and($service->hasAnyProjectsForUser($user->id))->toBeTrue();
 });
+
+test('a failed owner assignment leaves no half-created project behind', function () {
+    $user = User::factory()->create();
+    $roleService = Mockery::mock(RoleService::class);
+    $roleService->shouldReceive('syncSystemRoleForMember')->andThrow(new RuntimeException('boom'));
+    $service = new ProjectService(new ProjectRepository, app(ActivityLogService::class), $roleService);
+
+    expect(fn () => $service->createProject(['name' => 'Half Made', 'color' => 'blue'], $user->id))->toThrow(RuntimeException::class, 'boom');
+
+    expect(Project::where('name', 'Half Made')->exists())->toBeFalse()
+        ->and($user->projects()->count())->toBe(0);
+});

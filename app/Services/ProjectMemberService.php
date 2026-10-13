@@ -6,7 +6,9 @@ use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ProjectMemberRepository;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class ProjectMemberService
@@ -64,8 +66,13 @@ class ProjectMemberService
             ]);
         }
 
-        $this->roleService->syncSystemRoleForMember($project, $currentOwner->id, RoleType::ADMIN);
-        $this->roleService->syncSystemRoleForMember($project, $newOwner->id, RoleType::OWNER);
+        // Demoting the old owner and promoting the new one must not be split:
+        // a project left without an owner has nobody who can manage it.
+        DB::transaction(function () use ($project, $currentOwner, $newOwner) {
+            $this->roleService->syncSystemRoleForMember($project, $currentOwner->id, RoleType::ADMIN);
+            $this->roleService->syncSystemRoleForMember($project, $newOwner->id, RoleType::OWNER);
+        });
+        CacheVersion::bump(CacheVersion::MEMBERSHIP);
 
         $this->activityLogService->log(
             $project->id,
