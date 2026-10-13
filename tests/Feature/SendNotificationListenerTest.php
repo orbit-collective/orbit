@@ -354,7 +354,6 @@ test('ProjectInvited notifies an existing user through the normal notification p
         'invited_by' => $invitedBy->id,
         'email' => 'invitee@example.com',
         'token' => 'test-token',
-        'role' => 'member',
         'expires_at' => now()->addDays(7),
     ]);
 
@@ -382,7 +381,6 @@ test('ProjectInvited sends the dedicated invitation email when there is no exist
         'invited_by' => $invitedBy->id,
         'email' => 'stranger@example.com',
         'token' => 'another-test-token',
-        'role' => 'member',
         'expires_at' => now()->addDays(7),
     ]);
 

@@ -146,14 +146,12 @@ test('pending invitations get their tier as a system role, accepted ones are ski
     $inviter = User::factory()->create();
     addProjectMember($project, $inviter->id, 'owner');
 
-    $pending = ProjectInvitation::create([
-        'project_id' => $project->id, 'invited_by' => $inviter->id, 'email' => 'a@example.com',
-        'token' => 'tok-a', 'role' => 'viewer', 'expires_at' => now()->addDay(),
+    $invite = fn (string $email, string $role, ?string $acceptedAt) => DB::table('project_invitations')->insertGetId([
+        'project_id' => $project->id, 'invited_by' => $inviter->id, 'email' => $email, 'token' => "tok-$email",
+        'role' => $role, 'expires_at' => now()->addDay(), 'accepted_at' => $acceptedAt,
     ]);
-    $accepted = ProjectInvitation::create([
-        'project_id' => $project->id, 'invited_by' => $inviter->id, 'email' => 'b@example.com',
-        'token' => 'tok-b', 'role' => 'admin', 'expires_at' => now()->addDay(), 'accepted_at' => now(),
-    ]);
+    $pending = ProjectInvitation::find($invite('a@example.com', 'viewer', null));
+    $accepted = ProjectInvitation::find($invite('b@example.com', 'admin', now()));
 
     runRoleBackfill();
 
