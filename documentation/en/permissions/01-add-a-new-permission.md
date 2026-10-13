@@ -37,11 +37,14 @@ new top-level area.
 File: `app/Services/RoleService.php`
 
 Every project gets four system roles (Owner, Admin, Member, Viewer).
-Owner and Admin **automatically get every permission that exists** —
+Owner and Admin get **every permission that exists** —
 `defaultPermissionIdsFor()` grants them `Permission::cases()` in full,
-so you never need to touch anything for those two tiers. You only
-decide what **Member** and **Viewer** get by default, by adding the
-new case(s) to the relevant `*_DEFAULT_PERMISSIONS` constant(s):
+so you never need to touch anything in `RoleService` for those two
+tiers *in new projects*. Projects whose system roles already exist are
+not topped up automatically, though — see step 6 for the one-liner
+that fixes that. You decide what **Member** and **Viewer** get by
+default, by adding the new case(s) to the relevant
+`*_DEFAULT_PERMISSIONS` constant(s):
 
 ```php
 private const array MEMBER_DEFAULT_PERMISSIONS = [
@@ -67,7 +70,10 @@ Rule of thumb used throughout this codebase: give Member/Viewer the
 `*_VIEW` half of a pair by default, never the `*_UPDATE`/`*_CREATE`/
 `*_DELETE` half — mutating abilities are Owner/Admin-only (or granted
 explicitly via a custom role) unless you have a specific reason to
-open them up further.
+open them up further. These defaults are seeded only when a project's
+system role is first created (`ensureSystemRoles()`), so a new entry
+reaches new projects only; existing projects keep whatever their admins
+configured.
 
 ## Step 3 — Add the authorization check
 
@@ -80,25 +86,22 @@ model or a whole feature area:
 ```php
 public function viewIntegrations(User $user, Project $project): bool
 {
-    return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_VIEW, [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER]);
+    return $project->hasPermission($user, Permission::INTEGRATIONS_VIEW);
 }
 
 public function updateIntegrations(User $user, Project $project): bool
 {
-    return $project->hasPermissionOrTier($user, Permission::INTEGRATIONS_UPDATE, [RoleType::OWNER, RoleType::ADMIN]);
+    return $project->hasPermission($user, Permission::INTEGRATIONS_UPDATE);
 }
 ```
 
-`hasPermissionOrTier()` (on `App\Models\Project`) does two checks in
-order: is the user's own membership tier (`owner`/`admin`/`member`/
-`viewer`) in the given allow-list — if so, grant immediately, no DB
-lookup into custom role permissions needed; otherwise fall through to
-`hasPermission()`, which checks whether any custom role the user holds
-has been granted the specific `Permission` via the
-`project_user_role`/`role_permission` pivot chain. This is why Owner
-and Admin "just work" for tier-gated abilities even before
-`ensureSystemRoles()` has synced their system role's permissions onto
-the pivot table.
+`hasPermission()` (on `App\Models\Project`) is the **only** check —
+there is no tier allow-list to maintain. Owner always passes; every
+other member passes when any of their roles (their system role or a
+custom role) has been granted the specific `Permission` through the
+`permission_role` pivot. What Admin/Member/Viewer can do is therefore
+decided purely by the permissions on those roles (the defaults from
+step 2, as edited in Settings → Roles).
 
 Call it from a controller with `$this->authorize('updateIntegrations', $project);`
 (Laravel resolves `ProjectPolicy::updateIntegrations` automatically —
@@ -130,7 +133,7 @@ Use Option B only when there's no instance yet to check against (e.g.
 File: `app/Http/Controllers/SettingsController.php`
 
 Compute the boolean **directly off the `Project` model**
-(`hasPermissionOrTier`/`hasPermission`) in the action for the tab that
+(`hasPermission`) in the action for the tab that
 needs it — each settings tab has its own action (see
 [`../settings-tabs/README.md`](../settings-tabs/README.md)) — and
 don't route through the Policy for these; Policies here are reserved
@@ -139,14 +142,14 @@ controller action), while `SettingsController` computes plain booleans
 for the UI to conditionally render:
 
 ```php
-$hasIntegrationsAccess = $selectedProject?->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_VIEW, self::VIEW_TIERS) ?? false;
+$hasIntegrationsAccess = $selectedProject?->hasPermission($user, PermissionEnum::INTEGRATIONS_VIEW) ?? false;
 $canUpdateIntegrations = $hasIntegrationsAccess
-    && $selectedProject->hasPermissionOrTier($user, PermissionEnum::INTEGRATIONS_UPDATE, self::MANAGE_TIERS);
+    && $selectedProject->hasPermission($user, PermissionEnum::INTEGRATIONS_UPDATE);
 ```
 
-`self::VIEW_TIERS` / `self::MANAGE_TIERS` are the shared tier
-constants on the Controller, and `can()` wraps the `MANAGE_TIERS`
-check for the common case. Add both booleans to that action's
+The controller's private `can()` helper wraps the same
+`hasPermission()` call (null-safe for "no project selected") for the
+common case. Add both booleans to that action's
 `Inertia::render(...)` props array — and only to that action's, so no
 other tab pays for them — then thread them through the tab's page
 (e.g. `Settings/Integrations.tsx`) into your tab component exactly the
@@ -215,7 +218,21 @@ is **not** re-run automatically when you add an enum case:
   as often as you like, including in production after a deploy that
   adds new permission cases.
 
-If you skip this, `getPermissionLabel`/the whole Roles UI won't be
+Seeding only creates the `permissions` row. Existing projects' Owner
+and Admin system roles do **not** get it automatically (they are only
+populated when first created), so also grant it to them:
+
+```bash
+php artisan permissions:grant-to-existing-roles projects.integrations.view projects.integrations.update
+# default is --roles=owner,admin; the command is additive and safe to re-run
+```
+
+(Implemented in `app/Console/Commands/GrantPermissionsToExistingRoles.php`.)
+Skip this and Admins of existing projects will be denied the new
+ability until someone ticks it in Settings → Roles. Owner is never
+affected — it passes every `hasPermission()` check unconditionally.
+
+If you skip the seeding, `getPermissionLabel`/the whole Roles UI won't be
 "broken" — the permission just won't exist as a row at all, so it
 silently never appears in the list, and no role can ever be granted
 it. If you ever see "I added a permission but it's nowhere in the UI",

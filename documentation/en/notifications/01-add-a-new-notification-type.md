@@ -226,8 +226,8 @@ from the backend.
       $project = Project::factory()->create();
       $admin = User::factory()->create();
       $member = User::factory()->create();
-      $project->users()->attach($admin->id, ['role' => 'admin']);
-      $project->users()->attach($member->id, ['role' => 'member']);
+      addProjectMember($project, $admin->id, 'admin');
+      addProjectMember($project, $member->id, 'member');
       $this->actingAs($admin);
 
       $this->service->updateRole($project, $member, RoleType::ADMIN);

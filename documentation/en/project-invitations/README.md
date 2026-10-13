@@ -33,12 +33,16 @@ deletes any existing pending invitation for the same email/project
 pair (so re-inviting someone is just calling `invite()` again — there
 is no separate "resend" action or endpoint), creates a new
 `ProjectInvitation` row with a random 64-character token and a 7-day
-`expires_at`, optionally attaches pre-assigned custom `Role`s via the
-`project_invitation_role` pivot, and fires `ProjectInvited` (consumed
+`expires_at`, stores the invitation's tier as a system role in the
+`project_invitation_role` pivot (there is no `role` column on
+`project_invitations`) next to any pre-assigned custom `Role`s
+(`ProjectInvitation::tier()` / `customRoleIds()`; custom roles are
+narrowed with `RoleService::customRoleIds()` so a system role can't be
+smuggled in), and fires `ProjectInvited` (consumed
 by `SendNotificationListener` — see
 [`../notifications/README.md`](../notifications/README.md)). Accepting
-one (`acceptByToken()`) attaches the user to the project with the
-invitation's base `RoleType`, syncs their system role, attaches any
+one (`acceptByToken()`) attaches the user to the project, assigns their system role from
+`$invitation->tier()` via `RoleService::syncSystemRoleForMember()`, attaches any
 pre-assigned custom roles, and marks the invitation `accepted_at` —
 called either automatically right after login/register (if the
 `pending_invitation_token` session key from a not-logged-in click on

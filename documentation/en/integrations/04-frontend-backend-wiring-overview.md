@@ -14,7 +14,7 @@ GET /settings/integrations?project=<id>
 SettingsController::integrations()
   - resolves $selectedProject from ?project= (or the user's first project)
   - computes $hasIntegrationsAccess / $canUpdateIntegrations directly off
-    Project::hasPermissionOrTier() (NOT via a Policy — Policies here are
+    Project::hasPermission() (NOT via a Policy — Policies here are
     only for authorizing mutating requests, see
     ../permissions/01-add-a-new-permission.md step 4)
   - calls ProjectIntegrationService::getStatuses() / getSettings()
@@ -167,7 +167,7 @@ register it for the same event classes in `AppServiceProvider::boot()`.
 
 **Backend — authorization:**
 - `app/Enums/Permissions/Permission.php` — `INTEGRATIONS_VIEW`/`INTEGRATIONS_UPDATE`
-- `app/Services/RoleService.php` — default grants per tier
+- `app/Services/RoleService.php` — default grants per tier (system role)
 - `app/Policies/ProjectPolicy.php` — `viewIntegrations`/`updateIntegrations`
 - `app/Http/Controllers/SettingsController.php` — computes the UI-facing booleans
 - `app/Http/Controllers/ProjectIntegrationController.php` — authorizes + validates mutations

@@ -145,13 +145,15 @@ every issue is moved onto the new status sharing its old one's category
 (`replaceGenericWorkflow()`).
 
 Permissions follow the same `Permission` enum / `ProjectPolicy` /
-`RoleService` tier pattern as labels: `ISSUE_TYPES_VIEW/CREATE/UPDATE/DELETE`
-and `WORKFLOW_UPDATE` (view: owner/admin/member/viewer; every mutation:
-owner/admin only — see
+`RoleService` default-permission pattern as labels: `ISSUE_TYPES_VIEW/CREATE/UPDATE/DELETE`
+and `WORKFLOW_UPDATE` (by default, view: owner/admin/member/viewer; every mutation:
+owner/admin only, all checked via `Project::hasPermission()` — see
 [`../permissions/README.md`](../permissions/README.md) if you need to
 add a new permission of your own). On top of that project-wide gate,
 each issue type can carry its own `restricted_role_types` (a JSON array
-of `owner`/`admin`/`member`/`viewer` values) — `App\Policies\IssuePolicy::createOfType()`
+of `owner`/`admin`/`member`/`viewer` values — still plain tier strings,
+compared against `Project::roleOf()`, which derives the tier from the
+member's system role) — `App\Policies\IssuePolicy::createOfType()`
 is a second, narrower check applied only when actually creating an
 issue of that specific type, on top of the general `issues.create`
 check; an empty `restricted_role_types` array means "no extra

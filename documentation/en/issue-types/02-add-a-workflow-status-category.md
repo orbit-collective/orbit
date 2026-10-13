@@ -127,7 +127,7 @@ Add a case confirming the controller accepts it end to end, mirroring
 test('an admin can add a status with the blocked category', function () {
     $project = Project::factory()->create();
     $admin = User::factory()->create();
-    $project->users()->attach($admin->id, ['role' => 'admin']);
+    addProjectMember($project, $admin->id, 'admin');
     $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
 
     $response = $this->actingAs($admin)->post("/projects/$project->id/issue-types/$issueType->id/statuses", [

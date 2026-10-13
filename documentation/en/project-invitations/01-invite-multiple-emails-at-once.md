@@ -147,7 +147,7 @@ prop names to match:
 ```tsx
 interface InviteByEmailPanelProps {
     emailEnabled: boolean;
-    isManager: boolean;
+    canInvite: boolean;
     canAssignRoles: boolean;
     assignableRoles: WorkspaceRole[];
     emails: string;

@@ -12,27 +12,22 @@ ownership distinction at all).
 File: `app/Policies/CommentPolicy.php`
 
 ```php
-private const array OWN_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-
-private const array ANY_TIERS = [RoleType::OWNER, RoleType::ADMIN];
-
 public function update(User $user, Comment $comment): bool
 {
     $project = $comment->issue->project;
 
     if ($comment->user_id === $user->id) {
-        return $project->hasPermissionOrTier($user, Permission::COMMENTS_UPDATE_OWN, self::OWN_TIERS);
+        return $project->hasPermission($user, Permission::COMMENTS_UPDATE_OWN);
     }
 
-    return $project->hasPermissionOrTier($user, Permission::COMMENTS_UPDATE_ANY, self::ANY_TIERS);
+    return $project->hasPermission($user, Permission::COMMENTS_UPDATE_ANY);
 }
 ```
 
 The shape is always the same: check who owns the resource first, then
-branch to one of **two separate permissions** — a `*_own` one with a
-wider tier allow-list (every tier that can act at all) and a `*_any`
-one with a narrower one (only tiers trusted to touch other people's
-things) — never a single permission with an ownership check bolted on
+branch to one of **two separate permissions** — a `*_own` one that Member gets by
+default and a `*_any` one that only Owner/Admin get (the roles trusted
+to touch other people's things) — never a single permission with an ownership check bolted on
 inline. This is what lets a custom role grant "edit your own comments"
 without also granting "edit anyone's."
 
@@ -76,6 +71,12 @@ neither, matching its read-only default posture) — `_ANY` is
 deliberately left out of every non-Owner/Admin default, exactly the
 comment permissions' precedent.
 
+Because defaults are seeded only when a project's system roles are
+first created, also run
+`php artisan permissions:grant-to-existing-roles saved_filters.delete_own saved_filters.delete_any`
+so the Owner/Admin roles of existing projects get both (see
+[`01-add-a-new-permission.md`](./01-add-a-new-permission.md) step 6).
+
 ## Step 3 — Write the Policy
 
 New file: `app/Policies/SavedFilterPolicy.php`
@@ -86,25 +87,20 @@ New file: `app/Policies/SavedFilterPolicy.php`
 namespace App\Policies;
 
 use App\Enums\Permissions\Permission;
-use App\Enums\Permissions\RoleType;
 use App\Models\SavedFilter;
 use App\Models\User;
 
 class SavedFilterPolicy
 {
-    private const array OWN_TIERS = [RoleType::OWNER, RoleType::ADMIN, RoleType::MEMBER];
-
-    private const array ANY_TIERS = [RoleType::OWNER, RoleType::ADMIN];
-
     public function delete(User $user, SavedFilter $savedFilter): bool
     {
         $project = $savedFilter->project;
 
         if ($savedFilter->user_id === $user->id) {
-            return $project->hasPermissionOrTier($user, Permission::SAVED_FILTERS_DELETE_OWN, self::OWN_TIERS);
+            return $project->hasPermission($user, Permission::SAVED_FILTERS_DELETE_OWN);
         }
 
-        return $project->hasPermissionOrTier($user, Permission::SAVED_FILTERS_DELETE_ANY, self::ANY_TIERS);
+        return $project->hasPermission($user, Permission::SAVED_FILTERS_DELETE_ANY);
     }
 }
 ```
