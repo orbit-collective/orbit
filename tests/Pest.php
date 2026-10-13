@@ -55,6 +55,6 @@ function addProjectMember(Project $project, int $userId, RoleType|string $role =
 {
     $tier = $role instanceof RoleType ? $role : RoleType::from($role);
 
-    $project->users()->attach($userId, ['role' => $tier->value]);
+    $project->users()->attach($userId);
     app(RoleService::class)->syncSystemRoleForMember($project, $userId, $tier);
 }
