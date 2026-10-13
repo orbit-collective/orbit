@@ -211,6 +211,20 @@ test('invite() stores the invited tier as a system role on the invitation', func
         ->and($invitation->customRoleIds())->toBe([]);
 });
 
+test('invite() ignores system role ids passed as custom roles', function () {
+    Notification::fake();
+
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    addProjectMember($project, $admin->id, 'admin');
+    $ownerRole = $project->roles()->where('slug', 'owner')->first();
+
+    $invitation = $this->service->invite($project, 'sneaky@example.com', RoleType::MEMBER, $admin, [$ownerRole->id]);
+
+    expect($invitation->tier())->toBe(RoleType::MEMBER)
+        ->and($invitation->customRoleIds())->toBe([]);
+});
+
 test('accepting an invitation with custom roles grants them to the new member', function () {
     Notification::fake();
 

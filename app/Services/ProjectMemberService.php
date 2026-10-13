@@ -44,7 +44,7 @@ class ProjectMemberService
     {
         $this->assertIsMember($project, $member);
 
-        $this->projectMemberRepository->syncRoles($project, $member->id, $roleIds);
+        $this->projectMemberRepository->syncRoles($project, $member->id, $this->roleService->customRoleIds($project, $roleIds));
         $this->activityLogService->log($project->id, "Updated $member->name's custom roles");
     }
 

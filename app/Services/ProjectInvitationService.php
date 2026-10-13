@@ -57,7 +57,7 @@ class ProjectInvitationService
         ]);
 
         $systemRole = $this->roleService->ensureSystemRoles($project)[$role->value];
-        $this->projectInvitationRepository->syncRoles($invitation, [$systemRole->id, ...$roleIds]);
+        $this->projectInvitationRepository->syncRoles($invitation, [$systemRole->id, ...$this->roleService->customRoleIds($project, $roleIds)]);
 
         $this->sendInvitationNotification($invitation, $project, $email, $invitedBy);
 

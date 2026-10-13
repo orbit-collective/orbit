@@ -114,8 +114,26 @@ test('it can sync a member\'s custom roles and logs the change', function () {
     $this->service->syncRoles($project, $member, [$role->id]);
 
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
-    expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
+    expect($projectUser->roles()->pluck('slug')->sort()->values()->all())->toBe(['member', 'qa']);
     $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => "Updated $member->name's custom roles"]);
+});
+
+test('syncing roles never changes a member\'s tier, whatever ids are sent', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+    $custom = $project->roles()->create(['name' => 'QA', 'slug' => 'qa', 'role' => 'custom']);
+    $ownerRole = $project->roles()->where('slug', 'owner')->first();
+
+    $this->service->syncRoles($project, $member, [$ownerRole->id, $custom->id]);
+
+    expect($project->roleOf($member))->toBe('member')
+        ->and(ProjectUser::where('user_id', $member->id)->first()->roles()->pluck('slug')->sort()->values()->all())->toBe(['member', 'qa']);
+
+    $this->service->syncRoles($project, $member, []);
+
+    expect($project->roleOf($member))->toBe('member')
+        ->and(ProjectUser::where('user_id', $member->id)->first()->roles()->count())->toBe(1);
 });
 
 test('it throws when syncing roles for someone who is not a member', function () {

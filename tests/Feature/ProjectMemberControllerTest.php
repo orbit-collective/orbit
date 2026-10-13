@@ -137,7 +137,8 @@ test('an admin can assign a custom role to a member', function () {
 
     $response->assertRedirect();
     $projectUser = ProjectUser::where('project_id', $project->id)->where('user_id', $member->id)->first();
-    expect($projectUser->roles()->pluck('roles.id')->all())->toBe([$role->id]);
+    expect($projectUser->roles()->where('is_system', false)->pluck('roles.id')->all())->toBe([$role->id])
+        ->and($projectUser->roles()->where('is_system', true)->count())->toBe(1);
 });
 
 test('a member with the roles.assign permission can assign a custom role', function () {
@@ -193,7 +194,8 @@ test('assigning roles accepts an empty array to clear all custom roles', functio
     ]);
 
     $response->assertRedirect();
-    expect($projectUser->roles()->count())->toBe(0);
+    expect($projectUser->roles()->where('is_system', false)->count())->toBe(0)
+        ->and($projectUser->roles()->where('is_system', true)->count())->toBe(1);
 });
 
 test('assigning a role from another project is rejected', function () {
