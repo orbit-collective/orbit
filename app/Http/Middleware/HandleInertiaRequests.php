@@ -67,6 +67,9 @@ class HandleInertiaRequests extends Middleware
             'notifications' => fn () => $request->user()
                 ? $this->notificationService->getAllForUser($request->user()->id)
                 : [],
+            'notificationUnreadCount' => fn () => $request->user()
+                ? $this->notificationService->unreadCountForUser($request->user()->id)
+                : 0,
         ];
     }
 }

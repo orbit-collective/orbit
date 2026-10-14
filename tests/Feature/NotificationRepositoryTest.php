@@ -86,3 +86,56 @@ test('it can delete a notification', function () {
 
     $this->assertDatabaseMissing('notifications', ['id' => $notification->id]);
 });
+
+test('pageForUser returns one extra row so the caller can tell a next page exists', function () {
+    $user = User::factory()->create();
+    Notification::factory()->count(5)->create(['user_id' => $user->id]);
+
+    expect($this->repository->pageForUser($user->id, [], null, 2))->toHaveCount(3);
+});
+
+test('pageForUser clamps the page size', function () {
+    $user = User::factory()->create();
+    Notification::factory()->count(NotificationRepository::MAX_PER_PAGE + 5)->create(['user_id' => $user->id]);
+
+    expect($this->repository->pageForUser($user->id, [], null, 10_000))->toHaveCount(NotificationRepository::MAX_PER_PAGE + 1)
+        ->and($this->repository->pageForUser($user->id, [], null, 0))->toHaveCount(2);
+});
+
+test('pageForUser applies the cursor and the filters together', function () {
+    $user = User::factory()->create();
+    $old = Notification::factory()->create(['user_id' => $user->id, 'read' => false, 'type' => 'info']);
+    Notification::factory()->create(['user_id' => $user->id, 'read' => true, 'type' => 'info']);
+    $newest = Notification::factory()->create(['user_id' => $user->id, 'read' => false, 'type' => 'info']);
+
+    $rows = $this->repository->pageForUser($user->id, ['unread' => true, 'type' => 'info'], $newest->id, 10);
+
+    expect($rows->pluck('id')->all())->toBe([$old->id]);
+});
+
+test('countUnreadForUser ignores read and foreign notifications', function () {
+    $user = User::factory()->create();
+    Notification::factory()->count(2)->create(['user_id' => $user->id, 'read' => false]);
+    Notification::factory()->create(['user_id' => $user->id, 'read' => true]);
+    Notification::factory()->create(['read' => false]);
+
+    expect($this->repository->countUnreadForUser($user->id))->toBe(2);
+});
+
+test('deleteOlderThanForUser can spare unread notifications', function () {
+    $user = User::factory()->create();
+    $oldRead = Notification::factory()->create(['user_id' => $user->id, 'read' => true, 'created_at' => now()->subDays(40)]);
+    $oldUnread = Notification::factory()->create(['user_id' => $user->id, 'read' => false, 'created_at' => now()->subDays(40)]);
+    $recent = Notification::factory()->create(['user_id' => $user->id, 'read' => true, 'created_at' => now()->subDays(2)]);
+    $foreign = Notification::factory()->create(['read' => true, 'created_at' => now()->subDays(40)]);
+
+    $deleted = $this->repository->deleteOlderThanForUser($user->id, now()->subDays(30), onlyRead: true);
+
+    expect($deleted)->toBe(1);
+    $this->assertDatabaseMissing('notifications', ['id' => $oldRead->id]);
+    $this->assertDatabaseHas('notifications', ['id' => $oldUnread->id]);
+    $this->assertDatabaseHas('notifications', ['id' => $recent->id]);
+    $this->assertDatabaseHas('notifications', ['id' => $foreign->id]);
+
+    expect($this->repository->deleteOlderThanForUser($user->id, now()->subDays(30)))->toBe(1);
+});
