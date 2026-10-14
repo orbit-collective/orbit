@@ -38,9 +38,11 @@ PruneOldNotifications  →  NotificationRetentionService::runDue()
   whether a full period has passed, so users do not need a time of day
   and a missed tick is harmless. A failure for one user, including the step that stamps `last_run_at`, is
   logged and skipped (their schedule stays due), it never stops the others.
-  Each schedule is re-read right before it is applied, so a user who just
-  switched it off, turned on "keep unread" or deleted their account is not
-  processed with the values from when the due list was built.
+  Each schedule is processed in its own transaction: the row is locked
+  (`findForUserForUpdate`) and re-read, so a user who just switched it off,
+  turned on "keep unread" or deleted their account is not processed with
+  the values from when the due list was built, a settings save waits for
+  the run to commit, and a failure rolls the deletion back with the stamp.
 - **What is deleted**: notifications via
   `NotificationRepository::deleteOlderThanForUser()` (optionally only
   read ones — `notifications_only_read`, on by default) and the user's

@@ -7,6 +7,7 @@ use App\Models\NotificationRetentionSetting;
 use App\Repositories\NotificationRepository;
 use App\Repositories\NotificationRetentionRepository;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -78,33 +79,42 @@ class NotificationRetentionService
         $ran = 0;
 
         foreach ($this->retentionRepository->getDue($now) as $due) {
-            // getDue() was read before earlier users were processed, so the
-            // user may have switched the schedule off, turned on "keep unread"
-            // or deleted their account since. Delete only what the row says now.
-            $setting = $this->retentionRepository->findForUser($due->user_id);
-
-            if (! $setting?->enabled || ! $this->isDue($setting, $now)) {
-                continue;
-            }
-
             // One user's failure, bookkeeping included, must not stop everyone
             // else's clean-up; their schedule stays due and is retried next tick.
             try {
-                $this->apply($setting);
-                $this->retentionRepository->markRun($setting->user_id, $now);
+                $ran += (int) DB::transaction(fn () => $this->runOne($due->user_id, $now));
             } catch (Throwable $exception) {
                 Log::warning('Notification clean-up failed', [
-                    'userId' => $setting->user_id,
+                    'userId' => $due->user_id,
                     'exception' => $exception->getMessage(),
                 ]);
-
-                continue;
             }
-
-            $ran++;
         }
 
         return $ran;
+    }
+
+    /**
+     * Run one user's schedule inside the caller's transaction. getDue() was
+     * read before earlier users were processed, so the row is locked and read
+     * again: the user may have switched it off, turned on "keep unread" or
+     * deleted their account since. The lock makes a settings save wait until
+     * the deletion and the run stamp have committed, so nothing is deleted
+     * with values older than the ones just saved. A failure rolls the
+     * deletion back together with the stamp.
+     */
+    private function runOne(int $userId, Carbon $now): bool
+    {
+        $setting = $this->retentionRepository->findForUserForUpdate($userId);
+
+        if (! $setting?->enabled || ! $this->isDue($setting, $now)) {
+            return false;
+        }
+
+        $this->apply($setting);
+        $this->retentionRepository->markRun($userId, $now);
+
+        return true;
     }
 
     private function isDue(NotificationRetentionSetting $setting, Carbon $now): bool

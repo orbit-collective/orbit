@@ -14,6 +14,16 @@ class NotificationRetentionRepository
         return NotificationRetentionSetting::query()->where('user_id', $userId)->first();
     }
 
+    /**
+     * The user's schedule with a row lock held until the surrounding
+     * transaction ends, so a concurrent settings save waits for it. Call it
+     * inside DB::transaction().
+     */
+    public function findForUserForUpdate(int $userId): ?NotificationRetentionSetting
+    {
+        return NotificationRetentionSetting::query()->where('user_id', $userId)->lockForUpdate()->first();
+    }
+
     public function updateOrCreateForUser(int $userId, array $data): NotificationRetentionSetting
     {
         return NotificationRetentionSetting::query()->updateOrCreate(['user_id' => $userId], $data);
