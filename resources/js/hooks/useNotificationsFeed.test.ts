@@ -230,4 +230,185 @@ describe('useNotificationsFeed', () => {
         await waitFor(() => expect(result.current.items).toHaveLength(1));
         expect(mocks.get).toHaveBeenCalledTimes(1);
     });
+
+    describe('races and reconciliation', () => {
+        const deferred = <T>() => {
+            let resolve!: (value: T) => void;
+            const promise = new Promise<T>((res) => {
+                resolve = res;
+            });
+            return { promise, resolve };
+        };
+        const page = (
+            ids: number[],
+            unread = 1,
+            next: number | null = null,
+        ) => ({
+            data: {
+                data: ids.map((id) => make(id)),
+                next_cursor: next,
+                unread_count: unread,
+            },
+        });
+
+        test('a superseded filter response neither shows nor clears the loading state', async () => {
+            const slow = deferred<ReturnType<typeof page>>();
+            const fast = deferred<ReturnType<typeof page>>();
+            mocks.get
+                .mockReturnValueOnce(slow.promise)
+                .mockReturnValueOnce(fast.promise);
+            const { result } = renderHook(() =>
+                useNotificationsFeed([make(1)], 1),
+            );
+
+            act(() =>
+                result.current.setQuery({ onlyUnread: true, type: 'all' }),
+            );
+            act(() =>
+                result.current.setQuery({ onlyUnread: true, type: 'error' }),
+            );
+
+            await act(async () => slow.resolve(page([50])));
+            expect(result.current.isLoading).toBe(true);
+            expect(result.current.items.map((i) => i.id)).toEqual([1]);
+
+            await act(async () => fast.resolve(page([70])));
+            expect(result.current.isLoading).toBe(false);
+            expect(result.current.items.map((i) => i.id)).toEqual([70]);
+        });
+
+        test('an emptied list with older pages behind it loads the next page by itself', async () => {
+            mocks.delete.mockImplementation((_url, options) =>
+                options.onFinish(),
+            );
+            mocks.get.mockResolvedValue(page([30], 1, null));
+            const rows = Array.from(
+                { length: NOTIFICATIONS_PAGE_SIZE },
+                (_, i) => make(100 - i, { read: true }),
+            );
+            const { result } = renderHook(() => useNotificationsFeed(rows, 0));
+
+            act(() => result.current.deleteRead());
+
+            await waitFor(() =>
+                expect(result.current.items.map((i) => i.id)).toEqual([30]),
+            );
+            expect(mocks.get).toHaveBeenCalledWith(
+                '/notifications',
+                expect.objectContaining({
+                    params: expect.objectContaining({ before: 81 }),
+                }),
+            );
+        });
+
+        test('does not fetch the next page while the write that emptied the list is in flight', () => {
+            const rows = Array.from(
+                { length: NOTIFICATIONS_PAGE_SIZE },
+                (_, i) => make(100 - i, { read: true }),
+            );
+            const { result } = renderHook(() => useNotificationsFeed(rows, 0));
+
+            act(() => result.current.deleteRead());
+
+            expect(result.current.items).toEqual([]);
+            expect(mocks.get).not.toHaveBeenCalled();
+        });
+
+        test('a page still loading when something is marked read is dropped', async () => {
+            const more = deferred<ReturnType<typeof page>>();
+            mocks.get.mockReturnValueOnce(more.promise);
+            const rows = Array.from(
+                { length: NOTIFICATIONS_PAGE_SIZE },
+                (_, i) => make(100 - i),
+            );
+            const { result } = renderHook(() => useNotificationsFeed(rows, 20));
+
+            act(() => void result.current.loadMore());
+            expect(result.current.isLoadingMore).toBe(true);
+
+            act(() => result.current.markAllAsRead());
+            await act(async () => more.resolve(page([50, 49], 22, null)));
+
+            expect(result.current.isLoadingMore).toBe(false);
+            expect(result.current.items).toHaveLength(NOTIFICATIONS_PAGE_SIZE);
+            expect(result.current.items.every((item) => item.read)).toBe(true);
+            expect(result.current.unreadCount).toBe(0);
+        });
+
+        test('a first page dropped by a write is refetched once the write finishes', async () => {
+            const first = deferred<ReturnType<typeof page>>();
+            mocks.get
+                .mockReturnValueOnce(first.promise)
+                .mockResolvedValueOnce(page([9], 0, null));
+            const { result } = renderHook(() =>
+                useNotificationsFeed([make(1)], 1),
+            );
+            act(() =>
+                result.current.setQuery({ onlyUnread: true, type: 'all' }),
+            );
+
+            act(() => result.current.markAllAsRead());
+            await act(async () => first.resolve(page([5])));
+            expect(result.current.isLoading).toBe(true);
+
+            act(() => mocks.post.mock.calls.at(-1)?.[2].onFinish());
+
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            expect(result.current.items.map((i) => i.id)).toEqual([9]);
+        });
+
+        test('picks up a refreshed shared page, keeping older pages already loaded', async () => {
+            mocks.get.mockResolvedValue(page([79], 20, null));
+            const rows = (read: boolean) =>
+                Array.from({ length: NOTIFICATIONS_PAGE_SIZE }, (_, i) =>
+                    make(100 - i, { read }),
+                );
+            const { result, rerender } = renderHook(
+                ({ shared, unread }) => useNotificationsFeed(shared, unread),
+                { initialProps: { shared: rows(false), unread: 20 } },
+            );
+            await act(async () => {
+                await result.current.loadMore();
+            });
+            expect(result.current.items).toHaveLength(21);
+
+            // e.g. the "Mark all notifications as read" command ran elsewhere.
+            rerender({ shared: rows(true), unread: 0 });
+
+            expect(result.current.unreadCount).toBe(0);
+            expect(result.current.items).toHaveLength(21);
+            expect(result.current.items.slice(0, 20).every((i) => i.read)).toBe(
+                true,
+            );
+            expect(result.current.items[20].id).toBe(79);
+        });
+
+        test('a short shared page replaces the list outright', () => {
+            const { result, rerender } = renderHook(
+                ({ shared }) => useNotificationsFeed(shared, 1),
+                { initialProps: { shared: [make(1), make(2)] } },
+            );
+
+            rerender({ shared: [make(2)] });
+
+            expect(result.current.items.map((i) => i.id)).toEqual([2]);
+            expect(result.current.hasMore).toBe(false);
+        });
+
+        test('a filtered view refetches when the unread count changed from outside', async () => {
+            mocks.get.mockResolvedValue(page([2], 1, null));
+            const { result, rerender } = renderHook(
+                ({ unread }) => useNotificationsFeed([make(1)], unread),
+                { initialProps: { unread: 1 } },
+            );
+            act(() =>
+                result.current.setQuery({ onlyUnread: true, type: 'all' }),
+            );
+            await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(1));
+
+            rerender({ unread: 0 });
+
+            await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(2));
+        });
+    });
 });

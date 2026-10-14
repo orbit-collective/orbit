@@ -64,4 +64,20 @@ describe('NotificationSelectionBar Component', () => {
 
         expect(screen.getByText('Select all')).toBeDisabled();
     });
+
+    test('flags the selection limit once it is reached', () => {
+        render(
+            <NotificationSelectionBar
+                selectedCount={200}
+                totalCount={200}
+                limit={200}
+                onToggleAll={() => {}}
+                onMarkAsRead={() => {}}
+                onDelete={() => {}}
+                onCancel={() => {}}
+            />,
+        );
+
+        expect(screen.getByText(/200 selected \(max\)/)).toBeInTheDocument();
+    });
 });
