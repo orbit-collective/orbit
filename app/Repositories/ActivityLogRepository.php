@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\ActivityLog;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 class ActivityLogRepository
@@ -27,6 +28,18 @@ class ActivityLogRepository
     public function paginateForUser(int $userId, int $perPage, string $pageName = 'page'): LengthAwarePaginator
     {
         return $this->paginate(ActivityLog::query()->where('user_id', $userId), $perPage, $pageName);
+    }
+
+    /**
+     * Delete the user's own entries logged before $before. Entries other
+     * people wrote - even in the same project - are never touched.
+     */
+    public function deleteOlderThanForUser(int $userId, Carbon $before): int
+    {
+        return ActivityLog::query()
+            ->where('user_id', $userId)
+            ->where('created_at', '<', $before)
+            ->delete();
     }
 
     /**
