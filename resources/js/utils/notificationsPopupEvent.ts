@@ -6,7 +6,19 @@
  */
 export const OPEN_NOTIFICATIONS_EVENT = 'orbit:open-notifications';
 
-export const requestOpenNotifications = (): void => {
+/** How the popup should open: pre-filtered and/or already in selection mode. */
+export interface OpenNotificationsOptions {
+    onlyUnread?: boolean;
+    selecting?: boolean;
+}
+
+export const requestOpenNotifications = (
+    options: OpenNotificationsOptions = {},
+): void => {
     if (typeof window === 'undefined') return;
-    window.dispatchEvent(new Event(OPEN_NOTIFICATIONS_EVENT));
+    window.dispatchEvent(
+        new CustomEvent<OpenNotificationsOptions>(OPEN_NOTIFICATIONS_EVENT, {
+            detail: options,
+        }),
+    );
 };

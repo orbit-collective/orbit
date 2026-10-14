@@ -41,6 +41,8 @@ NotificationsPopup.tsx
 
 `before` to ostatnie id, które klient już ma (sortowanie wyłącznie po id, więc kursor i kolejność nie mogą się rozjechać, a powiadomienie, które przyjdzie w trakcie przewijania, nie przesuwa stron). `next_cursor` jest `null`, gdy skrzynka się skończyła. `per_page` jest przycinany do `NotificationRepository::MAX_PER_PAGE`. Błędy walidacji zwracają 422 JSON (`ListNotificationsRequest`), nie redirect, bo wywołującym jest axios.
 
+Paleta komend otwiera popup przez `requestOpenNotifications({ onlyUnread?, selecting? })` (`utils/notificationsPopupEvent.ts`): `PageHeader` odbiera event, remontuje popup i przekazuje opcje jako `initialOnlyUnread` / `initialSelecting`. Komendy żyją w `hooks/useGlobalCommands.ts`: *Go to Notifications*, *Show unread notifications*, *Select notifications*, *Mark all notifications as read* oraz *Notification clean-up schedule* (otwiera Ustawienia → Powiadomienia). Usuwanie celowo nie jest komendą w palecie, bo wykonałoby się bez potwierdzenia.
+
 Elementy popupu:
 
 - `useNotificationsFeed.ts` — cały stan listy: elementy, kursor, licznik nieprzeczytanych, flagi ładowania/błędu, filtry oraz mutacje opisane niżej. Licznik żądań odrzuca spóźnioną odpowiedź dla filtra, który użytkownik już opuścił.

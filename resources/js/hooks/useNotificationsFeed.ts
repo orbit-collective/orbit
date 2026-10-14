@@ -33,7 +33,11 @@ const MUTATION_OPTIONS: VisitHelperOptions = {
 export function useNotificationsFeed(
     initialNotifications: Notification[],
     initialUnreadCount: number,
+    initialQuery: NotificationQuery = DEFAULT_QUERY,
 ) {
+    // Opened already filtered (e.g. from the command palette): the shared first
+    // page is the wrong list, so the first fetch happens straight away.
+    const startsFiltered = queryKey(initialQuery) !== queryKey(DEFAULT_QUERY);
     const [items, setItems] = useState(initialNotifications);
     const [cursor, setCursor] = useState<number | null>(
         initialNotifications.length >= NOTIFICATIONS_PAGE_SIZE
@@ -41,14 +45,16 @@ export function useNotificationsFeed(
             : null,
     );
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
-    const [query, setQuery] = useState(DEFAULT_QUERY);
-    const [isLoading, setIsLoading] = useState(false);
+    const [query, setQuery] = useState(initialQuery);
+    const [isLoading, setIsLoading] = useState(startsFiltered);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [hasError, setHasError] = useState(false);
 
     // Which query the list currently shows, and the latest request's number, so
     // a slow response for a filter the user already left cannot overwrite it.
-    const loadedKey = useRef(`${queryKey(DEFAULT_QUERY)}:0`);
+    const loadedKey = useRef(
+        startsFiltered ? '' : `${queryKey(DEFAULT_QUERY)}:0`,
+    );
     const requestId = useRef(0);
     const [reloadToken, setReloadToken] = useState(0);
 
