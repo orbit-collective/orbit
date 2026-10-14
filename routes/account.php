@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\NotificationRetentionController;
 use App\Http\Controllers\NotificationSettingController;
 use App\Http\Controllers\UserController;
 
@@ -13,4 +14,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/account/session-lifetime/{lifetime}', [UserController::class, 'updateSessionLifetime'])->name('account.session-lifetime.update');
     Route::delete('/account/delete', [UserController::class, 'deleteAccount'])->name('account.delete');
     Route::post('/account/notification-settings', [NotificationSettingController::class, 'update'])->name('account.notification-settings.update');
+    Route::post('/account/notification-retention', [NotificationRetentionController::class, 'update'])->name('account.notification-retention.update');
+    Route::post('/account/notification-retention/purge', [NotificationRetentionController::class, 'purge'])->name('account.notification-retention.purge');
 });

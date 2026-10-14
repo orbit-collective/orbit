@@ -17,6 +17,7 @@ use App\Services\Integrations\Github\GithubIntegrationService;
 use App\Services\Integrations\Jira\JiraIntegrationService;
 use App\Services\IssueTypeService;
 use App\Services\LabelService;
+use App\Services\NotificationRetentionService;
 use App\Services\NotificationSettingService;
 use App\Services\PermissionService;
 use App\Services\ProjectIntegrationService;
@@ -46,6 +47,7 @@ class SettingsController extends Controller
     public function __construct(
         protected UserService $userService,
         protected NotificationSettingService $notificationSettingService,
+        protected NotificationRetentionService $notificationRetentionService,
         protected ProjectService $projectService,
         protected ProjectMemberService $projectMemberService,
         protected ProjectInvitationService $projectInvitationService,
@@ -78,6 +80,7 @@ class SettingsController extends Controller
         return Inertia::render('Settings/Notifications', [
             'projects' => $this->projects($request),
             'notificationSettings' => $this->notificationSettingService->getAllSettings($request->user()->id),
+            'notificationRetention' => $this->notificationRetentionService->getSettings($request->user()->id),
         ]);
     }
 
