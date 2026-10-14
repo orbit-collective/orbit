@@ -4,96 +4,64 @@ Mapa całej funkcji: jak powiadomienia docierają do przeglądarki, jak stan rea
 
 ## 1. Odczyt: skąd popup z dzwonkiem bierze dane
 
-Powiadomienia **nie** są pobierane na żądanie przez popup — przychodzą jako współdzielony prop Inertii przy każdym pojedynczym żądaniu/wizycie strony, tak samo jak `auth.user`:
+Najnowsza strona powiadomień dociera jako **współdzielony prop Inertii** przy każdej wizycie na stronie, tak samo jak `auth.user`; wszystko starsze (i każdy przefiltrowany widok) popup dociąga stronami.
 
 ```
-Every Inertia request
+Każde żądanie Inertii
         │
         ▼
 HandleInertiaRequests::share()
-  - 'notifications' => fn () => $request->user()
-        ? $this->notificationService->getAllForUser($request->user()->id)
-        : []
-  - 'emailEnabled' => fn () => $this->mailConfigurationService->isEnabled()
-        │
-        ▼  every page component receives `notifications` as a prop automatically
+  - 'notifications'          => najnowsze NotificationRepository::LIMIT (20)
+                                wierszy, serwowane z cache per użytkownik
+  - 'notificationUnreadCount' => nieprzeczytane w CAŁEJ skrzynce (osobny
+                                cache, kasowany przy każdym zapisie)
         │
         ▼
 PageHeader.tsx
-  - sam czyta `notifications` przez usePage<PageProps>().props, żeby
-    policzyć `unreadNotificationsCount` na potrzeby małej czerwonej
-    odznaki renderowanej na ikonie dzwonka (z limitem "9+")
-  - owns `showNotificationsPopup` (local state, toggled by the Bell
-    icon button) i zamyka go po kliknięciu poza / Escape (zarówno
-    przycisk, jak i popup siedzą w jednym `divie` śledzonym przez
-    `ref`)
+  - czyta `notificationUnreadCount` do czerwonej plakietki na dzwonku
+    (limit "9+") — nie może już liczyć samej listy, bo jest ucięta
+  - zarządza `showNotificationsPopup`, zamyka go po kliknięciu poza/Escape
         │
-        ▼ (only rendered while open)
+        ▼ (renderowany tylko gdy otwarty)
 NotificationsPopup.tsx
-  - reads `notifications` via usePage<PageProps>().props (not its own fetch)
-  - posiada `onlyUnread` (filtr przeczytane/nieprzeczytane) oraz
-    `activeFilter` (`NotificationFilter` — `'all'` albo jedna wartość
-    `NotificationTypes`)
-  - computes `unreadCount` = notifications.filter(n => !n.read).length
-  - `filteredNotifications` stosuje zarówno `onlyUnread`, jak i
-    `activeFilter`, zanim przekaże listę dalej
+  - useNotificationsFeed(notifications, notificationUnreadCount)
         │
-        ├─▶ NotificationHeader.tsx      (tekst "N unread", przycisk-ikona
-        │     "Mark all as read", przełącznik-ikona filtra "Only show
-        │     unread")
-        ├─▶ NotificationFilterTabs.tsx  (zakładki-pigułki All/Success/
-        │     Info/Warning/Error, po jednej na każdą wartość
-        │     `NotificationTypes`)
-        └─▶ NotificationsList.tsx       (maps to NotificationItem, or
-                    │                     NotificationEmptyState if empty)
-                    └─▶ NotificationItem.tsx (kolorowa kropka typu +
-                          tytuł, treść, data, kontrolka statusu
-                          "Read"/"Unread" — kliknięcie "Unread" to
-                          właśnie oznaczenie jako przeczytane — oraz
-                          link "View details" do action_url, gdy jest
-                          obecny)
+        ├─ pierwsza strona: współdzielony prop, bez żądania
+        ├─ zmiana filtra (nieprzeczytane / ważność): GET /notifications
+        │    ?unread=1&type=error  → zastępuje listę
+        └─ koniec listy w widoku: GET /notifications?before=<ostatnie id>
+             → dokleja kolejną stronę
 ```
 
-Ponieważ prop jest odświeżany przy każdej wizycie Inertii, odznaka na dzwonku i lista aktualizują się po każdej akcji, która powoduje przekierowanie z powrotem (czyli po każdej mutującej akcji powiadomień poniżej) — nie ma pollingu, nie ma WebSocketa, nie ma osobnego endpointu "liczba nieprzeczytanych".
+`GET /notifications` (`NotificationController::index`) to JSON paginowany kursorem (keyset), od najnowszych:
 
-Istnieje trasa `GET /notifications` (`NotificationController::index()`, nazwa `notifications.index`, zwraca kolekcję jako JSON) — nic w obecnym froncie jej nie wywołuje. Jest nieużywana przez popup (który polega wyłącznie na współdzielonym propie powyżej); zostaw ją bez zmian, chyba że masz konkretny nowy powód, żeby pobierać powiadomienia poza normalnym wczytaniem strony.
-
-## 2. Zapis: oznacz jako przeczytane, oznacz wszystkie jako przeczytane, usuń
-
-Trzy mutujące akcje, wszystkie jako żądania Inertii przekierowujące z powrotem (wyzwalające odświeżenie współdzielonego propu z części 1) — żadna z nich nie dotyka lokalnego stanu komponentu bezpośrednio:
-
-```
-NotificationItem's "Unread" status control clicked
-        │
-        ▼
-NotificationsPopup::handleMarkAsRead(id)
-  - POST /notifications/{id}  body: { ...notification, read: true }
-        │
-        ▼
-NotificationController::update()
-  - abort_if(notification.user_id !== auth()->id(), 403)
-  - validates type/title/message/read/action_url
-  - NotificationService::update()
-        │
-        ▼  redirect back → shared prop refetches → item re-renders as read
+```json
+{ "data": [ ...powiadomienia ], "next_cursor": 81, "unread_count": 34 }
 ```
 
-```
-"Mark all as read" clicked
-        │
-        ▼
-NotificationsPopup::handleMarkAllAsRead()
-  - POST /notifications/mark-all-read
-        │
-        ▼
-NotificationController::markAllAsRead()
-  - NotificationService::markAllAsReadForUser(auth()->id())
-  - bulk UPDATE, scoped to the authenticated user's own unread rows only
-```
+`before` to ostatnie id, które klient już ma (sortowanie wyłącznie po id, więc kursor i kolejność nie mogą się rozjechać, a powiadomienie, które przyjdzie w trakcie przewijania, nie przesuwa stron). `next_cursor` jest `null`, gdy skrzynka się skończyła. `per_page` jest przycinany do `NotificationRepository::MAX_PER_PAGE`. Błędy walidacji zwracają 422 JSON (`ListNotificationsRequest`), nie redirect, bo wywołującym jest axios.
 
-`NotificationController::destroy()` (`DELETE /notifications/{notification}`) stosuje to samo sprawdzenie własności (`abort_if($notification->user_id !== auth()->id(), 403)`), ale zwraca zwykły JSON zamiast przekierowania — nic w obecnym froncie też jej nie wywołuje; dodaj przycisk usuwania do `NotificationItem.tsx`, stosując ten sam wzorzec `router.delete(...)`, jakiego używa `WorkspaceSettingsDeleteRoleModal.tsx` (zobacz
-[`../permissions/03-grant-a-custom-role-in-bulk.md`](../permissions/03-grant-a-custom-role-in-bulk.md)
-krok 3), jeśli musisz to podłączyć.
+Elementy popupu:
+
+- `useNotificationsFeed.ts` — cały stan listy: elementy, kursor, licznik nieprzeczytanych, flagi ładowania/błędu, filtry oraz mutacje opisane niżej. Licznik żądań odrzuca spóźnioną odpowiedź dla filtra, który użytkownik już opuścił.
+- `NotificationsList.tsx` — wartownik `IntersectionObserver` na końcu listy wywołuje `onLoadMore`; widoczny przycisk "Load more" to rozwiązanie awaryjne (i to, co klikają testy w jsdom).
+- `NotificationHeader.tsx` (licznik nieprzeczytanych, oznacz wszystkie, filtr nieprzeczytanych, przełącznik zaznaczania), `NotificationFilterTabs.tsx` (ważność), `NotificationSelectionBar.tsx` (akcje masowe), `NotificationClearRead.tsx` ("Delete all read" z krokiem potwierdzenia), `NotificationItem.tsx` (checkbox w trybie zaznaczania).
+
+## 2. Zapis: przeczytane, usuwanie, hurtowo
+
+Każda mutacja **od razu** aktualizuje lokalny stan feedu i dopiero potem leci przez `router.post/delete` z `only: ['notifications', 'notificationUnreadCount']`, więc po redirectcie odświeżane są tylko współdzielone propy. Odrzucone żądanie wywołuje `refresh()`, które pobiera pierwszą stronę od nowa, żeby lista nigdy nie pokazywała czegoś, czego serwer odmówił.
+
+| Akcja w UI | Żądanie | Kontroler |
+| --- | --- | --- |
+| oznacz jedno / kilka jako przeczytane | `POST /notifications/bulk-read` `{ids}` | `bulkMarkAsRead` |
+| oznacz wszystkie | `POST /notifications/mark-all-read` | `markAllAsRead` |
+| usuń jedno | `DELETE /notifications/{id}` | `destroy` (sprawdza właściciela, loguje) |
+| usuń kilka | `POST /notifications/bulk-delete` `{ids}` | `bulkDestroy` |
+| usuń wszystkie przeczytane | `DELETE /notifications/read` | `destroyRead` |
+
+Trasy hurtowe przyjmują maksymalnie `NotificationRepository::MAX_BULK_IDS` (200) id (`BulkNotificationsRequest`), a repozytorium zawęża każde zapytanie przez `forUser($userId)`, więc id należące do kogoś innego jest po cichu ignorowane, nigdy ruszane. Każda metoda serwisu, która zapisuje, wywołuje `NotificationService::forget($userId)`, co kasuje zarówno cache listy, jak i cache licznika nieprzeczytanych.
+
+`POST /notifications/{id}` (`update`) nadal istnieje, ale popup już go nie używa.
 
 ## 3. Ustawienia: jak zapisuje się przełącznik kanału
 
@@ -148,9 +116,10 @@ W przeciwieństwie do części 1–2, ta aktualizacja to **zwykły POST w stylu 
 - `app/Listeners/SendNotificationListener.php`
 - `app/Http/Controllers/NotificationController.php`,
   `NotificationSettingController.php`
-- `app/Http/Requests/Notifications/UpdateNotificationSettingsRequest.php`
+- `app/Http/Requests/Notifications/UpdateNotificationSettingsRequest.php`,
+  `ListNotificationsRequest.php`, `BulkNotificationsRequest.php`
 - `app/Http/Middleware/HandleInertiaRequests.php` (współdzielone
-  propy `notifications`/`emailEnabled`)
+  propy `notifications`/`notificationUnreadCount`/`emailEnabled`)
 - `app/Notifications/NotificationMail.php` +
   `resources/views/emails/notification.blade.php`
 - `resources/js/types/Notification.ts`
@@ -162,7 +131,12 @@ W przeciwieństwie do części 1–2, ta aktualizacja to **zwykły POST w stylu 
 - `resources/js/Components/Molecules/NotificationHeader/NotificationHeader.tsx`,
   `NotificationFilterTabs/NotificationFilterTabs.tsx`,
   `NotificationItem/NotificationItem.tsx`,
-  `NotificationEmptyState/NotificationEmptyState.tsx`
+  `NotificationEmptyState/NotificationEmptyState.tsx`,
+  `NotificationSelectionBar/NotificationSelectionBar.tsx`,
+  `NotificationClearRead/NotificationClearRead.tsx`
+- `resources/js/hooks/useNotificationsFeed.ts`
+
+Harmonogram sprzątania ma własne pliki, zobacz [przewodnik 06](./06-clean-up-old-notifications.md).
 
 ## Lokalna checklista testowania
 

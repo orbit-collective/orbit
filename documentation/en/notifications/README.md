@@ -39,6 +39,12 @@ that's easy to forget when adding a new kind of notification.
    a client from claiming `mentioned_user_ids` for someone the comment
    text never actually names.
 
+6. **[Clean up old notifications and activity history](./06-clean-up-old-notifications.md)**
+   — the per-user daily/weekly/monthly schedule (`notifications:prune`)
+   and the one-off "delete older than N days" actions in Settings →
+   Notifications: what is deleted, the due logic, the cache, and how to
+   add an age preset, a frequency or another kind of data.
+
 Wiring a domain event into the notification pipeline is itself
 documented as part of
 [`../integrations/03-add-a-new-event-type.md`](../integrations/03-add-a-new-event-type.md)
@@ -71,3 +77,9 @@ array is a **hand-maintained mirror** of the backend's `NotificationType`
 cases (icon, title, description per type) — nothing generates it from
 the enum, so a new backend type is invisible in Settings until you add
 its row there too.
+
+The bell popup does not render the whole inbox: the shared prop carries
+only the newest 20 notifications plus the real unread count, and the
+popup pages older ones from `GET /notifications` (keyset cursor, unread
+and severity filters), with selection mode for bulk read/delete — see
+guide 3.
