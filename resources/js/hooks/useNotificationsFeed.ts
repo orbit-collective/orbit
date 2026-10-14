@@ -1,4 +1,5 @@
-import { router, VisitOptions } from '@inertiajs/react';
+import type { VisitHelperOptions } from '@inertiajs/core';
+import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -16,7 +17,7 @@ const queryKey = (query: NotificationQuery): string =>
     `${query.onlyUnread}:${query.type}`;
 
 /** Only the shared props the popup shows change, so only those are re-fetched. */
-const MUTATION_OPTIONS: VisitOptions = {
+const MUTATION_OPTIONS: VisitHelperOptions = {
     preserveScroll: true,
     preserveState: true,
     only: ['notifications', 'notificationUnreadCount'],
@@ -124,7 +125,7 @@ export function useNotificationsFeed(
         setReloadToken((token) => token + 1);
     }, []);
 
-    const mutationOptions: VisitOptions = {
+    const mutationOptions: VisitHelperOptions = {
         ...MUTATION_OPTIONS,
         onError: refresh,
     };
