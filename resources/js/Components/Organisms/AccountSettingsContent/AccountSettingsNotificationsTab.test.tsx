@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
@@ -61,7 +61,10 @@ describe('AccountSettingsNotificationsTab', () => {
         expect(screen.getByText('Other issue updates')).toBeInTheDocument();
         expect(screen.getByText('Project invitations')).toBeInTheDocument();
         expect(screen.getByText('Integration activity')).toBeInTheDocument();
-        expect(screen.getAllByRole('button')).toHaveLength(20);
+        const typesPanel = screen
+            .getByText('Notification types')
+            .closest('section') as HTMLElement;
+        expect(within(typesPanel).getAllByRole('button')).toHaveLength(20);
     });
 
     test('without a notificationSettings prop, defaults to in-app enabled and email disabled', () => {
@@ -139,5 +142,14 @@ describe('AccountSettingsNotificationsTab', () => {
         expect(
             screen.getByText('Failed to update notification settings.'),
         ).toBeInTheDocument();
+    });
+});
+
+describe('AccountSettingsNotificationsTab clean-up', () => {
+    test('renders the clean-up schedule and one-off actions below the types', () => {
+        renderTab();
+
+        expect(screen.getByText('Automatic clean-up')).toBeInTheDocument();
+        expect(screen.getByText('Clean up now')).toBeInTheDocument();
     });
 });

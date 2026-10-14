@@ -93,6 +93,27 @@ export const Notifications: Story = {
     ),
 };
 
+/** A saved weekly schedule that already ran, with both clean-ups configured. */
+export const NotificationsWithCleanupSchedule: Story = {
+    render: () => (
+        <AccountSettingsNotificationsTab
+            notificationRetention={{
+                enabled: true,
+                frequency: 'weekly',
+                notifications_older_than_days: 30,
+                notifications_only_read: true,
+                activity_older_than_days: 90,
+                last_run_at: minutesAgo(180),
+            }}
+        />
+    ),
+    play: async ({ canvasElement }) => {
+        await expect(
+            within(canvasElement).getByText('Last ran 3h ago.'),
+        ).toBeVisible();
+    },
+};
+
 export const Security: Story = {
     render: () => <AccountSettingsSecurityTab sessions={sessions} />,
     parameters: { inertia: { url: '/settings/security-access' } },
