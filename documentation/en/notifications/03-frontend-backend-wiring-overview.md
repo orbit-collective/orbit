@@ -7,108 +7,93 @@ touched this system before.
 
 ## 1. Reading: how the bell popup gets its data
 
-Notifications are **not** fetched on demand by the popup — they arrive
-as a shared Inertia prop on every single page load/visit, the same way
-`auth.user` does:
+The newest page of notifications arrives as a **shared Inertia prop** on
+every page visit, the same way `auth.user` does; everything older (and
+every filtered view) is fetched by the popup page by page.
 
 ```
 Every Inertia request
         │
         ▼
 HandleInertiaRequests::share()
-  - 'notifications' => fn () => $request->user()
-        ? $this->notificationService->getAllForUser($request->user()->id)
-        : []
-  - 'emailEnabled' => fn () => $this->mailConfigurationService->isEnabled()
-        │
-        ▼  every page component receives `notifications` as a prop automatically
+  - 'notifications'          => the newest NotificationRepository::LIMIT (20)
+                                rows, served from a per-user cache
+  - 'notificationUnreadCount' => unread across the WHOLE inbox (cached
+                                separately, dropped by every write)
         │
         ▼
 PageHeader.tsx
-  - reads `notifications` via usePage<PageProps>().props itself, just
-    to compute `unreadNotificationsCount` for the small red badge
-    rendered on the Bell icon (capped at "9+")
-  - owns `showNotificationsPopup` (local state, toggled by the Bell
-    icon button) and closes it on click-outside/Escape (both the
-    button and the popup sit inside one `ref`-tracked wrapper `div`)
+  - reads `notificationUnreadCount` for the red badge on the Bell
+    (capped at "9+") — it can no longer count the list itself, which
+    is capped
+  - owns `showNotificationsPopup`, closes it on click-outside/Escape
         │
         ▼ (only rendered while open)
 NotificationsPopup.tsx
-  - reads `notifications` via usePage<PageProps>().props (not its own fetch)
-  - owns `onlyUnread` (read/unread filter) and `activeFilter`
-    (`NotificationFilter` — `'all'` or one `NotificationTypes` value)
-  - computes `unreadCount` = notifications.filter(n => !n.read).length
-  - `filteredNotifications` applies both `onlyUnread` and
-    `activeFilter` before handing the list down
+  - useNotificationsFeed(notifications, notificationUnreadCount)
         │
-        ├─▶ NotificationHeader.tsx      ("N unread" text, "Mark all as
-        │     read" icon button, "Only show unread" filter-icon toggle)
-        ├─▶ NotificationFilterTabs.tsx  (All/Success/Info/Warning/Error
-        │     pill tabs, one per `NotificationTypes` value)
-        └─▶ NotificationsList.tsx       (maps to NotificationItem, or
-                    │                     NotificationEmptyState if empty)
-                    └─▶ NotificationItem.tsx (type-colored dot + title,
-                          message, date, a "Read"/"Unread" status
-                          control — clicking "Unread" is what marks it
-                          read — and a "View details" link to
-                          action_url when present)
+        ├─ first page: the shared prop, no request
+        ├─ filter changed (unread / severity): GET /notifications
+        │    ?unread=1&type=error  → replaces the list
+        └─ end of list scrolled into view: GET /notifications?before=<last id>
+             → appends the next page
 ```
 
-Because the prop is refreshed on every Inertia visit, the bell badge
-and list update after any action that causes a redirect back (which is
-every mutating notification action below) — there's no polling, no
-WebSocket, no separate "unread count" endpoint.
+`GET /notifications` (`NotificationController::index`) is keyset
+paginated JSON, newest first:
 
-There *is* a `GET /notifications` route
-(`NotificationController::index()`, name `notifications.index`,
-returns the collection as JSON) — nothing in the current frontend
-calls it. It's unused by the popup (which relies entirely on the
-shared prop above); leave it alone unless you have a concrete new
-reason to fetch notifications outside of a normal page load.
-
-## 2. Writing: mark as read, mark all as read, delete
-
-Three mutating actions, all Inertia requests that redirect back
-(triggering the shared-prop refresh from part 1) — none of them touch
-local component state directly:
-
-```
-NotificationItem's "Unread" status control clicked
-        │
-        ▼
-NotificationsPopup::handleMarkAsRead(id)
-  - POST /notifications/{id}  body: { ...notification, read: true }
-        │
-        ▼
-NotificationController::update()
-  - abort_if(notification.user_id !== auth()->id(), 403)
-  - validates type/title/message/read/action_url
-  - NotificationService::update()
-        │
-        ▼  redirect back → shared prop refetches → item re-renders as read
+```json
+{ "data": [ ...notifications ], "next_cursor": 81, "unread_count": 34 }
 ```
 
-```
-"Mark all as read" clicked
-        │
-        ▼
-NotificationsPopup::handleMarkAllAsRead()
-  - POST /notifications/mark-all-read
-        │
-        ▼
-NotificationController::markAllAsRead()
-  - NotificationService::markAllAsReadForUser(auth()->id())
-  - bulk UPDATE, scoped to the authenticated user's own unread rows only
-```
+`before` is the last id the client has (ordering is by id alone, so
+the cursor and the order cannot disagree and a notification arriving
+mid-scroll never shifts a page). `next_cursor` is `null` once the inbox
+is exhausted. `per_page` is clamped to `NotificationRepository::MAX_PER_PAGE`.
+Validation failures answer 422 JSON (`ListNotificationsRequest`), not a
+redirect, because the caller is axios.
 
-`NotificationController::destroy()` (`DELETE /notifications/{notification}`)
-follows the same ownership check (`abort_if($notification->user_id !== auth()->id(), 403)`)
-but returns plain JSON rather than a redirect — nothing in the current
-frontend calls it either; add a delete button to `NotificationItem.tsx`
-following the same `router.delete(...)` pattern used by
-`WorkspaceSettingsDeleteRoleModal.tsx` (see
-[`../permissions/03-grant-a-custom-role-in-bulk.md`](../permissions/03-grant-a-custom-role-in-bulk.md)
-step 3) if you need to wire it up.
+The popup's pieces:
+
+- `useNotificationsFeed.ts` — all list state: items, cursor, unread
+  count, loading/error flags, filters, and the mutations below. A
+  request counter drops a slow response for a filter the user already
+  left.
+- `NotificationsList.tsx` — an `IntersectionObserver` sentinel at the end
+  of the list calls `onLoadMore`; a visible "Load more" button is the
+  fallback (and what jsdom tests click).
+- `NotificationHeader.tsx` (unread count, mark all read, unread filter,
+  selection toggle), `NotificationFilterTabs.tsx` (severity),
+  `NotificationSelectionBar.tsx` (bulk actions),
+  `NotificationClearRead.tsx` ("Delete all read" with a confirm step),
+  `NotificationItem.tsx` (checkbox in selection mode).
+
+## 2. Writing: read, delete, in bulk
+
+Every mutation updates the feed's local state **immediately** and is
+then sent through `router.post/delete` with
+`only: ['notifications', 'notificationUnreadCount']`, so just the shared
+props are refreshed when the redirect lands. A rejected request calls
+`refresh()`, which refetches the first page so the list never keeps
+showing something the server refused.
+
+| UI action | Request | Controller |
+| --- | --- | --- |
+| mark one / several read | `POST /notifications/bulk-read` `{ids}` | `bulkMarkAsRead` |
+| mark all read | `POST /notifications/mark-all-read` | `markAllAsRead` |
+| delete one | `DELETE /notifications/{id}` | `destroy` (ownership checked, logged) |
+| delete several | `POST /notifications/bulk-delete` `{ids}` | `bulkDestroy` |
+| delete all read | `DELETE /notifications/read` | `destroyRead` |
+
+The bulk routes take at most `NotificationRepository::MAX_BULK_IDS` (200)
+ids (`BulkNotificationsRequest`) and the repository scopes every query
+with `forUser($userId)`, so an id belonging to someone else is silently
+ignored, never touched. Every service method that writes calls
+`NotificationService::forget($userId)`, which drops both the list cache
+and the unread-count cache.
+
+`POST /notifications/{id}` (`update`) still exists but the popup no
+longer uses it.
 
 ## 3. Settings: how a channel toggle persists
 
@@ -167,9 +152,10 @@ wait for a fresh `notificationSettings` prop to confirm the new value.
 - `app/Listeners/SendNotificationListener.php`
 - `app/Http/Controllers/NotificationController.php`,
   `NotificationSettingController.php`
-- `app/Http/Requests/Notifications/UpdateNotificationSettingsRequest.php`
+- `app/Http/Requests/Notifications/UpdateNotificationSettingsRequest.php`,
+  `ListNotificationsRequest.php`, `BulkNotificationsRequest.php`
 - `app/Http/Middleware/HandleInertiaRequests.php` (the shared
-  `notifications`/`emailEnabled` props)
+  `notifications`/`notificationUnreadCount`/`emailEnabled` props)
 - `app/Notifications/NotificationMail.php` +
   `resources/views/emails/notification.blade.php`
 - `resources/js/types/Notification.ts`
@@ -178,10 +164,16 @@ wait for a fresh `notificationSettings` prop to confirm the new value.
   `NotificationsList/NotificationsList.tsx`,
   `AccountSettingsContent/AccountSettingsNotificationsTab.tsx`,
   `AccountSettingsContent/AccountSettingsNotificationTypeRow.tsx`
+- `resources/js/hooks/useNotificationsFeed.ts`
 - `resources/js/Components/Molecules/NotificationHeader/NotificationHeader.tsx`,
   `NotificationFilterTabs/NotificationFilterTabs.tsx`,
   `NotificationItem/NotificationItem.tsx`,
-  `NotificationEmptyState/NotificationEmptyState.tsx`
+  `NotificationEmptyState/NotificationEmptyState.tsx`,
+  `NotificationSelectionBar/NotificationSelectionBar.tsx`,
+  `NotificationClearRead/NotificationClearRead.tsx`
+
+The clean-up schedule has its own files, see
+[guide 06](./06-clean-up-old-notifications.md).
 
 ## Local testing checklist
 
