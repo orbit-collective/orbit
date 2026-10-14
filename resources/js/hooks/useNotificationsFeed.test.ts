@@ -383,6 +383,64 @@ describe('useNotificationsFeed', () => {
             expect(result.current.items[20].id).toBe(79);
         });
 
+        test('restarts paging when the refreshed page no longer joins the loaded rows', async () => {
+            mocks.get.mockResolvedValue(page([79], 20, null));
+            const rows = (from: number) =>
+                Array.from({ length: NOTIFICATIONS_PAGE_SIZE }, (_, i) =>
+                    make(from - i),
+                );
+            const { result, rerender } = renderHook(
+                ({ shared }) => useNotificationsFeed(shared, 20),
+                { initialProps: { shared: rows(100) } },
+            );
+            await act(async () => {
+                await result.current.loadMore();
+            });
+            expect(result.current.items).toHaveLength(21);
+
+            // 30 new notifications: 130-111 does not touch the loaded 100-79.
+            rerender({ shared: rows(130) });
+
+            expect(result.current.items.map((i) => i.id)).toEqual(
+                rows(130).map((i) => i.id),
+            );
+            expect(result.current.hasMore).toBe(true);
+
+            mocks.get.mockResolvedValue(page([110], 20, null));
+            await act(async () => {
+                await result.current.loadMore();
+            });
+
+            expect(mocks.get).toHaveBeenLastCalledWith(
+                '/notifications',
+                expect.objectContaining({
+                    params: expect.objectContaining({ before: 111 }),
+                }),
+            );
+            expect(result.current.items.at(-1)?.id).toBe(110);
+        });
+
+        test('keeps the loaded pages when the refreshed page still overlaps them', async () => {
+            mocks.get.mockResolvedValue(page([79], 20, null));
+            const rows = (from: number) =>
+                Array.from({ length: NOTIFICATIONS_PAGE_SIZE }, (_, i) =>
+                    make(from - i),
+                );
+            const { result, rerender } = renderHook(
+                ({ shared }) => useNotificationsFeed(shared, 20),
+                { initialProps: { shared: rows(100) } },
+            );
+            await act(async () => {
+                await result.current.loadMore();
+            });
+
+            // 3 new notifications: 103-84 still overlaps 100-81.
+            rerender({ shared: rows(103) });
+
+            expect(result.current.items).toHaveLength(24);
+            expect(result.current.items.at(-1)?.id).toBe(79);
+        });
+
         test('a short shared page replaces the list outright', () => {
             const { result, rerender } = renderHook(
                 ({ shared }) => useNotificationsFeed(shared, 1),
