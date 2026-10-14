@@ -77,11 +77,21 @@ class NotificationRetentionService
         $now ??= now();
         $ran = 0;
 
-        foreach ($this->retentionRepository->getDue($now) as $setting) {
-            // One user's failure must not stop everyone else's clean-up; their
-            // schedule stays due and is retried on the next tick.
+        foreach ($this->retentionRepository->getDue($now) as $due) {
+            // getDue() was read before earlier users were processed, so the
+            // user may have switched the schedule off, turned on "keep unread"
+            // or deleted their account since. Delete only what the row says now.
+            $setting = $this->retentionRepository->findForUser($due->user_id);
+
+            if (! $setting?->enabled || ! $this->isDue($setting, $now)) {
+                continue;
+            }
+
+            // One user's failure, bookkeeping included, must not stop everyone
+            // else's clean-up; their schedule stays due and is retried next tick.
             try {
                 $this->apply($setting);
+                $this->retentionRepository->markRun($setting->user_id, $now);
             } catch (Throwable $exception) {
                 Log::warning('Notification clean-up failed', [
                     'userId' => $setting->user_id,
@@ -91,11 +101,16 @@ class NotificationRetentionService
                 continue;
             }
 
-            $this->retentionRepository->updateOrCreateForUser($setting->user_id, ['last_run_at' => $now]);
             $ran++;
         }
 
         return $ran;
+    }
+
+    private function isDue(NotificationRetentionSetting $setting, Carbon $now): bool
+    {
+        return $setting->last_run_at === null
+            || $setting->last_run_at->lte($now->copy()->subDays($setting->frequency->days()));
     }
 
     private function apply(NotificationRetentionSetting $setting): void

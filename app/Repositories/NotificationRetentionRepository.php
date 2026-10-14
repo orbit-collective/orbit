@@ -20,6 +20,15 @@ class NotificationRetentionRepository
     }
 
     /**
+     * Stamp a finished run. An update, not an upsert: a schedule that was
+     * deleted meanwhile (its user deleted the account) must stay deleted.
+     */
+    public function markRun(int $userId, Carbon $at): void
+    {
+        NotificationRetentionSetting::query()->where('user_id', $userId)->update(['last_run_at' => $at]);
+    }
+
+    /**
      * Enabled schedules whose last run is at least one full period old (or
      * that never ran), judged per frequency.
      *
