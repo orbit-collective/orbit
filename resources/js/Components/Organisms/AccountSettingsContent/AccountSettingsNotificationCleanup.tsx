@@ -134,6 +134,7 @@ export default function AccountSettingsNotificationCleanup({
                     description={draft.enabled ? lastRun : undefined}
                     action={
                         <ToggleSwitch
+                            label="Run clean-up automatically"
                             checked={draft.enabled}
                             onChange={(enabled) => update({ enabled })}
                         />
@@ -187,6 +188,7 @@ export default function AccountSettingsNotificationCleanup({
                     description="Only notifications you have already read are deleted."
                     action={
                         <ToggleSwitch
+                            label="Keep unread notifications"
                             checked={draft.notifications_only_read}
                             onChange={(notifications_only_read) =>
                                 update({ notifications_only_read })

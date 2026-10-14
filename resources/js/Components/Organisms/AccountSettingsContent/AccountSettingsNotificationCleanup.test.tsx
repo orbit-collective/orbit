@@ -92,7 +92,9 @@ describe('AccountSettingsNotificationCleanup', () => {
         const user = userEvent.setup();
         renderCleanup(retention());
 
-        await user.click(screen.getAllByRole('button', { name: '' })[0]);
+        await user.click(
+            screen.getByRole('switch', { name: 'Run clean-up automatically' }),
+        );
         await pick(user, 'Frequency', 'Every month');
         await pick(user, 'Notification age', '30 days');
         await pick(user, 'Activity age', '90 days');
@@ -138,7 +140,9 @@ describe('AccountSettingsNotificationCleanup', () => {
         );
         renderCleanup(retention());
 
-        await user.click(screen.getAllByRole('button', { name: '' })[0]);
+        await user.click(
+            screen.getByRole('switch', { name: 'Run clean-up automatically' }),
+        );
         await user.click(screen.getByRole('button', { name: 'Save schedule' }));
 
         expect(screen.getByRole('alert')).toHaveTextContent(
@@ -211,5 +215,16 @@ describe('AccountSettingsNotificationCleanup', () => {
         expect(
             screen.getByText('Unread notifications are deleted too.'),
         ).toBeInTheDocument();
+    });
+
+    test('names both switches for assistive technology', () => {
+        renderCleanup(retention({ enabled: true }));
+
+        expect(
+            screen.getByRole('switch', { name: 'Run clean-up automatically' }),
+        ).toHaveAttribute('aria-checked', 'true');
+        expect(
+            screen.getByRole('switch', { name: 'Keep unread notifications' }),
+        ).toHaveAttribute('aria-checked', 'true');
     });
 });
