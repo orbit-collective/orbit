@@ -1,4 +1,10 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { Notification } from '@/types/Notification';
@@ -239,25 +245,28 @@ describe('NotificationsPopup Component', () => {
             );
         });
 
-        test('never selects more than one bulk request can take', async () => {
-            const user = userEvent.setup();
+        test('never selects more than one bulk request can take', () => {
             pageState.notifications = Array.from({ length: 250 }, (_, i) =>
                 makeNotification({ id: 1000 - i, title: `Item ${i}` }),
             );
-            render(<NotificationsPopup initialSelecting />);
+            const { container } = render(
+                <NotificationsPopup initialSelecting />,
+            );
 
-            await user.click(screen.getByText('Select all'));
+            // fireEvent and a plain DOM query: 250 rows make userEvent and
+            // role queries slow enough to time out on a busy CI runner.
+            fireEvent.click(screen.getByText('Select all'));
             expect(
                 screen.getByText(/200 selected \(max\)/),
             ).toBeInTheDocument();
 
             // A further click on an unselected row is ignored.
-            await user.click(screen.getAllByRole('checkbox')[200]);
+            const boxes = container.querySelectorAll('input[type="checkbox"]');
+            fireEvent.click(boxes[200]);
             expect(screen.getByText(/200 selected/)).toBeInTheDocument();
 
-            await user.click(screen.getByRole('button', { name: /^delete$/i }));
-            const sent = mocks.post.mock.calls[0][1].ids;
-            expect(sent).toHaveLength(200);
+            fireEvent.click(screen.getByRole('button', { name: /^delete$/i }));
+            expect(mocks.post.mock.calls[0][1].ids).toHaveLength(200);
         });
 
         test('cancelling leaves selection mode and clears the selection', async () => {
