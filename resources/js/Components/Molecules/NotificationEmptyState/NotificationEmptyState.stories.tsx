@@ -25,3 +25,15 @@ export const Default: Story = {
         ).toBeVisible();
     },
 };
+
+/** An active filter that matches nothing. */
+export const Filtered: Story = {
+    args: { filtered: true },
+    play: async ({ canvasElement }) => {
+        await expect(
+            within(canvasElement).getByText(
+                'No notifications match these filters',
+            ),
+        ).toBeVisible();
+    },
+};

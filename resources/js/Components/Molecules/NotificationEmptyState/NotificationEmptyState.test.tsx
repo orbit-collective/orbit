@@ -10,4 +10,12 @@ describe('NotificationEmptyState Component', () => {
             screen.getByText('No notifications to display'),
         ).toBeInTheDocument();
     });
+
+    test('says nothing matches when a filter is active', () => {
+        render(<NotificationEmptyState filtered />);
+
+        expect(
+            screen.getByText('No notifications match these filters'),
+        ).toBeInTheDocument();
+    });
 });

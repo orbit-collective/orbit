@@ -67,7 +67,9 @@ export const WithTabs: Story = {
 
 /** Unread notifications put a count on the bell, which opens the popup. */
 export const UnreadNotifications: Story = {
-    parameters: { inertia: { props: { notifications } } },
+    parameters: {
+        inertia: { props: { notifications, notificationUnreadCount: 2 } },
+    },
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
         await expect(canvas.getByText('2')).toBeVisible();
