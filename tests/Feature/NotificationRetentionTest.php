@@ -13,6 +13,7 @@ use App\Services\NotificationService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -194,6 +195,40 @@ test('a failure while recording a run does not stop the other users', function (
     expect($service->runDue())->toBe(1)
         ->and($firstSetting->fresh()->last_run_at)->toBeNull()
         ->and($secondSetting->fresh()->last_run_at)->not->toBeNull();
+});
+
+test('each schedule is locked and cleaned up inside its own transaction', function () {
+    $user = User::factory()->create();
+    $setting = retentionSetting($user);
+    $baseline = DB::transactionLevel();
+    $seen = [];
+
+    $service = retentionServiceWithDue(collect([$setting]), function ($repository) use (&$seen) {
+        $repository->shouldReceive('findForUserForUpdate')->andReturnUsing(function (int $userId) use (&$seen) {
+            $seen[] = DB::transactionLevel();
+
+            return NotificationRetentionSetting::where('user_id', $userId)->first();
+        });
+    });
+
+    $service->runDue();
+
+    expect($seen)->toHaveCount(1)->and($seen[0])->toBeGreaterThan($baseline);
+});
+
+test('a failure while recording a run rolls its deletion back', function () {
+    $user = User::factory()->create();
+    $setting = retentionSetting($user);
+    $notification = Notification::factory()->create(['user_id' => $user->id, 'read' => true, 'created_at' => now()->subDays(40)]);
+
+    $service = retentionServiceWithDue(
+        collect([$setting]),
+        fn ($repository) => $repository->shouldReceive('markRun')->andThrow(new RuntimeException('boom')),
+    );
+
+    expect($service->runDue())->toBe(0);
+    $this->assertDatabaseHas('notifications', ['id' => $notification->id]);
+    expect($setting->fresh()->last_run_at)->toBeNull();
 });
 
 test('the prune command runs the due schedules', function () {
