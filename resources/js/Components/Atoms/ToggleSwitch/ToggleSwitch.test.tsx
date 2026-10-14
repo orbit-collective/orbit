@@ -63,4 +63,36 @@ describe('ToggleSwitch Component', () => {
 
         expect(onChange).not.toHaveBeenCalled();
     });
+
+    test('with a label it is a named switch exposing its checked state', () => {
+        const { rerender } = render(
+            <ToggleSwitch
+                label="Run clean-up automatically"
+                checked={false}
+                onChange={() => {}}
+            />,
+        );
+
+        const toggle = screen.getByRole('switch', {
+            name: 'Run clean-up automatically',
+        });
+        expect(toggle).toHaveAttribute('aria-checked', 'false');
+
+        rerender(
+            <ToggleSwitch
+                label="Run clean-up automatically"
+                checked
+                onChange={() => {}}
+            />,
+        );
+
+        expect(toggle).toHaveAttribute('aria-checked', 'true');
+    });
+
+    test('without a label it stays a plain button', () => {
+        render(<ToggleSwitch checked onChange={() => {}} />);
+
+        expect(screen.getByRole('button')).not.toHaveAttribute('aria-checked');
+        expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    });
 });
