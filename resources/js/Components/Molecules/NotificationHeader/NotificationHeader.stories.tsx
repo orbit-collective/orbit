@@ -48,3 +48,16 @@ export const AllRead: Story = {
 export const OnlyUnreadActive: Story = {
     args: { onlyUnread: true },
 };
+
+/** With selection wired, a toggle enters bulk-selection mode. */
+export const SelectionMode: Story = {
+    args: { isSelecting: true, onToggleSelecting: fn() },
+    play: async ({ canvasElement, args }) => {
+        const toggle = within(canvasElement).getByLabelText(
+            'Select notifications',
+        );
+        await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+        await userEvent.click(toggle);
+        await expect(args.onToggleSelecting).toHaveBeenCalled();
+    },
+};
