@@ -14,7 +14,19 @@ const pageState = vi.hoisted(() => ({
 }));
 
 vi.mock('@/Components/Organisms/NotificationsPopup/NotificationsPopup', () => ({
-    default: () => <div data-testid="notifications-popup" />,
+    default: ({
+        initialOnlyUnread,
+        initialSelecting,
+    }: {
+        initialOnlyUnread?: boolean;
+        initialSelecting?: boolean;
+    }) => (
+        <div
+            data-testid="notifications-popup"
+            data-unread={String(Boolean(initialOnlyUnread))}
+            data-selecting={String(Boolean(initialSelecting))}
+        />
+    ),
 }));
 
 vi.mock('@inertiajs/react', () => ({
@@ -114,6 +126,35 @@ describe('PageHeader Component', () => {
         act(() => requestOpenNotifications());
 
         expect(screen.getByTestId('notifications-popup')).toBeInTheDocument();
+    });
+
+    test('passes the requested options on to the popup', () => {
+        render(<PageHeader title="Dashboard" />);
+
+        act(() =>
+            requestOpenNotifications({ onlyUnread: true, selecting: true }),
+        );
+
+        const popup = screen.getByTestId('notifications-popup');
+        expect(popup).toHaveAttribute('data-unread', 'true');
+        expect(popup).toHaveAttribute('data-selecting', 'true');
+    });
+
+    test('opening from the bell afterwards forgets the earlier options', async () => {
+        const user = userEvent.setup();
+        const { container } = render(<PageHeader title="Dashboard" />);
+        const bell = container
+            .querySelector('.lucide-bell')
+            ?.closest('button') as HTMLElement;
+
+        act(() => requestOpenNotifications({ onlyUnread: true }));
+        await user.click(bell); // closes
+        await user.click(bell); // reopens plainly
+
+        expect(screen.getByTestId('notifications-popup')).toHaveAttribute(
+            'data-unread',
+            'false',
+        );
     });
 
     test('stops listening for that request once unmounted', () => {

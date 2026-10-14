@@ -8,7 +8,10 @@ import { PageHeaderProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
 import { requestOpenCommandPalette } from '@/utils/commandPaletteEvent';
-import { OPEN_NOTIFICATIONS_EVENT } from '@/utils/notificationsPopupEvent';
+import {
+    OPEN_NOTIFICATIONS_EVENT,
+    OpenNotificationsOptions,
+} from '@/utils/notificationsPopupEvent';
 import { formattedDate } from '@/utils/time';
 
 const tabVariants = cva(
@@ -34,6 +37,9 @@ function PageHeader({
     children,
 }: PageHeaderProps) {
     const [showNotificationsPopup, setShowNotificationsPopup] = useState(false);
+    const [notificationsOptions, setNotificationsOptions] =
+        useState<OpenNotificationsOptions>({});
+    const [notificationsOpenCount, setNotificationsOpenCount] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const notificationsRef = useRef<HTMLDivElement>(null);
     const unreadNotificationsCount =
@@ -45,7 +51,14 @@ function PageHeader({
     };
 
     useEffect(() => {
-        const open = () => setShowNotificationsPopup(true);
+        const open = (event: Event) => {
+            setNotificationsOptions(
+                (event as CustomEvent<OpenNotificationsOptions>).detail ?? {},
+            );
+            // A new key remounts an already open popup so it re-applies them.
+            setNotificationsOpenCount((count) => count + 1);
+            setShowNotificationsPopup(true);
+        };
 
         window.addEventListener(OPEN_NOTIFICATIONS_EVENT, open);
         return () => window.removeEventListener(OPEN_NOTIFICATIONS_EVENT, open);
@@ -167,11 +180,12 @@ function PageHeader({
                             className={
                                 'relative flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]'
                             }
-                            onClick={() =>
+                            onClick={() => {
+                                setNotificationsOptions({});
                                 setShowNotificationsPopup(
                                     !showNotificationsPopup,
-                                )
-                            }
+                                );
+                            }}
                         >
                             <Icon
                                 name="Bell"
@@ -186,7 +200,17 @@ function PageHeader({
                                 </span>
                             )}
                         </button>
-                        {showNotificationsPopup && <NotificationsPopup />}
+                        {showNotificationsPopup && (
+                            <NotificationsPopup
+                                key={notificationsOpenCount}
+                                initialOnlyUnread={
+                                    notificationsOptions.onlyUnread
+                                }
+                                initialSelecting={
+                                    notificationsOptions.selecting
+                                }
+                            />
+                        )}
                     </div>
                     {showSettingsIcon && (
                         <button

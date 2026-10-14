@@ -9,16 +9,27 @@ import { useNotificationsFeed } from '@/hooks/useNotificationsFeed';
 import { PageProps } from '@/types';
 import { NotificationFilter } from '@/types/Notification';
 
-function NotificationsPopup() {
+interface NotificationsPopupProps {
+    /** Open on the unread view (the command palette's "Show unread"). */
+    initialOnlyUnread?: boolean;
+    /** Open already in selection mode. */
+    initialSelecting?: boolean;
+}
+
+function NotificationsPopup({
+    initialOnlyUnread = false,
+    initialSelecting = false,
+}: NotificationsPopupProps) {
     const { notifications, notificationUnreadCount } =
         usePage<PageProps>().props;
     const feed = useNotificationsFeed(
         notifications,
         notificationUnreadCount ?? 0,
+        { onlyUnread: initialOnlyUnread, type: 'all' },
     );
     const { items, query, setQuery } = feed;
 
-    const [isSelecting, setIsSelecting] = useState(false);
+    const [isSelecting, setIsSelecting] = useState(initialSelecting);
     const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
         new Set(),
     );

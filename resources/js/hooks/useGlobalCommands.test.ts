@@ -144,6 +144,46 @@ describe('useGlobalCommands', () => {
         );
     });
 
+    test('Show unread notifications opens the popup on the unread view, only with unread ones', () => {
+        const opened = vi.fn();
+        window.addEventListener(OPEN_NOTIFICATIONS_EVENT, opened);
+        render();
+        expect(byId('notifications.unread').when?.()).toBe(false);
+
+        mocks.page.props = {
+            auth: { user: { id: 1 } },
+            notificationUnreadCount: 2,
+        };
+        render();
+        expect(byId('notifications.unread').when?.()).toBe(true);
+
+        byId('notifications.unread').perform?.();
+
+        expect(opened.mock.calls[0][0].detail).toEqual({ onlyUnread: true });
+        window.removeEventListener(OPEN_NOTIFICATIONS_EVENT, opened);
+    });
+
+    test('Select notifications opens the popup in selection mode', () => {
+        const opened = vi.fn();
+        window.addEventListener(OPEN_NOTIFICATIONS_EVENT, opened);
+        render();
+
+        byId('notifications.select').perform?.();
+
+        expect(opened.mock.calls[0][0].detail).toEqual({ selecting: true });
+        window.removeEventListener(OPEN_NOTIFICATIONS_EVENT, opened);
+    });
+
+    test('the clean-up command goes to the notification settings', () => {
+        render();
+
+        byId('notifications.cleanup').perform?.();
+
+        expect(mocks.router.visit).toHaveBeenCalledWith(
+            '/settings/notifications',
+        );
+    });
+
     test('tolerates pages without a notifications prop', () => {
         mocks.page.props = { auth: { user: { id: 1 } } };
         render();

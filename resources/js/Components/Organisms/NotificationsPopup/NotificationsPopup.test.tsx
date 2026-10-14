@@ -290,4 +290,41 @@ describe('NotificationsPopup Component', () => {
 
         expect(screen.queryByText('Delete all read')).not.toBeInTheDocument();
     });
+
+    test('can open straight on the unread view', async () => {
+        pageState.notifications = [
+            makeNotification({ id: 1, title: 'Read one', read: true }),
+        ];
+        mocks.get.mockResolvedValue({
+            data: {
+                data: [makeNotification({ id: 2, title: 'Unread one' })],
+                next_cursor: null,
+                unread_count: 1,
+            },
+        });
+        render(<NotificationsPopup initialOnlyUnread />);
+
+        expect(await screen.findByText('Unread one')).toBeInTheDocument();
+        expect(screen.queryByText('Read one')).not.toBeInTheDocument();
+        expect(mocks.get).toHaveBeenCalledWith(
+            '/notifications',
+            expect.objectContaining({
+                params: expect.objectContaining({ unread: 1 }),
+            }),
+        );
+        expect(screen.getByLabelText('Only show unread')).toHaveAttribute(
+            'aria-pressed',
+            'true',
+        );
+    });
+
+    test('can open straight in selection mode', () => {
+        pageState.notifications = [makeNotification({ id: 1 })];
+        render(<NotificationsPopup initialSelecting />);
+
+        expect(screen.getByRole('checkbox')).toBeInTheDocument();
+        expect(
+            screen.getByRole('toolbar', { name: 'Selection actions' }),
+        ).toBeInTheDocument();
+    });
 });

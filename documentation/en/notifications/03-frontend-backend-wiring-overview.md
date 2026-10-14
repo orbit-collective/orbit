@@ -53,6 +53,17 @@ is exhausted. `per_page` is clamped to `NotificationRepository::MAX_PER_PAGE`.
 Validation failures answer 422 JSON (`ListNotificationsRequest`), not a
 redirect, because the caller is axios.
 
+The command palette opens the popup through
+`requestOpenNotifications({ onlyUnread?, selecting? })`
+(`utils/notificationsPopupEvent.ts`): `PageHeader` receives the event,
+remounts the popup and passes the options as `initialOnlyUnread` /
+`initialSelecting`. The commands live in `hooks/useGlobalCommands.ts`:
+*Go to Notifications*, *Show unread notifications*, *Select
+notifications*, *Mark all notifications as read* and *Notification
+clean-up schedule* (opens Settings → Notifications). Deleting is
+deliberately not a palette command, since it would run without a
+confirmation.
+
 The popup's pieces:
 
 - `useNotificationsFeed.ts` — all list state: items, cursor, unread
