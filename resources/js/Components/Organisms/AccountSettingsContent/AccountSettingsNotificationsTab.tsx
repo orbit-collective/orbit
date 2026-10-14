@@ -2,9 +2,13 @@ import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import AccountSettingsNotificationCleanup from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationCleanup';
 import AccountSettingsNotificationTypeRow from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationTypeRow';
 import { useAlert } from '@/context/AlertContext';
-import { NotificationSettings } from '@/types/Notification';
+import {
+    NotificationRetention,
+    NotificationSettings,
+} from '@/types/Notification';
 
 interface NotificationTypeState {
     id: string;
@@ -125,8 +129,10 @@ function mergeNotificationSettings(
 
 export default function AccountSettingsNotificationsTab({
     notificationSettings,
+    notificationRetention,
 }: {
     notificationSettings?: NotificationSettings;
+    notificationRetention?: NotificationRetention;
 }) {
     const { addAlert } = useAlert();
     const [notificationTypes, setNotificationTypes] = useState(() =>
@@ -226,6 +232,10 @@ export default function AccountSettingsNotificationsTab({
                     />
                 ))}
             </SettingsPanel>
+
+            <AccountSettingsNotificationCleanup
+                retention={notificationRetention}
+            />
         </div>
     );
 }
