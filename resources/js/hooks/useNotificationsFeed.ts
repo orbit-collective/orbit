@@ -23,6 +23,20 @@ type FetchResult =
 const DEFAULT_QUERY: NotificationQuery = { onlyUnread: false, type: 'all' };
 
 /**
+ * Whether a refreshed shared first page still joins the rows already shown. If
+ * every row shown is older than the page's oldest row, notifications arrived
+ * that neither list contains, and keeping the old pages would leave a gap that
+ * paging by cursor can never fill.
+ */
+const joinsLoadedRows = (
+    current: Notification[],
+    shared: Notification[],
+): boolean =>
+    current.length === 0 ||
+    shared.length === 0 ||
+    current[0].id >= shared[shared.length - 1].id;
+
+/**
  * Fold a fresh shared first page into what the feed already shows: the newest
  * rows come from the server, older pages that were loaded on demand stay.
  */
@@ -32,6 +46,8 @@ const mergeShared = (
 ): Notification[] => {
     // A short shared page is the whole inbox.
     if (shared.length < NOTIFICATIONS_PAGE_SIZE) return shared;
+    // No overlap: start over from the shared page; older pages load on scroll.
+    if (!joinsLoadedRows(current, shared)) return shared;
 
     const floor = shared[shared.length - 1].id;
     return [...shared, ...current.filter((item) => item.id < floor)];
@@ -87,6 +103,8 @@ export function useNotificationsFeed(
     const requestId = useRef(0);
     const [reloadToken, setReloadToken] = useState(0);
     const needsRefreshAfterWrite = useRef(false);
+    const itemsRef = useRef(items);
+    itemsRef.current = items;
     const unreadRef = useRef(unreadCount);
     unreadRef.current = unreadCount;
     const isDefaultQuery = queryKey(query) === queryKey(DEFAULT_QUERY);
@@ -107,6 +125,7 @@ export function useNotificationsFeed(
     useEffect(() => {
         const shared = sharedRows.current;
         if (isDefaultQuery) {
+            const restart = !joinsLoadedRows(itemsRef.current, shared);
             setItems((current) => {
                 const merged = mergeShared(current, shared);
                 // Same rows: keep the array, so an unchanged page cannot loop.
@@ -115,14 +134,15 @@ export function useNotificationsFeed(
             setCursor((current) =>
                 shared.length < NOTIFICATIONS_PAGE_SIZE
                     ? null
-                    : (current ?? shared[shared.length - 1].id),
+                    : restart
+                      ? shared[shared.length - 1].id
+                      : (current ?? shared[shared.length - 1].id),
             );
         } else if (initialUnreadCount !== unreadRef.current) {
             // A filtered view cannot be patched from the unfiltered page.
             refresh();
         }
         setUnreadCount(initialUnreadCount);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sharedSignature, initialUnreadCount]);
 
     const fetchPage = useCallback(
