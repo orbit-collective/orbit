@@ -26,8 +26,8 @@ class NotificationService
     private const int CACHE_TTL = 300;
 
     /**
-     * The shared Inertia prop on every page, so it is served from the cache
-     * rather than queried on each request.
+     * The newest notifications - the shared Inertia prop on every page, so it
+     * is served from the cache rather than queried on each request.
      */
     public function getAllForUser(int $userId): Collection
     {
@@ -38,6 +38,39 @@ class NotificationService
         );
 
         return CachedModels::hydrate(Notification::class, $rows);
+    }
+
+    /**
+     * Unread notifications across the whole inbox, not just the newest page
+     * the shared prop carries - the bell badge needs the real number.
+     */
+    public function unreadCountForUser(int $userId): int
+    {
+        return Cache::remember(
+            self::unreadCacheKey($userId),
+            self::CACHE_TTL,
+            fn () => $this->notificationRepository->countUnreadForUser($userId),
+        );
+    }
+
+    /**
+     * One page of the popup's infinite scroll. `next_cursor` is the id to send
+     * back as `before` for the following page, null once the inbox is exhausted.
+     *
+     * @param  array{unread?: bool, type?: string|null}  $filters
+     * @return array{data: Collection<int, Notification>, next_cursor: int|null}
+     */
+    public function pageForUser(int $userId, array $filters, ?int $beforeId, int $perPage = NotificationRepository::PER_PAGE): array
+    {
+        $perPage = max(1, min($perPage, NotificationRepository::MAX_PER_PAGE));
+        $rows = $this->notificationRepository->pageForUser($userId, $filters, $beforeId, $perPage);
+        $hasMore = $rows->count() > $perPage;
+        $page = $rows->take($perPage)->values();
+
+        return [
+            'data' => $page,
+            'next_cursor' => $hasMore ? $page->last()->id : null,
+        ];
     }
 
     public function store(array $data): Notification
@@ -74,14 +107,53 @@ class NotificationService
         return $updated;
     }
 
+    /**
+     * @param  list<int>  $ids
+     */
+    public function markAsReadForUser(int $userId, array $ids): int
+    {
+        $updated = $this->notificationRepository->markAsReadForUser($userId, $ids);
+
+        $this->forget($userId);
+
+        return $updated;
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function deleteForUser(int $userId, array $ids): int
+    {
+        $deleted = $this->notificationRepository->deleteForUser($userId, $ids);
+
+        $this->forget($userId);
+
+        return $deleted;
+    }
+
+    public function deleteReadForUser(int $userId): int
+    {
+        $deleted = $this->notificationRepository->deleteReadForUser($userId);
+
+        $this->forget($userId);
+
+        return $deleted;
+    }
+
     private static function cacheKey(int $userId): string
     {
         return "user:$userId:notifications:rows";
     }
 
-    private function forget(int $userId): void
+    private static function unreadCacheKey(int $userId): string
+    {
+        return "user:$userId:notifications:unread";
+    }
+
+    public function forget(int $userId): void
     {
         Cache::forget(self::cacheKey($userId));
+        Cache::forget(self::unreadCacheKey($userId));
     }
 
     /**
@@ -97,7 +169,7 @@ class NotificationService
             return null;
         }
 
-        return $this->notificationRepository->store([
+        return $this->store([
             'user_id' => $userId,
             'notification_type' => $notificationType,
             'type' => $type,

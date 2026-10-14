@@ -4,6 +4,7 @@ use App\Enums\Notifications\NotificationChannel;
 use App\Enums\Notifications\NotificationType;
 use App\Models\Notification;
 use App\Models\NotificationSetting;
+use App\Models\User;
 use App\Repositories\NotificationRepository;
 use App\Repositories\NotificationSettingRepository;
 use App\Services\ActivityLogService;
@@ -214,4 +215,46 @@ test('one user\'s cached list is not shared with another user', function () {
     $this->service->getAllForUser(5);
     $this->service->getAllForUser(6);
     $this->service->getAllForUser(5);
+});
+
+test('pageForUser reports the cursor only while another page remains', function () {
+    $user = User::factory()->create();
+    Notification::factory()->count(3)->create(['user_id' => $user->id]);
+    $service = app(NotificationService::class);
+
+    $first = $service->pageForUser($user->id, [], null, 2);
+    $second = $service->pageForUser($user->id, [], $first['next_cursor'], 2);
+
+    expect($first['data'])->toHaveCount(2)
+        ->and($first['next_cursor'])->toBe($first['data']->last()->id)
+        ->and($second['data'])->toHaveCount(1)
+        ->and($second['next_cursor'])->toBeNull();
+});
+
+test('the unread count is cached and dropped by every write', function () {
+    $user = User::factory()->create();
+    $notification = Notification::factory()->create(['user_id' => $user->id, 'read' => false]);
+    $service = app(NotificationService::class);
+
+    expect($service->unreadCountForUser($user->id))->toBe(1);
+
+    $service->markAsReadForUser($user->id, [$notification->id]);
+    expect($service->unreadCountForUser($user->id))->toBe(0);
+
+    $service->notify($user->id, NotificationType::IssueAssigned, 'info', 'Hi', 'Body');
+    expect($service->unreadCountForUser($user->id))->toBe(1);
+
+    $service->deleteForUser($user->id, Notification::where('user_id', $user->id)->pluck('id')->all());
+    expect($service->unreadCountForUser($user->id))->toBe(0);
+});
+
+test('deleteReadForUser drops the cached list too', function () {
+    $user = User::factory()->create();
+    Notification::factory()->create(['user_id' => $user->id, 'read' => true]);
+    $service = app(NotificationService::class);
+
+    expect($service->getAllForUser($user->id))->toHaveCount(1);
+
+    expect($service->deleteReadForUser($user->id))->toBe(1)
+        ->and($service->getAllForUser($user->id))->toHaveCount(0);
 });

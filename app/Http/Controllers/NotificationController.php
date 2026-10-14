@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Notifications\BulkNotificationsRequest;
+use App\Http\Requests\Notifications\ListNotificationsRequest;
 use App\Models\Notification;
+use App\Repositories\NotificationRepository;
 use App\Services\ActivityLogService;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use Illuminate\Http\JsonResponse;
 
 class NotificationController extends Controller
 {
@@ -15,9 +18,27 @@ class NotificationController extends Controller
         protected NotificationService $notificationService,
         protected ActivityLogService $activityLogService
     ) {}
-    public function index(): Collection
+
+    /**
+     * One page of the popup's infinite scroll as JSON (not an Inertia page):
+     * `before` is the last id the client has, the filters narrow the inbox.
+     */
+    public function index(ListNotificationsRequest $request): JsonResponse
     {
-        return $this->notificationService->getAllForUser(auth()->id());
+        $userId = $request->user()->id;
+
+        $page = $this->notificationService->pageForUser(
+            $userId,
+            $request->filters(),
+            $request->integer('before') ?: null,
+            $request->integer('per_page') ?: NotificationRepository::PER_PAGE,
+        );
+
+        return response()->json([
+            'data' => $page['data'],
+            'next_cursor' => $page['next_cursor'],
+            'unread_count' => $this->notificationService->unreadCountForUser($userId),
+        ]);
     }
 
     public function update(Request $request, Notification $notification): RedirectResponse
@@ -50,6 +71,27 @@ class NotificationController extends Controller
     public function markAllAsRead(): RedirectResponse
     {
         $this->notificationService->markAllAsReadForUser(auth()->id());
+
+        return redirect()->back();
+    }
+
+    public function bulkMarkAsRead(BulkNotificationsRequest $request): RedirectResponse
+    {
+        $this->notificationService->markAsReadForUser($request->user()->id, $request->ids());
+
+        return redirect()->back();
+    }
+
+    public function bulkDestroy(BulkNotificationsRequest $request): RedirectResponse
+    {
+        $this->notificationService->deleteForUser($request->user()->id, $request->ids());
+
+        return redirect()->back();
+    }
+
+    public function destroyRead(): RedirectResponse
+    {
+        $this->notificationService->deleteReadForUser(auth()->id());
 
         return redirect()->back();
     }
