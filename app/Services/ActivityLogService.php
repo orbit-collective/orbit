@@ -42,4 +42,9 @@ class ActivityLogService
     {
         return $this->activityLogRepository->paginateForUser($userId, $perPage, self::PAGE_NAME);
     }
+
+    public function deleteOlderThanForUser(int $userId, int $days): int
+    {
+        return $this->activityLogRepository->deleteOlderThanForUser($userId, now()->subDays($days));
+    }
 }
