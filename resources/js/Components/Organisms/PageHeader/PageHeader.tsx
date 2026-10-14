@@ -36,10 +36,8 @@ function PageHeader({
     const [showNotificationsPopup, setShowNotificationsPopup] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const notificationsRef = useRef<HTMLDivElement>(null);
-    const { notifications } = usePage<PageProps>().props;
-    const unreadNotificationsCount = notifications.filter(
-        (n) => !n.read,
-    ).length;
+    const unreadNotificationsCount =
+        usePage<PageProps>().props.notificationUnreadCount ?? 0;
 
     const handleRefresh = () => {
         setIsRefreshing(true);

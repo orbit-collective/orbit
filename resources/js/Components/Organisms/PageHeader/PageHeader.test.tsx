@@ -1,7 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { Notification } from '@/types/Notification';
 import { OPEN_COMMAND_PALETTE_EVENT } from '@/utils/commandPaletteEvent';
 import { requestOpenNotifications } from '@/utils/notificationsPopupEvent';
 import { formattedDate } from '@/utils/time';
@@ -11,7 +10,7 @@ const { reload } = vi.hoisted(() => ({
     reload: vi.fn(),
 }));
 const pageState = vi.hoisted(() => ({
-    notifications: [] as Notification[],
+    unread: 0,
 }));
 
 vi.mock('@/Components/Organisms/NotificationsPopup/NotificationsPopup', () => ({
@@ -23,13 +22,13 @@ vi.mock('@inertiajs/react', () => ({
         reload: reload,
     },
     usePage: () => ({
-        props: { notifications: pageState.notifications },
+        props: { notificationUnreadCount: pageState.unread },
     }),
 }));
 
 describe('PageHeader Component', () => {
     beforeEach(() => {
-        pageState.notifications = [];
+        pageState.unread = 0;
     });
 
     test('renders the provided title', () => {
@@ -162,7 +161,7 @@ describe('PageHeader Component', () => {
     });
 
     test('does not show an unread badge when there are no unread notifications', () => {
-        pageState.notifications = [{ id: 1, read: true } as Notification];
+        pageState.unread = 0;
         const { container } = render(<PageHeader title="Dashboard" />);
 
         const bellButton = container
@@ -173,21 +172,14 @@ describe('PageHeader Component', () => {
     });
 
     test('shows the unread notifications count as a badge on the bell icon', () => {
-        pageState.notifications = [
-            { id: 1, read: false } as Notification,
-            { id: 2, read: false } as Notification,
-            { id: 3, read: true } as Notification,
-        ];
+        pageState.unread = 2;
         render(<PageHeader title="Dashboard" />);
 
         expect(screen.getByText('2')).toBeInTheDocument();
     });
 
     test('caps the unread badge at "9+"', () => {
-        pageState.notifications = Array.from({ length: 12 }, (_, i) => ({
-            id: i,
-            read: false,
-        })) as Notification[];
+        pageState.unread = 120;
         render(<PageHeader title="Dashboard" />);
 
         expect(screen.getByText('9+')).toBeInTheDocument();

@@ -47,7 +47,7 @@ const render = () => renderHook(() => useGlobalCommands());
 beforeEach(() => {
     mocks.page.props = {
         auth: { user: { id: 1 } },
-        notifications: [{ id: 1, read: true }],
+        notificationUnreadCount: 0,
     };
     mocks.theme = 'dark';
 });
@@ -130,7 +130,7 @@ describe('useGlobalCommands', () => {
 
         mocks.page.props = {
             auth: { user: { id: 1 } },
-            notifications: [{ id: 1, read: false }],
+            notificationUnreadCount: 3,
         };
         render();
         const command = byId('notifications.mark-all-read');
