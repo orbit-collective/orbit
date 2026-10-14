@@ -160,3 +160,41 @@ describe('NotificationItem Component', () => {
         expect(onRemove).toHaveBeenCalledWith(9);
     });
 });
+
+describe('NotificationItem selection mode', () => {
+    const notification: Notification = {
+        id: 4,
+        user_id: 1,
+        type: 'info',
+        title: 'Pick me',
+        message: 'Body',
+        read: false,
+        action_url: '',
+        created_at: '2026-04-14T10:00:00.000Z',
+    };
+
+    test('shows a checkbox instead of the delete button and reports toggles', async () => {
+        const user = userEvent.setup();
+        const onToggleSelect = vi.fn();
+        render(
+            <NotificationItem
+                notification={notification}
+                onMarkAsRead={() => {}}
+                onRemove={() => {}}
+                selectable
+                selected
+                onToggleSelect={onToggleSelect}
+            />,
+        );
+
+        expect(
+            screen.queryByLabelText('Delete notification'),
+        ).not.toBeInTheDocument();
+        const checkbox = screen.getByRole('checkbox');
+        expect(checkbox).toBeChecked();
+
+        await user.click(checkbox);
+
+        expect(onToggleSelect).toHaveBeenCalledWith(4);
+    });
+});

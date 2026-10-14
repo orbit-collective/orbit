@@ -6,6 +6,9 @@ interface NotificationHeaderProps {
     onlyUnread: boolean;
     onToggleOnlyUnread: (value: boolean) => void;
     onMarkAllAsRead: () => void;
+    /** Selection mode for bulk actions; the toggle is hidden when not wired. */
+    isSelecting?: boolean;
+    onToggleSelecting?: () => void;
 }
 
 function NotificationHeader({
@@ -13,6 +16,8 @@ function NotificationHeader({
     onlyUnread,
     onToggleOnlyUnread,
     onMarkAllAsRead,
+    isSelecting = false,
+    onToggleSelecting,
 }: NotificationHeaderProps) {
     return (
         <div className="flex items-center justify-between gap-3">
@@ -37,6 +42,23 @@ function NotificationHeader({
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
+                {onToggleSelecting && (
+                    <button
+                        type="button"
+                        onClick={onToggleSelecting}
+                        aria-pressed={isSelecting}
+                        aria-label="Select notifications"
+                        title="Select notifications"
+                        className={cn(
+                            'flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
+                            isSelecting
+                                ? 'bg-[var(--text-color)] text-[var(--bg-dark-color)]'
+                                : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]',
+                        )}
+                    >
+                        <Icon name="ListChecks" size={16} />
+                    </button>
+                )}
                 <button
                     type="button"
                     onClick={onMarkAllAsRead}

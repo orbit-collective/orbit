@@ -92,3 +92,42 @@ describe('NotificationHeader Component', () => {
         expect(toggle).toHaveAttribute('aria-pressed', 'true');
     });
 });
+
+describe('NotificationHeader selection toggle', () => {
+    test('is hidden unless the popup wires selection mode', () => {
+        render(
+            <NotificationHeader
+                unreadCount={0}
+                onlyUnread={false}
+                onToggleOnlyUnread={() => {}}
+                onMarkAllAsRead={() => {}}
+            />,
+        );
+
+        expect(
+            screen.queryByLabelText('Select notifications'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('reflects and toggles selection mode', async () => {
+        const user = userEvent.setup();
+        const onToggleSelecting = vi.fn();
+        render(
+            <NotificationHeader
+                unreadCount={0}
+                onlyUnread={false}
+                onToggleOnlyUnread={() => {}}
+                onMarkAllAsRead={() => {}}
+                isSelecting
+                onToggleSelecting={onToggleSelecting}
+            />,
+        );
+
+        const toggle = screen.getByLabelText('Select notifications');
+        expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+        await user.click(toggle);
+
+        expect(onToggleSelecting).toHaveBeenCalledTimes(1);
+    });
+});

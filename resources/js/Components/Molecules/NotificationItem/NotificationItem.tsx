@@ -1,12 +1,18 @@
+import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { Notification, NotificationTypes } from '@/types/Notification';
+import { cn } from '@/utils/cn';
 import { formatShortDate } from '@/utils/time';
 
 interface NotificationItemProps {
     notification: Notification;
     onMarkAsRead: (id: number) => void;
     onRemove: (id: number) => void;
+    /** Selection mode: a checkbox replaces the delete button. */
+    selectable?: boolean;
+    selected?: boolean;
+    onToggleSelect?: (id: number) => void;
 }
 
 const DOT_COLOR_CLASSES: Record<NotificationTypes, string> = {
@@ -20,9 +26,17 @@ function NotificationItem({
     notification,
     onMarkAsRead,
     onRemove,
+    selectable = false,
+    selected = false,
+    onToggleSelect,
 }: NotificationItemProps) {
     return (
-        <div className="group px-1 py-3">
+        <div
+            className={cn(
+                'group px-1 py-3',
+                selected && 'bg-[var(--bg-light-color)]/40',
+            )}
+        >
             <div className="flex items-center justify-between gap-2">
                 <div className={'flex items-center gap-2'}>
                     <span
@@ -32,12 +46,26 @@ function NotificationItem({
                         {notification.title}
                     </h2>
                 </div>
-                <IconButton
-                    iconName={'Trash'}
-                    iconSize={12}
-                    ariaLabel="Delete notification"
-                    onClick={() => onRemove(notification.id)}
-                />
+                {selectable ? (
+                    <Checkbox
+                        id={`notification-select-${notification.id}`}
+                        checked={selected}
+                        onChange={() => onToggleSelect?.(notification.id)}
+                        label={
+                            <span className="sr-only">
+                                Select notification {notification.title}
+                            </span>
+                        }
+                        className="p-2"
+                    />
+                ) : (
+                    <IconButton
+                        iconName={'Trash'}
+                        iconSize={12}
+                        ariaLabel="Delete notification"
+                        onClick={() => onRemove(notification.id)}
+                    />
+                )}
             </div>
 
             <div className="pl-3.5">
