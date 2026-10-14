@@ -24,7 +24,7 @@
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",
-        "@inertiajs/react": "^3.8.0",
+        "@inertiajs/react": "^3.9.1",
         "@storybook/addon-a11y": "^10.6.1",
         "@storybook/addon-docs": "^10.6.1",
         "@storybook/react-vite": "^10.6.1",
