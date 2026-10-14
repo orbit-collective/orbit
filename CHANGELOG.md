@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.10.8](https://github.com/orbit-collective/orbit/compare/v0.10.7...v0.10.8) (2026-10-14)
+
+
+### Features
+
+* **notifications:** add clean-up schedule and prune command ([5ebd1de](https://github.com/orbit-collective/orbit/commit/5ebd1de460bc05859a6340c40bd9e84590c9b1e4))
+* **notifications:** add clean-up schedule to the settings tab ([b9210b6](https://github.com/orbit-collective/orbit/commit/b9210b6af54eb2f534cc90097e91acdea4a6c541))
+* **notifications:** add command palette actions ([1748f88](https://github.com/orbit-collective/orbit/commit/1748f8877b623c0a69bd49771dd6dd8148187e46))
+* **notifications:** add paginated feed hook and unread count prop ([38cb77f](https://github.com/orbit-collective/orbit/commit/38cb77feea6d4786637eae8ec39fb3e3f98359b9))
+* **notifications:** add selection and clear-read building blocks ([3f7f6b2](https://github.com/orbit-collective/orbit/commit/3f7f6b2373d4e21a89e5a2bc6f99bc5f28b341c4))
+* **notifications:** expose clean-up settings and purge action ([77632c9](https://github.com/orbit-collective/orbit/commit/77632c94701264a86a6ac408827aaf9943bd23e3))
+* **notifications:** infinite scroll, filters and bulk actions in popup ([2e4ff12](https://github.com/orbit-collective/orbit/commit/2e4ff12da389ea2da8810adba268eceddd2f83a4))
+* **notifications:** page the inbox and add bulk actions ([57767bd](https://github.com/orbit-collective/orbit/commit/57767bdd6ef2225570c44067ab0086f4cd020ce9))
+
+
+### Bug Fixes
+
+* **notifications:** harden the popup feed against races ([5955258](https://github.com/orbit-collective/orbit/commit/59552582b452ff06441ffd0102eeb052480e04d7))
+* **notifications:** import the Inertia visit options type from core ([1b4454d](https://github.com/orbit-collective/orbit/commit/1b4454dedb95b643d0f1283a200b7e09bcd24c6e))
+* **notifications:** lock each schedule while cleaning up ([dc8e673](https://github.com/orbit-collective/orbit/commit/dc8e67310fb4841da020a95a5eb4f32bcaed7c4e))
+* **notifications:** re-read schedules before cleaning up ([20252c0](https://github.com/orbit-collective/orbit/commit/20252c0f5c2625f82fa69ba58fbf6c512ea941c2))
+* **notifications:** restart paging when the shared page has a gap ([43fafb4](https://github.com/orbit-collective/orbit/commit/43fafb47ca9e418e4e51c16b9f7371943412b9f4))
+* **ui:** name the switches in the clean-up panel ([9f95ae7](https://github.com/orbit-collective/orbit/commit/9f95ae762c10fb8d931c27343eb1b812cf45cea1))
+
+
+### Miscellaneous Chores
+
+* release 0.10.8 ([053a2df](https://github.com/orbit-collective/orbit/commit/053a2df52dc60678708ee96aaa96808073ab4ad4))
+
 ## [0.10.7](https://github.com/orbit-collective/orbit/compare/v0.10.6...v0.10.7) (2026-10-13)
 
 
