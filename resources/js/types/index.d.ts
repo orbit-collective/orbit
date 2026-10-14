@@ -19,7 +19,10 @@ export type PageProps<
     auth: {
         user: User;
     };
+    /** The newest page only; the popup loads older ones on demand. */
     notifications: Notification[];
+    /** Unread across the whole inbox, not just `notifications`. */
+    notificationUnreadCount: number;
     hasProjects: boolean;
     emailEnabled: boolean;
 };

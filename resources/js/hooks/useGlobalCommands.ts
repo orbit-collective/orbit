@@ -26,9 +26,7 @@ export const useGlobalCommands = (): void => {
     const { openHelp } = useShortcuts();
     const { props } = usePage<PageProps>();
     const isAuthenticated = Boolean(props.auth?.user);
-    const hasUnreadNotifications = Boolean(
-        props.notifications?.some((notification) => !notification.read),
-    );
+    const hasUnreadNotifications = (props.notificationUnreadCount ?? 0) > 0;
 
     const commands = useMemo((): Command[] => {
         if (!isAuthenticated) return [];
