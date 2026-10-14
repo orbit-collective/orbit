@@ -36,8 +36,11 @@ PruneOldNotifications  →  NotificationRetentionService::runDue()
   runs.
 - **Why hourly?** The command runs every hour but each schedule decides
   whether a full period has passed, so users do not need a time of day
-  and a missed tick is harmless. A failure for one user is logged and
-  skipped (their schedule stays due), it never stops the others.
+  and a missed tick is harmless. A failure for one user, including the step that stamps `last_run_at`, is
+  logged and skipped (their schedule stays due), it never stops the others.
+  Each schedule is re-read right before it is applied, so a user who just
+  switched it off, turned on "keep unread" or deleted their account is not
+  processed with the values from when the due list was built.
 - **What is deleted**: notifications via
   `NotificationRepository::deleteOlderThanForUser()` (optionally only
   read ones — `notifications_only_read`, on by default) and the user's

@@ -12,6 +12,7 @@ use App\Services\NotificationRetentionService;
 use App\Services\NotificationService;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 
 uses(RefreshDatabase::class);
 
@@ -107,6 +108,92 @@ test('a failing clean-up is skipped and stays due', function () {
 
     expect($service->runDue())->toBe(0)
         ->and(NotificationRetentionSetting::first()->last_run_at)->toBeNull();
+});
+
+function retentionServiceWithDue(Collection $due, ?Closure $configure = null): NotificationRetentionService
+{
+    $repository = Mockery::mock(app(NotificationRetentionRepository::class))->makePartial();
+    $repository->shouldReceive('getDue')->andReturn($due);
+    if ($configure) {
+        $configure($repository);
+    }
+
+    return new NotificationRetentionService(
+        $repository,
+        app(NotificationRepository::class),
+        app(NotificationService::class),
+        app(ActivityLogService::class),
+    );
+}
+
+test('a schedule switched off after the due list was read deletes nothing', function () {
+    $user = User::factory()->create();
+    $setting = retentionSetting($user);
+    $notification = Notification::factory()->create(['user_id' => $user->id, 'read' => true, 'created_at' => now()->subDays(40)]);
+    $stale = $setting->replicate()->forceFill(['id' => $setting->id]);
+    $setting->update(['enabled' => false]);
+
+    $ran = retentionServiceWithDue(collect([$stale]))->runDue();
+
+    expect($ran)->toBe(0);
+    $this->assertDatabaseHas('notifications', ['id' => $notification->id]);
+});
+
+test('keep-unread turned on after the due list was read is honoured', function () {
+    $user = User::factory()->create();
+    $setting = retentionSetting($user, ['notifications_only_read' => false]);
+    $unread = Notification::factory()->create(['user_id' => $user->id, 'read' => false, 'created_at' => now()->subDays(40)]);
+    $stale = $setting->replicate()->forceFill(['id' => $setting->id]);
+    $setting->update(['notifications_only_read' => true]);
+
+    retentionServiceWithDue(collect([$stale]))->runDue();
+
+    $this->assertDatabaseHas('notifications', ['id' => $unread->id]);
+});
+
+test('a schedule that ran meanwhile is not run again', function () {
+    $user = User::factory()->create();
+    $setting = retentionSetting($user);
+    $notification = Notification::factory()->create(['user_id' => $user->id, 'read' => true, 'created_at' => now()->subDays(40)]);
+    $stale = $setting->replicate()->forceFill(['id' => $setting->id]);
+    $setting->update(['last_run_at' => now()->subMinute()]);
+
+    expect(retentionServiceWithDue(collect([$stale]))->runDue())->toBe(0);
+    $this->assertDatabaseHas('notifications', ['id' => $notification->id]);
+});
+
+test('a schedule deleted with its user after the due list was read is skipped, not recreated', function () {
+    $gone = User::factory()->create();
+    $kept = User::factory()->create();
+    $goneSetting = retentionSetting($gone);
+    $keptSetting = retentionSetting($kept);
+    Notification::factory()->create(['user_id' => $kept->id, 'read' => true, 'created_at' => now()->subDays(40)]);
+    $due = collect([$goneSetting->replicate()->forceFill(['id' => $goneSetting->id]), $keptSetting]);
+    $gone->delete();
+
+    $ran = retentionServiceWithDue($due)->runDue();
+
+    expect($ran)->toBe(1)
+        ->and(NotificationRetentionSetting::where('user_id', $gone->id)->exists())->toBeFalse()
+        ->and(Notification::where('user_id', $kept->id)->count())->toBe(0);
+});
+
+test('a failure while recording a run does not stop the other users', function () {
+    $first = User::factory()->create();
+    $second = User::factory()->create();
+    $firstSetting = retentionSetting($first);
+    $secondSetting = retentionSetting($second);
+
+    $service = retentionServiceWithDue(
+        collect([$firstSetting, $secondSetting]),
+        fn ($repository) => $repository->shouldReceive('markRun')
+            ->once()->with($first->id, Mockery::any())->andThrow(new RuntimeException('boom'))
+            ->getMock()->shouldReceive('markRun')->passthru(),
+    );
+
+    expect($service->runDue())->toBe(1)
+        ->and($firstSetting->fresh()->last_run_at)->toBeNull()
+        ->and($secondSetting->fresh()->last_run_at)->not->toBeNull();
 });
 
 test('the prune command runs the due schedules', function () {
