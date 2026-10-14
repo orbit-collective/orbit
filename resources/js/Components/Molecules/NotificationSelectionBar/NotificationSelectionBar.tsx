@@ -4,6 +4,8 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 interface NotificationSelectionBarProps {
     selectedCount: number;
     totalCount: number;
+    /** The most notifications one action may take; shown once it is reached. */
+    limit?: number;
     onToggleAll: () => void;
     onMarkAsRead: () => void;
     onDelete: () => void;
@@ -13,6 +15,7 @@ interface NotificationSelectionBarProps {
 function NotificationSelectionBar({
     selectedCount,
     totalCount,
+    limit,
     onToggleAll,
     onMarkAsRead,
     onDelete,
@@ -37,6 +40,7 @@ function NotificationSelectionBar({
             </button>
             <span className="text-xs text-[var(--text-gray-color)]">
                 {selectedCount} selected
+                {limit !== undefined && selectedCount >= limit && ' (max)'}
             </span>
 
             <div className="ml-auto flex items-center gap-1.5">

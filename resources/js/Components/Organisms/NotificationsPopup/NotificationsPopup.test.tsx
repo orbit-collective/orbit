@@ -239,6 +239,27 @@ describe('NotificationsPopup Component', () => {
             );
         });
 
+        test('never selects more than one bulk request can take', async () => {
+            const user = userEvent.setup();
+            pageState.notifications = Array.from({ length: 250 }, (_, i) =>
+                makeNotification({ id: 1000 - i, title: `Item ${i}` }),
+            );
+            render(<NotificationsPopup initialSelecting />);
+
+            await user.click(screen.getByText('Select all'));
+            expect(
+                screen.getByText(/200 selected \(max\)/),
+            ).toBeInTheDocument();
+
+            // A further click on an unselected row is ignored.
+            await user.click(screen.getAllByRole('checkbox')[200]);
+            expect(screen.getByText(/200 selected/)).toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: /^delete$/i }));
+            const sent = mocks.post.mock.calls[0][1].ids;
+            expect(sent).toHaveLength(200);
+        });
+
         test('cancelling leaves selection mode and clears the selection', async () => {
             const user = await setup();
 

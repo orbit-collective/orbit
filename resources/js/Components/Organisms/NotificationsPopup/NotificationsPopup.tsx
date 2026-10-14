@@ -5,7 +5,10 @@ import NotificationFilterTabs from '@/Components/Molecules/NotificationFilterTab
 import NotificationHeader from '@/Components/Molecules/NotificationHeader/NotificationHeader';
 import NotificationSelectionBar from '@/Components/Molecules/NotificationSelectionBar/NotificationSelectionBar';
 import NotificationsList from '@/Components/Organisms/NotificationsList/NotificationsList';
-import { useNotificationsFeed } from '@/hooks/useNotificationsFeed';
+import {
+    NOTIFICATIONS_BULK_LIMIT,
+    useNotificationsFeed,
+} from '@/hooks/useNotificationsFeed';
 import { PageProps } from '@/types';
 import { NotificationFilter } from '@/types/Notification';
 
@@ -43,6 +46,9 @@ function NotificationsPopup({
         });
     }, [items]);
 
+    // Selecting beyond the bulk limit would make the request fail server-side.
+    const selectableCount = Math.min(items.length, NOTIFICATIONS_BULK_LIMIT);
+
     const stopSelecting = () => {
         setIsSelecting(false);
         setSelectedIds(new Set());
@@ -51,16 +57,21 @@ function NotificationsPopup({
     const toggleSelect = (id: number) => {
         setSelectedIds((current) => {
             const next = new Set(current);
-            if (!next.delete(id)) next.add(id);
+            if (next.delete(id)) return next;
+            // One bulk request takes a bounded number of ids (server limit).
+            if (next.size >= NOTIFICATIONS_BULK_LIMIT) return current;
+            next.add(id);
             return next;
         });
     };
 
     const toggleAll = () => {
         setSelectedIds(
-            selectedIds.size === items.length
+            selectedIds.size === selectableCount
                 ? new Set()
-                : new Set(items.map((item) => item.id)),
+                : new Set(
+                      items.slice(0, selectableCount).map((item) => item.id),
+                  ),
         );
     };
 
@@ -100,7 +111,8 @@ function NotificationsPopup({
             {isSelecting && (
                 <NotificationSelectionBar
                     selectedCount={selectedIds.size}
-                    totalCount={items.length}
+                    totalCount={selectableCount}
+                    limit={NOTIFICATIONS_BULK_LIMIT}
                     onToggleAll={toggleAll}
                     onMarkAsRead={() => handleBulk(feed.markAsRead)}
                     onDelete={() => handleBulk(feed.remove)}

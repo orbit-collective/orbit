@@ -53,6 +53,16 @@ is exhausted. `per_page` is clamped to `NotificationRepository::MAX_PER_PAGE`.
 Validation failures answer 422 JSON (`ListNotificationsRequest`), not a
 redirect, because the caller is axios.
 
+Consistency rules in `useNotificationsFeed`: a response is applied only
+if it belongs to the latest request (a superseded filter or page never
+touches the list or the loading flag); a write drops any read still in
+flight and a dropped first page is refetched when the write finishes;
+an emptied list with older pages behind the cursor loads the next page
+by itself; and when the shared props change (for example the "mark all
+as read" command ran) the first rows are reconciled, or a filtered view
+is refetched. Selection is capped at
+`NOTIFICATIONS_BULK_LIMIT` (200, the server's `MAX_BULK_IDS`).
+
 The command palette opens the popup through
 `requestOpenNotifications({ onlyUnread?, selecting? })`
 (`utils/notificationsPopupEvent.ts`): `PageHeader` receives the event,
