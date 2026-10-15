@@ -17,13 +17,16 @@ vi.mock('@/Components/Molecules/FilterDropdown/FilterDropdown', () => ({
         type,
         isOpen,
         onOpenChange,
+        statusGroups = [],
     }: {
         type: string;
         isOpen: boolean;
         onOpenChange: (isOpen: boolean) => void;
+        statusGroups?: unknown[];
     }) => (
         <button
             data-testid={`filter-dropdown-${type}`}
+            data-status-groups={statusGroups.length}
             data-open={isOpen}
             onClick={() => onOpenChange(!isOpen)}
         >
@@ -235,7 +238,7 @@ describe('FilterBar Component', () => {
             })),
         }) as unknown as IssueType;
 
-    test('hides the exact-status filter while the project has only the stock statuses', () => {
+    test('gives the Status filter no exact statuses while the project has only the stock ones', () => {
         render(
             <FilterBar
                 savedFilters={[]}
@@ -245,12 +248,16 @@ describe('FilterBar Component', () => {
             />,
         );
 
+        expect(screen.getByTestId('filter-dropdown-status')).toHaveAttribute(
+            'data-status-groups',
+            '0',
+        );
         expect(
             screen.queryByTestId('filter-dropdown-workflowStatus'),
         ).not.toBeInTheDocument();
     });
 
-    test('shows the exact-status filter once a custom status exists', () => {
+    test('hands the Status filter the exact statuses once a custom one exists', () => {
         render(
             <FilterBar
                 savedFilters={[]}
@@ -265,8 +272,12 @@ describe('FilterBar Component', () => {
             />,
         );
 
+        expect(screen.getByTestId('filter-dropdown-status')).toHaveAttribute(
+            'data-status-groups',
+            '4',
+        );
         expect(
-            screen.getByTestId('filter-dropdown-workflowStatus'),
-        ).toBeInTheDocument();
+            screen.queryByTestId('filter-dropdown-workflowStatus'),
+        ).not.toBeInTheDocument();
     });
 });
