@@ -673,11 +673,11 @@ identycznie na liście, tablicy i w widoku szczegółów (zobacz
   jest rozwiązywany *względem typu, który issue właśnie dostało*: jeśli
   zmapowana wartość nazywa status tego workflow, jest używana wprost
   („Code Review" z Jiry zmapowane na „In Review" ląduje na własnym „In
-  Review" typu Bug), w przeciwnym razie stara wartość
-  `open`/`in_progress`/`closed` jest rozwiązywana po kategorii przez
-  `IssueTypeService::resolveWorkflowStatusForLegacyValue()`. Stara
-  kolumna `issues.status` jest utrzymywana w spójności z tym, który
-  status wygrał.
+  Review" typu Bug), w przeciwnym razie jest czytana jako kategoria
+  (`todo`/`in_progress`/`done` albo stare słowa `open`/`closed` zapisane
+  we wcześniejszych mapowaniach) i rozwiązywana przez
+  `IssueTypeService::statusForCategory()`, z powrotem do statusu
+  początkowego typu.
 - **Etykiety.** Mapowane przez `IntegrationFieldMappingType::LABEL`, a
   potem filtrowane do etykiet, które projekt faktycznie ma — mapowanie
   wskazujące na usuniętą etykietę jest odrzucane, a nie zapisywane.

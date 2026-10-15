@@ -2,8 +2,9 @@
 
 A workflow status's `category` isn't free text — it's a fixed,
 three-value enum (`todo`/`in_progress`/`done`) shared by every issue
-type's workflow, used to color-group statuses and to map the legacy
-`issues.status` value onto whichever real status best fits. Worked
+type's workflow, used to color-group statuses and as the coarse bucket the board
+columns, the status filter, the dashboard counters and the
+change-status automation work on. Worked
 example: adding a fourth bucket, `blocked`, for a status like "Blocked"
 or "On Hold" that isn't really "in progress" but isn't abandoned
 either.
@@ -39,43 +40,26 @@ validates an incoming `category` with `Rule::enum(WorkflowStatusCategory::class)
 (both `storeStatus()` and `updateStatus()`) — a new case is accepted by
 that rule automatically, no controller change required.
 
-## Step 2 — Decide what the legacy status mapping does with it
+## Step 2 — Decide where the new category has to be handled
 
-File: `app/Services/IssueTypeService.php`
+The issue's status is its workflow status alone (the old
+`issues.status` open/in_progress/closed column is gone), so nothing maps
+a legacy value onto a category any more. What does read the category:
 
-`resolveWorkflowStatusForLegacyValue()` maps the old `issues.status`
-enum (`open`/`in_progress`/`closed`) onto a category:
+- `IssueTypeService::statusForCategory()` — returns the type's first
+  status of a category; used by the importer (a mapping may name a
+  category) and works for a new case without changes.
+- `ChangeStatusAction` — accepts a `category` param validated against
+  `WorkflowStatusCategory::tryFrom()`, so a new case is accepted as is.
+- `IssueRepository::applySearchAndFilters()` and the `status` sort —
+  the filter takes category values and the sort ranks them with a
+  `CASE`; add `'blocked'` to that `CASE` in `getAllPaginated()` so it
+  sorts where you want it.
 
-```php
-public function resolveWorkflowStatusForLegacyValue(IssueType $issueType, ?string $legacyStatus): ?WorkflowStatus
-{
-    $category = match ($legacyStatus) {
-        'open' => WorkflowStatusCategory::TODO,
-        'in_progress' => WorkflowStatusCategory::IN_PROGRESS,
-        'closed' => WorkflowStatusCategory::DONE,
-        default => null,
-    };
-
-    $status = $category
-        ? $issueType->statuses()->where('category', $category->value)->orderBy('sort_order')->first()
-        : null;
-
-    return $status
-        ?? $issueType->statuses()->where('is_initial', true)->first()
-        ?? $issueType->statuses()->orderBy('sort_order')->first();
-}
-```
-
-There is no fourth legacy `IssueStatus` value to map onto `blocked` —
-`open`/`in_progress`/`closed` is a closed, unrelated enum
-(`app/Enums/IssueStatus.php`) that predates issue types and is kept in
-sync only for backward compatibility. Leave this method as-is: a
-`blocked` status is something a user sets explicitly via
-`workflow_status_id` (through the real Settings → workflow UI, or the
-issue detail view once it's wired to a status picker), not something
-the legacy `status` string can ever resolve to. That's expected, not a
-gap — don't add a `'blocked' => ...` arm here, there's no legacy value
-that means that.
+A `blocked` status is something a user sets explicitly via
+`workflow_status_id`; the board's status columns
+(`STATUS_COLUMNS` in `IssueBoard.tsx`) only list the three original
+categories, so decide whether the new one gets a column of its own.
 
 ## Step 3 — Add it to the frontend option list
 

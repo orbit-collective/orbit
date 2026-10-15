@@ -3,8 +3,8 @@
 `category` statusu workflow nie jest dowolnym tekstem — to sztywny,
 trójwartościowy enum (`todo`/`in_progress`/`done`) współdzielony przez
 workflow każdego typu issue, używany do grupowania kolorystycznego
-statusów i mapowania starej wartości `issues.status` na status, który
-najlepiej pasuje. Przećwiczony przykład: dodanie czwartego koszyka,
+statusów i jako zgrubny koszyk, na którym działają kolumny tablicy,
+filtr statusu, liczniki na dashboardzie i automatyzacja zmiany statusu. Przećwiczony przykład: dodanie czwartego koszyka,
 `blocked`, dla statusu w rodzaju "Blocked" albo "On Hold", który nie
 jest tak naprawdę "w trakcie", ale też nie jest porzucony.
 
@@ -41,44 +41,27 @@ waliduje przychodzącą `category` przez
 jak i `updateStatus()`) — nowy case jest akceptowany przez tę regułę
 automatycznie, bez zmiany kontrolera.
 
-## Krok 2 — Zdecyduj, co robi z nią mapowanie starego statusu
+## Krok 2 — Zdecyduj, gdzie nowa kategoria musi być obsłużona
 
-Plik: `app/Services/IssueTypeService.php`
+Status issue to wyłącznie jego status workflow (stara kolumna
+`issues.status` open/in_progress/closed zniknęła), więc nic już nie
+mapuje starej wartości na kategorię. To, co czyta kategorię:
 
-`resolveWorkflowStatusForLegacyValue()` mapuje stary enum
-`issues.status` (`open`/`in_progress`/`closed`) na kategorię:
+- `IssueTypeService::statusForCategory()` — zwraca pierwszy status typu
+  o danej kategorii; używany przez import (mapowanie może nazwać
+  kategorię) i działa dla nowego przypadku bez zmian.
+- `ChangeStatusAction` — przyjmuje parametr `category` walidowany przez
+  `WorkflowStatusCategory::tryFrom()`, więc nowy przypadek jest
+  akceptowany bez zmian.
+- `IssueRepository::applySearchAndFilters()` i sortowanie po `status` —
+  filtr przyjmuje wartości kategorii, a sortowanie układa je przez
+  `CASE`; dodaj `'blocked'` do tego `CASE` w `getAllPaginated()`, żeby
+  sortował się tam, gdzie chcesz.
 
-```php
-public function resolveWorkflowStatusForLegacyValue(IssueType $issueType, ?string $legacyStatus): ?WorkflowStatus
-{
-    $category = match ($legacyStatus) {
-        'open' => WorkflowStatusCategory::TODO,
-        'in_progress' => WorkflowStatusCategory::IN_PROGRESS,
-        'closed' => WorkflowStatusCategory::DONE,
-        default => null,
-    };
-
-    $status = $category
-        ? $issueType->statuses()->where('category', $category->value)->orderBy('sort_order')->first()
-        : null;
-
-    return $status
-        ?? $issueType->statuses()->where('is_initial', true)->first()
-        ?? $issueType->statuses()->orderBy('sort_order')->first();
-}
-```
-
-Nie ma czwartej starej wartości `IssueStatus` do zmapowania na
-`blocked` — `open`/`in_progress`/`closed` to zamknięty, niepowiązany
-enum (`app/Enums/IssueStatus.php`), który istniał przed typami issue i
-jest utrzymywany w synchronizacji tylko dla wstecznej kompatybilności.
-Zostaw tę metodę bez zmian: status `blocked` to coś, co użytkownik
-ustawia jawnie przez `workflow_status_id` (przez prawdziwe UI
-workflow w Ustawieniach, albo widok szczegółów issue, gdy zostanie
-podpięty do selektora statusu), a nie coś, na co stary string `status`
-mógłby się kiedykolwiek rozwiązać. Tak ma być, to nie luka — nie dodawaj
-tu ramienia `'blocked' => ...`, nie ma starej wartości, która by to
-znaczyła.
+Status `blocked` użytkownik ustawia jawnie przez `workflow_status_id`;
+kolumny statusów tablicy (`STATUS_COLUMNS` w `IssueBoard.tsx`) wymieniają
+tylko trzy pierwotne kategorie, więc zdecyduj, czy nowa dostaje własną
+kolumnę.
 
 ## Krok 3 — Dodaj ją do listy opcji na frontendzie
 
