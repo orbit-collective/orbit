@@ -409,11 +409,11 @@ export interface VisualCardHeaderProps {
     description: string;
 }
 export interface CompletionRatioCardProps {
-    open: number;
+    todo: number;
     inProgress: number;
-    closed: number;
+    done: number;
     total: number;
-    closedPct: number;
+    donePct: number;
 }
 export interface PriorityItem {
     label: string;

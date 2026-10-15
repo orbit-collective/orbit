@@ -6,11 +6,11 @@ describe('CompletionRatioCard Component', () => {
     test('renders the card title and description', () => {
         render(
             <CompletionRatioCard
-                open={4}
+                todo={4}
                 inProgress={0}
-                closed={6}
+                done={6}
                 total={10}
-                closedPct={60}
+                donePct={60}
             />,
         );
 
@@ -20,14 +20,14 @@ describe('CompletionRatioCard Component', () => {
         ).toBeInTheDocument();
     });
 
-    test('renders the closed percentage as the hero figure with its breakdown', () => {
+    test('renders the done percentage as the hero figure with its breakdown', () => {
         render(
             <CompletionRatioCard
-                open={4}
+                todo={4}
                 inProgress={0}
-                closed={6}
+                done={6}
                 total={10}
-                closedPct={60}
+                donePct={60}
             />,
         );
 
@@ -39,60 +39,60 @@ describe('CompletionRatioCard Component', () => {
     test('renders a labelled bar for each status with its count', () => {
         render(
             <CompletionRatioCard
-                open={3}
+                todo={3}
                 inProgress={2}
-                closed={5}
+                done={5}
                 total={10}
-                closedPct={50}
+                donePct={50}
             />,
         );
 
-        expect(screen.getByText('Open')).toBeInTheDocument();
+        expect(screen.getByText('To Do')).toBeInTheDocument();
         expect(screen.getByText('3')).toBeInTheDocument();
 
         expect(screen.getByText('In Progress')).toBeInTheDocument();
         expect(screen.getByText('2')).toBeInTheDocument();
 
-        expect(screen.getByText('Closed')).toBeInTheDocument();
+        expect(screen.getByText('Done')).toBeInTheDocument();
         expect(screen.getByText('5')).toBeInTheDocument();
     });
 
-    test('shows an "Excellent" tier badge for a high closed percentage', () => {
+    test('shows an "Excellent" tier badge for a high done percentage', () => {
         render(
             <CompletionRatioCard
-                open={1}
+                todo={1}
                 inProgress={0}
-                closed={9}
+                done={9}
                 total={10}
-                closedPct={90}
+                donePct={90}
             />,
         );
 
         expect(screen.getByText('Excellent')).toBeInTheDocument();
     });
 
-    test('shows an "On track" tier badge for a mid closed percentage', () => {
+    test('shows an "On track" tier badge for a mid done percentage', () => {
         render(
             <CompletionRatioCard
-                open={5}
+                todo={5}
                 inProgress={0}
-                closed={5}
+                done={5}
                 total={10}
-                closedPct={50}
+                donePct={50}
             />,
         );
 
         expect(screen.getByText('On track')).toBeInTheDocument();
     });
 
-    test('shows a "Needs attention" tier badge for a low closed percentage', () => {
+    test('shows a "Needs attention" tier badge for a low done percentage', () => {
         render(
             <CompletionRatioCard
-                open={9}
+                todo={9}
                 inProgress={0}
-                closed={1}
+                done={1}
                 total={10}
-                closedPct={10}
+                donePct={10}
             />,
         );
 
@@ -102,11 +102,11 @@ describe('CompletionRatioCard Component', () => {
     test('hides the tier badge when there are no issues yet', () => {
         render(
             <CompletionRatioCard
-                open={0}
+                todo={0}
                 inProgress={0}
-                closed={0}
+                done={0}
                 total={0}
-                closedPct={0}
+                donePct={0}
             />,
         );
 
@@ -116,11 +116,11 @@ describe('CompletionRatioCard Component', () => {
     test('renders without crashing when there are no issues', () => {
         render(
             <CompletionRatioCard
-                open={0}
+                todo={0}
                 inProgress={0}
-                closed={0}
+                done={0}
                 total={0}
-                closedPct={0}
+                donePct={0}
             />,
         );
 

@@ -19,12 +19,12 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
                 highPct: 0,
                 mediumPct: 0,
                 lowPct: 0,
-                open: 0,
+                todo: 0,
                 inProgress: 0,
-                closed: 0,
-                openPct: 0,
+                done: 0,
+                todoPct: 0,
                 inProgressPct: 0,
-                closedPct: 0,
+                donePct: 0,
             };
         }
 
@@ -32,11 +32,11 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
         const medium = issues.filter((i) => i.priority === 'medium').length;
         const low = issues.filter((i) => i.priority === 'low').length;
 
-        const open = issues.filter((i) => issueCategory(i) === 'todo').length;
+        const todo = issues.filter((i) => issueCategory(i) === 'todo').length;
         const inProgress = issues.filter(
             (i) => issueCategory(i) === 'in_progress',
         ).length;
-        const closed = issues.filter(isIssueDone).length;
+        const done = issues.filter(isIssueDone).length;
 
         return {
             high,
@@ -45,12 +45,12 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
             highPct: Math.round((high / total) * 100),
             mediumPct: Math.round((medium / total) * 100),
             lowPct: Math.round((low / total) * 100),
-            open,
+            todo,
             inProgress,
-            closed,
-            openPct: Math.round((open / total) * 100),
+            done,
+            todoPct: Math.round((todo / total) * 100),
             inProgressPct: Math.round((inProgress / total) * 100),
-            closedPct: Math.round((closed / total) * 100),
+            donePct: Math.round((done / total) * 100),
         };
     }, [issues]);
 
@@ -63,11 +63,11 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
 
             <div className="flex flex-col gap-5">
                 <CompletionRatioCard
-                    open={stats.open}
+                    todo={stats.todo}
                     inProgress={stats.inProgress}
-                    closed={stats.closed}
+                    done={stats.done}
                     total={issues.length}
-                    closedPct={stats.closedPct}
+                    donePct={stats.donePct}
                 />
 
                 <PriorityBreakdownCard
