@@ -11,7 +11,6 @@ use App\Models\Issue;
 use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
-use App\Models\WorkflowStatus;
 use App\Repositories\IssueRepository;
 use App\Services\Automation\AutomationDispatcher;
 use App\Support\Cache\CacheVersion;
@@ -305,11 +304,14 @@ class IssueService
             // downstream (log text, notifications, automations) knows it as
             // "status" holding the status name.
             if ($field === 'workflow_status_id') {
+                $oldStatus = $this->issueRepository->findWorkflowStatus($old);
+                $newStatus = $this->issueRepository->findWorkflowStatus($new);
+
                 $changes['status'] = [
-                    'old' => $this->statusName($old),
-                    'new' => $this->statusName($new),
-                    'oldCategory' => $this->statusCategory($old),
-                    'newCategory' => $this->statusCategory($new),
+                    'old' => $oldStatus?->name,
+                    'new' => $newStatus?->name,
+                    'oldCategory' => $oldStatus?->category->value,
+                    'newCategory' => $newStatus?->category->value,
                 ];
                 $changes['status']['text'] = $this->describeChange('status', $changes['status']['old'], $changes['status']['new']);
 
@@ -324,16 +326,6 @@ class IssueService
         }
 
         return $changes;
-    }
-
-    private function statusName(mixed $statusId): ?string
-    {
-        return $statusId ? WorkflowStatus::query()->whereKey($statusId)->value('name') : null;
-    }
-
-    private function statusCategory(mixed $statusId): ?string
-    {
-        return $statusId ? WorkflowStatus::query()->whereKey($statusId)->first()?->category->value : null;
     }
 
     /** The project-scoped number shown to users for an issue's internal id. */

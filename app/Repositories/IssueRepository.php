@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Issue;
 use App\Models\Project;
+use App\Models\WorkflowStatus;
 use App\Support\Cache\CacheVersion;
 use App\Support\LikePattern;
 use Carbon\Carbon;
@@ -53,6 +54,12 @@ class IssueRepository
     public function peekNextNumber(Project $project): int
     {
         return (int) $project->next_issue_number;
+    }
+
+    /** The workflow status with this id, if there is one (an issue may have none). */
+    public function findWorkflowStatus(mixed $statusId): ?WorkflowStatus
+    {
+        return $statusId ? WorkflowStatus::query()->find($statusId) : null;
     }
 
     /** The project-scoped number of the issue with this internal id, if it exists. */

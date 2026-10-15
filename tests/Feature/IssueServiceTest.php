@@ -21,6 +21,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->issueRepository = Mockery::mock(IssueRepository::class);
     $this->activityLogService = Mockery::mock(ActivityLogService::class);
+    $this->issueRepository->shouldReceive('findWorkflowStatus')->andReturnUsing(fn ($id) => $id ? WorkflowStatus::find($id) : null);
     $this->userService = Mockery::mock(UserService::class);
     $this->userService->shouldReceive('getUserById')->andReturnUsing(fn ($id) => User::find($id));
     $this->service = new IssueService($this->issueRepository, $this->activityLogService, $this->userService, app(AutomationDispatcher::class));
