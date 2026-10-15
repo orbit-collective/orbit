@@ -1,13 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { todoStatus, inProgressStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { BoardCard, BoardCardOverlay } from './BoardCard';
 
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: 'ISSUE-1',
     title: 'Fix the login page',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -37,16 +38,16 @@ describe('BoardCard Component', () => {
         expect(screen.queryByText('open')).not.toBeInTheDocument();
     });
 
-    test('falls back to the plain status badge without a workflow status', () => {
+    test('shows no status badge without a workflow status', () => {
         render(
             <BoardCard
-                issue={makeIssue({ status: 'in_progress' })}
+                issue={makeIssue({ workflowStatus: undefined })}
                 isClosed={false}
                 onClick={() => {}}
             />,
         );
 
-        expect(screen.getByText('in progress')).toBeInTheDocument();
+        expect(screen.queryByText('To Do')).not.toBeInTheDocument();
     });
 
     test('renders the issue title', () => {
@@ -116,25 +117,25 @@ describe('BoardCard Component', () => {
     test('renders the issue status as a badge', () => {
         render(
             <BoardCard
-                issue={makeIssue({ status: 'open' })}
+                issue={makeIssue({ workflowStatus: todoStatus })}
                 isClosed={false}
                 onClick={() => {}}
             />,
         );
 
-        expect(screen.getAllByText('open').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getByText('To Do')).toBeInTheDocument();
     });
 
-    test('renders the in_progress status badge without an underscore', () => {
+    test('renders the in-progress status badge by its name', () => {
         render(
             <BoardCard
-                issue={makeIssue({ status: 'in_progress' })}
+                issue={makeIssue({ workflowStatus: inProgressStatus })}
                 isClosed={false}
                 onClick={() => {}}
             />,
         );
 
-        expect(screen.getByText('in progress')).toBeInTheDocument();
+        expect(screen.getByText('In Progress')).toBeInTheDocument();
         expect(screen.queryByText('in_progress')).not.toBeInTheDocument();
     });
 
@@ -195,7 +196,10 @@ describe('BoardCard Component', () => {
     test('shows the priority dot when the issue is open, and the status dot when closed', () => {
         const { container, rerender } = render(
             <BoardCard
-                issue={makeIssue({ priority: 'high', status: 'open' })}
+                issue={makeIssue({
+                    priority: 'high',
+                    workflowStatus: todoStatus,
+                })}
                 isClosed={false}
                 onClick={() => {}}
             />,
@@ -208,15 +212,18 @@ describe('BoardCard Component', () => {
 
         rerender(
             <BoardCard
-                issue={makeIssue({ priority: 'high', status: 'open' })}
+                issue={makeIssue({
+                    priority: 'high',
+                    workflowStatus: todoStatus,
+                })}
                 isClosed={true}
                 onClick={() => {}}
             />,
         );
 
-        // Closed: the leading dot reflects status ("open") rather than priority.
+        // Closed: the leading dot reflects the done status rather than priority.
         expect(
-            container.querySelector('.bg-\\[var\\(--info-color\\)\\]'),
+            container.querySelector('.bg-\\[var\\(--pending-color\\)\\]'),
         ).toBeInTheDocument();
     });
 });

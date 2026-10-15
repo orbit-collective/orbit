@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { todoStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import IssuePageHeader from './IssuePageHeader';
@@ -29,7 +30,7 @@ const project: Project = {
 const issue: Issue = {
     id: '42',
     title: 'Fix login crash',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -74,7 +75,7 @@ describe('IssuePageHeader breadcrumb', () => {
     const epic: Issue = {
         id: '10',
         title: 'Checkout revamp',
-        status: 'open',
+        workflowStatus: todoStatus,
         priority: 'high',
         project_id: 1,
         user_id: 1,

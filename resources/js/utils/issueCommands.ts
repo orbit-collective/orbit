@@ -1,6 +1,6 @@
 import type { FormDataConvertible } from '@inertiajs/core';
 import { Command } from '@/types/Commands';
-import { Issue, IssueAbilities, IssuePriority, Status } from '@/types/Issues';
+import { Issue, IssueAbilities, IssuePriority } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
 import { AssignableUser } from '@/types/Users';
 import { getReachableStatuses } from '@/utils/workflow';
@@ -20,12 +20,6 @@ export interface IssueCommandContext {
     copy: (text: string, successMessage: string) => void;
     visit: (url: string) => void;
 }
-
-const LEGACY_STATUSES: { value: Status; title: string }[] = [
-    { value: 'open', title: 'Open' },
-    { value: 'in_progress', title: 'In progress' },
-    { value: 'closed', title: 'Closed' },
-];
 
 const PRIORITIES: { value: IssuePriority; icon: Command['icon'] }[] = [
     { value: 'high', icon: 'ArrowUp' },
@@ -51,31 +45,19 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         context,
     } as const;
 
-    const hasWorkflow = (issue.issueType?.statuses?.length ?? 0) > 0;
     const currentStatusId = issue.workflowStatus?.id ?? null;
 
     const statusSteps = (): Command[] =>
-        hasWorkflow
-            ? getReachableStatuses(issue)
-                  .filter((status) => status.id !== currentStatusId)
-                  .map((status): Command => ({
-                      id: `issue.status.${status.id}`,
-                      title: status.name,
-                      group: 'suggested',
-                      icon: 'Circle',
-                      iconColor: status.color,
-                      perform: () =>
-                          ctx.update({ workflow_status_id: status.id }),
-                  }))
-            : LEGACY_STATUSES.filter(({ value }) => value !== issue.status).map(
-                  ({ value, title }): Command => ({
-                      id: `issue.status.${value}`,
-                      title,
-                      group: 'suggested',
-                      icon: 'Circle',
-                      perform: () => ctx.update({ status: value }),
-                  }),
-              );
+        getReachableStatuses(issue)
+            .filter((status) => status.id !== currentStatusId)
+            .map((status): Command => ({
+                id: `issue.status.${status.id}`,
+                title: status.name,
+                group: 'suggested',
+                icon: 'Circle',
+                iconColor: status.color,
+                perform: () => ctx.update({ workflow_status_id: status.id }),
+            }));
 
     const prioritySteps = (): Command[] =>
         PRIORITIES.filter(({ value }) => value !== issue.priority).map(

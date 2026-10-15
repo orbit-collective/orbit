@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { todoStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
@@ -67,7 +68,7 @@ const epicType = makeType({
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: '10',
     title: 'Big epic',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,

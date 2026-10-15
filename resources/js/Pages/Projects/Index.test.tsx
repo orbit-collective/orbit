@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { todoStatus, doneStatus } from '@/tests/statuses';
 import { Project } from '@/types/Projects';
 import Index from './Index';
 
@@ -114,7 +115,7 @@ describe('Projects Index Page', () => {
                     {
                         id: 'ISSUE-1',
                         title: 'A',
-                        status: 'closed',
+                        workflowStatus: doneStatus,
                         priority: 'low',
                         project_id: 1,
                         user_id: 1,
@@ -122,7 +123,7 @@ describe('Projects Index Page', () => {
                     {
                         id: 'ISSUE-2',
                         title: 'B',
-                        status: 'open',
+                        workflowStatus: todoStatus,
                         priority: 'low',
                         project_id: 1,
                         user_id: 1,

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { inProgressStatus } from '@/tests/statuses';
 import { AssignableUser } from '@/types/Users';
 import CommentForm from './CommentForm';
 
@@ -644,7 +645,7 @@ describe('CommentForm image uploads', () => {
                 {
                     id: 2,
                     title: 'Fix login',
-                    status: 'in_progress',
+                    workflowStatus: inProgressStatus,
                     priority: 'high',
                     labels: [],
                     assignee: null,

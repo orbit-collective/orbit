@@ -4,15 +4,14 @@ import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { useCommandPalette } from '@/context/CommandContext';
 import { ProjectCardProps } from '@/types/Components';
 import { getColorTheme } from '@/utils/colors';
+import { isIssueDone } from '@/utils/workflow';
 import Icon from '../../Atoms/Icon/Icon';
 import ProgressRing from '../../Atoms/ProgressRing/ProgressRing';
 
 const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
     const projectIssues = issues.filter((i) => i.project_id === project.id);
     const totalIssuesCount = projectIssues.length;
-    const closedIssuesCount = projectIssues.filter(
-        (i) => i.status === 'closed',
-    ).length;
+    const closedIssuesCount = projectIssues.filter(isIssueDone).length;
     const openIssuesCount = totalIssuesCount - closedIssuesCount;
     const completionRate =
         totalIssuesCount > 0
@@ -86,7 +85,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
                 <div className="flex min-w-0 flex-1 flex-col gap-1 text-[11px]">
                     <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 text-[var(--text-gray-color)]">
-                            <StatusDot status={'open'} />
+                            <StatusDot status={'todo'} />
                             Open
                         </span>
                         <span className="font-semibold text-[var(--text-color)]">
@@ -95,7 +94,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
                     </div>
                     <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 text-[var(--text-gray-color)]">
-                            <StatusDot status={'closed'} />
+                            <StatusDot status={'done'} />
                             Closed
                         </span>
                         <span className="font-semibold text-[var(--text-color)]">

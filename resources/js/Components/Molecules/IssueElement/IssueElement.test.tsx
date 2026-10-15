@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { todoStatus, doneStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import IssueElement from './IssueElement';
 
@@ -36,7 +37,7 @@ const makeAssignee = (name = 'Jane Doe') => ({
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: 'ISSUE-1',
     title: 'Fix the bug',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -98,7 +99,7 @@ describe('IssueElement Component', () => {
         test('applies closed (line-through) styling for closed issues', () => {
             render(
                 <IssueElement
-                    issue={makeIssue({ status: 'closed' })}
+                    issue={makeIssue({ workflowStatus: doneStatus })}
                     type="board"
                 />,
             );

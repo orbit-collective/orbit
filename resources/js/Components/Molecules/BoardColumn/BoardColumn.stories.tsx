@@ -21,8 +21,8 @@ const meta = {
         issues,
         count: issues.length,
         meta: {
-            id: 'open',
-            label: 'Open',
+            id: 'todo',
+            label: 'To Do',
             hint: 'Waiting to be picked up',
             accent: '#38bdf8',
             icon: 'CircleDot',
@@ -36,7 +36,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     play: async ({ canvasElement }) => {
         await expect(
-            within(canvasElement).getByRole('heading', { name: 'Open' }),
+            within(canvasElement).getByRole('heading', { name: 'To Do' }),
         ).toBeVisible();
     },
 };
@@ -53,8 +53,8 @@ export const Empty: Story = {
 export const Closed: Story = {
     args: {
         meta: {
-            id: 'closed',
-            label: 'Closed',
+            id: 'done',
+            label: 'Done',
             hint: 'Done and dusted',
             accent: '#4ade80',
             icon: 'CircleCheck',

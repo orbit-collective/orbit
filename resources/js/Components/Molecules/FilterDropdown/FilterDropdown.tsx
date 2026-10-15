@@ -43,9 +43,9 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
         label: 'Status',
         multiSelect: false,
         options: [
-            { value: 'open', label: 'Open' },
+            { value: 'todo', label: 'To Do' },
             { value: 'in_progress', label: 'In Progress' },
-            { value: 'closed', label: 'Closed' },
+            { value: 'done', label: 'Done' },
         ].map(({ value, label }) => ({
             value,
             label,

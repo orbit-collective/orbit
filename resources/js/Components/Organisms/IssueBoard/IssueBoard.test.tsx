@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { todoStatus, inProgressStatus, doneStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import IssueBoard from './IssueBoard';
 
@@ -65,7 +66,7 @@ let counter = 0;
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: `ISSUE-${counter++}`,
     title: 'Some issue',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -131,9 +132,9 @@ describe('IssueBoard Component', () => {
 
     test('the count badge reflects only non-closed issues in that priority', () => {
         const issues = [
-            makeIssue({ priority: 'high', status: 'open' }),
-            makeIssue({ priority: 'high', status: 'open' }),
-            makeIssue({ priority: 'high', status: 'closed' }),
+            makeIssue({ priority: 'high', workflowStatus: todoStatus }),
+            makeIssue({ priority: 'high', workflowStatus: todoStatus }),
+            makeIssue({ priority: 'high', workflowStatus: doneStatus }),
         ];
         render(<IssueBoard issues={issues} />);
 
@@ -149,20 +150,26 @@ describe('IssueBoard Component', () => {
         );
     });
 
-    test('switching to Status regroups issues into Open/In Progress/Done columns', async () => {
+    test('switching to Status regroups issues into To Do/In Progress/Done columns', async () => {
         const user = userEvent.setup();
         const issues = [
-            makeIssue({ title: 'Not started', status: 'open' }),
-            makeIssue({ title: 'Underway', status: 'in_progress' }),
-            makeIssue({ title: 'Finished', status: 'closed' }),
+            makeIssue({ title: 'Not started', workflowStatus: todoStatus }),
+            makeIssue({ title: 'Underway', workflowStatus: inProgressStatus }),
+            makeIssue({ title: 'Finished', workflowStatus: doneStatus }),
         ];
         render(<IssueBoard issues={issues} />);
 
         await user.click(screen.getByRole('button', { name: 'Status' }));
 
-        expect(screen.getByText('Open')).toBeInTheDocument();
-        expect(screen.getByText('In Progress')).toBeInTheDocument();
-        expect(screen.getByText('Done')).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'To Do' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'In Progress' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Done' }),
+        ).toBeInTheDocument();
         expect(screen.getByText('Not started')).toBeInTheDocument();
         expect(screen.getByText('Underway')).toBeInTheDocument();
         expect(screen.getByText('Finished')).toBeInTheDocument();
@@ -180,7 +187,9 @@ describe('IssueBoard Component', () => {
 
         render(<IssueBoard issues={[]} />);
 
-        expect(screen.getByText('Open')).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'To Do' }),
+        ).toBeInTheDocument();
         expect(screen.queryByText(/high Priority/i)).not.toBeInTheDocument();
     });
 
@@ -201,9 +210,22 @@ describe('IssueBoard Component', () => {
         );
     });
 
-    test('dragging a card to a new status column patches status instead of priority', async () => {
+    test("dragging a card to a status column patches the type's status of that category", async () => {
         const user = userEvent.setup();
-        const issue = makeIssue({ status: 'open' });
+        const issue = makeIssue({
+            workflowStatus: todoStatus,
+            issueType: {
+                statuses: [todoStatus, inProgressStatus, doneStatus],
+                transitions: [
+                    {
+                        id: 1,
+                        issueTypeId: 1,
+                        fromStatusId: todoStatus.id,
+                        toStatusId: inProgressStatus.id,
+                    },
+                ],
+            } as Issue['issueType'],
+        });
         render(<IssueBoard issues={[issue]} />);
 
         await user.click(screen.getByRole('button', { name: 'Status' }));
@@ -215,8 +237,33 @@ describe('IssueBoard Component', () => {
 
         expect(mockRouterPatch).toHaveBeenCalledWith(
             expect.any(String),
-            { status: 'in_progress' },
+            { workflow_status_id: inProgressStatus.id },
             expect.objectContaining({ preserveScroll: true }),
+        );
+    });
+
+    test('dragging to a status column the workflow does not reach alerts instead of patching', async () => {
+        const user = userEvent.setup();
+        const issue = makeIssue({
+            workflowStatus: todoStatus,
+            issueType: {
+                statuses: [todoStatus, inProgressStatus, doneStatus],
+                transitions: [],
+            } as unknown as Issue['issueType'],
+        });
+        render(<IssueBoard issues={[issue]} />);
+
+        await user.click(screen.getByRole('button', { name: 'Status' }));
+
+        capturedHandlers.onDragEnd?.({
+            active: { id: issue.id },
+            over: { id: 'done' },
+        });
+
+        expect(mockRouterPatch).not.toHaveBeenCalled();
+        expect(mockAddAlert).toHaveBeenCalledWith(
+            'This issue type has no reachable done status',
+            'error',
         );
     });
 

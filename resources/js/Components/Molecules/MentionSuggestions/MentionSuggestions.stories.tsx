@@ -7,7 +7,7 @@ const suggestions = issues.slice(0, 4).map((item) => ({
     id: Number(item.id),
     number: item.number,
     title: item.title,
-    status: item.status,
+    workflowStatus: item.workflowStatus,
     priority: item.priority,
     labels: item.labels,
     assignee: null,

@@ -1,12 +1,13 @@
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'vitest';
+import { todoStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { useIssueHierarchy } from './useIssueHierarchy';
 
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: '1',
     title: 'Issue',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'medium',
     project_id: 1,
     user_id: 1,

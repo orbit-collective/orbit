@@ -7,6 +7,7 @@ import { UpcomingDeadlinesPanelProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
 import { parseDateKey } from '@/utils/time';
+import { isIssueDone } from '@/utils/workflow';
 
 const SHORT_DATE_FORMAT: Intl.DateTimeFormatOptions = {
     month: 'short',
@@ -66,7 +67,7 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
         return issues
             .filter(
                 (issue): issue is Issue & { end_date: string } =>
-                    Boolean(issue.end_date) && issue.status !== 'closed',
+                    Boolean(issue.end_date) && !isIssueDone(issue),
             )
             .sort(
                 (a, b) =>

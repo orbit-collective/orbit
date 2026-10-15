@@ -22,6 +22,7 @@ import {
     ACTIVITY_PAGE_PARAM,
     ACTIVITY_PER_PAGE_PARAM,
 } from '@/utils/activityLog';
+import { isIssueDone } from '@/utils/workflow';
 
 const ACTIVITY_DEFAULT_PER_PAGE = 10;
 
@@ -44,7 +45,7 @@ export default function Dashboard({
 }) {
     const stats = useMemo(() => {
         const total = issues.length;
-        const closed = issues.filter((i) => i.status === 'closed').length;
+        const closed = issues.filter(isIssueDone).length;
         const open = total - closed;
         const highPriority = issues.filter((i) => i.priority === 'high').length;
         const resolutionRate =

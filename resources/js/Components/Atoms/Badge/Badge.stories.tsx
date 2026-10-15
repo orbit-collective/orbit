@@ -50,9 +50,9 @@ export const Colors: Story = {
                     'high',
                     'medium',
                     'low',
-                    'open',
+                    'todo',
                     'in_progress',
-                    'closed',
+                    'done',
                 ] as const
             ).map((color) => (
                 <Badge key={color} {...args} color={color}>
@@ -65,5 +65,5 @@ export const Colors: Story = {
 
 /** Hover the badge to reveal the tooltip, which defaults to the badge's own content. */
 export const WithTooltip: Story = {
-    args: { tooltip: true, tooltipText: 'Not started yet', color: 'open' },
+    args: { tooltip: true, tooltipText: 'Not started yet', color: 'todo' },
 };

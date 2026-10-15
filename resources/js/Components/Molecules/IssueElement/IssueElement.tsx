@@ -3,6 +3,7 @@ import { BoardCard } from '@/Components/Organisms/BoardCard/BoardCard';
 import { ListRow } from '@/Components/Organisms/ListRow/ListRow';
 import { IssueElementProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
+import { isIssueDone } from '@/utils/workflow';
 
 export const IssueElement = ({
     issue,
@@ -21,9 +22,7 @@ export const IssueElement = ({
 
     const props = {
         issue,
-        isClosed: issue.workflowStatus
-            ? issue.workflowStatus.category === 'done'
-            : issue.status === 'closed',
+        isClosed: isIssueDone(issue),
         onClick: () =>
             router.visit(route('issues.show', [issue.project_id, issue.id])),
         onRemove: () => removeIssue(issue),

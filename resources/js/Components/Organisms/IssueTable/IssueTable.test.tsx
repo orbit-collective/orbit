@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { todoStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import IssueTable from './IssueTable';
@@ -96,7 +97,7 @@ let counter = 0;
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: `ISSUE-${counter++}`,
     title: 'Some issue',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -215,7 +216,6 @@ describe('IssueTable Component', () => {
                 title: 'Quick issue',
                 project_id: 1,
                 priority: 'medium',
-                status: 'open',
             }),
             expect.any(Object),
         );

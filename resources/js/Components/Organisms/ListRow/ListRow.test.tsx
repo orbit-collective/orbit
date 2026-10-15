@@ -2,13 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { todoStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { ListRow } from './ListRow';
 
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: 'ISSUE-1',
     title: 'Fix the login page',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -39,7 +40,7 @@ describe('ListRow Component', () => {
 
         expect(screen.getByText('#ISSUE-42')).toBeInTheDocument();
         expect(screen.getByText('Fix the login page')).toBeInTheDocument();
-        expect(screen.getAllByText('open').length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText('To Do').length).toBeGreaterThanOrEqual(1);
         expect(screen.getAllByText('high').length).toBeGreaterThanOrEqual(1);
         expect(screen.getAllByText('Unassigned').length).toBeGreaterThanOrEqual(
             1,

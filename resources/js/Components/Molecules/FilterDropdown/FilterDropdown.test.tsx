@@ -67,15 +67,15 @@ describe('FilterDropdown Component', () => {
             />,
         );
 
-        expect(screen.queryByText('Open')).not.toBeInTheDocument();
-        expect(screen.queryByText('Closed')).not.toBeInTheDocument();
+        expect(screen.queryByText('To Do')).not.toBeInTheDocument();
+        expect(screen.queryByText('Done')).not.toBeInTheDocument();
     });
 
     test('renders the option panel with all options when open', async () => {
         render(<FilterDropdown type="status" isOpen onOpenChange={vi.fn()} />);
 
-        expect(await screen.findByText('Open')).toBeInTheDocument();
-        expect(screen.getByText('Closed')).toBeInTheDocument();
+        expect(await screen.findByText('To Do')).toBeInTheDocument();
+        expect(screen.getByText('Done')).toBeInTheDocument();
         expect(screen.getByText('Filter by Status')).toBeInTheDocument();
     });
 
@@ -96,11 +96,11 @@ describe('FilterDropdown Component', () => {
         const user = userEvent.setup();
         render(<FilterDropdown type="status" isOpen onOpenChange={vi.fn()} />);
 
-        await user.click(await screen.findByText('Open'));
+        await user.click(await screen.findByText('To Do'));
 
         expect(mockRouterGet).toHaveBeenCalledWith(
             '/',
-            expect.objectContaining({ status: 'open', page: 1 }),
+            expect.objectContaining({ status: 'todo', page: 1 }),
             { preserveState: true, replace: true },
         );
     });
@@ -110,13 +110,13 @@ describe('FilterDropdown Component', () => {
         render(
             <FilterDropdown
                 type="status"
-                queryParams={{ status: 'open' }}
+                queryParams={{ status: 'todo' }}
                 isOpen
                 onOpenChange={vi.fn()}
             />,
         );
 
-        await user.click(await screen.findByText('Open'));
+        await user.click(await screen.findByText('To Do'));
 
         const params = mockRouterGet.mock.calls[0][1];
         expect(params).not.toHaveProperty('status');

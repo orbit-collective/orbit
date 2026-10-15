@@ -254,7 +254,7 @@ export function toPreviewIssue(suggestion: IssueSuggestion): Issue {
     return {
         ...suggestion,
         id: String(suggestion.id),
-        status: suggestion.status ?? 'open',
+        workflowStatus: suggestion.workflowStatus ?? undefined,
         priority: suggestion.priority ?? 'medium',
         assignee: suggestion.assignee ?? undefined,
     } as Issue;

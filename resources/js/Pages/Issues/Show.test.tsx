@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { todoStatus, doneStatus } from '@/tests/statuses';
 import { Comment, Issue } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
@@ -89,7 +90,7 @@ const buildIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: '42',
     title: 'Fix login crash',
     description: 'Steps to reproduce',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -360,9 +361,7 @@ describe('Issues/Show Page', () => {
 
         expect(screen.getByText('Fix login crash')).toBeInTheDocument();
         expect(screen.getByText('Steps to reproduce')).toBeInTheDocument();
-        expect(
-            screen.getByRole('button', { name: 'open' }),
-        ).toBeInTheDocument();
+        expect(screen.getByText('To Do')).toBeInTheDocument();
         expect(
             screen.getByRole('button', { name: 'high' }),
         ).toBeInTheDocument();
@@ -410,26 +409,6 @@ describe('Issues/Show Page', () => {
         expect(mockPatch).toHaveBeenCalledWith(
             '/issues.update/42',
             { description: 'Updated steps' },
-            { preserveScroll: true },
-        );
-    });
-
-    test('changing the status opens the picker and commits the new value', async () => {
-        render(
-            <Show
-                project={project}
-                projects={[project]}
-                issue={buildIssue()}
-                users={users}
-            />,
-        );
-
-        await userEvent.click(screen.getByRole('button', { name: 'open' }));
-        await userEvent.click(screen.getByRole('option', { name: 'closed' }));
-
-        expect(mockPatch).toHaveBeenCalledWith(
-            expect.any(String),
-            { status: 'closed' },
             { preserveScroll: true },
         );
     });
@@ -702,7 +681,7 @@ describe('Issues/Show workflow status', () => {
         workflowStatus: taskType.statuses[0],
     });
 
-    test("shows the issue type's current workflow status instead of the legacy enum", () => {
+    test("shows the issue type's current workflow status ", () => {
         render(
             <Show
                 project={project}

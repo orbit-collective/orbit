@@ -7,7 +7,7 @@ const preview = {
     id: Number(issue.id),
     number: issue.number,
     title: issue.title,
-    status: issue.status,
+    workflowStatus: issue.workflowStatus,
     priority: issue.priority,
     labels: issue.labels,
     start_date: issue.start_date,

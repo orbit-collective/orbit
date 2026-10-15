@@ -62,7 +62,7 @@ const NavItem: React.FC<NavItemProps> = ({
                 )}
             </div>
             {!collapsed && disabled && (
-                <Badge color="closed" className="shrink-0 tracking-wide">
+                <Badge color="done" className="shrink-0 tracking-wide">
                     Soon
                 </Badge>
             )}

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { todoStatus, inProgressStatus, doneStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import DashboardVisuals from './DashboardVisuals';
 
@@ -7,7 +8,7 @@ let counter = 0;
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: `ISSUE-${counter++}`,
     title: 'Some issue',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -31,10 +32,10 @@ describe('DashboardVisuals Component', () => {
 
     test('computes the closed percentage from the issues', () => {
         const issues = [
-            makeIssue({ status: 'closed' }),
-            makeIssue({ status: 'closed' }),
-            makeIssue({ status: 'closed' }),
-            makeIssue({ status: 'open' }),
+            makeIssue({ workflowStatus: doneStatus }),
+            makeIssue({ workflowStatus: doneStatus }),
+            makeIssue({ workflowStatus: doneStatus }),
+            makeIssue({ workflowStatus: todoStatus }),
         ];
         render(<DashboardVisuals issues={issues} productivity_trend={[]} />);
 
@@ -44,10 +45,10 @@ describe('DashboardVisuals Component', () => {
 
     test('computes the in-progress count from the issues', () => {
         const issues = [
-            makeIssue({ status: 'in_progress' }),
-            makeIssue({ status: 'in_progress' }),
-            makeIssue({ status: 'open' }),
-            makeIssue({ status: 'closed' }),
+            makeIssue({ workflowStatus: inProgressStatus }),
+            makeIssue({ workflowStatus: inProgressStatus }),
+            makeIssue({ workflowStatus: todoStatus }),
+            makeIssue({ workflowStatus: doneStatus }),
         ];
         render(<DashboardVisuals issues={issues} productivity_trend={[]} />);
 

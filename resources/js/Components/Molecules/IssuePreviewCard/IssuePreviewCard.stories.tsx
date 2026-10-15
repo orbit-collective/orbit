@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
-import { issues, makeIssue } from '@/stories/fixtures';
+import { issues, makeIssue, taskStatuses } from '@/stories/fixtures';
 import IssuePreviewCard from './IssuePreviewCard';
 
 // The card is position: fixed next to an anchor rect, so the stories pin it
@@ -50,7 +50,7 @@ export const ManyLabelsLongTitle: Story = {
         issue: makeIssue({
             title: 'A very long issue title that wraps over several lines inside the narrow preview card',
             labels: ['bug', 'design', 'ux', 'feature', 'performance'],
-            status: 'closed',
+            workflowStatus: taskStatuses[3],
             priority: 'low',
         }),
     },

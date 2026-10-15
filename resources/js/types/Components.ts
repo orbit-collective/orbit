@@ -31,14 +31,13 @@ import {
     ProductivityTrendProps,
     Sorting,
     SortingColumn,
-    Status,
 } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { Project, ProjectColors } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
-import { WorkflowStatus } from '@/types/Workflow';
+import { WorkflowStatus, WorkflowStatusCategory } from '@/types/Workflow';
 
 export interface AvatarProps {
     src?: string;
@@ -121,7 +120,7 @@ export interface ProgressRingProps {
     bgColorClass?: string;
 }
 export interface StatusDotProps extends VariantProps<typeof statusDotVariants> {
-    status: 'open' | 'in_progress' | 'closed' | 'low' | 'medium' | 'high';
+    status: 'todo' | 'in_progress' | 'done' | 'low' | 'medium' | 'high';
     className?: string;
 }
 export interface TextAreaProps extends VariantProps<typeof textareaVariants> {
@@ -253,7 +252,7 @@ export interface StatusIconProps {
 // MOLECULES COMPONENTS
 export type BoardGroupBy = 'priority' | 'status';
 export interface BoardColumnMeta {
-    id: IssuePriority | Status;
+    id: IssuePriority | WorkflowStatusCategory;
     label: string;
     hint: string;
     accent: string;
@@ -623,7 +622,7 @@ export interface IssueSuggestion {
     id: number;
     number?: number;
     title: string;
-    status?: Issue['status'];
+    workflowStatus?: Issue['workflowStatus'] | null;
     priority?: Issue['priority'];
     labels?: Issue['labels'];
     start_date?: Issue['start_date'];
