@@ -225,36 +225,39 @@ describe('FilterBar Component', () => {
         expect(labelsButton).toHaveAttribute('data-open', 'true');
     });
 
-    const typeWithStatuses = (names: string[]) =>
+    type Pair = [string, 'todo' | 'in_progress' | 'done'];
+    const STOCK: Pair[] = [
+        ['To Do', 'todo'],
+        ['In Progress', 'in_progress'],
+        ['Done', 'done'],
+    ];
+    const typeWithStatuses = (pairs: Pair[]) =>
         ({
             id: 1,
-            statuses: names.map((name, index) => ({
+            statuses: pairs.map(([name, category], index) => ({
                 id: index + 1,
                 issueTypeId: 1,
                 name,
                 color: '#000',
-                category: 'todo',
+                category,
                 isInitial: false,
             })),
         }) as unknown as IssueType;
+
+    const statusGroupsOf = () =>
+        screen
+            .getByTestId('filter-dropdown-status')
+            .getAttribute('data-status-groups');
 
     test('gives the Status filter no exact statuses while the project has only the stock ones', () => {
         render(
             <FilterBar
                 savedFilters={[]}
-                issueTypes={[
-                    typeWithStatuses(['To Do', 'In Progress', 'Done']),
-                ]}
+                issueTypes={[typeWithStatuses(STOCK)]}
             />,
         );
 
-        expect(screen.getByTestId('filter-dropdown-status')).toHaveAttribute(
-            'data-status-groups',
-            '0',
-        );
-        expect(
-            screen.queryByTestId('filter-dropdown-workflowStatus'),
-        ).not.toBeInTheDocument();
+        expect(statusGroupsOf()).toBe('0');
     });
 
     test('hands the Status filter the exact statuses once a custom one exists', () => {
@@ -262,22 +265,28 @@ describe('FilterBar Component', () => {
             <FilterBar
                 savedFilters={[]}
                 issueTypes={[
+                    typeWithStatuses([...STOCK, ['In Review', 'in_progress']]),
+                ]}
+            />,
+        );
+
+        expect(statusGroupsOf()).toBe('4');
+    });
+
+    test('a workflow of three custom statuses still gets the exact statuses', () => {
+        render(
+            <FilterBar
+                savedFilters={[]}
+                issueTypes={[
                     typeWithStatuses([
-                        'To Do',
-                        'In Progress',
-                        'Done',
-                        'In Review',
+                        ['Backlog', 'todo'],
+                        ['Ready', 'todo'],
+                        ['Done', 'done'],
                     ]),
                 ]}
             />,
         );
 
-        expect(screen.getByTestId('filter-dropdown-status')).toHaveAttribute(
-            'data-status-groups',
-            '4',
-        );
-        expect(
-            screen.queryByTestId('filter-dropdown-workflowStatus'),
-        ).not.toBeInTheDocument();
+        expect(statusGroupsOf()).toBe('3');
     });
 });
