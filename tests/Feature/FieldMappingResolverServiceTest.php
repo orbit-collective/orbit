@@ -30,7 +30,7 @@ test('resolve returns the saved mapping when one exists', function () {
 
 test('resolve falls back to the default status when unmapped', function () {
     expect($this->service->resolve($this->projectIntegration, IntegrationFieldMappingType::STATUS, 'Backlog'))
-        ->toBe('open');
+        ->toBe('todo');
 });
 
 test('resolve falls back to the default priority when unmapped', function () {

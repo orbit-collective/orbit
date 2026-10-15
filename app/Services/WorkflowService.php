@@ -164,7 +164,7 @@ class WorkflowService
 
         if (! $this->workflowRepository->transitionExists($issueType, $fromStatusId, $toStatusId)) {
             throw ValidationException::withMessages([
-                'status' => 'This status transition is not allowed by this issue type\'s workflow.',
+                'workflow_status_id' => 'This status transition is not allowed by this issue type\'s workflow.',
             ]);
         }
     }

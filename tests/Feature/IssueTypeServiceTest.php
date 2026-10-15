@@ -72,21 +72,16 @@ test('getIssueTypes seeds system issue types and returns them for the project', 
     expect($issueTypes)->toHaveCount(16);
 });
 
-test('it backfills pre-existing issues onto the Task type, mapping legacy status to the matching workflow status', function () {
+test('it backfills pre-existing issues onto the Task type and its initial workflow status', function () {
     $project = Project::factory()->create();
-    $openIssue = Issue::factory()->create(['project_id' => $project->id, 'status' => 'open', 'issue_type_id' => null, 'workflow_status_id' => null]);
-    $inProgressIssue = Issue::factory()->create(['project_id' => $project->id, 'status' => 'in_progress', 'issue_type_id' => null, 'workflow_status_id' => null]);
-    $closedIssue = Issue::factory()->create(['project_id' => $project->id, 'status' => 'closed', 'issue_type_id' => null, 'workflow_status_id' => null]);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'issue_type_id' => null, 'workflow_status_id' => null]);
 
     $this->service->ensureSystemIssueTypes($project);
 
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
-    $statusesByName = $taskType->statuses()->get()->keyBy('name');
 
-    expect($openIssue->refresh()->issue_type_id)->toBe($taskType->id)
-        ->and($openIssue->workflow_status_id)->toBe($statusesByName['To Do']->id)
-        ->and($inProgressIssue->refresh()->workflow_status_id)->toBe($statusesByName['In Progress']->id)
-        ->and($closedIssue->refresh()->workflow_status_id)->toBe($statusesByName['Done']->id);
+    expect($issue->refresh()->issue_type_id)->toBe($taskType->id)
+        ->and($issue->workflow_status_id)->toBe($taskType->statuses()->where('is_initial', true)->first()->id);
 });
 
 test('it does not touch issues that already have an issue type assigned', function () {

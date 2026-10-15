@@ -99,14 +99,12 @@ test('an issue payload carries what the palette row renders', function () {
 });
 
 test('an issue without a type or workflow status falls back gracefully', function () {
-    Issue::factory()->create(['project_id' => $this->project->id, 'title' => 'Legacy', 'status' => 'open']);
-    Issue::factory()->create(['project_id' => $this->project->id, 'title' => 'Legacy blank', 'status' => '']);
+    Issue::factory()->create(['project_id' => $this->project->id, 'title' => 'Legacy']);
 
     $issues = collect($this->service->search($this->user->id, 'legacy')['issues'])->keyBy('title');
 
     expect($issues['Legacy']['type'])->toBeNull()
-        ->and($issues['Legacy']['status'])->toBe(['name' => 'open', 'color' => null])
-        ->and($issues['Legacy blank']['status'])->toBeNull();
+        ->and($issues['Legacy']['status'])->toBeNull();
 });
 
 test('a project payload carries a link to the project', function () {

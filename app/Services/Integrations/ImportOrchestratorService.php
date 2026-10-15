@@ -5,6 +5,7 @@ namespace App\Services\Integrations;
 use App\DataTransferObjects\ExternalIssueDTO;
 use App\DataTransferObjects\ImportResultDTO;
 use App\Enums\IntegrationFieldMappingType;
+use App\Enums\WorkflowStatusCategory;
 use App\Events\IssuesImported;
 use App\Models\Issue;
 use App\Models\IssueType;
@@ -174,21 +175,22 @@ class ImportOrchestratorService
         $issueType = $this->resolveIssueType($projectIntegration, $externalIssue, $issueTypes, $defaultIssueType);
         $data['issue_type_id'] = $issueType->id;
 
+        $mappedStatus = null;
+
         if ($externalIssue->externalStatus !== null) {
-            $data['status'] = $this->fieldMappingResolverService->resolve(
+            $mappedStatus = $this->fieldMappingResolverService->resolve(
                 $projectIntegration, IntegrationFieldMappingType::STATUS, $externalIssue->externalStatus,
             );
         }
 
         // Every issue lands on a real workflow status of its own type, so an
         // imported issue behaves like one created in Orbit: the mapping may
-        // name a status of that workflow directly, otherwise the legacy
-        // open/in_progress/closed value is resolved by category.
-        $workflowStatus = $this->resolveWorkflowStatus($issueType, $data['status'] ?? null);
+        // name a status of that workflow directly, otherwise it names a
+        // category (todo/in_progress/done) that is resolved within the type.
+        $workflowStatus = $this->resolveWorkflowStatus($issueType, $mappedStatus);
 
         if ($workflowStatus) {
             $data['workflow_status_id'] = $workflowStatus->id;
-            $data['status'] = $this->issueTypeService->legacyValueForWorkflowStatus($workflowStatus);
         }
 
         if ($externalIssue->externalPriority !== null) {
@@ -255,7 +257,21 @@ class ImportOrchestratorService
             ->whereRaw('LOWER(name) = ?', [mb_strtolower($mappedStatus)])
             ->first();
 
-        return $byName ?? $this->issueTypeService->resolveWorkflowStatusForLegacyValue($issueType, $mappedStatus);
+        if ($byName) {
+            return $byName;
+        }
+
+        // Mappings saved while issues still had an open/closed column use
+        // those words for the todo/done categories.
+        $category = WorkflowStatusCategory::tryFrom(match ($mappedStatus) {
+            'open' => 'todo',
+            'closed' => 'done',
+            default => $mappedStatus,
+        });
+
+        return ($category ? $this->issueTypeService->statusForCategory($issueType, $category) : null)
+            ?? $issueType->statuses()->where('is_initial', true)->first()
+            ?? $issueType->statuses()->orderBy('sort_order')->first();
     }
 
     /**

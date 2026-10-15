@@ -78,6 +78,7 @@ class IssueFactory extends Factory
             );
 
             $issue->forceFill(['issue_type_id' => $type->id, 'workflow_status_id' => $status->id])->save();
+            $issue->unsetRelation('issueType')->unsetRelation('workflowStatus');
         });
     }
 }
