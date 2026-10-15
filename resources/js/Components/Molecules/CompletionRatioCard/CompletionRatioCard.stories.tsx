@@ -14,11 +14,11 @@ const meta = {
         ),
     ],
     args: {
-        open: 8,
+        todo: 8,
         inProgress: 5,
-        closed: 12,
+        done: 12,
         total: 25,
-        closedPct: 48,
+        donePct: 48,
     },
 } satisfies Meta<typeof CompletionRatioCard>;
 
@@ -32,7 +32,7 @@ export const OnTrack: Story = {
 };
 
 export const Excellent: Story = {
-    args: { open: 1, inProgress: 1, closed: 18, total: 20, closedPct: 90 },
+    args: { todo: 1, inProgress: 1, done: 18, total: 20, donePct: 90 },
     play: async ({ canvasElement }) => {
         await expect(
             within(canvasElement).getByText('Excellent'),
@@ -41,7 +41,7 @@ export const Excellent: Story = {
 };
 
 export const NeedsAttention: Story = {
-    args: { open: 14, inProgress: 4, closed: 2, total: 20, closedPct: 10 },
+    args: { todo: 14, inProgress: 4, done: 2, total: 20, donePct: 10 },
     play: async ({ canvasElement }) => {
         await expect(
             within(canvasElement).getByText('Needs attention'),
@@ -51,5 +51,5 @@ export const NeedsAttention: Story = {
 
 /** With no issues the tier badge is hidden. */
 export const Empty: Story = {
-    args: { open: 0, inProgress: 0, closed: 0, total: 0, closedPct: 0 },
+    args: { todo: 0, inProgress: 0, done: 0, total: 0, donePct: 0 },
 };

@@ -3,12 +3,12 @@ import { CompletionRatioCardProps } from '@/types/Components';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 
-const tierFor = (closedPct: number) => {
-    if (closedPct >= 75) {
+const tierFor = (donePct: number) => {
+    if (donePct >= 75) {
         return { label: 'Excellent', colorClass: 'bg-[var(--success-color)]' };
     }
 
-    if (closedPct >= 40) {
+    if (donePct >= 40) {
         return { label: 'On track', colorClass: 'bg-[var(--accent-color)]' };
     }
 
@@ -19,27 +19,27 @@ const tierFor = (closedPct: number) => {
 };
 
 export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
-    open,
+    todo,
     inProgress,
-    closed,
+    done,
     total,
-    closedPct,
+    donePct,
 }) => {
     const bars = [
-        { label: 'Open', value: open, colorClass: 'bg-[var(--info-color)]' },
+        { label: 'To Do', value: todo, colorClass: 'bg-[var(--info-color)]' },
         {
             label: 'In Progress',
             value: inProgress,
             colorClass: 'bg-[var(--accent-color)]',
         },
         {
-            label: 'Closed',
-            value: closed,
+            label: 'Done',
+            value: done,
             colorClass: 'bg-[var(--success-color)]',
         },
     ];
-    const maxValue = Math.max(1, open, inProgress, closed);
-    const tier = tierFor(closedPct);
+    const maxValue = Math.max(1, todo, inProgress, done);
+    const tier = tierFor(donePct);
 
     return (
         <VisualCard>
@@ -64,13 +64,13 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                 <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-5">
                     <div className="flex flex-col">
                         <span className="text-6xl font-bold tabular-nums leading-none tracking-tight text-[var(--text-color)]">
-                            {closedPct}%
+                            {donePct}%
                         </span>
                         <span className="mt-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted-color)]">
                             Resolved
                         </span>
                         <span className="mt-1 text-xs text-[var(--text-gray-color)]">
-                            {closed} of {total} issues
+                            {done} of {total} issues
                         </span>
                     </div>
 
