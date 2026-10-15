@@ -5,7 +5,6 @@ import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
-import { StatusIcon } from '@/Components/Atoms/StatusIcon/StatusIcon';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import Calendar from '@/Components/Molecules/Calendar/Calendar';
 import CommentForm from '@/Components/Molecules/CommentForm/CommentForm';
@@ -25,15 +24,8 @@ import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useIssueCommands } from '@/hooks/useIssueCommands';
 import { IssuePageProps } from '@/types/Components';
-import {
-    Comment,
-    Issue,
-    IssueLabel,
-    IssuePriority,
-    Status,
-} from '@/types/Issues';
+import { Comment, Issue, IssueLabel, IssuePriority } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
-import { formatStatusLabel } from '@/utils/text';
 import { formatDate } from '@/utils/time';
 import { getReachableStatuses } from '@/utils/workflow';
 
@@ -42,7 +34,6 @@ import { getReachableStatuses } from '@/utils/workflow';
 // re-register them in a loop.
 const NO_LABELS: ProjectLabel[] = [];
 const NO_ANCESTORS: Issue[] = [];
-const STATUSES: Status[] = ['open', 'in_progress', 'closed'];
 const PRIORITIES: IssuePriority[] = ['high', 'medium', 'low'];
 
 export default function Show({
@@ -174,16 +165,6 @@ export default function Show({
         value: String(status.id),
         searchLabel: status.name,
         label: <WorkflowStatusBadge status={status} />,
-    }));
-
-    const legacyStatusOptions = STATUSES.map((status) => ({
-        value: status,
-        label: (
-            <div className="flex items-center gap-2">
-                <StatusIcon status={status} tooltip={false} />
-                <span className="capitalize">{formatStatusLabel(status)}</span>
-            </div>
-        ),
     }));
 
     const customFields = issue.issueType?.fields ?? [];
@@ -368,28 +349,14 @@ export default function Show({
                                                 )
                                             }
                                         />
-                                    ) : (
-                                        <EditableSelect
-                                            value={issue.status}
-                                            options={legacyStatusOptions}
-                                            header="Change status to..."
-                                            onSave={(value) =>
-                                                updateIssue({ status: value })
-                                            }
-                                            renderValue={(value) => (
-                                                <div className="flex items-center gap-2">
-                                                    <StatusIcon
-                                                        status={value}
-                                                        tooltip={false}
-                                                    />
-                                                    <span className="text-sm capitalize text-[var(--text-color)]">
-                                                        {formatStatusLabel(
-                                                            value,
-                                                        )}
-                                                    </span>
-                                                </div>
-                                            )}
+                                    ) : issue.workflowStatus ? (
+                                        <WorkflowStatusBadge
+                                            status={issue.workflowStatus}
                                         />
+                                    ) : (
+                                        <span className="text-sm text-[var(--text-gray-color)]">
+                                            No status
+                                        </span>
                                     )}
                                 </SidebarField>
 

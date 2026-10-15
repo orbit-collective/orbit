@@ -5,16 +5,11 @@ import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { IssuePreviewCardProps } from '@/types/Components';
 import { parseDateKey } from '@/utils/time';
+import { issueCategory } from '@/utils/workflow';
 
 const CARD_WIDTH = 260;
 const ESTIMATED_HEIGHT = 220;
 const VIEWPORT_MARGIN = 12;
-
-const STATUS_LABELS: Record<string, string> = {
-    open: 'Open',
-    in_progress: 'In Progress',
-    closed: 'Closed',
-};
 
 const formatShort = (dateString: string) =>
     parseDateKey(dateString).toLocaleDateString('en-US', {
@@ -86,8 +81,8 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-[var(--border-color)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                    <StatusDot status={issue.status} size="xs" />
-                    {STATUS_LABELS[issue.status]}
+                    <StatusDot status={issueCategory(issue)} size="xs" />
+                    {issue.workflowStatus?.name ?? 'No status'}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-[var(--border-color)] px-2 py-0.5 text-[10px] font-medium capitalize text-[var(--text-gray-color)]">
                     <StatusDot status={issue.priority} size="xs" />

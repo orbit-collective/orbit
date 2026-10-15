@@ -1,5 +1,5 @@
 import { Issue } from '@/types/Issues';
-import { WorkflowStatus } from '@/types/Workflow';
+import { WorkflowStatus, WorkflowStatusCategory } from '@/types/Workflow';
 
 /**
  * Statuses the workflow actually permits moving this issue to - the current
@@ -23,3 +23,15 @@ export const getReachableStatuses = (issue: Issue): WorkflowStatus[] => {
             ),
     );
 };
+
+/**
+ * The category of the issue's workflow status - the only status notion the
+ * board, counters and filters share, since each issue type names its own
+ * statuses. An issue without a loaded status counts as to do.
+ */
+export const issueCategory = (
+    issue: Pick<Issue, 'workflowStatus'>,
+): WorkflowStatusCategory => issue.workflowStatus?.category ?? 'todo';
+
+export const isIssueDone = (issue: Pick<Issue, 'workflowStatus'>): boolean =>
+    issueCategory(issue) === 'done';

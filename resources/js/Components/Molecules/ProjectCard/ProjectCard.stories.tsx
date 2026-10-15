@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
-import { issues, makeIssue, makeProject } from '@/stories/fixtures';
+import {
+    issues,
+    makeIssue,
+    makeProject,
+    taskStatuses,
+} from '@/stories/fixtures';
 import ProjectCard, { ProjectNewCard } from './ProjectCard';
 
 const meta = {
@@ -39,8 +44,8 @@ export const NoIssues: Story = {
 export const AllClosed: Story = {
     args: {
         issues: [
-            makeIssue({ id: '1', status: 'closed' }),
-            makeIssue({ id: '2', status: 'closed' }),
+            makeIssue({ id: '1', workflowStatus: taskStatuses[3] }),
+            makeIssue({ id: '2', workflowStatus: taskStatuses[3] }),
         ],
     },
 };

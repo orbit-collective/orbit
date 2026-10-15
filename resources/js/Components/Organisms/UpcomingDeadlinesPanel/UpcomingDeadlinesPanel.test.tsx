@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { todoStatus, doneStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import UpcomingDeadlinesPanel from './UpcomingDeadlinesPanel';
 
@@ -20,7 +21,7 @@ vi.stubGlobal(
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: '1',
     title: 'Fix login bug',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -62,7 +63,7 @@ describe('UpcomingDeadlinesPanel Component', () => {
     test('excludes closed issues even with a near end_date', () => {
         const issue = makeIssue({
             title: 'Already done',
-            status: 'closed',
+            workflowStatus: doneStatus,
             end_date: '2026-07-26',
         });
         render(<UpcomingDeadlinesPanel issues={[issue]} />);

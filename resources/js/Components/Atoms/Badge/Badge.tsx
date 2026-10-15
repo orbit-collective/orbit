@@ -29,10 +29,10 @@ export const badgeVariants = cva(
                 high: 'text-[#f44336] border-[#f44336]/20 bg-transparent',
                 medium: 'text-[#ff9800] border-[#ff9800]/20 bg-transparent',
                 low: 'text-[#4caf50] border-[#4caf50]/20 bg-transparent',
-                open: 'text-[#2196f3] border-[#2196f3]/20 bg-transparent',
+                todo: 'text-[#2196f3] border-[#2196f3]/20 bg-transparent',
                 in_progress:
                     'text-[#8844da] border-[#8844da]/20 bg-transparent',
-                closed: 'text-[#757575] border-[#757575]/20 bg-transparent',
+                done: 'text-[#757575] border-[#757575]/20 bg-transparent',
             },
         },
         defaultVariants: {

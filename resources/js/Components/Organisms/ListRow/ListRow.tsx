@@ -3,7 +3,6 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
-import { StatusIcon } from '@/Components/Atoms/StatusIcon/StatusIcon';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
@@ -12,7 +11,6 @@ import { ListRowProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { cn } from '@/utils/cn';
 import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
-import { formatStatusLabel } from '@/utils/text';
 import { formatTimeAgo, formatWeekdayDate } from '@/utils/time';
 
 const rowMenuOptions = (removeDisabled: boolean): DropdownOptionItem[] => [
@@ -196,12 +194,9 @@ export const ListRow = ({
                                 status={issue.workflowStatus}
                             />
                         ) : (
-                            <div className="flex items-center gap-1.5">
-                                <StatusIcon status={issue.status} />
-                                <span className="truncate capitalize text-[var(--text-color)]">
-                                    {formatStatusLabel(issue.status)}
-                                </span>
-                            </div>
+                            <span className="text-[var(--text-muted-color)]">
+                                —
+                            </span>
                         )}
                     </td>
                 )}

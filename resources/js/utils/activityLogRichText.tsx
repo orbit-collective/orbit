@@ -6,6 +6,7 @@ import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
+import { StatusDotProps } from '@/types/Components';
 import { IssueType } from '@/types/IssueTypes';
 import { RoleNameSummary, RoleTypeValue } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
@@ -13,17 +14,32 @@ import { cn } from '@/utils/cn';
 import { ROLE_TYPE_THEME } from '@/utils/roleTheme';
 
 const CHANGE_PATTERN =
-    /(status|priority) changed from "([a-z_]+)" to "([a-z_]+)"|labels changed to \[([^\]]*)]|assignee changed from "((?:[^"\\]|\\.)*)"(?:#(\d+))? to "((?:[^"\\]|\\.)*)"(?:#(\d+))?|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|task:|[Nn]otification:?|sub-issue of)\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)|(?<=\bthe )"([^"]+)"(?= label\b)|(?<=\bthe )"([^"]+)"(?= role\b)|transition from "([^"]+)" to "([^"]+)"|(?<=\bthe )"([^"]+)"(?= issue type\b)|(?<=\bthe )"([^"]+)"(?= workflow\b)|(?<=\bthe )"([^"]+)"(?= status\b)|(?<=\bMade )"([^"]+)"(?= the starting status\b)|(?<=sub-issues of )"([^"]+)"|(?<=\bthe )"([^"]+)"(?= template\b)/g;
+    /(status|priority) changed from "([^"]+)" to "([^"]+)"|labels changed to \[([^\]]*)]|assignee changed from "((?:[^"\\]|\\.)*)"(?:#(\d+))? to "((?:[^"\\]|\\.)*)"(?:#(\d+))?|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|task:|[Nn]otification:?|sub-issue of)\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)|(?<=\bthe )"([^"]+)"(?= label\b)|(?<=\bthe )"([^"]+)"(?= role\b)|transition from "([^"]+)" to "([^"]+)"|(?<=\bthe )"([^"]+)"(?= issue type\b)|(?<=\bthe )"([^"]+)"(?= workflow\b)|(?<=\bthe )"([^"]+)"(?= status\b)|(?<=\bMade )"([^"]+)"(?= the starting status\b)|(?<=sub-issues of )"([^"]+)"|(?<=\bthe )"([^"]+)"(?= template\b)/g;
 
 const unescapeQuoted = (value: string) => value.replace(/\\(.)/g, '$1');
 
-const StatusOrPriorityValue = ({
-    value,
-}: {
-    value: 'open' | 'in_progress' | 'closed' | 'low' | 'medium' | 'high';
-}) => (
+/**
+ * A status is logged by name now (each issue type names its own), so only
+ * the words the app itself knows - priorities and the old open/closed
+ * statuses in earlier entries - get a coloured dot; any other name gets a
+ * neutral one.
+ */
+const DOT_FOR_VALUE: Record<string, StatusDotProps['status']> = {
+    open: 'todo',
+    in_progress: 'in_progress',
+    closed: 'done',
+    low: 'low',
+    medium: 'medium',
+    high: 'high',
+};
+
+const StatusOrPriorityValue = ({ value }: { value: string }) => (
     <span className="mx-0.5 inline-flex items-center gap-1 align-middle">
-        <StatusDot status={value} size="sm" />
+        {DOT_FOR_VALUE[value] ? (
+            <StatusDot status={DOT_FOR_VALUE[value]} size="sm" />
+        ) : (
+            <span className="inline-block h-2 w-2 shrink-0 rounded-sm bg-[var(--text-muted-color)]" />
+        )}
         <span className="font-medium capitalize text-[var(--text-color)]">
             {value.replace('_', ' ')}
         </span>
@@ -221,14 +237,14 @@ export function renderActivityLogBody(
             nodes.push(
                 <StatusOrPriorityValue
                     key={`old-${matchCount}`}
-                    value={oldValue as never}
+                    value={oldValue}
                 />,
             );
             nodes.push(' to ');
             nodes.push(
                 <StatusOrPriorityValue
                     key={`new-${matchCount}`}
-                    value={newValue as never}
+                    value={newValue}
                 />,
             );
         } else if (labelsCsv !== undefined) {

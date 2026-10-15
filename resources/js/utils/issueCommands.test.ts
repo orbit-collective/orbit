@@ -186,22 +186,15 @@ describe('buildIssueCommands', () => {
             expect(make().byId('issue.status').subtitle).toBe('Todo');
         });
 
-        test('a legacy issue without a workflow uses the legacy statuses', () => {
-            const { ctx, byId } = make({
+        test('an issue without a workflow offers no status steps', () => {
+            const { byId } = make({
                 issue: baseIssue({
                     issueType: undefined,
                     workflowStatus: undefined,
                 }),
             });
 
-            const steps = byId('issue.status').children?.() ?? [];
-            expect(steps.map((c) => c.title)).toEqual([
-                'In progress',
-                'Closed',
-            ]);
-
-            steps[0].perform?.();
-            expect(ctx.update).toHaveBeenCalledWith({ status: 'in_progress' });
+            expect(byId('issue.status').children?.() ?? []).toEqual([]);
         });
     });
 

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { todoStatus, inProgressStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import CalendarView from './CalendarView';
 
@@ -20,7 +21,7 @@ vi.stubGlobal(
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: '1',
     title: 'Fix login bug',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -171,7 +172,7 @@ describe('CalendarView Component', () => {
         const issue = makeIssue({
             id: '10',
             title: 'Hoverable issue',
-            status: 'in_progress',
+            workflowStatus: inProgressStatus,
             start_date: '2026-07-15',
         });
         render(<CalendarView issues={[issue]} />);
@@ -188,7 +189,7 @@ describe('CalendarView Component', () => {
         const issue = makeIssue({
             id: '10',
             title: 'Hoverable issue',
-            status: 'in_progress',
+            workflowStatus: inProgressStatus,
             start_date: '2026-07-15',
         });
         render(<CalendarView issues={[issue]} />);

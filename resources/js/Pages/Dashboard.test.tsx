@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { makePaginated } from '@/tests/paginated';
+import { todoStatus, doneStatus } from '@/tests/statuses';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import { Issue, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
@@ -117,7 +118,7 @@ let issueId = 0;
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: `ISSUE-${issueId++}`,
     title: 'An issue',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'medium',
     project_id: 1,
     user_id: 1,
@@ -148,10 +149,10 @@ describe('Dashboard Page', () => {
 
     test('computes stat card values from the issues list', () => {
         const issues = [
-            makeIssue({ status: 'closed', priority: 'high' }),
-            makeIssue({ status: 'closed', priority: 'low' }),
-            makeIssue({ status: 'open', priority: 'high' }),
-            makeIssue({ status: 'open', priority: 'medium' }),
+            makeIssue({ workflowStatus: doneStatus, priority: 'high' }),
+            makeIssue({ workflowStatus: doneStatus, priority: 'low' }),
+            makeIssue({ workflowStatus: todoStatus, priority: 'high' }),
+            makeIssue({ workflowStatus: todoStatus, priority: 'medium' }),
         ];
         render(
             <Dashboard

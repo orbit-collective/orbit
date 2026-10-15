@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { todoStatus, doneStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import ProjectCard, { ProjectNewCard } from './ProjectCard';
@@ -49,7 +50,7 @@ let issueId = 0;
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: `ISSUE-${issueId++}`,
     title: 'An issue',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'medium',
     project_id: 1,
     user_id: 1,
@@ -86,10 +87,10 @@ describe('ProjectCard Component', () => {
 
     test('computes the completion rate and open/closed counts', () => {
         const issues = [
-            makeIssue({ status: 'closed' }),
-            makeIssue({ status: 'closed' }),
-            makeIssue({ status: 'open' }),
-            makeIssue({ status: 'open' }),
+            makeIssue({ workflowStatus: doneStatus }),
+            makeIssue({ workflowStatus: doneStatus }),
+            makeIssue({ workflowStatus: todoStatus }),
+            makeIssue({ workflowStatus: todoStatus }),
         ];
         render(<ProjectCard project={makeProject()} issues={issues} />);
 
@@ -106,9 +107,9 @@ describe('ProjectCard Component', () => {
 
     test('only counts issues that belong to this project', () => {
         const issues = [
-            makeIssue({ project_id: 1, status: 'closed' }),
-            makeIssue({ project_id: 2, status: 'open' }),
-            makeIssue({ project_id: 99, status: 'open' }),
+            makeIssue({ project_id: 1, workflowStatus: doneStatus }),
+            makeIssue({ project_id: 2, workflowStatus: todoStatus }),
+            makeIssue({ project_id: 99, workflowStatus: todoStatus }),
         ];
         render(
             <ProjectCard project={makeProject({ id: 1 })} issues={issues} />,

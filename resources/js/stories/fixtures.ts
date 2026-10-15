@@ -134,7 +134,7 @@ const transition = (
     toStatusId: number,
 ): WorkflowTransition => ({ id, issueTypeId, fromStatusId, toStatusId });
 
-const taskStatuses = [
+export const taskStatuses = [
     status(1, 1, 'To do', '#757575', 'todo', true),
     status(2, 1, 'In progress', '#8844da', 'in_progress'),
     status(3, 1, 'In review', '#ff9800', 'in_progress'),
@@ -231,7 +231,6 @@ export const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     title: 'Fix login redirect after session timeout',
     description:
         'Users are sent to the dashboard instead of the page they were on.',
-    status: 'in_progress',
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -264,7 +263,6 @@ export const issues: Issue[] = [
         id: '102',
         number: 13,
         title: 'Add keyboard shortcuts to the issue board',
-        status: 'open',
         priority: 'medium',
         assignee_id: undefined,
         assignee: undefined,
@@ -281,7 +279,6 @@ export const issues: Issue[] = [
         id: '103',
         number: 14,
         title: 'Board column drag handle is not reachable by keyboard',
-        status: 'open',
         priority: 'high',
         labels: ['bug', 'design', 'ux'],
         workflowStatus: bugStatuses[0],
@@ -292,7 +289,6 @@ export const issues: Issue[] = [
         id: '104',
         number: 15,
         title: 'Speed up the project list for workspaces with 10k issues',
-        status: 'in_progress',
         priority: 'low',
         labels: ['performance'],
         issue_type_id: 1,
@@ -305,7 +301,6 @@ export const issues: Issue[] = [
         id: '105',
         number: 16,
         title: 'Release 0.11 checklist',
-        status: 'closed',
         priority: 'medium',
         labels: ['chore'],
         issue_type_id: 1,
@@ -318,7 +313,6 @@ export const issues: Issue[] = [
         id: '106',
         number: 17,
         title: 'Rework onboarding for new workspaces',
-        status: 'open',
         priority: 'high',
         labels: ['feature', 'customer-request'],
         issue_type_id: 3,

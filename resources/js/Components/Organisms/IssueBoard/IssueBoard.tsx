@@ -21,6 +21,12 @@ import {
 } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
+import { formatStatusLabel } from '@/utils/text';
+import {
+    getReachableStatuses,
+    isIssueDone,
+    issueCategory,
+} from '@/utils/workflow';
 
 const dropAnimationConfig: DropAnimation = {
     duration: 220,
@@ -53,8 +59,8 @@ const PRIORITY_COLUMNS: BoardColumnMeta[] = [
 
 const STATUS_COLUMNS: BoardColumnMeta[] = [
     {
-        id: 'open',
-        label: 'Open',
+        id: 'todo',
+        label: 'To Do',
         hint: 'Not started yet',
         accent: 'var(--info-color)',
         icon: 'GitPullRequest',
@@ -67,7 +73,7 @@ const STATUS_COLUMNS: BoardColumnMeta[] = [
         icon: 'CircleDashed',
     },
     {
-        id: 'closed',
+        id: 'done',
         label: 'Done',
         hint: 'Completed',
         accent: 'var(--pending-color)',
@@ -115,7 +121,8 @@ function IssueBoard({ issues }: IssueBoardProps) {
         });
 
         issues.forEach((issue) => {
-            const key = issue[groupBy];
+            const key =
+                groupBy === 'priority' ? issue.priority : issueCategory(issue);
             if (board[key]) {
                 board[key].push(issue);
             }
@@ -126,17 +133,42 @@ function IssueBoard({ issues }: IssueBoardProps) {
 
     const grouped = groupIssues(boardIssues);
 
-    // In priority mode, the count only reflects still-active work — closed
+    // In priority mode, the count only reflects still-active work — done
     // issues no longer need attention at that priority. In status mode every
-    // issue in a column already IS that status, so the total is the count.
+    // issue in a column already IS that category, so the total is the count.
     const countFor = (columnIssues: Issue[]) =>
         groupBy === 'priority'
-            ? columnIssues.filter((issue) => issue.status !== 'closed').length
+            ? columnIssues.filter((issue) => !isIssueDone(issue)).length
             : columnIssues.length;
 
     const handleDragStart = (event: DragStartEvent) => {
         const issue = boardIssues.find((i) => i.id === event.active.id);
         setDraggingIssue(issue ?? null);
+    };
+
+    const moveIssue = (
+        issue: Issue,
+        optimistic: Partial<Issue>,
+        previous: Partial<Issue>,
+        payload: Record<string, string | number>,
+        label: string,
+    ) => {
+        setBoardIssues((prev) =>
+            prev.map((i) => (i.id === issue.id ? { ...i, ...optimistic } : i)),
+        );
+
+        router.patch(route('issues.update', issue.id), payload, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: () => {
+                setBoardIssues((prev) =>
+                    prev.map((i) =>
+                        i.id === issue.id ? { ...i, ...previous } : i,
+                    ),
+                );
+                addAlert(`Failed to update issue ${label}`, 'error');
+            },
+        });
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -145,35 +177,50 @@ function IssueBoard({ issues }: IssueBoardProps) {
 
         if (!over) return;
 
-        const targetValue = over.id as Issue['priority'] | Issue['status'];
         const issue = boardIssues.find((i) => i.id === active.id);
-        if (!issue || issue[groupBy] === targetValue) return;
+        if (!issue) return;
 
-        const previousValue = issue[groupBy];
+        const targetValue = String(over.id);
 
-        setBoardIssues((prev) =>
-            prev.map((i) =>
-                i.id === issue.id ? { ...i, [groupBy]: targetValue } : i,
-            ),
+        if (groupBy === 'priority') {
+            if (issue.priority === targetValue) return;
+
+            moveIssue(
+                issue,
+                { priority: targetValue as Issue['priority'] },
+                { priority: issue.priority },
+                { priority: targetValue },
+                'priority',
+            );
+            return;
+        }
+
+        if (issueCategory(issue) === targetValue) return;
+
+        // A column is a category; the issue type decides which of its own
+        // statuses stands for it, and only one the workflow lets the issue
+        // move to right now can be used.
+        const target = getReachableStatuses(issue).find(
+            (status) => status.category === targetValue,
         );
 
-        router.patch(
-            route('issues.update', issue.id),
-            { [groupBy]: targetValue },
+        if (!target) {
+            addAlert(
+                `This issue type has no reachable ${formatStatusLabel(targetValue)} status`,
+                'error',
+            );
+            return;
+        }
+
+        moveIssue(
+            issue,
+            { workflowStatus: target, workflow_status_id: target.id },
             {
-                preserveScroll: true,
-                preserveState: true,
-                onError: () => {
-                    setBoardIssues((prev) =>
-                        prev.map((i) =>
-                            i.id === issue.id
-                                ? { ...i, [groupBy]: previousValue }
-                                : i,
-                        ),
-                    );
-                    addAlert(`Failed to update issue ${groupBy}`, 'error');
-                },
+                workflowStatus: issue.workflowStatus,
+                workflow_status_id: issue.workflow_status_id,
             },
+            { workflow_status_id: target.id },
+            'status',
         );
     };
 
@@ -222,7 +269,7 @@ function IssueBoard({ issues }: IssueBoardProps) {
                 {draggingIssue ? (
                     <BoardCardOverlay
                         issue={draggingIssue}
-                        isClosed={draggingIssue.status === 'closed'}
+                        isClosed={isIssueDone(draggingIssue)}
                     />
                 ) : null}
             </DragOverlay>

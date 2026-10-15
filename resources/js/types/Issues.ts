@@ -30,7 +30,6 @@ export interface Issue {
     number?: number;
     title: string;
     description?: string;
-    status: 'open' | 'in_progress' | 'closed';
     priority: 'high' | 'medium' | 'low';
     project_id: number;
     user_id: number;
@@ -105,7 +104,6 @@ export interface ProductivityTrendProps {
     count: number;
     day: string;
 }
-export type Status = 'open' | 'in_progress' | 'closed';
 
 export type Sorting = 'AZ' | 'ZA';
 export type SortingColumn =

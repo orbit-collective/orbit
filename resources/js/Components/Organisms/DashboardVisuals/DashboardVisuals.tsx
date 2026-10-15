@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { DashboardVisualsProps } from '@/types/Components';
+import { isIssueDone, issueCategory } from '@/utils/workflow';
 import { CompletionRatioCard } from '../../Molecules/CompletionRatioCard/CompletionRatioCard';
 import { PriorityBreakdownCard } from '../../Molecules/PriorityBreakdownCard/PriorityBreakdownCard';
 import { ProductivityTrendCard } from '../../Molecules/ProductivityTrendCard/ProductivityTrendCard';
@@ -31,11 +32,11 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
         const medium = issues.filter((i) => i.priority === 'medium').length;
         const low = issues.filter((i) => i.priority === 'low').length;
 
-        const open = issues.filter((i) => i.status === 'open').length;
+        const open = issues.filter((i) => issueCategory(i) === 'todo').length;
         const inProgress = issues.filter(
-            (i) => i.status === 'in_progress',
+            (i) => issueCategory(i) === 'in_progress',
         ).length;
-        const closed = issues.filter((i) => i.status === 'closed').length;
+        const closed = issues.filter(isIssueDone).length;
 
         return {
             high,

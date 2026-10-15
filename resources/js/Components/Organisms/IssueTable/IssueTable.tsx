@@ -307,7 +307,6 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                 title,
                 project_id: project.id,
                 priority: 'medium',
-                status: 'open',
                 ...(issueTypeId ? { issue_type_id: issueTypeId } : {}),
                 ...(parentId ? { parent_id: parentId } : {}),
             },

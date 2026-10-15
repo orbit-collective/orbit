@@ -5,7 +5,7 @@ const meta = {
     title: 'Atoms/StatusDot',
     component: StatusDot,
     parameters: { layout: 'centered' },
-    args: { status: 'open', size: 'md' },
+    args: { status: 'todo', size: 'md' },
     argTypes: {
         size: { control: 'inline-radio', options: ['xs', 'sm', 'md'] },
     },
@@ -14,20 +14,20 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Open: Story = {};
+export const ToDo: Story = {};
 
 export const InProgress: Story = { args: { status: 'in_progress' } };
 
-export const Closed: Story = { args: { status: 'closed' } };
+export const Done: Story = { args: { status: 'done' } };
 
 export const Statuses: Story = {
     render: (args) => (
         <div className="flex items-center gap-3">
             {(
                 [
-                    'open',
+                    'todo',
                     'in_progress',
-                    'closed',
+                    'done',
                     'low',
                     'medium',
                     'high',

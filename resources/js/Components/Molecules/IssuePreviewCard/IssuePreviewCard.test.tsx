@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { todoStatus, inProgressStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import IssuePreviewCard from './IssuePreviewCard';
 
@@ -19,7 +20,7 @@ const makeRect = (overrides: Partial<DOMRect> = {}): DOMRect => ({
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: '1',
     title: 'Fix login bug',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,
@@ -30,7 +31,10 @@ describe('IssuePreviewCard Component', () => {
     test('renders the issue title, status and priority', () => {
         render(
             <IssuePreviewCard
-                issue={makeIssue({ status: 'in_progress', priority: 'high' })}
+                issue={makeIssue({
+                    workflowStatus: inProgressStatus,
+                    priority: 'high',
+                })}
                 anchorRect={makeRect()}
             />,
         );

@@ -2,14 +2,12 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
-import Badge from '@/Components/Atoms/Badge/Badge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import { BoardCardProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
-import { formatStatusLabel } from '@/utils/text';
 import { boardCardVariants } from '@/utils/variants';
 
 const BoardCardContent = ({
@@ -22,7 +20,7 @@ const BoardCardContent = ({
     <>
         <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5">
-                <StatusDot status={isClosed ? issue.status : issue.priority} />
+                <StatusDot status={isClosed ? 'done' : issue.priority} />
                 <span className="truncate text-[11px] font-semibold text-[var(--text-muted-color)]">
                     {issue.assignee?.name || 'Unassigned'}
                 </span>
@@ -49,14 +47,7 @@ const BoardCardContent = ({
             {issue.workflowStatus ? (
                 <WorkflowStatusBadge status={issue.workflowStatus} />
             ) : (
-                <Badge
-                    color={issue.status}
-                    variant="default"
-                    className="flex items-center gap-1.5"
-                >
-                    <StatusDot status={issue.status} />
-                    <span>{formatStatusLabel(issue.status)}</span>
-                </Badge>
+                <span />
             )}
             {issue.assignee ? (
                 <Avatar

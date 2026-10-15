@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { todoStatus } from '@/tests/statuses';
 import { BoardColumnMeta } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import BoardColumn from './BoardColumn';
@@ -8,7 +9,7 @@ let counter = 0;
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: `ISSUE-${counter++}`,
     title: 'Some issue',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'high',
     project_id: 1,
     user_id: 1,

@@ -4,6 +4,7 @@ import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SavedFilter } from '@/hooks/useSavedFilters';
 import { makePaginated } from '@/tests/paginated';
+import { todoStatus } from '@/tests/statuses';
 import { Issue, IssuePageLooks } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
@@ -146,7 +147,7 @@ let issueId = 0;
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: `ISSUE-${issueId++}`,
     title: 'An issue',
-    status: 'open',
+    workflowStatus: todoStatus,
     priority: 'medium',
     project_id: 1,
     user_id: 1,
