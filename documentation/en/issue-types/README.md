@@ -87,18 +87,18 @@ An issue's status is changed by sending **`workflow_status_id`**, which
 is the only way to reach a custom status like "In Review" — the issue
 detail sidebar builds its picker from the type's own statuses, filtered
 down to the ones a transition actually leads to from the current one.
-The legacy `issues.status` enum (`open`/`in_progress`/`closed`) still
-exists and is kept in sync in both directions for backward
-compatibility: `IssueTypeService::legacyValueForWorkflowStatus()`
-collapses a picked status back onto the enum by category, and
-`IssueTypeService::resolveWorkflowStatusForLegacyValue()` maps the
-other way — to the **best-fit status by category**, not by exact name,
-so a request that still sends the old `status` field resolves to
-something sensible even for a type whose workflow has been customized
-away from the three default statuses. Every system type's default workflow is a simple three-status
+The workflow status is the **only** status an issue has: the old
+`issues.status` column (`open`/`in_progress`/`closed`) was dropped, so
+there is nothing to keep in sync. Everything that needs a coarse bucket
+— the board's columns, the status filter, the dashboard counters, the
+change-status automation — works on the status's **category**
+(`todo`/`in_progress`/`done`), and `IssueTypeService::statusForCategory()`
+resolves a category to the type's own status of that category. The
+status filter and search go through `IssueRepository`, which matches the
+category (and, for the search box, the status name). Every system type's default workflow is a simple three-status
 board (To Do/In Progress/Done) with **every** status able to transition
 to every other one (a full mesh) — this matches the pre-Issue-Types
-behavior, where any `IssueStatus` value could be set at any time; a
+behavior, where the status could be set to any value at any time; a
 custom, restrictive workflow is something a project has to build
 deliberately from **Settings → Issue Types → Manage workflow**.
 

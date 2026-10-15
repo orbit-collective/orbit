@@ -91,19 +91,19 @@ Status issue zmienia się, wysyłając **`workflow_status_id`** — to
 jedyny sposób, by dosięgnąć własnego statusu w rodzaju „In Review".
 Panel boczny widoku issue buduje selektor z własnych statusów typu,
 zawężonych do tych, do których faktycznie prowadzi przejście z
-bieżącego. Stary enum `issues.status` (`open`/`in_progress`/`closed`)
-nadal istnieje i jest utrzymywany w spójności w obie strony dla
-wstecznej kompatybilności: `IssueTypeService::legacyValueForWorkflowStatus()`
-sprowadza wybrany status z powrotem do enuma po kategorii, a
-`IssueTypeService::resolveWorkflowStatusForLegacyValue()` mapuje w
-drugą stronę — na **najlepiej pasujący status po kategorii**, a nie po
-dokładnej nazwie, więc żądanie, które nadal wysyła stare pole `status`,
-rozwiązuje się do czegoś sensownego nawet dla typu, którego workflow
-został dostosowany poza trzy domyślne statusy. Domyślny workflow każdego typu systemowego to prosta
+bieżącego. Status workflow jest **jedynym** statusem issue: stara kolumna
+`issues.status` (`open`/`in_progress`/`closed`) została usunięta, więc
+nie ma czego synchronizować. Wszystko, co potrzebuje zgrubnego koszyka
+— kolumny tablicy, filtr statusu, liczniki na dashboardzie, automatyzacja
+zmiany statusu — działa na **kategorii** statusu
+(`todo`/`in_progress`/`done`), a `IssueTypeService::statusForCategory()`
+zamienia kategorię na własny status typu o tej kategorii. Filtr statusu
+i wyszukiwanie przechodzą przez `IssueRepository`, który dopasowuje
+kategorię (a w polu wyszukiwania także nazwę statusu). Domyślny workflow każdego typu systemowego to prosta
 trójstanowa tablica (To Do/In Progress/Done), w której **każdy** status
 może przejść do każdego innego (pełna siatka) — to odpowiada
-zachowaniu sprzed Issue Types, gdzie dowolna wartość `IssueStatus`
-mogła zostać ustawiona w dowolnym momencie; restrykcyjny, niestandardowy
+zachowaniu sprzed Issue Types, gdzie status można było ustawić na
+dowolną wartość w dowolnym momencie; restrykcyjny, niestandardowy
 workflow to coś, co projekt musi celowo zbudować z **Ustawienia →
 Issue Types → Manage workflow**.
 

@@ -654,10 +654,11 @@ board and on its detail view (see
   status is resolved *against the type the issue just got*: if the
   mapped value names a status of that workflow it is used directly
   (a Jira "Code Review" mapped to "In Review" lands on Bug's own "In
-  Review"), otherwise the legacy `open`/`in_progress`/`closed` value is
-  resolved by category through
-  `IssueTypeService::resolveWorkflowStatusForLegacyValue()`. The legacy
-  `issues.status` column is kept in sync from whichever status wins.
+  Review"), otherwise it is read as a category
+  (`todo`/`in_progress`/`done`, or the old `open`/`closed` words saved in
+  earlier mappings) and resolved through
+  `IssueTypeService::statusForCategory()`, falling back to the type's
+  initial status.
 - **Labels.** Mapped through `IntegrationFieldMappingType::LABEL`, then
   filtered to labels the project actually has — a mapping pointing at a
   deleted label is dropped rather than written.
@@ -697,7 +698,7 @@ for any future source:
   name, prefers a configured `issue_type` mapping over that name, and
   falls back to the default type for an unknown one; lands every issue
   on a workflow status belonging to its own type, whether the mapping
-  names that status directly or only the legacy category; widens a
+  names that status directly or only a category; widens a
   parent type so an imported hierarchy survives, without ever removing
   a child type the project already allowed; asserts `IssuesImported`
   fires exactly once with the final
