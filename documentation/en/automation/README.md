@@ -99,3 +99,15 @@ compact rule list plus an inline add-rule form — one trigger, one
 optional condition, one action per rule. It is not a visual
 if/then/else builder with branches or condition groups; extending it
 to one is out of scope for this release.
+
+## Status in rules
+
+The status trigger and the GitHub triggers expose the issue's workflow
+status in their context: `issue.status` is the status **name**,
+`issue.category` its category (`todo`/`in_progress`/`done`), and the
+status-changed trigger adds `issue.previousStatus` /
+`issue.previousCategory`. Conditions on the category work across every
+issue type; one on a name only matches types that have that status. The
+`change_status` action takes either `category` (each issue goes to its
+own type's status of that category) or an exact `workflow_status_id`
+(only applied to issues of that type). The rule builder offers both.
