@@ -14,16 +14,6 @@ use Illuminate\Support\Collection;
 class IssueRepository
 {
     /**
-     * The status filter works on a workflow status category. Filters saved
-     * (or bookmarked) before the legacy issues.status column went away still
-     * carry its three values, which map onto the category of the same meaning.
-     */
-    private const array STATUS_FILTER_ALIASES = [
-        'open' => 'todo',
-        'closed' => 'done',
-    ];
-
-    /**
      * All of a project's issues matching the given search/filters, unpaginated -
      * used by views (calendar, upcoming-deadlines) that need every matching
      * issue rather than one table page, while still respecting the same
@@ -299,10 +289,7 @@ class IssueRepository
         if (! empty($filters)) {
             if (! empty($filters['status'])) {
                 $values = is_array($filters['status']) ? $filters['status'] : explode(',', $filters['status']);
-                $categories = array_values(array_unique(array_filter(array_map(
-                    fn ($value) => self::STATUS_FILTER_ALIASES[trim($value)] ?? trim($value),
-                    $values,
-                ))));
+                $categories = array_values(array_unique(array_filter(array_map('trim', $values))));
 
                 if ($categories !== []) {
                     $query->whereHas('workflowStatus', fn ($status) => $status->whereIn('category', $categories));

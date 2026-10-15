@@ -655,8 +655,7 @@ board and on its detail view (see
   mapped value names a status of that workflow it is used directly
   (a Jira "Code Review" mapped to "In Review" lands on Bug's own "In
   Review"), otherwise it is read as a category
-  (`todo`/`in_progress`/`done`, or the old `open`/`closed` words saved in
-  earlier mappings) and resolved through
+  (`todo`/`in_progress`/`done`) and resolved through
   `IssueTypeService::statusForCategory()`, falling back to the type's
   initial status.
 - **Labels.** Mapped through `IntegrationFieldMappingType::LABEL`, then

@@ -19,7 +19,7 @@ use App\Repositories\IntegrationFieldMappingRepository;
  */
 class FieldMappingResolverService
 {
-    /** A status mapping's value is a workflow status name or a category (open/todo, in_progress, closed/done). */
+    /** A status mapping's value is a workflow status name or a category (todo, in_progress, done). */
     private const array DEFAULTS = [
         'status' => 'todo',
         'priority' => 'medium',

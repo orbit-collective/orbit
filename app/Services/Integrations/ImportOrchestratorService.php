@@ -261,13 +261,7 @@ class ImportOrchestratorService
             return $byName;
         }
 
-        // Mappings saved while issues still had an open/closed column use
-        // those words for the todo/done categories.
-        $category = WorkflowStatusCategory::tryFrom(match ($mappedStatus) {
-            'open' => 'todo',
-            'closed' => 'done',
-            default => $mappedStatus,
-        });
+        $category = WorkflowStatusCategory::tryFrom($mappedStatus);
 
         return ($category ? $this->issueTypeService->statusForCategory($issueType, $category) : null)
             ?? $issueType->statuses()->where('is_initial', true)->first()

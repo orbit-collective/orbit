@@ -674,8 +674,7 @@ identycznie na liście, tablicy i w widoku szczegółów (zobacz
   zmapowana wartość nazywa status tego workflow, jest używana wprost
   („Code Review" z Jiry zmapowane na „In Review" ląduje na własnym „In
   Review" typu Bug), w przeciwnym razie jest czytana jako kategoria
-  (`todo`/`in_progress`/`done` albo stare słowa `open`/`closed` zapisane
-  we wcześniejszych mapowaniach) i rozwiązywana przez
+  (`todo`/`in_progress`/`done`) i rozwiązywana przez
   `IssueTypeService::statusForCategory()`, z powrotem do statusu
   początkowego typu.
 - **Etykiety.** Mapowane przez `IntegrationFieldMappingType::LABEL`, a
