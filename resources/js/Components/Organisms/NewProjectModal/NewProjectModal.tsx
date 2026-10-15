@@ -165,7 +165,6 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     created_at: 0,
                                     updated_at: 0,
                                 }}
-                                issues={[]}
                             />
                         </div>
                     </div>

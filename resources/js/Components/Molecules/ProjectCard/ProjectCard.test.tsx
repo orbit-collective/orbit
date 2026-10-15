@@ -2,8 +2,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { todoStatus, doneStatus } from '@/tests/statuses';
-import { Issue } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import ProjectCard, { ProjectNewCard } from './ProjectCard';
 
@@ -46,32 +44,16 @@ const makeProject = (overrides: Partial<Project> = {}): Project => ({
     ...overrides,
 });
 
-let issueId = 0;
-const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
-    id: `ISSUE-${issueId++}`,
-    title: 'An issue',
-    workflowStatus: todoStatus,
-    priority: 'medium',
-    project_id: 1,
-    user_id: 1,
-    ...overrides,
-});
-
 describe('ProjectCard Component', () => {
     test('renders the project name and description', () => {
-        render(<ProjectCard project={makeProject()} issues={[]} />);
+        render(<ProjectCard project={makeProject()} />);
 
         expect(screen.getByText('Orbit')).toBeInTheDocument();
         expect(screen.getByText('An issue tracker')).toBeInTheDocument();
     });
 
     test('renders a fallback description when the project has none', () => {
-        render(
-            <ProjectCard
-                project={makeProject({ description: '' })}
-                issues={[]}
-            />,
-        );
+        render(<ProjectCard project={makeProject({ description: '' })} />);
 
         expect(
             screen.getByText('No description provided.'),
@@ -79,60 +61,52 @@ describe('ProjectCard Component', () => {
     });
 
     test('shows 0% completion and 0/0 issues when there are no issues', () => {
-        render(<ProjectCard project={makeProject()} issues={[]} />);
+        render(<ProjectCard project={makeProject()} />);
 
         expect(screen.getByText('0%')).toBeInTheDocument();
         expect(screen.getByText('0/0 Issues')).toBeInTheDocument();
     });
 
-    test('computes the completion rate and open/closed counts', () => {
-        const issues = [
-            makeIssue({ workflowStatus: doneStatus }),
-            makeIssue({ workflowStatus: doneStatus }),
-            makeIssue({ workflowStatus: todoStatus }),
-            makeIssue({ workflowStatus: todoStatus }),
-        ];
-        render(<ProjectCard project={makeProject()} issues={issues} />);
-
-        // 2 of 4 closed => 50%.
-        expect(screen.getByText('50%')).toBeInTheDocument();
-        expect(screen.getByText('2/4 Issues')).toBeInTheDocument();
-
-        const openRow = screen.getByText('Open').closest('div');
-        expect(openRow).toHaveTextContent('2');
-
-        const closedRow = screen.getByText('Closed').closest('div');
-        expect(closedRow).toHaveTextContent('2');
-    });
-
-    test('only counts issues that belong to this project', () => {
-        const issues = [
-            makeIssue({ project_id: 1, workflowStatus: doneStatus }),
-            makeIssue({ project_id: 2, workflowStatus: todoStatus }),
-            makeIssue({ project_id: 99, workflowStatus: todoStatus }),
-        ];
+    test('computes the completion rate and per-category counts', () => {
         render(
-            <ProjectCard project={makeProject({ id: 1 })} issues={issues} />,
+            <ProjectCard
+                project={makeProject({
+                    issue_counts: { todo: 1, in_progress: 1, done: 2 },
+                })}
+            />,
         );
 
-        // Only the single project-1 issue is counted (closed => 100%).
+        // 2 of 4 done => 50%.
+        expect(screen.getByText('50%')).toBeInTheDocument();
+        expect(screen.getByText('2/4 Issues')).toBeInTheDocument();
+        expect(screen.getByText('To Do').closest('div')).toHaveTextContent('1');
+        expect(
+            screen.getByText('In Progress').closest('div'),
+        ).toHaveTextContent('1');
+        expect(screen.getByText('Done').closest('div')).toHaveTextContent('2');
+    });
+
+    test('is fully complete when every issue is done', () => {
+        render(
+            <ProjectCard
+                project={makeProject({
+                    issue_counts: { todo: 0, in_progress: 0, done: 3 },
+                })}
+            />,
+        );
+
         expect(screen.getByText('100%')).toBeInTheDocument();
-        expect(screen.getByText('1/1 Issues')).toBeInTheDocument();
+        expect(screen.getByText('3/3 Issues')).toBeInTheDocument();
     });
 
     test('links to the project detail page', () => {
-        render(<ProjectCard project={makeProject({ id: 7 })} issues={[]} />);
+        render(<ProjectCard project={makeProject({ id: 7 })} />);
 
         expect(screen.getByRole('link')).toHaveAttribute('href', '/projects/7');
     });
 
     test('renders the project slug', () => {
-        render(
-            <ProjectCard
-                project={makeProject({ slug: 'orbit-slug' })}
-                issues={[]}
-            />,
-        );
+        render(<ProjectCard project={makeProject({ slug: 'orbit-slug' })} />);
 
         expect(screen.getByText('orbit-slug')).toBeInTheDocument();
     });

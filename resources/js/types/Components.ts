@@ -375,7 +375,6 @@ export interface PaginationProps {
 }
 export interface ProjectCardProps {
     project: Project;
-    issues: Issue[];
 }
 export interface SidebarFieldProps {
     label: string;

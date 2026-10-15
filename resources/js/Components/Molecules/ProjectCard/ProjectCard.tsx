@@ -4,19 +4,16 @@ import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { useCommandPalette } from '@/context/CommandContext';
 import { ProjectCardProps } from '@/types/Components';
 import { getColorTheme } from '@/utils/colors';
-import { isIssueDone } from '@/utils/workflow';
 import Icon from '../../Atoms/Icon/Icon';
 import ProgressRing from '../../Atoms/ProgressRing/ProgressRing';
 
-const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
-    const projectIssues = issues.filter((i) => i.project_id === project.id);
-    const totalIssuesCount = projectIssues.length;
-    const closedIssuesCount = projectIssues.filter(isIssueDone).length;
-    const openIssuesCount = totalIssuesCount - closedIssuesCount;
+const NO_ISSUES = { todo: 0, in_progress: 0, done: 0 };
+
+const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
+    const { todo, in_progress, done } = project.issue_counts ?? NO_ISSUES;
+    const totalIssuesCount = todo + in_progress + done;
     const completionRate =
-        totalIssuesCount > 0
-            ? Math.round((closedIssuesCount / totalIssuesCount) * 100)
-            : 0;
+        totalIssuesCount > 0 ? Math.round((done / totalIssuesCount) * 100) : 0;
 
     const theme = getColorTheme(project.color);
 
@@ -86,25 +83,34 @@ const ProjectCard: FC<ProjectCardProps> = ({ project, issues }) => {
                     <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 text-[var(--text-gray-color)]">
                             <StatusDot status={'todo'} />
-                            Open
+                            To Do
                         </span>
                         <span className="font-semibold text-[var(--text-color)]">
-                            {openIssuesCount}
+                            {todo}
+                        </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-1.5 text-[var(--text-gray-color)]">
+                            <StatusDot status={'in_progress'} />
+                            In Progress
+                        </span>
+                        <span className="font-semibold text-[var(--text-color)]">
+                            {in_progress}
                         </span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 text-[var(--text-gray-color)]">
                             <StatusDot status={'done'} />
-                            Closed
+                            Done
                         </span>
                         <span className="font-semibold text-[var(--text-color)]">
-                            {closedIssuesCount}
+                            {done}
                         </span>
                     </div>
                     <div className="flex items-center justify-between gap-2 text-[var(--text-muted-color)]">
                         <span>Total</span>
                         <span className="font-semibold text-[var(--text-color)]">
-                            {closedIssuesCount}/{totalIssuesCount} Issues
+                            {done}/{totalIssuesCount} Issues
                         </span>
                     </div>
                 </div>

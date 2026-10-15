@@ -1,4 +1,6 @@
-import { Issue } from '@/types/Issues';
+import { WorkflowStatusCategory } from '@/types/Workflow';
+
+export type IssueCategoryCounts = Record<WorkflowStatusCategory, number>;
 
 export interface Project {
     id: number;
@@ -8,7 +10,8 @@ export interface Project {
     color: ProjectColors;
     created_at: number;
     updated_at: number;
-    issues?: Issue[];
+    /** Issues per workflow status category, counted by the server for the project card. */
+    issue_counts?: IssueCategoryCounts;
     columns?: Record<string, boolean>;
 }
 

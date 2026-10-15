@@ -163,7 +163,6 @@ export default function Dashboard({
                                                     <ProjectCard
                                                         key={project.id}
                                                         project={project}
-                                                        issues={issues}
                                                     />
                                                 ))}
                                             {projects.length > 3 && (

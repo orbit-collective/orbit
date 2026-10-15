@@ -106,29 +106,12 @@ describe('Projects Index Page', () => {
         expect(screen.getByText('New Project')).toBeInTheDocument();
     });
 
-    test("renders each project's own issues on its card", () => {
+    test("renders each project's own issue counts on its card", () => {
         const projects = [
             makeProject({
                 id: 1,
                 name: 'Project One',
-                issues: [
-                    {
-                        id: 'ISSUE-1',
-                        title: 'A',
-                        workflowStatus: doneStatus,
-                        priority: 'low',
-                        project_id: 1,
-                        user_id: 1,
-                    },
-                    {
-                        id: 'ISSUE-2',
-                        title: 'B',
-                        workflowStatus: todoStatus,
-                        priority: 'low',
-                        project_id: 1,
-                        user_id: 1,
-                    },
-                ],
+                issue_counts: { todo: 1, in_progress: 0, done: 1 },
             }),
         ];
         render(<Index projects={projects} />);
@@ -136,8 +119,8 @@ describe('Projects Index Page', () => {
         expect(screen.getByText('1/2 Issues')).toBeInTheDocument();
     });
 
-    test('renders 0/0 issues for a project with no issues field', () => {
-        render(<Index projects={[makeProject({ issues: undefined })]} />);
+    test('renders 0/0 issues for a project without counts', () => {
+        render(<Index projects={[makeProject()]} />);
 
         expect(screen.getByText('0/0 Issues')).toBeInTheDocument();
     });
