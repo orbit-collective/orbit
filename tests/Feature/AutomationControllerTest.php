@@ -23,6 +23,16 @@ test('settings page grants an admin access to view and update automation', funct
     );
 });
 
+test('settings page sends the project issue types with their statuses for the status pickers', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+
+    $this->actingAs($user)->get('/settings/automation')->assertInertia(fn (Assert $page) => $page
+        ->has('issueTypes')
+        ->where('issueTypes.0.statuses.0.category', 'todo'));
+});
+
 test('settings page grants a plain member view-only access to automation', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();

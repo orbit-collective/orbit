@@ -271,6 +271,11 @@ class SettingsController extends Controller
                 : [],
             'triggerTypes' => $this->mapAutomationTriggerTypes(),
             'actionTypes' => $this->mapAutomationActionTypes(),
+            // The change-status action and the status conditions pick one of
+            // the project's own workflow statuses.
+            'issueTypes' => $hasAutomationAccess
+                ? $this->issueTypeService->getIssueTypes($selectedProject)
+                : [],
             'hasAutomationAccess' => $hasAutomationAccess,
             'canUpdateAutomation' => $canUpdateAutomation,
         ]);
