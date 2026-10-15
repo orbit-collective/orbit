@@ -360,3 +360,13 @@ test('the project show page paginates the activity logs independently of the iss
         ->has('activityLogs.data', 45)
     );
 });
+
+test('the projects page issues carry their workflow status for the completion ring', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+    Issue::factory()->done()->create(['project_id' => $project->id]);
+
+    $this->actingAs($user)->get('/projects')->assertInertia(fn (Assert $page) => $page
+        ->where('projects.0.issues.0.workflowStatus.category', 'done'));
+});
