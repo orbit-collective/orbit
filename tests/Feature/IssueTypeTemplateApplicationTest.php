@@ -25,7 +25,7 @@ test('a quick-added issue picks up its type template description and labels', fu
 
     $this->actingAs($user)->post('/issues', [
         'title' => 'Login crashes', 'project_id' => $project->id,
-        'priority' => 'medium', 'status' => 'open', 'issue_type_id' => $bug->id,
+        'priority' => 'medium', 'issue_type_id' => $bug->id,
     ])->assertRedirect()->assertSessionHasNoErrors();
 
     $issue = $project->issues()->where('title', 'Login crashes')->first();
@@ -39,7 +39,7 @@ test('a description supplied by the request wins over the template', function ()
 
     $this->actingAs($user)->post('/issues', [
         'title' => 'Login crashes', 'project_id' => $project->id,
-        'priority' => 'medium', 'status' => 'open', 'issue_type_id' => $bug->id,
+        'priority' => 'medium', 'issue_type_id' => $bug->id,
         'description' => 'My own write-up', 'labels' => ['feature'],
     ])->assertRedirect();
 
@@ -55,7 +55,7 @@ test('a template label the project has deleted is dropped rather than rejected',
 
     $this->actingAs($user)->post('/issues', [
         'title' => 'Login crashes', 'project_id' => $project->id,
-        'priority' => 'medium', 'status' => 'open', 'issue_type_id' => $bug->id,
+        'priority' => 'medium', 'issue_type_id' => $bug->id,
     ])->assertRedirect()->assertSessionHasNoErrors();
 
     expect($project->issues()->where('title', 'Login crashes')->first()->labels)->toBe([]);
@@ -67,7 +67,7 @@ test('every system type hands a new issue a description', function () {
     foreach ($project->issueTypes()->where('is_top_level', true)->get() as $type) {
         $this->actingAs($user)->post('/issues', [
             'title' => "T {$type->name}", 'project_id' => $project->id,
-            'priority' => 'medium', 'status' => 'open', 'issue_type_id' => $type->id,
+            'priority' => 'medium', 'issue_type_id' => $type->id,
         ])->assertRedirect();
 
         expect($project->issues()->where('title', "T {$type->name}")->first()->description)
@@ -81,7 +81,7 @@ test('retyping an empty issue adopts the new type template', function () {
     $bug = $project->issueTypes()->where('name', 'Bug')->first();
     $issue = $project->issues()->create([
         'title' => 'Untouched', 'project_id' => $project->id, 'user_id' => $user->id,
-        'issue_type_id' => $task->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $task->id, 'priority' => 'low',
     ]);
 
     $this->actingAs($user)->patch("/issues/$issue->id", ['issue_type_id' => $bug->id])
@@ -96,7 +96,7 @@ test('retyping an issue someone has written up keeps their description', functio
     $bug = $project->issueTypes()->where('name', 'Bug')->first();
     $issue = $project->issues()->create([
         'title' => 'Written up', 'project_id' => $project->id, 'user_id' => $user->id,
-        'issue_type_id' => $task->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $task->id, 'priority' => 'low',
         'description' => 'Carefully written notes',
     ]);
 
@@ -111,7 +111,7 @@ test('retyping moves the issue onto the new type workflow and its statuses are s
     $bug = $project->issueTypes()->where('name', 'Bug')->first();
     $issue = $project->issues()->create([
         'title' => 'Retyped', 'project_id' => $project->id, 'user_id' => $user->id,
-        'issue_type_id' => $task->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $task->id, 'priority' => 'low',
         'workflow_status_id' => $task->statuses()->where('is_initial', true)->first()->id,
     ]);
 

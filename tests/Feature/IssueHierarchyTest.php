@@ -21,14 +21,13 @@ test('an issue can be created as a sub-issue of an Epic', function () {
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $epic = $project->issues()->create([
         'title' => 'Big Epic', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
         'title' => 'Sub task',
         'project_id' => $project->id,
         'priority' => 'low',
-        'status' => 'open',
         'parent_id' => $epic->id,
     ]);
 
@@ -45,11 +44,11 @@ test('an issue cannot be created under a parent whose type does not allow childr
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $task = $project->issues()->create([
         'title' => 'A plain task', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $taskType->id, 'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'Nested', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open', 'parent_id' => $task->id,
+        'title' => 'Nested', 'project_id' => $project->id, 'priority' => 'low', 'parent_id' => $task->id,
     ]);
 
     $response->assertSessionHasErrors('parent_id');
@@ -64,11 +63,11 @@ test('an issue cannot be created under a parent from another project', function 
     $epicType = $otherProject->issueTypes()->where('name', 'Epic')->first();
     $foreignEpic = $otherProject->issues()->create([
         'title' => 'Foreign Epic', 'project_id' => $otherProject->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'Nested', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open', 'parent_id' => $foreignEpic->id,
+        'title' => 'Nested', 'project_id' => $project->id, 'priority' => 'low', 'parent_id' => $foreignEpic->id,
     ]);
 
     $response->assertSessionHasErrors('parent_id');
@@ -82,7 +81,7 @@ test('an issue cannot be updated to become its own parent', function () {
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $issue = $project->issues()->create([
         'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $taskType->id, 'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->patch("/issues/$issue->id", ['parent_id' => $issue->id]);
@@ -98,13 +97,13 @@ test('an issue cannot be moved under its own descendant, preventing a cycle', fu
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $epic = $project->issues()->create([
         'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
     $epic->update(['allows_children' => true]);
     $child = $project->issues()->create([
         'title' => 'Child', 'project_id' => $project->id, 'user_id' => $member->id,
         'issue_type_id' => $project->issueTypes()->where('name', 'Task')->first()->id,
-        'priority' => 'low', 'status' => 'open', 'parent_id' => $epic->id,
+        'priority' => 'low', 'parent_id' => $epic->id,
     ]);
     // Make the epic type able to be nested by allowing it to be a child too, then try to invert the relationship.
     $epicType->update(['allows_children' => true]);
@@ -123,11 +122,11 @@ test('a parent type with no configured allowed children accepts any child type',
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
     $epic = $project->issues()->create([
         'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'Bug sub-issue', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'title' => 'Bug sub-issue', 'project_id' => $project->id, 'priority' => 'low',
         'issue_type_id' => $bugType->id, 'parent_id' => $epic->id,
     ]);
 
@@ -146,11 +145,11 @@ test('a parent type restricted to specific allowed children rejects an unlisted 
     $epicType->allowedChildTypes()->sync([$storyType->id]);
     $epic = $project->issues()->create([
         'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'Bug sub-issue', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'title' => 'Bug sub-issue', 'project_id' => $project->id, 'priority' => 'low',
         'issue_type_id' => $bugType->id, 'parent_id' => $epic->id,
     ]);
 
@@ -167,11 +166,11 @@ test('a parent type restricted to specific allowed children accepts a listed chi
     $epicType->allowedChildTypes()->sync([$storyType->id]);
     $epic = $project->issues()->create([
         'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'Story sub-issue', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'title' => 'Story sub-issue', 'project_id' => $project->id, 'priority' => 'low',
         'issue_type_id' => $storyType->id, 'parent_id' => $epic->id,
     ]);
 
@@ -187,12 +186,12 @@ test('updating an issue to move it under a valid parent succeeds', function () {
     $epicType = $project->issueTypes()->where('name', 'Epic')->first();
     $epic = $project->issues()->create([
         'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $issue = $project->issues()->create([
         'title' => 'Loose task', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $taskType->id, 'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->patch("/issues/$issue->id", ['parent_id' => $epic->id]);
@@ -209,7 +208,7 @@ test('an issue whose type is sub-issue only cannot be created at the top level',
     $spikeType = $project->issueTypes()->where('name', 'Spike')->first();
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'Loose spike', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'title' => 'Loose spike', 'project_id' => $project->id, 'priority' => 'low',
         'issue_type_id' => $spikeType->id,
     ]);
 
@@ -225,11 +224,11 @@ test('a sub-issue only type can still be created underneath an allowed parent', 
     $spikeType = $project->issueTypes()->where('name', 'Spike')->first();
     $epic = $project->issues()->create([
         'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'Nested spike', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'title' => 'Nested spike', 'project_id' => $project->id, 'priority' => 'low',
         'issue_type_id' => $spikeType->id, 'parent_id' => $epic->id,
     ]);
 
@@ -257,15 +256,15 @@ test('the issue detail view exposes the ancestors of a nested issue, root first'
     $taskType = $project->issueTypes()->where('name', 'Task')->first();
     $epic = $project->issues()->create([
         'title' => 'Epic', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open',
+        'issue_type_id' => $epicType->id, 'priority' => 'high',
     ]);
     $middle = $project->issues()->create([
         'title' => 'Middle', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $epicType->id, 'priority' => 'high', 'status' => 'open', 'parent_id' => $epic->id,
+        'issue_type_id' => $epicType->id, 'priority' => 'high', 'parent_id' => $epic->id,
     ]);
     $leaf = $project->issues()->create([
         'title' => 'Leaf', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open', 'parent_id' => $middle->id,
+        'issue_type_id' => $taskType->id, 'priority' => 'low', 'parent_id' => $middle->id,
     ]);
 
     $ancestors = app(IssueService::class)->ancestorsOf($leaf);
@@ -281,7 +280,7 @@ test('a root issue has no ancestors', function () {
     $issue = $project->issues()->create([
         'title' => 'Loose', 'project_id' => $project->id, 'user_id' => $member->id,
         'issue_type_id' => $project->issueTypes()->where('name', 'Task')->first()->id,
-        'priority' => 'low', 'status' => 'open',
+        'priority' => 'low',
     ]);
 
     expect(app(IssueService::class)->ancestorsOf($issue))->toBeEmpty();
@@ -296,11 +295,11 @@ test('a Bug can be created as a sub-issue of a Task, which now accepts one', fun
     $bugType = $project->issueTypes()->where('name', 'Bug')->first();
     $task = $project->issues()->create([
         'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $taskType->id, 'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'A nested bug', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'title' => 'A nested bug', 'project_id' => $project->id, 'priority' => 'low',
         'issue_type_id' => $bugType->id, 'parent_id' => $task->id,
     ]);
 
@@ -317,11 +316,11 @@ test('a type the parent does not list as an allowed child is still rejected', fu
     $storyType = $project->issueTypes()->where('name', 'Story')->first();
     $task = $project->issues()->create([
         'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
-        'issue_type_id' => $taskType->id, 'priority' => 'low', 'status' => 'open',
+        'issue_type_id' => $taskType->id, 'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->post('/issues', [
-        'title' => 'A nested story', 'project_id' => $project->id, 'priority' => 'low', 'status' => 'open',
+        'title' => 'A nested story', 'project_id' => $project->id, 'priority' => 'low',
         'issue_type_id' => $storyType->id, 'parent_id' => $task->id,
     ]);
 

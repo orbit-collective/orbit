@@ -29,7 +29,6 @@ class Issue extends Model
         'number',
         'title',
         'description',
-        'status',
         'priority',
         'project_id',
         'parent_id',

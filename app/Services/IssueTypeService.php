@@ -754,8 +754,8 @@ class IssueTypeService
             ]));
 
         // A simple default workflow allows moving freely between every
-        // status (matches the previous behaviour, where any IssueStatus
-        // value could be set at any time).
+        // status (the workflow used to be an open/in_progress/closed
+        // enum, which could be set to any value at any time).
         foreach ($statuses as $from) {
             foreach ($statuses as $to) {
                 if ($from->id !== $to->id) {

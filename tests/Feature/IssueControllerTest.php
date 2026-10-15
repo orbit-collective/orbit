@@ -502,7 +502,6 @@ test('a project member can create an issue', function () {
         'description' => 'Something to do',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
     ]);
 
     $response->assertRedirect();
@@ -521,7 +520,6 @@ test('a viewer cannot create an issue', function () {
         'title' => 'New issue',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
     ]);
 
     $response->assertForbidden();
@@ -534,7 +532,6 @@ test('a non-member cannot create an issue in a project they do not belong to', f
         'title' => 'New issue',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
     ]);
 
     $response->assertForbidden();
@@ -547,7 +544,6 @@ test('a rejected create request does not seed the target project\'s labels as a 
         'title' => 'New issue',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
         'labels' => ['bug'],
     ]);
 
@@ -564,7 +560,6 @@ test('creating an issue stamps the authenticated user as the creator', function 
         'title' => 'New issue',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
     ]);
 
     $issue = Issue::where('title', 'New issue')->firstOrFail();
@@ -579,7 +574,6 @@ test('creating an issue redirects back with a success flash message and an actio
         'title' => 'Flash message issue',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
     ]);
 
     $issue = Issue::where('title', 'Flash message issue')->firstOrFail();
@@ -599,7 +593,6 @@ test('creating an issue requires the project_id to reference a real project', fu
         'title' => 'Orphan issue',
         'project_id' => 999999,
         'priority' => 'high',
-        'status' => 'open',
     ]);
 
     $response->assertSessionHasErrors('project_id');
@@ -613,7 +606,6 @@ test('creating an issue requires the assignee_id to reference a real user when g
         'title' => 'Bad assignee',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
         'assignee_id' => 999999,
     ]);
 
@@ -629,7 +621,6 @@ test('creating an issue rejects an assignee who is not a member of the project',
         'title' => 'Wrong assignee',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
         'assignee_id' => $outsider->id,
     ]);
 
@@ -644,7 +635,6 @@ test('creating an issue rejects an end_date before the start_date', function () 
         'title' => 'Bad dates',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
         'start_date' => now()->toDateString(),
         'end_date' => now()->subDay()->toDateString(),
     ]);
@@ -662,7 +652,6 @@ test('creating an issue accepts a system label, seeding it automatically', funct
         'title' => 'Broken login',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
         'labels' => ['bug'],
     ]);
 
@@ -679,7 +668,6 @@ test('creating an issue rejects a label name that does not exist in the project'
         'title' => 'Broken login',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
         'labels' => ['not-a-real-label'],
     ]);
 
@@ -696,7 +684,6 @@ test('creating an issue rejects a label that belongs to a different project', fu
         'title' => 'Broken login',
         'project_id' => $project->id,
         'priority' => 'high',
-        'status' => 'open',
         'labels' => ['other-project-label'],
     ]);
 
@@ -1051,7 +1038,7 @@ test('an issue can be moved to a custom workflow status by id', function () {
     $issue = $project->issues()->create([
         'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
         'issue_type_id' => $type->id, 'workflow_status_id' => $initial->id,
-        'priority' => 'low', 'status' => 'open',
+        'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->patch("/issues/$issue->id", [
@@ -1074,7 +1061,7 @@ test('a workflow status from another issue type is rejected', function () {
         'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
         'issue_type_id' => $taskType->id,
         'workflow_status_id' => $taskType->statuses()->where('is_initial', true)->first()->id,
-        'priority' => 'low', 'status' => 'open',
+        'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->patch("/issues/$issue->id", [
@@ -1098,7 +1085,7 @@ test('a workflow status with no transition from the current one is rejected', fu
     $issue = $project->issues()->create([
         'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
         'issue_type_id' => $type->id, 'workflow_status_id' => $initial->id,
-        'priority' => 'low', 'status' => 'open',
+        'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->patch("/issues/$issue->id", [
@@ -1120,7 +1107,7 @@ test('changing the issue type and picking a status of the new type in one reques
         'title' => 'A task', 'project_id' => $project->id, 'user_id' => $member->id,
         'issue_type_id' => $taskType->id,
         'workflow_status_id' => $taskType->statuses()->where('is_initial', true)->first()->id,
-        'priority' => 'low', 'status' => 'open',
+        'priority' => 'low',
     ]);
 
     $response = $this->actingAs($member)->patch("/issues/$issue->id", [

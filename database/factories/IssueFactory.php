@@ -27,7 +27,6 @@ class IssueFactory extends Factory
         return [
             'title' => fake()->sentence(3),
             'description' => fake()->paragraph(),
-            'status' => fake()->randomElement(['open', 'closed']),
             'priority' => fake()->randomElement(['low', 'medium', 'high']),
             'project_id' => Project::factory(),
             'user_id' => User::factory(),

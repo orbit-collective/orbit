@@ -31,7 +31,7 @@ test('every top-level type can be created as a root issue', function () {
     foreach ($project->issueTypes()->where('is_top_level', true)->get() as $type) {
         $response = $this->actingAs($user)->post('/issues', [
             'title' => "Root {$type->name}", 'project_id' => $project->id,
-            'priority' => 'medium', 'status' => 'open', 'issue_type_id' => $type->id,
+            'priority' => 'medium', 'issue_type_id' => $type->id,
         ]);
 
         if ($response->getSession()->hasOldInput() || $response->getSession()->get('errors')) {
@@ -48,7 +48,7 @@ test('every sub-issue-only type is rejected as a root issue', function () {
     foreach ($project->issueTypes()->where('is_top_level', false)->get() as $type) {
         $this->actingAs($user)->post('/issues', [
             'title' => "Root {$type->name}", 'project_id' => $project->id,
-            'priority' => 'medium', 'status' => 'open', 'issue_type_id' => $type->id,
+            'priority' => 'medium', 'issue_type_id' => $type->id,
         ])->assertSessionHasErrors('issue_type_id');
     }
 });
@@ -61,14 +61,14 @@ test('each container type accepts exactly the child types it lists', function ()
     foreach ($types->where('allows_children', true) as $parentType) {
         $parent = $project->issues()->create([
             'title' => "Parent {$parentType->name}", 'project_id' => $project->id, 'user_id' => $user->id,
-            'issue_type_id' => $parentType->id, 'priority' => 'medium', 'status' => 'open',
+            'issue_type_id' => $parentType->id, 'priority' => 'medium',
         ]);
         $allowed = $parentType->allowedChildTypes()->pluck('name')->all();
 
         foreach ($types as $child) {
             $response = $this->actingAs($user)->post('/issues', [
                 'title' => "Child {$parentType->name}/{$child->name}", 'project_id' => $project->id,
-                'priority' => 'medium', 'status' => 'open',
+                'priority' => 'medium',
                 'issue_type_id' => $child->id, 'parent_id' => $parent->id,
             ]);
 

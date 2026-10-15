@@ -9,6 +9,8 @@ use App\Services\IssueTypeService;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
@@ -17,7 +19,6 @@ test('a factory-created issue persists with the expected attribute types', funct
 
     expect($issue->exists)->toBeTrue()
         ->and($issue->title)->toBeString()
-        ->and($issue->status)->toBeIn(['open', 'closed'])
         ->and($issue->priority)->toBeIn(['low', 'medium', 'high']);
 });
 
@@ -181,4 +182,37 @@ test('an issue serializes its type and workflow status under camelCase relation 
         ->and($array)->not->toHaveKeys(['issue_type', 'workflow_status'])
         ->and($array['issueType']['allowsChildren'])->toBeTrue()
         ->and($array['workflowStatus'])->toHaveKeys(['isInitial', 'issueTypeId', 'category']);
+});
+
+test('the issues table has no status column of its own, the workflow status is the only one', function () {
+    expect(Schema::hasColumn('issues', 'status'))->toBeFalse()
+        ->and(Schema::hasColumn('issues', 'workflow_status_id'))->toBeTrue();
+});
+
+test('dropping the status column moves each legacy value onto the matching workflow status', function () {
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+    $migration = require database_path('migrations/2026_10_15_120000_drop_status_from_issues_table.php');
+
+    $migration->down();
+
+    $insert = fn (string $legacy) => DB::table('issues')->insertGetId([
+        'title' => "Legacy $legacy",
+        'status' => $legacy,
+        'priority' => 'low',
+        'project_id' => $project->id,
+        'user_id' => $user->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    $ids = ['open' => $insert('open'), 'in_progress' => $insert('in_progress'), 'closed' => $insert('closed')];
+
+    $migration->up();
+
+    expect(Schema::hasColumn('issues', 'status'))->toBeFalse();
+
+    $categories = collect($ids)->map(fn (int $id) => Issue::query()->with('workflowStatus')->find($id)->workflowStatus->category->value);
+
+    expect($categories->all())->toBe(['open' => 'todo', 'in_progress' => 'in_progress', 'closed' => 'done'])
+        ->and(Issue::query()->whereIn('id', $ids)->whereNull('issue_type_id')->count())->toBe(0);
 });
