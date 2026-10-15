@@ -155,16 +155,17 @@ test('the project show page respects a custom perPage query parameter', function
     );
 });
 
-test('the project show page parses comma-separated status, priority and label filters into arrays', function () {
+test('the project show page parses comma-separated status, workflow status, priority and label filters into arrays', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     addProjectMember($project, $user->id, 'member');
 
     $response = $this->actingAs($user)
-        ->get("/projects/$project->id?status=open,closed&priority=high&labels=bug,design");
+        ->get("/projects/$project->id?status=todo,done&priority=high&labels=bug,design&workflow_status=4,7");
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->where('filters.status', ['open', 'closed'])
+        ->where('filters.status', ['todo', 'done'])
+        ->where('filters.workflow_status', ['4', '7'])
         ->where('filters.priority', ['high'])
         ->where('filters.labels', ['bug', 'design'])
     );

@@ -308,6 +308,14 @@ class IssueRepository
                     $query->whereHas('workflowStatus', fn ($status) => $status->whereIn('category', $categories));
                 }
             }
+            if (! empty($filters['workflow_status'])) {
+                $ids = is_array($filters['workflow_status']) ? $filters['workflow_status'] : explode(',', $filters['workflow_status']);
+                $ids = array_values(array_filter(array_map('intval', $ids)));
+
+                if ($ids !== []) {
+                    $query->whereIn('issues.workflow_status_id', $ids);
+                }
+            }
             if (! empty($filters['priority'])) {
                 $values = is_array($filters['priority']) ? $filters['priority'] : explode(',', $filters['priority']);
                 $query->whereIn('priority', array_filter($values));

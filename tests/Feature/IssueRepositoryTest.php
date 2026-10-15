@@ -546,3 +546,18 @@ test('searchForUser eager-loads the type, status and project', function () {
         ->and($issue->relationLoaded('workflowStatus'))->toBeTrue()
         ->and($issue->relationLoaded('project'))->toBeTrue();
 });
+
+test('the workflow_status filter matches exact statuses, alone or with a category', function () {
+    $project = Project::factory()->create();
+    $review = Issue::factory()->inProgress()->create(['project_id' => $project->id]);
+    $review->workflowStatus->update(['name' => 'In Review']);
+    $other = Issue::factory()->done()->create(['project_id' => $project->id]);
+
+    $byId = $this->repository->getForProject($project->id, [], ['workflow_status' => [$review->workflow_status_id]]);
+    $csv = $this->repository->getForProject($project->id, [], ['workflow_status' => $review->workflow_status_id.','.$other->workflow_status_id]);
+    $both = $this->repository->getForProject($project->id, [], ['workflow_status' => $csv->pluck('workflow_status_id')->all(), 'status' => ['done']]);
+
+    expect($byId->pluck('id')->all())->toBe([$review->id])
+        ->and($csv)->toHaveCount(2)
+        ->and($both->pluck('id')->all())->toBe([$other->id]);
+});
