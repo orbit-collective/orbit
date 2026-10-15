@@ -41,6 +41,8 @@ describe('automationMeta', () => {
             'issue.id',
             'issue.status',
             'issue.previousStatus',
+            'issue.category',
+            'issue.previousCategory',
         ]);
     });
 

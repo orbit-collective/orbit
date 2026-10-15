@@ -26,10 +26,13 @@ import {
     AutomationOption,
     AutomationRule,
 } from '@/types/Automation';
+import { IssueType } from '@/types/IssueTypes';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import {
     actionMeta,
+    CATEGORY_CONDITION_FIELDS,
     conditionFieldsForTrigger,
+    STATUS_NAME_CONDITION_FIELDS,
     triggerMeta,
 } from '@/utils/automationMeta';
 import { cn } from '@/utils/cn';
@@ -40,6 +43,7 @@ interface WorkspaceSettingsAutomationTabProps {
     automationRules?: AutomationRule[];
     triggerTypes?: AutomationOption[];
     actionTypes?: AutomationOption[];
+    issueTypes?: IssueType[];
     hasAutomationAccess?: boolean;
     canUpdateAutomation?: boolean;
 }
@@ -114,6 +118,10 @@ function defaultParamsFor(actionType: string): Record<string, string> {
     }
 }
 
+const categoryLabel = (category: string) =>
+    STATUS_CATEGORY_OPTIONS.find((option) => option.value === category)
+        ?.label ?? category;
+
 function isActionIncomplete(action: AutomationActionConfig): boolean {
     switch (action.type) {
         case 'change_status':
@@ -132,13 +140,17 @@ function isActionIncomplete(action: AutomationActionConfig): boolean {
     }
 }
 
-function actionSubtitle(action: AutomationActionConfig): string | undefined {
+function actionSubtitle(
+    action: AutomationActionConfig,
+    statusLabels: Record<string, string>,
+): string | undefined {
     switch (action.type) {
         case 'change_status':
-            return action.params.category
-                ? `Category: ${action.params.category}`
-                : action.params.workflow_status_id
-                  ? `Status id: ${action.params.workflow_status_id}`
+            return action.params.workflow_status_id
+                ? (statusLabels[String(action.params.workflow_status_id)] ??
+                      'A deleted status')
+                : action.params.category
+                  ? `Category: ${categoryLabel(String(action.params.category))}`
                   : undefined;
         case 'change_priority':
             return action.params.priority
@@ -169,6 +181,7 @@ function DraggableActionNode({
     onSelect,
     onDelete,
     actionLabel,
+    statusLabels,
 }: {
     action: AutomationActionConfig;
     index: number;
@@ -177,6 +190,7 @@ function DraggableActionNode({
     onSelect: () => void;
     onDelete: () => void;
     actionLabel: (type: string) => string;
+    statusLabels: Record<string, string>;
 }) {
     const draggable = useDraggable({
         id: `action-${index}`,
@@ -202,7 +216,7 @@ function DraggableActionNode({
             color={meta.color}
             eyebrow={`Then · Step ${index + 1}`}
             title={actionLabel(action.type)}
-            subtitle={actionSubtitle(action)}
+            subtitle={actionSubtitle(action, statusLabels)}
             selected={selected}
             incomplete={isActionIncomplete(action)}
             onClick={onSelect}
@@ -242,10 +256,42 @@ export default function WorkspaceSettingsAutomationTab({
     automationRules = [],
     triggerTypes = [],
     actionTypes = [],
+    issueTypes = [],
     hasAutomationAccess = false,
     canUpdateAutomation = false,
 }: WorkspaceSettingsAutomationTabProps) {
     const { addAlert } = useAlert();
+
+    // A specific status belongs to one issue type's workflow, so it is named
+    // together with its type; the category option is the one that works for all.
+    const statusOptions = useMemo<AutomationOption[]>(
+        () =>
+            issueTypes.flatMap((type) =>
+                (type.statuses ?? []).map((status) => ({
+                    value: String(status.id),
+                    label: `${type.name} · ${status.name}`,
+                })),
+            ),
+        [issueTypes],
+    );
+    const statusLabels = useMemo(
+        () =>
+            Object.fromEntries(
+                statusOptions.map((option) => [option.value, option.label]),
+            ),
+        [statusOptions],
+    );
+    const statusNameOptions = useMemo<AutomationOption[]>(
+        () =>
+            [
+                ...new Set(
+                    issueTypes.flatMap((type) =>
+                        (type.statuses ?? []).map((status) => status.name),
+                    ),
+                ),
+            ].map((name) => ({ value: name, label: name })),
+        [issueTypes],
+    );
     const [selectedRuleId, setSelectedRuleId] = useState<number | 'new' | null>(
         null,
     );
@@ -778,6 +824,9 @@ export default function WorkspaceSettingsAutomationTab({
                                                                 actionLabel={
                                                                     actionLabel
                                                                 }
+                                                                statusLabels={
+                                                                    statusLabels
+                                                                }
                                                             />
                                                             {index <
                                                                 draft.actions
@@ -902,28 +951,79 @@ export default function WorkspaceSettingsAutomationTab({
                                                                         )
                                                                     }
                                                                 />
-                                                                <input
-                                                                    value={
-                                                                        condition.value as string
-                                                                    }
-                                                                    disabled={
-                                                                        !canUpdateAutomation
-                                                                    }
-                                                                    onChange={(
-                                                                        e,
-                                                                    ) =>
-                                                                        updateCondition(
-                                                                            index,
-                                                                            {
-                                                                                value: e
-                                                                                    .target
-                                                                                    .value,
-                                                                            },
+                                                                {(() => {
+                                                                    const isExact =
+                                                                        condition.operator ===
+                                                                            'equals' ||
+                                                                        condition.operator ===
+                                                                            'not_equals';
+                                                                    const valueOptions =
+                                                                        isExact &&
+                                                                        CATEGORY_CONDITION_FIELDS.includes(
+                                                                            condition.field,
                                                                         )
-                                                                    }
-                                                                    placeholder="Value"
-                                                                    className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)]"
-                                                                />
+                                                                            ? STATUS_CATEGORY_OPTIONS
+                                                                            : isExact &&
+                                                                                STATUS_NAME_CONDITION_FIELDS.includes(
+                                                                                    condition.field,
+                                                                                ) &&
+                                                                                statusNameOptions.length >
+                                                                                    0
+                                                                              ? statusNameOptions
+                                                                              : null;
+
+                                                                    return valueOptions ? (
+                                                                        <InlineSelectDropdown
+                                                                            label="Value"
+                                                                            placeholder="Choose a value"
+                                                                            options={
+                                                                                valueOptions
+                                                                            }
+                                                                            value={
+                                                                                (condition.value as string) ||
+                                                                                null
+                                                                            }
+                                                                            disabled={
+                                                                                !canUpdateAutomation
+                                                                            }
+                                                                            onChange={(
+                                                                                value,
+                                                                            ) =>
+                                                                                updateCondition(
+                                                                                    index,
+                                                                                    {
+                                                                                        value:
+                                                                                            value ??
+                                                                                            '',
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                        />
+                                                                    ) : (
+                                                                        <input
+                                                                            value={
+                                                                                condition.value as string
+                                                                            }
+                                                                            disabled={
+                                                                                !canUpdateAutomation
+                                                                            }
+                                                                            onChange={(
+                                                                                e,
+                                                                            ) =>
+                                                                                updateCondition(
+                                                                                    index,
+                                                                                    {
+                                                                                        value: e
+                                                                                            .target
+                                                                                            .value,
+                                                                                    },
+                                                                                )
+                                                                            }
+                                                                            placeholder="Value"
+                                                                            className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)]"
+                                                                        />
+                                                                    );
+                                                                })()}
                                                                 {canUpdateAutomation && (
                                                                     <button
                                                                         type="button"
@@ -971,6 +1071,9 @@ export default function WorkspaceSettingsAutomationTab({
                                                         actionLabel={
                                                             actionLabel
                                                         }
+                                                        statusOptions={
+                                                            statusOptions
+                                                        }
                                                         onChange={(params) =>
                                                             updateAction(
                                                                 selectedNode.index,
@@ -1008,11 +1111,13 @@ function ActionInspector({
     action,
     canUpdate,
     actionLabel,
+    statusOptions,
     onChange,
 }: {
     action: AutomationActionConfig;
     canUpdate: boolean;
     actionLabel: (type: string) => string;
+    statusOptions: AutomationOption[];
     onChange: (params: Record<string, string>) => void;
 }) {
     const params = action.params as Record<string, string>;
@@ -1024,14 +1129,42 @@ function ActionInspector({
             </p>
 
             {action.type === 'change_status' && (
-                <InlineSelectDropdown
-                    label="Move to category"
-                    placeholder="Choose a category"
-                    options={STATUS_CATEGORY_OPTIONS}
-                    value={params.category ?? null}
-                    disabled={!canUpdate}
-                    onChange={(value) => onChange({ category: value ?? '' })}
-                />
+                <>
+                    <InlineSelectDropdown
+                        label="Move to category"
+                        placeholder="Choose a category"
+                        options={STATUS_CATEGORY_OPTIONS}
+                        value={params.category ?? null}
+                        disabled={!canUpdate}
+                        onChange={(value) =>
+                            onChange({ category: value ?? '' })
+                        }
+                    />
+                    {statusOptions.length > 0 && (
+                        <>
+                            <p className="text-[11px] text-[var(--text-muted-color)]">
+                                A category moves each issue to its own type's
+                                matching status. Or pick one exact status
+                                instead - it only applies to issues of that
+                                type.
+                            </p>
+                            <InlineSelectDropdown
+                                label="Exact status"
+                                placeholder="Or choose an exact status"
+                                options={statusOptions}
+                                value={params.workflow_status_id ?? null}
+                                disabled={!canUpdate}
+                                onChange={(value) =>
+                                    onChange(
+                                        value
+                                            ? { workflow_status_id: value }
+                                            : { category: '' },
+                                    )
+                                }
+                            />
+                        </>
+                    )}
+                </>
             )}
 
             {action.type === 'change_priority' && (
