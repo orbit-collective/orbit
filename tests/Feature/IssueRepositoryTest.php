@@ -55,15 +55,6 @@ test('the status filter takes several categories at once', function () {
     expect($issues)->toHaveCount(2);
 });
 
-test('the status filter still understands the legacy open and closed values', function () {
-    $project = Project::factory()->create();
-    $todo = Issue::factory()->todo()->create(['project_id' => $project->id]);
-    $done = Issue::factory()->done()->create(['project_id' => $project->id]);
-
-    expect($this->repository->getForProject($project->id, [], ['status' => ['open']])->pluck('id')->all())->toBe([$todo->id])
-        ->and($this->repository->getForProject($project->id, [], ['status' => ['closed']])->pluck('id')->all())->toBe([$done->id]);
-});
-
 test('the status filter matches the category, not the status name', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->done()->create(['project_id' => $project->id]);

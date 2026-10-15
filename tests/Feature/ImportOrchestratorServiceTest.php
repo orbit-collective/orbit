@@ -273,9 +273,9 @@ test('a status mapping naming a workflow status of that type is used directly', 
     expect($this->project->issues()->first()->workflowStatus->name)->toBe('In Review');
 });
 
-test('a legacy status mapping still resolves by category within the type workflow', function () {
+test('a category status mapping resolves within the type workflow', function () {
     app(IntegrationFieldMappingRepository::class)->upsert(
-        $this->projectIntegration, IntegrationFieldMappingType::STATUS, 'Done', 'closed',
+        $this->projectIntegration, IntegrationFieldMappingType::STATUS, 'Done', 'done',
     );
     $external = new ExternalIssueDTO(
         externalId: '1', externalKey: 'JIRA-1', title: 'A crash', description: null,
