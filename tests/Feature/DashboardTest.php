@@ -79,3 +79,13 @@ test('the dashboard issues carry their workflow status, so the counters can tell
     $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
         ->where('issues.0.workflowStatus.category', 'done'));
 });
+
+test('the dashboard projects carry per-category issue counts', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+    Issue::factory()->done()->create(['project_id' => $project->id]);
+
+    $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
+        ->where('projects.0.issue_counts.done', 1));
+});

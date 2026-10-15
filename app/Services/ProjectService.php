@@ -61,6 +61,17 @@ class ProjectService
         return CachedModels::hydrate(Project::class, $rows);
     }
 
+    /**
+     * The given projects with an `issue_counts` attribute (issues per status
+     * category) for the project cards' completion ring.
+     */
+    public function withIssueCounts(Collection $projects): Collection
+    {
+        $counts = $this->projectRepository->issueCountsByCategory($projects->pluck('id')->all());
+
+        return $projects->each(fn (Project $project) => $project->setAttribute('issue_counts', $counts[$project->id]));
+    }
+
     public function findById(int $id): ?Project
     {
         return $this->projectRepository->findById($id);
