@@ -76,8 +76,22 @@ export interface ConditionFieldOption {
  */
 const ISSUE_STATUS_CHANGED_FIELDS: ConditionFieldOption[] = [
     { value: 'issue.id', label: 'Issue ID' },
-    { value: 'issue.status', label: 'Issue status (new)' },
-    { value: 'issue.previousStatus', label: 'Issue status (previous)' },
+    { value: 'issue.status', label: 'Status name (new)' },
+    { value: 'issue.previousStatus', label: 'Status name (previous)' },
+    { value: 'issue.category', label: 'Status category (new)' },
+    { value: 'issue.previousCategory', label: 'Status category (previous)' },
+];
+
+/** Condition fields whose value is a status category rather than free text. */
+export const CATEGORY_CONDITION_FIELDS = [
+    'issue.category',
+    'issue.previousCategory',
+];
+
+/** Condition fields whose value is the name of one of the project's statuses. */
+export const STATUS_NAME_CONDITION_FIELDS = [
+    'issue.status',
+    'issue.previousStatus',
 ];
 
 /**
@@ -88,7 +102,8 @@ const ISSUE_STATUS_CHANGED_FIELDS: ConditionFieldOption[] = [
 const GITHUB_PULL_REQUEST_FIELDS: ConditionFieldOption[] = [
     { value: 'issue.id', label: 'Issue ID' },
     { value: 'issue.title', label: 'Issue title' },
-    { value: 'issue.status', label: 'Issue status' },
+    { value: 'issue.status', label: 'Status name' },
+    { value: 'issue.category', label: 'Status category' },
     { value: 'project.id', label: 'Project ID' },
     { value: 'project.name', label: 'Project name' },
     { value: 'repository.owner', label: 'Repository owner' },

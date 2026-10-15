@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { AutomationRule } from '@/types/Automation';
+import { IssueType } from '@/types/IssueTypes';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsAutomationTab from './WorkspaceSettingsAutomationTab';
 
@@ -314,6 +315,120 @@ describe('WorkspaceSettingsAutomationTab', () => {
             expect.objectContaining({
                 conditions: [
                     expect.objectContaining({ field: 'pullRequest.title' }),
+                ],
+            }),
+            expect.anything(),
+        );
+    });
+
+    describe('change status action', () => {
+        const issueTypes = [
+            {
+                id: 1,
+                name: 'Bug',
+                statuses: [
+                    {
+                        id: 5,
+                        issueTypeId: 1,
+                        name: 'In Review',
+                        color: '#ff9800',
+                        category: 'in_progress',
+                        isInitial: false,
+                    },
+                ],
+            },
+        ] as unknown as IssueType[];
+
+        const statusRule = (
+            params: Record<string, string>,
+        ): AutomationRule => ({
+            ...rule,
+            actions: [{ type: 'change_status', params }],
+        });
+
+        const open = async (r: AutomationRule) => {
+            const user = userEvent.setup();
+            renderTab({
+                memberProjects: [project],
+                selectedProjectId: 1,
+                automationRules: [r],
+                triggerTypes,
+                actionTypes,
+                issueTypes,
+                hasAutomationAccess: true,
+                canUpdateAutomation: true,
+            });
+            await user.click(screen.getByText('Merge to done'));
+            return user;
+        };
+
+        test('names the category the action moves issues to', async () => {
+            await open(statusRule({ category: 'done' }));
+
+            expect(screen.getByText('Category: Done')).toBeInTheDocument();
+        });
+
+        test('names an exact status with its issue type', async () => {
+            await open(statusRule({ workflow_status_id: '5' }));
+
+            expect(screen.getByText('Bug · In Review')).toBeInTheDocument();
+        });
+
+        test('picking an exact status saves it in place of the category', async () => {
+            const user = await open(statusRule({ category: 'done' }));
+
+            await user.click(screen.getByText('Change status'));
+            await user.click(
+                screen.getByRole('button', { name: 'Exact status' }),
+            );
+            await user.click(screen.getByText('Bug · In Review'));
+            await user.click(screen.getByRole('button', { name: 'Save' }));
+
+            expect(mockRouterPatch).toHaveBeenCalledWith(
+                '/projects/1/automation-rules/1',
+                expect.objectContaining({
+                    actions: [
+                        expect.objectContaining({
+                            params: { workflow_status_id: '5' },
+                        }),
+                    ],
+                }),
+                expect.anything(),
+            );
+        });
+    });
+
+    test('a status category condition picks its value from the categories', async () => {
+        const user = userEvent.setup();
+        renderTab({
+            memberProjects: [project],
+            selectedProjectId: 1,
+            automationRules: [rule],
+            triggerTypes,
+            actionTypes,
+            hasAutomationAccess: true,
+            canUpdateAutomation: true,
+        });
+
+        await user.click(screen.getByText('Merge to done'));
+        await user.click(screen.getByText('+ Add condition'));
+        await user.click(screen.getByRole('button', { name: 'Field' }));
+        await user.click(screen.getByText('Status category'));
+
+        expect(screen.queryByPlaceholderText('Value')).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Value' }));
+        await user.click(screen.getByText('In Progress'));
+        await user.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            '/projects/1/automation-rules/1',
+            expect.objectContaining({
+                conditions: [
+                    expect.objectContaining({
+                        field: 'issue.category',
+                        value: 'in_progress',
+                    }),
                 ],
             }),
             expect.anything(),
