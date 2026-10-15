@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkflowStatus;
 use App\Services\IssueTypeService;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -215,4 +216,16 @@ test('dropping the status column moves each legacy value onto the matching workf
 
     expect($categories->all())->toBe(['open' => 'todo', 'in_progress' => 'in_progress', 'closed' => 'done'])
         ->and(Issue::query()->whereIn('id', $ids)->whereNull('issue_type_id')->count())->toBe(0);
+});
+
+test('the status column migration drops the cached issue lists in both directions', function () {
+    $migration = require database_path('migrations/2026_10_15_120000_drop_status_from_issues_table.php');
+    $before = CacheVersion::current(CacheVersion::ISSUES);
+
+    $migration->down();
+    $afterDown = CacheVersion::current(CacheVersion::ISSUES);
+    $migration->up();
+
+    expect($afterDown)->toBeGreaterThan($before)
+        ->and(CacheVersion::current(CacheVersion::ISSUES))->toBeGreaterThan($afterDown);
 });

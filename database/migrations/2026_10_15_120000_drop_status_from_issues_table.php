@@ -2,6 +2,7 @@
 
 use App\Models\Project;
 use App\Services\IssueTypeService;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,10 @@ return new class extends Migration
         });
 
         $this->recreateDateCheckTriggers();
+
+        // Issues were written through the query builder, so no model event
+        // dropped the cached issue lists.
+        CacheVersion::bump(CacheVersion::ISSUES);
     }
 
     public function down(): void
@@ -52,6 +57,8 @@ return new class extends Migration
         });
 
         $this->recreateDateCheckTriggers();
+
+        CacheVersion::bump(CacheVersion::ISSUES);
     }
 
     /**
