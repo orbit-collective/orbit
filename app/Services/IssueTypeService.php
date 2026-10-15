@@ -82,13 +82,6 @@ class IssueTypeService
      */
     public const int DEFAULTS_VERSION = 5;
 
-    /** Maps the legacy issues.status enum value to a default-workflow status name, for the one-time backfill. */
-    private const array LEGACY_STATUS_TO_DEFAULT_STATUS = [
-        'open' => 'To Do',
-        'in_progress' => 'In Progress',
-        'closed' => 'Done',
-    ];
-
     public function __construct(
         protected IssueTypeRepository $issueTypeRepository,
         protected WorkflowRepository $workflowRepository,
@@ -358,7 +351,7 @@ class IssueTypeService
 
         $statuses = $issueType->statuses()->get()->keyBy('name');
 
-        if (array_any($catalogNames, fn($name) => !$statuses->has($name))) {
+        if (array_any($catalogNames, fn ($name) => ! $statuses->has($name))) {
             return;
         }
 
@@ -576,43 +569,39 @@ class IssueTypeService
     }
 
     /**
-     * Maps the legacy issues.status enum value to the best-fit status of the
-     * given issue type's workflow, by category rather than by exact name -
-     * so it still works for a type whose workflow has been customized away
-     * from the three default statuses. Falls back to the type's initial
-     * status, so every issue always resolves to *something*.
+     * The workflow status a new issue of the given type starts on: the one
+     * the caller picked, or the type's initial status. A pick that is not a
+     * node of this type's workflow is a validation error rather than being
+     * silently replaced. Falls back to the first status by order when a
+     * customized workflow has no initial one, so a typed issue always
+     * resolves to *something*.
      */
-    public function resolveWorkflowStatusForLegacyValue(IssueType $issueType, ?string $legacyStatus): ?WorkflowStatus
+    public function startingStatusFor(IssueType $issueType, ?int $requestedId = null): ?WorkflowStatus
     {
-        $category = match ($legacyStatus) {
-            'open' => WorkflowStatusCategory::TODO,
-            'in_progress' => WorkflowStatusCategory::IN_PROGRESS,
-            'closed' => WorkflowStatusCategory::DONE,
-            default => null,
-        };
+        if ($requestedId !== null) {
+            $status = $issueType->statuses()->find($requestedId);
 
-        $status = $category
-            ? $issueType->statuses()->where('category', $category->value)->orderBy('sort_order')->first()
-            : null;
+            if (! $status) {
+                throw ValidationException::withMessages([
+                    'workflow_status_id' => 'That status does not belong to this issue type\'s workflow.',
+                ]);
+            }
 
-        return $status
-            ?? $issueType->statuses()->where('is_initial', true)->first()
+            return $status;
+        }
+
+        return $issueType->statuses()->where('is_initial', true)->first()
             ?? $issueType->statuses()->orderBy('sort_order')->first();
     }
 
     /**
-     * The inverse of resolveWorkflowStatusForLegacyValue(): collapses a
-     * workflow status back onto the legacy issues.status enum by category,
-     * so the old column stays meaningful for board/filter code that still
-     * reads it while the workflow is the real source of truth.
+     * The status of the issue type's workflow that stands for the given
+     * category - the first one by order - or null when the workflow has none
+     * of that category (a workflow may legitimately lack, say, "in progress").
      */
-    public function legacyValueForWorkflowStatus(WorkflowStatus $status): string
+    public function statusForCategory(IssueType $issueType, WorkflowStatusCategory $category): ?WorkflowStatus
     {
-        return match ($status->category) {
-            WorkflowStatusCategory::TODO => 'open',
-            WorkflowStatusCategory::IN_PROGRESS => 'in_progress',
-            WorkflowStatusCategory::DONE => 'closed',
-        };
+        return $issueType->statuses()->where('category', $category->value)->orderBy('sort_order')->first();
     }
 
     public function createIssueType(Project $project, array $data): IssueType
@@ -784,18 +773,16 @@ class IssueTypeService
             return;
         }
 
-        $statusesByName = $taskType->statuses()->get()->keyBy('name');
+        $initialStatus = $taskType->statuses()->where('is_initial', true)->first()
+            ?? $taskType->statuses()->orderBy('sort_order')->first();
 
         Issue::query()
             ->where('project_id', $project->id)
             ->whereNull('issue_type_id')
-            ->each(function (Issue $issue) use ($taskType, $statusesByName) {
-                $statusName = self::LEGACY_STATUS_TO_DEFAULT_STATUS[$issue->status] ?? 'To Do';
-                $status = $statusesByName->get($statusName) ?? $statusesByName->get('To Do');
-
+            ->each(function (Issue $issue) use ($taskType, $initialStatus) {
                 $issue->forceFill([
                     'issue_type_id' => $taskType->id,
-                    'workflow_status_id' => $status?->id,
+                    'workflow_status_id' => $issue->workflow_status_id ?? $initialStatus?->id,
                 ])->save();
             });
     }

@@ -7,6 +7,7 @@ use App\Events\IssueUpdated;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\WorkflowStatus;
 use App\Repositories\IssueRepository;
 use App\Services\ActivityLogService;
 use App\Services\Automation\AutomationDispatcher;
@@ -25,6 +26,16 @@ beforeEach(function () {
     $this->service = new IssueService($this->issueRepository, $this->activityLogService, $this->userService, app(AutomationDispatcher::class));
     Event::fake();
 });
+
+/** A "Done" status on the issue's own issue type, to move the issue to. */
+function doneStatusFor(Issue $issue): WorkflowStatus
+{
+    return WorkflowStatus::factory()->create([
+        'issue_type_id' => $issue->issue_type_id,
+        'name' => 'Done',
+        'category' => 'done',
+    ]);
+}
 
 test('getIssueWithRelations delegates to the repository', function () {
     $issue = Issue::factory()->make(['id' => 42, 'number' => 42]);
@@ -55,7 +66,7 @@ test('getAllForProject delegates to the repository', function () {
 test('getAllForProject passes search and filters through to the repository', function () {
     $issues = Issue::factory()->count(1)->make(['project_id' => 7]);
     $searchParams = ['search' => 'bug'];
-    $filters = ['status' => ['open']];
+    $filters = ['status' => ['todo']];
 
     $this->issueRepository->shouldReceive('getForProject')
         ->once()
@@ -168,11 +179,10 @@ test('updateIssue logs activity and fires IssueUpdated with the actor when there
     $this->actingAs($actor);
 
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create([
+    $issue = Issue::factory()->todo()->create([
         'project_id' => $project->id,
         'assignee_id' => null,
         'title' => 'Bug report',
-        'status' => 'open',
     ]);
 
     $this->issueRepository->shouldReceive('update')
@@ -186,15 +196,15 @@ test('updateIssue logs activity and fires IssueUpdated with the actor when there
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'status changed from "open" to "closed"')));
+        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'status changed from "Todo status" to "Done"')));
 
-    $this->service->updateIssue($issue, ['status' => 'closed']);
+    $this->service->updateIssue($issue, ['workflow_status_id' => doneStatusFor($issue)->id]);
 
     Event::assertDispatched(
         IssueUpdated::class,
         fn ($event) => $event->actor->is($actor)
-            && $event->changes['status']['old'] === 'open'
-            && $event->changes['status']['new'] === 'closed'
+            && $event->changes['status']['old'] === 'Todo status'
+            && $event->changes['status']['new'] === 'Done'
     );
     Event::assertNotDispatched(IssueAssigned::class);
     Event::assertNotDispatched(IssueUnassigned::class);
@@ -206,10 +216,9 @@ test('updateIssue fires IssueUpdated with the current assignee available when th
     $this->actingAs($actor);
 
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create([
+    $issue = Issue::factory()->todo()->create([
         'project_id' => $project->id,
         'assignee_id' => $assignee->id,
-        'status' => 'open',
     ]);
 
     $this->issueRepository->shouldReceive('update')
@@ -223,7 +232,7 @@ test('updateIssue fires IssueUpdated with the current assignee available when th
 
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->service->updateIssue($issue, ['status' => 'closed']);
+    $this->service->updateIssue($issue, ['workflow_status_id' => doneStatusFor($issue)->id]);
 
     Event::assertDispatched(
         IssueUpdated::class,
@@ -471,11 +480,10 @@ test('updateIssue reports both changed fields in a single IssueUpdated payload w
     $this->actingAs($actor);
 
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create([
+    $issue = Issue::factory()->todo()->create([
         'project_id' => $project->id,
         'assignee_id' => null,
         'priority' => 'low',
-        'status' => 'open',
     ]);
 
     $this->issueRepository->shouldReceive('update')
@@ -489,7 +497,7 @@ test('updateIssue reports both changed fields in a single IssueUpdated payload w
 
     $this->activityLogService->shouldReceive('log')->once();
 
-    $this->service->updateIssue($issue, ['status' => 'closed', 'priority' => 'high']);
+    $this->service->updateIssue($issue, ['workflow_status_id' => doneStatusFor($issue)->id, 'priority' => 'high']);
 
     Event::assertDispatched(
         IssueUpdated::class,
@@ -672,10 +680,9 @@ test('updateIssue does not log or fire any event when nothing actually changed',
     $this->actingAs($actor);
 
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create([
+    $issue = Issue::factory()->todo()->create([
         'project_id' => $project->id,
         'assignee_id' => null,
-        'status' => 'open',
     ]);
 
     $this->issueRepository->shouldReceive('update')
@@ -688,7 +695,7 @@ test('updateIssue does not log or fire any event when nothing actually changed',
 
     $this->activityLogService->shouldNotReceive('log');
 
-    $this->service->updateIssue($issue, ['status' => 'open']);
+    $this->service->updateIssue($issue, ['workflow_status_id' => $issue->workflow_status_id]);
 
     Event::assertNotDispatched(IssueUpdated::class);
 });

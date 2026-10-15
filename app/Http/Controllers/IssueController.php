@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\IssueStatus;
 use App\Models\ExternalIssueLink;
 use App\Models\Issue;
 use App\Models\IssueType;
@@ -18,8 +17,8 @@ use App\Services\LabelService;
 use App\Services\ProjectService;
 use App\Services\UserService;
 use App\Services\WorkflowService;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -127,7 +126,7 @@ class IssueController extends Controller
             'id' => $issue->id,
             'number' => $issue->number,
             'title' => $issue->title,
-            'status' => $issue->status,
+            'workflowStatus' => $issue->workflowStatus?->toArray(),
             'priority' => $issue->priority,
             'labels' => $issue->labels ?? [],
             'start_date' => $issue->start_date,
@@ -220,7 +219,6 @@ class IssueController extends Controller
         $data = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
-            'status' => ['sometimes', 'required', Rule::enum(IssueStatus::class)],
             'priority' => 'sometimes|required|string',
             'issue_type_id' => 'sometimes|required|integer',
             'workflow_status_id' => 'sometimes|required|integer',
@@ -268,7 +266,7 @@ class IssueController extends Controller
                 // The old workflow_status_id almost certainly doesn't belong
                 // to the new type's workflow - reset to its initial status
                 // unless this same request also picks an explicit one below.
-                if (! array_key_exists('status', $data) && ! $picksWorkflowStatus) {
+                if (! $picksWorkflowStatus) {
                     $data['workflow_status_id'] = $newType->statuses()->where('is_initial', true)->first()?->id;
                 }
 
@@ -289,9 +287,6 @@ class IssueController extends Controller
             }
         }
 
-        // A picked workflow status wins over the legacy enum: the sidebar
-        // sends workflow_status_id so a custom status ("In Review") is
-        // selectable at all, and the old status column is derived from it.
         if ($picksWorkflowStatus) {
             $this->authorize('changeStatus', $issue);
 
@@ -309,18 +304,6 @@ class IssueController extends Controller
                 $this->workflowService->assertTransitionAllowed($issueType, $issue->workflow_status_id, $newStatus->id);
             }
 
-            $data['status'] = $this->issueTypeService->legacyValueForWorkflowStatus($newStatus);
-        } elseif (array_key_exists('status', $data)) {
-            $this->authorize('changeStatus', $issue);
-
-            $newStatus = $issueType
-                ? $this->issueTypeService->resolveWorkflowStatusForLegacyValue($issueType, $data['status'])
-                : null;
-
-            if ($newStatus && $issueType) {
-                $this->workflowService->assertTransitionAllowed($issueType, $issue->workflow_status_id, $newStatus->id);
-                $data['workflow_status_id'] = $newStatus->id;
-            }
         }
 
         if ($issueType && array_key_exists('custom_fields', $data)) {
@@ -362,8 +345,8 @@ class IssueController extends Controller
             'description' => 'nullable|string',
             'project_id' => 'required|exists:projects,id',
             'priority' => 'required|string',
-            'status' => ['required', Rule::enum(IssueStatus::class)],
             'issue_type_id' => 'nullable|integer',
+            'workflow_status_id' => 'nullable|integer',
             'template_id' => 'nullable|integer',
             'parent_id' => 'nullable|integer',
             'assignee_id' => [
@@ -404,8 +387,7 @@ class IssueController extends Controller
         $this->issueService->assertValidParent($project, $data['parent_id'] ?? null, $issueType->id);
 
         $data['issue_type_id'] = $issueType->id;
-        $data['workflow_status_id'] = $this->issueTypeService
-            ->resolveWorkflowStatusForLegacyValue($issueType, $data['status'])?->id;
+        $data['workflow_status_id'] = $this->issueTypeService->startingStatusFor($issueType, $data['workflow_status_id'] ?? null)?->id;
 
         // With no explicit template_id the type's own template still applies:
         // that is the whole point of a per-type template, and quick-add (which

@@ -588,10 +588,10 @@ test('creating an issue redirects back with a success flash message and an actio
     $response->assertSessionHas('action_url', route('projects.show', $project->id).'?issue='.$issue->id);
 });
 
-test('creating an issue requires a title, project_id, priority and status', function () {
+test('creating an issue requires a title, project_id and priority', function () {
     $response = $this->actingAs(User::factory()->create())->post('/issues');
 
-    $response->assertSessionHasErrors(['title', 'project_id', 'priority', 'status']);
+    $response->assertSessionHasErrors(['title', 'project_id', 'priority']);
 });
 
 test('creating an issue requires the project_id to reference a real project', function () {
@@ -888,41 +888,44 @@ test('updating only end_date without start_date bypasses validation and returns 
     $response->assertStatus(500);
 });
 
-test('updating an issue rejects an invalid status or priority value type', function () {
+test('updating an issue rejects an empty workflow status', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
     $user = actingAsProjectMember($project);
 
     $response = $this->actingAs($user)->patch("/issues/$issue->id", [
-        'status' => '',
+        'workflow_status_id' => '',
     ]);
 
-    $response->assertSessionHasErrors('status');
+    $response->assertSessionHasErrors('workflow_status_id');
 });
 
-test('updating an issue accepts in_progress as a valid status', function () {
+test('updating an issue moves it to an in-progress workflow status', function () {
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['project_id' => $project->id, 'status' => 'open']);
+    $issue = Issue::factory()->todo()->create(['project_id' => $project->id]);
+    $inProgress = $issue->issueType->statuses()->create([
+        'name' => 'Doing', 'color' => '#f59e0b', 'category' => 'in_progress', 'sort_order' => 1,
+    ]);
+    $issue->issueType->transitions()->create(['from_status_id' => $issue->workflow_status_id, 'to_status_id' => $inProgress->id]);
     $user = actingAsProjectMember($project);
 
     $response = $this->actingAs($user)->patch("/issues/$issue->id", [
-        'status' => 'in_progress',
+        'workflow_status_id' => $inProgress->id,
     ]);
 
     $response->assertRedirect();
-    $this->assertDatabaseHas('issues', ['id' => $issue->id, 'status' => 'in_progress']);
+    $this->assertDatabaseHas('issues', ['id' => $issue->id, 'workflow_status_id' => $inProgress->id]);
 });
 
-test('updating an issue rejects a status value outside the enum', function () {
+test('the legacy status field is no longer accepted when updating an issue', function () {
     $project = Project::factory()->create();
-    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $issue = Issue::factory()->todo()->create(['project_id' => $project->id]);
+    $before = $issue->workflow_status_id;
     $user = actingAsProjectMember($project);
 
-    $response = $this->actingAs($user)->patch("/issues/$issue->id", [
-        'status' => 'archived',
-    ]);
+    $this->actingAs($user)->patch("/issues/$issue->id", ['status' => 'closed'])->assertRedirect();
 
-    $response->assertSessionHasErrors('status');
+    expect($issue->refresh()->workflow_status_id)->toBe($before);
 });
 
 test('guests cannot update an issue', function () {
@@ -1057,8 +1060,7 @@ test('an issue can be moved to a custom workflow status by id', function () {
 
     $response->assertRedirect();
     $issue->refresh();
-    expect($issue->workflow_status_id)->toBe($inReview->id)
-        ->and($issue->status)->toBe('in_progress');
+    expect($issue->workflow_status_id)->toBe($inReview->id);
 });
 
 test('a workflow status from another issue type is rejected', function () {
@@ -1103,7 +1105,7 @@ test('a workflow status with no transition from the current one is rejected', fu
         'workflow_status_id' => $unreachable->id,
     ]);
 
-    $response->assertSessionHasErrors('status');
+    $response->assertSessionHasErrors('workflow_status_id');
 });
 
 test('changing the issue type and picking a status of the new type in one request works', function () {
@@ -1129,8 +1131,7 @@ test('changing the issue type and picking a status of the new type in one reques
     $response->assertRedirect()->assertSessionHasNoErrors();
     $issue->refresh();
     expect($issue->issue_type_id)->toBe($bugType->id)
-        ->and($issue->workflow_status_id)->toBe($bugDone->id)
-        ->and($issue->status)->toBe('closed');
+        ->and($issue->workflow_status_id)->toBe($bugDone->id);
 });
 
 test('issue search returns only this project\'s issues whose id starts with the query', function () {

@@ -285,8 +285,7 @@ test('a legacy status mapping still resolves by category within the type workflo
     $this->service->import($this->projectIntegration, $this->project, $this->importedBy, [$external]);
 
     $issue = $this->project->issues()->first();
-    expect($issue->workflowStatus->category->value)->toBe('done')
-        ->and($issue->status)->toBe('closed');
+    expect($issue->workflowStatus->category->value)->toBe('done');
 });
 
 test('importing a hierarchy the project did not allow widens the parent type', function () {

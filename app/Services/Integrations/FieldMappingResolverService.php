@@ -3,7 +3,6 @@
 namespace App\Services\Integrations;
 
 use App\Enums\IntegrationFieldMappingType;
-use App\Enums\IssueStatus;
 use App\Models\ProjectIntegration;
 use App\Repositories\IntegrationFieldMappingRepository;
 
@@ -20,8 +19,9 @@ use App\Repositories\IntegrationFieldMappingRepository;
  */
 class FieldMappingResolverService
 {
+    /** A status mapping's value is a workflow status name or a category (open/todo, in_progress, closed/done). */
     private const array DEFAULTS = [
-        'status' => IssueStatus::OPEN->value,
+        'status' => 'todo',
         'priority' => 'medium',
     ];
 

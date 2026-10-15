@@ -107,7 +107,7 @@ class CommandPaletteSearchService
             'status' => $issue->workflowStatus ? [
                 'name' => $issue->workflowStatus->name,
                 'color' => $issue->workflowStatus->color,
-            ] : ($issue->status ? ['name' => $issue->status, 'color' => null] : null),
+            ] : null,
         ];
     }
 

@@ -5,6 +5,7 @@ use App\Models\Issue;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Models\User;
+use App\Models\WorkflowStatus;
 use App\Services\CommentService;
 use App\Services\IssueService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -131,10 +132,11 @@ test('a status change always fires the webhook, regardless of who made it or who
     ]);
     $assignee = User::factory()->create();
     $someoneElse = User::factory()->create(['name' => 'Carol']);
-    $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => $assignee->id, 'status' => 'open']);
+    $issue = Issue::factory()->todo()->create(['project_id' => $project->id, 'assignee_id' => $assignee->id]);
+    $done = WorkflowStatus::factory()->create(['issue_type_id' => $issue->issue_type_id, 'name' => 'Done', 'category' => 'done']);
     $this->actingAs($someoneElse);
 
-    app(IssueService::class)->updateIssue($issue, ['status' => 'closed']);
+    app(IssueService::class)->updateIssue($issue, ['workflow_status_id' => $done->id]);
 
     Queue::assertPushed(SendWebhookNotificationJob::class, fn (SendWebhookNotificationJob $job) => str_contains($job->payload['embeds'][0]['description'], 'status changed'));
 });

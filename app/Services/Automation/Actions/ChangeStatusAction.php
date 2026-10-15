@@ -47,7 +47,6 @@ class ChangeStatusAction implements AutomationActionHandler
 
         $this->issueService->updateIssue($issue, [
             'workflow_status_id' => $newStatus->id,
-            'status' => $this->issueTypeService->legacyValueForWorkflowStatus($newStatus),
         ]);
     }
 
