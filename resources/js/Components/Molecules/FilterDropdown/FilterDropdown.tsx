@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import React, { ReactNode, useMemo } from 'react';
+import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
@@ -159,19 +159,48 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     onOpenChange,
 }) => {
     const { labels: projectLabels } = useProjectLabels();
+
+    // The Status filter can list either the three categories or, when the
+    // project has statuses of its own, the exact statuses. Both live in the
+    // same dropdown; a button in its panel switches between them.
+    const canShowExact = type === 'status' && statusGroups.length > 0;
+    const [exact, setExact] = useState(() =>
+        Boolean(queryParams?.workflow_status),
+    );
+    useEffect(() => {
+        if (queryParams?.workflow_status) setExact(true);
+        else if (queryParams?.status) setExact(false);
+    }, [queryParams?.workflow_status, queryParams?.status]);
+
+    const mode: FilterDropdownType =
+        canShowExact && exact ? 'workflowStatus' : type;
+
     const config = useMemo(() => {
-        if (type === 'assignee') return buildAssigneeConfig(users);
-        if (type === 'labels') return buildLabelsConfig(projectLabels);
-        if (type === 'workflowStatus')
+        if (mode === 'assignee') return buildAssigneeConfig(users);
+        if (mode === 'labels') return buildLabelsConfig(projectLabels);
+        if (mode === 'workflowStatus')
             return buildWorkflowStatusConfig(statusGroups);
-        return FILTER_CONFIG[type];
-    }, [type, users, projectLabels, statusGroups]);
+        return FILTER_CONFIG[mode];
+    }, [mode, users, projectLabels, statusGroups]);
+
+    const switchMode = () => {
+        // The other mode's selection would keep filtering without being
+        // visible, so it is cleared on the way over.
+        const nextParams: Record<string, any> = { ...queryParams, page: 1 };
+        delete nextParams[FILTER_CONFIG.status.paramKey];
+        delete nextParams[FILTER_CONFIG.workflowStatus.paramKey];
+        router.get(window.location.pathname, nextParams, {
+            preserveState: true,
+            replace: true,
+        });
+        setExact(!exact);
+    };
 
     const selected = useMemo(() => {
         const raw = queryParams?.[config.paramKey];
         const values = raw ? String(raw).split(',').filter(Boolean) : [];
 
-        if (type !== 'workflowStatus') return values;
+        if (mode !== 'workflowStatus') return values;
 
         // The URL holds plain status ids; an option is selected once all of
         // its ids are there.
@@ -180,7 +209,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
             .filter((value) =>
                 value.split('.').every((id) => values.includes(id)),
             );
-    }, [queryParams, config.paramKey, config.options, type]);
+    }, [queryParams, config.paramKey, config.options, mode]);
 
     const options = useMemo(
         () =>
@@ -200,7 +229,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
         const nextParams: Record<string, any> = { ...queryParams, page: 1 };
         if (values.length > 0) {
             nextParams[config.paramKey] = (
-                type === 'workflowStatus'
+                mode === 'workflowStatus'
                     ? values.flatMap((value) => value.split('.'))
                     : values
             ).join(',');
@@ -243,11 +272,24 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
                         : config.options.map((option) => option.value),
                 )
             }
+            footer={
+                canShowExact ? (
+                    <button
+                        type="button"
+                        data-nav
+                        onClick={switchMode}
+                        className="flex w-full cursor-pointer items-center gap-2 border-0 border-t border-solid border-[var(--border-color)] bg-transparent px-3 py-2 text-left text-xs font-medium text-[var(--accent-color)] hover:bg-[var(--bg-light-color)]"
+                    >
+                        <Icon name="ArrowLeftRight" size={12} />
+                        {exact ? 'Show categories' : 'Show exact statuses'}
+                    </button>
+                ) : undefined
+            }
             open={isOpen}
             onOpenChange={onOpenChange}
             trigger={
                 <FilterButton
-                    label={config.label}
+                    label={FILTER_CONFIG[type].label}
                     value={
                         selected.length > 0
                             ? String(selected.length)

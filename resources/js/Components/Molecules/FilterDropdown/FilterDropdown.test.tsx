@@ -367,31 +367,69 @@ describe('FilterDropdown Component', () => {
             },
         ];
 
-        test('lists one option per status name', async () => {
+        const renderStatus = (
+            queryParams: Record<string, string> = {},
+            groups = statusGroups,
+        ) =>
             render(
                 <FilterDropdown
-                    type="workflowStatus"
-                    statusGroups={statusGroups}
+                    type="status"
+                    statusGroups={groups}
+                    queryParams={queryParams}
                     isOpen
                     onOpenChange={vi.fn()}
                 />,
             );
 
+        test('lists the categories first and offers a switch to exact statuses', async () => {
+            renderStatus();
+
+            expect(await screen.findByText('To Do')).toBeInTheDocument();
+            expect(
+                screen.getByRole('button', { name: /Show exact statuses/ }),
+            ).toBeInTheDocument();
+        });
+
+        test('has no switch when the project has no statuses of its own', async () => {
+            renderStatus({}, []);
+
+            await screen.findByText('To Do');
+            expect(
+                screen.queryByRole('button', { name: /exact statuses/ }),
+            ).not.toBeInTheDocument();
+        });
+
+        test('the switch lists one option per status name and clears the category filter', async () => {
+            const user = userEvent.setup();
+            renderStatus({ status: 'todo' });
+
+            await user.click(
+                await screen.findByRole('button', {
+                    name: /Show exact statuses/,
+                }),
+            );
+
+            expect(mockRouterGet).toHaveBeenCalledWith(
+                '/',
+                expect.not.objectContaining({ status: expect.anything() }),
+                expect.anything(),
+            );
             expect(await screen.findByText('In Review')).toBeInTheDocument();
-            expect(screen.getByText('Done')).toBeInTheDocument();
+            expect(
+                screen.getByRole('button', { name: /Show categories/ }),
+            ).toBeInTheDocument();
         });
 
         test('picking a name filters by all the ids behind it', async () => {
             const user = userEvent.setup();
-            render(
-                <FilterDropdown
-                    type="workflowStatus"
-                    statusGroups={statusGroups}
-                    isOpen
-                    onOpenChange={vi.fn()}
-                />,
-            );
+            renderStatus();
 
+            await user.click(
+                await screen.findByRole('button', {
+                    name: /Show exact statuses/,
+                }),
+            );
+            mockRouterGet.mockClear();
             await user.click(await screen.findByText('In Review'));
 
             expect(mockRouterGet).toHaveBeenCalledWith(
@@ -401,19 +439,11 @@ describe('FilterDropdown Component', () => {
             );
         });
 
-        test('marks a name as selected once all its ids are in the URL', () => {
-            render(
-                <FilterDropdown
-                    type="workflowStatus"
-                    statusGroups={statusGroups}
-                    queryParams={{ workflow_status: '5,9' }}
-                    isOpen={false}
-                    onOpenChange={vi.fn()}
-                />,
-            );
+        test('opens straight in exact mode when the URL already holds exact statuses', async () => {
+            renderStatus({ workflow_status: '5,9' });
 
-            // The trigger shows how many names are selected, not how many ids.
-            expect(screen.getByText('1')).toBeInTheDocument();
+            expect(await screen.findByText('In Review')).toBeInTheDocument();
+            expect(screen.queryByText('To Do')).not.toBeInTheDocument();
         });
     });
 });

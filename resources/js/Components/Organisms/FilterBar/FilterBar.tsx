@@ -33,13 +33,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
     const [searchQuery, setSearchQuery] = useState(queryParams?.search || '');
     const [openFilter, setOpenFilter] = useState<OpenPanel>(null);
     const input = useRef<HTMLInputElement>(null);
-    const statusGroups = useMemo(
-        () => groupStatusesByName(issueTypes),
-        [issueTypes],
-    );
     // A project that kept the stock To Do / In Progress / Done has nothing
-    // to add over the category filter, so the exact-status one stays hidden.
-    const hasCustomStatuses = statusGroups.length > 3;
+    // to add over the categories, so it gets no switch to exact statuses.
+    const statusGroups = useMemo(() => {
+        const groups = groupStatusesByName(issueTypes);
+        return groups.length > 3 ? groups : [];
+    }, [issueTypes]);
 
     useEffect(() => {
         onPanelOpenChange?.(openFilter !== null);
@@ -104,24 +103,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
                             <FilterDropdown
                                 type="status"
                                 queryParams={queryParams}
+                                statusGroups={statusGroups}
                                 isOpen={openFilter === 'status'}
                                 onOpenChange={(isOpen) =>
                                     setOpenFilter(isOpen ? 'status' : null)
                                 }
                             />
-                            {hasCustomStatuses && (
-                                <FilterDropdown
-                                    type="workflowStatus"
-                                    queryParams={queryParams}
-                                    statusGroups={statusGroups}
-                                    isOpen={openFilter === 'workflowStatus'}
-                                    onOpenChange={(isOpen) =>
-                                        setOpenFilter(
-                                            isOpen ? 'workflowStatus' : null,
-                                        )
-                                    }
-                                />
-                            )}
                             <FilterDropdown
                                 type="assignee"
                                 queryParams={queryParams}
