@@ -27,7 +27,8 @@ class GithubAutomationContextBuilder
             'issue' => [
                 'id' => $issue->id,
                 'title' => $issue->title,
-                'status' => $issue->status,
+                'status' => $issue->workflowStatus?->name,
+                'category' => $issue->workflowStatus?->category->value,
             ],
             'repository' => [
                 'owner' => $repository->owner,
