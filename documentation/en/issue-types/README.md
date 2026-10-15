@@ -96,9 +96,10 @@ change-status automation — works on the status's **category**
 resolves a category to the type's own status of that category. The
 status filter and search go through `IssueRepository`, which matches the
 category (and, for the search box, the status name). The filter bar has
-two status filters: **Status** (the three categories, always there) and
-**Exact status**, which only appears once a project has a status beyond
-the stock three; it sends the `workflow_status` query param (status ids,
+one **Status** filter that lists the three categories; once a project
+has a status beyond the stock three, a switch in its panel swaps the list
+for the exact statuses (clearing the other mode's selection) and sends the
+`workflow_status` query param (status ids,
 one name selecting the id of every type that has it, combined with the
 category filter by AND). Project cards count issues per category on the
 server (`ProjectService::withIssueCounts()` -> `issue_counts`). Every system type's default workflow is a simple three-status
