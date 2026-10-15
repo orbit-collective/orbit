@@ -99,7 +99,14 @@ zmiany statusu — działa na **kategorii** statusu
 (`todo`/`in_progress`/`done`), a `IssueTypeService::statusForCategory()`
 zamienia kategorię na własny status typu o tej kategorii. Filtr statusu
 i wyszukiwanie przechodzą przez `IssueRepository`, który dopasowuje
-kategorię (a w polu wyszukiwania także nazwę statusu). Domyślny workflow każdego typu systemowego to prosta
+kategorię (a w polu wyszukiwania także nazwę statusu). Pasek filtrów ma
+dwa filtry statusu: **Status** (trzy kategorie, zawsze widoczny) i
+**Exact status**, który pojawia się dopiero, gdy projekt ma status poza
+standardowymi trzema; wysyła parametr `workflow_status` (id statusów,
+jedna nazwa wybiera id statusu z każdego typu, który ją ma, łączony z
+filtrem kategorii przez AND). Karty projektów liczą issues na kategorię
+po stronie serwera (`ProjectService::withIssueCounts()` -> `issue_counts`).
+Domyślny workflow każdego typu systemowego to prosta
 trójstanowa tablica (To Do/In Progress/Done), w której **każdy** status
 może przejść do każdego innego (pełna siatka) — to odpowiada
 zachowaniu sprzed Issue Types, gdzie status można było ustawić na

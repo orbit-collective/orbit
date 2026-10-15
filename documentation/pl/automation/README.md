@@ -107,3 +107,15 @@ lista reguł plus inline'owy formularz dodawania reguły — jeden
 trigger, jeden opcjonalny warunek, jedna akcja na regułę. To nie jest
 wizualny builder if/then/else z gałęziami czy grupami warunków;
 rozszerzenie go do takiego jest poza zakresem tego wydania.
+
+## Status w regułach
+
+Trigger zmiany statusu i triggery GitHub udostępniają status workflow
+issue w swoim kontekście: `issue.status` to **nazwa** statusu,
+`issue.category` jego kategoria (`todo`/`in_progress`/`done`), a trigger
+zmiany statusu dodaje `issue.previousStatus` / `issue.previousCategory`.
+Warunki na kategorii działają dla każdego typu issue; warunek na nazwie
+pasuje tylko do typów, które mają taki status. Akcja `change_status`
+przyjmuje albo `category` (każde issue trafia na własny status swojego
+typu o tej kategorii), albo dokładny `workflow_status_id` (stosowany
+tylko do issues tego typu). Kreator reguł oferuje oba.
