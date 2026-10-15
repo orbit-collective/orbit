@@ -69,3 +69,13 @@ test('the dashboard paginates the activity logs with the activity page params', 
         ->has('activityLogs.data', 20)
     );
 });
+
+test('the dashboard issues carry their workflow status, so the counters can tell done from open', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+    Issue::factory()->done()->create(['project_id' => $project->id]);
+
+    $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
+        ->where('issues.0.workflowStatus.category', 'done'));
+});

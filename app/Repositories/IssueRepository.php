@@ -192,7 +192,7 @@ class IssueRepository
     {
         return Issue::query()
             ->whereHas('project.users', fn ($query) => $query->where('users.id', $userId))
-            ->with(['creator', 'assignee'])
+            ->with(['creator', 'assignee', 'workflowStatus'])
             ->latest()
             ->get();
     }
