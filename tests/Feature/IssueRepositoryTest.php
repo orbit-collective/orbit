@@ -552,3 +552,19 @@ test('the workflow_status filter matches exact statuses, alone or with a categor
         ->and($csv)->toHaveCount(2)
         ->and($both->pluck('id')->all())->toBe([$other->id]);
 });
+
+test('getAllPaginated loads each issue type with its statuses and transitions, so the board can pick a reachable status', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->todo()->create(['project_id' => $project->id]);
+    $inProgress = $issue->issueType->statuses()->create([
+        'name' => 'Doing', 'color' => '#f59e0b', 'category' => 'in_progress', 'sort_order' => 1,
+    ]);
+    $issue->issueType->transitions()->create(['from_status_id' => $issue->workflow_status_id, 'to_status_id' => $inProgress->id]);
+
+    $loaded = $this->repository->getAllPaginated($project->id, 10)->items()[0];
+
+    expect($loaded->issueType->relationLoaded('statuses'))->toBeTrue()
+        ->and($loaded->issueType->statuses->pluck('name')->all())->toBe(['Todo status', 'Doing'])
+        ->and($loaded->issueType->relationLoaded('transitions'))->toBeTrue()
+        ->and($loaded->issueType->transitions)->toHaveCount(1);
+});

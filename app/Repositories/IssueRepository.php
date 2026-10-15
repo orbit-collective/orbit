@@ -189,7 +189,13 @@ class IssueRepository
 
     public function getAllPaginated(string|int $projectID = 'all', int $perPage = 20, array $sortParams = [], array $searchParams = [], array $filters = []): LengthAwarePaginator
     {
-        $query = Issue::query()->with(['creator', 'assignee', 'issueType', 'workflowStatus']);
+        // The board moves an issue by picking a status its type's workflow can
+        // reach, so each type comes with its statuses and transitions.
+        $query = Issue::query()->with([
+            'creator', 'assignee', 'workflowStatus', 'issueType',
+            'issueType.statuses' => fn ($statuses) => $statuses->orderBy('sort_order'),
+            'issueType.transitions',
+        ]);
 
         if ($projectID !== 'all') {
             $query->where('issues.project_id', $projectID);
