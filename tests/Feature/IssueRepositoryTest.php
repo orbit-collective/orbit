@@ -568,3 +568,11 @@ test('getAllPaginated loads each issue type with its statuses and transitions, s
         ->and($loaded->issueType->relationLoaded('transitions'))->toBeTrue()
         ->and($loaded->issueType->transitions)->toHaveCount(1);
 });
+
+test('findWorkflowStatus returns the status, or null for no id or an unknown one', function () {
+    $issue = Issue::factory()->done()->create();
+
+    expect($this->repository->findWorkflowStatus($issue->workflow_status_id)->is($issue->workflowStatus))->toBeTrue()
+        ->and($this->repository->findWorkflowStatus(null))->toBeNull()
+        ->and($this->repository->findWorkflowStatus(999999))->toBeNull();
+});
