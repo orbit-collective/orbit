@@ -35,13 +35,67 @@ test('getForProject respects the search box', function () {
 
 test('getForProject respects the status filter', function () {
     $project = Project::factory()->create();
-    Issue::factory()->create(['project_id' => $project->id, 'status' => 'open']);
-    Issue::factory()->create(['project_id' => $project->id, 'status' => 'closed']);
+    Issue::factory()->todo()->create(['project_id' => $project->id]);
+    Issue::factory()->done()->create(['project_id' => $project->id]);
 
-    $issues = $this->repository->getForProject($project->id, [], ['status' => ['open']]);
+    $issues = $this->repository->getForProject($project->id, [], ['status' => ['todo']]);
 
     expect($issues)->toHaveCount(1)
-        ->and($issues->first()->status)->toBe('open');
+        ->and($issues->first()->workflowStatus->category->value)->toBe('todo');
+});
+
+test('the status filter takes several categories at once', function () {
+    $project = Project::factory()->create();
+    Issue::factory()->todo()->create(['project_id' => $project->id]);
+    Issue::factory()->inProgress()->create(['project_id' => $project->id]);
+    Issue::factory()->done()->create(['project_id' => $project->id]);
+
+    $issues = $this->repository->getForProject($project->id, [], ['status' => 'todo,in_progress']);
+
+    expect($issues)->toHaveCount(2);
+});
+
+test('the status filter still understands the legacy open and closed values', function () {
+    $project = Project::factory()->create();
+    $todo = Issue::factory()->todo()->create(['project_id' => $project->id]);
+    $done = Issue::factory()->done()->create(['project_id' => $project->id]);
+
+    expect($this->repository->getForProject($project->id, [], ['status' => ['open']])->pluck('id')->all())->toBe([$todo->id])
+        ->and($this->repository->getForProject($project->id, [], ['status' => ['closed']])->pluck('id')->all())->toBe([$done->id]);
+});
+
+test('the status filter matches the category, not the status name', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->done()->create(['project_id' => $project->id]);
+    $issue->workflowStatus->update(['name' => 'Shipped']);
+    Issue::factory()->todo()->create(['project_id' => $project->id]);
+
+    expect($this->repository->getForProject($project->id, [], ['status' => ['done']])->pluck('id')->all())->toBe([$issue->id]);
+});
+
+test('the search box matches a status name', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->done()->create(['project_id' => $project->id]);
+    $issue->workflowStatus->update(['name' => 'Shipped']);
+    Issue::factory()->todo()->create(['project_id' => $project->id]);
+
+    $results = $this->repository->getAllPaginated($project->id, 10, [], ['status' => 'Shipped']);
+
+    expect($results->items())->toHaveCount(1)
+        ->and($results->items()[0]->id)->toBe($issue->id);
+});
+
+test('issues sort by status category and then by workflow order', function () {
+    $project = Project::factory()->create();
+    $done = Issue::factory()->done()->create(['project_id' => $project->id]);
+    $todo = Issue::factory()->todo()->create(['project_id' => $project->id]);
+    $progress = Issue::factory()->inProgress()->create(['project_id' => $project->id]);
+
+    $asc = collect($this->repository->getAllPaginated($project->id, 10, ['sort' => 'status', 'direction' => 'AZ'])->items())->pluck('id')->all();
+    $desc = collect($this->repository->getAllPaginated($project->id, 10, ['sort' => 'status', 'direction' => 'ZA'])->items())->pluck('id')->all();
+
+    expect($asc)->toBe([$todo->id, $progress->id, $done->id])
+        ->and($desc)->toBe([$done->id, $progress->id, $todo->id]);
 });
 
 test('getForProject respects the priority filter', function () {
@@ -233,13 +287,13 @@ test('it can search issues by labels', function () {
 
 test('it can search issues by a specific field key instead of the generic search term', function () {
     $project = Project::factory()->create();
-    Issue::factory()->create(['project_id' => $project->id, 'status' => 'closed']);
-    Issue::factory()->create(['project_id' => $project->id, 'status' => 'open']);
+    Issue::factory()->done()->create(['project_id' => $project->id]);
+    Issue::factory()->todo()->create(['project_id' => $project->id]);
 
-    $results = $this->repository->getAllPaginated($project->id, 10, [], ['status' => 'closed']);
+    $results = $this->repository->getAllPaginated($project->id, 10, [], ['status' => 'done']);
 
     expect($results->items())->toHaveCount(1)
-        ->and($results->items()[0]->status)->toBe('closed');
+        ->and($results->items()[0]->workflowStatus->category->value)->toBe('done');
 });
 
 test('it can sort issues by title ascending', function () {

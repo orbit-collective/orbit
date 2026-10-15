@@ -14,6 +14,16 @@ use Illuminate\Support\Collection;
 class IssueRepository
 {
     /**
+     * The status filter works on a workflow status category. Filters saved
+     * (or bookmarked) before the legacy issues.status column went away still
+     * carry its three values, which map onto the category of the same meaning.
+     */
+    private const array STATUS_FILTER_ALIASES = [
+        'open' => 'todo',
+        'closed' => 'done',
+    ];
+
+    /**
      * All of a project's issues matching the given search/filters, unpaginated -
      * used by views (calendar, upcoming-deadlines) that need every matching
      * issue rather than one table page, while still respecting the same
@@ -207,8 +217,14 @@ class IssueRepository
                     $query->orderBy('issues.number', $direction)->orderBy('issues.id', $direction);
                     break;
 
-                case 'title':
                 case 'status':
+                    $query->leftJoin('workflow_statuses', 'issues.workflow_status_id', '=', 'workflow_statuses.id')
+                        ->select('issues.*')
+                        ->orderByRaw("CASE workflow_statuses.category WHEN 'todo' THEN 1 WHEN 'in_progress' THEN 2 WHEN 'done' THEN 3 ELSE 4 END ".($direction === 'desc' ? 'desc' : 'asc'))
+                        ->orderBy('workflow_statuses.sort_order', $direction);
+                    break;
+
+                case 'title':
                 case 'labels':
                     $query->orderBy($column, $direction);
                     break;
@@ -269,7 +285,11 @@ class IssueRepository
                                 ->orWhere('issues.number', 'like', "%$value%")
                                 ->orWhere('labels', 'like', "%$value%");
                         });
-                    } elseif (in_array($key, ['title', 'status', 'priority', 'labels'])) {
+                    } elseif ($key === 'status') {
+                        $q->whereHas('workflowStatus', fn ($status) => $status
+                            ->where('name', 'like', "%$value%")
+                            ->orWhere('category', 'like', '%'.str_replace(' ', '_', strtolower((string) $value)).'%'));
+                    } elseif (in_array($key, ['title', 'priority', 'labels'])) {
                         $q->where($key, 'like', "%$value%");
                     }
                 }
@@ -277,11 +297,20 @@ class IssueRepository
         }
 
         if (! empty($filters)) {
-            foreach (['status', 'priority'] as $field) {
-                if (! empty($filters[$field])) {
-                    $values = is_array($filters[$field]) ? $filters[$field] : explode(',', $filters[$field]);
-                    $query->whereIn($field, array_filter($values));
+            if (! empty($filters['status'])) {
+                $values = is_array($filters['status']) ? $filters['status'] : explode(',', $filters['status']);
+                $categories = array_values(array_unique(array_filter(array_map(
+                    fn ($value) => self::STATUS_FILTER_ALIASES[trim($value)] ?? trim($value),
+                    $values,
+                ))));
+
+                if ($categories !== []) {
+                    $query->whereHas('workflowStatus', fn ($status) => $status->whereIn('category', $categories));
                 }
+            }
+            if (! empty($filters['priority'])) {
+                $values = is_array($filters['priority']) ? $filters['priority'] : explode(',', $filters['priority']);
+                $query->whereIn('priority', array_filter($values));
             }
             if (! empty($filters['labels'])) {
                 $labels = is_array($filters['labels']) ? $filters['labels'] : explode(',', $filters['labels']);
