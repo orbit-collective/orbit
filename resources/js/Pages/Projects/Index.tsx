@@ -30,7 +30,6 @@ function Index({ projects }: { projects: Project[] }) {
                                 <ProjectCard
                                     key={project.id}
                                     project={project}
-                                    issues={project.issues ?? []}
                                 />
                             ))}
                             <ProjectNewCard />

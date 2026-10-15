@@ -1,11 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
-import {
-    issues,
-    makeIssue,
-    makeProject,
-    taskStatuses,
-} from '@/stories/fixtures';
+import { makeProject } from '@/stories/fixtures';
 import ProjectCard, { ProjectNewCard } from './ProjectCard';
 
 const meta = {
@@ -20,8 +15,9 @@ const meta = {
         ),
     ],
     args: {
-        project: makeProject(),
-        issues,
+        project: makeProject({
+            issue_counts: { todo: 4, in_progress: 3, done: 5 },
+        }),
     },
 } satisfies Meta<typeof ProjectCard>;
 
@@ -38,15 +34,14 @@ export const Default: Story = {
 };
 
 export const NoIssues: Story = {
-    args: { issues: [] },
+    args: { project: makeProject() },
 };
 
-export const AllClosed: Story = {
+export const AllDone: Story = {
     args: {
-        issues: [
-            makeIssue({ id: '1', workflowStatus: taskStatuses[3] }),
-            makeIssue({ id: '2', workflowStatus: taskStatuses[3] }),
-        ],
+        project: makeProject({
+            issue_counts: { todo: 0, in_progress: 0, done: 2 },
+        }),
     },
 };
 
@@ -62,8 +57,8 @@ export const Colors: Story = {
                             name: color,
                             slug: color,
                             color,
+                            issue_counts: { todo: 2, in_progress: 1, done: 3 },
                         })}
-                        issues={issues}
                     />
                 ))}
             </div>
