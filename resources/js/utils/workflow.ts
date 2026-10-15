@@ -1,4 +1,5 @@
 import { Issue } from '@/types/Issues';
+import { IssueType } from '@/types/IssueTypes';
 import { WorkflowStatus, WorkflowStatusCategory } from '@/types/Workflow';
 
 /**
@@ -35,3 +36,50 @@ export const issueCategory = (
 
 export const isIssueDone = (issue: Pick<Issue, 'workflowStatus'>): boolean =>
     issueCategory(issue) === 'done';
+
+export interface StatusGroup {
+    name: string;
+    color: string;
+    category: WorkflowStatusCategory;
+    /** Every status id sharing this name, one per issue type that has it. */
+    ids: number[];
+}
+
+const CATEGORY_ORDER: Record<WorkflowStatusCategory, number> = {
+    todo: 0,
+    in_progress: 1,
+    done: 2,
+};
+
+/**
+ * The statuses of all the given issue types, merged by name: each type owns
+ * its own copy of "To Do" or "In Review", but a filter wants one entry per
+ * name that selects all of them. Ordered by category, then name.
+ */
+export const groupStatusesByName = (issueTypes: IssueType[]): StatusGroup[] => {
+    const groups = new Map<string, StatusGroup>();
+
+    issueTypes
+        .flatMap((type) => type.statuses ?? [])
+        .forEach((status) => {
+            const key = status.name.toLowerCase();
+            const group = groups.get(key);
+
+            if (group) {
+                group.ids.push(status.id);
+            } else {
+                groups.set(key, {
+                    name: status.name,
+                    color: status.color,
+                    category: status.category,
+                    ids: [status.id],
+                });
+            }
+        });
+
+    return [...groups.values()].sort(
+        (a, b) =>
+            CATEGORY_ORDER[a.category] - CATEGORY_ORDER[b.category] ||
+            a.name.localeCompare(b.name),
+    );
+};

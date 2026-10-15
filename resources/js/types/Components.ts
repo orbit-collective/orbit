@@ -38,6 +38,7 @@ import { Project, ProjectColors } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
 import { WorkflowStatus, WorkflowStatusCategory } from '@/types/Workflow';
+import type { StatusGroup } from '@/utils/workflow';
 
 export interface AvatarProps {
     src?: string;
@@ -272,11 +273,18 @@ export interface FilterButtonProps {
     /** Shows the chevron; defaults to on when `onClick` is given. */
     hasMenu?: boolean;
 }
-export type FilterDropdownType = 'labels' | 'status' | 'assignee' | 'priority';
+export type FilterDropdownType =
+    | 'labels'
+    | 'status'
+    | 'workflowStatus'
+    | 'assignee'
+    | 'priority';
 export interface FilterDropdownProps {
     type: FilterDropdownType;
     queryParams?: Record<string, any>;
     users?: AssignableUser[];
+    /** The project's statuses merged by name, for the exact-status filter. */
+    statusGroups?: StatusGroup[];
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
 }

@@ -1,11 +1,13 @@
 import { router } from '@inertiajs/react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import { SavedFilter } from '@/hooks/useSavedFilters';
 import { FilterDropdownType } from '@/types/Components';
+import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
+import { groupStatusesByName } from '@/utils/workflow';
 import FilterDropdown from '../../Molecules/FilterDropdown/FilterDropdown';
 import SavedFiltersDropdown from '../../Molecules/SavedFiltersDropdown/SavedFiltersDropdown';
 
@@ -16,6 +18,7 @@ interface FilterBarProps {
     project?: Project;
     savedFilters: SavedFilter[];
     users?: AssignableUser[];
+    issueTypes?: IssueType[];
     onPanelOpenChange?: (isOpen: boolean) => void;
 }
 
@@ -24,11 +27,19 @@ const FilterBar: React.FC<FilterBarProps> = ({
     project,
     savedFilters,
     users = [],
+    issueTypes = [],
     onPanelOpenChange,
 }) => {
     const [searchQuery, setSearchQuery] = useState(queryParams?.search || '');
     const [openFilter, setOpenFilter] = useState<OpenPanel>(null);
     const input = useRef<HTMLInputElement>(null);
+    const statusGroups = useMemo(
+        () => groupStatusesByName(issueTypes),
+        [issueTypes],
+    );
+    // A project that kept the stock To Do / In Progress / Done has nothing
+    // to add over the category filter, so the exact-status one stays hidden.
+    const hasCustomStatuses = statusGroups.length > 3;
 
     useEffect(() => {
         onPanelOpenChange?.(openFilter !== null);
@@ -98,6 +109,19 @@ const FilterBar: React.FC<FilterBarProps> = ({
                                     setOpenFilter(isOpen ? 'status' : null)
                                 }
                             />
+                            {hasCustomStatuses && (
+                                <FilterDropdown
+                                    type="workflowStatus"
+                                    queryParams={queryParams}
+                                    statusGroups={statusGroups}
+                                    isOpen={openFilter === 'workflowStatus'}
+                                    onOpenChange={(isOpen) =>
+                                        setOpenFilter(
+                                            isOpen ? 'workflowStatus' : null,
+                                        )
+                                    }
+                                />
+                            )}
                             <FilterDropdown
                                 type="assignee"
                                 queryParams={queryParams}

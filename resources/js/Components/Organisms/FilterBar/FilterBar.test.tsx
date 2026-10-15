@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import FilterBar from './FilterBar';
@@ -219,5 +220,53 @@ describe('FilterBar Component', () => {
 
         expect(savedButton).toHaveAttribute('data-open', 'false');
         expect(labelsButton).toHaveAttribute('data-open', 'true');
+    });
+
+    const typeWithStatuses = (names: string[]) =>
+        ({
+            id: 1,
+            statuses: names.map((name, index) => ({
+                id: index + 1,
+                issueTypeId: 1,
+                name,
+                color: '#000',
+                category: 'todo',
+                isInitial: false,
+            })),
+        }) as unknown as IssueType;
+
+    test('hides the exact-status filter while the project has only the stock statuses', () => {
+        render(
+            <FilterBar
+                savedFilters={[]}
+                issueTypes={[
+                    typeWithStatuses(['To Do', 'In Progress', 'Done']),
+                ]}
+            />,
+        );
+
+        expect(
+            screen.queryByTestId('filter-dropdown-workflowStatus'),
+        ).not.toBeInTheDocument();
+    });
+
+    test('shows the exact-status filter once a custom status exists', () => {
+        render(
+            <FilterBar
+                savedFilters={[]}
+                issueTypes={[
+                    typeWithStatuses([
+                        'To Do',
+                        'In Progress',
+                        'Done',
+                        'In Review',
+                    ]),
+                ]}
+            />,
+        );
+
+        expect(
+            screen.getByTestId('filter-dropdown-workflowStatus'),
+        ).toBeInTheDocument();
     });
 });

@@ -9,6 +9,7 @@ import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { FilterDropdownProps, FilterDropdownType } from '@/types/Components';
 import { ProjectLabel } from '@/types/Labels';
 import { AssignableUser } from '@/types/Users';
+import type { StatusGroup } from '@/utils/workflow';
 import FilterButton from '../FilterButton/FilterButton';
 
 interface FilterOption {
@@ -52,6 +53,12 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
             render: () =>
                 optionRow(label, <StatusDot status={value as any} size="sm" />),
         })),
+    },
+    workflowStatus: {
+        paramKey: 'workflow_status',
+        label: 'Exact status',
+        multiSelect: true,
+        options: [],
     },
     priority: {
         paramKey: 'priority',
@@ -103,6 +110,26 @@ const buildLabelsConfig = (labels: ProjectLabel[]): FilterConfig => ({
     })),
 });
 
+/**
+ * One option per status name; its value is the ids of every issue type's
+ * status with that name, dot-joined, so a single choice selects them all.
+ */
+const buildWorkflowStatusConfig = (groups: StatusGroup[]): FilterConfig => ({
+    ...FILTER_CONFIG.workflowStatus,
+    options: groups.map((group) => ({
+        value: group.ids.join('.'),
+        label: group.name,
+        render: () =>
+            optionRow(
+                group.name,
+                <span
+                    className="inline-block h-2 w-2 shrink-0 rounded-sm"
+                    style={{ backgroundColor: group.color }}
+                />,
+            ),
+    })),
+});
+
 const buildAssigneeConfig = (users: AssignableUser[]): FilterConfig => ({
     ...FILTER_CONFIG.assignee,
     options: [
@@ -127,6 +154,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     type,
     queryParams = {},
     users = [],
+    statusGroups = [],
     isOpen,
     onOpenChange,
 }) => {
@@ -134,13 +162,25 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     const config = useMemo(() => {
         if (type === 'assignee') return buildAssigneeConfig(users);
         if (type === 'labels') return buildLabelsConfig(projectLabels);
+        if (type === 'workflowStatus')
+            return buildWorkflowStatusConfig(statusGroups);
         return FILTER_CONFIG[type];
-    }, [type, users, projectLabels]);
+    }, [type, users, projectLabels, statusGroups]);
 
     const selected = useMemo(() => {
         const raw = queryParams?.[config.paramKey];
-        return raw ? String(raw).split(',').filter(Boolean) : [];
-    }, [queryParams, config.paramKey]);
+        const values = raw ? String(raw).split(',').filter(Boolean) : [];
+
+        if (type !== 'workflowStatus') return values;
+
+        // The URL holds plain status ids; an option is selected once all of
+        // its ids are there.
+        return config.options
+            .map((option) => option.value)
+            .filter((value) =>
+                value.split('.').every((id) => values.includes(id)),
+            );
+    }, [queryParams, config.paramKey, config.options, type]);
 
     const options = useMemo(
         () =>
@@ -159,7 +199,11 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     const applyFilter = (values: string[]) => {
         const nextParams: Record<string, any> = { ...queryParams, page: 1 };
         if (values.length > 0) {
-            nextParams[config.paramKey] = values.join(',');
+            nextParams[config.paramKey] = (
+                type === 'workflowStatus'
+                    ? values.flatMap((value) => value.split('.'))
+                    : values
+            ).join(',');
         } else {
             delete nextParams[config.paramKey];
         }
