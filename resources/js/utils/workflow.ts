@@ -83,3 +83,20 @@ export const groupStatusesByName = (issueTypes: IssueType[]): StatusGroup[] => {
             a.name.localeCompare(b.name),
     );
 };
+
+const STOCK_STATUSES: Record<string, WorkflowStatusCategory> = {
+    'to do': 'todo',
+    'in progress': 'in_progress',
+    done: 'done',
+};
+
+/**
+ * Whether the groups hold anything beyond the stock To Do / In Progress /
+ * Done: a status named otherwise, a stock name in another category, or a
+ * category with more than one status. Counting names is not enough, a
+ * Backlog / Ready / Done workflow also has three.
+ */
+export const hasCustomStatuses = (groups: StatusGroup[]): boolean =>
+    groups.some(
+        (group) => STOCK_STATUSES[group.name.toLowerCase()] !== group.category,
+    ) || new Set(groups.map((group) => group.category)).size < groups.length;

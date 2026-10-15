@@ -5,6 +5,7 @@ import { WorkflowStatus, WorkflowTransition } from '@/types/Workflow';
 import {
     getReachableStatuses,
     groupStatusesByName,
+    hasCustomStatuses,
     isIssueDone,
     issueCategory,
 } from './workflow';
@@ -135,5 +136,50 @@ describe('groupStatusesByName', () => {
 
     test('is empty for types without statuses', () => {
         expect(groupStatusesByName([{ id: 1 } as IssueType])).toEqual([]);
+    });
+});
+
+describe('hasCustomStatuses', () => {
+    const groupsOf = (...pairs: [string, WorkflowStatus['category']][]) =>
+        groupStatusesByName([
+            typeWith(pairs.map(([name, c], i) => catStatus(i + 1, name, c))),
+        ]);
+
+    test('is false for the stock three, in any letter case', () => {
+        expect(
+            hasCustomStatuses(
+                groupsOf(
+                    ['to do', 'todo'],
+                    ['In Progress', 'in_progress'],
+                    ['DONE', 'done'],
+                ),
+            ),
+        ).toBe(false);
+    });
+
+    test('is true when a status has another name', () => {
+        expect(
+            hasCustomStatuses(
+                groupsOf(
+                    ['Backlog', 'todo'],
+                    ['In Progress', 'in_progress'],
+                    ['Done', 'done'],
+                ),
+            ),
+        ).toBe(true);
+    });
+
+    test('is true when a stock name sits in another category', () => {
+        expect(hasCustomStatuses(groupsOf(['Done', 'in_progress']))).toBe(true);
+    });
+
+    test('is true when a category has several statuses', () => {
+        expect(
+            hasCustomStatuses(groupsOf(['To Do', 'todo'], ['Ready', 'todo'])),
+        ).toBe(true);
+    });
+
+    test('is false for no statuses', () => {
+        expect(hasCustomStatuses([])).toBe(false);
     });
 });

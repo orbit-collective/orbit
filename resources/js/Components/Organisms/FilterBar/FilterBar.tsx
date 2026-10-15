@@ -7,7 +7,7 @@ import { FilterDropdownType } from '@/types/Components';
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
-import { groupStatusesByName } from '@/utils/workflow';
+import { groupStatusesByName, hasCustomStatuses } from '@/utils/workflow';
 import FilterDropdown from '../../Molecules/FilterDropdown/FilterDropdown';
 import SavedFiltersDropdown from '../../Molecules/SavedFiltersDropdown/SavedFiltersDropdown';
 
@@ -37,7 +37,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
     // to add over the categories, so it gets no switch to exact statuses.
     const statusGroups = useMemo(() => {
         const groups = groupStatusesByName(issueTypes);
-        return groups.length > 3 ? groups : [];
+        return hasCustomStatuses(groups) ? groups : [];
     }, [issueTypes]);
 
     useEffect(() => {
