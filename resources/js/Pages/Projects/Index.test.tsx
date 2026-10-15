@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import { todoStatus, doneStatus } from '@/tests/statuses';
 import { Project } from '@/types/Projects';
 import Index from './Index';
 
