@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { ProjectLabel } from '@/types/Labels';
 import { AssignableUser } from '@/types/Users';
+import type { StatusGroup } from '@/utils/workflow';
 import FilterDropdown from './FilterDropdown';
 
 const mockRouterGet = vi.hoisted(() => vi.fn());
@@ -369,7 +370,7 @@ describe('FilterDropdown Component', () => {
 
         const renderStatus = (
             queryParams: Record<string, string> = {},
-            groups = statusGroups,
+            groups: StatusGroup[] = statusGroups,
         ) =>
             render(
                 <FilterDropdown
@@ -436,6 +437,44 @@ describe('FilterDropdown Component', () => {
                 '/',
                 expect.objectContaining({ workflow_status: '5,9', page: 1 }),
                 { preserveState: true, replace: true },
+            );
+        });
+
+        test('arrow keys reach the switch button after the last option', async () => {
+            const user = userEvent.setup();
+            renderStatus();
+            await screen.findByText('To Do');
+
+            const visited: string[] = [];
+            for (let i = 0; i < 4; i++) {
+                await user.keyboard('{ArrowDown}');
+                visited.push(document.activeElement?.textContent ?? '');
+            }
+
+            expect(
+                visited.some((text) => /Show exact statuses/.test(text)),
+            ).toBe(true);
+        });
+
+        test('arrow keys also reach the switch among many exact statuses with a search box', async () => {
+            const user = userEvent.setup();
+            const many = Array.from({ length: 8 }, (_, i) => ({
+                name: `Status ${i}`,
+                color: '#000',
+                category: 'todo' as const,
+                ids: [i + 1],
+            }));
+            renderStatus({ workflow_status: '1' }, many);
+            await screen.findByText('Status 0');
+
+            const visited: string[] = [];
+            for (let i = 0; i < 12; i++) {
+                await user.keyboard('{ArrowDown}');
+                visited.push(document.activeElement?.textContent ?? '');
+            }
+
+            expect(visited.some((text) => /Show categories/.test(text))).toBe(
+                true,
             );
         });
 
