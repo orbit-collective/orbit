@@ -96,6 +96,7 @@ export default function Show({
                             project={project}
                             savedFilters={savedFilters}
                             users={users}
+                            issueTypes={issueTypes}
                             onPanelOpenChange={setFilterPanelOpen}
                         />
                     )}

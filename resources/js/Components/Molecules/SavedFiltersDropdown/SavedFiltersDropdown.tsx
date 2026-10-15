@@ -8,11 +8,18 @@ import { SavedFiltersDropdownProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import FilterButton from '../FilterButton/FilterButton';
 
-const FILTERABLE_KEYS = ['labels', 'status', 'assignee', 'priority'] as const;
+const FILTERABLE_KEYS = [
+    'labels',
+    'status',
+    'workflow_status',
+    'assignee',
+    'priority',
+] as const;
 
 const FILTER_LABELS: Record<(typeof FILTERABLE_KEYS)[number], string> = {
     labels: 'Labels',
     status: 'Status',
+    workflow_status: 'Exact status',
     assignee: 'Assignee',
     priority: 'Priority',
 };
@@ -29,14 +36,16 @@ const pickFilters = (
 
 const describeFilters = (filters: Record<string, any>) =>
     Object.entries(pickFilters(filters))
-        .map(
-            ([key, value]) =>
-                `${FILTER_LABELS[key as (typeof FILTERABLE_KEYS)[number]]}: ${String(
-                    value,
-                )
-                    .split(',')
-                    .join(', ')}`,
-        )
+        .map(([key, value]) => {
+            const label =
+                FILTER_LABELS[key as (typeof FILTERABLE_KEYS)[number]];
+            const values = String(value).split(',');
+
+            // Exact statuses are stored as ids, which mean nothing in a list.
+            return key === 'workflow_status'
+                ? `${label}: ${values.length} selected`
+                : `${label}: ${values.join(', ')}`;
+        })
         .join(' · ');
 
 const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({

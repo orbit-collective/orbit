@@ -350,4 +350,70 @@ describe('FilterDropdown Component', () => {
         await screen.findByText('Filter by Status');
         expect(screen.queryByText('Select all')).not.toBeInTheDocument();
     });
+
+    describe('exact status', () => {
+        const statusGroups = [
+            {
+                name: 'In Review',
+                color: '#ff9800',
+                category: 'in_progress' as const,
+                ids: [5, 9],
+            },
+            {
+                name: 'Done',
+                color: '#4caf50',
+                category: 'done' as const,
+                ids: [3],
+            },
+        ];
+
+        test('lists one option per status name', async () => {
+            render(
+                <FilterDropdown
+                    type="workflowStatus"
+                    statusGroups={statusGroups}
+                    isOpen
+                    onOpenChange={vi.fn()}
+                />,
+            );
+
+            expect(await screen.findByText('In Review')).toBeInTheDocument();
+            expect(screen.getByText('Done')).toBeInTheDocument();
+        });
+
+        test('picking a name filters by all the ids behind it', async () => {
+            const user = userEvent.setup();
+            render(
+                <FilterDropdown
+                    type="workflowStatus"
+                    statusGroups={statusGroups}
+                    isOpen
+                    onOpenChange={vi.fn()}
+                />,
+            );
+
+            await user.click(await screen.findByText('In Review'));
+
+            expect(mockRouterGet).toHaveBeenCalledWith(
+                '/',
+                expect.objectContaining({ workflow_status: '5,9', page: 1 }),
+                { preserveState: true, replace: true },
+            );
+        });
+
+        test('marks a name as selected once all its ids are in the URL', () => {
+            render(
+                <FilterDropdown
+                    type="workflowStatus"
+                    statusGroups={statusGroups}
+                    queryParams={{ workflow_status: '5,9' }}
+                    isOpen={false}
+                    onOpenChange={vi.fn()}
+                />,
+            );
+
+            // The trigger shows how many names are selected, not how many ids.
+            expect(screen.getByText('1')).toBeInTheDocument();
+        });
+    });
 });

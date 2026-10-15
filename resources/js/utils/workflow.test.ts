@@ -1,7 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import { Issue } from '@/types/Issues';
+import { IssueType } from '@/types/IssueTypes';
 import { WorkflowStatus, WorkflowTransition } from '@/types/Workflow';
-import { getReachableStatuses } from './workflow';
+import {
+    getReachableStatuses,
+    groupStatusesByName,
+    isIssueDone,
+    issueCategory,
+} from './workflow';
 
 const status = (id: number, name: string): WorkflowStatus => ({
     id,
@@ -72,5 +78,62 @@ describe('getReachableStatuses', () => {
         expect(getReachableStatuses(issue({ issueType: undefined }))).toEqual(
             [],
         );
+    });
+});
+
+const typeWith = (statuses: WorkflowStatus[]) =>
+    ({ id: 1, statuses }) as unknown as IssueType;
+
+const catStatus = (
+    id: number,
+    name: string,
+    category: WorkflowStatus['category'],
+): WorkflowStatus => ({ ...status(id, name), category });
+
+describe('issueCategory / isIssueDone', () => {
+    test('reads the category of the workflow status', () => {
+        const done = { workflowStatus: catStatus(1, 'Shipped', 'done') };
+
+        expect(issueCategory(done)).toBe('done');
+        expect(isIssueDone(done)).toBe(true);
+    });
+
+    test('an issue without a loaded status counts as to do', () => {
+        expect(issueCategory({})).toBe('todo');
+        expect(isIssueDone({})).toBe(false);
+    });
+});
+
+describe('groupStatusesByName', () => {
+    test('merges same-named statuses of different types into one group with every id', () => {
+        const groups = groupStatusesByName([
+            typeWith([catStatus(1, 'To Do', 'todo')]),
+            typeWith([catStatus(7, 'to do', 'todo')]),
+        ]);
+
+        expect(groups).toHaveLength(1);
+        expect(groups[0].ids).toEqual([1, 7]);
+    });
+
+    test('orders groups by category and then by name', () => {
+        const groups = groupStatusesByName([
+            typeWith([
+                catStatus(1, 'Done', 'done'),
+                catStatus(2, 'In Review', 'in_progress'),
+                catStatus(3, 'Backlog', 'todo'),
+                catStatus(4, 'Blocked', 'todo'),
+            ]),
+        ]);
+
+        expect(groups.map((g) => g.name)).toEqual([
+            'Backlog',
+            'Blocked',
+            'In Review',
+            'Done',
+        ]);
+    });
+
+    test('is empty for types without statuses', () => {
+        expect(groupStatusesByName([{ id: 1 } as IssueType])).toEqual([]);
     });
 });
