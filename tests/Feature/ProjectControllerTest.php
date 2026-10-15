@@ -361,12 +361,25 @@ test('the project show page paginates the activity logs independently of the iss
     );
 });
 
-test('the projects page issues carry their workflow status for the completion ring', function () {
+test('the projects page sends per-category issue counts instead of every issue', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     addProjectMember($project, $user->id, 'admin');
+    Issue::factory()->count(2)->todo()->create(['project_id' => $project->id]);
+    Issue::factory()->inProgress()->create(['project_id' => $project->id]);
     Issue::factory()->done()->create(['project_id' => $project->id]);
+    Issue::factory()->create(['project_id' => $project->id]);
 
     $this->actingAs($user)->get('/projects')->assertInertia(fn (Assert $page) => $page
-        ->where('projects.0.issues.0.workflowStatus.category', 'done'));
+        ->missing('projects.0.issues')
+        ->where('projects.0.issue_counts', ['todo' => 3, 'in_progress' => 1, 'done' => 1]));
+});
+
+test('a project with no issues still reports zero counts', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+
+    $this->actingAs($user)->get('/projects')->assertInertia(fn (Assert $page) => $page
+        ->where('projects.0.issue_counts', ['todo' => 0, 'in_progress' => 0, 'done' => 0]));
 });

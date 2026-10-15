@@ -125,7 +125,7 @@ class ProjectController extends Controller
 
     public function index(Request $request): Response
     {
-        $projects = $this->projectService->getAllForUser($request->user()->id)->load('issues.workflowStatus');
+        $projects = $this->projectService->withIssueCounts($this->projectService->getAllForUser($request->user()->id));
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
