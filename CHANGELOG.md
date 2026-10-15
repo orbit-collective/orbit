@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.11.0](https://github.com/orbit-collective/orbit/compare/v0.10.8...v0.11.0) (2026-10-15)
+
+
+### Features
+
+* **automation:** pick statuses and categories in rules ([1be4d2a](https://github.com/orbit-collective/orbit/commit/1be4d2aca6ad8a1bf72919391f6517af8fdd263a))
+* **automation:** send issue types with statuses to the automation page ([31598ab](https://github.com/orbit-collective/orbit/commit/31598abd7d73583c008601a6a3c0d502a8350d91))
+* **issues:** add an exact-status filter next to the category one ([b498575](https://github.com/orbit-collective/orbit/commit/b498575af1559ed8795ce439e1a24bdf3b960652))
+* **issues:** filter by exact workflow status ([c6b5d39](https://github.com/orbit-collective/orbit/commit/c6b5d397a09c809b31dc2aaed8ec942c01de663c))
+
+
+### Bug Fixes
+
+* **automation:** expose the workflow status in GitHub rule context ([85cd625](https://github.com/orbit-collective/orbit/commit/85cd625dc713637cfecae932461a96f54fa7d318))
+* **issues:** bump the issue cache version in the status migration ([ca555cb](https://github.com/orbit-collective/orbit/commit/ca555cb1965de174e0c50db2633eba3cf2a25125))
+* **issues:** detect custom statuses by name and category, not count ([3ef80ac](https://github.com/orbit-collective/orbit/commit/3ef80acec68740c26278f86ab7b0e8fe7e60b046))
+* **issues:** load the workflow status for dashboard and project counts ([74d36f1](https://github.com/orbit-collective/orbit/commit/74d36f148e79c8eaa122a82eaa90f2007472799c))
+* **issues:** load type statuses and transitions for board issues ([aac90cc](https://github.com/orbit-collective/orbit/commit/aac90cc9c0b9e592733e5e87f478cdebf67fa2d3))
+* **issues:** show keyboard focus on the status switch button ([f718456](https://github.com/orbit-collective/orbit/commit/f718456ebcce9ca320b2eddfecf70fb587e6c1c1))
+* **ui:** remove the duplicate A-Z range in the activity log regex ([d3d769a](https://github.com/orbit-collective/orbit/commit/d3d769a77d1469dcb97e2726a21c85bf35a146df))
+
+
+### Performance Improvements
+
+* **projects:** count issues per status category on the server ([43924da](https://github.com/orbit-collective/orbit/commit/43924daa4d8d08338413998bb287463c5a43a1e4))
+
 ## [0.10.8](https://github.com/orbit-collective/orbit/compare/v0.10.7...v0.10.8) (2026-10-14)
 
 
