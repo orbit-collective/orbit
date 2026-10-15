@@ -246,7 +246,7 @@ describe('NotificationsPopup Component', () => {
         });
 
         test('never selects more than one bulk request can take', () => {
-            pageState.notifications = Array.from({ length: 250 }, (_, i) =>
+            pageState.notifications = Array.from({ length: 201 }, (_, i) =>
                 makeNotification({ id: 1000 - i, title: `Item ${i}` }),
             );
             const { container } = render(
