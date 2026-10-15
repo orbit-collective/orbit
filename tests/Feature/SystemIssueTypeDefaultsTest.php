@@ -171,7 +171,7 @@ test('an issue sitting on a replaced status is moved onto the new equivalent', f
     $issue = $project->issues()->create([
         'title' => 'Old bug', 'project_id' => $project->id, 'user_id' => $user->id,
         'issue_type_id' => $bug->id, 'workflow_status_id' => $stock[1]->id,
-        'priority' => 'low', 'status' => 'in_progress',
+        'priority' => 'low',
     ]);
     $project->forceFill(['issue_type_defaults_version' => 0])->save();
 
@@ -295,7 +295,7 @@ test('an issue parked on a leftover stock status is moved onto the catalog one',
     $issue = $project->issues()->create([
         'title' => 'Parked', 'project_id' => $project->id, 'user_id' => $user->id,
         'issue_type_id' => $bug->id, 'workflow_status_id' => $leftover->id,
-        'priority' => 'low', 'status' => 'in_progress',
+        'priority' => 'low',
     ]);
     $project->forceFill(['issue_type_defaults_version' => 3])->save();
 
