@@ -67,6 +67,7 @@ class ProjectController extends Controller
         $filters = [
             'labels' => array_filter(explode(',', $request->query('labels', ''))),
             'status' => array_filter(explode(',', $request->query('status', ''))),
+            'workflow_status' => array_filter(explode(',', $request->query('workflow_status', ''))),
             'priority' => array_filter(explode(',', $request->query('priority', ''))),
             'assignee' => request()->query('assignee'),
         ];
