@@ -3,7 +3,10 @@
 use App\Models\AutomationAction;
 use App\Models\AutomationRule;
 use App\Models\IssueType;
+use App\Models\Label;
 use App\Models\Project;
+use App\Repositories\LabelRepository;
+use App\Services\ActivityLogService;
 use App\Services\LabelService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -126,4 +129,28 @@ test('renaming a label rewrites the name in template defaults, Jira mappings and
 
     expect($template->fresh()->default_labels)->toBe(['ux'])
         ->and(AutomationAction::query()->whereKey($action->id)->exists())->toBeFalse();
+});
+
+test('a failure while rewriting name references rolls the rename back', function () {
+    $project = Project::factory()->create();
+    $label = $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
+
+    $repository = Mockery::mock(LabelRepository::class)->makePartial();
+    $repository->shouldReceive('replaceNameReferences')->andThrow(new RuntimeException('boom'));
+    $service = new LabelService($repository, app(ActivityLogService::class));
+
+    expect(fn () => $service->updateLabel($project, $label, ['name' => 'defect']))->toThrow(RuntimeException::class)
+        ->and($label->fresh()->name)->toBe('bug');
+});
+
+test('a failure while cleaning up name references keeps the label on delete', function () {
+    $project = Project::factory()->create();
+    $label = $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
+
+    $repository = Mockery::mock(LabelRepository::class)->makePartial();
+    $repository->shouldReceive('replaceNameReferences')->andThrow(new RuntimeException('boom'));
+    $service = new LabelService($repository, app(ActivityLogService::class));
+
+    expect(fn () => $service->deleteLabel($project, $label))->toThrow(RuntimeException::class)
+        ->and(Label::query()->whereKey($label->id)->exists())->toBeTrue();
 });

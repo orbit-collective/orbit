@@ -6,6 +6,7 @@ use App\Models\Label;
 use App\Models\Project;
 use App\Repositories\LabelRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class LabelService
@@ -98,25 +99,32 @@ class LabelService
             $this->assertNameAvailable($project, $data['name']);
         }
 
-        $previousName = $label->name;
+        // One transaction: a failure while rewriting the name copies must not
+        // leave the label renamed with stale references behind it, which a
+        // retry could no longer repair (the old name would be gone).
+        return DB::transaction(function () use ($project, $label, $data) {
+            $previousName = $label->name;
 
-        $label = $this->labelRepository->update($label, $data);
+            $label = $this->labelRepository->update($label, $data);
 
-        if ($label->name !== $previousName) {
-            $this->labelRepository->replaceNameReferences($project, $previousName, $label->name);
-        }
+            if ($label->name !== $previousName) {
+                $this->labelRepository->replaceNameReferences($project, $previousName, $label->name);
+            }
 
-        $this->activityLogService->log($project->id, "Updated the \"$label->name\" label");
+            $this->activityLogService->log($project->id, "Updated the \"$label->name\" label");
 
-        return $label;
+            return $label;
+        });
     }
 
     public function deleteLabel(Project $project, Label $label): void
     {
-        $this->labelRepository->delete($label);
-        $this->labelRepository->replaceNameReferences($project, $label->name, null);
+        DB::transaction(function () use ($project, $label) {
+            $this->labelRepository->delete($label);
+            $this->labelRepository->replaceNameReferences($project, $label->name, null);
 
-        $this->activityLogService->log($project->id, "Deleted the \"$label->name\" label");
+            $this->activityLogService->log($project->id, "Deleted the \"$label->name\" label");
+        });
     }
 
     private function assertNameAvailable(Project $project, string $name): void
