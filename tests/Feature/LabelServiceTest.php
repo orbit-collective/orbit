@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Repositories\LabelRepository;
 use App\Services\ActivityLogService;
 use App\Services\LabelService;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 
@@ -153,4 +154,25 @@ test('a failure while cleaning up name references keeps the label on delete', fu
 
     expect(fn () => $service->deleteLabel($project, $label))->toThrow(RuntimeException::class)
         ->and(Label::query()->whereKey($label->id)->exists())->toBeTrue();
+});
+
+test('renaming and deleting a label bump the issue-list version again after the commit', function () {
+    $project = Project::factory()->create();
+    $label = $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
+    $seenInside = [];
+
+    $repository = Mockery::mock(LabelRepository::class)->makePartial();
+    $repository->shouldReceive('replaceNameReferences')->andReturnUsing(function () use (&$seenInside) {
+        $seenInside[] = CacheVersion::current(CacheVersion::ISSUES);
+    });
+    $service = new LabelService($repository, app(ActivityLogService::class));
+
+    $service->updateLabel($project, $label, ['name' => 'defect']);
+    $afterUpdate = CacheVersion::current(CacheVersion::ISSUES);
+
+    $service->deleteLabel($project, $label->fresh());
+    $afterDelete = CacheVersion::current(CacheVersion::ISSUES);
+
+    expect($afterUpdate)->toBeGreaterThan($seenInside[0])
+        ->and($afterDelete)->toBeGreaterThan($seenInside[1]);
 });
