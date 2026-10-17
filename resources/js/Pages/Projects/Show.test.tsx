@@ -126,9 +126,24 @@ vi.mock('@/Components/Organisms/IssueBoard/IssueBoard', () => ({
     ),
 }));
 
+const mockReload = vi.fn();
+vi.mock('@inertiajs/react', () => ({
+    router: { reload: (...args: unknown[]) => mockReload(...args) },
+}));
+
 vi.mock('@/Components/Organisms/CalendarView/CalendarView', () => ({
-    default: ({ issues }: { issues: Issue[] }) => (
-        <div data-testid="calendar-view" data-issues-count={issues.length} />
+    default: ({
+        issues,
+        onRangeChange,
+    }: {
+        issues: Issue[];
+        onRangeChange?: (from: string, to: string) => void;
+    }) => (
+        <div data-testid="calendar-view" data-issues-count={issues.length}>
+            <button onClick={() => onRangeChange?.('2026-07-01', '2026-08-01')}>
+                Report range
+            </button>
+        </div>
     ),
 }));
 
@@ -338,7 +353,7 @@ describe('Projects Show Page', () => {
         expect(screen.getByText('Upcoming Deadlines')).toBeInTheDocument();
     });
 
-    test('gives the calendar the full unpaginated project issue set, not the current table page', async () => {
+    test('gives the calendar its own issue set, not the current table page', async () => {
         const user = userEvent.setup();
         render(
             <Show
@@ -359,6 +374,61 @@ describe('Projects Show Page', () => {
         expect(screen.getByTestId('calendar-view')).toHaveAttribute(
             'data-issues-count',
             '3',
+        );
+    });
+
+    test('asks only for the calendar props, scoped to the visible range', async () => {
+        const user = userEvent.setup();
+        render(
+            <Show
+                project={makeProject()}
+                issues={makePaginated([])}
+                projects={[]}
+                savedFilters={[]}
+                users={[]}
+                activityLogs={makePaginated([])}
+            />,
+        );
+
+        await user.click(
+            screen.getByRole('button', { name: 'Switch to Calendar' }),
+        );
+        await user.click(screen.getByRole('button', { name: 'Report range' }));
+
+        expect(mockReload).toHaveBeenCalledWith({
+            only: ['calendarIssues', 'upcomingDeadlines'],
+            data: { calendar_from: '2026-07-01', calendar_to: '2026-08-01' },
+        });
+    });
+
+    test('reloads the calendar for the same range when its props are dropped by a filter visit', async () => {
+        const user = userEvent.setup();
+        const props = {
+            project: makeProject(),
+            issues: makePaginated([]),
+            projects: [],
+            savedFilters: [],
+            users: [],
+            activityLogs: makePaginated([]),
+        };
+        const { rerender } = render(<Show {...props} calendarIssues={[]} />);
+
+        await user.click(
+            screen.getByRole('button', { name: 'Switch to Calendar' }),
+        );
+        await user.click(screen.getByRole('button', { name: 'Report range' }));
+        mockReload.mockClear();
+
+        rerender(<Show {...props} />);
+
+        expect(mockReload).toHaveBeenCalledTimes(1);
+        expect(mockReload).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: {
+                    calendar_from: '2026-07-01',
+                    calendar_to: '2026-08-01',
+                },
+            }),
         );
     });
 

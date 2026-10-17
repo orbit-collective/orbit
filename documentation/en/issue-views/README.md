@@ -2,8 +2,8 @@
 
 A project's issues render as a sortable table, a status-grouped Kanban
 board, a calendar laid out by issue dates, or a chronological activity
-feed — the same `issues.data` array (plus, for Activity, a separate
-`activityLogs` prop) presented four different ways, switched with no
+feed — the same `issues.data` array (plus, for Calendar and Activity, their own
+`calendarIssues` and `activityLogs` props) presented four different ways, switched with no
 page reload via a flat `IssuePageLooks` string type. This category
 documents how the switch works and what it takes to add a fifth view.
 
@@ -14,6 +14,10 @@ documents how the switch works and what it takes to add a fifth view.
    existing four are wired: the type, the render switch, the nav
    button (plus its keyboard shortcut), and the Account settings
    default-view picker.
+
+2. **[Load a view's data lazily](./02-load-view-data-lazily.md)** — optional
+   Inertia props, a date-ranged calendar query and why the dashboard only
+   receives counts.
 
 ## The architecture in one paragraph
 
@@ -26,9 +30,10 @@ for a project page visit, seeded once from
 `localStorage.getItem('selectedLook')` on mount and rendered via a
 flat ternary chain (`selectedLook === 'List' ? <IssueTable /> :
 selectedLook === 'Board' ? <IssueBoard /> : selectedLook === 'Calendar'
-? <CalendarView /> : <ActivityLogs logs={activityLogs.data} />`) — List,
-Board, and Calendar all receive the exact same `issues.data`, just
-presented differently, while Activity instead reads
+? <CalendarView /> : <ActivityLogs logs={activityLogs.data} />`) — List
+and Board receive the same `issues.data`, just presented differently,
+Calendar reads its own date-ranged, optional `calendarIssues` (see
+[guide 2](./02-load-view-data-lazily.md)), and Activity instead reads
 `activityLogs` (a paginator of `ActivityLogEntry`, threaded down from
 `ProjectController::show()` via `ActivityLogService::paginateForProject()`
 — see [`../activity-log/README.md`](../activity-log/README.md) for

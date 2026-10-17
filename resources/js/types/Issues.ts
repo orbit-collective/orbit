@@ -105,6 +105,16 @@ export interface ProductivityTrendProps {
     day: string;
 }
 
+/**
+ * What the dashboard draws, counted on the server (the issue rows themselves
+ * are never sent): totals by priority and by workflow status category.
+ */
+export interface IssueStats {
+    total: number;
+    priority: { high: number; medium: number; low: number };
+    category: { todo: number; in_progress: number; done: number };
+}
+
 export type Sorting = 'AZ' | 'ZA';
 export type SortingColumn =
     | 'id'

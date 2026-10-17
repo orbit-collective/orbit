@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssuePreviewCard from '@/Components/Molecules/IssuePreviewCard/IssuePreviewCard';
@@ -48,7 +48,10 @@ const startOfWeek = (date: Date) => {
     return start;
 };
 
-const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({
+    issues,
+    onRangeChange,
+}) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState<ViewMode>('month');
     const [preview, setPreview] = useState<{
@@ -122,6 +125,23 @@ const CalendarView: React.FC<CalendarViewProps> = ({ issues }) => {
     }, [currentDate]);
 
     const visibleDays = viewMode === 'month' ? monthDays : weekViewDays;
+
+    // The page only sends the issues that fall in the visible range, so tell
+    // it which days are on screen (the month grid's 42 days, or the week).
+    const rangeFrom =
+        viewMode === 'month'
+            ? toDateKey(new Date(year, month, 1 - firstDayOfMonth(year, month)))
+            : weekViewDays[0].dateKey;
+    const rangeTo =
+        viewMode === 'month'
+            ? toDateKey(
+                  new Date(year, month, 42 - firstDayOfMonth(year, month)),
+              )
+            : weekViewDays[6].dateKey;
+
+    useEffect(() => {
+        onRangeChange?.(rangeFrom, rangeTo);
+    }, [rangeFrom, rangeTo]);
 
     const issuesByDate = useMemo(() => {
         const map: Record<string, Issue[]> = {};

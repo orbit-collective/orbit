@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
-import { issues } from '@/stories/fixtures';
+import { makeIssueStats } from '@/tests/issueStats';
 import DashboardVisuals from './DashboardVisuals';
 
 const meta = {
@@ -14,7 +14,14 @@ const meta = {
         ),
     ],
     args: {
-        issues,
+        stats: makeIssueStats({
+            high: 4,
+            medium: 6,
+            low: 2,
+            todo: 5,
+            inProgress: 4,
+            done: 3,
+        }),
         productivity_trend: [
             { day: 'Mon', count: 3 },
             { day: 'Tue', count: 5 },
@@ -42,7 +49,7 @@ export const Default: Story = {
 /** A new workspace: no issues and a flat trend. */
 export const Empty: Story = {
     args: {
-        issues: [],
+        stats: makeIssueStats(),
         productivity_trend: [
             'Mon',
             'Tue',
@@ -57,10 +64,7 @@ export const Empty: Story = {
 
 export const AllClosed: Story = {
     args: {
-        issues: issues.map((issue) => ({
-            ...issue,
-            status: 'closed' as const,
-        })),
+        stats: makeIssueStats({ high: 4, medium: 6, low: 2, done: 12 }),
     },
 };
 

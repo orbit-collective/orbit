@@ -1,58 +1,28 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { DashboardVisualsProps } from '@/types/Components';
-import { isIssueDone, issueCategory } from '@/utils/workflow';
 import { CompletionRatioCard } from '../../Molecules/CompletionRatioCard/CompletionRatioCard';
 import { PriorityBreakdownCard } from '../../Molecules/PriorityBreakdownCard/PriorityBreakdownCard';
 import { ProductivityTrendCard } from '../../Molecules/ProductivityTrendCard/ProductivityTrendCard';
 
+const percent = (part: number, total: number) =>
+    total === 0 ? 0 : Math.round((part / total) * 100);
+
 const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
-    issues,
+    stats: { total, priority, category },
     productivity_trend,
 }) => {
-    const stats = useMemo(() => {
-        const total = issues.length;
-        if (total === 0) {
-            return {
-                high: 0,
-                medium: 0,
-                low: 0,
-                highPct: 0,
-                mediumPct: 0,
-                lowPct: 0,
-                todo: 0,
-                inProgress: 0,
-                done: 0,
-                todoPct: 0,
-                inProgressPct: 0,
-                donePct: 0,
-            };
-        }
-
-        const high = issues.filter((i) => i.priority === 'high').length;
-        const medium = issues.filter((i) => i.priority === 'medium').length;
-        const low = issues.filter((i) => i.priority === 'low').length;
-
-        const todo = issues.filter((i) => issueCategory(i) === 'todo').length;
-        const inProgress = issues.filter(
-            (i) => issueCategory(i) === 'in_progress',
-        ).length;
-        const done = issues.filter(isIssueDone).length;
-
-        return {
-            high,
-            medium,
-            low,
-            highPct: Math.round((high / total) * 100),
-            mediumPct: Math.round((medium / total) * 100),
-            lowPct: Math.round((low / total) * 100),
-            todo,
-            inProgress,
-            done,
-            todoPct: Math.round((todo / total) * 100),
-            inProgressPct: Math.round((inProgress / total) * 100),
-            donePct: Math.round((done / total) * 100),
-        };
-    }, [issues]);
+    const stats = {
+        high: priority.high,
+        medium: priority.medium,
+        low: priority.low,
+        highPct: percent(priority.high, total),
+        mediumPct: percent(priority.medium, total),
+        lowPct: percent(priority.low, total),
+        todo: category.todo,
+        inProgress: category.in_progress,
+        done: category.done,
+        donePct: percent(category.done, total),
+    };
 
     return (
         <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-3">
@@ -66,7 +36,7 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
                     todo={stats.todo}
                     inProgress={stats.inProgress}
                     done={stats.done}
-                    total={issues.length}
+                    total={total}
                     donePct={stats.donePct}
                 />
 

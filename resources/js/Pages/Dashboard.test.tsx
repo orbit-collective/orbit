@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
-import { todoStatus, doneStatus } from '@/tests/statuses';
 import { ActivityLogEntry } from '@/types/ActivityLog';
-import { Issue, ProductivityTrendProps } from '@/types/Issues';
+import { IssueStats, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import Dashboard from './Dashboard';
 
@@ -52,15 +52,15 @@ vi.mock('@/Components/Organisms/PageHeader/PageHeader', () => ({
 
 vi.mock('@/Components/Organisms/DashboardVisuals/DashboardVisuals', () => ({
     default: ({
-        issues,
+        stats,
         productivity_trend,
     }: {
-        issues: Issue[];
+        stats: IssueStats;
         productivity_trend: ProductivityTrendProps[];
     }) => (
         <div
             data-testid="dashboard-visuals"
-            data-issues-count={issues.length}
+            data-issues-count={stats.total}
             data-trend-count={productivity_trend.length}
         />
     ),
@@ -114,23 +114,12 @@ const makeProject = (overrides: Partial<Project> = {}): Project => ({
     ...overrides,
 });
 
-let issueId = 0;
-const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
-    id: `ISSUE-${issueId++}`,
-    title: 'An issue',
-    workflowStatus: todoStatus,
-    priority: 'medium',
-    project_id: 1,
-    user_id: 1,
-    ...overrides,
-});
-
 describe('Dashboard Page', () => {
     test('renders the Sidebar with the provided projects and a Dashboard page header', () => {
         const projects = [makeProject({ id: 1 }), makeProject({ id: 2 })];
         render(
             <Dashboard
-                issues={[]}
+                issueStats={makeIssueStats()}
                 projects={projects}
                 productivity_trend={[]}
                 activityLogs={makePaginated([])}
@@ -147,16 +136,17 @@ describe('Dashboard Page', () => {
         );
     });
 
-    test('computes stat card values from the issues list', () => {
-        const issues = [
-            makeIssue({ workflowStatus: doneStatus, priority: 'high' }),
-            makeIssue({ workflowStatus: doneStatus, priority: 'low' }),
-            makeIssue({ workflowStatus: todoStatus, priority: 'high' }),
-            makeIssue({ workflowStatus: todoStatus, priority: 'medium' }),
-        ];
+    test('computes stat card values from the issue counts', () => {
+        const issueStats = makeIssueStats({
+            high: 2,
+            medium: 1,
+            low: 1,
+            todo: 2,
+            done: 2,
+        });
         render(
             <Dashboard
-                issues={issues}
+                issueStats={issueStats}
                 projects={[makeProject()]}
                 productivity_trend={[]}
                 activityLogs={makePaginated([])}
@@ -178,7 +168,7 @@ describe('Dashboard Page', () => {
     test('shows 0% resolution rate when there are no issues', () => {
         render(
             <Dashboard
-                issues={[]}
+                issueStats={makeIssueStats()}
                 projects={[]}
                 productivity_trend={[]}
                 activityLogs={makePaginated([])}
@@ -188,12 +178,12 @@ describe('Dashboard Page', () => {
         expect(screen.getAllByText('0%').length).toBeGreaterThan(0);
     });
 
-    test('forwards issues and productivity_trend to DashboardVisuals', () => {
-        const issues = [makeIssue(), makeIssue()];
+    test('forwards the stats and productivity_trend to DashboardVisuals', () => {
+        const issueStats = makeIssueStats({ todo: 2 });
         const trend = [{ day: 'Mon', count: 3 }];
         render(
             <Dashboard
-                issues={issues}
+                issueStats={issueStats}
                 projects={[]}
                 productivity_trend={trend}
                 activityLogs={makePaginated([])}
@@ -218,7 +208,7 @@ describe('Dashboard Page', () => {
         ];
         render(
             <Dashboard
-                issues={[]}
+                issueStats={makeIssueStats()}
                 projects={[]}
                 productivity_trend={[]}
                 activityLogs={makePaginated(activityLogs, {
@@ -255,7 +245,7 @@ describe('Dashboard Page', () => {
         ];
         render(
             <Dashboard
-                issues={[]}
+                issueStats={makeIssueStats()}
                 projects={projects}
                 productivity_trend={[]}
                 activityLogs={makePaginated([])}
@@ -274,7 +264,7 @@ describe('Dashboard Page', () => {
     test('does not render a "view all" link when there are 3 or fewer projects', () => {
         render(
             <Dashboard
-                issues={[]}
+                issueStats={makeIssueStats()}
                 projects={[makeProject({ id: 1 })]}
                 productivity_trend={[]}
                 activityLogs={makePaginated([])}
@@ -287,7 +277,7 @@ describe('Dashboard Page', () => {
     test('renders an empty state when there are no projects', () => {
         render(
             <Dashboard
-                issues={[]}
+                issueStats={makeIssueStats()}
                 projects={[]}
                 productivity_trend={[]}
                 activityLogs={makePaginated([])}

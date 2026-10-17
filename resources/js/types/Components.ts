@@ -23,6 +23,7 @@ import {
     Comment,
     GithubDevelopmentRepository,
     Issue,
+    IssueStats,
     IssueAbilities,
     IssueLabel,
     IssuePageLooks,
@@ -561,6 +562,8 @@ export interface ActivityLogsProps {
 }
 export interface CalendarViewProps {
     issues: Issue[];
+    /** Called with the first and last visible day (YYYY-MM-DD) whenever they change. */
+    onRangeChange?: (from: string, to: string) => void;
 }
 export interface IssuePreviewCardProps {
     issue: Issue;
@@ -572,7 +575,7 @@ export interface UpcomingDeadlinesPanelProps {
     issues: Issue[];
 }
 export interface DashboardVisualsProps {
-    issues: Issue[];
+    stats: IssueStats;
     productivity_trend: ProductivityTrendProps[];
 }
 export interface IssueBoardProps {
