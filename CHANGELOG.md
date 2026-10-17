@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.11.1](https://github.com/orbit-collective/orbit/compare/v0.11.0...v0.11.1) (2026-10-17)
+
+
+### Features
+
+* **labels:** filter by label id and document the pivot ([4b149d6](https://github.com/orbit-collective/orbit/commit/4b149d6bdec0dc985654ad3ada54ba9eaafa4ed5))
+* **labels:** store issue labels in an issue_label pivot ([51cfedd](https://github.com/orbit-collective/orbit/commit/51cfedd1b5b877e76db7f013165ada4ba8eca48a))
+
+
+### Bug Fixes
+
+* **labels:** rename and delete labels atomically ([025951e](https://github.com/orbit-collective/orbit/commit/025951ef1287fe225d09d919ca28170ac51e1efb))
+* **labels:** restore label names in saved filters on rollback ([c4dfe0f](https://github.com/orbit-collective/orbit/commit/c4dfe0f64f489b800d62b15f64c61b5e1ea6c028))
+* **labels:** retire cached issue lists after the commit ([8a0afb2](https://github.com/orbit-collective/orbit/commit/8a0afb2ca39652680648ab8e58256addbf26fd80))
+* **ui:** show label names in saved filter summaries ([52bbdc9](https://github.com/orbit-collective/orbit/commit/52bbdc99fc70e746394e9525d3206e5db7b876fe))
+
+
+### Performance Improvements
+
+* **projects:** load calendar and dashboard data on demand ([d9ef0d4](https://github.com/orbit-collective/orbit/commit/d9ef0d46cbfbbd83cf520b51e0548ae750e18e1e))
+* **ui:** request calendar data per visible range ([9bb5288](https://github.com/orbit-collective/orbit/commit/9bb528818941a08165d2e08426dff704ee6276aa))
+
+
+### Miscellaneous Chores
+
+* release 0.11.1 ([8cf6240](https://github.com/orbit-collective/orbit/commit/8cf624094a07f3f6ad2e326d7849e646629942d6))
+
 ## [0.11.0](https://github.com/orbit-collective/orbit/compare/v0.10.8...v0.11.0) (2026-10-15)
 
 
