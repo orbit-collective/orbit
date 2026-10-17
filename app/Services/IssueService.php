@@ -122,19 +122,18 @@ class IssueService
     private const int LIST_CACHE_TTL = 120;
 
     /**
-     * Every issue in the user's projects, as the plain arrays Inertia would
-     * serialise them to. Arrays rather than models: Redis cannot hand Eloquent
-     * objects back (see CachedModels), and the dashboard only renders them.
+     * Issue counts for the dashboard (see IssueRepository::statsForUser()) -
+     * a handful of numbers, so cheap to keep cached until an issue changes.
      *
-     * @return list<array<string, mixed>>
+     * @return array<string, mixed>
      */
-    public function getAllForUser(int $userId): array
+    public function getStatsForUser(int $userId): array
     {
         return CacheVersion::remember(
-            [CacheVersion::ISSUES, CacheVersion::USERS, CacheVersion::MEMBERSHIP],
-            "user:$userId:issues",
+            [CacheVersion::ISSUES, CacheVersion::MEMBERSHIP],
+            "user:$userId:issue-stats",
             self::LIST_CACHE_TTL,
-            fn () => $this->issueRepository->getAllForUser($userId)->toArray(),
+            fn () => $this->issueRepository->statsForUser($userId),
         );
     }
 
@@ -253,17 +252,34 @@ class IssueService
     }
 
     /**
-     * The full, unpaginated set of a project's issues matching the given search
-     * box/filter chips - used by views (calendar, upcoming-deadlines) that need
-     * every matching issue rather than one table page.
+     * The project's issues that fall in the visible calendar range matching
+     * the given search box/filter chips, as plain arrays.
+     *
+     * @return list<array<string, mixed>>
      */
-    public function getAllForProject(int $projectId, array $searchParams = [], array $filters = []): array
+    public function getCalendarIssues(int $projectId, string $from, string $to, array $searchParams = [], array $filters = []): array
     {
         return CacheVersion::remember(
             [CacheVersion::ISSUES, CacheVersion::USERS],
-            "project:$projectId:issues:all:".md5(json_encode([$searchParams, $filters])),
+            "project:$projectId:issues:calendar:".md5(json_encode([$from, $to, $searchParams, $filters])),
             self::LIST_CACHE_TTL,
-            fn () => $this->issueRepository->getForProject($projectId, $searchParams, $filters)->toArray(),
+            fn () => $this->issueRepository->getForProjectInRange($projectId, $from, $to, $searchParams, $filters)->toArray(),
+        );
+    }
+
+    /**
+     * The calendar's deadlines panel: unfinished issues with an end date,
+     * soonest first.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function getUpcomingDeadlines(int $projectId, array $searchParams = [], array $filters = []): array
+    {
+        return CacheVersion::remember(
+            [CacheVersion::ISSUES, CacheVersion::USERS],
+            "project:$projectId:issues:deadlines:".md5(json_encode([$searchParams, $filters])),
+            self::LIST_CACHE_TTL,
+            fn () => $this->issueRepository->getUpcomingDeadlines($projectId, $searchParams, $filters)->toArray(),
         );
     }
 

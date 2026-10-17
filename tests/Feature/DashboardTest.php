@@ -35,7 +35,8 @@ test('the dashboard renders the expected Inertia component and props', function 
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('Dashboard')
-        ->has('issues', 3)
+        ->where('issueStats.total', 3)
+        ->missing('issues')
         ->has('projects', 1)
         ->has('productivity_trend')
         ->has('users')
@@ -70,14 +71,19 @@ test('the dashboard paginates the activity logs with the activity page params', 
     );
 });
 
-test('the dashboard issues carry their workflow status, so the counters can tell done from open', function () {
+test('the dashboard sends issue counts by status category instead of the issue rows', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     addProjectMember($project, $user->id, 'admin');
-    Issue::factory()->done()->create(['project_id' => $project->id]);
+    Issue::factory()->done()->create(['project_id' => $project->id, 'priority' => 'high']);
+    Issue::factory()->todo()->create(['project_id' => $project->id, 'priority' => 'low']);
 
     $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
-        ->where('issues.0.workflowStatus.category', 'done'));
+        ->where('issueStats.total', 2)
+        ->where('issueStats.category.done', 1)
+        ->where('issueStats.category.todo', 1)
+        ->where('issueStats.priority.high', 1)
+        ->where('issueStats.priority.low', 1));
 });
 
 test('the dashboard projects carry per-category issue counts', function () {

@@ -384,3 +384,41 @@ test('a project with no issues still reports zero counts', function () {
     $this->actingAs($user)->get('/projects')->assertInertia(fn (Assert $page) => $page
         ->where('projects.0.issue_counts', ['todo' => 0, 'in_progress' => 0, 'done' => 0]));
 });
+
+test('the project show page does not send the calendar data on a normal visit', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'member');
+    Issue::factory()->count(2)->create(['project_id' => $project->id]);
+
+    $this->actingAs($user)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->missing('calendarIssues')
+        ->missing('upcomingDeadlines'));
+});
+
+test('a calendar reload only sends the calendar props, scoped to the asked date range', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'member');
+    $inRange = Issue::factory()->create(['project_id' => $project->id, 'start_date' => '2026-10-05', 'end_date' => '2026-10-07']);
+    Issue::factory()->create(['project_id' => $project->id, 'start_date' => '2026-03-05', 'end_date' => '2026-03-07']);
+
+    $this->actingAs($user)
+        ->get("/projects/$project->id?calendar_from=2026-10-01&calendar_to=2026-10-31")
+        ->assertInertia(fn (Assert $page) => $page
+            ->missing('calendarIssues')
+            ->reloadOnly(['calendarIssues', 'upcomingDeadlines'], fn (Assert $reload) => $reload
+                ->has('calendarIssues', 1)
+                ->where('calendarIssues.0.id', $inRange->id)
+                ->has('upcomingDeadlines', 2)
+                ->missing('issues')
+                ->missing('activityLogs')));
+});
+
+test('the calendar range must be valid dates', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'member');
+
+    $this->actingAs($user)->get("/projects/$project->id?calendar_from=nope")->assertSessionHasErrors('calendar_from');
+});
