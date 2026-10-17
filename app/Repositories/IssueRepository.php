@@ -15,24 +15,6 @@ use Illuminate\Support\Collection;
 
 class IssueRepository
 {
-    /**
-     * All of a project's issues matching the given search/filters, unpaginated -
-     * used by views (calendar, upcoming-deadlines) that need every matching
-     * issue rather than one table page, while still respecting the same
-     * search box and filter chips as the table view.
-     */
-    public function getForProject(int $projectId, array $searchParams = [], array $filters = []): Collection
-    {
-        $query = Issue::query()
-            ->where('project_id', $projectId)
-            ->with(['creator', 'assignee', 'issueType', 'workflowStatus', 'labels'])
-            ->orderByRaw("CASE WHEN priority = 'high' THEN 1 WHEN priority = 'medium' THEN 2 WHEN priority = 'low' THEN 3 ELSE 4 END");
-
-        $this->applySearchAndFilters($query, $searchParams, $filters);
-
-        return $query->get();
-    }
-
     public function findWithRelations(int $id): Issue
     {
         return Issue::query()
@@ -186,13 +168,91 @@ class IssueRepository
         return $issue;
     }
 
-    public function getAllForUser(int $userId): Collection
+    /**
+     * Counts of every issue in the user's projects by priority and by workflow
+     * status category (an issue without a status counts as to do), from one
+     * grouped query - the dashboard only draws totals, so it never needs the
+     * issue rows themselves.
+     *
+     * @return array{total: int, priority: array{high: int, medium: int, low: int}, category: array{todo: int, in_progress: int, done: int}}
+     */
+    public function statsForUser(int $userId): array
     {
-        return Issue::query()
-            ->whereHas('project.users', fn ($query) => $query->where('users.id', $userId))
-            ->with(['creator', 'assignee', 'workflowStatus', 'labels'])
-            ->latest()
+        $stats = [
+            'total' => 0,
+            'priority' => ['high' => 0, 'medium' => 0, 'low' => 0],
+            'category' => ['todo' => 0, 'in_progress' => 0, 'done' => 0],
+        ];
+
+        $rows = Issue::query()
+            ->leftJoin('workflow_statuses', 'issues.workflow_status_id', '=', 'workflow_statuses.id')
+            ->whereIn('issues.project_id', fn ($members) => $members
+                ->select('project_id')
+                ->from('project_user')
+                ->where('user_id', $userId))
+            ->selectRaw("issues.priority, COALESCE(workflow_statuses.category, 'todo') as category, COUNT(*) as total")
+            ->groupBy('issues.priority', 'category')
+            ->toBase()
             ->get();
+
+        foreach ($rows as $row) {
+            $stats['total'] += (int) $row->total;
+
+            if (isset($stats['priority'][$row->priority])) {
+                $stats['priority'][$row->priority] += (int) $row->total;
+            }
+
+            if (isset($stats['category'][$row->category])) {
+                $stats['category'][$row->category] += (int) $row->total;
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * The project's issues that overlap the date range (they start on or
+     * before `$to` and end, or - with no end date - start, on or after
+     * `$from`), for the calendar. Respects the same search box and filter
+     * chips as the table.
+     */
+    public function getForProjectInRange(int $projectId, string $from, string $to, array $searchParams = [], array $filters = []): Collection
+    {
+        $query = Issue::query()
+            ->where('issues.project_id', $projectId)
+            ->whereNotNull('issues.start_date')
+            ->where('issues.start_date', '<=', $to)
+            ->whereRaw('COALESCE(issues.end_date, issues.start_date) >= ?', [$from])
+            ->with(['assignee', 'issueType', 'workflowStatus', 'labels'])
+            ->orderByRaw("CASE WHEN issues.priority = 'high' THEN 1 WHEN issues.priority = 'medium' THEN 2 WHEN issues.priority = 'low' THEN 3 ELSE 4 END")
+            ->orderBy('issues.id');
+
+        $this->applySearchAndFilters($query, $searchParams, $filters);
+
+        return $query->get();
+    }
+
+    /**
+     * The project's unfinished issues that have an end date, soonest first -
+     * what the calendar's deadlines panel lists, capped so a project with a
+     * long backlog does not ship all of it.
+     */
+    public function getUpcomingDeadlines(int $projectId, array $searchParams = [], array $filters = [], int $limit = 50): Collection
+    {
+        $query = Issue::query()
+            ->where('issues.project_id', $projectId)
+            ->whereNotNull('issues.end_date')
+            ->where(fn ($open) => $open
+                ->whereNull('issues.workflow_status_id')
+                ->orWhereDoesntHave('workflowStatus', fn ($status) => $status->where('category', 'done')))
+            ->with(['assignee', 'issueType', 'workflowStatus', 'labels'])
+            ->orderBy('issues.end_date')
+            ->orderBy('issues.id')
+            ->limit($limit);
+
+        $this->applySearchAndFilters($query, $searchParams, $filters);
+
+        return $query->get();
     }
 
     public function getAllPaginated(string|int $projectID = 'all', int $perPage = 20, array $sortParams = [], array $searchParams = [], array $filters = []): LengthAwarePaginator

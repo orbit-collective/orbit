@@ -51,32 +51,30 @@ test('getIssueWithRelations delegates to the repository', function () {
     expect($result)->toBe($issue);
 });
 
-test('getAllForProject delegates to the repository', function () {
-    $issues = Issue::factory()->count(3)->make(['project_id' => 7]);
-
-    $this->issueRepository->shouldReceive('getForProject')
-        ->once()
-        ->with(7, [], [])
-        ->andReturn($issues);
-
-    $result = $this->service->getAllForProject(7);
-
-    expect($result)->toBe($issues->toArray());
-});
-
-test('getAllForProject passes search and filters through to the repository', function () {
+test('getCalendarIssues delegates the range, search and filters to the repository', function () {
     $issues = Issue::factory()->count(1)->make(['project_id' => 7]);
     $searchParams = ['search' => 'bug'];
     $filters = ['status' => ['todo']];
 
-    $this->issueRepository->shouldReceive('getForProject')
+    $this->issueRepository->shouldReceive('getForProjectInRange')
         ->once()
-        ->with(7, $searchParams, $filters)
+        ->with(7, '2026-10-01', '2026-10-31', $searchParams, $filters)
         ->andReturn($issues);
 
-    $result = $this->service->getAllForProject(7, $searchParams, $filters);
+    $result = $this->service->getCalendarIssues(7, '2026-10-01', '2026-10-31', $searchParams, $filters);
 
     expect($result)->toBe($issues->toArray());
+});
+
+test('getUpcomingDeadlines delegates search and filters to the repository', function () {
+    $issues = Issue::factory()->count(2)->make(['project_id' => 7]);
+
+    $this->issueRepository->shouldReceive('getUpcomingDeadlines')
+        ->once()
+        ->with(7, [], [])
+        ->andReturn($issues);
+
+    expect($this->service->getUpcomingDeadlines(7))->toBe($issues->toArray());
 });
 
 test('it can create an issue and log activity', function () {

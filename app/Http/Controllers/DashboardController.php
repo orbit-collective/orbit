@@ -39,12 +39,12 @@ class DashboardController extends Controller
     {
         $userId = $request->user()->id;
 
-        $issues = $this->issueService->getAllForUser($userId);
+        $issueStats = $this->issueService->getStatsForUser($userId);
         $projects = $this->projectService->withIssueCounts($this->projectService->getAllForUser($userId));
         $productivity_trend = $this->issueService->getProductivityTrendForUser($userId);
 
         return Inertia::render('Dashboard', [
-            'issues' => $issues,
+            'issueStats' => $issueStats,
             'projects' => $projects,
             'productivity_trend' => $productivity_trend,
             'users' => $this->userService->getAssignableUsersForUserProjects($userId),

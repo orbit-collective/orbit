@@ -12,6 +12,7 @@ use App\Services\LabelService;
 use App\Services\ProjectService;
 use App\Services\RoleService;
 use App\Services\UserService;
+use Carbon\Carbon;
 use Illuminate\Container\EntryNotFoundException;
 use Illuminate\Contracts\Container\CircularDependencyException;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,11 @@ use Psr\Container\NotFoundExceptionInterface;
 
 class ProjectController extends Controller
 {
+    /** A month grid is 42 days; the cap leaves room for week and month views alike. */
+    private const int CALENDAR_DEFAULT_SPAN_DAYS = 45;
+
+    private const int CALENDAR_MAX_SPAN_DAYS = 93;
+
     protected ProjectService $projectService;
 
     protected IssueService $issueService;
@@ -72,19 +78,23 @@ class ProjectController extends Controller
             'assignee' => request()->query('assignee'),
         ];
 
-        $issues = $this->issueService->getAllByProjectID($project->id, $sortParams, $perPage, $searchParams, $filters);
-        $calendarIssues = $this->issueService->getAllForProject($project->id, $searchParams, $filters);
+        [$calendarFrom, $calendarTo] = $this->calendarRange($request);
 
+        // Closures and optional props are only evaluated when the response
+        // actually includes them: the calendar's month navigation reloads just
+        // its own props, and the calendar data is never sent to the table,
+        // board or activity views at all.
         return Inertia::render('Projects/Show', [
             'project' => $project,
             'projects' => $projects,
-            'issues' => $issues,
-            'calendarIssues' => $calendarIssues,
+            'issues' => fn () => $this->issueService->getAllByProjectID($project->id, $sortParams, $perPage, $searchParams, $filters),
+            'calendarIssues' => Inertia::optional(fn () => $this->issueService->getCalendarIssues($project->id, $calendarFrom, $calendarTo, $searchParams, $filters)),
+            'upcomingDeadlines' => Inertia::optional(fn () => $this->issueService->getUpcomingDeadlines($project->id, $searchParams, $filters)),
             'queryParams' => request()->query() ?: null,
             'filters' => $filters,
             'savedFilters' => $project->savedFilters()->latest()->get(),
             'users' => $this->userService->getAssignableUsersForProject($project->id),
-            'activityLogs' => $this->activityLogService->paginateForProject($project->id, $request->integer(ActivityLogService::PER_PAGE_NAME, 20))->through(fn ($entry) => [
+            'activityLogs' => fn () => $this->activityLogService->paginateForProject($project->id, $request->integer(ActivityLogService::PER_PAGE_NAME, 20))->through(fn ($entry) => [
                 'id' => $entry->id,
                 'body' => $entry->body,
                 'userId' => $entry->user_id,
@@ -97,6 +107,38 @@ class ProjectController extends Controller
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
             'nextIssueId' => $this->issueService->peekNextIssueId($project),
         ]);
+    }
+
+    /**
+     * The date range the calendar asked for (`calendar_from`/`calendar_to`,
+     * Y-m-d), defaulting to the current month's grid and capped so a crafted
+     * request cannot ask for every issue in one go.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function calendarRange(Request $request): array
+    {
+        $valid = $request->validate([
+            'calendar_from' => 'sometimes|date_format:Y-m-d',
+            'calendar_to' => 'sometimes|date_format:Y-m-d',
+        ]);
+
+        $from = isset($valid['calendar_from'])
+            ? Carbon::parse($valid['calendar_from'])
+            : now()->startOfMonth()->subDays(7);
+        $to = isset($valid['calendar_to'])
+            ? Carbon::parse($valid['calendar_to'])
+            : $from->copy()->addDays(self::CALENDAR_DEFAULT_SPAN_DAYS);
+
+        if ($to->lt($from)) {
+            $to = $from->copy();
+        }
+
+        if ($from->diffInDays($to) > self::CALENDAR_MAX_SPAN_DAYS) {
+            $to = $from->copy()->addDays(self::CALENDAR_MAX_SPAN_DAYS);
+        }
+
+        return [$from->toDateString(), $to->toDateString()];
     }
 
     private function mapLabels(Collection $labels): array

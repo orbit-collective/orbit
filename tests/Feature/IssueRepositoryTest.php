@@ -17,7 +17,7 @@ test('it can get issues for a project', function () {
     Issue::factory()->count(3)->create(['project_id' => $project->id]);
     Issue::factory()->count(2)->create(); // other project
 
-    $issues = $this->repository->getForProject($project->id);
+    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31');
 
     expect($issues)->toHaveCount(3);
 });
@@ -27,7 +27,7 @@ test('getForProject respects the search box', function () {
     Issue::factory()->create(['project_id' => $project->id, 'title' => 'Searchable Title']);
     Issue::factory()->create(['project_id' => $project->id, 'title' => 'Another Issue']);
 
-    $issues = $this->repository->getForProject($project->id, ['search' => 'Searchable']);
+    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', ['search' => 'Searchable']);
 
     expect($issues)->toHaveCount(1)
         ->and($issues->first()->title)->toBe('Searchable Title');
@@ -38,7 +38,7 @@ test('getForProject respects the status filter', function () {
     Issue::factory()->todo()->create(['project_id' => $project->id]);
     Issue::factory()->done()->create(['project_id' => $project->id]);
 
-    $issues = $this->repository->getForProject($project->id, [], ['status' => ['todo']]);
+    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['status' => ['todo']]);
 
     expect($issues)->toHaveCount(1)
         ->and($issues->first()->workflowStatus->category->value)->toBe('todo');
@@ -50,7 +50,7 @@ test('the status filter takes several categories at once', function () {
     Issue::factory()->inProgress()->create(['project_id' => $project->id]);
     Issue::factory()->done()->create(['project_id' => $project->id]);
 
-    $issues = $this->repository->getForProject($project->id, [], ['status' => 'todo,in_progress']);
+    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['status' => 'todo,in_progress']);
 
     expect($issues)->toHaveCount(2);
 });
@@ -61,7 +61,7 @@ test('the status filter matches the category, not the status name', function () 
     $issue->workflowStatus->update(['name' => 'Shipped']);
     Issue::factory()->todo()->create(['project_id' => $project->id]);
 
-    expect($this->repository->getForProject($project->id, [], ['status' => ['done']])->pluck('id')->all())->toBe([$issue->id]);
+    expect($this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['status' => ['done']])->pluck('id')->all())->toBe([$issue->id]);
 });
 
 test('the search box matches a status name', function () {
@@ -94,7 +94,7 @@ test('getForProject respects the priority filter', function () {
     Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high']);
     Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low']);
 
-    $issues = $this->repository->getForProject($project->id, [], ['priority' => ['high']]);
+    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['priority' => ['high']]);
 
     expect($issues)->toHaveCount(1)
         ->and($issues->first()->priority)->toBe('high');
@@ -107,7 +107,7 @@ test('getForProject respects the assignee filter, including unassigned', functio
     $unassigned = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null]);
     Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => User::factory()->create()->id]);
 
-    $issues = $this->repository->getForProject($project->id, [], [
+    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], [
         'assignee' => [(string) $assignee->id, 'unassigned'],
     ]);
 
@@ -171,7 +171,7 @@ test('it returns issues ordered by priority', function () {
     Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high', 'title' => 'High Issue']);
     Issue::factory()->create(['project_id' => $project->id, 'priority' => 'medium', 'title' => 'Medium Issue']);
 
-    $issues = $this->repository->getForProject($project->id);
+    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31');
 
     expect($issues[0]->priority)->toBe('high')
         ->and($issues[1]->priority)->toBe('medium')
@@ -582,9 +582,9 @@ test('the workflow_status filter matches exact statuses, alone or with a categor
     $review->workflowStatus->update(['name' => 'In Review']);
     $other = Issue::factory()->done()->create(['project_id' => $project->id]);
 
-    $byId = $this->repository->getForProject($project->id, [], ['workflow_status' => [$review->workflow_status_id]]);
-    $csv = $this->repository->getForProject($project->id, [], ['workflow_status' => $review->workflow_status_id.','.$other->workflow_status_id]);
-    $both = $this->repository->getForProject($project->id, [], ['workflow_status' => $csv->pluck('workflow_status_id')->all(), 'status' => ['done']]);
+    $byId = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['workflow_status' => [$review->workflow_status_id]]);
+    $csv = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['workflow_status' => $review->workflow_status_id.','.$other->workflow_status_id]);
+    $both = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['workflow_status' => $csv->pluck('workflow_status_id')->all(), 'status' => ['done']]);
 
     expect($byId->pluck('id')->all())->toBe([$review->id])
         ->and($csv)->toHaveCount(2)
