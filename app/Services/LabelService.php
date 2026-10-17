@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Label;
 use App\Models\Project;
 use App\Repositories\LabelRepository;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -102,7 +103,7 @@ class LabelService
         // One transaction: a failure while rewriting the name copies must not
         // leave the label renamed with stale references behind it, which a
         // retry could no longer repair (the old name would be gone).
-        return DB::transaction(function () use ($project, $label, $data) {
+        $label = DB::transaction(function () use ($project, $label, $data) {
             $previousName = $label->name;
 
             $label = $this->labelRepository->update($label, $data);
@@ -115,6 +116,10 @@ class LabelService
 
             return $label;
         });
+
+        $this->retireIssueLists();
+
+        return $label;
     }
 
     public function deleteLabel(Project $project, Label $label): void
@@ -125,6 +130,18 @@ class LabelService
 
             $this->activityLogService->log($project->id, "Deleted the \"$label->name\" label");
         });
+
+        $this->retireIssueLists();
+    }
+
+    /**
+     * The Label model bumps the issue-list version while the transaction is
+     * still open, so a list read in between would cache the old name under the
+     * new version. Bumping again once the changes are committed retires it.
+     */
+    private function retireIssueLists(): void
+    {
+        CacheVersion::bump(CacheVersion::ISSUES);
     }
 
     private function assertNameAvailable(Project $project, string $name): void
