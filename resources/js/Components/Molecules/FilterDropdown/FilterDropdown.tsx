@@ -104,7 +104,7 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
 const buildLabelsConfig = (labels: ProjectLabel[]): FilterConfig => ({
     ...FILTER_CONFIG.labels,
     options: labels.map((label) => ({
-        value: label.name,
+        value: String(label.id),
         label: label.name,
         render: () => <LabelBadge label={label.name} />,
     })),

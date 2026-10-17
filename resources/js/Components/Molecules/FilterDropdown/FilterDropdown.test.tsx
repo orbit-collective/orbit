@@ -129,7 +129,7 @@ describe('FilterDropdown Component', () => {
             <ProjectLabelsProvider labels={testLabels}>
                 <FilterDropdown
                     type="labels"
-                    queryParams={{ labels: 'bug' }}
+                    queryParams={{ labels: '1' }}
                     isOpen
                     onOpenChange={vi.fn()}
                 />
@@ -140,7 +140,7 @@ describe('FilterDropdown Component', () => {
 
         expect(mockRouterGet).toHaveBeenCalledWith(
             '/',
-            expect.objectContaining({ labels: 'bug,feature' }),
+            expect.objectContaining({ labels: '1,2' }),
             { preserveState: true, replace: true },
         );
     });
@@ -151,7 +151,7 @@ describe('FilterDropdown Component', () => {
             <ProjectLabelsProvider labels={testLabels}>
                 <FilterDropdown
                     type="labels"
-                    queryParams={{ labels: 'bug,feature' }}
+                    queryParams={{ labels: '1,2' }}
                     isOpen
                     onOpenChange={vi.fn()}
                 />
@@ -162,7 +162,7 @@ describe('FilterDropdown Component', () => {
 
         expect(mockRouterGet).toHaveBeenCalledWith(
             '/',
-            expect.objectContaining({ labels: 'feature' }),
+            expect.objectContaining({ labels: '2' }),
             { preserveState: true, replace: true },
         );
     });
