@@ -36,18 +36,31 @@ silently resurrect a label a project owner deliberately deleted.
 `App\Policies\ProjectPolicy::viewLabels()` / `manageLabels()` (view:
 owner/admin/member/viewer; manage: owner/admin — the same
 owner/admin-only pattern as `viewIntegrations()`/`updateIntegrations()`).
-An issue's `labels` column is still a plain JSON array of label
-**name strings** (`Issue::casts()['labels'] = 'array'`, no more
-`App\Enums\IssueLabel` backing it) — but every name written through
-`IssueController@store`/`@update` is now validated against that
-project's real `labels` rows
-(`Rule::exists('labels', 'name')->where('project_id', ...)`) instead of
-a fixed enum. That's a deliberate scope tradeoff worth knowing before
-you touch it: a label is identified by **name**, not by a relational
-pivot to issues, so renaming or deleting a label does **not**
-retroactively update or strip it from issues that already reference
-the old name — an issue keeps whatever string it was tagged with until
-someone edits its labels again. On the frontend,
+An issue's labels are rows of the `issue_label` pivot
+(`issue_id`, `label_id`; migration
+`2026_10_17_100000_create_issue_label_table.php`, which also moved the
+old JSON names over and dropped `issues.labels`), exposed as
+`Issue::labels()` (`BelongsToMany`). Writers still speak **names**:
+assigning `labels` on an `Issue` (`create()`, `update()`, factories,
+imports, templates, automations) goes through
+`Issue::setLabelsAttribute()` and is written to the pivot by
+`Issue::save()`; names that are not a label of the issue's project are
+ignored, and every name written through
+`IssueController@store`/`@update` is validated against that project's
+real `labels` rows
+(`Rule::exists('labels', 'name')->where('project_id', ...)`). Reads
+serialise `labels` as a list of names (`Issue::relationsToArray()`), and
+listing queries must eager-load `labels`. Because storage is relational,
+**filtering is by label id** (`?labels=1,2` →
+`whereHas('labels', ... whereIn('labels.id', ...))`, an exact match — a
+`bug` filter never catches `debug`) and **renaming a label shows the new
+name on every issue at once**; deleting one cascades its pivot rows.
+`Label` bumps `CacheVersion::ISSUES` on save/delete so cached issue lists
+refresh. The few places that still keep a label as plain text (template
+`default_labels`, Jira label mappings, add/remove-label automation
+params) are rewritten or cleaned up by
+`LabelRepository::replaceNameReferences()` when a label is renamed or
+deleted. On the frontend,
 `resources/js/context/ProjectLabelsContext.tsx`'s
 `ProjectLabelsProvider`/`useProjectLabels()` is the single source of
 truth for "what labels exist and what color is this one" wherever it's

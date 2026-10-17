@@ -37,20 +37,32 @@ udostępnia `projects.labels.store` / `.update` / `.destroy`,
 zabezpieczone przez `App\Policies\ProjectPolicy::viewLabels()` /
 `manageLabels()` (podgląd: owner/admin/member/viewer; zarządzanie:
 tylko owner/admin — dokładnie ten sam wzorzec, co
-`viewIntegrations()`/`updateIntegrations()`). Kolumna `labels` issue'a
-to nadal zwykła tablica JSON z **nazwami** labeli w postaci stringów
-(`Issue::casts()['labels'] = 'array'`, bez `App\Enums\IssueLabel` w
-tle) — ale każda nazwa zapisywana przez
-`IssueController@store`/`@update` jest teraz walidowana względem
-prawdziwych wierszy `labels` danego projektu
-(`Rule::exists('labels', 'name')->where('project_id', ...)`), zamiast
-względem sztywnego enuma. To świadomy kompromis zakresu, o którym
-warto wiedzieć, zanim się w to ruszy: label jest identyfikowany przez
-**nazwę**, a nie przez relacyjną tabelę pośredniczącą do issue'ów, więc
-zmiana nazwy albo usunięcie labela **nie** aktualizuje ani nie usuwa go
-wstecznie z issue'ów, które już odwołują się do starej nazwy — issue
-zachowuje ten sam string, dopóki ktoś ponownie nie edytuje jego
-labeli. Po stronie frontendu `resources/js/context/ProjectLabelsContext.tsx`
+`viewIntegrations()`/`updateIntegrations()`). Labele issue'a to wiersze tabeli pośredniczącej `issue_label`
+(`issue_id`, `label_id`; migracja
+`2026_10_17_100000_create_issue_label_table.php`, która przeniosła też
+stare nazwy z JSON-a i usunęła `issues.labels`), dostępne jako
+`Issue::labels()` (`BelongsToMany`). Zapisujące nadal operują na
+**nazwach**: przypisanie `labels` na `Issue` (`create()`, `update()`,
+fabryki, importy, szablony, automatyzacje) przechodzi przez
+`Issue::setLabelsAttribute()` i jest zapisywane do pivota przez
+`Issue::save()`; nazwy, które nie są labelem projektu issue'a, są
+ignorowane, a każda nazwa zapisywana przez
+`IssueController@store`/`@update` jest walidowana względem prawdziwych
+wierszy `labels` danego projektu
+(`Rule::exists('labels', 'name')->where('project_id', ...)`). Odczyt
+serializuje `labels` jako listę nazw (`Issue::relationsToArray()`), a
+zapytania listujące muszą eager-loadować `labels`. Ponieważ
+przechowywanie jest relacyjne, **filtrowanie odbywa się po id labela**
+(`?labels=1,2` → `whereHas('labels', ... whereIn('labels.id', ...))`,
+dokładne dopasowanie — filtr `bug` nigdy nie złapie `debug`), a **zmiana
+nazwy labela jest od razu widoczna na wszystkich issue'ach**; usunięcie
+labela kasuje kaskadowo jego wiersze w pivocie. `Label` podbija
+`CacheVersion::ISSUES` przy zapisie/usunięciu, więc cache list issue'ów
+się odświeża. Nieliczne miejsca, które nadal trzymają label jako tekst
+(`default_labels` szablonów, mapowania labeli Jiry, parametry akcji
+automatyzacji add/remove-label), są przepisywane lub czyszczone przez
+`LabelRepository::replaceNameReferences()` przy zmianie nazwy albo
+usunięciu labela. Po stronie frontendu `resources/js/context/ProjectLabelsContext.tsx`
 z `ProjectLabelsProvider`/`useProjectLabels()` jest jedynym źródłem
 prawdy dla "jakie labele istnieją i jaki kolor ma ten konkretny",
 wszędzie tam, gdzie jest zamontowany (obecnie `Pages/Projects/Show.tsx`
