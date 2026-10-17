@@ -269,5 +269,5 @@ test('creating an issue with a template_id prefills description and labels when 
         'title' => 'Login fails',
         'description' => 'Steps to reproduce...',
     ]);
-    expect($project->issues()->where('title', 'Login fails')->first()->labels)->toBe(['bug']);
+    expect($project->issues()->where('title', 'Login fails')->first()->labelNames())->toBe(['bug']);
 });

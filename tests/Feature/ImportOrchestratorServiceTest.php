@@ -175,7 +175,7 @@ test('omits an imported label whose mapped orbit value no longer exists in the p
 
     $issue = Issue::where('project_id', $this->project->id)->first();
 
-    expect($issue->labels)->toBeNull();
+    expect($issue->labelNames())->toBe([]);
 });
 
 test('keeps an imported label whose mapped orbit value exists in the project taxonomy', function () {
@@ -190,7 +190,7 @@ test('keeps an imported label whose mapped orbit value exists in the project tax
 
     $issue = Issue::where('project_id', $this->project->id)->first();
 
-    expect($issue->labels)->toBe(['bug']);
+    expect($issue->labelNames())->toBe(['bug']);
 });
 
 test('calls onProgress with running totals after every processed issue', function () {

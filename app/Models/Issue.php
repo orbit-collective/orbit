@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BumpsIssueCache;
+use App\Support\Cache\CacheVersion;
 use Database\Factories\IssueFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
@@ -23,6 +25,14 @@ class Issue extends Model
      * the type and status columns silently render as empty.
      */
     public static $snakeAttributes = false;
+
+    /**
+     * Label names assigned through `labels` that still have to be written to
+     * the issue_label pivot (see setLabelsAttribute()).
+     *
+     * @var list<string>|null
+     */
+    protected ?array $pendingLabelNames = null;
 
     protected $fillable = [
         'id',
@@ -91,10 +101,84 @@ class Issue extends Model
     protected function casts(): array
     {
         return [
-            'labels' => 'array',
             'custom_fields' => 'array',
             'tags' => 'array',
         ];
+    }
+
+    /**
+     * Assigning `labels` takes label names (what forms, imports, templates and
+     * automations all speak) and writes them to the issue_label pivot once the
+     * issue is saved, so `fill()`, `create()` and `update()` keep working with
+     * names while storage is relational. Names that are not a label of the
+     * issue's project are ignored.
+     *
+     * @param  array<array-key, string>|null  $names
+     */
+    public function setLabelsAttribute(?array $names): void
+    {
+        $this->pendingLabelNames = array_values(array_unique(array_map('strval', $names ?? [])));
+    }
+
+    /**
+     * Overridden rather than hooked on the `saved` event so the pending label
+     * names are written even when model events are faked or muted.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public function save(array $options = []): bool
+    {
+        $saved = parent::save($options);
+
+        if ($saved && $this->pendingLabelNames !== null) {
+            $this->syncLabelNames($this->pendingLabelNames);
+        }
+
+        return $saved;
+    }
+
+    /** @param  list<string>  $names */
+    public function syncLabelNames(array $names): void
+    {
+        $this->pendingLabelNames = null;
+
+        $ids = $names === []
+            ? []
+            : Label::query()->where('project_id', $this->project_id)->whereIn('name', $names)->pluck('id')->all();
+
+        $changes = $this->labels()->sync($ids);
+
+        $this->load('labels');
+
+        if (array_filter($changes)) {
+            CacheVersion::bump(CacheVersion::ISSUES);
+        }
+    }
+
+    /** @return list<string> */
+    public function labelNames(): array
+    {
+        return $this->labels->pluck('name')->sort()->values()->all();
+    }
+
+    /**
+     * The payload keeps `labels` as a list of names (what resources/js/types
+     * Issues.ts expects) instead of serialising the Label rows.
+     */
+    public function relationsToArray(): array
+    {
+        $relations = parent::relationsToArray();
+
+        if ($this->relationLoaded('labels')) {
+            $relations['labels'] = $this->labelNames();
+        }
+
+        return $relations;
+    }
+
+    public function labels(): BelongsToMany
+    {
+        return $this->belongsToMany(Label::class, 'issue_label')->orderBy('labels.name');
     }
 
     public function creator(): BelongsTo

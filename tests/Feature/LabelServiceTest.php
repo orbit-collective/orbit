@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\AutomationAction;
+use App\Models\AutomationRule;
+use App\Models\IssueType;
 use App\Models\Project;
 use App\Services\LabelService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -102,4 +105,25 @@ test('it can delete a label, including a system label, and logs the change', fun
 
     $this->assertDatabaseMissing('labels', ['id' => $label->id]);
     $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id, 'body' => 'Deleted the "bug" label']);
+});
+
+test('renaming a label rewrites the name in template defaults, Jira mappings and automation actions', function () {
+    $project = Project::factory()->create();
+    $label = $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
+
+    $type = IssueType::factory()->create(['project_id' => $project->id]);
+    $template = $type->templates()->create(['name' => 'T', 'description' => '', 'default_priority' => 'low', 'default_labels' => ['bug', 'ux']]);
+
+    $rule = AutomationRule::query()->create(['project_id' => $project->id, 'name' => 'R', 'trigger_type' => 'issue_created', 'enabled' => true]);
+    $action = $rule->actions()->create(['type' => 'add_label', 'params' => ['label' => 'bug'], 'sort_order' => 0]);
+
+    app(LabelService::class)->updateLabel($project, $label, ['name' => 'defect']);
+
+    expect($template->fresh()->default_labels)->toBe(['defect', 'ux'])
+        ->and($action->fresh()->params['label'])->toBe('defect');
+
+    app(LabelService::class)->deleteLabel($project, $label->fresh());
+
+    expect($template->fresh()->default_labels)->toBe(['ux'])
+        ->and(AutomationAction::query()->whereKey($action->id)->exists())->toBeFalse();
 });

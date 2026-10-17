@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Issue;
+use App\Models\Label;
 use App\Models\Project;
 use App\Models\WorkflowStatus;
 use App\Support\Cache\CacheVersion;
@@ -24,7 +25,7 @@ class IssueRepository
     {
         $query = Issue::query()
             ->where('project_id', $projectId)
-            ->with(['creator', 'assignee', 'issueType', 'workflowStatus'])
+            ->with(['creator', 'assignee', 'issueType', 'workflowStatus', 'labels'])
             ->orderByRaw("CASE WHEN priority = 'high' THEN 1 WHEN priority = 'medium' THEN 2 WHEN priority = 'low' THEN 3 ELSE 4 END");
 
         $this->applySearchAndFilters($query, $searchParams, $filters);
@@ -39,8 +40,8 @@ class IssueRepository
                 'creator', 'assignee', 'project', 'comments.user',
                 'issueType.statuses', 'issueType.transitions', 'issueType.allowedChildTypes',
                 'issueType.fields' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
-                'workflowStatus', 'parent', 'externalLinks',
-                'children' => fn ($query) => $query->with(['assignee', 'issueType', 'workflowStatus']),
+                'workflowStatus', 'parent', 'externalLinks', 'labels',
+                'children' => fn ($query) => $query->with(['assignee', 'issueType', 'workflowStatus', 'labels']),
             ])
             ->findOrFail($id);
     }
@@ -169,7 +170,7 @@ class IssueRepository
     /**
      * Bulk-create primitive: loops the existing store() per row rather than a
      * raw insert(), so Eloquent casts/model events still run per issue (e.g.
-     * the labels enum-array cast) - correctness over a single fast query.
+     * the labels pivot sync) - correctness over a single fast query.
      *
      * @return Collection<array-key, Issue>
      */
@@ -189,7 +190,7 @@ class IssueRepository
     {
         return Issue::query()
             ->whereHas('project.users', fn ($query) => $query->where('users.id', $userId))
-            ->with(['creator', 'assignee', 'workflowStatus'])
+            ->with(['creator', 'assignee', 'workflowStatus', 'labels'])
             ->latest()
             ->get();
     }
@@ -199,7 +200,7 @@ class IssueRepository
         // The board moves an issue by picking a status its type's workflow can
         // reach, so each type comes with its statuses and transitions.
         $query = Issue::query()->with([
-            'creator', 'assignee', 'workflowStatus', 'issueType',
+            'creator', 'assignee', 'workflowStatus', 'issueType', 'labels',
             'issueType.statuses' => fn ($statuses) => $statuses->orderBy('sort_order'),
             'issueType.transitions',
         ]);
@@ -228,8 +229,19 @@ class IssueRepository
                     break;
 
                 case 'title':
-                case 'labels':
                     $query->orderBy($column, $direction);
+                    break;
+
+                case 'labels':
+                    $query->orderBy(
+                        Label::query()
+                            ->select('labels.name')
+                            ->join('issue_label', 'issue_label.label_id', '=', 'labels.id')
+                            ->whereColumn('issue_label.issue_id', 'issues.id')
+                            ->orderBy('labels.name')
+                            ->limit(1),
+                        $direction,
+                    );
                     break;
 
                 case 'priority':
@@ -286,13 +298,15 @@ class IssueRepository
                             $sq->where('title', 'like', "%$value%")
                                 ->orWhere('description', 'like', "%$value%")
                                 ->orWhere('issues.number', 'like', "%$value%")
-                                ->orWhere('labels', 'like', "%$value%");
+                                ->orWhereHas('labels', fn ($label) => $label->where('labels.name', 'like', "%$value%"));
                         });
                     } elseif ($key === 'status') {
                         $q->whereHas('workflowStatus', fn ($status) => $status
                             ->where('name', 'like', "%$value%")
                             ->orWhere('category', 'like', '%'.str_replace(' ', '_', strtolower((string) $value)).'%'));
-                    } elseif (in_array($key, ['title', 'priority', 'labels'])) {
+                    } elseif ($key === 'labels') {
+                        $q->whereHas('labels', fn ($label) => $label->where('labels.name', 'like', "%$value%"));
+                    } elseif (in_array($key, ['title', 'priority'])) {
                         $q->where($key, 'like', "%$value%");
                     }
                 }
@@ -321,15 +335,11 @@ class IssueRepository
                 $query->whereIn('priority', array_filter($values));
             }
             if (! empty($filters['labels'])) {
-                $labels = is_array($filters['labels']) ? $filters['labels'] : explode(',', $filters['labels']);
-                $labels = array_filter($labels);
+                $values = is_array($filters['labels']) ? $filters['labels'] : explode(',', $filters['labels']);
+                $labelIds = array_values(array_filter(array_map('intval', $values)));
 
-                if (! empty($labels)) {
-                    $query->where(function ($q) use ($labels) {
-                        foreach ($labels as $label) {
-                            $q->orWhere('labels', 'like', '%'.trim($label).'%');
-                        }
-                    });
+                if ($labelIds !== []) {
+                    $query->whereHas('labels', fn ($label) => $label->whereIn('labels.id', $labelIds));
                 }
             }
             if (! empty($filters['assignee'])) {

@@ -132,7 +132,7 @@ test('AddLabelAction adds a real project label', function () {
 
     app(AddLabelAction::class)->handle($issue, ['label' => 'bug']);
 
-    expect($issue->fresh()->labels)->toBe(['bug']);
+    expect($issue->fresh()->labelNames())->toBe(['bug']);
 });
 
 test('AddLabelAction ignores a label the project does not have', function () {
@@ -140,15 +140,19 @@ test('AddLabelAction ignores a label the project does not have', function () {
 
     app(AddLabelAction::class)->handle($issue, ['label' => 'nonexistent']);
 
-    expect($issue->fresh()->labels)->toBe([]);
+    expect($issue->fresh()->labelNames())->toBe([]);
 });
 
 test('RemoveLabelAction removes an existing label', function () {
-    $issue = Issue::factory()->create(['labels' => ['bug', 'urgent']]);
+    $issue = Issue::factory()->create();
+    foreach (['bug', 'urgent'] as $name) {
+        Label::query()->create(['project_id' => $issue->project_id, 'name' => $name, 'color' => '#f00']);
+    }
+    $issue->update(['labels' => ['bug', 'urgent']]);
 
     app(RemoveLabelAction::class)->handle($issue, ['label' => 'bug']);
 
-    expect($issue->fresh()->labels)->toBe(['urgent']);
+    expect($issue->fresh()->labelNames())->toBe(['urgent']);
 });
 
 test('SendNotificationAction notifies the assignee', function () {

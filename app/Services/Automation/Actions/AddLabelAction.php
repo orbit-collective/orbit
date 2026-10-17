@@ -22,7 +22,7 @@ class AddLabelAction implements AutomationActionHandler
             return;
         }
 
-        $labels = $issue->labels ?? [];
+        $labels = $issue->labelNames();
 
         if (in_array($name, $labels, true)) {
             return;

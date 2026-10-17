@@ -98,7 +98,13 @@ class LabelService
             $this->assertNameAvailable($project, $data['name']);
         }
 
+        $previousName = $label->name;
+
         $label = $this->labelRepository->update($label, $data);
+
+        if ($label->name !== $previousName) {
+            $this->labelRepository->replaceNameReferences($project, $previousName, $label->name);
+        }
 
         $this->activityLogService->log($project->id, "Updated the \"$label->name\" label");
 
@@ -108,6 +114,7 @@ class LabelService
     public function deleteLabel(Project $project, Label $label): void
     {
         $this->labelRepository->delete($label);
+        $this->labelRepository->replaceNameReferences($project, $label->name, null);
 
         $this->activityLogService->log($project->id, "Deleted the \"$label->name\" label");
     }

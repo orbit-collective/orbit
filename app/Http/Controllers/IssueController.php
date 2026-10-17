@@ -114,7 +114,7 @@ class IssueController extends Controller
             throw new NotFoundHttpException;
         }
 
-        return response()->json($this->previewPayload($issue->loadMissing('assignee')));
+        return response()->json($this->previewPayload($issue->loadMissing(['assignee', 'labels'])));
     }
 
     /**
@@ -128,7 +128,7 @@ class IssueController extends Controller
             'title' => $issue->title,
             'workflowStatus' => $issue->workflowStatus?->toArray(),
             'priority' => $issue->priority,
-            'labels' => $issue->labels ?? [],
+            'labels' => $issue->labelNames(),
             'start_date' => $issue->start_date,
             'end_date' => $issue->end_date,
             'assignee' => $issue->assignee
@@ -279,7 +279,7 @@ class IssueController extends Controller
                     $data['description'] = $template->description;
                 }
 
-                if ($template && ! array_key_exists('labels', $data) && empty($issue->labels)) {
+                if ($template && ! array_key_exists('labels', $data) && $issue->labels->isEmpty()) {
                     $data['labels'] = $this->labelService->filterToExisting($issue->project, $template->default_labels ?? []);
                 }
             } else {

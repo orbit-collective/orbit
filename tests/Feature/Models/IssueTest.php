@@ -91,11 +91,14 @@ test('workflowStatus() belongs to the workflow status referenced by workflow_sta
         ->and($issue->workflowStatus->id)->toBe($status->id);
 });
 
-test('labels are cast to a plain array of label name strings', function () {
-    $issue = Issue::factory()->create(['labels' => ['bug', 'design']]);
-    $fresh = $issue->fresh();
+test('labels assigned by name are stored on the issue_label pivot and serialised as names', function () {
+    $project = Project::factory()->create();
+    $project->labels()->createMany([['name' => 'bug', 'color' => '#f00'], ['name' => 'design', 'color' => '#00f']]);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'labels' => ['design', 'bug', 'unknown']]);
 
-    expect($fresh->labels)->toBe(['bug', 'design']);
+    expect($issue->fresh()->labelNames())->toBe(['bug', 'design'])
+        ->and($issue->fresh()->load('labels')->toArray()['labels'])->toBe(['bug', 'design'])
+        ->and(DB::table('issue_label')->where('issue_id', $issue->id)->count())->toBe(2);
 });
 
 test('labels persist as an empty set when none are given', function () {
