@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { SavedFilter } from '@/hooks/useSavedFilters';
 import SavedFiltersDropdown from './SavedFiltersDropdown';
 
@@ -188,12 +189,52 @@ describe('SavedFiltersDropdown Component', () => {
 
     test('lists saved views with their name and filter summary', async () => {
         render(
+            <ProjectLabelsProvider
+                labels={[
+                    {
+                        id: 4,
+                        name: 'bug',
+                        color: '#f44336',
+                        description: null,
+                        isSystem: true,
+                    },
+                    {
+                        id: 9,
+                        name: 'ux',
+                        color: '#009688',
+                        description: null,
+                        isSystem: true,
+                    },
+                ]}
+            >
+                <SavedFiltersDropdown
+                    savedFilters={[
+                        makeSavedFilter({
+                            id: 1,
+                            name: 'Open bugs',
+                            query_params: { status: 'open', labels: '4,9' },
+                        }),
+                    ]}
+                    isOpen
+                    onOpenChange={vi.fn()}
+                />
+            </ProjectLabelsProvider>,
+        );
+
+        expect(await screen.findByText('Open bugs')).toBeInTheDocument();
+        expect(
+            screen.getByText('Labels: bug, ux · Status: open'),
+        ).toBeInTheDocument();
+    });
+
+    test('summarises label ids it cannot resolve as a count instead of raw numbers', async () => {
+        render(
             <SavedFiltersDropdown
                 savedFilters={[
                     makeSavedFilter({
                         id: 1,
-                        name: 'Open bugs',
-                        query_params: { status: 'open', labels: 'bug' },
+                        name: 'Old labels',
+                        query_params: { labels: '4,9' },
                     }),
                 ]}
                 isOpen
@@ -201,9 +242,8 @@ describe('SavedFiltersDropdown Component', () => {
             />,
         );
 
-        expect(await screen.findByText('Open bugs')).toBeInTheDocument();
         expect(
-            screen.getByText('Labels: bug · Status: open'),
+            await screen.findByText('Labels: 2 selected'),
         ).toBeInTheDocument();
     });
 
