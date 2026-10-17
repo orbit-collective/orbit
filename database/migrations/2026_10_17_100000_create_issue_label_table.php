@@ -54,6 +54,8 @@ return new class extends Migration
             DB::table('issues')->where('id', $issueId)->update(['labels' => json_encode($rows->pluck('name')->all())]);
         }
 
+        $this->restoreSavedFilterNames();
+
         $this->recreateDateCheckTriggers();
 
         Schema::dropIfExists('issue_label');
@@ -93,11 +95,37 @@ return new class extends Migration
 
     private function rewriteSavedFilters(): void
     {
+        $this->rewriteSavedFilterLabels(function ($filter, array $values) {
+            return DB::table('labels')
+                ->where('project_id', $filter->project_id)
+                ->whereIn('name', array_map('trim', $values))
+                ->pluck('id')
+                ->all();
+        });
+    }
+
+    /** Puts label names back into saved filters, so the previous code can read them again. */
+    private function restoreSavedFilterNames(): void
+    {
+        $this->rewriteSavedFilterLabels(function ($filter, array $values) {
+            return DB::table('labels')
+                ->where('project_id', $filter->project_id)
+                ->whereIn('id', array_filter(array_map('intval', $values)))
+                ->pluck('name')
+                ->all();
+        });
+    }
+
+    /**
+     * @param  callable(object, array<int, string>): array<int, int|string>  $convert  maps a saved filter's label values to their replacement
+     */
+    private function rewriteSavedFilterLabels(callable $convert): void
+    {
         if (! Schema::hasTable('saved_filters')) {
             return;
         }
 
-        DB::table('saved_filters')->orderBy('id')->each(function ($filter) {
+        DB::table('saved_filters')->orderBy('id')->each(function ($filter) use ($convert) {
             $params = json_decode((string) $filter->query_params, true);
 
             if (! is_array($params) || empty($params['labels'])) {
@@ -106,16 +134,12 @@ return new class extends Migration
 
             $names = is_array($params['labels']) ? $params['labels'] : explode(',', (string) $params['labels']);
 
-            $ids = DB::table('labels')
-                ->where('project_id', $filter->project_id)
-                ->whereIn('name', array_map('trim', $names))
-                ->pluck('id')
-                ->all();
+            $converted = $convert($filter, $names);
 
-            if ($ids === []) {
+            if ($converted === []) {
                 unset($params['labels']);
             } else {
-                $params['labels'] = implode(',', $ids);
+                $params['labels'] = implode(',', $converted);
             }
 
             DB::table('saved_filters')->where('id', $filter->id)->update(['query_params' => json_encode($params)]);
