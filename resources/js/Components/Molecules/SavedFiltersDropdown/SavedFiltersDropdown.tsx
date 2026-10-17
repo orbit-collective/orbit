@@ -3,8 +3,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { useAlert } from '@/context/AlertContext';
+import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { useSavedFilters } from '@/hooks/useSavedFilters';
 import { SavedFiltersDropdownProps } from '@/types/Components';
+import { ProjectLabel } from '@/types/Labels';
 import { cn } from '@/utils/cn';
 import FilterButton from '../FilterButton/FilterButton';
 
@@ -34,14 +36,28 @@ const pickFilters = (
     return result;
 };
 
-const describeFilters = (filters: Record<string, any>) =>
+const describeFilters = (
+    filters: Record<string, any>,
+    labels: ProjectLabel[],
+) =>
     Object.entries(pickFilters(filters))
         .map(([key, value]) => {
             const label =
                 FILTER_LABELS[key as (typeof FILTERABLE_KEYS)[number]];
             const values = String(value).split(',');
 
-            // Exact statuses are stored as ids, which mean nothing in a list.
+            // Exact statuses and labels are stored as ids, which mean nothing
+            // in a list: labels show their names while they still exist.
+            if (key === 'labels') {
+                const names = values.map(
+                    (id) => labels.find((l) => String(l.id) === id)?.name,
+                );
+
+                return names.every(Boolean)
+                    ? `${label}: ${names.join(', ')}`
+                    : `${label}: ${values.length} selected`;
+            }
+
             return key === 'workflow_status'
                 ? `${label}: ${values.length} selected`
                 : `${label}: ${values.join(', ')}`;
@@ -56,6 +72,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
     onOpenChange,
 }) => {
     const { addAlert } = useAlert();
+    const { labels } = useProjectLabels();
 
     const { savedFilters, saveFilter, deleteFilter } = useSavedFilters(
         initialSavedFilters,
@@ -150,7 +167,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                 {activeFilterCount > 0 ? (
                     <div className="flex flex-col gap-2">
                         <p className="truncate text-[11px] text-[var(--text-muted-color)]">
-                            {describeFilters(activeFilters)}
+                            {describeFilters(activeFilters, labels)}
                         </p>
                         <div className="flex items-center gap-1.5">
                             <input
@@ -260,7 +277,10 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                         {filter.name}
                                     </p>
                                     <p className="truncate text-[10px] text-[var(--text-muted-color)]">
-                                        {describeFilters(filter.query_params)}
+                                        {describeFilters(
+                                            filter.query_params,
+                                            labels,
+                                        )}
                                     </p>
                                 </div>
                                 <button
