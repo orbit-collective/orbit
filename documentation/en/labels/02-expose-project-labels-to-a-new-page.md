@@ -80,16 +80,17 @@ Route::get('/projects/{project}/backlog', [BacklogController::class, 'show'])->n
 File: `resources/js/Pages/Projects/Backlog.tsx`
 
 ```tsx
+import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import ListRow from '@/Components/Organisms/ListRow/ListRow';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
-import { Issue } from '@/types/Issues';
+import { Issue, PaginatedResponse } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
 import { Project } from '@/types/Projects';
 
 interface BacklogProps {
     project: Project;
-    issues: Issue[];
+    issues: PaginatedResponse<Issue>;
     labels: ProjectLabel[];
 }
 
@@ -101,7 +102,7 @@ export default function Backlog({ project, issues, labels }: BacklogProps) {
                 <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
                     <table className="w-full">
                         <tbody>
-                            {issues.map((issue) => (
+                            {issues.data.map((issue) => (
                                 <ListRow
                                     key={issue.id}
                                     issue={issue}
@@ -111,6 +112,13 @@ export default function Backlog({ project, issues, labels }: BacklogProps) {
                             ))}
                         </tbody>
                     </table>
+                    <Pagination
+                        links={issues.links}
+                        from={issues.from}
+                        to={issues.to}
+                        total={issues.total}
+                        queryParams={{}}
+                    />
                 </div>
             </div>
         </ProjectLabelsProvider>
@@ -133,6 +141,7 @@ File: `resources/js/Pages/Projects/Backlog.test.tsx`
 ```tsx
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { makePaginated } from '@/tests/paginated';
 import Backlog from './Backlog';
 
 const project = {
@@ -150,7 +159,7 @@ describe('Backlog Page', () => {
         render(
             <Backlog
                 project={project}
-                issues={[
+                issues={makePaginated([
                     {
                         id: '1',
                         title: 'Fix login crash',
@@ -160,7 +169,7 @@ describe('Backlog Page', () => {
                         user_id: 1,
                         labels: ['bug'],
                     },
-                ]}
+                ])}
                 labels={[
                     {
                         id: 1,
