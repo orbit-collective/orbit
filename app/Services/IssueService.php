@@ -277,7 +277,10 @@ class IssueService
      */
     public function snapshot(Issue $issue): array
     {
-        return $issue->only(array_keys(self::TRACKED_FIELDS));
+        $snapshot = $issue->only(array_diff(array_keys(self::TRACKED_FIELDS), ['labels']));
+        $snapshot['labels'] = $issue->labelNames();
+
+        return $snapshot;
     }
 
     /**
@@ -294,7 +297,7 @@ class IssueService
 
         foreach (self::TRACKED_FIELDS as $field => $label) {
             $old = $before[$field] ?? null;
-            $new = $issue->{$field};
+            $new = $field === 'labels' ? $issue->labelNames() : $issue->{$field};
 
             if ($this->normalize($field, $old) === $this->normalize($field, $new)) {
                 continue;

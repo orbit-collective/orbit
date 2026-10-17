@@ -15,7 +15,7 @@ class RemoveLabelAction implements AutomationActionHandler
     public function handle(Issue $issue, array $params): void
     {
         $name = $params['label'] ?? null;
-        $labels = $issue->labels ?? [];
+        $labels = $issue->labelNames();
 
         if (! $name || ! in_array($name, $labels, true)) {
             return;

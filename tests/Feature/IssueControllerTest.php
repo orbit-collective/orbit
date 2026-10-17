@@ -657,7 +657,7 @@ test('creating an issue accepts a system label, seeding it automatically', funct
 
     $response->assertRedirect();
     $this->assertDatabaseHas('labels', ['project_id' => $project->id, 'name' => 'bug']);
-    $this->assertDatabaseHas('issues', ['title' => 'Broken login', 'labels' => json_encode(['bug'])]);
+    expect(Issue::query()->where('title', 'Broken login')->first()->labelNames())->toBe(['bug']);
 });
 
 test('creating an issue rejects a label name that does not exist in the project', function () {
@@ -774,7 +774,7 @@ test('updating an issue accepts a label that exists in the project, seeding syst
     ]);
 
     $response->assertRedirect();
-    $this->assertDatabaseHas('issues', ['id' => $issue->id, 'labels' => json_encode(['bug'])]);
+    expect($issue->fresh()->labelNames())->toBe(['bug']);
 });
 
 test('updating an issue rejects a label name that does not exist in the project', function () {

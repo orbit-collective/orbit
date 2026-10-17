@@ -262,6 +262,10 @@ test('it can still filter unassigned issues only', function () {
 
 test('it can search issues by labels', function () {
     $project = Project::factory()->create();
+    $project->labels()->createMany([
+        ['name' => 'bug', 'color' => '#f00'],
+        ['name' => 'feature', 'color' => '#00f'],
+    ]);
     Issue::factory()->create([
         'project_id' => $project->id,
         'labels' => ['bug'],
@@ -274,6 +278,40 @@ test('it can search issues by labels', function () {
     $results = $this->repository->getAllPaginated($project->id, 10, [], ['search' => 'bug']);
 
     expect($results->items())->toHaveCount(1);
+});
+
+test('filtering by label id is an exact match, so "bug" does not catch "debug"', function () {
+    $project = Project::factory()->create();
+    $bug = $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
+    $project->labels()->create(['name' => 'debug', 'color' => '#00f']);
+    $bugIssue = Issue::factory()->create(['project_id' => $project->id, 'labels' => ['bug']]);
+    Issue::factory()->create(['project_id' => $project->id, 'labels' => ['debug']]);
+
+    $results = $this->repository->getAllPaginated($project->id, 10, [], [], ['labels' => (string) $bug->id]);
+
+    expect($results->items())->toHaveCount(1)
+        ->and($results->items()[0]->id)->toBe($bugIssue->id);
+});
+
+test('renaming a label shows the new name on its issues and keeps the label filter working', function () {
+    $project = Project::factory()->create();
+    $label = $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'labels' => ['bug']]);
+
+    $label->update(['name' => 'defect']);
+
+    expect($issue->fresh()->labelNames())->toBe(['defect'])
+        ->and($this->repository->getAllPaginated($project->id, 10, [], [], ['labels' => (string) $label->id])->items())->toHaveCount(1);
+});
+
+test('deleting a label detaches it from its issues', function () {
+    $project = Project::factory()->create();
+    $label = $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'labels' => ['bug']]);
+
+    $label->delete();
+
+    expect($issue->fresh()->labelNames())->toBe([]);
 });
 
 test('it can search issues by a specific field key instead of the generic search term', function () {

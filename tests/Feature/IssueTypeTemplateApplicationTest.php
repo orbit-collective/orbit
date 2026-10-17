@@ -30,7 +30,7 @@ test('a quick-added issue picks up its type template description and labels', fu
 
     $issue = $project->issues()->where('title', 'Login crashes')->first();
     expect($issue->description)->toContain('Steps to reproduce')
-        ->and($issue->labels)->toBe(['bug']);
+        ->and($issue->labelNames())->toBe(['bug']);
 });
 
 test('a description supplied by the request wins over the template', function () {
@@ -45,7 +45,7 @@ test('a description supplied by the request wins over the template', function ()
 
     $issue = $project->issues()->where('title', 'Login crashes')->first();
     expect($issue->description)->toBe('My own write-up')
-        ->and($issue->labels)->toBe(['feature']);
+        ->and($issue->labelNames())->toBe(['feature']);
 });
 
 test('a template label the project has deleted is dropped rather than rejected', function () {
@@ -58,7 +58,7 @@ test('a template label the project has deleted is dropped rather than rejected',
         'priority' => 'medium', 'issue_type_id' => $bug->id,
     ])->assertRedirect()->assertSessionHasNoErrors();
 
-    expect($project->issues()->where('title', 'Login crashes')->first()->labels)->toBe([]);
+    expect($project->issues()->where('title', 'Login crashes')->first()->labelNames())->toBe([]);
 });
 
 test('every system type hands a new issue a description', function () {

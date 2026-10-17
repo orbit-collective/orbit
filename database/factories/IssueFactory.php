@@ -22,8 +22,6 @@ class IssueFactory extends Factory
      */
     public function definition(): array
     {
-        $availableLabels = ['bug', 'feature', 'performance', 'design', 'ux', 'chore'];
-
         return [
             'title' => fake()->sentence(3),
             'description' => fake()->paragraph(),
@@ -31,7 +29,6 @@ class IssueFactory extends Factory
             'project_id' => Project::factory(),
             'user_id' => User::factory(),
             'assignee_id' => fake()->boolean(90) ? User::factory() : null,
-            'labels' => fake()->randomElements($availableLabels, rand(0, 2)),
             'start_date' => now(),
             'end_date' => now()->addDays(rand(1, 30)),
         ];

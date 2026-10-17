@@ -511,13 +511,13 @@ test('updateIssue describes labels changing to a non-empty set', function () {
     $this->actingAs($actor);
 
     $project = Project::factory()->create();
+    $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
     $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null, 'labels' => []]);
 
     $this->issueRepository->shouldReceive('update')
         ->once()
         ->andReturnUsing(function ($issue, $data) {
-            $issue->fill($data);
-            $issue->syncOriginal();
+            $issue->update($data);
 
             return $issue;
         });
@@ -539,6 +539,7 @@ test('updateIssue describes labels being cleared as "none"', function () {
     $this->actingAs($actor);
 
     $project = Project::factory()->create();
+    $project->labels()->create(['name' => 'bug', 'color' => '#f00']);
     $issue = Issue::factory()->create([
         'project_id' => $project->id,
         'assignee_id' => null,
@@ -548,8 +549,7 @@ test('updateIssue describes labels being cleared as "none"', function () {
     $this->issueRepository->shouldReceive('update')
         ->once()
         ->andReturnUsing(function ($issue, $data) {
-            $issue->fill($data);
-            $issue->syncOriginal();
+            $issue->update($data);
 
             return $issue;
         });
