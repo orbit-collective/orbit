@@ -229,6 +229,30 @@ describe('CalendarView Component', () => {
         expect(screen.queryByText('July only issue')).not.toBeInTheDocument();
     });
 
+    test('reports the visible month grid range, and again after navigating', async () => {
+        const user = userEvent.setup();
+        const onRangeChange = vi.fn();
+        render(<CalendarView issues={[]} onRangeChange={onRangeChange} />);
+
+        // July 2026 starts on a Wednesday: the 42-day grid runs Jun 28 - Aug 8.
+        expect(onRangeChange).toHaveBeenLastCalledWith(
+            '2026-06-28',
+            '2026-08-08',
+        );
+
+        const nextButton = document
+            .querySelector('.lucide-chevron-right')
+            ?.closest('button') as HTMLElement;
+        await user.click(nextButton);
+
+        // August 2026 starts on a Saturday: Jul 26 - Sep 5.
+        expect(onRangeChange).toHaveBeenLastCalledWith(
+            '2026-07-26',
+            '2026-09-05',
+        );
+        expect(onRangeChange).toHaveBeenCalledTimes(2);
+    });
+
     test('navigates to the previous month', async () => {
         const user = userEvent.setup();
         render(<CalendarView issues={[]} />);

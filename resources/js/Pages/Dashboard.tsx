@@ -1,5 +1,4 @@
 import { Link } from '@inertiajs/react';
-import { useMemo } from 'react';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import ProjectCard from '@/Components/Molecules/ProjectCard/ProjectCard';
@@ -11,7 +10,7 @@ import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useCommandPalette } from '@/context/CommandContext';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import {
-    Issue,
+    IssueStats,
     PaginatedResponse,
     ProductivityTrendProps,
 } from '@/types/Issues';
@@ -22,12 +21,11 @@ import {
     ACTIVITY_PAGE_PARAM,
     ACTIVITY_PER_PAGE_PARAM,
 } from '@/utils/activityLog';
-import { isIssueDone } from '@/utils/workflow';
 
 const ACTIVITY_DEFAULT_PER_PAGE = 10;
 
 export default function Dashboard({
-    issues,
+    issueStats,
     projects,
     productivity_trend,
     activityLogs,
@@ -35,7 +33,7 @@ export default function Dashboard({
     users = [],
     issueTypes = [],
 }: {
-    issues: Issue[];
+    issueStats: IssueStats;
     projects: Project[];
     productivity_trend: ProductivityTrendProps[];
     activityLogs: PaginatedResponse<ActivityLogEntry>;
@@ -43,21 +41,15 @@ export default function Dashboard({
     users?: AssignableUser[];
     issueTypes?: IssueType[];
 }) {
-    const stats = useMemo(() => {
-        const total = issues.length;
-        const closed = issues.filter(isIssueDone).length;
-        const open = total - closed;
-        const highPriority = issues.filter((i) => i.priority === 'high').length;
-        const resolutionRate =
-            total > 0 ? Math.round((closed / total) * 100) : 0;
-
-        return {
-            total,
-            open,
-            highPriority,
-            resolutionRate,
-        };
-    }, [issues]);
+    const done = issueStats.category.done;
+    const stats = {
+        open: issueStats.total - done,
+        highPriority: issueStats.priority.high,
+        resolutionRate:
+            issueStats.total > 0
+                ? Math.round((done / issueStats.total) * 100)
+                : 0,
+    };
 
     const hasProjects = projects && projects.length > 0;
     const { runCommand } = useCommandPalette();
@@ -109,7 +101,7 @@ export default function Dashboard({
                         </section>
 
                         <DashboardVisuals
-                            issues={issues}
+                            stats={issueStats}
                             productivity_trend={productivity_trend}
                         />
 

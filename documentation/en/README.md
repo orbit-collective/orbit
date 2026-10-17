@@ -105,6 +105,7 @@ documentation/
     issue-views/
       README.md              <- index for this category
       01-add-a-new-issue-view.md
+      02-load-view-data-lazily.md
     rich-text-editor/
       README.md              <- index for this category
       01-add-a-new-tiptap-extension.md

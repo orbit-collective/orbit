@@ -43,7 +43,7 @@ class BacklogController extends Controller
 
         return Inertia::render('Projects/Backlog', [
             'project' => $project,
-            'issues' => $this->issueService->getAllForProject($project->id, [], ['status' => ['open']]),
+            'issues' => $this->issueService->getAllByProjectID($project->id, [], 20, [], ['status' => ['todo']]),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
         ]);
     }

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { router } from '@inertiajs/react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
 import CalendarView from '@/Components/Organisms/CalendarView/CalendarView';
@@ -40,7 +41,8 @@ interface QueryParams {
 export default function Show({
     project,
     issues,
-    calendarIssues = [],
+    calendarIssues,
+    upcomingDeadlines,
     projects,
     queryParams = {},
     savedFilters,
@@ -53,7 +55,9 @@ export default function Show({
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
+    /** Optional props: only sent by a calendar reload, never on a normal visit. */
     calendarIssues?: Issue[];
+    upcomingDeadlines?: Issue[];
     projects: Project[];
     queryParams?: QueryParams;
     savedFilters: SavedFilter[];
@@ -79,6 +83,32 @@ export default function Show({
         }
         return 'List';
     });
+
+    const calendarRange = useRef<[string, string] | null>(null);
+
+    const loadCalendar = useCallback((from: string, to: string) => {
+        calendarRange.current = [from, to];
+        router.reload({
+            only: ['calendarIssues', 'upcomingDeadlines'],
+            data: { calendar_from: from, calendar_to: to },
+        });
+    }, []);
+
+    // A filter or search change is a normal visit, which does not carry the
+    // calendar props: fetch them again for the range still on screen.
+    const calendarLoaded = calendarIssues !== undefined;
+    const calendarWasLoaded = useRef(false);
+    useEffect(() => {
+        if (
+            calendarWasLoaded.current &&
+            !calendarLoaded &&
+            selectedLook === 'Calendar' &&
+            calendarRange.current
+        ) {
+            loadCalendar(...calendarRange.current);
+        }
+        calendarWasLoaded.current = calendarLoaded;
+    }, [calendarLoaded, selectedLook, loadCalendar]);
 
     return (
         <ProjectLabelsProvider labels={labels}>
@@ -155,9 +185,12 @@ export default function Show({
                                 </>
                             ) : selectedLook === 'Calendar' ? (
                                 <div className="flex flex-1 flex-col gap-4 overflow-y-auto xl:flex-row xl:overflow-hidden">
-                                    <CalendarView issues={calendarIssues} />
+                                    <CalendarView
+                                        issues={calendarIssues ?? []}
+                                        onRangeChange={loadCalendar}
+                                    />
                                     <UpcomingDeadlinesPanel
-                                        issues={calendarIssues}
+                                        issues={upcomingDeadlines ?? []}
                                     />
                                 </div>
                             ) : (

@@ -125,6 +125,7 @@ documentation/
     issue-views/
       README.md              <- indeks tej kategorii
       01-add-a-new-issue-view.md
+      02-load-view-data-lazily.md
     rich-text-editor/
       README.md              <- indeks tej kategorii
       01-add-a-new-tiptap-extension.md
