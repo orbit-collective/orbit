@@ -202,14 +202,22 @@ renders as a real table row: the title and the **issue type** are
 editable, while the remaining cells preview what the issue will be
 created with — the id it will get (`IssueService::peekNextIssueId()`,
 a hint only, since a concurrent create wins the real id), the selected
-type's initial workflow status, `Medium` priority, and unassigned. The
+type's initial workflow status, the project's default priority
+(`useProjectPriorities().defaultPriority`, `Medium` until its owners
+change it; see [`../priorities/README.md`](../priorities/README.md)),
+and unassigned. The
 top-level row offers only `is_top_level` types; a nested one offers
 only the parent type's allowed children. Submitting posts to
 `issues.store` with the title, the chosen `issue_type_id` (falling back
 to `IssueTypeService::defaultIssueType()` when none is sent) and
 `parent_id` for a sub-issue — open the issue afterward to fill in the
 rest, or apply an
-`IssueTypeTemplate` (`name`, `description`, `default_priority`,
+`IssueTypeTemplate` (`name`, `description`, `default_priority` — the
+**name of one of the project's priorities**, stored in the project's own
+spelling by `IssueTypeTemplateService::canonicalPriority()` and dropped
+when the project has no priority by that name; renaming or deleting that
+priority rewrites or clears it, see
+[`../priorities/README.md`](../priorities/README.md) —
 `default_labels`, managed from **Settings → Issue Types → Manage
 templates**). A template applies **without being asked for**: with no
 `template_id` on the request, `IssueTypeService::defaultTemplateFor()`

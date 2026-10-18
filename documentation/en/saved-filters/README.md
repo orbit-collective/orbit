@@ -1,7 +1,10 @@
 # Saved filters
 
 A `SavedFilter` is a named, stored combination of search/label/status/
-priority/assignee query params for a project, created from
+priority/assignee query params for a project (the `priority` param
+holds priority **ids**, e.g. `1,3`, not names — deleting a priority drops
+its id from the project's saved filters, see
+[`../priorities/README.md`](../priorities/README.md)), created from
 `useSavedFilters()`'s `saveFilter(name, queryParams)` and listed back
 via `Project::savedFilters()`. This category documents two real gaps
 found while researching it: the Controller bypasses the Service layer

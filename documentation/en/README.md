@@ -96,6 +96,10 @@ documentation/
       README.md              <- index for this category
       01-add-a-new-default-label.md
       02-expose-project-labels-to-a-new-page.md
+    priorities/
+      README.md              <- index for this category
+      01-change-the-starter-priorities.md
+      02-show-priorities-on-a-new-page.md
     issue-types/
       README.md              <- index for this category
       01-add-a-new-default-issue-type.md
@@ -158,6 +162,7 @@ documentation/
     saved-filters/           <- Polish translation of every guide above
     dropdowns/               <- Polish translation of every guide above
     labels/                  <- Polish translation of every guide above
+    priorities/              <- Polish translation of every guide above
     issue-types/             <- Polish translation of every guide above
     issue-views/             <- Polish translation of every guide above
     rich-text-editor/        <- Polish translation of every guide above

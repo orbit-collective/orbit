@@ -51,8 +51,8 @@ project in the system.
 
 ## Most Workspace settings tabs are placeholders
 
-`resources/js/types/Settings.ts`'s `SETTINGS_TABS` lists Priorities
-and Documents (Workspace section) and Export (Account section) with
+`resources/js/types/Settings.ts`'s `SETTINGS_TABS` lists Documents
+(Workspace section) and Export (Account section) with
 `enabled: false` — they render in the sidebar nav for discoverability,
 but the tab itself is unreachable (see
 [`../settings-tabs/README.md`](../settings-tabs/README.md)'s

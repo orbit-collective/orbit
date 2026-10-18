@@ -76,7 +76,13 @@ never depends on which specific event fired it.
 
 `App\Enums\AutomationActionType`: `ChangeStatus`, `ChangePriority`,
 `AssignUser`, `AddLabel`, `RemoveLabel`, `SendNotification` — see
-`app/Services/Automation/Actions/`. Every handler validates its own
+`app/Services/Automation/Actions/`. `ChangePriority`'s
+`params.priority` is the **name of one of the rule's project's
+priorities** (the rule builder lists them from the settings page's
+`priorities` prop); `ChangePriorityAction` looks the name up
+case-insensitively in that project and does nothing when it is gone, and
+renaming a priority rewrites it while deleting one removes the action
+(see [`../priorities/README.md`](../priorities/README.md)). Every handler validates its own
 `params` defensively (e.g. `ChangeStatusAction` confirms the target
 `workflow_status_id` actually belongs to the issue's own issue type)
 and simply returns (no exception, no partial side effect) rather than
