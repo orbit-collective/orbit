@@ -9,6 +9,7 @@ use App\Models\AutomationAction;
 use App\Models\AutomationRule;
 use App\Models\Label;
 use App\Models\Permission as PermissionModel;
+use App\Models\Priority;
 use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
@@ -114,6 +115,31 @@ class SettingsController extends Controller
             'canCreateLabels' => $this->can($selectedProject, $user, PermissionEnum::LABELS_CREATE),
             'canUpdateLabels' => $this->can($selectedProject, $user, PermissionEnum::LABELS_UPDATE),
             'canDeleteLabels' => $this->can($selectedProject, $user, PermissionEnum::LABELS_DELETE),
+        ]);
+    }
+
+    public function priorities(Request $request): Response
+    {
+        $user = $request->user();
+        $projects = $this->projects($request);
+        $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
+
+        $hasPrioritiesAccess = $selectedProject?->hasPermission($user, PermissionEnum::PRIORITIES_VIEW) ?? false;
+
+        return Inertia::render('Settings/Priorities', [
+            ...$this->projectScope($projects, $selectedProject),
+            'priorities' => $hasPrioritiesAccess
+                ? $this->priorityService->getPrioritiesWithIssueCounts($selectedProject)
+                    ->map(fn (Priority $priority) => [...$priority->toOption(), 'issueCount' => $priority->issues_count])
+                    ->values()
+                    ->all()
+                : [],
+            'hasPrioritiesAccess' => $hasPrioritiesAccess,
+            // Independent of the view access, like the label tab: a role can be
+            // granted a mutation permission without also being granted view.
+            'canCreatePriorities' => $this->can($selectedProject, $user, PermissionEnum::PRIORITIES_CREATE),
+            'canUpdatePriorities' => $this->can($selectedProject, $user, PermissionEnum::PRIORITIES_UPDATE),
+            'canDeletePriorities' => $this->can($selectedProject, $user, PermissionEnum::PRIORITIES_DELETE),
         ]);
     }
 

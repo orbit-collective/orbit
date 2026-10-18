@@ -112,7 +112,7 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Flag',
         section: 'workspace',
         description: 'Standardize priority levels and urgency definitions.',
-        enabled: false,
+        enabled: true,
     },
     {
         id: 'documents',

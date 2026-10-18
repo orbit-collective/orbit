@@ -56,6 +56,19 @@ class PriorityService
         return $this->priorityRepository->getForProject($project);
     }
 
+    /**
+     * The priorities with how many issues use each, for the settings tab
+     * (and the "move its issues to..." choice when deleting one).
+     *
+     * @return Collection<int, Priority>
+     */
+    public function getPrioritiesWithIssueCounts(Project $project): Collection
+    {
+        $this->ensureSystemPriorities($project);
+
+        return $this->priorityRepository->getForProjectWithIssueCounts($project);
+    }
+
     /** The priority a new issue gets when none is chosen. */
     public function defaultFor(Project $project): ?Priority
     {

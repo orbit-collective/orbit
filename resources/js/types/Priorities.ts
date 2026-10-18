@@ -16,3 +16,8 @@ export interface ProjectPriority extends PriorityDetails {
 export interface PriorityCount extends Omit<PriorityDetails, 'id'> {
     count: number;
 }
+
+/** A priority on the settings tab, with how many issues currently use it. */
+export interface SettingsPriority extends ProjectPriority {
+    issueCount: number;
+}
