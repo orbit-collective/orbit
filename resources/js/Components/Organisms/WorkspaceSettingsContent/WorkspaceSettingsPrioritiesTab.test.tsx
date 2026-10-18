@@ -11,6 +11,7 @@ const mockRouter = vi.hoisted(() => ({
     get: vi.fn(),
     post: vi.fn(),
     patch: vi.fn(),
+    delete: vi.fn(),
 }));
 const mockRouterGet = mockRouter.get;
 
@@ -58,6 +59,7 @@ beforeEach(() => {
     mockRouter.get.mockClear();
     mockRouter.post.mockClear();
     mockRouter.patch.mockClear();
+    mockRouter.delete.mockClear();
 });
 
 describe('WorkspaceSettingsPrioritiesTab', () => {
@@ -245,6 +247,123 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
             expect(
                 screen.getByText('New priority', { selector: 'div' }),
             ).toBeInTheDocument();
+        });
+    });
+
+    describe('ordering and deleting', () => {
+        test('shows move controls only to a user who can update priorities', () => {
+            renderTab();
+
+            expect(screen.queryByTitle('Move up')).not.toBeInTheDocument();
+            expect(screen.queryByTitle('Move down')).not.toBeInTheDocument();
+        });
+
+        test('the first row cannot move up and the last cannot move down', () => {
+            renderTab({ canUpdatePriorities: true });
+
+            expect(screen.getAllByTitle('Move up')[0]).toBeDisabled();
+            expect(screen.getAllByTitle('Move down')[2]).toBeDisabled();
+            expect(screen.getAllByTitle('Move up')[1]).toBeEnabled();
+        });
+
+        test('moving a priority down sends the new order of ids', async () => {
+            const user = userEvent.setup();
+            renderTab({ canUpdatePriorities: true });
+
+            await user.click(screen.getAllByTitle('Move down')[0]);
+
+            expect(mockRouter.patch).toHaveBeenCalledWith(
+                '/projects.priorities.reorder/1',
+                { order: [2, 1, 3] },
+                expect.objectContaining({ preserveScroll: true }),
+            );
+        });
+
+        test('moving a priority up sends the new order of ids', async () => {
+            const user = userEvent.setup();
+            renderTab({ canUpdatePriorities: true });
+
+            await user.click(screen.getAllByTitle('Move up')[2]);
+
+            expect(mockRouter.patch).toHaveBeenCalledWith(
+                '/projects.priorities.reorder/1',
+                { order: [1, 3, 2] },
+                expect.objectContaining({ preserveScroll: true }),
+            );
+        });
+
+        test('a project with a single priority offers no moving and no deleting', () => {
+            renderTab({
+                canUpdatePriorities: true,
+                canDeletePriorities: true,
+                priorities: [settingsPriorities[0]],
+            });
+
+            expect(screen.queryByTitle('Move up')).not.toBeInTheDocument();
+            expect(
+                screen.queryByTitle('Delete priority'),
+            ).not.toBeInTheDocument();
+            expect(screen.getByTitle('Edit priority')).toBeInTheDocument();
+        });
+
+        test('a delete-only user sees delete but not edit or move controls', () => {
+            renderTab({ canDeletePriorities: true });
+
+            expect(screen.getAllByTitle('Delete priority')).toHaveLength(3);
+            expect(
+                screen.queryByTitle('Edit priority'),
+            ).not.toBeInTheDocument();
+            expect(screen.queryByTitle('Move up')).not.toBeInTheDocument();
+        });
+
+        test('deleting moves the issues to the chosen priority', async () => {
+            const user = userEvent.setup();
+            renderTab({ canDeletePriorities: true });
+
+            await user.click(screen.getAllByTitle('Delete priority')[0]);
+            await user.selectOptions(screen.getByRole('combobox'), 'Low');
+            // The modal's confirm button comes after the row icons that share its name.
+            await user.click(
+                screen
+                    .getAllByRole('button', { name: 'Delete priority' })
+                    .at(-1)!,
+            );
+
+            expect(mockRouter.delete).toHaveBeenCalledWith(
+                '/projects.priorities.destroy/1/1',
+                expect.objectContaining({
+                    data: { replacement_id: 3 },
+                    preserveScroll: true,
+                }),
+            );
+        });
+
+        test('deleting without choosing leaves the issues without a priority', async () => {
+            const user = userEvent.setup();
+            renderTab({ canDeletePriorities: true });
+
+            await user.click(screen.getAllByTitle('Delete priority')[2]);
+            // The modal's confirm button comes after the row icons that share its name.
+            await user.click(
+                screen
+                    .getAllByRole('button', { name: 'Delete priority' })
+                    .at(-1)!,
+            );
+
+            expect(mockRouter.delete).toHaveBeenCalledWith(
+                '/projects.priorities.destroy/1/3',
+                expect.objectContaining({ data: { replacement_id: null } }),
+            );
+        });
+
+        test('cancelling the delete modal deletes nothing', async () => {
+            const user = userEvent.setup();
+            renderTab({ canDeletePriorities: true });
+
+            await user.click(screen.getAllByTitle('Delete priority')[0]);
+            await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+            expect(mockRouter.delete).not.toHaveBeenCalled();
         });
     });
 });

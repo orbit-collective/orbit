@@ -10,6 +10,7 @@ import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useAlert } from '@/context/AlertContext';
 import { SettingsPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
+import WorkspaceSettingsDeletePriorityModal from './WorkspaceSettingsDeletePriorityModal';
 import WorkspaceSettingsPriorityInlineEditor, {
     PriorityFormValues,
 } from './WorkspaceSettingsPriorityInlineEditor';
@@ -33,9 +34,12 @@ export default function WorkspaceSettingsPrioritiesTab({
     hasPrioritiesAccess = false,
     canCreatePriorities = false,
     canUpdatePriorities = false,
+    canDeletePriorities = false,
 }: WorkspaceSettingsPrioritiesTabProps) {
     const { addAlert } = useAlert();
     const [editorTarget, setEditorTarget] = useState<string | null>(null);
+    const [deletingPriority, setDeletingPriority] =
+        useState<SettingsPriority | null>(null);
     const [errors, setErrors] = useState<
         Partial<Record<keyof PriorityFormValues, string>>
     >({});
@@ -123,6 +127,46 @@ export default function WorkspaceSettingsPrioritiesTab({
         );
     };
 
+    const handleMove = (index: number, direction: -1 | 1) => {
+        const order = priorities.map((priority) => priority.id);
+        const target = index + direction;
+        [order[index], order[target]] = [order[target], order[index]];
+
+        router.patch(
+            route('projects.priorities.reorder', [selectedProject.id]),
+            { order },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onError: () =>
+                    addAlert('Could not reorder the priorities.', 'error'),
+            },
+        );
+    };
+
+    const handleConfirmDelete = (replacementId: number | null) => {
+        if (!deletingPriority) return;
+
+        const target = String(deletingPriority.id);
+
+        router.delete(
+            route('projects.priorities.destroy', [
+                selectedProject.id,
+                deletingPriority.id,
+            ]),
+            {
+                data: { replacement_id: replacementId },
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    if (editorTarget === target) closeEditor();
+                },
+                onError: () =>
+                    addAlert('Could not delete this priority.', 'error'),
+            },
+        );
+    };
+
     const defaultPriority = priorities.find((priority) => priority.isDefault);
     const issueCount = priorities.reduce(
         (sum, priority) => sum + priority.issueCount,
@@ -197,7 +241,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                     />
                 )}
 
-                {priorities.map((priority) =>
+                {priorities.map((priority, index) =>
                     editorTarget === String(priority.id) ? (
                         <WorkspaceSettingsPriorityInlineEditor
                             key={priority.id}
@@ -241,22 +285,89 @@ export default function WorkspaceSettingsPrioritiesTab({
                                     </p>
                                 </div>
                             </div>
-                            {canUpdatePriorities && (
-                                <button
-                                    type="button"
-                                    title="Edit priority"
-                                    onClick={() =>
-                                        toggleEditor(String(priority.id))
-                                    }
-                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
-                                >
-                                    <Icon name="Pencil" size={14} />
-                                </button>
+                            {(canUpdatePriorities || canDeletePriorities) && (
+                                <div className="flex shrink-0 items-center gap-1">
+                                    {canUpdatePriorities &&
+                                        priorities.length > 1 && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    title="Move up"
+                                                    disabled={index === 0}
+                                                    onClick={() =>
+                                                        handleMove(index, -1)
+                                                    }
+                                                    className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                                                >
+                                                    <Icon
+                                                        name="ArrowUp"
+                                                        size={14}
+                                                    />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    title="Move down"
+                                                    disabled={
+                                                        index ===
+                                                        priorities.length - 1
+                                                    }
+                                                    onClick={() =>
+                                                        handleMove(index, 1)
+                                                    }
+                                                    className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                                                >
+                                                    <Icon
+                                                        name="ArrowDown"
+                                                        size={14}
+                                                    />
+                                                </button>
+                                            </>
+                                        )}
+                                    {canUpdatePriorities && (
+                                        <button
+                                            type="button"
+                                            title="Edit priority"
+                                            onClick={() =>
+                                                toggleEditor(
+                                                    String(priority.id),
+                                                )
+                                            }
+                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                        >
+                                            <Icon name="Pencil" size={14} />
+                                        </button>
+                                    )}
+                                    {canDeletePriorities &&
+                                        priorities.length > 1 && (
+                                            <button
+                                                type="button"
+                                                title="Delete priority"
+                                                onClick={() =>
+                                                    setDeletingPriority(
+                                                        priority,
+                                                    )
+                                                }
+                                                className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                            >
+                                                <Icon name="Trash" size={14} />
+                                            </button>
+                                        )}
+                                </div>
                             )}
                         </div>
                     ),
                 )}
             </SettingsPanel>
+
+            <WorkspaceSettingsDeletePriorityModal
+                isOpen={deletingPriority !== null}
+                onClose={() => setDeletingPriority(null)}
+                priority={deletingPriority}
+                otherPriorities={priorities.filter(
+                    (priority) => priority.id !== deletingPriority?.id,
+                )}
+                onConfirm={handleConfirmDelete}
+            />
         </div>
     );
 }
