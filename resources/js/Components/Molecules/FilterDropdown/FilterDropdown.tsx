@@ -3,11 +3,14 @@ import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
+import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { useProjectLabels } from '@/context/ProjectLabelsContext';
+import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
 import { FilterDropdownProps, FilterDropdownType } from '@/types/Components';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import { AssignableUser } from '@/types/Users';
 import type { StatusGroup } from '@/utils/workflow';
 import FilterButton from '../FilterButton/FilterButton';
@@ -64,16 +67,7 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
         paramKey: 'priority',
         label: 'Priority',
         multiSelect: true,
-        options: [
-            { value: 'high', label: 'High' },
-            { value: 'medium', label: 'Medium' },
-            { value: 'low', label: 'Low' },
-        ].map(({ value, label }) => ({
-            value,
-            label,
-            render: () =>
-                optionRow(label, <StatusDot status={value as any} size="sm" />),
-        })),
+        options: [],
     },
     assignee: {
         paramKey: 'assignee',
@@ -100,6 +94,21 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
         })),
     },
 };
+
+/** One option per priority of the project's scale; the value is its id, which the server filters by. */
+const buildPriorityConfig = (priorities: ProjectPriority[]): FilterConfig => ({
+    ...FILTER_CONFIG.priority,
+    options: priorities.map((priority) => ({
+        value: String(priority.id),
+        label: priority.name,
+        render: () => (
+            <span className="flex items-center gap-2">
+                <PriorityIcon priority={priority} tooltip={false} />
+                <span className="font-medium">{priority.name}</span>
+            </span>
+        ),
+    })),
+});
 
 const buildLabelsConfig = (labels: ProjectLabel[]): FilterConfig => ({
     ...FILTER_CONFIG.labels,
@@ -159,6 +168,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     onOpenChange,
 }) => {
     const { labels: projectLabels } = useProjectLabels();
+    const { priorities } = useProjectPriorities();
 
     // The Status filter can list either the three categories or, when the
     // project has statuses of its own, the exact statuses. Both live in the
@@ -178,10 +188,11 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     const config = useMemo(() => {
         if (mode === 'assignee') return buildAssigneeConfig(users);
         if (mode === 'labels') return buildLabelsConfig(projectLabels);
+        if (mode === 'priority') return buildPriorityConfig(priorities);
         if (mode === 'workflowStatus')
             return buildWorkflowStatusConfig(statusGroups);
         return FILTER_CONFIG[mode];
-    }, [mode, users, projectLabels, statusGroups]);
+    }, [mode, users, projectLabels, priorities, statusGroups]);
 
     const switchMode = () => {
         // The other mode's selection would keep filtering without being

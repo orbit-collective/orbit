@@ -1,7 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
+import { priorities } from '@/stories/fixtures';
 import { ProjectLabel } from '@/types/Labels';
 import { AssignableUser } from '@/types/Users';
 import type { StatusGroup } from '@/utils/workflow';
@@ -81,16 +84,69 @@ describe('FilterDropdown Component', () => {
     });
 
     test('shows the selected count as the trigger value', () => {
-        render(
-            <FilterDropdown
-                type="priority"
-                queryParams={{ priority: 'high,medium' }}
-                isOpen={false}
-                onOpenChange={vi.fn()}
-            />,
-        );
+        renderPriority({
+            queryParams: { priority: '1,2' },
+            isOpen: false,
+        });
 
         expect(screen.getByText('2')).toBeInTheDocument();
+    });
+
+    const renderPriority = (
+        props: Partial<React.ComponentProps<typeof FilterDropdown>> = {},
+    ) =>
+        render(
+            <ProjectPrioritiesProvider priorities={priorities}>
+                <FilterDropdown
+                    type="priority"
+                    isOpen
+                    onOpenChange={vi.fn()}
+                    {...props}
+                />
+            </ProjectPrioritiesProvider>,
+        );
+
+    test('lists the project priorities under their own names', async () => {
+        renderPriority();
+
+        expect(await screen.findByText('High')).toBeInTheDocument();
+        expect(screen.getByText('Medium')).toBeInTheDocument();
+        expect(screen.getByText('Low')).toBeInTheDocument();
+    });
+
+    test('lists a custom scale instead of the starter names', async () => {
+        render(
+            <ProjectPrioritiesProvider
+                priorities={[
+                    {
+                        id: 9,
+                        name: 'Blocker',
+                        color: '#9c27b0',
+                        icon: 'Flame',
+                        position: 0,
+                        isDefault: true,
+                    },
+                ]}
+            >
+                <FilterDropdown type="priority" isOpen onOpenChange={vi.fn()} />
+            </ProjectPrioritiesProvider>,
+        );
+
+        expect(await screen.findByText('Blocker')).toBeInTheDocument();
+        expect(screen.queryByText('High')).not.toBeInTheDocument();
+    });
+
+    test('filters by priority id, since a rename must not break the filter', async () => {
+        const user = userEvent.setup();
+        renderPriority({ queryParams: { priority: '1' } });
+
+        await user.click(await screen.findByText('Low'));
+
+        expect(mockRouterGet).toHaveBeenCalledWith(
+            '/',
+            expect.objectContaining({ priority: '1,3' }),
+            { preserveState: true, replace: true },
+        );
     });
 
     test('selects a single-select option and applies the filter', async () => {
@@ -169,14 +225,7 @@ describe('FilterDropdown Component', () => {
 
     test('clears all selected values when Clear is clicked', async () => {
         const user = userEvent.setup();
-        render(
-            <FilterDropdown
-                type="priority"
-                queryParams={{ priority: 'high' }}
-                isOpen
-                onOpenChange={vi.fn()}
-            />,
-        );
+        renderPriority({ queryParams: { priority: '1' } });
 
         await user.click(await screen.findByText('Clear'));
 
@@ -185,9 +234,7 @@ describe('FilterDropdown Component', () => {
     });
 
     test('does not render a Clear button when nothing is selected', async () => {
-        render(
-            <FilterDropdown type="priority" isOpen onOpenChange={vi.fn()} />,
-        );
+        renderPriority();
 
         await screen.findByText('Filter by Priority');
         expect(screen.queryByText('Clear')).not.toBeInTheDocument();
@@ -332,15 +379,13 @@ describe('FilterDropdown Component', () => {
 
     test('selects and deselects all options via the "Select all" control', async () => {
         const user = userEvent.setup();
-        render(
-            <FilterDropdown type="priority" isOpen onOpenChange={vi.fn()} />,
-        );
+        renderPriority();
 
         await user.click(await screen.findByText('Select all'));
 
         expect(mockRouterGet).toHaveBeenCalledWith(
             '/',
-            expect.objectContaining({ priority: 'high,medium,low' }),
+            expect.objectContaining({ priority: '1,2,3' }),
             { preserveState: true, replace: true },
         );
     });
