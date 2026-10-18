@@ -19,13 +19,23 @@ export default function WorkspaceSettingsPrioritiesTab() {
                             key: 'high',
                             label: 'High',
                             info: 'Immediate attention',
+                            icon: 'SignalHigh',
+                            color: '#f44336',
                         },
                         {
                             key: 'medium',
                             label: 'Medium',
                             info: 'Important but not blocking',
+                            icon: 'SignalMedium',
+                            color: '#ff9800',
                         },
-                        { key: 'low', label: 'Low', info: 'Planned flexibly' },
+                        {
+                            key: 'low',
+                            label: 'Low',
+                            info: 'Planned flexibly',
+                            icon: 'SignalLow',
+                            color: '#4caf50',
+                        },
                     ].map((priority) => (
                         <div
                             key={priority.key}
@@ -33,7 +43,11 @@ export default function WorkspaceSettingsPrioritiesTab() {
                         >
                             <div className="mb-2 flex items-center gap-2">
                                 <PriorityIcon
-                                    priority={priority.key}
+                                    priority={{
+                                        name: priority.label,
+                                        icon: priority.icon,
+                                        color: priority.color,
+                                    }}
                                     tooltip={false}
                                 />
                                 <p className="text-sm font-medium text-[var(--text-color)]">

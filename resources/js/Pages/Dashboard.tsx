@@ -44,7 +44,7 @@ export default function Dashboard({
     const done = issueStats.category.done;
     const stats = {
         open: issueStats.total - done,
-        highPriority: issueStats.priority.high,
+        topPriority: issueStats.topPriority,
         resolutionRate:
             issueStats.total > 0
                 ? Math.round((done / issueStats.total) * 100)
@@ -86,9 +86,9 @@ export default function Dashboard({
                             />
                             <StatCard
                                 title="Critical Tasks"
-                                value={stats.highPriority}
+                                value={stats.topPriority}
                                 icon="TriangleAlert"
-                                description="High priority issues needing attention"
+                                description="Issues at the top of their priority scale"
                                 color="error"
                             />
                             <StatCard

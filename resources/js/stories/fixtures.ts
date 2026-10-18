@@ -3,6 +3,7 @@ import { Comment, Issue } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { Notification } from '@/types/Notification';
+import { ProjectPriority } from '@/types/Priorities';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import { WorkflowStatus, WorkflowTransition } from '@/types/Workflow';
@@ -225,13 +226,68 @@ export const [taskType, bugType, epicType] = issueTypes;
 
 // --- Issues -----------------------------------------------------------------
 
+// --- Priorities -------------------------------------------------------------
+
+export const priorities: ProjectPriority[] = [
+    {
+        id: 1,
+        name: 'High',
+        color: '#f44336',
+        icon: 'SignalHigh',
+        position: 0,
+        isDefault: false,
+    },
+    {
+        id: 2,
+        name: 'Medium',
+        color: '#ff9800',
+        icon: 'SignalMedium',
+        position: 1,
+        isDefault: true,
+    },
+    {
+        id: 3,
+        name: 'Low',
+        color: '#4caf50',
+        icon: 'SignalLow',
+        position: 2,
+        isDefault: false,
+    },
+];
+
+const findPriority = (name: string | null | undefined) =>
+    priorities.find(
+        (priority) => priority.name.toLowerCase() === name?.toLowerCase(),
+    ) ?? null;
+
+/** The priority fields an issue carries for one of the fixture priorities, by name (case-insensitive). */
+export const priorityFields = (
+    name: string | null,
+): Pick<Issue, 'priority' | 'priority_id' | 'priorityDetails'> => {
+    const priority = findPriority(name);
+
+    return {
+        priority: priority?.name ?? null,
+        priority_id: priority?.id ?? null,
+        priorityDetails: priority
+            ? {
+                  id: priority.id,
+                  name: priority.name,
+                  color: priority.color,
+                  icon: priority.icon,
+                  position: priority.position,
+              }
+            : null,
+    };
+};
+
 export const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: '101',
     number: 12,
     title: 'Fix login redirect after session timeout',
     description:
         'Users are sent to the dashboard instead of the page they were on.',
-    priority: 'high',
+    ...priorityFields('high'),
     project_id: 1,
     user_id: 1,
     assignee_id: 2,
@@ -255,6 +311,11 @@ export const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     end_date: '2026-10-16',
     comments_count: 3,
     ...overrides,
+    // Naming just `priority` is enough: its canonical name, id and details follow.
+    ...(overrides.priority !== undefined &&
+    overrides.priorityDetails === undefined
+        ? priorityFields(overrides.priority)
+        : {}),
 });
 
 export const issues: Issue[] = [

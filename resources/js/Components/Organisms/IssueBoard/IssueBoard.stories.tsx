@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
-import { issues } from '@/stories/fixtures';
+import { issues, priorityFields } from '@/stories/fixtures';
 import IssueBoard from './IssueBoard';
 
 const meta = {
@@ -31,7 +31,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     play: async ({ canvasElement }) => {
         await expect(
-            within(canvasElement).getByText('High Priority'),
+            within(canvasElement).getByRole('heading', { name: 'High' }),
         ).toBeVisible();
     },
 };
@@ -50,7 +50,7 @@ export const SingleColumnBusy: Story = {
     args: {
         issues: issues.map((issue) => ({
             ...issue,
-            priority: 'high' as const,
+            ...priorityFields('high'),
         })),
     },
 };

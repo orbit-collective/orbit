@@ -14,13 +14,16 @@ import { useEffect, useState } from 'react';
 import BoardColumn from '@/Components/Molecules/BoardColumn/BoardColumn';
 import { BoardCardOverlay } from '@/Components/Organisms/BoardCard/BoardCard';
 import { useAlert } from '@/context/AlertContext';
+import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
 import {
     BoardColumnMeta,
     BoardGroupBy,
     IssueBoardProps,
 } from '@/types/Components';
 import { Issue } from '@/types/Issues';
+import { PriorityDetails } from '@/types/Priorities';
 import { cn } from '@/utils/cn';
+import { resolvePriorityIcon } from '@/utils/priorityIcons';
 import { formatStatusLabel } from '@/utils/text';
 import {
     getReachableStatuses,
@@ -33,27 +36,31 @@ const dropAnimationConfig: DropAnimation = {
     easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
 };
 
-const PRIORITY_COLUMNS: BoardColumnMeta[] = [
+const NO_PRIORITY_COLUMN_ID = 'priority-none';
+
+const priorityColumnId = (priorityId: number | null | undefined) =>
+    priorityId == null ? NO_PRIORITY_COLUMN_ID : `priority-${priorityId}`;
+
+/**
+ * One column per priority of the project's scale, most important first, plus
+ * a "No priority" column at the end so an issue can be put back to none.
+ */
+const buildPriorityColumns = (
+    priorities: PriorityDetails[],
+): BoardColumnMeta[] => [
+    ...priorities.map((priority): BoardColumnMeta => ({
+        id: priorityColumnId(priority.id),
+        label: priority.name,
+        hint: '',
+        accent: priority.color,
+        icon: resolvePriorityIcon(priority.icon),
+    })),
     {
-        id: 'high',
-        label: 'High Priority',
-        hint: 'Fix immediately',
-        accent: 'var(--error-color)',
-        icon: 'Flame',
-    },
-    {
-        id: 'medium',
-        label: 'Medium Priority',
-        hint: 'Handle soon',
-        accent: 'var(--warning-color)',
-        icon: 'Gauge',
-    },
-    {
-        id: 'low',
-        label: 'Low Priority',
-        hint: 'When time allows',
-        accent: 'var(--success-color)',
-        icon: 'Leaf',
+        id: NO_PRIORITY_COLUMN_ID,
+        label: 'No priority',
+        hint: 'Not prioritised yet',
+        accent: '#757575',
+        icon: 'CircleDashed',
     },
 ];
 
@@ -112,7 +119,25 @@ function IssueBoard({ issues }: IssueBoardProps) {
         useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     );
 
-    const columns = groupBy === 'priority' ? PRIORITY_COLUMNS : STATUS_COLUMNS;
+    // Without a provider (the board outside a project page) the columns come
+    // from the priorities the issues themselves carry.
+    const { priorities } = useProjectPriorities();
+    const scale: PriorityDetails[] =
+        priorities.length > 0
+            ? priorities
+            : [
+                  ...new Map(
+                      boardIssues
+                          .filter((issue) => issue.priorityDetails)
+                          .map((issue) => [
+                              issue.priorityDetails!.id,
+                              issue.priorityDetails!,
+                          ]),
+                  ).values(),
+              ].sort((a, b) => a.position - b.position);
+
+    const columns =
+        groupBy === 'priority' ? buildPriorityColumns(scale) : STATUS_COLUMNS;
 
     const groupIssues = (issues: Issue[]) => {
         const board: Record<string, Issue[]> = {};
@@ -122,7 +147,9 @@ function IssueBoard({ issues }: IssueBoardProps) {
 
         issues.forEach((issue) => {
             const key =
-                groupBy === 'priority' ? issue.priority : issueCategory(issue);
+                groupBy === 'priority'
+                    ? priorityColumnId(issue.priority_id)
+                    : issueCategory(issue);
             if (board[key]) {
                 board[key].push(issue);
             }
@@ -150,7 +177,7 @@ function IssueBoard({ issues }: IssueBoardProps) {
         issue: Issue,
         optimistic: Partial<Issue>,
         previous: Partial<Issue>,
-        payload: Record<string, string | number>,
+        payload: Record<string, string | number | null>,
         label: string,
     ) => {
         setBoardIssues((prev) =>
@@ -183,13 +210,33 @@ function IssueBoard({ issues }: IssueBoardProps) {
         const targetValue = String(over.id);
 
         if (groupBy === 'priority') {
-            if (issue.priority === targetValue) return;
+            if (priorityColumnId(issue.priority_id) === targetValue) return;
+
+            const target =
+                targetValue === NO_PRIORITY_COLUMN_ID
+                    ? null
+                    : (scale.find(
+                          (priority) =>
+                              priorityColumnId(priority.id) === targetValue,
+                      ) ?? null);
+
+            if (target === null && targetValue !== NO_PRIORITY_COLUMN_ID) {
+                return;
+            }
 
             moveIssue(
                 issue,
-                { priority: targetValue as Issue['priority'] },
-                { priority: issue.priority },
-                { priority: targetValue },
+                {
+                    priority: target?.name ?? null,
+                    priority_id: target?.id ?? null,
+                    priorityDetails: target,
+                },
+                {
+                    priority: issue.priority,
+                    priority_id: issue.priority_id,
+                    priorityDetails: issue.priorityDetails,
+                },
+                { priority: target?.name ?? null },
                 'priority',
             );
             return;

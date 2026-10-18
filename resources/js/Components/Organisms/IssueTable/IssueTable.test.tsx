@@ -210,13 +210,15 @@ describe('IssueTable Component', () => {
         fireEvent.change(input, { target: { value: 'Quick issue' } });
         fireEvent.keyDown(input, { key: 'Enter' });
 
+        // No priority is sent: the server gives the issue the project default.
         expect(router.post).toHaveBeenCalledWith(
             expect.stringContaining('issues.store'),
-            expect.objectContaining({
-                title: 'Quick issue',
-                project_id: 1,
-                priority: 'medium',
-            }),
+            expect.not.objectContaining({ priority: expect.anything() }),
+            expect.any(Object),
+        );
+        expect(router.post).toHaveBeenCalledWith(
+            expect.stringContaining('issues.store'),
+            expect.objectContaining({ title: 'Quick issue', project_id: 1 }),
             expect.any(Object),
         );
     });

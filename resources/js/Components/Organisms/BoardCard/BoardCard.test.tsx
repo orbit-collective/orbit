@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { priorityFields } from '@/stories/fixtures';
 import { todoStatus, inProgressStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { BoardCard, BoardCardOverlay } from './BoardCard';
@@ -9,10 +10,14 @@ const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: 'ISSUE-1',
     title: 'Fix the login page',
     workflowStatus: todoStatus,
-    priority: 'high',
+    ...priorityFields('high'),
     project_id: 1,
     user_id: 1,
     ...overrides,
+    ...(overrides.priority !== undefined &&
+    overrides.priorityDetails === undefined
+        ? priorityFields(overrides.priority)
+        : {}),
 });
 
 describe('BoardCard Component', () => {
@@ -205,10 +210,10 @@ describe('BoardCard Component', () => {
             />,
         );
 
-        // Not closed: the leading dot reflects priority ("high").
+        // Not closed: the leading dot takes the priority's own color.
         expect(
-            container.querySelector('.bg-\\[var\\(--error-color\\)\\]'),
-        ).toBeInTheDocument();
+            container.querySelector('span[style*="background-color"]'),
+        ).toHaveStyle({ backgroundColor: '#f44336' });
 
         rerender(
             <BoardCard

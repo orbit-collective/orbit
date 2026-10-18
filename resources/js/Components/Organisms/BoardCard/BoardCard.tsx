@@ -20,7 +20,10 @@ const BoardCardContent = ({
     <>
         <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1.5">
-                <StatusDot status={isClosed ? 'done' : issue.priority} />
+                <StatusDot
+                    status={isClosed ? 'done' : undefined}
+                    color={isClosed ? undefined : issue.priorityDetails?.color}
+                />
                 <span className="truncate text-[11px] font-semibold text-[var(--text-muted-color)]">
                     {issue.assignee?.name || 'Unassigned'}
                 </span>

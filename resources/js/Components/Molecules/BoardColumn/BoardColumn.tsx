@@ -4,9 +4,14 @@ import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueElement from '@/Components/Molecules/IssueElement/IssueElement';
 import { BoardColumnProps } from '@/types/Components';
+import { WorkflowStatusCategory } from '@/types/Workflow';
+
+/** A priority column carries its own color; a status column maps onto a badge variant by its id. */
+const isPriorityColumn = (id: string) => id.startsWith('priority-');
 
 function BoardColumn({ issues, meta, count }: BoardColumnProps) {
     const { setNodeRef, isOver } = useDroppable({ id: meta.id });
+    const priorityColumn = isPriorityColumn(meta.id);
 
     return (
         <div
@@ -49,7 +54,20 @@ function BoardColumn({ issues, meta, count }: BoardColumnProps) {
                         </div>
                     </div>
                     <Badge
-                        color={meta.id}
+                        color={
+                            priorityColumn
+                                ? undefined
+                                : (meta.id as WorkflowStatusCategory)
+                        }
+                        style={
+                            priorityColumn
+                                ? {
+                                      color: meta.accent,
+                                      borderColor: `${meta.accent}33`,
+                                      backgroundColor: `${meta.accent}14`,
+                                  }
+                                : undefined
+                        }
                         variant="default"
                         className="ml-auto shrink-0 rounded-full font-semibold tabular-nums"
                     >

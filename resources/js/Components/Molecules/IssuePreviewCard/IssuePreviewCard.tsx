@@ -70,7 +70,7 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
         >
             <div className="flex items-start gap-2">
                 <StatusDot
-                    status={issue.priority}
+                    color={issue.priorityDetails?.color}
                     size="sm"
                     className="mt-1.5 shrink-0"
                 />
@@ -84,9 +84,9 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                     <StatusDot status={issueCategory(issue)} size="xs" />
                     {issue.workflowStatus?.name ?? 'No status'}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-[var(--border-color)] px-2 py-0.5 text-[10px] font-medium capitalize text-[var(--text-gray-color)]">
-                    <StatusDot status={issue.priority} size="xs" />
-                    {issue.priority}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-[var(--border-color)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                    <StatusDot color={issue.priorityDetails?.color} size="xs" />
+                    {issue.priority ?? 'No priority'}
                 </span>
             </div>
 

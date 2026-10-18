@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
+import { priorities } from '@/stories/fixtures';
 import { renderActivityLogBody } from './activityLogRichText';
 
 describe('renderActivityLogBody', () => {
@@ -39,6 +41,39 @@ describe('renderActivityLogBody', () => {
 
         expect(screen.getByText('low')).toBeInTheDocument();
         expect(screen.getByText('high')).toBeInTheDocument();
+    });
+
+    test('colors a priority change with the project priorities', () => {
+        const { container } = render(
+            <ProjectPrioritiesProvider priorities={priorities}>
+                <p>
+                    {renderActivityLogBody(
+                        'priority changed from "Low" to "Urgent"',
+                    )}
+                </p>
+            </ProjectPrioritiesProvider>,
+        );
+
+        const dots = container.querySelectorAll('span[style]');
+
+        // "Low" is a priority of the project, "Urgent" is not (any more): it gets the neutral dot.
+        expect(dots).toHaveLength(1);
+        expect(dots[0]).toHaveStyle({ backgroundColor: '#4caf50' });
+        expect(screen.getByText('Urgent')).toBeInTheDocument();
+    });
+
+    test('matches an older lowercase priority entry to the project priority', () => {
+        const { container } = render(
+            <ProjectPrioritiesProvider priorities={priorities}>
+                <p>
+                    {renderActivityLogBody(
+                        'priority changed from "low" to "high"',
+                    )}
+                </p>
+            </ProjectPrioritiesProvider>,
+        );
+
+        expect(container.querySelectorAll('span[style]')).toHaveLength(2);
     });
 
     test('renders each label as a Badge chip', () => {

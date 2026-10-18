@@ -1,8 +1,10 @@
 import type { FormDataConvertible } from '@inertiajs/core';
 import { Command } from '@/types/Commands';
-import { Issue, IssueAbilities, IssuePriority } from '@/types/Issues';
+import { Issue, IssueAbilities } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import { AssignableUser } from '@/types/Users';
+import { resolvePriorityIcon } from '@/utils/priorityIcons';
 import { getReachableStatuses } from '@/utils/workflow';
 
 export interface IssueCommandContext {
@@ -11,6 +13,7 @@ export interface IssueCommandContext {
     ancestors: Issue[];
     users: AssignableUser[];
     labels: ProjectLabel[];
+    priorities: ProjectPriority[];
     abilities: IssueAbilities;
     currentUserId: number;
     /** Absolute link to the issue, for "Copy link". */
@@ -20,12 +23,6 @@ export interface IssueCommandContext {
     copy: (text: string, successMessage: string) => void;
     visit: (url: string) => void;
 }
-
-const PRIORITIES: { value: IssuePriority; icon: Command['icon'] }[] = [
-    { value: 'high', icon: 'ArrowUp' },
-    { value: 'medium', icon: 'Minus' },
-    { value: 'low', icon: 'ArrowDown' },
-];
 
 const issueLabel = (issue: Issue): string => `#${issue.number ?? issue.id}`;
 
@@ -37,7 +34,7 @@ const issueLabel = (issue: Issue): string => `#${issue.number ?? issue.id}`;
  * reflects state after a toggle.
  */
 export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
-    const { issue, abilities, users, labels } = ctx;
+    const { issue, abilities, users, labels, priorities } = ctx;
     const context = issueLabel(issue);
     const base = {
         group: 'suggested',
@@ -59,16 +56,30 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
                 perform: () => ctx.update({ workflow_status_id: status.id }),
             }));
 
-    const prioritySteps = (): Command[] =>
-        PRIORITIES.filter(({ value }) => value !== issue.priority).map(
-            ({ value, icon }): Command => ({
-                id: `issue.priority.${value}`,
-                title: value.charAt(0).toUpperCase() + value.slice(1),
+    const prioritySteps = (): Command[] => {
+        const steps = priorities
+            .filter((priority) => priority.id !== issue.priority_id)
+            .map((priority): Command => ({
+                id: `issue.priority.${priority.id}`,
+                title: priority.name,
                 group: 'suggested',
-                icon,
-                perform: () => ctx.update({ priority: value }),
-            }),
-        );
+                icon: resolvePriorityIcon(priority.icon),
+                iconColor: priority.color,
+                perform: () => ctx.update({ priority: priority.name }),
+            }));
+
+        if (issue.priority_id != null) {
+            steps.push({
+                id: 'issue.priority.none',
+                title: 'No priority',
+                group: 'suggested',
+                icon: 'CircleDashed',
+                perform: () => ctx.update({ priority: null }),
+            });
+        }
+
+        return steps;
+    };
 
     const assigneeSteps = (): Command[] => {
         const steps: Command[] = [];
@@ -158,7 +169,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
             ...base,
             id: 'issue.priority',
             title: 'Change priority…',
-            subtitle: issue.priority,
+            subtitle: issue.priority ?? undefined,
             icon: 'Flag',
             keywords: ['urgent', 'importance'],
             when: () => canUpdate && abilities.changePriority,

@@ -6,6 +6,7 @@ import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
+import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
 import { StatusDotProps } from '@/types/Components';
 import { IssueType } from '@/types/IssueTypes';
 import { RoleNameSummary, RoleTypeValue } from '@/types/Roles';
@@ -19,32 +20,51 @@ const CHANGE_PATTERN =
 const unescapeQuoted = (value: string) => value.replace(/\\(.)/g, '$1');
 
 /**
- * A status is logged by name now (each issue type names its own), so only
- * the words the app itself knows - priorities and the old open/closed
- * statuses in earlier entries - get a coloured dot; any other name gets a
- * neutral one.
+ * A status is logged by name (each issue type names its own), so only the
+ * old open/closed words in earlier entries get a coloured dot; any other
+ * status gets a neutral one.
  */
-const DOT_FOR_VALUE: Record<string, StatusDotProps['status']> = {
+const DOT_FOR_STATUS: Record<string, StatusDotProps['status']> = {
     open: 'todo',
     in_progress: 'in_progress',
     closed: 'done',
-    low: 'low',
-    medium: 'medium',
-    high: 'high',
 };
 
-const StatusOrPriorityValue = ({ value }: { value: string }) => (
-    <span className="mx-0.5 inline-flex items-center gap-1 align-middle">
-        {DOT_FOR_VALUE[value] ? (
-            <StatusDot status={DOT_FOR_VALUE[value]} size="sm" />
-        ) : (
-            <span className="inline-block h-2 w-2 shrink-0 rounded-sm bg-[var(--text-muted-color)]" />
-        )}
-        <span className="font-medium capitalize text-[var(--text-color)]">
-            {value.replace('_', ' ')}
+/**
+ * A priority is logged by name too; it takes the color of the project's
+ * priority of that name (older entries said "low", which matches "Low"), or
+ * a neutral dot where the project - or no project, as on the dashboard -
+ * has none by that name.
+ */
+const StatusOrPriorityValue = ({
+    value,
+    kind,
+}: {
+    value: string;
+    kind: 'status' | 'priority';
+}) => {
+    const { findByName } = useProjectPriorities();
+    const priority = kind === 'priority' ? findByName(value) : null;
+    const status = kind === 'status' ? DOT_FOR_STATUS[value] : undefined;
+
+    return (
+        <span className="mx-0.5 inline-flex items-center gap-1 align-middle">
+            {priority || status ? (
+                <StatusDot status={status} color={priority?.color} size="sm" />
+            ) : (
+                <span className="inline-block h-2 w-2 shrink-0 rounded-sm bg-[var(--text-muted-color)]" />
+            )}
+            <span
+                className={cn(
+                    'font-medium text-[var(--text-color)]',
+                    kind === 'status' && 'capitalize',
+                )}
+            >
+                {value.replace('_', ' ')}
+            </span>
         </span>
-    </span>
-);
+    );
+};
 
 const LabelsValue = ({ labelsCsv }: { labelsCsv: string }) => {
     const labels = labelsCsv
@@ -237,6 +257,7 @@ export function renderActivityLogBody(
             nodes.push(
                 <StatusOrPriorityValue
                     key={`old-${matchCount}`}
+                    kind={field as 'status' | 'priority'}
                     value={oldValue}
                 />,
             );
@@ -244,6 +265,7 @@ export function renderActivityLogBody(
             nodes.push(
                 <StatusOrPriorityValue
                     key={`new-${matchCount}`}
+                    kind={field as 'status' | 'priority'}
                     value={newValue}
                 />,
             );

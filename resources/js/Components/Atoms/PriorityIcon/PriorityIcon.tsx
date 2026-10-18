@@ -1,87 +1,27 @@
 import Badge from '@/Components/Atoms/Badge/Badge';
+import Icon from '@/Components/Atoms/Icon/Icon';
 import { PriorityIconProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { resolvePriorityIcon } from '@/utils/priorityIcons';
 
 export const PriorityIcon = ({
     priority,
     className,
     tooltip = true,
 }: PriorityIconProps) => {
-    const p = priority?.toLowerCase();
-
-    if (p === 'high') {
+    if (priority) {
         return (
-            <Badge variant={'ghost'} tooltip={tooltip} tooltipText={p}>
-                <span
-                    className={cn(
-                        'inline-flex items-center text-zinc-300',
-                        className,
-                    )}
-                >
-                    <svg className="h-4 w-4 fill-current" viewBox="0 0 16 16">
-                        <rect x="2" y="10" width="3" height="4" rx="0.5" />
-                        <rect x="6.5" y="7" width="3" height="7" rx="0.5" />
-                        <rect x="11" y="4" width="3" height="10" rx="0.5" />
-                    </svg>
-                </span>
-            </Badge>
-        );
-    }
-
-    if (p === 'medium') {
-        return (
-            <Badge variant={'ghost'} tooltip={tooltip} tooltipText={p}>
-                <span
-                    className={cn(
-                        'inline-flex items-center text-zinc-400',
-                        className,
-                    )}
-                >
-                    <svg className="h-4 w-4 fill-current" viewBox="0 0 16 16">
-                        <rect x="2" y="10" width="3" height="4" rx="0.5" />
-                        <rect x="6.5" y="7" width="3" height="7" rx="0.5" />
-                        <rect
-                            x="11"
-                            y="4"
-                            width="3"
-                            height="10"
-                            rx="0.5"
-                            fillOpacity="0.2"
-                        />
-                    </svg>
-                </span>
-            </Badge>
-        );
-    }
-
-    if (p === 'low') {
-        return (
-            <Badge variant={'ghost'} tooltip={tooltip} tooltipText={p}>
-                <span
-                    className={cn(
-                        'inline-flex items-center text-zinc-500',
-                        className,
-                    )}
-                >
-                    <svg className="h-4 w-4 fill-current" viewBox="0 0 16 16">
-                        <rect x="2" y="10" width="3" height="4" rx="0.5" />
-                        <rect
-                            x="6.5"
-                            y="7"
-                            width="3"
-                            height="7"
-                            rx="0.5"
-                            fillOpacity="0.2"
-                        />
-                        <rect
-                            x="11"
-                            y="4"
-                            width="3"
-                            height="10"
-                            rx="0.5"
-                            fillOpacity="0.2"
-                        />
-                    </svg>
+            <Badge
+                variant={'ghost'}
+                tooltip={tooltip}
+                tooltipText={priority.name}
+            >
+                <span className={cn('inline-flex items-center', className)}>
+                    <Icon
+                        name={resolvePriorityIcon(priority.icon)}
+                        size={16}
+                        color={priority.color}
+                    />
                 </span>
             </Badge>
         );

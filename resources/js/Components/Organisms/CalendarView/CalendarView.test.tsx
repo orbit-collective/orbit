@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { priorityFields } from '@/stories/fixtures';
 import { todoStatus, inProgressStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import CalendarView from './CalendarView';
@@ -22,10 +23,14 @@ const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: '1',
     title: 'Fix login bug',
     workflowStatus: todoStatus,
-    priority: 'high',
+    ...priorityFields('high'),
     project_id: 1,
     user_id: 1,
     ...overrides,
+    ...(overrides.priority !== undefined &&
+    overrides.priorityDetails === undefined
+        ? priorityFields(overrides.priority)
+        : {}),
 });
 
 describe('CalendarView Component', () => {
@@ -123,7 +128,40 @@ describe('CalendarView Component', () => {
         const chip = screen
             .getByText('High priority task')
             .closest('button') as HTMLElement;
-        expect(chip).toHaveClass('border-l-[var(--error-color)]');
+        expect(chip).toHaveStyle({ borderLeftColor: '#f44336' });
+    });
+
+    test('colors the chip with a custom priority color and a neutral one without a priority', () => {
+        const custom = makeIssue({
+            id: '23',
+            title: 'Custom priority task',
+            priority: 'Blocker',
+            priority_id: 9,
+            priorityDetails: {
+                id: 9,
+                name: 'Blocker',
+                color: '#9c27b0',
+                icon: 'Flame',
+                position: 0,
+            },
+            start_date: '2026-07-15',
+        });
+        const none = makeIssue({
+            id: '24',
+            title: 'Unprioritised task',
+            priority: null,
+            priority_id: null,
+            priorityDetails: null,
+            start_date: '2026-07-16',
+        });
+        render(<CalendarView issues={[custom, none]} />);
+
+        expect(
+            screen.getByText('Custom priority task').closest('button'),
+        ).toHaveStyle({ borderLeftColor: '#9c27b0' });
+        expect(
+            screen.getByText('Unprioritised task').closest('button'),
+        ).toHaveStyle({ borderLeftColor: 'var(--text-muted-color)' });
     });
 
     test('shows a "+N more" indicator when a day has more issues than fit', () => {

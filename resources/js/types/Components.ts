@@ -27,7 +27,6 @@ import {
     IssueAbilities,
     IssueLabel,
     IssuePageLooks,
-    IssuePriority,
     LinkedPullRequest,
     ProductivityTrendProps,
     Sorting,
@@ -35,6 +34,11 @@ import {
 } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
+import {
+    PriorityCount,
+    PriorityDetails,
+    ProjectPriority,
+} from '@/types/Priorities';
 import { Project, ProjectColors } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
@@ -122,7 +126,9 @@ export interface ProgressRingProps {
     bgColorClass?: string;
 }
 export interface StatusDotProps extends VariantProps<typeof statusDotVariants> {
-    status: 'todo' | 'in_progress' | 'done' | 'low' | 'medium' | 'high';
+    status?: 'todo' | 'in_progress' | 'done' | 'low' | 'medium' | 'high';
+    /** An explicit color (e.g. a priority's own), used instead of the status color. */
+    color?: string;
     className?: string;
 }
 export interface TextAreaProps extends VariantProps<typeof textareaVariants> {
@@ -242,7 +248,8 @@ export interface DividerProps {
     className?: string;
 }
 export interface PriorityIconProps {
-    priority: string;
+    /** The priority to draw; null (or omitted) draws the dashed "no priority" ring. */
+    priority?: Pick<PriorityDetails, 'name' | 'color' | 'icon'> | null;
     className?: string;
     tooltip?: boolean;
 }
@@ -254,7 +261,8 @@ export interface StatusIconProps {
 // MOLECULES COMPONENTS
 export type BoardGroupBy = 'priority' | 'status';
 export interface BoardColumnMeta {
-    id: IssuePriority | WorkflowStatusCategory;
+    /** A workflow status category, or `priority-<id>` / `priority-none` for a priority column. */
+    id: string;
     label: string;
     hint: string;
     accent: string;
@@ -424,20 +432,13 @@ export interface CompletionRatioCardProps {
     total: number;
     donePct: number;
 }
-export interface PriorityItem {
-    label: string;
-    status: IssuePriority;
-    count: number;
-    pct: number;
-}
-
 export interface PriorityBreakdownCardProps {
-    high: number;
-    medium: number;
-    low: number;
-    highPct: number;
-    mediumPct: number;
-    lowPct: number;
+    /** Counted by priority name across the user's projects, most important first. */
+    priorities: PriorityCount[];
+    /** Issues that have no priority. */
+    noPriority: number;
+    /** Every issue, the denominator of the percentages. */
+    total: number;
 }
 export interface ProductivityTrendCardProps {
     trendData: ProductivityTrendProps[];
@@ -587,6 +588,7 @@ export interface IssuePageProps {
     issue: Issue;
     users: AssignableUser[];
     labels?: ProjectLabel[];
+    priorities?: ProjectPriority[];
     issueTypes?: IssueType[];
     nextIssueId?: number | null;
     ancestors?: Issue[];
@@ -634,6 +636,7 @@ export interface IssueSuggestion {
     title: string;
     workflowStatus?: Issue['workflowStatus'] | null;
     priority?: Issue['priority'];
+    priorityDetails?: Issue['priorityDetails'];
     labels?: Issue['labels'];
     start_date?: Issue['start_date'];
     end_date?: Issue['end_date'];

@@ -1,4 +1,5 @@
 import { IssueType } from '@/types/IssueTypes';
+import { PriorityCount, PriorityDetails } from '@/types/Priorities';
 import { WorkflowStatus } from '@/types/Workflow';
 
 /**
@@ -30,7 +31,11 @@ export interface Issue {
     number?: number;
     title: string;
     description?: string;
-    priority: 'high' | 'medium' | 'low';
+    /** The name of the issue's priority, or null when it has none. */
+    priority: string | null;
+    priority_id?: number | null;
+    /** The priority's color, icon and position, so a row can draw itself. */
+    priorityDetails?: PriorityDetails | null;
     project_id: number;
     user_id: number;
     assignee_id?: number;
@@ -98,8 +103,6 @@ export interface PaginatedResponse<T> {
 }
 
 export type IssuePageLooks = 'List' | 'Board' | 'Calendar' | 'Activity';
-export type IssuePriority = 'high' | 'medium' | 'low';
-
 export interface ProductivityTrendProps {
     count: number;
     day: string;
@@ -111,7 +114,12 @@ export interface ProductivityTrendProps {
  */
 export interface IssueStats {
     total: number;
-    priority: { high: number; medium: number; low: number };
+    /** Counted by priority name across the user's projects, most important first. */
+    priority: PriorityCount[];
+    /** Issues that have no priority at all. */
+    noPriority: number;
+    /** Issues at the top of their own project's priority scale, whatever it is called. */
+    topPriority: number;
     category: { todo: number; in_progress: number; done: number };
 }
 

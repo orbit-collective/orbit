@@ -123,7 +123,7 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
                                     className="group flex items-start gap-2.5 rounded-xl border border-solid border-transparent px-2.5 py-2.5 text-left transition-all hover:border-[var(--border-color)] hover:bg-[var(--bg-light-color)]"
                                 >
                                     <StatusDot
-                                        status={issue.priority}
+                                        color={issue.priorityDetails?.color}
                                         size="sm"
                                         className="mt-1.5 shrink-0"
                                     />
