@@ -2,6 +2,7 @@
 
 use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
+use App\Models\Issue;
 use App\Models\NotificationSetting;
 use App\Models\Permission;
 use App\Models\Project;
@@ -10,6 +11,7 @@ use App\Models\User;
 use App\Services\ProjectIntegrationService;
 use App\Services\ProjectInvitationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -531,8 +533,63 @@ test('those tabs send no priorities to someone without the priorities.view permi
     addProjectMember($project, $user->id, 'admin');
     $project->roles()->where('slug', 'admin')->first()->permissions()
         ->detach(Permission::where('key', PermissionEnum::PRIORITIES_VIEW->value)->value('id'));
-    Illuminate\Support\Facades\Cache::flush();
+    Cache::flush();
 
     $this->actingAs($user)->get('/settings/automation')->assertInertia(fn (Assert $page) => $page
         ->where('priorities', []));
+});
+
+test('the priorities tab lists the project scale with how many issues use each', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+    Issue::factory()->count(2)->create(['project_id' => $project->id, 'priority' => 'high']);
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low']);
+
+    $this->actingAs($user)->get('/settings/priorities')->assertInertia(fn (Assert $page) => $page
+        ->component('Settings/Priorities')
+        ->where('selectedProjectId', $project->id)
+        ->has('priorities', 3)
+        ->where('priorities.0.name', 'High')
+        ->where('priorities.0.issueCount', 2)
+        ->where('priorities.1.issueCount', 0)
+        ->where('priorities.1.isDefault', true)
+        ->where('priorities.2.issueCount', 1)
+        ->where('hasPrioritiesAccess', true)
+        ->where('canCreatePriorities', true)
+        ->where('canUpdatePriorities', true)
+        ->where('canDeletePriorities', true));
+});
+
+test('a member sees the priorities but cannot change them', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'member');
+
+    $this->actingAs($user)->get('/settings/priorities')->assertInertia(fn (Assert $page) => $page
+        ->has('priorities', 3)
+        ->where('hasPrioritiesAccess', true)
+        ->where('canCreatePriorities', false)
+        ->where('canUpdatePriorities', false)
+        ->where('canDeletePriorities', false));
+});
+
+test('without the view permission the priorities tab sends no priorities', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'viewer');
+    $project->roles()->where('slug', 'viewer')->first()->permissions()
+        ->detach(Permission::where('key', PermissionEnum::PRIORITIES_VIEW->value)->value('id'));
+    Cache::flush();
+
+    $this->actingAs($user)->get('/settings/priorities')->assertInertia(fn (Assert $page) => $page
+        ->where('priorities', [])
+        ->where('hasPrioritiesAccess', false));
+});
+
+test('the priorities tab has no selected project when the user belongs to none', function () {
+    $this->actingAs(User::factory()->create())->get('/settings/priorities')->assertInertia(fn (Assert $page) => $page
+        ->where('selectedProjectId', null)
+        ->where('priorities', [])
+        ->where('hasPrioritiesAccess', false));
 });

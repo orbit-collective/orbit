@@ -498,7 +498,17 @@ describe('Sidebar Component', () => {
         pageState.url = '/settings';
         render(<Sidebar projects={[]} />);
 
-        expect(screen.getByText('Priorities').closest('a')).toBeNull();
+        expect(screen.getByText('Documents').closest('a')).toBeNull();
         expect(screen.getAllByText('Soon').length).toBeGreaterThan(0);
+    });
+
+    test('links the Priorities settings tab now that it is live', () => {
+        pageState.url = '/settings';
+        render(<Sidebar projects={[]} />);
+
+        expect(screen.getByText('Priorities').closest('a')).toHaveAttribute(
+            'href',
+            '/settings/priorities',
+        );
     });
 });

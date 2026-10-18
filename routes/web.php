@@ -118,6 +118,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/notifications', [SettingsController::class, 'notifications'])->name('settings.notifications');
     Route::get('/settings/security-access', [SettingsController::class, 'securityAccess'])->name('settings.security-access');
     Route::get('/settings/labels', [SettingsController::class, 'labels'])->name('settings.labels');
+    Route::get('/settings/priorities', [SettingsController::class, 'priorities'])->name('settings.priorities');
     Route::get('/settings/issue-types', [SettingsController::class, 'issueTypes'])->name('settings.issue-types');
     Route::get('/settings/members', [SettingsController::class, 'members'])->name('settings.members');
     Route::get('/settings/roles-management', [SettingsController::class, 'rolesManagement'])->name('settings.roles-management');

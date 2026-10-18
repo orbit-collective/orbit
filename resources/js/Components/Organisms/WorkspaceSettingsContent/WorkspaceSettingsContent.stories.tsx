@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
-import { issueTypes, labels, projects, users } from '@/stories/fixtures';
+import {
+    issueTypes,
+    labels,
+    priorities,
+    projects,
+    users,
+} from '@/stories/fixtures';
 import { AutomationOption, AutomationRule } from '@/types/Automation';
 import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
 import {
@@ -139,6 +145,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const settingsPriorities = priorities.map((priority, index) => ({
+    ...priority,
+    issueCount: [4, 9, 2][index],
+}));
+
 export const Labels: Story = {
     render: () => (
         <WorkspaceSettingsLabelsTab
@@ -261,7 +272,31 @@ export const Automation: Story = {
 };
 
 export const Priorities: Story = {
-    render: () => <WorkspaceSettingsPrioritiesTab />,
+    render: () => (
+        <WorkspaceSettingsPrioritiesTab
+            {...projectScope}
+            priorities={settingsPriorities}
+            hasPrioritiesAccess
+            canCreatePriorities
+            canUpdatePriorities
+            canDeletePriorities
+        />
+    ),
+    play: async ({ canvasElement }) => {
+        await expect(
+            await within(canvasElement).findByText('9 issues'),
+        ).toBeVisible();
+    },
+};
+
+export const PrioritiesReadOnly: Story = {
+    render: () => (
+        <WorkspaceSettingsPrioritiesTab
+            {...projectScope}
+            priorities={settingsPriorities}
+            hasPrioritiesAccess
+        />
+    ),
 };
 
 export const Documents: Story = {

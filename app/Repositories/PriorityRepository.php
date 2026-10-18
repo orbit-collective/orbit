@@ -22,6 +22,12 @@ class PriorityRepository
         return $project->priorities()->orderBy('position')->orderBy('id')->get();
     }
 
+    /** @return Collection<int, Priority> each with an `issues_count` */
+    public function getForProjectWithIssueCounts(Project $project): Collection
+    {
+        return $project->priorities()->withCount('issues')->orderBy('position')->orderBy('id')->get();
+    }
+
     public function findForProject(Project $project, int $id): ?Priority
     {
         return $project->priorities()->whereKey($id)->first();

@@ -1,132 +1,144 @@
-import { useState } from 'react';
+import { router } from '@inertiajs/react';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
+import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
+import StatCard from '@/Components/Molecules/StatCard/StatCard';
+import { SettingsPriority } from '@/types/Priorities';
+import { MemberProjectSummary } from '@/types/ProjectMembers';
 
-export default function WorkspaceSettingsPrioritiesTab() {
-    const [priorityScale, setPriorityScale] = useState('Three levels');
-    const [activePriority, setActivePriority] = useState('high');
+interface WorkspaceSettingsPrioritiesTabProps {
+    memberProjects?: MemberProjectSummary[];
+    selectedProjectId?: number | null;
+    priorities?: SettingsPriority[];
+    hasPrioritiesAccess?: boolean;
+    canCreatePriorities?: boolean;
+    canUpdatePriorities?: boolean;
+    canDeletePriorities?: boolean;
+}
 
-    return (
-        <div className="space-y-5">
+export default function WorkspaceSettingsPrioritiesTab({
+    memberProjects = [],
+    selectedProjectId = null,
+    priorities = [],
+    hasPrioritiesAccess = false,
+}: WorkspaceSettingsPrioritiesTabProps) {
+    const selectedProject =
+        memberProjects.find((project) => project.id === selectedProjectId) ??
+        null;
+
+    const switchProject = (projectId: number) => {
+        router.get(
+            `/settings/priorities?project=${projectId}`,
+            {},
+            { preserveScroll: true, preserveState: true },
+        );
+    };
+
+    if (!selectedProject || !hasPrioritiesAccess) {
+        return (
             <SettingsPanel
-                title="Priority framework"
-                description="Standardize urgency levels for consistent planning."
+                title="Priority scale"
+                description="Name, color and order the priorities issues can have."
+                icon="Flag"
             >
-                <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
-                    {[
-                        {
-                            key: 'high',
-                            label: 'High',
-                            info: 'Immediate attention',
-                            icon: 'SignalHigh',
-                            color: '#f44336',
-                        },
-                        {
-                            key: 'medium',
-                            label: 'Medium',
-                            info: 'Important but not blocking',
-                            icon: 'SignalMedium',
-                            color: '#ff9800',
-                        },
-                        {
-                            key: 'low',
-                            label: 'Low',
-                            info: 'Planned flexibly',
-                            icon: 'SignalLow',
-                            color: '#4caf50',
-                        },
-                    ].map((priority) => (
-                        <div
-                            key={priority.key}
-                            className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-3"
-                        >
-                            <div className="mb-2 flex items-center gap-2">
-                                <PriorityIcon
-                                    priority={{
-                                        name: priority.label,
-                                        icon: priority.icon,
-                                        color: priority.color,
-                                    }}
-                                    tooltip={false}
-                                />
-                                <p className="text-sm font-medium text-[var(--text-color)]">
-                                    {priority.label}
-                                </p>
-                            </div>
-                            <p className="text-xs text-[var(--text-gray-color)]">
-                                {priority.info}
-                            </p>
-                            <button
-                                type="button"
-                                onClick={() => setActivePriority(priority.key)}
-                                className={`mt-2 rounded-full border px-2 py-0.5 text-[10px] ${
-                                    activePriority === priority.key
-                                        ? 'border-[var(--accent-color)] text-[var(--text-color)]'
-                                        : 'border-[var(--bg-light-color)] text-[var(--text-gray-color)]'
-                                }`}
-                            >
-                                Edit level
-                            </button>
-                        </div>
-                    ))}
-                </div>
-                <div className="px-5 pb-4">
-                    <button
-                        type="button"
-                        className="rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-semibold text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
-                    >
-                        + Add priority level
-                    </button>
-                </div>
                 <SettingsPanelRow
-                    title="Priority scale"
-                    description="Select how many priority levels your workspace uses."
-                    action={
-                        <button
-                            type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
-                            onClick={() =>
-                                setPriorityScale(
-                                    priorityScale === 'Three levels'
-                                        ? 'Four levels'
-                                        : 'Three levels',
-                                )
-                            }
-                        >
-                            {priorityScale}
-                        </button>
+                    title={
+                        !selectedProject
+                            ? "You're not part of any project yet"
+                            : "You don't have access to this project's priorities"
+                    }
+                    description={
+                        !selectedProject
+                            ? 'Create or join a project to manage its priorities here.'
+                            : 'Ask a project admin for the priorities.view permission to see priorities here.'
                     }
                 />
             </SettingsPanel>
+        );
+    }
+
+    const defaultPriority = priorities.find((priority) => priority.isDefault);
+    const issueCount = priorities.reduce(
+        (sum, priority) => sum + priority.issueCount,
+        0,
+    );
+
+    return (
+        <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <StatCard
+                    variant="vivid"
+                    title="Priority levels"
+                    value={priorities.length}
+                    icon="Flag"
+                    color="accent"
+                />
+                <StatCard
+                    variant="vivid"
+                    title="Issues prioritised"
+                    value={issueCount}
+                    icon="ListChecks"
+                    color="info"
+                />
+                <StatCard
+                    variant="vivid"
+                    title="Default for new issues"
+                    value={defaultPriority?.name ?? 'None'}
+                    icon="Star"
+                    color="warning"
+                />
+            </div>
+
+            <ProjectPickerPanel
+                projects={memberProjects}
+                selectedProjectId={selectedProject.id}
+                description="Choose which project's priority scale you're viewing."
+                onSelect={switchProject}
+            />
+
             <SettingsPanel
-                title="Default policy"
-                description="Control workspace defaults for newly created issues."
+                title="Priority scale"
+                description={`Priorities available for issues in ${selectedProject.name}, most important first.`}
+                icon="Flag"
             >
-                <SettingsPanelRow
-                    title="Default issue priority"
-                    description="Used when no explicit priority is selected."
-                    action={
-                        <button
-                            type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
-                        >
-                            Medium
-                        </button>
-                    }
-                />
-                <SettingsPanelRow
-                    title="Auto-escalation rules"
-                    description="Trigger priority bumps based on age, status, or SLA."
-                    action={
-                        <button
-                            type="button"
-                            className="rounded-full border border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)]"
-                        >
-                            Configure rules
-                        </button>
-                    }
-                />
+                {priorities.map((priority) => (
+                    <div
+                        key={priority.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                    >
+                        <div className="flex min-w-0 items-center gap-3">
+                            <span
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                                style={{
+                                    backgroundColor: `${priority.color}1f`,
+                                }}
+                            >
+                                <PriorityIcon
+                                    priority={priority}
+                                    tooltip={false}
+                                />
+                            </span>
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                        {priority.name}
+                                    </p>
+                                    {priority.isDefault && (
+                                        <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                            Default
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="truncate text-sm text-[var(--text-gray-color)]">
+                                    {priority.issueCount === 1
+                                        ? '1 issue'
+                                        : `${priority.issueCount} issues`}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                ))}
             </SettingsPanel>
         </div>
     );
