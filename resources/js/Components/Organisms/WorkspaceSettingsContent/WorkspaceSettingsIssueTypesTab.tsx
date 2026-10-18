@@ -10,6 +10,7 @@ import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useAlert } from '@/context/AlertContext';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
 import WorkspaceSettingsFieldsModal from './WorkspaceSettingsFieldsModal';
@@ -23,6 +24,7 @@ interface WorkspaceSettingsIssueTypesTabProps {
     selectedProjectId?: number | null;
     issueTypes?: IssueType[];
     labels?: ProjectLabel[];
+    priorities?: ProjectPriority[];
     hasIssueTypesAccess?: boolean;
     canCreateIssueTypes?: boolean;
     canUpdateIssueTypes?: boolean;
@@ -37,6 +39,7 @@ export default function WorkspaceSettingsIssueTypesTab({
     selectedProjectId = null,
     issueTypes = [],
     labels = [],
+    priorities = [],
     hasIssueTypesAccess = false,
     canCreateIssueTypes = false,
     canUpdateIssueTypes = false,
@@ -402,6 +405,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                         : null
                 }
                 labels={labels}
+                priorities={priorities}
                 canManageTemplates={canUpdateIssueTypes}
             />
 

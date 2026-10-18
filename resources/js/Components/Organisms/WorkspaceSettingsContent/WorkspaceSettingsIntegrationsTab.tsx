@@ -12,6 +12,7 @@ import {
 } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import {
     GithubConnectedRepository,
     GithubConnectStatus,
@@ -39,6 +40,7 @@ interface WorkspaceSettingsIntegrationsTabProps {
     githubConnectStatus?: GithubConnectStatus | null;
     issueTypes?: IssueType[];
     labels?: ProjectLabel[];
+    priorities?: ProjectPriority[];
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
@@ -86,6 +88,7 @@ export default function WorkspaceSettingsIntegrationsTab({
     githubConnectStatus = null,
     issueTypes = [],
     labels = [],
+    priorities = [],
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsIntegrationsTabProps) {
@@ -748,6 +751,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                 }
                 issueTypes={issueTypes}
                 labels={labels}
+                priorities={priorities}
                 onToggle={(checked) => {
                     if (!openIntegration) return;
 

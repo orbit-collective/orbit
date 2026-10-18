@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { priorities } from '@/stories/fixtures';
 import { INTEGRATIONS } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
@@ -141,6 +142,41 @@ describe('WorkspaceSettingsImportPanel', () => {
         fireEvent.click(screen.getByLabelText('Map to Orbit labels'));
 
         expect(screen.getAllByText('chore').length).toBeGreaterThan(0);
+    });
+
+    test("the priority targets are the project's own priorities", () => {
+        renderPanel({
+            priorities: [
+                { ...priorities[0], name: 'Blocker', isDefault: false },
+                { ...priorities[1], name: 'Whenever', isDefault: true },
+            ],
+        });
+
+        fireEvent.click(screen.getByLabelText('Map to Orbit priorities'));
+
+        expect(screen.getAllByText('Blocker').length).toBeGreaterThan(0);
+        expect(screen.getAllByText('Whenever').length).toBeGreaterThan(0);
+        expect(screen.queryByText('High')).not.toBeInTheDocument();
+    });
+
+    test('saving sends the chosen priority mapping by name', () => {
+        renderPanel({ priorities });
+
+        fireEvent.click(screen.getByLabelText('Map to Orbit priorities'));
+        const options = screen.getAllByText('High');
+        fireEvent.click(options[options.length - 1]);
+
+        fireEvent.click(screen.getByText('Save mapping'));
+
+        expect(onSaveMappings).toHaveBeenCalledWith(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    mapping_type: 'priority',
+                    external_value: 'Highest',
+                    orbit_value: 'High',
+                }),
+            ]),
+        );
     });
 
     test('saving sends the chosen issue type mapping', () => {
