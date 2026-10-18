@@ -43,7 +43,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Standard task',
                     'description' => "## What needs doing\n\n## Definition of done\n",
-                    'priority' => 'medium',
+                    'priority' => 'Medium',
                     'labels' => ['chore'],
                 ],
                 'fields' => [
@@ -65,7 +65,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Feature brief',
                     'description' => "## Problem\n\n## Proposed solution\n\n## Out of scope\n",
-                    'priority' => 'medium',
+                    'priority' => 'Medium',
                     'labels' => ['feature'],
                 ],
                 'fields' => [
@@ -88,7 +88,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'User story',
                     'description' => "**As a** \n**I want** \n**So that** \n\n## Acceptance criteria\n- [ ] \n",
-                    'priority' => 'medium',
+                    'priority' => 'Medium',
                     'labels' => ['feature', 'ux'],
                 ],
                 'fields' => [
@@ -111,7 +111,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Bug report',
                     'description' => "## Steps to reproduce\n1. \n\n## Expected\n\n## Actual\n",
-                    'priority' => 'high',
+                    'priority' => 'High',
                     'labels' => ['bug'],
                 ],
                 'fields' => [
@@ -135,7 +135,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Epic brief',
                     'description' => "## Goal\n\n## Why now\n\n## Scope\n\n## Not in scope\n",
-                    'priority' => 'medium',
+                    'priority' => 'Medium',
                     'labels' => ['feature'],
                 ],
                 'fields' => [
@@ -155,7 +155,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Spike',
                     'description' => "## Question\n\n## Timebox\n\n## Findings\n",
-                    'priority' => 'medium',
+                    'priority' => 'Medium',
                     'labels' => [],
                 ],
                 'fields' => [
@@ -171,7 +171,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Chore',
                     'description' => "## What\n\n## Why now\n",
-                    'priority' => 'low',
+                    'priority' => 'Low',
                     'labels' => ['chore'],
                 ],
                 'fields' => [
@@ -191,7 +191,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Improvement',
                     'description' => "## Today\n\n## Proposed\n\n## Impact\n",
-                    'priority' => 'low',
+                    'priority' => 'Low',
                     'labels' => ['performance'],
                 ],
                 'fields' => [
@@ -212,7 +212,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Incident report',
                     'description' => "## Impact\n\n## Timeline\n\n## Mitigation\n\n## Follow-ups\n",
-                    'priority' => 'high',
+                    'priority' => 'High',
                     'labels' => ['bug'],
                 ],
                 'fields' => [
@@ -235,7 +235,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Security finding',
                     'description' => "## Summary\n\n## Affected versions\n\n## Remediation\n",
-                    'priority' => 'high',
+                    'priority' => 'High',
                     'labels' => ['bug'],
                 ],
                 'fields' => [
@@ -257,7 +257,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Infrastructure change',
                     'description' => "## Change\n\n## Blast radius\n\n## Rollback plan\n",
-                    'priority' => 'medium',
+                    'priority' => 'Medium',
                     'labels' => ['chore'],
                 ],
                 'fields' => [
@@ -279,7 +279,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Research note',
                     'description' => "## Question\n\n## Sources\n\n## Findings\n",
-                    'priority' => 'low',
+                    'priority' => 'Low',
                     'labels' => [],
                 ],
                 'fields' => [
@@ -300,7 +300,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Experiment',
                     'description' => "## Hypothesis\n\n## Method\n\n## Result\n",
-                    'priority' => 'low',
+                    'priority' => 'Low',
                     'labels' => [],
                 ],
                 'fields' => [
@@ -321,7 +321,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Doc page',
                     'description' => "## Audience\n\n## Outline\n",
-                    'priority' => 'low',
+                    'priority' => 'Low',
                     'labels' => [],
                 ],
                 'fields' => [
@@ -341,7 +341,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'Design brief',
                     'description' => "## Goal\n\n## Constraints\n\n## References\n",
-                    'priority' => 'medium',
+                    'priority' => 'Medium',
                     'labels' => ['design', 'ux'],
                 ],
                 'fields' => [
@@ -361,7 +361,7 @@ final class SystemIssueTypeDefaults
                 'template' => [
                     'name' => 'AI task',
                     'description' => "## Prompt\n\n## Constraints\n\n## Review notes\n",
-                    'priority' => 'medium',
+                    'priority' => 'Medium',
                     'labels' => [],
                 ],
                 'fields' => [
