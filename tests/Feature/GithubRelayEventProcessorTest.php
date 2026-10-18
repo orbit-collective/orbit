@@ -685,7 +685,7 @@ test('a successful opened link fires the pull request opened trigger', function 
 
     $this->processor->process(makeRelayEvent("<!-- orbit-issue:{$issue->id} -->"), $this->projectIntegration);
 
-    expect($issue->fresh()->priority)->toBe('high');
+    expect($issue->fresh()->priority->name)->toBe('High');
 });
 
 test('a merged pull request fires the merged trigger, not the closed trigger', function () {
@@ -700,7 +700,7 @@ test('a merged pull request fires the merged trigger, not the closed trigger', f
         $this->projectIntegration,
     );
 
-    expect($issue->fresh()->priority)->toBe('high');
+    expect($issue->fresh()->priority->name)->toBe('High');
     expect(AutomationRuleExecution::query()->count())->toBe(1);
 });
 
@@ -716,7 +716,7 @@ test('a closed unmerged pull request fires the closed trigger, not the merged tr
         $this->projectIntegration,
     );
 
-    expect($issue->fresh()->priority)->toBe('high');
+    expect($issue->fresh()->priority->name)->toBe('High');
     expect(AutomationRuleExecution::query()->count())->toBe(1);
 });
 
@@ -731,7 +731,7 @@ test('a reopened pull request fires the reopened trigger', function () {
         $this->projectIntegration,
     );
 
-    expect($issue->fresh()->priority)->toBe('high');
+    expect($issue->fresh()->priority->name)->toBe('High');
 });
 
 test('a synchronize event fires the synchronized trigger', function () {
@@ -745,7 +745,7 @@ test('a synchronize event fires the synchronized trigger', function () {
         $this->projectIntegration,
     );
 
-    expect($issue->fresh()->priority)->toBe('high');
+    expect($issue->fresh()->priority->name)->toBe('High');
 });
 
 test('a skipped stale lifecycle event never fires a trigger', function () {
@@ -763,7 +763,7 @@ test('a skipped stale lifecycle event never fires a trigger', function () {
         $this->projectIntegration,
     );
 
-    expect($issue->fresh()->priority)->toBe('low');
+    expect($issue->fresh()->priority->name)->toBe('Low');
     expect(AutomationRuleExecution::query()->count())->toBe(0);
 });
 
@@ -805,7 +805,7 @@ test('a disabled automation rule does not execute even though the trigger fires'
         $this->projectIntegration,
     );
 
-    expect($issue->fresh()->priority)->toBe('low');
+    expect($issue->fresh()->priority->name)->toBe('Low');
 });
 
 test('an opened event for a repository not connected to this project is skipped', function () {

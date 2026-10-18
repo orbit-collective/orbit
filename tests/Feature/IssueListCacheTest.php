@@ -52,7 +52,8 @@ test('the dashboard stats count issues by priority and status category in one qu
 
     expect($queries)->toBe(1)
         ->and($stats['total'])->toBe(3)
-        ->and($stats['priority'])->toBe(['high' => 2, 'medium' => 0, 'low' => 1])
+        ->and(collect($stats['priority'])->pluck('count', 'name')->all())->toBe(['High' => 2, 'Low' => 1])
+        ->and($stats['noPriority'])->toBe(0)
         ->and($stats['category'])->toBe(['todo' => 1, 'in_progress' => 1, 'done' => 1]);
 });
 

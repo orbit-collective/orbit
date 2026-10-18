@@ -4,22 +4,30 @@ namespace App\Services\Automation\Actions;
 
 use App\Models\Issue;
 use App\Services\IssueService;
+use App\Services\PriorityService;
 
-/** params: {priority: 'low'|'medium'|'high'} */
+/** params: {priority: the name of one of the issue's project's priorities} */
 class ChangePriorityAction implements AutomationActionHandler
 {
     public function __construct(
         protected IssueService $issueService,
+        protected PriorityService $priorityService,
     ) {}
 
     public function handle(Issue $issue, array $params): void
     {
-        $priority = $params['priority'] ?? null;
+        $name = $params['priority'] ?? null;
 
-        if (! in_array($priority, ['low', 'medium', 'high'], true)) {
+        if (! is_string($name)) {
             return;
         }
 
-        $this->issueService->updateIssue($issue, ['priority' => $priority]);
+        $priority = $this->priorityService->findByName($issue->project, $name);
+
+        if (! $priority) {
+            return;
+        }
+
+        $this->issueService->updateIssue($issue, ['priority' => $priority->name]);
     }
 }

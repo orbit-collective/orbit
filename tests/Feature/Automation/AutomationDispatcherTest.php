@@ -41,7 +41,7 @@ test('a matching rule runs its actions once', function () {
 
     $this->dispatcher->dispatch(AutomationTriggerType::GithubPullRequestMerged, $issue, [], 'evt_1');
 
-    expect($issue->fresh()->priority)->toBe('high');
+    expect($issue->fresh()->priority->name)->toBe('High');
     expect(AutomationRuleExecution::query()->count())->toBe(1);
 });
 
@@ -92,7 +92,7 @@ test('conditions that do not match prevent execution', function () {
 
     $this->dispatcher->dispatch(AutomationTriggerType::GithubPullRequestMerged, $issue, ['pullRequest' => ['title' => 'Other']], 'evt_1');
 
-    expect($issue->fresh()->priority)->toBe('low');
+    expect($issue->fresh()->priority->name)->toBe('Low');
 });
 
 test('a disabled rule never executes', function () {
@@ -101,7 +101,7 @@ test('a disabled rule never executes', function () {
 
     $this->dispatcher->dispatch(AutomationTriggerType::GithubPullRequestMerged, $issue, [], 'evt_1');
 
-    expect($issue->fresh()->priority)->toBe('low');
+    expect($issue->fresh()->priority->name)->toBe('Low');
 });
 
 test('a rule for a different trigger never executes', function () {
@@ -110,7 +110,7 @@ test('a rule for a different trigger never executes', function () {
 
     $this->dispatcher->dispatch(AutomationTriggerType::GithubPullRequestMerged, $issue, [], 'evt_1');
 
-    expect($issue->fresh()->priority)->toBe('low');
+    expect($issue->fresh()->priority->name)->toBe('Low');
 });
 
 test('the same idempotency key never executes a rule twice', function () {
@@ -123,7 +123,7 @@ test('the same idempotency key never executes a rule twice', function () {
 
     expect(AutomationRuleExecution::query()->count())->toBe(1);
     // priority was manually reset to low above; a second real execution would flip it back to high.
-    expect($issue->fresh()->priority)->toBe('low');
+    expect($issue->fresh()->priority->name)->toBe('Low');
 });
 
 test('a different idempotency key executes the rule again', function () {

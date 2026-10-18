@@ -32,6 +32,12 @@ class Priority extends Model
         return $this->belongsTo(Project::class);
     }
 
+    /** The option shape the pickers and the settings tab use: the details plus the default flag. */
+    public function toOption(): array
+    {
+        return [...$this->toDetails(), 'isDefault' => $this->is_default];
+    }
+
     /**
      * The compact shape every payload that shows a priority uses, so an issue
      * row can draw its icon and color without a lookup into the project's

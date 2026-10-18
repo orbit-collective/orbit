@@ -14,9 +14,11 @@ use App\Services\IssueService;
 use App\Services\IssueTypeFieldService;
 use App\Services\IssueTypeService;
 use App\Services\LabelService;
+use App\Services\PriorityService;
 use App\Services\ProjectService;
 use App\Services\UserService;
 use App\Services\WorkflowService;
+use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +36,7 @@ class IssueController extends Controller
         protected UserService $userService,
         protected ProjectService $projectService,
         protected LabelService $labelService,
+        protected PriorityService $priorityService,
         protected IssueTypeService $issueTypeService,
         protected IssueTypeFieldService $issueTypeFieldService,
         protected WorkflowService $workflowService,
@@ -41,6 +44,19 @@ class IssueController extends Controller
         protected GithubRepositoryRepository $githubRepositoryRepository,
         protected GithubBranchService $githubBranchService,
     ) {}
+
+    /**
+     * A priority is sent by name and has to be one of the project's own
+     * (case-insensitive), so a name from another project's scale is refused.
+     */
+    private function priorityRule(Project $project): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail) use ($project) {
+            if ($value !== null && $this->priorityService->findByName($project, (string) $value) === null) {
+                $fail('The selected priority is invalid.');
+            }
+        };
+    }
 
     public function show(Request $request, Project $project, Issue $issue): Response
     {
@@ -58,6 +74,7 @@ class IssueController extends Controller
             'issue' => $issueWithRelations,
             'users' => $this->userService->getAssignableUsersForProject($project->id),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
+            'priorities' => $this->priorityService->getPriorities($project)->map->toOption()->values(),
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
             'nextIssueId' => $this->issueService->peekNextIssueId($project),
             'ancestors' => $this->issueService->ancestorsOf($issue)->values(),
@@ -127,7 +144,8 @@ class IssueController extends Controller
             'number' => $issue->number,
             'title' => $issue->title,
             'workflowStatus' => $issue->workflowStatus?->toArray(),
-            'priority' => $issue->priority,
+            'priority' => $issue->priority?->name,
+            'priorityDetails' => $issue->priority?->toDetails(),
             'labels' => $issue->labelNames(),
             'start_date' => $issue->start_date,
             'end_date' => $issue->end_date,
@@ -213,13 +231,14 @@ class IssueController extends Controller
         // nobody has opened yet, and the issue's issue_type_id/
         // workflow_status_id backfill wouldn't have run yet either.
         $this->labelService->ensureSystemLabels($issue->project);
+        $this->priorityService->ensureSystemPriorities($issue->project);
         $this->issueTypeService->ensureSystemIssueTypes($issue->project);
         $issue->refresh();
 
         $data = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
-            'priority' => 'sometimes|required|string',
+            'priority' => ['sometimes', 'required', 'string', $this->priorityRule($issue->project)],
             'issue_type_id' => 'sometimes|required|integer',
             'workflow_status_id' => 'sometimes|required|integer',
             'parent_id' => 'sometimes|nullable|integer',
@@ -344,7 +363,7 @@ class IssueController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'project_id' => 'required|exists:projects,id',
-            'priority' => 'required|string',
+            'priority' => 'nullable|string',
             'issue_type_id' => 'nullable|integer',
             'workflow_status_id' => 'nullable|integer',
             'template_id' => 'nullable|integer',
@@ -370,9 +389,11 @@ class IssueController extends Controller
         // error that leaks which label names exist in a project it can't
         // access.
         $this->labelService->ensureSystemLabels($project);
+        $this->priorityService->ensureSystemPriorities($project);
         $this->issueTypeService->ensureSystemIssueTypes($project);
 
         $request->validate([
+            'priority' => ['nullable', 'string', $this->priorityRule($project)],
             'labels.*' => [
                 'string',
                 Rule::exists('labels', 'name')->where('project_id', $project->id),

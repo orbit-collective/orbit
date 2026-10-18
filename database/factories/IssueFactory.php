@@ -25,7 +25,6 @@ class IssueFactory extends Factory
         return [
             'title' => fake()->sentence(3),
             'description' => fake()->paragraph(),
-            'priority' => fake()->randomElement(['low', 'medium', 'high']),
             'project_id' => Project::factory(),
             'user_id' => User::factory(),
             'assignee_id' => fake()->boolean(90) ? User::factory() : null,

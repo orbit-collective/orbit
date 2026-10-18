@@ -96,7 +96,7 @@ test('ChangePriorityAction updates priority', function () {
 
     app(ChangePriorityAction::class)->handle($issue, ['priority' => 'high']);
 
-    expect($issue->fresh()->priority)->toBe('high');
+    expect($issue->fresh()->priority->name)->toBe('High');
 });
 
 test('ChangePriorityAction ignores an invalid priority', function () {
@@ -104,7 +104,7 @@ test('ChangePriorityAction ignores an invalid priority', function () {
 
     app(ChangePriorityAction::class)->handle($issue, ['priority' => 'urgent']);
 
-    expect($issue->fresh()->priority)->toBe('low');
+    expect($issue->fresh()->priority->name)->toBe('Low');
 });
 
 test('AssignUserAction assigns a project member', function () {

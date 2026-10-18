@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Issue;
 use App\Models\Label;
+use App\Models\Priority;
 use App\Models\Project;
 use App\Models\WorkflowStatus;
 use App\Support\Cache\CacheVersion;
@@ -168,44 +169,75 @@ class IssueRepository
         return $issue;
     }
 
+    public function findPriority(int|string|null $id): ?Priority
+    {
+        return $id ? Priority::query()->find($id) : null;
+    }
+
     /**
      * Counts of every issue in the user's projects by priority and by workflow
      * status category (an issue without a status counts as to do), from one
      * grouped query - the dashboard only draws totals, so it never needs the
      * issue rows themselves.
      *
-     * @return array{total: int, priority: array{high: int, medium: int, low: int}, category: array{todo: int, in_progress: int, done: int}}
+     * Priorities are counted by name across projects (projects may colour or
+     * order them differently, so the lowest position and one colour/icon of
+     * the name stand for it); issues with no priority are counted apart.
+     *
+     * @return array{total: int, priority: list<array{name: string, color: string, icon: string, position: int, count: int}>, noPriority: int, category: array{todo: int, in_progress: int, done: int}}
      */
     public function statsForUser(int $userId): array
     {
         $stats = [
             'total' => 0,
-            'priority' => ['high' => 0, 'medium' => 0, 'low' => 0],
+            'priority' => [],
+            'noPriority' => 0,
             'category' => ['todo' => 0, 'in_progress' => 0, 'done' => 0],
         ];
 
         $rows = Issue::query()
             ->leftJoin('workflow_statuses', 'issues.workflow_status_id', '=', 'workflow_statuses.id')
+            ->leftJoin('priorities', 'issues.priority_id', '=', 'priorities.id')
             ->whereIn('issues.project_id', fn ($members) => $members
                 ->select('project_id')
                 ->from('project_user')
                 ->where('user_id', $userId))
-            ->selectRaw("issues.priority, COALESCE(workflow_statuses.category, 'todo') as category, COUNT(*) as total")
-            ->groupBy('issues.priority', 'category')
+            ->selectRaw("lower(priorities.name) as priority_key, MIN(priorities.name) as priority_name, MIN(priorities.color) as color, MIN(priorities.icon) as icon, MIN(priorities.position) as position, COALESCE(workflow_statuses.category, 'todo') as category, COUNT(*) as total")
+            ->groupBy('priority_key', 'category')
             ->toBase()
             ->get();
+
+        $byPriority = [];
 
         foreach ($rows as $row) {
             $stats['total'] += (int) $row->total;
 
-            if (isset($stats['priority'][$row->priority])) {
-                $stats['priority'][$row->priority] += (int) $row->total;
-            }
-
             if (isset($stats['category'][$row->category])) {
                 $stats['category'][$row->category] += (int) $row->total;
             }
+
+            if ($row->priority_key === null) {
+                $stats['noPriority'] += (int) $row->total;
+
+                continue;
+            }
+
+            $entry = $byPriority[$row->priority_key] ??= [
+                'name' => $row->priority_name,
+                'color' => $row->color,
+                'icon' => $row->icon,
+                'position' => (int) $row->position,
+                'count' => 0,
+            ];
+            $entry['position'] = min($entry['position'], (int) $row->position);
+            $entry['count'] += (int) $row->total;
+            $byPriority[$row->priority_key] = $entry;
         }
+
+        $stats['priority'] = collect($byPriority)
+            ->sortBy([['position', 'asc'], ['name', 'asc']])
+            ->values()
+            ->all();
 
         return $stats;
     }
@@ -224,7 +256,7 @@ class IssueRepository
             ->where('issues.start_date', '<=', $to)
             ->whereRaw('COALESCE(issues.end_date, issues.start_date) >= ?', [$from])
             ->with(['assignee', 'issueType', 'workflowStatus', 'labels'])
-            ->orderByRaw("CASE WHEN issues.priority = 'high' THEN 1 WHEN issues.priority = 'medium' THEN 2 WHEN issues.priority = 'low' THEN 3 ELSE 4 END")
+            ->tap(fn ($query) => $this->orderByPriority($query, 'asc'))
             ->orderBy('issues.id');
 
         $this->applySearchAndFilters($query, $searchParams, $filters);
@@ -305,11 +337,7 @@ class IssueRepository
                     break;
 
                 case 'priority':
-                    if ($direction === 'asc') {
-                        $query->orderByRaw("CASE WHEN priority = 'high' THEN 1 WHEN priority = 'medium' THEN 2 WHEN priority = 'low' THEN 3 ELSE 4 END");
-                    } else {
-                        $query->orderByRaw("CASE WHEN priority = 'high' THEN 4 WHEN priority = 'medium' THEN 3 WHEN priority = 'low' THEN 2 ELSE 1 END");
-                    }
+                    $this->orderByPriority($query, $direction);
                     break;
 
                 case 'assignee':
@@ -344,6 +372,19 @@ class IssueRepository
     }
 
     /**
+     * Orders by the priority's place in its project's scale: ascending puts
+     * the most important first and issues without a priority last,
+     * descending is the exact reverse.
+     */
+    private function orderByPriority(Builder $query, string $direction): void
+    {
+        $position = '(select position from priorities where priorities.id = issues.priority_id)';
+
+        $query->orderByRaw("$position is null ".($direction === 'desc' ? 'desc' : 'asc'))
+            ->orderByRaw("$position ".($direction === 'desc' ? 'desc' : 'asc'));
+    }
+
+    /**
      * Applies the search box and filter-chip conditions (search, status,
      * priority, labels, assignee) shared by every unfiltered/filtered issue
      * listing query, in place on the given query builder.
@@ -366,7 +407,9 @@ class IssueRepository
                             ->orWhere('category', 'like', '%'.str_replace(' ', '_', strtolower((string) $value)).'%'));
                     } elseif ($key === 'labels') {
                         $q->whereHas('labels', fn ($label) => $label->where('labels.name', 'like', "%$value%"));
-                    } elseif (in_array($key, ['title', 'priority'])) {
+                    } elseif ($key === 'priority') {
+                        $q->whereHas('priority', fn ($priority) => $priority->where('priorities.name', 'like', "%$value%"));
+                    } elseif ($key === 'title') {
                         $q->where($key, 'like', "%$value%");
                     }
                 }
@@ -392,7 +435,11 @@ class IssueRepository
             }
             if (! empty($filters['priority'])) {
                 $values = is_array($filters['priority']) ? $filters['priority'] : explode(',', $filters['priority']);
-                $query->whereIn('priority', array_filter($values));
+                $priorityIds = array_values(array_filter(array_map('intval', $values)));
+
+                if ($priorityIds !== []) {
+                    $query->whereIn('issues.priority_id', $priorityIds);
+                }
             }
             if (! empty($filters['labels'])) {
                 $values = is_array($filters['labels']) ? $filters['labels'] : explode(',', $filters['labels']);

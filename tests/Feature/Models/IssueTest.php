@@ -20,7 +20,7 @@ test('a factory-created issue persists with the expected attribute types', funct
 
     expect($issue->exists)->toBeTrue()
         ->and($issue->title)->toBeString()
-        ->and($issue->priority)->toBeIn(['low', 'medium', 'high']);
+        ->and($issue->priority->name)->toBe('Medium');
 });
 
 test('mass assignment via fillable creates an issue', function () {
@@ -203,7 +203,6 @@ test('dropping the status column moves each legacy value onto the matching workf
     $insert = fn (string $legacy) => DB::table('issues')->insertGetId([
         'title' => "Legacy $legacy",
         'status' => $legacy,
-        'priority' => 'low',
         'project_id' => $project->id,
         'user_id' => $user->id,
         'created_at' => now(),

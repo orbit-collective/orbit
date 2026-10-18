@@ -71,6 +71,26 @@ class PriorityService
         return $this->priorityRepository->findByName($project, $name);
     }
 
+    /**
+     * The id of the project's priority with the given name (case-insensitive),
+     * or null. Used where only a project id is at hand, e.g. when an issue
+     * resolves the name it was assigned.
+     */
+    public function idByName(int $projectId, string $name): ?int
+    {
+        $project = Project::query()->find($projectId);
+
+        return $project ? $this->findByName($project, $name)?->id : null;
+    }
+
+    /** The id of the project's default priority, seeding the starter scale first. */
+    public function defaultId(int $projectId): ?int
+    {
+        $project = Project::query()->find($projectId);
+
+        return $project ? $this->defaultFor($project)?->id : null;
+    }
+
     public function createPriority(Project $project, array $data): Priority
     {
         $this->ensureSystemPriorities($project);
