@@ -1247,3 +1247,25 @@ test('the issue page exposes what the acting user may change, mirroring update()
         'changeLabels' => false,
     ]);
 });
+
+test('an issue priority can be cleared by sending null, and the change is logged', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high']);
+
+    $this->actingAs($user)->patch("/issues/$issue->id", ['priority' => null])->assertRedirect();
+
+    expect($issue->fresh()->priority_id)->toBeNull();
+    $this->assertDatabaseHas('activity_logs', ['project_id' => $project->id]);
+});
+
+test('clearing a priority still needs the change-priority permission', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high']);
+    $viewer = User::factory()->create();
+    addProjectMember($project, $viewer->id, 'viewer');
+
+    $this->actingAs($viewer)->patch("/issues/$issue->id", ['priority' => null])->assertForbidden();
+
+    expect($issue->fresh()->priority->name)->toBe('High');
+});

@@ -225,7 +225,7 @@ class IssueController extends Controller
         $data = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
-            'priority' => ['sometimes', 'required', 'string', new ProjectPriorityName($issue->project)],
+            'priority' => ['sometimes', 'nullable', 'string', new ProjectPriorityName($issue->project)],
             'issue_type_id' => 'sometimes|required|integer',
             'workflow_status_id' => 'sometimes|required|integer',
             'parent_id' => 'sometimes|nullable|integer',
