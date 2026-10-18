@@ -4,9 +4,11 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { useAlert } from '@/context/AlertContext';
 import { useProjectLabels } from '@/context/ProjectLabelsContext';
+import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
 import { useSavedFilters } from '@/hooks/useSavedFilters';
 import { SavedFiltersDropdownProps } from '@/types/Components';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import { cn } from '@/utils/cn';
 import FilterButton from '../FilterButton/FilterButton';
 
@@ -39,6 +41,7 @@ const pickFilters = (
 const describeFilters = (
     filters: Record<string, any>,
     labels: ProjectLabel[],
+    priorities: ProjectPriority[],
 ) =>
     Object.entries(pickFilters(filters))
         .map(([key, value]) => {
@@ -51,6 +54,19 @@ const describeFilters = (
             if (key === 'labels') {
                 const names = values.map(
                     (id) => labels.find((l) => String(l.id) === id)?.name,
+                );
+
+                return names.every(Boolean)
+                    ? `${label}: ${names.join(', ')}`
+                    : `${label}: ${values.length} selected`;
+            }
+
+            if (key === 'priority') {
+                const names = values.map(
+                    (id) =>
+                        priorities.find(
+                            (priority) => String(priority.id) === id,
+                        )?.name,
                 );
 
                 return names.every(Boolean)
@@ -73,6 +89,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
 }) => {
     const { addAlert } = useAlert();
     const { labels } = useProjectLabels();
+    const { priorities } = useProjectPriorities();
 
     const { savedFilters, saveFilter, deleteFilter } = useSavedFilters(
         initialSavedFilters,
@@ -167,7 +184,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                 {activeFilterCount > 0 ? (
                     <div className="flex flex-col gap-2">
                         <p className="truncate text-[11px] text-[var(--text-muted-color)]">
-                            {describeFilters(activeFilters, labels)}
+                            {describeFilters(activeFilters, labels, priorities)}
                         </p>
                         <div className="flex items-center gap-1.5">
                             <input
@@ -280,6 +297,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                         {describeFilters(
                                             filter.query_params,
                                             labels,
+                                            priorities,
                                         )}
                                     </p>
                                 </div>

@@ -2,7 +2,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
 import { SavedFilter } from '@/hooks/useSavedFilters';
+import { priorities } from '@/stories/fixtures';
 import SavedFiltersDropdown from './SavedFiltersDropdown';
 
 const mockRouter = vi.hoisted(() => ({
@@ -224,6 +226,48 @@ describe('SavedFiltersDropdown Component', () => {
         expect(await screen.findByText('Open bugs')).toBeInTheDocument();
         expect(
             screen.getByText('Labels: bug, ux · Status: open'),
+        ).toBeInTheDocument();
+    });
+
+    test('lists a saved priority filter by the priority names', async () => {
+        render(
+            <ProjectPrioritiesProvider priorities={priorities}>
+                <SavedFiltersDropdown
+                    savedFilters={[
+                        makeSavedFilter({
+                            id: 1,
+                            name: 'Urgent stuff',
+                            query_params: { priority: '1,3' },
+                        }),
+                    ]}
+                    isOpen
+                    onOpenChange={vi.fn()}
+                />
+            </ProjectPrioritiesProvider>,
+        );
+
+        expect(
+            await screen.findByText('Priority: High, Low'),
+        ).toBeInTheDocument();
+    });
+
+    test('summarises priority ids it cannot resolve as a count', async () => {
+        render(
+            <SavedFiltersDropdown
+                savedFilters={[
+                    makeSavedFilter({
+                        id: 1,
+                        name: 'Gone',
+                        query_params: { priority: '41,42' },
+                    }),
+                ]}
+                isOpen
+                onOpenChange={vi.fn()}
+            />,
+        );
+
+        expect(
+            await screen.findByText('Priority: 2 selected'),
         ).toBeInTheDocument();
     });
 
