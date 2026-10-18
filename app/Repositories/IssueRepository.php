@@ -182,9 +182,11 @@ class IssueRepository
      *
      * Priorities are counted by name across projects (projects may colour or
      * order them differently, so the lowest position and one colour/icon of
-     * the name stand for it); issues with no priority are counted apart.
+     * the name stand for it); issues with no priority are counted apart, and
+     * `topPriority` counts the issues sitting at the top of their own
+     * project's scale (position 0), whatever that priority is called.
      *
-     * @return array{total: int, priority: list<array{name: string, color: string, icon: string, position: int, count: int}>, noPriority: int, category: array{todo: int, in_progress: int, done: int}}
+     * @return array{total: int, priority: list<array{name: string, color: string, icon: string, position: int, count: int}>, noPriority: int, topPriority: int, category: array{todo: int, in_progress: int, done: int}}
      */
     public function statsForUser(int $userId): array
     {
@@ -192,6 +194,7 @@ class IssueRepository
             'total' => 0,
             'priority' => [],
             'noPriority' => 0,
+            'topPriority' => 0,
             'category' => ['todo' => 0, 'in_progress' => 0, 'done' => 0],
         ];
 
@@ -202,7 +205,7 @@ class IssueRepository
                 ->select('project_id')
                 ->from('project_user')
                 ->where('user_id', $userId))
-            ->selectRaw("lower(priorities.name) as priority_key, MIN(priorities.name) as priority_name, MIN(priorities.color) as color, MIN(priorities.icon) as icon, MIN(priorities.position) as position, COALESCE(workflow_statuses.category, 'todo') as category, COUNT(*) as total")
+            ->selectRaw("lower(priorities.name) as priority_key, MIN(priorities.name) as priority_name, MIN(priorities.color) as color, MIN(priorities.icon) as icon, MIN(priorities.position) as position, SUM(CASE WHEN priorities.position = 0 THEN 1 ELSE 0 END) as top_total, COALESCE(workflow_statuses.category, 'todo') as category, COUNT(*) as total")
             ->groupBy('priority_key', 'category')
             ->toBase()
             ->get();
@@ -215,6 +218,8 @@ class IssueRepository
             if (isset($stats['category'][$row->category])) {
                 $stats['category'][$row->category] += (int) $row->total;
             }
+
+            $stats['topPriority'] += (int) $row->top_total;
 
             if ($row->priority_key === null) {
                 $stats['noPriority'] += (int) $row->total;
