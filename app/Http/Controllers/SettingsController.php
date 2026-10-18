@@ -20,6 +20,7 @@ use App\Services\LabelService;
 use App\Services\NotificationRetentionService;
 use App\Services\NotificationSettingService;
 use App\Services\PermissionService;
+use App\Services\PriorityService;
 use App\Services\ProjectIntegrationService;
 use App\Services\ProjectInvitationService;
 use App\Services\ProjectMemberService;
@@ -57,6 +58,7 @@ class SettingsController extends Controller
         protected JiraIntegrationService $jiraIntegrationService,
         protected GithubIntegrationService $githubIntegrationService,
         protected LabelService $labelService,
+        protected PriorityService $priorityService,
         protected IssueTypeService $issueTypeService,
         protected AutomationRuleService $automationRuleService,
     ) {}
@@ -134,6 +136,8 @@ class SettingsController extends Controller
             'labels' => $hasLabelsAccess
                 ? $this->mapLabels($this->labelService->getLabels($selectedProject))
                 : [],
+            // Templates also pick a default priority from the project's scale.
+            'priorities' => $this->priorityOptions($selectedProject, $user),
             'hasIssueTypesAccess' => $hasIssueTypesAccess,
             'canCreateIssueTypes' => $this->can($selectedProject, $user, PermissionEnum::ISSUE_TYPES_CREATE),
             'canUpdateIssueTypes' => $this->can($selectedProject, $user, PermissionEnum::ISSUE_TYPES_UPDATE),
@@ -251,6 +255,10 @@ class SettingsController extends Controller
             'labels' => $canUpdateIntegrations
                 ? $this->mapLabels($this->labelService->getLabels($selectedProject))
                 : [],
+            // The priority mapping lands Jira priorities on the project's own.
+            'priorities' => $canUpdateIntegrations
+                ? $this->priorityOptions($selectedProject, $user)
+                : [],
         ]);
     }
 
@@ -275,6 +283,10 @@ class SettingsController extends Controller
             // the project's own workflow statuses.
             'issueTypes' => $hasAutomationAccess
                 ? $this->issueTypeService->getIssueTypes($selectedProject)
+                : [],
+            // The change-priority action picks one of the project's priorities.
+            'priorities' => $hasAutomationAccess
+                ? $this->priorityOptions($selectedProject, $user)
                 : [],
             'hasAutomationAccess' => $hasAutomationAccess,
             'canUpdateAutomation' => $canUpdateAutomation,
@@ -332,6 +344,14 @@ class SettingsController extends Controller
             ])->values(),
             'selectedProjectId' => $selectedProject?->id,
         ];
+    }
+
+    /** The project's priorities as picker options, or none without the priorities.view permission. */
+    private function priorityOptions(?Project $project, User $user): array
+    {
+        return $this->can($project, $user, PermissionEnum::PRIORITIES_VIEW)
+            ? $this->priorityService->getPriorities($project)->map->toOption()->values()->all()
+            : [];
     }
 
     private function can(?Project $project, User $user, PermissionEnum $permission): bool
