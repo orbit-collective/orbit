@@ -679,5 +679,18 @@ test('dashboard stats count priorities by name across projects and issues withou
     expect($stats['priority'])->toHaveCount(1)
         ->and($stats['priority'][0])->toMatchArray(['name' => 'High', 'count' => 3, 'position' => 0])
         ->and($stats['noPriority'])->toBe(1)
+        ->and($stats['topPriority'])->toBe(3)
         ->and($stats['total'])->toBe(4);
+});
+
+test('the top priority is each project\'s own first priority, whatever it is called', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'member');
+    $ids = app(PriorityService::class)->getPriorities($project)->pluck('id', 'name');
+    app(PriorityService::class)->reorder($project, [$ids['Low'], $ids['Medium'], $ids['High']]);
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low']);
+    Issue::factory()->count(2)->create(['project_id' => $project->id, 'priority' => 'high']);
+
+    expect($this->repository->statsForUser($user->id)['topPriority'])->toBe(1);
 });
