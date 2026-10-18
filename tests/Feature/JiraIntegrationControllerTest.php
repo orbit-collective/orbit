@@ -164,3 +164,26 @@ test('a member without the integrations.update permission cannot trigger an impo
 
     $response->assertForbidden();
 });
+
+test('a priority mapping must land on one of the project\'s priorities and is stored under its own spelling', function () {
+    ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'jira',
+        'enabled' => true,
+        'credentials' => ['instance_url' => 'https://example.atlassian.net', 'email' => 'a@b.com', 'api_token' => 'secret'],
+    ]);
+
+    $this->actingAs($this->admin)->put("/projects/{$this->project->id}/integrations/jira/mappings", [
+        'mappings' => [['mapping_type' => 'priority', 'external_value' => 'Highest', 'orbit_value' => 'urgent']],
+    ])->assertSessionHasErrors('mappings.0.orbit_value');
+
+    $this->actingAs($this->admin)->put("/projects/{$this->project->id}/integrations/jira/mappings", [
+        'mappings' => [
+            ['mapping_type' => 'priority', 'external_value' => 'Highest', 'orbit_value' => 'hIGH'],
+            ['mapping_type' => 'status', 'external_value' => 'To Do', 'orbit_value' => 'open'],
+        ],
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('integration_field_mappings', ['external_value' => 'Highest', 'orbit_value' => 'High']);
+    $this->assertDatabaseHas('integration_field_mappings', ['external_value' => 'To Do', 'orbit_value' => 'open']);
+});

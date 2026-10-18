@@ -4,6 +4,7 @@ use App\Enums\IntegrationFieldMappingType;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Services\Integrations\FieldMappingResolverService;
+use App\Services\PriorityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -33,9 +34,19 @@ test('resolve falls back to the default status when unmapped', function () {
         ->toBe('todo');
 });
 
-test('resolve falls back to the default priority when unmapped', function () {
+test('resolve falls back to the project default priority when unmapped', function () {
     expect($this->service->resolve($this->projectIntegration, IntegrationFieldMappingType::PRIORITY, 'Urgent'))
-        ->toBe('medium');
+        ->toBe('Medium');
+});
+
+test('the unmapped priority follows whichever priority the project made its default', function () {
+    $project = $this->projectIntegration->project;
+    app(PriorityService::class)->ensureSystemPriorities($project);
+    $project->priorities()->where('name', 'Medium')->update(['is_default' => false]);
+    $project->priorities()->where('name', 'Low')->update(['is_default' => true, 'name' => 'Whenever']);
+
+    expect($this->service->resolve($this->projectIntegration, IntegrationFieldMappingType::PRIORITY, 'Urgent'))
+        ->toBe('Whenever');
 });
 
 test('resolve returns null for an unmapped label, since labels have no default', function () {

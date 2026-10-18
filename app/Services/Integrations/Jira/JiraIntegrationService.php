@@ -12,6 +12,7 @@ use App\Repositories\IntegrationFieldMappingRepository;
 use App\Repositories\ProjectIntegrationRepository;
 use App\Services\ActivityLogService;
 use App\Services\Integrations\IntegrationImporterRegistry;
+use App\Services\PriorityService;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Throwable;
@@ -31,6 +32,7 @@ class JiraIntegrationService
         protected IntegrationFieldMappingRepository $integrationFieldMappingRepository,
         protected IntegrationImporterRegistry $integrationImporterRegistry,
         protected ActivityLogService $activityLogService,
+        protected PriorityService $priorityService,
     ) {}
 
     /**
@@ -71,11 +73,19 @@ class JiraIntegrationService
     public function saveMappings(ProjectIntegration $projectIntegration, array $mappings): void
     {
         foreach ($mappings as $mapping) {
+            $type = IntegrationFieldMappingType::from($mapping['mapping_type']);
+
+            // A priority is stored under the project's own spelling of its
+            // name, so a later rename or delete finds the mapping.
+            $orbitValue = $type === IntegrationFieldMappingType::PRIORITY
+                ? ($this->priorityService->findByName($projectIntegration->project, $mapping['orbit_value'])?->name ?? $mapping['orbit_value'])
+                : $mapping['orbit_value'];
+
             $this->integrationFieldMappingRepository->upsert(
                 $projectIntegration,
-                IntegrationFieldMappingType::from($mapping['mapping_type']),
+                $type,
                 $mapping['external_value'],
-                $mapping['orbit_value'],
+                $orbitValue,
                 $mapping['external_label'] ?? null,
             );
         }

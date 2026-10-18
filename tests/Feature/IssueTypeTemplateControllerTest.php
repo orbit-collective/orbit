@@ -115,3 +115,49 @@ test('updating a template keeps a markdown image link intact', function () {
         'description' => $description,
     ]);
 });
+
+test('a template stores its default priority under the project\'s own spelling', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    addProjectMember($project, $admin->id, 'admin');
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+
+    $this->actingAs($admin)->post("/projects/$project->id/issue-types/$issueType->id/templates", [
+        'name' => 'Urgent report',
+        'default_priority' => 'hIGH',
+    ])->assertRedirect();
+
+    $this->assertDatabaseHas('issue_type_templates', ['name' => 'Urgent report', 'default_priority' => 'High']);
+});
+
+test('a template rejects a default priority the project does not have', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    addProjectMember($project, $admin->id, 'admin');
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+
+    $this->actingAs($admin)->post("/projects/$project->id/issue-types/$issueType->id/templates", [
+        'name' => 'Report',
+        'default_priority' => 'urgent',
+    ])->assertSessionHasErrors('default_priority');
+});
+
+test('a template\'s default priority can be changed and cleared', function () {
+    $project = Project::factory()->create();
+    $admin = User::factory()->create();
+    addProjectMember($project, $admin->id, 'admin');
+    $issueType = $project->issueTypes()->create(['name' => 'Bug', 'icon' => 'Bug', 'color' => '#f44336']);
+    $template = $issueType->templates()->create(['name' => 'T', 'description' => '', 'default_priority' => 'High']);
+
+    $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id/templates/$template->id", [
+        'name' => 'T',
+        'default_priority' => 'low',
+    ])->assertRedirect();
+    expect($template->fresh()->default_priority)->toBe('Low');
+
+    $this->actingAs($admin)->patch("/projects/$project->id/issue-types/$issueType->id/templates/$template->id", [
+        'name' => 'T',
+        'default_priority' => null,
+    ])->assertRedirect();
+    expect($template->fresh()->default_priority)->toBeNull();
+});
