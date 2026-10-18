@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\IssueType;
 use App\Models\IssueTypeTemplate;
 use App\Models\Project;
+use App\Rules\ProjectPriorityName;
 use App\Services\IssueTypeTemplateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +25,7 @@ class IssueTypeTemplateController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
-            'default_priority' => ['nullable', 'string'],
+            'default_priority' => ['nullable', 'string', new ProjectPriorityName($project)],
             'default_labels' => ['sometimes', 'array'],
             'default_labels.*' => ['string'],
         ]);
@@ -43,7 +44,7 @@ class IssueTypeTemplateController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
-            'default_priority' => ['nullable', 'string'],
+            'default_priority' => ['nullable', 'string', new ProjectPriorityName($project)],
             'default_labels' => ['sometimes', 'array'],
             'default_labels.*' => ['string'],
         ]);

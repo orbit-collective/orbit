@@ -12,6 +12,7 @@ class IssueTypeTemplateService
     public function __construct(
         protected IssueTypeTemplateRepository $issueTypeTemplateRepository,
         protected ActivityLogService $activityLogService,
+        protected PriorityService $priorityService,
     ) {}
 
     public function createTemplate(IssueType $issueType, array $data): IssueTypeTemplate
@@ -21,7 +22,7 @@ class IssueTypeTemplateService
         $template = $this->issueTypeTemplateRepository->create($issueType, [
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'default_priority' => $data['default_priority'] ?? null,
+            'default_priority' => $this->canonicalPriority($issueType, $data['default_priority'] ?? null),
             'default_labels' => $data['default_labels'] ?? [],
         ]);
 
@@ -36,11 +37,29 @@ class IssueTypeTemplateService
             $this->assertNameAvailable($issueType, $data['name']);
         }
 
+        if (array_key_exists('default_priority', $data)) {
+            $data['default_priority'] = $this->canonicalPriority($issueType, $data['default_priority']);
+        }
+
         $template = $this->issueTypeTemplateRepository->update($template, $data);
 
         $this->activityLogService->log($issueType->project_id, "Updated the \"$template->name\" template on the \"$issueType->name\" issue type");
 
         return $template;
+    }
+
+    /**
+     * A template keeps its default priority as the priority's name; the name
+     * the caller typed is stored as the project's own spelling of it, so a
+     * later rename finds it, and a name the project does not have is dropped.
+     */
+    private function canonicalPriority(IssueType $issueType, ?string $name): ?string
+    {
+        if ($name === null || trim($name) === '') {
+            return null;
+        }
+
+        return $this->priorityService->findByName($issueType->project, $name)?->name;
     }
 
     public function deleteTemplate(IssueType $issueType, IssueTypeTemplate $template): void

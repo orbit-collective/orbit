@@ -6,7 +6,9 @@ use App\Enums\IntegrationFieldMappingType;
 use App\Models\Project;
 use App\Models\ProjectIntegration;
 use App\Repositories\ProjectIntegrationRepository;
+use App\Rules\ProjectPriorityName;
 use App\Services\Integrations\Jira\JiraIntegrationService;
+use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -48,7 +50,19 @@ class JiraIntegrationController extends Controller
             'mappings.*.mapping_type' => ['required', Rule::enum(IntegrationFieldMappingType::class)],
             'mappings.*.external_value' => ['required', 'string', 'max:255'],
             'mappings.*.external_label' => ['nullable', 'string', 'max:255'],
-            'mappings.*.orbit_value' => ['required', 'string', 'max:255'],
+            'mappings.*.orbit_value' => [
+                'required',
+                'string',
+                'max:255',
+                // A priority mapping has to land on one of the project's own priorities.
+                function (string $attribute, mixed $value, Closure $fail) use ($project, $request) {
+                    $type = $request->input(str_replace('orbit_value', 'mapping_type', $attribute));
+
+                    if ($type === IntegrationFieldMappingType::PRIORITY->value) {
+                        (new ProjectPriorityName($project))->validate($attribute, $value, $fail);
+                    }
+                },
+            ],
         ]);
 
         $projectIntegration = $this->findConnectedIntegration($project);

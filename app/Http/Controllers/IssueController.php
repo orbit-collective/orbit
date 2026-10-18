@@ -9,6 +9,7 @@ use App\Models\Label;
 use App\Models\Project;
 use App\Repositories\GithubRepositoryRepository;
 use App\Repositories\ProjectIntegrationRepository;
+use App\Rules\ProjectPriorityName;
 use App\Services\Integrations\Github\GithubBranchService;
 use App\Services\IssueService;
 use App\Services\IssueTypeFieldService;
@@ -18,7 +19,6 @@ use App\Services\PriorityService;
 use App\Services\ProjectService;
 use App\Services\UserService;
 use App\Services\WorkflowService;
-use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,19 +44,6 @@ class IssueController extends Controller
         protected GithubRepositoryRepository $githubRepositoryRepository,
         protected GithubBranchService $githubBranchService,
     ) {}
-
-    /**
-     * A priority is sent by name and has to be one of the project's own
-     * (case-insensitive), so a name from another project's scale is refused.
-     */
-    private function priorityRule(Project $project): Closure
-    {
-        return function (string $attribute, mixed $value, Closure $fail) use ($project) {
-            if ($value !== null && $this->priorityService->findByName($project, (string) $value) === null) {
-                $fail('The selected priority is invalid.');
-            }
-        };
-    }
 
     public function show(Request $request, Project $project, Issue $issue): Response
     {
@@ -238,7 +225,7 @@ class IssueController extends Controller
         $data = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|nullable|string',
-            'priority' => ['sometimes', 'required', 'string', $this->priorityRule($issue->project)],
+            'priority' => ['sometimes', 'required', 'string', new ProjectPriorityName($issue->project)],
             'issue_type_id' => 'sometimes|required|integer',
             'workflow_status_id' => 'sometimes|required|integer',
             'parent_id' => 'sometimes|nullable|integer',
@@ -393,7 +380,7 @@ class IssueController extends Controller
         $this->issueTypeService->ensureSystemIssueTypes($project);
 
         $request->validate([
-            'priority' => ['nullable', 'string', $this->priorityRule($project)],
+            'priority' => ['nullable', 'string', new ProjectPriorityName($project)],
             'labels.*' => [
                 'string',
                 Rule::exists('labels', 'name')->where('project_id', $project->id),
