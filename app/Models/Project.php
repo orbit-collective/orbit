@@ -27,6 +27,7 @@ class Project extends Model
         'color',
         'columns',
         'labels_seeded_at',
+        'priorities_seeded_at',
         'issue_types_seeded_at',
         'issue_type_defaults_version',
         'next_issue_number',
@@ -35,6 +36,7 @@ class Project extends Model
     protected $casts = [
         'columns' => 'array',
         'labels_seeded_at' => 'datetime',
+        'priorities_seeded_at' => 'datetime',
         'issue_types_seeded_at' => 'datetime',
         'issue_type_defaults_version' => 'integer',
     ];
@@ -80,6 +82,11 @@ class Project extends Model
     public function labels(): HasMany
     {
         return $this->hasMany(Label::class);
+    }
+
+    public function priorities(): HasMany
+    {
+        return $this->hasMany(Priority::class);
     }
 
     public function attachments(): HasMany
