@@ -117,8 +117,17 @@ Notes:
   [`../labels/README.md`](../labels/README.md)).
 - The **target** side of every mapping row is the importing project's
   own configuration, not a fixed enum: its issue types, the workflow
-  statuses those types define, and its labels (see
-  [`../issue-types/README.md`](../issue-types/README.md)). A status
+  statuses those types define, its labels (see
+  [`../issue-types/README.md`](../issue-types/README.md)) and its
+  priorities (the `priorities` prop `SettingsController::integrations()`
+  sends, only to users who can update integrations and have
+  `projects.priorities.view`; see
+  [`../priorities/README.md`](../priorities/README.md)). A priority
+  mapping's `orbit_value` is a priority **name**, kept in step by
+  `PriorityRepository::replaceNameReferences()` when that priority is
+  renamed (updated) or deleted (the mapping row is removed), and an
+  unmapped remote priority becomes the project's default priority
+  (`FieldMappingResolverService`). A status
   target is offered as the union of every type's status names, because
   the type an issue lands on is only known at import time — the backend
   then resolves that name against the type it actually got.

@@ -21,14 +21,19 @@ pass a function (`({ isOpen }) => …`) if the trigger changes while open.
 
 ```tsx
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
+import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
+
+// A project's priorities are its own (see ../priorities/README.md), so the
+// options come from the provider rather than a hardcoded list.
+const { priorities } = useProjectPriorities();
 
 <Dropdown
     variant="select"
     title="Priority"
-    options={[
-        { value: 'high', label: 'High' },
-        { value: 'low', label: 'Low' },
-    ]}
+    options={priorities.map((priority) => ({
+        value: priority.name,
+        label: priority.name,
+    }))}
     selectedValues={[priority]}
     onSelect={(value) => setPriority(value)}
     trigger={<button type="button">{priority}</button>}
