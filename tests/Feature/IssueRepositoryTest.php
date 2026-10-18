@@ -4,6 +4,7 @@ use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\IssueRepository;
+use App\Services\PriorityService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -94,10 +95,12 @@ test('getForProject respects the priority filter', function () {
     Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high']);
     Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low']);
 
-    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['priority' => ['high']]);
+    $highId = $project->priorities()->where('name', 'High')->value('id');
+
+    $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31', [], ['priority' => [$highId]]);
 
     expect($issues)->toHaveCount(1)
-        ->and($issues->first()->priority)->toBe('high');
+        ->and($issues->first()->priority->name)->toBe('High');
 });
 
 test('getForProject respects the assignee filter, including unassigned', function () {
@@ -173,9 +176,9 @@ test('it returns issues ordered by priority', function () {
 
     $issues = $this->repository->getForProjectInRange($project->id, '1970-01-01', '2999-12-31');
 
-    expect($issues[0]->priority)->toBe('high')
-        ->and($issues[1]->priority)->toBe('medium')
-        ->and($issues[2]->priority)->toBe('low');
+    expect($issues[0]->priority->name)->toBe('High')
+        ->and($issues[1]->priority->name)->toBe('Medium')
+        ->and($issues[2]->priority->name)->toBe('Low');
 });
 
 test('it can search issues by title', function () {
@@ -613,4 +616,68 @@ test('findWorkflowStatus returns the status, or null for no id or an unknown one
     expect($this->repository->findWorkflowStatus($issue->workflow_status_id)->is($issue->workflowStatus))->toBeTrue()
         ->and($this->repository->findWorkflowStatus(null))->toBeNull()
         ->and($this->repository->findWorkflowStatus(999999))->toBeNull();
+});
+
+test('sorting by priority puts issues without one last ascending and first descending', function () {
+    $project = Project::factory()->create();
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low', 'title' => 'Low']);
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => null, 'title' => 'None']);
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high', 'title' => 'High']);
+
+    $titles = fn (string $direction) => collect($this->repository->getAllPaginated($project->id, 10, ['sort' => 'priority', 'direction' => $direction])->items())->pluck('title')->all();
+
+    expect($titles('AZ'))->toBe(['High', 'Low', 'None'])
+        ->and($titles('ZA'))->toBe(['None', 'Low', 'High']);
+});
+
+test('sorting follows a reordered scale rather than the old low-medium-high words', function () {
+    $project = Project::factory()->create();
+    $high = Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high', 'title' => 'High']);
+    $low = Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low', 'title' => 'Low']);
+    $ids = $project->priorities()->pluck('id', 'name');
+    app(PriorityService::class)->reorder($project, [$ids['Low'], $ids['Medium'], $ids['High']]);
+
+    $titles = collect($this->repository->getAllPaginated($project->id, 10, ['sort' => 'priority', 'direction' => 'AZ'])->items())->pluck('title')->all();
+
+    expect($titles)->toBe(['Low', 'High']);
+});
+
+test('the priority filter takes priority ids and several at once', function () {
+    $project = Project::factory()->create();
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high']);
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'medium']);
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low']);
+    $ids = $project->priorities()->whereIn('name', ['High', 'Low'])->pluck('id')->all();
+
+    $found = $this->repository->getAllPaginated($project->id, 10, [], [], ['priority' => $ids]);
+
+    expect($found->items())->toHaveCount(2);
+});
+
+test('searching "priority" matches the priority name', function () {
+    $project = Project::factory()->create();
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high', 'title' => 'A']);
+    Issue::factory()->create(['project_id' => $project->id, 'priority' => 'low', 'title' => 'B']);
+
+    $found = $this->repository->getAllPaginated($project->id, 10, [], ['priority' => 'hig']);
+
+    expect(collect($found->items())->pluck('title')->all())->toBe(['A']);
+});
+
+test('dashboard stats count priorities by name across projects and issues without one apart', function () {
+    $user = User::factory()->create();
+    $first = Project::factory()->create();
+    $second = Project::factory()->create();
+    addProjectMember($first, $user->id, 'member');
+    addProjectMember($second, $user->id, 'member');
+    Issue::factory()->count(2)->create(['project_id' => $first->id, 'priority' => 'high']);
+    Issue::factory()->create(['project_id' => $second->id, 'priority' => 'high']);
+    Issue::factory()->create(['project_id' => $second->id, 'priority' => null]);
+
+    $stats = $this->repository->statsForUser($user->id);
+
+    expect($stats['priority'])->toHaveCount(1)
+        ->and($stats['priority'][0])->toMatchArray(['name' => 'High', 'count' => 3, 'position' => 0])
+        ->and($stats['noPriority'])->toBe(1)
+        ->and($stats['total'])->toBe(4);
 });

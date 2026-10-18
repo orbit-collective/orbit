@@ -5,6 +5,7 @@ use App\Events\IssueCreated;
 use App\Events\IssueUnassigned;
 use App\Events\IssueUpdated;
 use App\Models\Issue;
+use App\Models\Priority;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkflowStatus;
@@ -454,6 +455,7 @@ test('updateIssue reports a priority change in the IssueUpdated payload', functi
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id, 'assignee_id' => null, 'priority' => 'low']);
 
+    $this->issueRepository->shouldReceive('findPriority')->andReturnUsing(fn ($id) => $id ? Priority::find($id) : null);
     $this->issueRepository->shouldReceive('update')
         ->once()
         ->andReturnUsing(function ($issue, $data) {
@@ -469,8 +471,8 @@ test('updateIssue reports a priority change in the IssueUpdated payload', functi
 
     Event::assertDispatched(
         IssueUpdated::class,
-        fn ($event) => $event->changes['priority']['old'] === 'low'
-            && $event->changes['priority']['new'] === 'high'
+        fn ($event) => $event->changes['priority']['old'] === 'Low'
+            && $event->changes['priority']['new'] === 'High'
     );
 });
 
@@ -485,6 +487,7 @@ test('updateIssue reports both changed fields in a single IssueUpdated payload w
         'priority' => 'low',
     ]);
 
+    $this->issueRepository->shouldReceive('findPriority')->andReturnUsing(fn ($id) => $id ? Priority::find($id) : null);
     $this->issueRepository->shouldReceive('update')
         ->once()
         ->andReturnUsing(function ($issue, $data) {

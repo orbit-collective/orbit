@@ -582,10 +582,51 @@ test('creating an issue redirects back with a success flash message and an actio
     $response->assertSessionHas('action_url', route('projects.show', $project->id).'?issue='.$issue->id);
 });
 
-test('creating an issue requires a title, project_id and priority', function () {
+test('creating an issue requires a title and a project_id', function () {
     $response = $this->actingAs(User::factory()->create())->post('/issues');
 
-    $response->assertSessionHasErrors(['title', 'project_id', 'priority']);
+    $response->assertSessionHasErrors(['title', 'project_id']);
+});
+
+test('a new issue without a priority takes the project default', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+
+    $this->actingAs($user)->post('/issues', ['title' => 'No priority given', 'project_id' => $project->id])->assertRedirect();
+
+    expect(Issue::where('title', 'No priority given')->first()->priority->name)->toBe('Medium');
+});
+
+test('a new issue takes a priority by name, ignoring case', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+
+    $this->actingAs($user)->post('/issues', ['title' => 'Shouting', 'project_id' => $project->id, 'priority' => 'HIGH'])->assertRedirect();
+
+    expect(Issue::where('title', 'Shouting')->first()->priority->name)->toBe('High');
+});
+
+test('a priority the project does not have is rejected on create and update', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+
+    $this->actingAs($user)->post('/issues', ['title' => 'X', 'project_id' => $project->id, 'priority' => 'urgent'])
+        ->assertSessionHasErrors('priority');
+    $this->actingAs($user)->patch("/issues/$issue->id", ['priority' => 'urgent'])
+        ->assertSessionHasErrors('priority');
+});
+
+test('a priority renamed in the project is the one an issue can be given', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $project->priorities()->where('name', 'High')->update(['name' => 'Urgent']);
+
+    $this->actingAs($user)->patch("/issues/$issue->id", ['priority' => 'Urgent'])->assertRedirect();
+    $this->actingAs($user)->patch("/issues/$issue->id", ['priority' => 'High'])->assertSessionHasErrors('priority');
+
+    expect($issue->fresh()->priority->name)->toBe('Urgent');
 });
 
 test('creating an issue requires the project_id to reference a real project', function () {
@@ -810,7 +851,7 @@ test('updating an issue redirects back with a summary of what changed', function
 
     $response->assertSessionHas(
         'success',
-        "Issue #$issue->id \"Old title\" updated: priority changed from \"low\" to \"high\"."
+        "Issue #$issue->id \"Old title\" updated: priority changed from \"Low\" to \"High\"."
     );
 });
 

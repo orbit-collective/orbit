@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BumpsIssueCache;
+use App\Services\PriorityService;
 use App\Support\Cache\CacheVersion;
 use Database\Factories\IssueFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,12 +35,32 @@ class Issue extends Model
      */
     protected ?array $pendingLabelNames = null;
 
+    /**
+     * The priority name assigned through `priority` that still has to be
+     * resolved to a priority_id once the issue's project is known (see
+     * setPriorityAttribute()), and whether it was assigned at all - an
+     * explicit null clears the priority, while "never assigned" lets a new
+     * issue take the project's default.
+     */
+    protected ?string $pendingPriorityName = null;
+
+    protected bool $priorityAssigned = false;
+
+    /**
+     * Priorities are tiny and every issue payload shows one, so they are
+     * always eager-loaded rather than left to each listing query to remember.
+     *
+     * @var list<string>
+     */
+    protected $with = ['priority'];
+
     protected $fillable = [
         'id',
         'number',
         'title',
         'description',
         'priority',
+        'priority_id',
         'project_id',
         'parent_id',
         'issue_type_id',
@@ -70,6 +91,15 @@ class Issue extends Model
      */
     protected static function booted(): void
     {
+        // A new issue with no priority of its own takes the project's default.
+        // Done here, like the number below, so factories and imports get it
+        // too.
+        static::creating(function (Issue $issue) {
+            if ($issue->project_id && $issue->priority_id === null && ! $issue->priorityAssigned) {
+                $issue->priority_id = app(PriorityService::class)->defaultId($issue->project_id);
+            }
+        });
+
         static::creating(function (Issue $issue) {
             if (! $issue->project_id) {
                 return;
@@ -128,13 +158,65 @@ class Issue extends Model
      */
     public function save(array $options = []): bool
     {
+        $touchesPriority = $this->priorityAssigned || ! $this->exists;
+
+        $this->resolvePendingPriority();
+
         $saved = parent::save($options);
+
+        $this->priorityAssigned = false;
+
+        if ($saved && $touchesPriority) {
+            $this->unsetRelation('priority')->load('priority');
+        }
 
         if ($saved && $this->pendingLabelNames !== null) {
             $this->syncLabelNames($this->pendingLabelNames);
         }
 
         return $saved;
+    }
+
+    /**
+     * Assigning `priority` takes a priority name (what forms, imports,
+     * templates and automations all speak); it is turned into priority_id when
+     * the issue is saved. A name the project has no priority for leaves the
+     * priority as it was, and null clears it.
+     */
+    public function setPriorityAttribute(?string $name): void
+    {
+        $this->priorityAssigned = true;
+
+        if ($name === null || trim($name) === '') {
+            $this->pendingPriorityName = null;
+            $this->attributes['priority_id'] = null;
+
+            return;
+        }
+
+        $this->pendingPriorityName = trim($name);
+
+        // With the project already known (an update, or `project_id` filled
+        // first) the name is resolved at once, so a filled model reads back
+        // the new priority before it is saved; otherwise save() does it.
+        if ($this->project_id) {
+            $this->resolvePendingPriority();
+        }
+    }
+
+    private function resolvePendingPriority(): void
+    {
+        if ($this->pendingPriorityName === null || ! $this->project_id) {
+            return;
+        }
+
+        $id = app(PriorityService::class)->idByName($this->project_id, $this->pendingPriorityName);
+
+        if ($id !== null) {
+            $this->attributes['priority_id'] = $id;
+        }
+
+        $this->pendingPriorityName = null;
     }
 
     /** @param  list<string>  $names */
@@ -173,7 +255,20 @@ class Issue extends Model
             $relations['labels'] = $this->labelNames();
         }
 
+        // `priority` stays the priority's name (what resources/js/types
+        // Issues.ts expects), with its color, icon and position beside it so
+        // a row can draw itself without the project's list.
+        if ($this->relationLoaded('priority')) {
+            $relations['priority'] = $this->priority?->name;
+            $relations['priorityDetails'] = $this->priority?->toDetails();
+        }
+
         return $relations;
+    }
+
+    public function priority(): BelongsTo
+    {
+        return $this->belongsTo(Priority::class);
     }
 
     public function labels(): BelongsToMany

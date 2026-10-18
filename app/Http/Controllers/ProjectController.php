@@ -9,6 +9,7 @@ use App\Services\ActivityLogService;
 use App\Services\IssueService;
 use App\Services\IssueTypeService;
 use App\Services\LabelService;
+use App\Services\PriorityService;
 use App\Services\ProjectService;
 use App\Services\RoleService;
 use App\Services\UserService;
@@ -44,7 +45,9 @@ class ProjectController extends Controller
 
     protected IssueTypeService $issueTypeService;
 
-    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService, RoleService $roleService, IssueTypeService $issueTypeService)
+    protected PriorityService $priorityService;
+
+    public function __construct(ProjectService $projectService, IssueService $issueService, UserService $userService, ActivityLogService $activityLogService, LabelService $labelService, RoleService $roleService, IssueTypeService $issueTypeService, PriorityService $priorityService)
     {
         $this->projectService = $projectService;
         $this->issueService = $issueService;
@@ -53,6 +56,7 @@ class ProjectController extends Controller
         $this->labelService = $labelService;
         $this->roleService = $roleService;
         $this->issueTypeService = $issueTypeService;
+        $this->priorityService = $priorityService;
     }
 
     /**
@@ -103,6 +107,7 @@ class ProjectController extends Controller
                 'createdAt' => $entry->created_at->toJSON(),
             ]),
             'labels' => $this->mapLabels($this->labelService->getLabels($project)),
+            'priorities' => $this->priorityService->getPriorities($project)->map->toOption()->values(),
             'roles' => $this->mapRoleNames($this->roleService->getRoles($project)),
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
             'nextIssueId' => $this->issueService->peekNextIssueId($project),

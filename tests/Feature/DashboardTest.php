@@ -82,8 +82,12 @@ test('the dashboard sends issue counts by status category instead of the issue r
         ->where('issueStats.total', 2)
         ->where('issueStats.category.done', 1)
         ->where('issueStats.category.todo', 1)
-        ->where('issueStats.priority.high', 1)
-        ->where('issueStats.priority.low', 1));
+        ->has('issueStats.priority', 2)
+        ->where('issueStats.priority.0.name', 'High')
+        ->where('issueStats.priority.0.count', 1)
+        ->where('issueStats.priority.1.name', 'Low')
+        ->where('issueStats.priority.1.count', 1)
+        ->where('issueStats.noPriority', 0));
 });
 
 test('the dashboard projects carry per-category issue counts', function () {

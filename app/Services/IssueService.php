@@ -28,7 +28,7 @@ class IssueService
         'title' => 'title',
         'description' => 'description',
         'workflow_status_id' => 'status',
-        'priority' => 'priority',
+        'priority_id' => 'priority',
         'assignee_id' => 'assignee',
         'labels' => 'labels',
         'start_date' => 'start date',
@@ -333,6 +333,18 @@ class IssueService
                     'newCategory' => $newStatus?->category->value,
                 ];
                 $changes['status']['text'] = $this->describeChange('status', $changes['status']['old'], $changes['status']['new']);
+
+                continue;
+            }
+
+            // Likewise the priority is a row of the project's scale, but is
+            // reported (log text, notifications) by its name.
+            if ($field === 'priority_id') {
+                $changes['priority'] = [
+                    'old' => $this->issueRepository->findPriority($old)?->name,
+                    'new' => $this->issueRepository->findPriority($new)?->name,
+                ];
+                $changes['priority']['text'] = $this->describeChange('priority', $changes['priority']['old'] ?? 'none', $changes['priority']['new'] ?? 'none');
 
                 continue;
             }
