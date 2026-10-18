@@ -509,3 +509,30 @@ test('the issue types page hides the catalog from a user outside the project', f
         ->where('canUpdateWorkflow', false)
     );
 });
+
+test('the issue types, integrations and automation tabs carry the project priorities for their pickers', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+
+    foreach (['/settings/issue-types', '/settings/integrations', '/settings/automation'] as $path) {
+        $this->actingAs($user)->get($path)->assertInertia(fn (Assert $page) => $page
+            ->has('priorities', 3)
+            ->where('priorities.0.name', 'High')
+            ->where('priorities.1.isDefault', true)
+            ->has('priorities.0', fn (Assert $priority) => $priority
+                ->hasAll(['id', 'name', 'color', 'icon', 'position', 'isDefault'])));
+    }
+});
+
+test('those tabs send no priorities to someone without the priorities.view permission', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+    $project->roles()->where('slug', 'admin')->first()->permissions()
+        ->detach(Permission::where('key', PermissionEnum::PRIORITIES_VIEW->value)->value('id'));
+    Illuminate\Support\Facades\Cache::flush();
+
+    $this->actingAs($user)->get('/settings/automation')->assertInertia(fn (Assert $page) => $page
+        ->where('priorities', []));
+});
