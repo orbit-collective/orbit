@@ -127,11 +127,7 @@ if ($column && in_array($column, $allowedColumns)) {
             break;
 
         case 'priority':
-            if ($direction === 'asc') {
-                $query->orderByRaw("CASE WHEN priority = 'high' THEN 1 WHEN priority = 'medium' THEN 2 WHEN priority = 'low' THEN 3 ELSE 4 END");
-            } else {
-                $query->orderByRaw("CASE WHEN priority = 'high' THEN 4 WHEN priority = 'medium' THEN 3 WHEN priority = 'low' THEN 2 ELSE 1 END");
-            }
+            $this->orderByPriority($query, $direction);
             break;
 
         case 'assignee':

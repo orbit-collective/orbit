@@ -215,14 +215,23 @@ issue**, a pozostałe komórki pokazują podgląd tego, z czym issue
 zostanie utworzone — id, jakie dostanie
 (`IssueService::peekNextIssueId()`, wyłącznie podpowiedź, bo
 równoległe tworzenie zabierze prawdziwe id), początkowy status
-workflow wybranego typu, priorytet `Medium` i brak przypisania. Wiersz
+workflow wybranego typu, domyślny priorytet projektu
+(`useProjectPriorities().defaultPriority`, `Medium`, dopóki właściciele
+go nie zmienią; zobacz [`../priorities/README.md`](../priorities/README.md))
+i brak przypisania. Wiersz
 najwyższego poziomu oferuje tylko typy `is_top_level`, a zagnieżdżony —
 tylko dozwolone dzieci typu rodzica. Zatwierdzenie wysyła do
 `issues.store` tytuł, wybrany `issue_type_id` (z fallbackiem na
 `IssueTypeService::defaultIssueType()`, gdy nic nie przyszło) oraz
 `parent_id` dla sub-issue — otwórz issue później, żeby uzupełnić
 resztę, albo zastosować `IssueTypeTemplate` (`name`,
-`description`, `default_priority`, `default_labels`, zarządzany z
+`description`, `default_priority` — **nazwa jednego z priorytetów
+projektu**, zapisywana we własnej pisowni projektu przez
+`IssueTypeTemplateService::canonicalPriority()` i odrzucana, gdy projekt
+nie ma priorytetu o tej nazwie; zmiana nazwy lub usunięcie tego
+priorytetu przepisuje ją albo czyści, zobacz
+[`../priorities/README.md`](../priorities/README.md) —
+`default_labels`, zarządzany z
 **Ustawienia → Issue Types → Manage templates**). Szablon stosuje się
 **bez proszenia o niego**: gdy w żądaniu nie ma `template_id`,
 `IssueTypeService::defaultTemplateFor()` podaje szablon typu — i tylko

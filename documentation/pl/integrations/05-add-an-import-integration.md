@@ -121,8 +121,17 @@ Uwagi:
   [`../labels/README.md`](../labels/README.md)).
 - **Docelowa** strona każdego wiersza mapowania to konfiguracja samego
   projektu, do którego importujesz, a nie sztywny enum: jego typy
-  issue, statusy workflow definiowane przez te typy oraz jego etykiety
-  (zobacz [`../issue-types/README.md`](../issue-types/README.md)). Cel
+  issue, statusy workflow definiowane przez te typy, jego etykiety
+  (zobacz [`../issue-types/README.md`](../issue-types/README.md)) oraz
+  jego priorytety (prop `priorities` wysyłany przez
+  `SettingsController::integrations()`, tylko użytkownikom, którzy mogą
+  aktualizować integracje i mają `projects.priorities.view`; zobacz
+  [`../priorities/README.md`](../priorities/README.md)). `orbit_value`
+  mapowania priorytetu to **nazwa** priorytetu, utrzymywana w zgodzie
+  przez `PriorityRepository::replaceNameReferences()` przy zmianie nazwy
+  (aktualizacja) lub usunięciu (wiersz mapowania jest usuwany) tego
+  priorytetu, a niezmapowany zewnętrzny priorytet staje się domyślnym
+  priorytetem projektu (`FieldMappingResolverService`). Cel
   statusu jest oferowany jako suma nazw statusów ze wszystkich typów,
   ponieważ typ, na którym wyląduje issue, jest znany dopiero w trakcie
   importu — backend rozwiązuje potem tę nazwę względem typu, który

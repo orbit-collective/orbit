@@ -82,7 +82,13 @@ konkretnie event go wyzwolił.
 
 `App\Enums\AutomationActionType`: `ChangeStatus`, `ChangePriority`,
 `AssignUser`, `AddLabel`, `RemoveLabel`, `SendNotification` — zobacz
-`app/Services/Automation/Actions/`. Każdy handler waliduje swoje własne
+`app/Services/Automation/Actions/`. `params.priority` akcji
+`ChangePriority` to **nazwa jednego z priorytetów projektu reguły**
+(kreator reguł wylistowuje je z propa `priorities` strony ustawień);
+`ChangePriorityAction` szuka tej nazwy bez rozróżniania wielkości liter
+w tym projekcie i nic nie robi, gdy jej już nie ma, a zmiana nazwy
+priorytetu przepisuje ją, natomiast jego usunięcie usuwa akcję (zobacz
+[`../priorities/README.md`](../priorities/README.md)). Każdy handler waliduje swoje własne
 `params` defensywnie (np. `ChangeStatusAction` sprawdza, że docelowe
 `workflow_status_id` faktycznie należy do typu issue, którego dotyczy)
 i po prostu wraca (bez wyjątku, bez częściowego efektu ubocznego)
