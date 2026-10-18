@@ -109,6 +109,26 @@ class ProjectPolicy
         return $project->hasPermission($user, Permission::LABELS_DELETE);
     }
 
+    public function viewPriorities(User $user, Project $project): bool
+    {
+        return $project->hasPermission($user, Permission::PRIORITIES_VIEW);
+    }
+
+    public function createPriorities(User $user, Project $project): bool
+    {
+        return $project->hasPermission($user, Permission::PRIORITIES_CREATE);
+    }
+
+    public function updatePriorities(User $user, Project $project): bool
+    {
+        return $project->hasPermission($user, Permission::PRIORITIES_UPDATE);
+    }
+
+    public function deletePriorities(User $user, Project $project): bool
+    {
+        return $project->hasPermission($user, Permission::PRIORITIES_DELETE);
+    }
+
     public function viewIssueTypes(User $user, Project $project): bool
     {
         return $project->hasPermission($user, Permission::ISSUE_TYPES_VIEW);

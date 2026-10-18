@@ -41,6 +41,7 @@ class RoleService
         Permission::AUTOMATION_VIEW,
         Permission::GITHUB_DEVELOPMENT_CREATE,
         Permission::LABELS_VIEW,
+        Permission::PRIORITIES_VIEW,
         Permission::ISSUE_TYPES_VIEW,
         Permission::ISSUES_VIEW,
         Permission::ISSUES_CREATE,
@@ -67,6 +68,7 @@ class RoleService
         Permission::INTEGRATIONS_VIEW,
         Permission::AUTOMATION_VIEW,
         Permission::LABELS_VIEW,
+        Permission::PRIORITIES_VIEW,
         Permission::ISSUE_TYPES_VIEW,
         Permission::ISSUES_VIEW,
     ];

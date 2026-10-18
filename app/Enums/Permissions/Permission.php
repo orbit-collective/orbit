@@ -38,6 +38,11 @@ enum Permission: string
     case LABELS_UPDATE = 'projects.labels.update';
     case LABELS_DELETE = 'projects.labels.delete';
 
+    case PRIORITIES_VIEW = 'projects.priorities.view';
+    case PRIORITIES_CREATE = 'projects.priorities.create';
+    case PRIORITIES_UPDATE = 'projects.priorities.update';
+    case PRIORITIES_DELETE = 'projects.priorities.delete';
+
     case ISSUE_TYPES_VIEW = 'projects.issue_types.view';
     case ISSUE_TYPES_CREATE = 'projects.issue_types.create';
     case ISSUE_TYPES_UPDATE = 'projects.issue_types.update';

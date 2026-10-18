@@ -89,6 +89,23 @@ const PERMISSION_META: Record<string, PermissionMeta> = {
         description:
             "Create a GitHub branch or pull request from an issue's Development panel.",
     },
+    'projects.priorities.view': {
+        label: 'View priorities',
+        description: "See the project's priority scale.",
+    },
+    'projects.priorities.create': {
+        label: 'Create priorities',
+        description: 'Add priority levels to the project.',
+    },
+    'projects.priorities.update': {
+        label: 'Edit priorities',
+        description:
+            'Rename, recolor, change the icon, reorder or set the default priority.',
+    },
+    'projects.priorities.delete': {
+        label: 'Delete priorities',
+        description: 'Remove priority levels from the project.',
+    },
     'projects.issue_types.view': {
         label: 'View issue types',
         description: "See the project's issue type catalog.",
