@@ -25,10 +25,16 @@ export const statusDotVariants = cva('inline-block rounded-sm shrink-0', {
 
 const StatusDot: React.FC<StatusDotProps> = ({
     status,
+    color,
     size = 'sm',
     className,
 }) => {
-    return <span className={statusDotVariants({ status, size, className })} />;
+    return (
+        <span
+            className={statusDotVariants({ status, size, className })}
+            style={color ? { backgroundColor: color } : undefined}
+        />
+    );
 };
 
 export default StatusDot;

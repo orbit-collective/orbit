@@ -41,4 +41,18 @@ describe('StatusDot Component', () => {
 
         expect(container.firstChild).toHaveClass('ml-2', 'inline-block');
     });
+
+    test("paints an explicit color, e.g. a priority's own", () => {
+        const { container } = render(<StatusDot color="#9c27b0" />);
+
+        expect(container.firstChild).toHaveStyle({
+            backgroundColor: '#9c27b0',
+        });
+    });
+
+    test('draws no inline color without one', () => {
+        const { container } = render(<StatusDot status="todo" />);
+
+        expect(container.firstChild).not.toHaveAttribute('style');
+    });
 });

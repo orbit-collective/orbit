@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
+import { priorities, priorityFields } from '@/stories/fixtures';
 import { todoStatus } from '@/tests/statuses';
 import { Comment, Issue } from '@/types/Issues';
 import { Project } from '@/types/Projects';
@@ -91,7 +92,7 @@ const buildIssue = (overrides: Partial<Issue> = {}): Issue => ({
     title: 'Fix login crash',
     description: 'Steps to reproduce',
     workflowStatus: todoStatus,
-    priority: 'high',
+    ...priorityFields('high'),
     project_id: 1,
     user_id: 1,
     labels: ['bug'],
@@ -363,7 +364,7 @@ describe('Issues/Show Page', () => {
         expect(screen.getByText('Steps to reproduce')).toBeInTheDocument();
         expect(screen.getByText('To Do')).toBeInTheDocument();
         expect(
-            screen.getByRole('button', { name: 'high' }),
+            screen.getByRole('button', { name: 'High' }),
         ).toBeInTheDocument();
     });
 
@@ -420,17 +421,93 @@ describe('Issues/Show Page', () => {
                 projects={[project]}
                 issue={buildIssue()}
                 users={users}
+                priorities={priorities}
             />,
         );
 
-        await userEvent.click(screen.getByRole('button', { name: 'high' }));
-        await userEvent.click(screen.getByRole('option', { name: 'low' }));
+        await userEvent.click(screen.getByRole('button', { name: 'High' }));
+        await userEvent.click(screen.getByRole('option', { name: 'Low' }));
 
         expect(mockPatch).toHaveBeenCalledWith(
             expect.any(String),
-            { priority: 'low' },
+            { priority: 'Low' },
             { preserveScroll: true },
         );
+    });
+
+    test('the priority picker lists the project\'s own priorities and "No priority"', async () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue()}
+                users={users}
+                priorities={[
+                    {
+                        id: 9,
+                        name: 'Blocker',
+                        color: '#9c27b0',
+                        icon: 'Flame',
+                        position: 0,
+                        isDefault: false,
+                    },
+                    ...priorities,
+                ]}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole('button', { name: 'High' }));
+
+        expect(
+            screen.getAllByRole('option').map((option) => option.textContent),
+        ).toEqual(
+            expect.arrayContaining([
+                'Blocker',
+                'High',
+                'Medium',
+                'Low',
+                'No priority',
+            ]),
+        );
+    });
+
+    test('choosing "No priority" clears the priority', async () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue()}
+                users={users}
+                priorities={priorities}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole('button', { name: 'High' }));
+        await userEvent.click(
+            screen.getByRole('option', { name: 'No priority' }),
+        );
+
+        expect(mockPatch).toHaveBeenCalledWith(
+            expect.any(String),
+            { priority: null },
+            { preserveScroll: true },
+        );
+    });
+
+    test('an issue without a priority shows "No priority" in the sidebar', () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue({ ...priorityFields(null) })}
+                users={users}
+                priorities={priorities}
+            />,
+        );
+
+        expect(
+            screen.getByRole('button', { name: 'No priority' }),
+        ).toBeInTheDocument();
     });
 
     test('assigning the issue to a user commits their id', async () => {
@@ -800,7 +877,7 @@ describe('Issues/Show custom fields', () => {
                 issueTypeId: 3,
                 label: 'Severity',
                 type: 'select' as const,
-                options: ['Low', 'High'],
+                options: ['Minor', 'Major'],
                 placeholder: null,
                 isRequired: true,
             },
@@ -819,7 +896,7 @@ describe('Issues/Show custom fields', () => {
         );
 
         expect(screen.getByText('Severity *')).toBeInTheDocument();
-        expect(screen.getByText('High')).toBeInTheDocument();
+        expect(screen.getByText('Major')).toBeInTheDocument();
     });
 
     test('picking a custom field value patches only that field', async () => {
@@ -834,11 +911,11 @@ describe('Issues/Show custom fields', () => {
             />,
         );
 
-        screen.getByText('High').click();
+        screen.getByText('Major').click();
 
         expect(router.patch).toHaveBeenCalledWith(
             expect.anything(),
-            { custom_fields: { 11: 'High' } },
+            { custom_fields: { 11: 'Major' } },
             expect.any(Object),
         );
     });
@@ -934,6 +1011,7 @@ describe('Issues/Show custom fields', () => {
                     projects={[project]}
                     issue={buildIssue()}
                     users={users}
+                    priorities={priorities}
                     issueAbilities={{
                         update: true,
                         changeStatus: true,
@@ -951,7 +1029,7 @@ describe('Issues/Show custom fields', () => {
 
             expect(mockPatch).toHaveBeenCalledWith(
                 '/issues.update/42',
-                { priority: 'medium' },
+                { priority: 'Medium' },
                 { preserveScroll: true },
             );
         });

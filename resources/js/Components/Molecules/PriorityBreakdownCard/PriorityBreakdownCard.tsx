@@ -1,27 +1,36 @@
 import { FC } from 'react';
-import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
-import { PriorityBreakdownCardProps, PriorityItem } from '@/types/Components';
+import { PriorityBreakdownCardProps } from '@/types/Components';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 
+const NO_PRIORITY_COLOR = 'var(--text-muted-color)';
+
+const percent = (part: number, total: number) =>
+    total === 0 ? 0 : Math.round((part / total) * 100);
+
 export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
-    high,
-    medium,
-    low,
-    highPct,
-    mediumPct,
-    lowPct,
+    priorities,
+    noPriority,
+    total,
 }) => {
-    const items: PriorityItem[] = [
-        { label: 'High Priority', status: 'high', count: high, pct: highPct },
-        {
-            label: 'Medium Priority',
-            status: 'medium',
-            count: medium,
-            pct: mediumPct,
-        },
-        { label: 'Low Priority', status: 'low', count: low, pct: lowPct },
-    ];
+    const items = [
+        ...priorities.map((priority) => ({
+            key: priority.name,
+            label: priority.name,
+            color: priority.color,
+            count: priority.count,
+        })),
+        ...(noPriority > 0
+            ? [
+                  {
+                      key: '__none__',
+                      label: 'No priority',
+                      color: NO_PRIORITY_COLOR,
+                      count: noPriority,
+                  },
+              ]
+            : []),
+    ].map((item) => ({ ...item, pct: percent(item.count, total) }));
 
     return (
         <VisualCard>
@@ -31,30 +40,34 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
             />
             <div className="flex flex-1 flex-col justify-center py-4">
                 <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
-                    <div
-                        style={{ width: `${highPct}%` }}
-                        className="h-full bg-[var(--error-color)] transition-all"
-                        title={`High: ${highPct}%`}
-                    />
-                    <div
-                        style={{ width: `${mediumPct}%` }}
-                        className="h-full bg-[var(--warning-color)] transition-all"
-                        title={`Medium: ${mediumPct}%`}
-                    />
-                    <div
-                        style={{ width: `${lowPct}%` }}
-                        className="h-full bg-[var(--success-color)] transition-all"
-                        title={`Low: ${lowPct}%`}
-                    />
+                    {items.map((item) => (
+                        <div
+                            key={item.key}
+                            style={{
+                                width: `${item.pct}%`,
+                                backgroundColor: item.color,
+                            }}
+                            className="h-full transition-all"
+                            title={`${item.label}: ${item.pct}%`}
+                        />
+                    ))}
                 </div>
                 <div className="mt-5 flex flex-col gap-2.5">
-                    {items.map((item, index) => (
+                    {items.length === 0 && (
+                        <span className="text-xs text-[var(--text-muted-color)]">
+                            No issues yet
+                        </span>
+                    )}
+                    {items.map((item) => (
                         <div
-                            key={index}
+                            key={item.key}
                             className="flex items-center justify-between text-xs"
                         >
                             <div className="flex items-center gap-2">
-                                <StatusDot status={item.status} size={'md'} />
+                                <span
+                                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
+                                    style={{ backgroundColor: item.color }}
+                                />
                                 <span className="font-medium text-[var(--text-color)]">
                                     {item.label}
                                 </span>

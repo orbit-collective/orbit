@@ -13,12 +13,31 @@ const meta = {
         ),
     ],
     args: {
-        high: 4,
-        medium: 9,
-        low: 5,
-        highPct: 22,
-        mediumPct: 50,
-        lowPct: 28,
+        priorities: [
+            {
+                name: 'High',
+                color: '#f44336',
+                icon: 'SignalHigh',
+                position: 0,
+                count: 4,
+            },
+            {
+                name: 'Medium',
+                color: '#ff9800',
+                icon: 'SignalMedium',
+                position: 1,
+                count: 9,
+            },
+            {
+                name: 'Low',
+                color: '#4caf50',
+                icon: 'SignalLow',
+                position: 2,
+                count: 5,
+            },
+        ],
+        noPriority: 0,
+        total: 18,
     },
 } satisfies Meta<typeof PriorityBreakdownCard>;
 
@@ -28,16 +47,44 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const NoIssues: Story = {
-    args: { high: 0, medium: 0, low: 0, highPct: 0, mediumPct: 0, lowPct: 0 },
+    args: { priorities: [], noPriority: 0, total: 0 },
 };
 
 export const AllHigh: Story = {
     args: {
-        high: 12,
-        medium: 0,
-        low: 0,
-        highPct: 100,
-        mediumPct: 0,
-        lowPct: 0,
+        priorities: [
+            {
+                name: 'High',
+                color: '#f44336',
+                icon: 'SignalHigh',
+                position: 0,
+                count: 12,
+            },
+        ],
+        total: 12,
+    },
+};
+
+/** A project's own scale and issues with none at all appear next to the starter names. */
+export const CustomScaleWithUnprioritised: Story = {
+    args: {
+        priorities: [
+            {
+                name: 'Blocker',
+                color: '#9c27b0',
+                icon: 'OctagonAlert',
+                position: 0,
+                count: 2,
+            },
+            {
+                name: 'Medium',
+                color: '#ff9800',
+                icon: 'SignalMedium',
+                position: 1,
+                count: 6,
+            },
+        ],
+        noPriority: 4,
+        total: 12,
     },
 };

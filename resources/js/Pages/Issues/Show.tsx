@@ -21,11 +21,13 @@ import IssuePageHeader from '@/Components/Organisms/IssuePageHeader/IssuePageHea
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useAlert } from '@/context/AlertContext';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useIssueCommands } from '@/hooks/useIssueCommands';
 import { IssuePageProps } from '@/types/Components';
-import { Comment, Issue, IssueLabel, IssuePriority } from '@/types/Issues';
+import { Comment, Issue, IssueLabel } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import { formatDate } from '@/utils/time';
 import { getReachableStatuses } from '@/utils/workflow';
 
@@ -34,7 +36,7 @@ import { getReachableStatuses } from '@/utils/workflow';
 // re-register them in a loop.
 const NO_LABELS: ProjectLabel[] = [];
 const NO_ANCESTORS: Issue[] = [];
-const PRIORITIES: IssuePriority[] = ['high', 'medium', 'low'];
+const NO_PRIORITIES: ProjectPriority[] = [];
 
 export default function Show({
     project,
@@ -42,6 +44,7 @@ export default function Show({
     issue,
     users,
     labels = NO_LABELS,
+    priorities = NO_PRIORITIES,
     issueTypes = [],
     ancestors = NO_ANCESTORS,
     linkedPullRequests = [],
@@ -122,6 +125,7 @@ export default function Show({
         ancestors,
         users,
         labels,
+        priorities,
         abilities: issueAbilities,
         update: updateIssue,
     });
@@ -184,15 +188,27 @@ export default function Show({
         label: <IssueTypeBadge issueType={type} />,
     }));
 
-    const priorityOptions = PRIORITIES.map((priority) => ({
-        value: priority,
-        label: (
-            <div className="flex items-center gap-2">
-                <PriorityIcon priority={priority} tooltip={false} />
-                <span className="capitalize">{priority}</span>
-            </div>
-        ),
-    }));
+    const priorityOptions = [
+        ...priorities.map((priority) => ({
+            value: priority.name,
+            label: (
+                <div className="flex items-center gap-2">
+                    <PriorityIcon priority={priority} tooltip={false} />
+                    <span>{priority.name}</span>
+                </div>
+            ),
+        })),
+        {
+            value: '',
+            searchLabel: 'No priority',
+            label: (
+                <div className="flex items-center gap-2">
+                    <PriorityIcon priority={null} tooltip={false} />
+                    <span>No priority</span>
+                </div>
+            ),
+        },
+    ];
 
     const assigneeOptions = [
         {
@@ -221,379 +237,406 @@ export default function Show({
 
     return (
         <ProjectLabelsProvider labels={labels}>
-            <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
-                <Sidebar projects={projects} />
-                <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
-                    <IssuePageHeader
-                        project={project}
-                        issue={issue}
-                        ancestors={ancestors}
-                    />
-                    <main className="flex flex-1 flex-col overflow-y-auto">
-                        <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-6 px-6 py-6 md:grid-cols-[1fr_260px]">
-                            <div className="flex min-w-0 flex-col gap-4">
-                                <EditableText
-                                    as="h1"
-                                    value={issue.title}
-                                    onSave={(value) =>
-                                        updateIssue({ title: value })
-                                    }
-                                    placeholder="Issue title"
-                                    displayClassName="text-2xl font-semibold text-[var(--text-color)]"
-                                    inputClassName="text-2xl font-semibold"
-                                />
-
-                                <EditableMarkdown
-                                    value={issue.description || ''}
-                                    onSave={(value) =>
-                                        updateIssue({ description: value })
-                                    }
-                                    onImageUpload={uploadImage}
-                                    users={users}
-                                    projectId={project.id}
-                                    placeholder="Add a description..."
-                                />
-
-                                {issue.issueType?.allowsChildren && (
-                                    <IssueChildrenPanel
-                                        project={project}
-                                        issue={issue}
-                                        issueTypes={issueTypes}
+            <ProjectPrioritiesProvider priorities={priorities}>
+                <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
+                    <Sidebar projects={projects} />
+                    <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
+                        <IssuePageHeader
+                            project={project}
+                            issue={issue}
+                            ancestors={ancestors}
+                        />
+                        <main className="flex flex-1 flex-col overflow-y-auto">
+                            <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-6 px-6 py-6 md:grid-cols-[1fr_260px]">
+                                <div className="flex min-w-0 flex-col gap-4">
+                                    <EditableText
+                                        as="h1"
+                                        value={issue.title}
+                                        onSave={(value) =>
+                                            updateIssue({ title: value })
+                                        }
+                                        placeholder="Issue title"
+                                        displayClassName="text-2xl font-semibold text-[var(--text-color)]"
+                                        inputClassName="text-2xl font-semibold"
                                     />
-                                )}
 
-                                <div className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
-                                    <span className="text-sm font-medium text-[var(--text-color)]">
-                                        Activity
-                                    </span>
-                                    <CommentList
-                                        comments={issue.comments || []}
+                                    <EditableMarkdown
+                                        value={issue.description || ''}
+                                        onSave={(value) =>
+                                            updateIssue({ description: value })
+                                        }
+                                        onImageUpload={uploadImage}
                                         users={users}
                                         projectId={project.id}
-                                        onEdit={editComment}
-                                        onDelete={deleteComment}
-                                        onImageUpload={uploadImage}
+                                        placeholder="Add a description..."
                                     />
-                                    <CommentForm
-                                        onSubmit={addComment}
-                                        users={users}
-                                        projectId={project.id}
-                                        onImageUpload={uploadImage}
-                                    />
-                                </div>
-                            </div>
 
-                            <div className="sticky top-6 flex flex-col gap-3 self-start">
-                                {issueTypeOptions.length > 0 && (
-                                    <SidebarField label="Type">
-                                        <EditableSelect
-                                            value={
-                                                issue.issueType
-                                                    ? String(issue.issueType.id)
-                                                    : ''
-                                            }
-                                            options={issueTypeOptions}
-                                            bare
-                                            header="Change issue type to..."
-                                            onSave={(value) =>
-                                                updateIssue({
-                                                    issue_type_id:
-                                                        Number(value),
-                                                })
-                                            }
-                                            renderValue={() =>
-                                                issue.issueType ? (
-                                                    <IssueTypeBadge
-                                                        issueType={
-                                                            issue.issueType
-                                                        }
-                                                    />
-                                                ) : (
-                                                    <span className="text-sm text-[var(--text-gray-color)]">
-                                                        No type
-                                                    </span>
-                                                )
-                                            }
+                                    {issue.issueType?.allowsChildren && (
+                                        <IssueChildrenPanel
+                                            project={project}
+                                            issue={issue}
+                                            issueTypes={issueTypes}
                                         />
-                                    </SidebarField>
-                                )}
-
-                                <SidebarField label="Status">
-                                    {workflowStatusOptions.length > 0 ? (
-                                        <EditableSelect
-                                            value={
-                                                currentStatusId !== null
-                                                    ? String(currentStatusId)
-                                                    : ''
-                                            }
-                                            options={workflowStatusOptions}
-                                            bare
-                                            header="Change status to..."
-                                            onSave={(value) =>
-                                                updateIssue({
-                                                    workflow_status_id:
-                                                        Number(value),
-                                                })
-                                            }
-                                            renderValue={() =>
-                                                issue.workflowStatus ? (
-                                                    <WorkflowStatusBadge
-                                                        status={
-                                                            issue.workflowStatus
-                                                        }
-                                                    />
-                                                ) : (
-                                                    <span className="text-sm text-[var(--text-gray-color)]">
-                                                        No status
-                                                    </span>
-                                                )
-                                            }
-                                        />
-                                    ) : issue.workflowStatus ? (
-                                        <WorkflowStatusBadge
-                                            status={issue.workflowStatus}
-                                        />
-                                    ) : (
-                                        <span className="text-sm text-[var(--text-gray-color)]">
-                                            No status
-                                        </span>
                                     )}
-                                </SidebarField>
 
-                                <SidebarField label="Priority">
-                                    <EditableSelect
-                                        value={issue.priority}
-                                        options={priorityOptions}
-                                        header="Change priority to..."
-                                        onSave={(value) =>
-                                            updateIssue({ priority: value })
-                                        }
-                                        renderValue={(value) => (
-                                            <div className="flex items-center gap-2">
-                                                <PriorityIcon
-                                                    priority={value}
-                                                    tooltip={false}
-                                                />
-                                                <span className="text-sm capitalize text-[var(--text-color)]">
-                                                    {value}
-                                                </span>
-                                            </div>
+                                    <div className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
+                                        <span className="text-sm font-medium text-[var(--text-color)]">
+                                            Activity
+                                        </span>
+                                        <CommentList
+                                            comments={issue.comments || []}
+                                            users={users}
+                                            projectId={project.id}
+                                            onEdit={editComment}
+                                            onDelete={deleteComment}
+                                            onImageUpload={uploadImage}
+                                        />
+                                        <CommentForm
+                                            onSubmit={addComment}
+                                            users={users}
+                                            projectId={project.id}
+                                            onImageUpload={uploadImage}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="sticky top-6 flex flex-col gap-3 self-start">
+                                    {issueTypeOptions.length > 0 && (
+                                        <SidebarField label="Type">
+                                            <EditableSelect
+                                                value={
+                                                    issue.issueType
+                                                        ? String(
+                                                              issue.issueType
+                                                                  .id,
+                                                          )
+                                                        : ''
+                                                }
+                                                options={issueTypeOptions}
+                                                bare
+                                                header="Change issue type to..."
+                                                onSave={(value) =>
+                                                    updateIssue({
+                                                        issue_type_id:
+                                                            Number(value),
+                                                    })
+                                                }
+                                                renderValue={() =>
+                                                    issue.issueType ? (
+                                                        <IssueTypeBadge
+                                                            issueType={
+                                                                issue.issueType
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm text-[var(--text-gray-color)]">
+                                                            No type
+                                                        </span>
+                                                    )
+                                                }
+                                            />
+                                        </SidebarField>
+                                    )}
+
+                                    <SidebarField label="Status">
+                                        {workflowStatusOptions.length > 0 ? (
+                                            <EditableSelect
+                                                value={
+                                                    currentStatusId !== null
+                                                        ? String(
+                                                              currentStatusId,
+                                                          )
+                                                        : ''
+                                                }
+                                                options={workflowStatusOptions}
+                                                bare
+                                                header="Change status to..."
+                                                onSave={(value) =>
+                                                    updateIssue({
+                                                        workflow_status_id:
+                                                            Number(value),
+                                                    })
+                                                }
+                                                renderValue={() =>
+                                                    issue.workflowStatus ? (
+                                                        <WorkflowStatusBadge
+                                                            status={
+                                                                issue.workflowStatus
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        <span className="text-sm text-[var(--text-gray-color)]">
+                                                            No status
+                                                        </span>
+                                                    )
+                                                }
+                                            />
+                                        ) : issue.workflowStatus ? (
+                                            <WorkflowStatusBadge
+                                                status={issue.workflowStatus}
+                                            />
+                                        ) : (
+                                            <span className="text-sm text-[var(--text-gray-color)]">
+                                                No status
+                                            </span>
                                         )}
-                                    />
-                                </SidebarField>
+                                    </SidebarField>
 
-                                <SidebarField label="Assignee">
-                                    <EditableSelect
-                                        value={
-                                            issue.assignee_id
-                                                ? String(issue.assignee_id)
-                                                : ''
-                                        }
-                                        options={assigneeOptions}
-                                        header="Change assignee to..."
-                                        onSave={(value) =>
-                                            updateIssue({
-                                                assignee_id: value
-                                                    ? Number(value)
-                                                    : null,
-                                            })
-                                        }
-                                        renderValue={() =>
-                                            issue.assignee ? (
-                                                <UserBadge
-                                                    avatarSrc={
-                                                        issue.assignee.avatar
-                                                    }
-                                                    name={issue.assignee.name}
-                                                    size="sm"
-                                                    showTooltip={false}
-                                                />
-                                            ) : (
-                                                <span className="flex items-center gap-2 text-[var(--text-gray-color)]">
-                                                    <Icon
-                                                        name="UserX"
-                                                        size={14}
-                                                    />
-                                                    Unassigned
-                                                </span>
-                                            )
-                                        }
-                                    />
-                                </SidebarField>
-
-                                {customFields.map((field) => (
-                                    <SidebarField
-                                        key={field.id}
-                                        label={
-                                            field.isRequired
-                                                ? `${field.label} *`
-                                                : field.label
-                                        }
-                                    >
-                                        <IssueCustomField
-                                            field={field}
-                                            value={
-                                                customFieldValues[field.id] ??
-                                                null
-                                            }
+                                    <SidebarField label="Priority">
+                                        <EditableSelect
+                                            value={issue.priority ?? ''}
+                                            options={priorityOptions}
+                                            header="Change priority to..."
                                             onSave={(value) =>
-                                                saveCustomField(field.id, value)
+                                                updateIssue({
+                                                    priority: value || null,
+                                                })
+                                            }
+                                            renderValue={() => (
+                                                <div className="flex items-center gap-2">
+                                                    <PriorityIcon
+                                                        priority={
+                                                            issue.priorityDetails
+                                                        }
+                                                        tooltip={false}
+                                                    />
+                                                    <span className="text-sm text-[var(--text-color)]">
+                                                        {issue.priority ??
+                                                            'No priority'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        />
+                                    </SidebarField>
+
+                                    <SidebarField label="Assignee">
+                                        <EditableSelect
+                                            value={
+                                                issue.assignee_id
+                                                    ? String(issue.assignee_id)
+                                                    : ''
+                                            }
+                                            options={assigneeOptions}
+                                            header="Change assignee to..."
+                                            onSave={(value) =>
+                                                updateIssue({
+                                                    assignee_id: value
+                                                        ? Number(value)
+                                                        : null,
+                                                })
+                                            }
+                                            renderValue={() =>
+                                                issue.assignee ? (
+                                                    <UserBadge
+                                                        avatarSrc={
+                                                            issue.assignee
+                                                                .avatar
+                                                        }
+                                                        name={
+                                                            issue.assignee.name
+                                                        }
+                                                        size="sm"
+                                                        showTooltip={false}
+                                                    />
+                                                ) : (
+                                                    <span className="flex items-center gap-2 text-[var(--text-gray-color)]">
+                                                        <Icon
+                                                            name="UserX"
+                                                            size={14}
+                                                        />
+                                                        Unassigned
+                                                    </span>
+                                                )
                                             }
                                         />
                                     </SidebarField>
-                                ))}
 
-                                <SidebarField label="Labels">
-                                    <EditableLabelList
-                                        labels={issue.labels || []}
-                                        onSave={(labels: IssueLabel[]) =>
-                                            updateIssue({ labels })
-                                        }
-                                    />
-                                </SidebarField>
+                                    {customFields.map((field) => (
+                                        <SidebarField
+                                            key={field.id}
+                                            label={
+                                                field.isRequired
+                                                    ? `${field.label} *`
+                                                    : field.label
+                                            }
+                                        >
+                                            <IssueCustomField
+                                                field={field}
+                                                value={
+                                                    customFieldValues[
+                                                        field.id
+                                                    ] ?? null
+                                                }
+                                                onSave={(value) =>
+                                                    saveCustomField(
+                                                        field.id,
+                                                        value,
+                                                    )
+                                                }
+                                            />
+                                        </SidebarField>
+                                    ))}
 
-                                <SidebarField label="Project">
-                                    <Link
-                                        href={route(
-                                            'projects.show',
-                                            project.id,
-                                        )}
-                                        className="flex items-center gap-2 rounded-full px-1.5 py-1 text-sm text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
-                                    >
-                                        <Icon name="FolderGit2" size={14} />
-                                        {project.name}
-                                    </Link>
-                                </SidebarField>
-
-                                {(linkedPullRequests.length > 0 ||
-                                    githubRepositories.length > 0) && (
-                                    <SidebarField label="Development">
-                                        <IssueDevelopmentPanel
-                                            pullRequests={linkedPullRequests}
-                                            repositories={githubRepositories}
-                                            defaultBranchName={
-                                                githubDefaultBranchName
-                                            }
-                                            onCreateBranch={
-                                                canCreateGithubDevelopment &&
-                                                githubAccountLinked
-                                                    ? createGithubBranch
-                                                    : undefined
-                                            }
-                                            onCreatePullRequest={
-                                                canCreateGithubDevelopment &&
-                                                githubAccountLinked
-                                                    ? createGithubPullRequest
-                                                    : undefined
-                                            }
-                                            requiresGithubAccountLink={
-                                                canCreateGithubDevelopment &&
-                                                !githubAccountLinked
+                                    <SidebarField label="Labels">
+                                        <EditableLabelList
+                                            labels={issue.labels || []}
+                                            onSave={(labels: IssueLabel[]) =>
+                                                updateIssue({ labels })
                                             }
                                         />
                                     </SidebarField>
-                                )}
 
-                                <SidebarField label="Dates">
-                                    <div className="flex items-center gap-1">
-                                        <Icon
-                                            name="Calendar"
-                                            size={14}
-                                            className="mr-1 text-[var(--text-gray-color)]"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setShowStartDate(true);
-                                                setShowEndDate(false);
-                                            }}
-                                            className="rounded-full px-1.5 py-1 text-xs text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
+                                    <SidebarField label="Project">
+                                        <Link
+                                            href={route(
+                                                'projects.show',
+                                                project.id,
+                                            )}
+                                            className="flex items-center gap-2 rounded-full px-1.5 py-1 text-sm text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
                                         >
-                                            {issue.start_date || 'Start date'}
-                                        </button>
-                                        <span className="text-xs text-[var(--text-gray-color)]">
-                                            —
-                                        </span>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setShowEndDate(true);
-                                                setShowStartDate(false);
-                                            }}
-                                            className="rounded-full px-1.5 py-1 text-xs text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
-                                        >
-                                            {issue.end_date || 'End date'}
-                                        </button>
-                                    </div>
-                                </SidebarField>
+                                            <Icon name="FolderGit2" size={14} />
+                                            {project.name}
+                                        </Link>
+                                    </SidebarField>
 
-                                <div className="mt-auto flex flex-col gap-2 border-t border-[var(--border-color)] pt-4">
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-gray-color)]">
-                                            Created
-                                        </span>
-                                        <span className="text-xs text-[var(--text-gray-color)]">
-                                            {formatDate(issue.created_at)}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-gray-color)]">
-                                            Modified
-                                        </span>
-                                        <span className="text-xs text-[var(--text-gray-color)]">
-                                            {formatDate(issue.updated_at)}
-                                        </span>
+                                    {(linkedPullRequests.length > 0 ||
+                                        githubRepositories.length > 0) && (
+                                        <SidebarField label="Development">
+                                            <IssueDevelopmentPanel
+                                                pullRequests={
+                                                    linkedPullRequests
+                                                }
+                                                repositories={
+                                                    githubRepositories
+                                                }
+                                                defaultBranchName={
+                                                    githubDefaultBranchName
+                                                }
+                                                onCreateBranch={
+                                                    canCreateGithubDevelopment &&
+                                                    githubAccountLinked
+                                                        ? createGithubBranch
+                                                        : undefined
+                                                }
+                                                onCreatePullRequest={
+                                                    canCreateGithubDevelopment &&
+                                                    githubAccountLinked
+                                                        ? createGithubPullRequest
+                                                        : undefined
+                                                }
+                                                requiresGithubAccountLink={
+                                                    canCreateGithubDevelopment &&
+                                                    !githubAccountLinked
+                                                }
+                                            />
+                                        </SidebarField>
+                                    )}
+
+                                    <SidebarField label="Dates">
+                                        <div className="flex items-center gap-1">
+                                            <Icon
+                                                name="Calendar"
+                                                size={14}
+                                                className="mr-1 text-[var(--text-gray-color)]"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowStartDate(true);
+                                                    setShowEndDate(false);
+                                                }}
+                                                className="rounded-full px-1.5 py-1 text-xs text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
+                                            >
+                                                {issue.start_date ||
+                                                    'Start date'}
+                                            </button>
+                                            <span className="text-xs text-[var(--text-gray-color)]">
+                                                —
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowEndDate(true);
+                                                    setShowStartDate(false);
+                                                }}
+                                                className="rounded-full px-1.5 py-1 text-xs text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
+                                            >
+                                                {issue.end_date || 'End date'}
+                                            </button>
+                                        </div>
+                                    </SidebarField>
+
+                                    <div className="mt-auto flex flex-col gap-2 border-t border-[var(--border-color)] pt-4">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-gray-color)]">
+                                                Created
+                                            </span>
+                                            <span className="text-xs text-[var(--text-gray-color)]">
+                                                {formatDate(issue.created_at)}
+                                            </span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-gray-color)]">
+                                                Modified
+                                            </span>
+                                            <span className="text-xs text-[var(--text-gray-color)]">
+                                                {formatDate(issue.updated_at)}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </main>
-                </div>
-                {(showStartDate || showEndDate) && (
-                    <div
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
-                        onClick={() => {
-                            setShowStartDate(false);
-                            setShowEndDate(false);
-                        }}
-                    >
-                        <div onClick={(e) => e.stopPropagation()}>
-                            {showStartDate && (
-                                <Calendar
-                                    selectedDate={parseDate(issue.start_date)}
-                                    onSelect={(date) => {
-                                        const newStartDate =
-                                            toLocalDateString(date);
-                                        updateIssue({
-                                            start_date: newStartDate,
-                                            ...(issue.end_date &&
-                                            issue.end_date < newStartDate
-                                                ? { end_date: newStartDate }
-                                                : {}),
-                                        });
-                                        setShowStartDate(false);
-                                    }}
-                                    onClose={() => setShowStartDate(false)}
-                                />
-                            )}
-                            {showEndDate && (
-                                <Calendar
-                                    selectedDate={parseDate(issue.end_date)}
-                                    minDate={parseDate(issue.start_date)}
-                                    rangeStart={parseDate(issue.start_date)}
-                                    onSelect={(date) => {
-                                        updateIssue({
-                                            end_date: toLocalDateString(date),
-                                        });
-                                        setShowEndDate(false);
-                                    }}
-                                    onClose={() => setShowEndDate(false)}
-                                />
-                            )}
-                        </div>
+                        </main>
                     </div>
-                )}
-            </div>
+                    {(showStartDate || showEndDate) && (
+                        <div
+                            className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
+                            onClick={() => {
+                                setShowStartDate(false);
+                                setShowEndDate(false);
+                            }}
+                        >
+                            <div onClick={(e) => e.stopPropagation()}>
+                                {showStartDate && (
+                                    <Calendar
+                                        selectedDate={parseDate(
+                                            issue.start_date,
+                                        )}
+                                        onSelect={(date) => {
+                                            const newStartDate =
+                                                toLocalDateString(date);
+                                            updateIssue({
+                                                start_date: newStartDate,
+                                                ...(issue.end_date &&
+                                                issue.end_date < newStartDate
+                                                    ? { end_date: newStartDate }
+                                                    : {}),
+                                            });
+                                            setShowStartDate(false);
+                                        }}
+                                        onClose={() => setShowStartDate(false)}
+                                    />
+                                )}
+                                {showEndDate && (
+                                    <Calendar
+                                        selectedDate={parseDate(issue.end_date)}
+                                        minDate={parseDate(issue.start_date)}
+                                        rangeStart={parseDate(issue.start_date)}
+                                        onSelect={(date) => {
+                                            updateIssue({
+                                                end_date:
+                                                    toLocalDateString(date),
+                                            });
+                                            setShowEndDate(false);
+                                        }}
+                                        onClose={() => setShowEndDate(false)}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </ProjectPrioritiesProvider>
         </ProjectLabelsProvider>
     );
 }

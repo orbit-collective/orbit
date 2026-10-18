@@ -218,9 +218,9 @@ export const ListRow = ({
                 {enabledColumns.priority && (
                     <td className={cellBase} data-column="priority">
                         <div className="flex items-center gap-1.5">
-                            <PriorityIcon priority={issue.priority} />
+                            <PriorityIcon priority={issue.priorityDetails} />
                             <span className="truncate capitalize text-[var(--text-color)]">
-                                {issue.priority}
+                                {issue.priority ?? 'None'}
                             </span>
                         </div>
                     </td>

@@ -11,6 +11,7 @@ import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
+import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { IssueType } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
@@ -61,6 +62,7 @@ export const QuickAddIssueRow = forwardRef<
         },
         ref,
     ) => {
+        const { defaultPriority } = useProjectPriorities();
         const [isEditing, setIsEditing] = useState(false);
         const [title, setTitle] = useState('');
         const defaultTypeId =
@@ -237,8 +239,11 @@ export const QuickAddIssueRow = forwardRef<
                 {enabledColumns.priority && (
                     <td className={cellBase}>
                         <span className="flex items-center gap-1.5 text-[var(--text-color)]">
-                            <PriorityIcon priority="medium" tooltip={false} />
-                            Medium
+                            <PriorityIcon
+                                priority={defaultPriority}
+                                tooltip={false}
+                            />
+                            {defaultPriority?.name ?? 'None'}
                         </span>
                     </td>
                 )}

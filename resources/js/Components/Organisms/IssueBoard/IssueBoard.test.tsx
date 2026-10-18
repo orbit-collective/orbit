@@ -1,9 +1,12 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
+import { priorities, priorityFields } from '@/stories/fixtures';
 import { todoStatus, inProgressStatus, doneStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
+import { ProjectPriority } from '@/types/Priorities';
 import IssueBoard from './IssueBoard';
 
 const mockAddAlert = vi.hoisted(() => vi.fn());
@@ -67,76 +70,144 @@ const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
     id: `ISSUE-${counter++}`,
     title: 'Some issue',
     workflowStatus: todoStatus,
-    priority: 'high',
+    ...priorityFields('high'),
     project_id: 1,
     user_id: 1,
     ...overrides,
+    // Naming just `priority` is enough: its id and details follow.
+    ...(overrides.priority !== undefined &&
+    overrides.priorityDetails === undefined
+        ? priorityFields(overrides.priority)
+        : {}),
 });
 
-describe('IssueBoard Component', () => {
-    test('renders a column for each of the three priorities', () => {
-        render(<IssueBoard issues={[]} />);
+const renderBoard = (issues: Issue[], scale: ProjectPriority[] = priorities) =>
+    render(
+        <ProjectPrioritiesProvider priorities={scale}>
+            <IssueBoard issues={issues} />
+        </ProjectPrioritiesProvider>,
+    );
 
-        expect(screen.getByText(/high Priority/i)).toBeInTheDocument();
-        expect(screen.getByText(/medium Priority/i)).toBeInTheDocument();
-        expect(screen.getByText(/low Priority/i)).toBeInTheDocument();
+/** The column titles in board order (issue titles are headings too, so they are left out). */
+const columnHeadings = () =>
+    screen
+        .getAllByRole('heading')
+        .map((heading) => heading.textContent ?? '')
+        .filter((text) => !text.includes('issue') && !text.includes(' one'));
+
+/** The column a heading belongs to. */
+const columnOf = (name: string) =>
+    screen.getByRole('heading', { name }).closest('div')?.parentElement
+        ?.parentElement?.parentElement?.parentElement as HTMLElement;
+
+describe('IssueBoard Component', () => {
+    test('renders a column for each priority of the project, then one for no priority', () => {
+        renderBoard([]);
+
+        expect(
+            screen.getByRole('heading', { name: 'High' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Medium' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'Low' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('heading', { name: 'No priority' }),
+        ).toBeInTheDocument();
+    });
+
+    test("renders the project's own scale in its own order", () => {
+        renderBoard(
+            [],
+            [
+                {
+                    id: 9,
+                    name: 'Blocker',
+                    color: '#9c27b0',
+                    icon: 'Flame',
+                    position: 0,
+                    isDefault: false,
+                },
+                {
+                    id: 8,
+                    name: 'Whenever',
+                    color: '#4caf50',
+                    icon: 'Leaf',
+                    position: 1,
+                    isDefault: true,
+                },
+            ],
+        );
+
+        expect(columnHeadings()).toEqual([
+            'Blocker',
+            'Whenever',
+            'No priority',
+        ]);
+        expect(screen.queryByRole('heading', { name: 'High' })).toBeNull();
     });
 
     test('groups each issue into the column matching its priority', () => {
-        const issues = [
+        renderBoard([
             makeIssue({ title: 'A high one', priority: 'high' }),
             makeIssue({ title: 'A medium one', priority: 'medium' }),
             makeIssue({ title: 'A low one', priority: 'low' }),
-        ];
-        render(<IssueBoard issues={issues} />);
+        ]);
 
-        // Every priority's issue is rendered somewhere on the board.
-        expect(screen.getByText('A high one')).toBeInTheDocument();
-        expect(screen.getByText('A medium one')).toBeInTheDocument();
-        expect(screen.getByText('A low one')).toBeInTheDocument();
+        expect(
+            within(columnOf('High')).getByText('A high one'),
+        ).toBeInTheDocument();
+        expect(
+            within(columnOf('Medium')).getByText('A medium one'),
+        ).toBeInTheDocument();
+        expect(
+            within(columnOf('Low')).getByText('A low one'),
+        ).toBeInTheDocument();
+    });
+
+    test('an issue without a priority lands in the No priority column', () => {
+        renderBoard([
+            makeIssue({
+                title: 'Unprioritised',
+                priority: null,
+                priority_id: null,
+                priorityDetails: null,
+            }),
+        ]);
+
+        expect(
+            within(columnOf('No priority')).getByText('Unprioritised'),
+        ).toBeInTheDocument();
     });
 
     test('shows an empty state in columns that have no issues', () => {
-        const issues = [makeIssue({ title: 'Only high', priority: 'high' })];
-        render(<IssueBoard issues={issues} />);
+        renderBoard([makeIssue({ title: 'Only high', priority: 'high' })]);
 
-        // The high column has an issue; medium and low are empty.
-        expect(screen.getAllByText('No issues')).toHaveLength(2);
+        // High has an issue; Medium, Low and No priority are empty.
+        expect(screen.getAllByText('No issues')).toHaveLength(3);
     });
 
-    test('ignores issues whose priority is not one of the three columns', () => {
-        const issues = [
-            makeIssue({ title: 'A high one', priority: 'high' }),
-            // A priority that has no matching column is silently skipped.
-            makeIssue({
-                title: 'An orphan',
-                priority: 'urgent' as Issue['priority'],
-            }),
-        ];
-        render(<IssueBoard issues={issues} />);
+    test('without a provider the columns come from the priorities the issues carry', () => {
+        render(
+            <IssueBoard
+                issues={[
+                    makeIssue({ title: 'A low one', priority: 'low' }),
+                    makeIssue({ title: 'A high one', priority: 'high' }),
+                ]}
+            />,
+        );
 
-        expect(screen.getByText('A high one')).toBeInTheDocument();
-        expect(screen.queryByText('An orphan')).not.toBeInTheDocument();
-    });
-
-    test('places an issue under the correct priority column', () => {
-        const issues = [makeIssue({ title: 'A low one', priority: 'low' })];
-        render(<IssueBoard issues={issues} />);
-
-        // Find the "low Priority" column and confirm the issue lives within it.
-        const lowHeading = screen.getByText(/low Priority/i);
-        const column = lowHeading.closest('div')?.parentElement?.parentElement
-            ?.parentElement?.parentElement as HTMLElement;
-        expect(within(column).getByText('A low one')).toBeInTheDocument();
+        expect(columnHeadings()).toEqual(['High', 'Low', 'No priority']);
     });
 
     test('the count badge reflects only non-closed issues in that priority', () => {
-        const issues = [
+        renderBoard([
             makeIssue({ priority: 'high', workflowStatus: todoStatus }),
             makeIssue({ priority: 'high', workflowStatus: todoStatus }),
             makeIssue({ priority: 'high', workflowStatus: doneStatus }),
-        ];
-        render(<IssueBoard issues={issues} />);
+        ]);
 
         // 2 open of 3 total in the High column => badge shows "2".
         expect(screen.getByText('2')).toBeInTheDocument();
@@ -174,7 +245,9 @@ describe('IssueBoard Component', () => {
         expect(screen.getByText('Underway')).toBeInTheDocument();
         expect(screen.getByText('Finished')).toBeInTheDocument();
         // Priority-only columns are gone once grouped by status.
-        expect(screen.queryByText(/high Priority/i)).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('heading', { name: 'High' }),
+        ).not.toBeInTheDocument();
     });
 
     test('persists the chosen grouping mode to localStorage and restores it', async () => {
@@ -190,24 +263,77 @@ describe('IssueBoard Component', () => {
         expect(
             screen.getByRole('heading', { name: 'To Do' }),
         ).toBeInTheDocument();
-        expect(screen.queryByText(/high Priority/i)).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('heading', { name: 'High' }),
+        ).not.toBeInTheDocument();
     });
 
-    test('dragging a card to a new priority column patches priority', () => {
+    test('dragging a card to a new priority column patches the priority by name', () => {
         const issue = makeIssue({ priority: 'low' });
-        render(<IssueBoard issues={[issue]} />);
+        renderBoard([issue]);
 
-        capturedHandlers.onDragEnd?.({
-            active: { id: issue.id },
-            over: { id: 'high' },
+        act(() => {
+            capturedHandlers.onDragEnd?.({
+                active: { id: issue.id },
+                over: { id: 'priority-1' },
+            });
         });
 
         expect(mockRoute).toHaveBeenCalledWith('issues.update', issue.id);
         expect(mockRouterPatch).toHaveBeenCalledWith(
             expect.any(String),
-            { priority: 'high' },
+            { priority: 'High' },
             expect.objectContaining({ preserveScroll: true }),
         );
+        // The card moves at once, before the server answers.
+        expect(
+            within(columnOf('High')).getByText('Some issue'),
+        ).toBeInTheDocument();
+    });
+
+    test('dragging a card to the No priority column clears its priority', () => {
+        const issue = makeIssue({ priority: 'low' });
+        renderBoard([issue]);
+
+        act(() => {
+            capturedHandlers.onDragEnd?.({
+                active: { id: issue.id },
+                over: { id: 'priority-none' },
+            });
+        });
+
+        expect(mockRouterPatch).toHaveBeenCalledWith(
+            expect.any(String),
+            { priority: null },
+            expect.objectContaining({ preserveScroll: true }),
+        );
+        expect(
+            within(columnOf('No priority')).getByText('Some issue'),
+        ).toBeInTheDocument();
+    });
+
+    test('dropping a card back on its own column patches nothing', () => {
+        const issue = makeIssue({ priority: 'low' });
+        renderBoard([issue]);
+
+        capturedHandlers.onDragEnd?.({
+            active: { id: issue.id },
+            over: { id: 'priority-3' },
+        });
+
+        expect(mockRouterPatch).not.toHaveBeenCalled();
+    });
+
+    test('dropping a card on a column that is not one of the priorities patches nothing', () => {
+        const issue = makeIssue({ priority: 'low' });
+        renderBoard([issue]);
+
+        capturedHandlers.onDragEnd?.({
+            active: { id: issue.id },
+            over: { id: 'priority-404' },
+        });
+
+        expect(mockRouterPatch).not.toHaveBeenCalled();
     });
 
     test("dragging a card to a status column patches the type's status of that category", async () => {
@@ -226,7 +352,7 @@ describe('IssueBoard Component', () => {
                 ],
             } as Issue['issueType'],
         });
-        render(<IssueBoard issues={[issue]} />);
+        renderBoard([issue]);
 
         await user.click(screen.getByRole('button', { name: 'Status' }));
 
@@ -251,7 +377,7 @@ describe('IssueBoard Component', () => {
                 transitions: [],
             } as unknown as Issue['issueType'],
         });
-        render(<IssueBoard issues={[issue]} />);
+        renderBoard([issue]);
 
         await user.click(screen.getByRole('button', { name: 'Status' }));
 
@@ -274,21 +400,20 @@ describe('IssueBoard Component', () => {
             },
         );
         const issue = makeIssue({ priority: 'low', title: 'Flaky issue' });
-        render(<IssueBoard issues={[issue]} />);
+        renderBoard([issue]);
 
         capturedHandlers.onDragEnd?.({
             active: { id: issue.id },
-            over: { id: 'high' },
+            over: { id: 'priority-1' },
         });
 
         expect(mockAddAlert).toHaveBeenCalledWith(
             'Failed to update issue priority',
             'error',
         );
-        // Reverted back to its original "low" column.
-        const lowHeading = screen.getByText(/low Priority/i);
-        const column = lowHeading.closest('div')?.parentElement?.parentElement
-            ?.parentElement?.parentElement as HTMLElement;
-        expect(within(column).getByText('Flaky issue')).toBeInTheDocument();
+        // Reverted back to its original "Low" column.
+        expect(
+            within(columnOf('Low')).getByText('Flaky issue'),
+        ).toBeInTheDocument();
     });
 });

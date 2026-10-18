@@ -156,8 +156,11 @@ describe('Dashboard Page', () => {
         // 4 total, 2 closed => 2 open.
         expect(screen.getByText('Open Issues')).toBeInTheDocument();
         expect(screen.getAllByText('2')).not.toHaveLength(0);
-        // 2 high priority issues => Critical Tasks value of 2.
+        // 2 issues at the top of their priority scale => Critical Tasks value of 2.
         expect(screen.getByText('Critical Tasks')).toBeInTheDocument();
+        expect(
+            screen.getByText('Issues at the top of their priority scale'),
+        ).toBeInTheDocument();
         // 2/4 closed => 50% resolution rate (rendered as both the stat
         // value and the progress bar percentage label).
         expect(screen.getAllByText('50%').length).toBeGreaterThan(0);

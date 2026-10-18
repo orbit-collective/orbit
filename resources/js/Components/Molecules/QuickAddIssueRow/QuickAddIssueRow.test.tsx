@@ -1,7 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ComponentProps, createRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
+import { priorities } from '@/stories/fixtures';
 import { IssueType } from '@/types/IssueTypes';
+import { ProjectPriority } from '@/types/Priorities';
 import QuickAddIssueRow, { QuickAddIssueRowHandle } from './QuickAddIssueRow';
 
 const issueTypes: IssueType[] = [
@@ -39,19 +42,22 @@ const enabledColumns = {
 
 const renderRow = (
     props: Partial<ComponentProps<typeof QuickAddIssueRow>> = {},
+    projectPriorities: ProjectPriority[] = [],
 ) =>
     render(
-        <table>
-            <tbody>
-                <QuickAddIssueRow
-                    colSpan={5}
-                    enabledColumns={enabledColumns}
-                    issueTypes={issueTypes}
-                    onSubmit={vi.fn()}
-                    {...props}
-                />
-            </tbody>
-        </table>,
+        <ProjectPrioritiesProvider priorities={projectPriorities}>
+            <table>
+                <tbody>
+                    <QuickAddIssueRow
+                        colSpan={5}
+                        enabledColumns={enabledColumns}
+                        issueTypes={issueTypes}
+                        onSubmit={vi.fn()}
+                        {...props}
+                    />
+                </tbody>
+            </table>
+        </ProjectPrioritiesProvider>,
     );
 
 describe('QuickAddIssueRow', () => {
@@ -170,7 +176,7 @@ describe('QuickAddIssueRow', () => {
     });
 
     test('previews the id the issue will get and the defaults it will be created with', () => {
-        renderRow({ nextIssueId: 42 });
+        renderRow({ nextIssueId: 42 }, priorities);
 
         fireEvent.click(screen.getByText('New issue'));
 
@@ -178,6 +184,26 @@ describe('QuickAddIssueRow', () => {
         expect(screen.getByText('To Do')).toBeInTheDocument();
         expect(screen.getByText('Unassigned')).toBeInTheDocument();
         expect(screen.getByText('Medium')).toBeInTheDocument();
+    });
+
+    test('previews whichever priority the project made its default', () => {
+        renderRow({}, [
+            { ...priorities[0], name: 'Urgent', isDefault: true },
+            { ...priorities[1], isDefault: false },
+        ]);
+
+        fireEvent.click(screen.getByText('New issue'));
+
+        expect(screen.getByText('Urgent')).toBeInTheDocument();
+        expect(screen.queryByText('Medium')).not.toBeInTheDocument();
+    });
+
+    test('previews no priority when the project has none', () => {
+        renderRow({ nextIssueId: 42 });
+
+        fireEvent.click(screen.getByText('New issue'));
+
+        expect(screen.getByText('None')).toBeInTheDocument();
     });
 
     test('the type stays selectable while the title is still empty', () => {

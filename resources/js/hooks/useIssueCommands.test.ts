@@ -27,6 +27,7 @@ vi.mock('@/context/AlertContext', () => ({
     useAlert: () => ({ addAlert: mocks.addAlert }),
 }));
 
+import { priorities } from '@/stories/fixtures';
 import { useIssueCommands } from './useIssueCommands';
 
 const project = { id: 1, name: 'Orbit' } as Project;
@@ -62,6 +63,7 @@ const render = (
             ancestors,
             users,
             labels,
+            priorities,
             abilities,
             update,
         }),
@@ -107,7 +109,7 @@ describe('useIssueCommands', () => {
             ?.children?.()[0]
             .perform?.();
 
-        expect(update).toHaveBeenCalledWith({ priority: 'high' });
+        expect(update).toHaveBeenCalledWith({ priority: 'High' });
     });
 
     test('copy link copies the absolute issue url and confirms with an alert', async () => {

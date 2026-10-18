@@ -16,10 +16,20 @@ const MAX_VISIBLE_ISSUES_PER_DAY: Record<ViewMode, number> = {
     week: 6,
 };
 
-const PRIORITY_CHIP_CLASSES: Record<Issue['priority'], string> = {
-    high: 'border-l-[var(--error-color)] bg-[var(--error-color)]/10 hover:bg-[var(--error-color)]/15',
-    medium: 'border-l-[var(--warning-color)] bg-[var(--warning-color)]/10 hover:bg-[var(--warning-color)]/15',
-    low: 'border-l-[var(--success-color)] bg-[var(--success-color)]/10 hover:bg-[var(--success-color)]/15',
+/** An issue without a priority gets the neutral chip. */
+const NO_PRIORITY_COLOR = 'var(--text-muted-color)';
+
+/**
+ * The chip is tinted with its priority's own color: a solid left edge and a
+ * faint wash, the same look the three fixed priorities used to have.
+ */
+const chipStyle = (issue: Issue): React.CSSProperties => {
+    const color = issue.priorityDetails?.color ?? NO_PRIORITY_COLOR;
+
+    return {
+        borderLeftColor: color,
+        backgroundColor: `color-mix(in srgb, ${color} 10%, transparent)`,
+    };
 };
 
 const MONTH_NAMES = [
@@ -394,11 +404,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                             onMouseLeave={() =>
                                                 setPreview(null)
                                             }
+                                            style={chipStyle(issue)}
                                             className={cn(
-                                                'flex items-center rounded-r-md border-l-2 px-2 py-1.5 text-left transition-all sm:py-1',
-                                                PRIORITY_CHIP_CLASSES[
-                                                    issue.priority
-                                                ],
+                                                'flex items-center rounded-r-md border-l-2 px-2 py-1.5 text-left transition-all hover:brightness-125 sm:py-1',
                                             )}
                                         >
                                             <span className="truncate text-xs font-medium text-[var(--text-color)] sm:text-[11px]">

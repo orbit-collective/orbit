@@ -6,6 +6,7 @@ import { useCommands } from '@/hooks/useCommands';
 import { PageProps } from '@/types';
 import { Issue, IssueAbilities } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import { buildIssueCommands } from '@/utils/issueCommands';
@@ -24,6 +25,7 @@ interface UseIssueCommandsInput {
     ancestors: Issue[];
     users: AssignableUser[];
     labels: ProjectLabel[];
+    priorities: ProjectPriority[];
     abilities?: IssueAbilities;
     /** The page's own PATCH helper, so a palette edit goes through the same route. */
     update: (data: Record<string, FormDataConvertible>) => void;
@@ -40,6 +42,7 @@ export const useIssueCommands = ({
     ancestors,
     users,
     labels,
+    priorities,
     abilities = NO_ABILITIES,
     update,
 }: UseIssueCommandsInput): void => {
@@ -57,6 +60,7 @@ export const useIssueCommands = ({
                 ancestors,
                 users,
                 labels,
+                priorities,
                 abilities,
                 currentUserId,
                 link: route('issues.show', {
@@ -82,6 +86,7 @@ export const useIssueCommands = ({
             ancestors,
             users,
             labels,
+            priorities,
             abilities,
             currentUserId,
             update,

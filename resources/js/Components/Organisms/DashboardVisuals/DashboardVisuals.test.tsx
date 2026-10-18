@@ -54,7 +54,7 @@ describe('DashboardVisuals Component', () => {
         render(<DashboardVisuals stats={stats} productivity_trend={[]} />);
 
         // 2 high of 4 => "(50%)". Confirm the high-priority count is shown.
-        expect(screen.getByText('High Priority')).toBeInTheDocument();
+        expect(screen.getByText('High')).toBeInTheDocument();
         expect(screen.getByText('(50%)')).toBeInTheDocument();
     });
 });

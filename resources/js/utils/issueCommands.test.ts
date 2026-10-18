@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import { priorities, priorityFields } from '@/stories/fixtures';
 import { Command } from '@/types/Commands';
 import { Issue, IssueAbilities } from '@/types/Issues';
 import { WorkflowStatus } from '@/types/Workflow';
@@ -27,7 +28,7 @@ const baseIssue = (overrides: Partial<Issue> = {}): Issue =>
         number: 12,
         title: 'Fix login',
         status: 'open',
-        priority: 'high',
+        ...priorityFields('high'),
         project_id: 1,
         user_id: 1,
         labels: ['bug'],
@@ -67,6 +68,7 @@ const make = (overrides: Partial<IssueCommandContext> = {}) => {
                 isSystem: true,
             },
         ],
+        priorities,
         abilities: ALL,
         currentUserId: 1,
         link: 'https://orbit.test/projects/1/issues/42',
@@ -199,22 +201,70 @@ describe('buildIssueCommands', () => {
     });
 
     describe('Change priority', () => {
-        test('offers the other two priorities', () => {
+        test('offers the other priorities of the project, then "No priority"', () => {
             const { byId } = make();
 
             expect(
                 byId('issue.priority')
                     .children?.()
                     .map((c) => c.title),
-            ).toEqual(['Medium', 'Low']);
+            ).toEqual(['Medium', 'Low', 'No priority']);
         });
 
-        test('picking one sends priority', () => {
+        test("offers a custom scale under its own names, with each priority's icon and color", () => {
+            const { byId } = make({
+                issue: baseIssue({ ...priorityFields(null) }),
+                priorities: [
+                    {
+                        id: 9,
+                        name: 'Blocker',
+                        color: '#9c27b0',
+                        icon: 'Flame',
+                        position: 0,
+                        isDefault: true,
+                    },
+                ],
+            });
+
+            const steps = byId('issue.priority').children?.() ?? [];
+
+            expect(steps.map((c) => c.title)).toEqual(['Blocker']);
+            expect(steps[0]).toMatchObject({
+                icon: 'Flame',
+                iconColor: '#9c27b0',
+            });
+        });
+
+        test('picking one sends its name', () => {
             const { ctx, byId } = make();
 
             byId('issue.priority').children?.()[1].perform?.();
 
-            expect(ctx.update).toHaveBeenCalledWith({ priority: 'low' });
+            expect(ctx.update).toHaveBeenCalledWith({ priority: 'Low' });
+        });
+
+        test('"No priority" clears the priority', () => {
+            const { ctx, byId } = make();
+
+            byId('issue.priority').children?.()[2].perform?.();
+
+            expect(ctx.update).toHaveBeenCalledWith({ priority: null });
+        });
+
+        test('an issue without a priority is not offered "No priority"', () => {
+            const { byId } = make({
+                issue: baseIssue({ ...priorityFields(null) }),
+            });
+
+            expect(
+                byId('issue.priority')
+                    .children?.()
+                    .map((c) => c.title),
+            ).toEqual(['High', 'Medium', 'Low']);
+        });
+
+        test('the subtitle shows the current priority', () => {
+            expect(make().byId('issue.priority').subtitle).toBe('High');
         });
     });
 

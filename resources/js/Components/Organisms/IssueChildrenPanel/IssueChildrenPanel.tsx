@@ -71,7 +71,6 @@ export default function IssueChildrenPanel({
             {
                 title: trimmed,
                 project_id: project.id,
-                priority: 'medium',
                 parent_id: issue.id,
                 ...(issueTypeId ? { issue_type_id: issueTypeId } : {}),
             },

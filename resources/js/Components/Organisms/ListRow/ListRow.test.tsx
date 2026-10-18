@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { priorityFields } from '@/stories/fixtures';
 import { todoStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { ListRow } from './ListRow';
@@ -84,6 +85,21 @@ describe('ListRow Component', () => {
 
         expect(screen.getByText('In Review')).toBeInTheDocument();
         expect(screen.queryByText('open')).not.toBeInTheDocument();
+    });
+
+    test('shows the issue priority name and draws its icon in the priority color', () => {
+        const { container } = renderRow({
+            issue: makeIssue({ ...priorityFields('high') }),
+        });
+
+        expect(screen.getAllByText('High').length).toBeGreaterThan(0);
+        expect(container.querySelector('svg[stroke="#f44336"]')).not.toBeNull();
+    });
+
+    test('shows "None" for an issue without a priority', () => {
+        renderRow({ issue: makeIssue({ ...priorityFields(null) }) });
+
+        expect(screen.getByText('None')).toBeInTheDocument();
     });
 
     test('renders an expand/collapse chevron when hasChildren is true', () => {

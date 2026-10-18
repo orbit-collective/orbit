@@ -8,16 +8,10 @@ const percent = (part: number, total: number) =>
     total === 0 ? 0 : Math.round((part / total) * 100);
 
 const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
-    stats: { total, priority, category },
+    stats: { total, priority, noPriority, category },
     productivity_trend,
 }) => {
     const stats = {
-        high: priority.high,
-        medium: priority.medium,
-        low: priority.low,
-        highPct: percent(priority.high, total),
-        mediumPct: percent(priority.medium, total),
-        lowPct: percent(priority.low, total),
         todo: category.todo,
         inProgress: category.in_progress,
         done: category.done,
@@ -41,12 +35,9 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
                 />
 
                 <PriorityBreakdownCard
-                    high={stats.high}
-                    medium={stats.medium}
-                    low={stats.low}
-                    highPct={stats.highPct}
-                    mediumPct={stats.mediumPct}
-                    lowPct={stats.lowPct}
+                    priorities={priority}
+                    noPriority={noPriority}
+                    total={total}
                 />
             </div>
         </div>

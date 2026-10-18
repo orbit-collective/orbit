@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { priorityFields } from '@/stories/fixtures';
 import { todoStatus, inProgressStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import IssuePreviewCard from './IssuePreviewCard';
@@ -42,6 +43,31 @@ describe('IssuePreviewCard Component', () => {
         expect(screen.getByText('Fix login bug')).toBeInTheDocument();
         expect(screen.getByText('In Progress')).toBeInTheDocument();
         expect(screen.getByText('high')).toBeInTheDocument();
+    });
+
+    test('shows the priority by name with a dot in its color', () => {
+        const { container } = render(
+            <IssuePreviewCard
+                issue={makeIssue({ ...priorityFields('high') })}
+                anchorRect={makeRect()}
+            />,
+        );
+
+        expect(screen.getByText('High')).toBeInTheDocument();
+        expect(container.querySelectorAll('span[style]')[0]).toHaveStyle({
+            backgroundColor: '#f44336',
+        });
+    });
+
+    test('says "No priority" for an issue without one', () => {
+        render(
+            <IssuePreviewCard
+                issue={makeIssue({ ...priorityFields(null) })}
+                anchorRect={makeRect()}
+            />,
+        );
+
+        expect(screen.getByText('No priority')).toBeInTheDocument();
     });
 
     test('renders each label', () => {
