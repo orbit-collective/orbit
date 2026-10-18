@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Issue;
 use App\Models\Permission;
 use App\Models\Project;
 use App\Models\ProjectUser;
@@ -111,4 +112,57 @@ test('reordering rejects an incomplete or foreign list', function () {
 
     $this->actingAs($admin)->patch("/projects/$project->id/priorities/order", ['order' => [$ids[0]]])
         ->assertSessionHasErrors('order');
+});
+
+test('an admin can delete a priority and move its issues to another', function () {
+    [$project, $admin] = projectWithMember('admin');
+    $issue = Issue::factory()->create(['project_id' => $project->id, 'priority' => 'high']);
+    $priorities = $project->priorities()->pluck('id', 'name');
+
+    $this->actingAs($admin)->delete("/projects/$project->id/priorities/{$priorities['High']}", ['replacement_id' => $priorities['Low']])
+        ->assertRedirect();
+
+    $this->assertDatabaseMissing('priorities', ['id' => $priorities['High']]);
+    expect($issue->fresh()->priority->name)->toBe('Low');
+});
+
+test('a priority can be deleted without a replacement', function () {
+    [$project, $admin] = projectWithMember('admin');
+    $low = app(PriorityService::class)->getPriorities($project)->firstWhere('name', 'Low');
+
+    $this->actingAs($admin)->delete("/projects/$project->id/priorities/$low->id")->assertRedirect();
+
+    $this->assertDatabaseMissing('priorities', ['id' => $low->id]);
+});
+
+test('the replacement has to belong to the project', function () {
+    [$project, $admin] = projectWithMember('admin');
+    $low = app(PriorityService::class)->getPriorities($project)->firstWhere('name', 'Low');
+    $foreign = app(PriorityService::class)->getPriorities(Project::factory()->create())->first();
+
+    $this->actingAs($admin)->delete("/projects/$project->id/priorities/$low->id", ['replacement_id' => $foreign->id])
+        ->assertSessionHasErrors('replacement_id');
+
+    $this->assertDatabaseHas('priorities', ['id' => $low->id]);
+});
+
+test('a member cannot delete a priority and a foreign priority answers 404', function () {
+    [$project, $member] = projectWithMember('member');
+    $low = app(PriorityService::class)->getPriorities($project)->firstWhere('name', 'Low');
+    $foreign = app(PriorityService::class)->getPriorities(Project::factory()->create())->first();
+
+    $this->actingAs($member)->delete("/projects/$project->id/priorities/$low->id")->assertForbidden();
+    [$other, $admin] = projectWithMember('admin');
+    $this->actingAs($admin)->delete("/projects/$other->id/priorities/$foreign->id")->assertNotFound();
+});
+
+test('the last priority cannot be deleted through the endpoint', function () {
+    [$project, $admin] = projectWithMember('admin');
+    $service = app(PriorityService::class);
+    $service->getPriorities($project)->each(fn ($priority) => $priority->name === 'Medium' ? null : $service->deletePriority($project, $priority));
+    $medium = $project->priorities()->first();
+
+    $this->actingAs($admin)->delete("/projects/$project->id/priorities/$medium->id")->assertSessionHasErrors('priority');
+
+    $this->assertDatabaseHas('priorities', ['id' => $medium->id]);
 });

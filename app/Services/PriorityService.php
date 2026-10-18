@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Priority;
 use App\Models\Project;
 use App\Repositories\PriorityRepository;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -130,11 +131,17 @@ class PriorityService
         }
 
         $priority = DB::transaction(function () use ($project, $priority, $data) {
+            $previousName = $priority->name;
+
             $priority = $this->priorityRepository->update($priority, array_filter([
                 'name' => isset($data['name']) ? trim($data['name']) : null,
                 'color' => $data['color'] ?? null,
                 'icon' => $data['icon'] ?? null,
             ], fn ($value) => $value !== null));
+
+            if ($priority->name !== $previousName) {
+                $this->priorityRepository->replaceNameReferences($project, $previousName, $priority->name);
+            }
 
             if (! empty($data['is_default'])) {
                 $this->priorityRepository->makeDefault($priority);
@@ -145,7 +152,53 @@ class PriorityService
             return $priority;
         });
 
+        CacheVersion::bump(CacheVersion::ISSUES);
+
         return $priority->refresh();
+    }
+
+    /**
+     * Deletes a priority. Its issues move to `$replacement` (or are left
+     * without a priority), text copies of its name are rewritten or removed,
+     * and the default flag passes on if it was the default. A project always
+     * keeps at least one priority.
+     */
+    public function deletePriority(Project $project, Priority $priority, ?Priority $replacement = null): void
+    {
+        $this->ensureSystemPriorities($project);
+
+        if ($this->priorityRepository->getForProject($project)->count() <= 1) {
+            throw ValidationException::withMessages([
+                'priority' => 'A project needs at least one priority.',
+            ]);
+        }
+
+        if ($replacement && ($replacement->project_id !== $project->id || $replacement->is($priority))) {
+            throw ValidationException::withMessages([
+                'replacement_id' => 'Choose a different priority of this project to move the issues to.',
+            ]);
+        }
+
+        DB::transaction(function () use ($project, $priority, $replacement) {
+            $this->priorityRepository->moveIssues($priority, $replacement);
+            $this->priorityRepository->replaceNameReferences($project, $priority->name, $replacement?->name);
+            $this->priorityRepository->removeFromSavedFilters($project, $priority->id);
+            $this->priorityRepository->delete($priority);
+
+            $this->priorityRepository->repackPositions($project);
+
+            if ($priority->is_default) {
+                $this->priorityRepository->makeDefault(
+                    $replacement?->refresh() ?? $this->priorityRepository->getForProject($project)->first()
+                );
+            }
+
+            $this->activityLogService->log($project->id, "Deleted the \"$priority->name\" priority");
+        });
+
+        // The bulk UPDATE of the issues fires no model event, and the models
+        // bump while the transaction is still open: bump once it is committed.
+        CacheVersion::bump(CacheVersion::ISSUES);
     }
 
     /**

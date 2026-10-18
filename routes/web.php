@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/projects/{project}/priorities', [PriorityController::class, 'store'])->name('projects.priorities.store');
     Route::patch('/projects/{project}/priorities/order', [PriorityController::class, 'reorder'])->name('projects.priorities.reorder');
     Route::patch('/projects/{project}/priorities/{priority}', [PriorityController::class, 'update'])->name('projects.priorities.update');
+    Route::delete('/projects/{project}/priorities/{priority}', [PriorityController::class, 'destroy'])->name('projects.priorities.destroy');
     Route::post('/projects/{project}/issue-types', [IssueTypeController::class, 'store'])->name('projects.issue-types.store');
     Route::patch('/projects/{project}/issue-types/{issueType}', [IssueTypeController::class, 'update'])->name('projects.issue-types.update');
     Route::delete('/projects/{project}/issue-types/{issueType}', [IssueTypeController::class, 'destroy'])->name('projects.issue-types.destroy');
