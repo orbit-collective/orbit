@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Services\PriorityService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PriorityController extends Controller
@@ -46,6 +47,26 @@ class PriorityController extends Controller
         $this->priorityService->updatePriority($project, $priority, $validated);
 
         return redirect()->back()->with('success', "The \"{$validated['name']}\" priority has been updated.");
+    }
+
+    public function destroy(Request $request, Project $project, Priority $priority): RedirectResponse
+    {
+        $this->ensurePriorityBelongsToProject($project, $priority);
+        $this->authorize('deletePriorities', $project);
+
+        $validated = $request->validate([
+            'replacement_id' => ['nullable', 'integer', Rule::exists('priorities', 'id')->where('project_id', $project->id)],
+        ]);
+
+        $replacement = isset($validated['replacement_id'])
+            ? $project->priorities()->find($validated['replacement_id'])
+            : null;
+
+        $name = $priority->name;
+
+        $this->priorityService->deletePriority($project, $priority, $replacement);
+
+        return redirect()->back()->with('success', "The \"$name\" priority has been deleted.");
     }
 
     public function reorder(Request $request, Project $project): RedirectResponse
