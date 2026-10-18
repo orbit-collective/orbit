@@ -2,6 +2,7 @@ import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout
 import WorkspaceSettingsIssueTypesTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIssueTypesTab';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { Project } from '@/types/Projects';
 
@@ -11,6 +12,7 @@ interface SettingsIssueTypesProps {
     selectedProjectId?: number | null;
     issueTypes?: IssueType[];
     labels?: ProjectLabel[];
+    priorities?: ProjectPriority[];
     hasIssueTypesAccess?: boolean;
     canCreateIssueTypes?: boolean;
     canUpdateIssueTypes?: boolean;
@@ -24,6 +26,7 @@ export default function SettingsIssueTypes({
     selectedProjectId = null,
     issueTypes = [],
     labels = [],
+    priorities = [],
     hasIssueTypesAccess = false,
     canCreateIssueTypes = false,
     canUpdateIssueTypes = false,
@@ -37,6 +40,7 @@ export default function SettingsIssueTypes({
                 selectedProjectId={selectedProjectId}
                 issueTypes={issueTypes}
                 labels={labels}
+                priorities={priorities}
                 hasIssueTypesAccess={hasIssueTypesAccess}
                 canCreateIssueTypes={canCreateIssueTypes}
                 canUpdateIssueTypes={canUpdateIssueTypes}

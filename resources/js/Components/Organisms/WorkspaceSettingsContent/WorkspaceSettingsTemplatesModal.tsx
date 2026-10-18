@@ -12,6 +12,7 @@ import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { IssueType, IssueTypeTemplate } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import { cn } from '@/utils/cn';
 import {
     extractImageFiles,
@@ -25,17 +26,9 @@ interface WorkspaceSettingsTemplatesModalProps {
     projectId: number;
     issueType: IssueType | null;
     labels?: ProjectLabel[];
+    priorities?: ProjectPriority[];
     canManageTemplates?: boolean;
 }
-
-const PRIORITY_OPTIONS = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-];
-
-const priorityLabel = (value: string | null) =>
-    PRIORITY_OPTIONS.find((option) => option.value === value)?.label ?? null;
 
 export default function WorkspaceSettingsTemplatesModal({
     isOpen,
@@ -43,9 +36,20 @@ export default function WorkspaceSettingsTemplatesModal({
     projectId,
     issueType,
     labels = [],
+    priorities = [],
     canManageTemplates = false,
 }: WorkspaceSettingsTemplatesModalProps) {
     const { addAlert } = useAlert();
+    const priorityOptions = priorities.map((priority) => ({
+        value: priority.name,
+        label: priority.name,
+    }));
+    // A template keeps its default priority by name; a name the project no
+    // longer has reads as no default.
+    const priorityLabel = (value: string | null) =>
+        priorityOptions.find(
+            (option) => option.value.toLowerCase() === value?.toLowerCase(),
+        )?.label ?? null;
     const { uploadImage } = useImageUpload(projectId);
     const descriptionRef = useRef<HTMLTextAreaElement>(null);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -381,7 +385,7 @@ export default function WorkspaceSettingsTemplatesModal({
                                 <InlineSelectDropdown
                                     label="Default priority"
                                     placeholder="No default"
-                                    options={PRIORITY_OPTIONS}
+                                    options={priorityOptions}
                                     value={defaultPriority}
                                     onChange={setDefaultPriority}
                                     subtle

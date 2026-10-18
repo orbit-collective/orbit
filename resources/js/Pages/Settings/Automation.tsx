@@ -2,6 +2,7 @@ import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout
 import WorkspaceSettingsAutomationTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsAutomationTab';
 import { AutomationOption, AutomationRule } from '@/types/Automation';
 import { IssueType } from '@/types/IssueTypes';
+import { ProjectPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { Project } from '@/types/Projects';
 
@@ -13,6 +14,7 @@ interface SettingsAutomationProps {
     triggerTypes?: AutomationOption[];
     actionTypes?: AutomationOption[];
     issueTypes?: IssueType[];
+    priorities?: ProjectPriority[];
     hasAutomationAccess?: boolean;
     canUpdateAutomation?: boolean;
 }
@@ -25,6 +27,7 @@ export default function SettingsAutomation({
     triggerTypes = [],
     actionTypes = [],
     issueTypes = [],
+    priorities = [],
     hasAutomationAccess = false,
     canUpdateAutomation = false,
 }: SettingsAutomationProps) {
@@ -37,6 +40,7 @@ export default function SettingsAutomation({
                 triggerTypes={triggerTypes}
                 actionTypes={actionTypes}
                 issueTypes={issueTypes}
+                priorities={priorities}
                 hasAutomationAccess={hasAutomationAccess}
                 canUpdateAutomation={canUpdateAutomation}
             />

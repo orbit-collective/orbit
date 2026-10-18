@@ -2,6 +2,7 @@ import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout
 import WorkspaceSettingsIntegrationsTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationsTab';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import {
     GithubConnectStatus,
     ImportIntegrationSettings,
@@ -24,6 +25,7 @@ interface SettingsIntegrationsProps {
     canUpdateIntegrations?: boolean;
     issueTypes?: IssueType[];
     labels?: ProjectLabel[];
+    priorities?: ProjectPriority[];
 }
 
 export default function SettingsIntegrations({
@@ -39,6 +41,7 @@ export default function SettingsIntegrations({
     canUpdateIntegrations = false,
     issueTypes = [],
     labels = [],
+    priorities = [],
 }: SettingsIntegrationsProps) {
     return (
         <SettingsLayout tabId="integrations" projects={projects}>
@@ -54,6 +57,7 @@ export default function SettingsIntegrations({
                 canUpdateIntegrations={canUpdateIntegrations}
                 issueTypes={issueTypes}
                 labels={labels}
+                priorities={priorities}
             />
         </SettingsLayout>
     );

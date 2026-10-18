@@ -7,6 +7,7 @@ import {
 } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { priorities } from '@/stories/fixtures';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import WorkspaceSettingsTemplatesModal from './WorkspaceSettingsTemplatesModal';
@@ -63,7 +64,7 @@ const bugType: IssueType = {
             issueTypeId: 1,
             name: 'Standard Bug Report',
             description: 'Steps to reproduce...',
-            defaultPriority: 'high',
+            defaultPriority: 'High',
             defaultLabels: ['bug'],
         },
     ],
@@ -91,6 +92,7 @@ const renderModal = (
                 projectId={1}
                 issueType={bugType}
                 labels={labels}
+                priorities={priorities}
                 {...props}
             />
         </AlertProvider>,
@@ -168,11 +170,34 @@ describe('WorkspaceSettingsTemplatesModal', () => {
             expect.objectContaining({
                 name: 'Quick Report',
                 description: '## Steps',
-                default_priority: 'high',
+                default_priority: 'High',
                 default_labels: ['chore'],
             }),
             expect.any(Object),
         );
+    });
+
+    test("offers the project's own priorities as the default", () => {
+        renderModal({
+            canManageTemplates: true,
+            priorities: [
+                { ...priorities[0], name: 'Blocker', isDefault: false },
+            ],
+        });
+
+        fireEvent.click(screen.getByText('New template'));
+        fireEvent.click(screen.getByLabelText('Default priority'));
+
+        expect(screen.getByText('Blocker')).toBeInTheDocument();
+        expect(screen.queryByText('High')).not.toBeInTheDocument();
+    });
+
+    test('a template default the project no longer has reads as no default', () => {
+        renderModal({
+            priorities: [{ ...priorities[1], name: 'Medium' }],
+        });
+
+        expect(screen.queryByText('High priority')).not.toBeInTheDocument();
     });
 
     test('editing a template prefills the form and patches it', () => {

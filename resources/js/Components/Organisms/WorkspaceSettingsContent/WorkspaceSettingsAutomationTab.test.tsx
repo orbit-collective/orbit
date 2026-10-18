@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { priorities } from '@/stories/fixtures';
 import { AutomationRule } from '@/types/Automation';
 import { IssueType } from '@/types/IssueTypes';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
@@ -65,7 +66,7 @@ const rule: AutomationRule = {
     triggerType: 'github.pull_request.merged',
     conditions: [],
     enabled: true,
-    actions: [{ type: 'change_priority', params: { priority: 'high' } }],
+    actions: [{ type: 'change_priority', params: { priority: 'High' } }],
 };
 
 const triggerTypes = [
@@ -165,6 +166,7 @@ describe('WorkspaceSettingsAutomationTab', () => {
             automationRules: [],
             triggerTypes,
             actionTypes,
+            priorities,
             hasAutomationAccess: true,
             canUpdateAutomation: true,
         });
@@ -195,11 +197,42 @@ describe('WorkspaceSettingsAutomationTab', () => {
                 name: 'Notify on merge',
                 trigger_type: 'github.pull_request.opened',
                 actions: [
-                    { type: 'change_priority', params: { priority: 'high' } },
+                    { type: 'change_priority', params: { priority: 'High' } },
                 ],
             }),
             expect.anything(),
         );
+    });
+
+    test("the change-priority action offers the project's own priorities and starts on its default", async () => {
+        const user = userEvent.setup();
+        renderTab({
+            memberProjects: [project],
+            selectedProjectId: 1,
+            automationRules: [],
+            triggerTypes,
+            actionTypes,
+            priorities: [
+                { ...priorities[0], name: 'Blocker', isDefault: false },
+                { ...priorities[1], name: 'Whenever', isDefault: true },
+            ],
+            hasAutomationAccess: true,
+            canUpdateAutomation: true,
+        });
+
+        await user.click(screen.getByRole('button', { name: 'New rule' }));
+        await user.click(screen.getByRole('button', { name: 'Add action' }));
+        await user.click(screen.getByText('Change priority'));
+
+        // The new action starts on the project's default priority.
+        expect(
+            screen.getByRole('button', { name: 'Priority' }),
+        ).toHaveTextContent('Whenever');
+
+        await user.click(screen.getByRole('button', { name: 'Priority' }));
+
+        expect(screen.getByText('Blocker')).toBeInTheDocument();
+        expect(screen.queryByText('High')).not.toBeInTheDocument();
     });
 
     test('Save is disabled until the draft actually changes', async () => {

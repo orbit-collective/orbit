@@ -27,6 +27,7 @@ import {
     AutomationRule,
 } from '@/types/Automation';
 import { IssueType } from '@/types/IssueTypes';
+import { ProjectPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import {
     actionMeta,
@@ -44,6 +45,7 @@ interface WorkspaceSettingsAutomationTabProps {
     triggerTypes?: AutomationOption[];
     actionTypes?: AutomationOption[];
     issueTypes?: IssueType[];
+    priorities?: ProjectPriority[];
     hasAutomationAccess?: boolean;
     canUpdateAutomation?: boolean;
 }
@@ -59,12 +61,6 @@ const STATUS_CATEGORY_OPTIONS: AutomationOption[] = [
     { value: 'todo', label: 'To Do' },
     { value: 'in_progress', label: 'In Progress' },
     { value: 'done', label: 'Done' },
-];
-
-const PRIORITY_OPTIONS: AutomationOption[] = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
 ];
 
 type NodeSelection =
@@ -107,12 +103,15 @@ function draftFromRule(rule: AutomationRule): Draft {
     };
 }
 
-function defaultParamsFor(actionType: string): Record<string, string> {
+function defaultParamsFor(
+    actionType: string,
+    defaultPriorityName: string,
+): Record<string, string> {
     switch (actionType) {
         case 'change_status':
             return { category: 'done' };
         case 'change_priority':
-            return { priority: 'medium' };
+            return { priority: defaultPriorityName };
         default:
             return {};
     }
@@ -257,6 +256,7 @@ export default function WorkspaceSettingsAutomationTab({
     triggerTypes = [],
     actionTypes = [],
     issueTypes = [],
+    priorities = [],
     hasAutomationAccess = false,
     canUpdateAutomation = false,
 }: WorkspaceSettingsAutomationTabProps) {
@@ -274,6 +274,18 @@ export default function WorkspaceSettingsAutomationTab({
             ),
         [issueTypes],
     );
+    // The change-priority action picks one of the project's own priorities.
+    const priorityOptions = useMemo<AutomationOption[]>(
+        () =>
+            priorities.map((priority) => ({
+                value: priority.name,
+                label: priority.name,
+            })),
+        [priorities],
+    );
+    const defaultPriorityName =
+        (priorities.find((priority) => priority.isDefault) ?? priorities[0])
+            ?.name ?? '';
     const statusLabels = useMemo(
         () =>
             Object.fromEntries(
@@ -367,7 +379,7 @@ export default function WorkspaceSettingsAutomationTab({
         if (!draft) return;
         const nextActions = [
             ...draft.actions,
-            { type, params: defaultParamsFor(type) },
+            { type, params: defaultParamsFor(type, defaultPriorityName) },
         ];
         updateDraft({ actions: nextActions });
         setSelectedNode({ kind: 'action', index: nextActions.length - 1 });
@@ -1074,6 +1086,9 @@ export default function WorkspaceSettingsAutomationTab({
                                                         statusOptions={
                                                             statusOptions
                                                         }
+                                                        priorityOptions={
+                                                            priorityOptions
+                                                        }
                                                         onChange={(params) =>
                                                             updateAction(
                                                                 selectedNode.index,
@@ -1112,12 +1127,14 @@ function ActionInspector({
     canUpdate,
     actionLabel,
     statusOptions,
+    priorityOptions,
     onChange,
 }: {
     action: AutomationActionConfig;
     canUpdate: boolean;
     actionLabel: (type: string) => string;
     statusOptions: AutomationOption[];
+    priorityOptions: AutomationOption[];
     onChange: (params: Record<string, string>) => void;
 }) {
     const params = action.params as Record<string, string>;
@@ -1171,7 +1188,7 @@ function ActionInspector({
                 <InlineSelectDropdown
                     label="Priority"
                     placeholder="Choose a priority"
-                    options={PRIORITY_OPTIONS}
+                    options={priorityOptions}
                     value={params.priority ?? null}
                     disabled={!canUpdate}
                     onChange={(value) => onChange({ priority: value ?? '' })}

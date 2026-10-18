@@ -9,6 +9,7 @@ import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMa
 import { IntegrationDefinition } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import {
     GithubConnectedRepository,
     GithubConnectStatus,
@@ -30,6 +31,7 @@ interface WorkspaceSettingsIntegrationDetailModalProps {
     githubStatus: GithubConnectStatus | null;
     issueTypes?: IssueType[];
     labels?: ProjectLabel[];
+    priorities?: ProjectPriority[];
     onToggle: (enabled: boolean) => void;
     onSaveWebhookUrl: (webhookUrl: string) => void;
     onToggleOption: (optionId: string, checked: boolean) => void;
@@ -58,6 +60,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     githubStatus,
     issueTypes = [],
     labels = [],
+    priorities = [],
     onToggle,
     onSaveWebhookUrl,
     onToggleOption,
@@ -312,6 +315,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         settings={importSettings}
                         issueTypes={issueTypes}
                         labels={labels}
+                        priorities={priorities}
                         onConnect={onConnectImport}
                         onSaveMappings={onSaveImportMappings}
                         onImport={onTriggerImport}

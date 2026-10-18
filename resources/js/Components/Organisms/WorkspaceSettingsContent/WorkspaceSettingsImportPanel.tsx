@@ -8,6 +8,7 @@ import {
 } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
+import { ProjectPriority } from '@/types/Priorities';
 import {
     ImportIntegrationSettings,
     IntegrationFieldMappingDraft,
@@ -21,16 +22,11 @@ interface WorkspaceSettingsImportPanelProps {
     /** This project's own issue types, with their workflow statuses. */
     issueTypes?: IssueType[];
     labels?: ProjectLabel[];
+    priorities?: ProjectPriority[];
     onConnect: (credentials: Record<string, string>) => void;
     onSaveMappings: (mappings: IntegrationFieldMappingDraft[]) => void;
     onImport: (projectKey: string, syncExisting: boolean) => void;
 }
-
-const PRIORITY_OPTIONS: IntegrationMappingOption[] = [
-    { value: 'low', label: 'Low' },
-    { value: 'medium', label: 'Medium' },
-    { value: 'high', label: 'High' },
-];
 
 const MAPPING_TYPE_LABELS: Record<IntegrationFieldMappingType, string> = {
     status: 'Statuses',
@@ -46,7 +42,8 @@ function mappingKey(mappingType: string, externalValue: string): string {
 /**
  * The settings panel for an 'import'-kind integration (see IntegrationKind
  * in Integrations.ts): connect credentials, map the remote system's
- * statuses/priorities to Orbit's fixed set, then trigger an import.
+ * statuses/priorities to the project's own statuses and priorities, then
+ * trigger an import.
  * Parameterized entirely by integration.importConfig, so a future importer
  * (Linear, Asana, Trello) plugs into this same panel with a different
  * credential-field/mapping-type list, not a new component.
@@ -57,6 +54,7 @@ export default function WorkspaceSettingsImportPanel({
     settings,
     issueTypes = [],
     labels = [],
+    priorities = [],
     onConnect,
     onSaveMappings,
     onImport,
@@ -130,7 +128,10 @@ export default function WorkspaceSettingsImportPanel({
                 }));
             }
             case 'priority':
-                return PRIORITY_OPTIONS;
+                return priorities.map((priority) => ({
+                    value: priority.name,
+                    label: priority.name,
+                }));
             default:
                 return labels.map((label) => ({
                     value: label.name,
