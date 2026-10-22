@@ -47,7 +47,7 @@
         "knip": "^6.42.1",
         "laravel-vite-plugin": "^3.2",
         "oxfmt": "^0.74.0",
-        "oxlint": "^1.88.0",
+        "oxlint": "^1.89.0",
         "postcss": "^8.5.31",
         "react": "^19.2.8",
         "react-dom": "^19.3.1",
