@@ -1,13 +1,17 @@
 import { useState } from 'react';
+import ColorPicker from '@/Components/Molecules/ColorPicker/ColorPicker';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import AccountSettingsIssueViewCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsIssueViewCard';
 import AccountSettingsThemeCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsThemeCard';
 import { useAccent } from '@/context/AccentContext';
 import { useTheme } from '@/context/ThemeContext';
-import { AccentColor } from '@/types/Accent';
 import { IssuePageLooks } from '@/types/Issues';
 import { ThemeMode } from '@/types/Theme';
-import { ACCENT_COLOR_OPTIONS, getAccentSwatch } from '@/utils/accentColors';
+import {
+    ACCENT_PALETTE,
+    accentFromHex,
+    getAccentSwatch,
+} from '@/utils/accentColors';
 
 const issueViewOptions: Array<{
     id: IssuePageLooks;
@@ -46,20 +50,6 @@ const themeOptions: Array<{ id: ThemeMode; label: string; subtitle: string }> =
             subtitle: 'Follow OS preference',
         },
     ];
-
-const accentLabels: Record<AccentColor, string> = {
-    default: 'Default',
-    red: 'Red',
-    orange: 'Orange',
-    yellow: 'Yellow',
-    green: 'Green',
-    lime: 'Lime',
-    blue: 'Blue',
-    sky: 'Sky',
-    violet: 'Violet',
-    purple: 'Purple',
-    pink: 'Pink',
-};
 
 export default function AccountSettingsPreferencesTab() {
     const { theme, setTheme } = useTheme();
@@ -128,25 +118,15 @@ export default function AccountSettingsPreferencesTab() {
 
             <SettingsPanel
                 title="Accent color"
-                description="Pick the accent used for buttons, links, and highlights — the same palette available when creating a project."
+                description="Pick the accent used for buttons, links, and highlights - one of the project colors, or any color of your own."
                 icon="Paintbrush"
             >
-                <div className="flex flex-wrap gap-3 px-5 py-4">
-                    {ACCENT_COLOR_OPTIONS.map((color) => (
-                        <button
-                            key={color}
-                            type="button"
-                            onClick={() => setAccentColor(color)}
-                            aria-label={`Select ${accentLabels[color]} accent color`}
-                            title={accentLabels[color]}
-                            className={`h-8 w-8 rounded-full border-2 transition-transform ${
-                                accentColor === color
-                                    ? 'scale-110 border-[var(--text-color)]'
-                                    : 'border-transparent hover:scale-110'
-                            }`}
-                            style={{ backgroundColor: getAccentSwatch(color) }}
-                        />
-                    ))}
+                <div className="max-w-sm px-5 py-4">
+                    <ColorPicker
+                        value={getAccentSwatch(accentColor)}
+                        onChange={(hex) => setAccentColor(accentFromHex(hex))}
+                        palette={ACCENT_PALETTE}
+                    />
                 </div>
             </SettingsPanel>
         </div>
