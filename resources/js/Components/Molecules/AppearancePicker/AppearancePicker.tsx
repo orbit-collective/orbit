@@ -47,7 +47,7 @@ export default function AppearancePicker({
                 <button
                     type="button"
                     aria-label={ariaLabel}
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-transparent transition-all hover:border-[var(--border-color-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-transparent transition-[background-color,border-color,transform] duration-200 hover:border-[var(--border-color-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] active:scale-95"
                     style={{
                         backgroundColor: HEX_COLOR.test(color)
                             ? `${color}1f`
@@ -57,7 +57,7 @@ export default function AppearancePicker({
                     {children}
                 </button>
             }
-            panelClassName="max-h-[min(34rem,80vh)] overflow-y-auto rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3 shadow-2xl"
+            panelClassName="slide-in-from-top-1 max-h-[min(34rem,80vh)] duration-200 overflow-y-auto rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3 shadow-2xl"
         >
             <div className="space-y-3">
                 <ColorPicker
