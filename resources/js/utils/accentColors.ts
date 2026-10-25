@@ -16,7 +16,19 @@ export const ACCENT_COLOR_OPTIONS: AccentColor[] = [
     'pink',
 ];
 
-const DEFAULT_ACCENT_HEX = '#8844da';
+export const DEFAULT_ACCENT_HEX = '#8844da';
+
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+
+export const isHexColor = (value: string): value is `#${string}` =>
+    HEX_COLOR.test(value);
+
+/** True for any value the accent setting can hold: 'default', a preset or a hex. */
+export const isAccentColor = (value: string | null): value is AccentColor =>
+    value !== null &&
+    (value === 'default' ||
+        Object.hasOwn(PROJECT_ACCENT_HEX, value) ||
+        isHexColor(value));
 
 const PROJECT_ACCENT_HEX: Record<
     ProjectColors,
@@ -34,15 +46,45 @@ const PROJECT_ACCENT_HEX: Record<
     pink: { base: '#ec4899', light: '#f472b6' },
 };
 
+/** A lighter shade for hover and highlight states: the color mixed a quarter of the way to white. */
+const lighten = (hex: string): string => {
+    const { r, g, b } = hexToRgb(hex);
+    const mix = (channel: number) =>
+        Math.round(channel + (255 - channel) * 0.25)
+            .toString(16)
+            .padStart(2, '0');
+
+    return `#${mix(r)}${mix(g)}${mix(b)}`;
+};
+
 const hexToRgb = (hex: string) => {
     const value = parseInt(hex.slice(1), 16);
     return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
 };
 
 export const getAccentSwatch = (color: AccentColor): string => {
-    return color === 'default'
-        ? DEFAULT_ACCENT_HEX
-        : PROJECT_ACCENT_HEX[color].base;
+    if (color === 'default') return DEFAULT_ACCENT_HEX;
+    if (isHexColor(color)) return color.toLowerCase();
+
+    return PROJECT_ACCENT_HEX[color as ProjectColors].base;
+};
+
+/** The quick colors of the accent picker: the theme's own accent, then every project color. */
+export const ACCENT_PALETTE: string[] =
+    ACCENT_COLOR_OPTIONS.map(getAccentSwatch);
+
+/**
+ * The setting a picked color stands for: the theme's accent or a preset when
+ * it is exactly one of those (so they keep following the theme), a custom
+ * hex otherwise.
+ */
+export const accentFromHex = (hex: string): AccentColor => {
+    const color = hex.toLowerCase();
+    const preset = ACCENT_COLOR_OPTIONS.find(
+        (option) => getAccentSwatch(option) === color,
+    );
+
+    return preset ?? (color as AccentColor);
 };
 
 interface AccentCssVariables {
@@ -64,7 +106,9 @@ export const getAccentCssVariables = (
         return null;
     }
 
-    const { base, light } = PROJECT_ACCENT_HEX[color];
+    const { base, light } = isHexColor(color)
+        ? { base: color.toLowerCase(), light: lighten(color) }
+        : PROJECT_ACCENT_HEX[color as ProjectColors];
     const { r, g, b } = hexToRgb(base);
     const opacityAlpha = resolvedTheme === 'light' ? 0.12 : 0.2;
 

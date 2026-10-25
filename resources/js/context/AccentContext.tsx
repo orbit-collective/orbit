@@ -7,25 +7,9 @@ import {
 } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { AccentColor, AccentContextType } from '@/types/Accent';
-import { getAccentCssVariables } from '@/utils/accentColors';
+import { getAccentCssVariables, isAccentColor } from '@/utils/accentColors';
 
 const ACCENT_STORAGE_KEY = 'accentColor';
-
-const isAccentColor = (value: string | null): value is AccentColor => {
-    return (
-        value === 'default' ||
-        value === 'red' ||
-        value === 'orange' ||
-        value === 'yellow' ||
-        value === 'green' ||
-        value === 'lime' ||
-        value === 'blue' ||
-        value === 'sky' ||
-        value === 'violet' ||
-        value === 'purple' ||
-        value === 'pink'
-    );
-};
 
 const AccentContext = createContext<AccentContextType | undefined>(undefined);
 
