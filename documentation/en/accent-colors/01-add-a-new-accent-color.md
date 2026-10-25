@@ -77,35 +77,16 @@ and would silently produce no CSS at all, no matter how correct the
 runtime string ends up being. Copy the five-property shape from an
 existing color exactly, swapping only the color name.
 
-## Step 3 — Make it a valid accent value
+## Step 3 — Nothing to do: the accent guard follows the map
 
-File: `resources/js/context/AccentContext.tsx`
+`isAccentColor()` (`resources/js/utils/accentColors.ts`), which
+`AccentContext.tsx` uses to validate the value read back from
+`localStorage`, is derived from `PROJECT_ACCENT_HEX` (step 4) plus
+`'default'` and custom hex colors, so there is no list of names to edit
+here. Adding `teal` to `PROJECT_ACCENT_HEX` is what makes a stored
+`teal` survive a page reload.
 
-```ts
-const isAccentColor = (value: string | null): value is AccentColor => {
-    return (
-        value === 'default' ||
-        value === 'red' ||
-        value === 'orange' ||
-        value === 'yellow' ||
-        value === 'green' ||
-        value === 'lime' ||
-        value === 'blue' ||
-        value === 'sky' ||
-        value === 'violet' ||
-        value === 'purple' ||
-        value === 'pink' ||
-        value === 'teal'
-    );
-};
-```
-
-Without this, a `teal` value read back from `localStorage` on a future
-visit fails the guard and silently resets to `'default'` — the
-picker (step 4) would still let someone select it once, but the
-choice wouldn't survive a page reload.
-
-## Step 4 — Give it accent hex values and a picker label
+## Step 4 — Give it accent hex values and a place in the picker
 
 File: `resources/js/utils/accentColors.ts`
 
@@ -151,31 +132,12 @@ official Tailwind palette's `-500`/`-400` hex values for the color
 badge read as "the same teal," even though nothing enforces that
 match in code.
 
-File:
-`resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsPreferencesTab.tsx`
-
-```ts
-const accentLabels: Record<AccentColor, string> = {
-    default: 'Default',
-    red: 'Red',
-    orange: 'Orange',
-    yellow: 'Yellow',
-    green: 'Green',
-    lime: 'Lime',
-    blue: 'Blue',
-    sky: 'Sky',
-    violet: 'Violet',
-    purple: 'Purple',
-    pink: 'Pink',
-    teal: 'Teal',
-};
-```
-
-This is a third, independent hand-maintained record keyed by the same
-names — `Record<AccentColor, string>` means TypeScript itself will
-refuse to compile once step 3/4 widen `AccentColor` until this map
-also gets the new key, which is the one piece of this whole chain
-that *does* have a compiler safety net.
+`ACCENT_COLOR_OPTIONS` is what the Preferences accent picker draws:
+`ACCENT_PALETTE` is built from it with `getAccentSwatch()` and handed
+to the shared `ColorPicker`, which shows each option as a dot. There
+is no label map to extend any more, so unlike the old swatch list the
+compiler will not warn you when you forget the new name here — add it
+to `ACCENT_COLOR_OPTIONS` by hand.
 
 ## Step 5 — Update the pre-paint script (don't skip this one)
 
@@ -231,6 +193,10 @@ does — so it hardcodes its own copy in plain JS:
 </script>
 ```
 
+The script also has a branch for a custom hex accent (it derives the
+light shade the same way `lighten()` does); a new preset name does not
+touch it.
+
 Skip this step and `teal` still works correctly — but only *after*
 `AccentProvider`'s effect runs on mount. Until then, the very first
 paint renders with no accent override at all (the plain `--accent-color`
@@ -247,9 +213,8 @@ other accent. Keep this hex pair in sync with
   step 1 adds `'teal'` and step 2 adds its entry, this test covers it
   with zero changes, *as long as* step 2's classes follow the exact
   `` bg-${color}-500 `` naming pattern the test asserts against.
-- `resources/js/utils/accentColors.ts` has no dedicated test file
-  today — add
-  `resources/js/utils/accentColors.test.ts` covering `getAccentSwatch('teal')`
+- `resources/js/utils/accentColors.test.ts` already exists — extend
+  it with a case covering `getAccentSwatch('teal')`
   (returns the `base` hex) and `getAccentCssVariables('teal', 'dark')`
   /`getAccentCssVariables('teal', 'light')` (returns the right
   `accentColor`/`accentLightColor`, and an `accentColorOpacity` alpha

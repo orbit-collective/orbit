@@ -55,32 +55,11 @@ teal: {
 
 Muszą być **napisane dosłownie**, nie zbudowane z szablonu — skaner Tailwinda generuje klasę narzędziową tylko wtedy, gdy dokładny string pojawia się gdzieś w zeskanowanym źródle (`content` w `tailwind.config.js` obejmuje glob `resources/js/**/*.{ts,tsx}`); wyrażenie szablonowe `` `bg-${color}-500` `` jest niewidoczne dla tego skanu i po cichu nie wyprodukowałoby żadnego CSS, niezależnie od tego, jak poprawny okazałby się string w czasie działania. Skopiuj dokładnie kształt pięciu właściwości z istniejącego koloru, zamieniając tylko nazwę koloru.
 
-## Krok 3 — Spraw, żeby była poprawną wartością akcentu
+## Krok 3 — Nic do zrobienia: strażnik akcentu podąża za mapą
 
-Plik: `resources/js/context/AccentContext.tsx`
+`isAccentColor()` (`resources/js/utils/accentColors.ts`), którego `AccentContext.tsx` używa do walidacji wartości odczytanej z `localStorage`, jest wyprowadzony z `PROJECT_ACCENT_HEX` (krok 4) plus `'default'` i własnych kolorów hex, więc nie ma tu listy nazw do edycji. To dodanie `teal` do `PROJECT_ACCENT_HEX` sprawia, że zapisany `teal` przetrwa przeładowanie strony.
 
-```ts
-const isAccentColor = (value: string | null): value is AccentColor => {
-    return (
-        value === 'default' ||
-        value === 'red' ||
-        value === 'orange' ||
-        value === 'yellow' ||
-        value === 'green' ||
-        value === 'lime' ||
-        value === 'blue' ||
-        value === 'sky' ||
-        value === 'violet' ||
-        value === 'purple' ||
-        value === 'pink' ||
-        value === 'teal'
-    );
-};
-```
-
-Bez tego, wartość `teal` odczytana z powrotem z `localStorage` przy przyszłej wizycie nie przechodzi zabezpieczenia i po cichu resetuje się do `'default'` — selektor (krok 4) wciąż pozwoliłby ją raz wybrać, ale wybór nie przetrwałby przeładowania strony.
-
-## Krok 4 — Nadaj jej wartości hex akcentu i etykietę w selektorze
+## Krok 4 — Nadaj jej wartości hex akcentu i miejsce w selektorze
 
 Plik: `resources/js/utils/accentColors.ts`
 
@@ -120,26 +99,7 @@ const PROJECT_ACCENT_HEX: Record<
 
 `base`/`light` tutaj to **kody hex**, nie nazwy klas Tailwinda — to mapa, której krok 2 **nie** dzieli, mimo że obie są kluczowane tą samą nazwą `teal` (zobacz notatkę o architekturze w README). Użyj oficjalnych wartości hex `-500`/`-400` palety Tailwinda dla tego koloru (tutaj `teal-500`/`teal-400`), żeby próbka akcentu i odznaka projektu czytały się jako "ten sam teal," mimo że nic w kodzie nie wymusza tej zgodności.
 
-Plik: `resources/js/Components/Organisms/AccountSettingsContent/AccountSettingsPreferencesTab.tsx`
-
-```ts
-const accentLabels: Record<AccentColor, string> = {
-    default: 'Default',
-    red: 'Red',
-    orange: 'Orange',
-    yellow: 'Yellow',
-    green: 'Green',
-    lime: 'Lime',
-    blue: 'Blue',
-    sky: 'Sky',
-    violet: 'Violet',
-    purple: 'Purple',
-    pink: 'Pink',
-    teal: 'Teal',
-};
-```
-
-To trzeci, niezależny, ręcznie utrzymywany rekord kluczowany tymi samymi nazwami — `Record<AccentColor, string>` oznacza, że sam TypeScript odmówi kompilacji, gdy tylko krok 3/4 rozszerzy `AccentColor`, dopóki ta mapa też nie dostanie nowego klucza, co jest jedynym elementem w tym całym łańcuchu, który *ma* siatkę bezpieczeństwa kompilatora.
+`ACCENT_COLOR_OPTIONS` to to, co rysuje selektor akcentu w Preferencjach: `ACCENT_PALETTE` jest z niego budowana przez `getAccentSwatch()` i przekazywana do współdzielonego `ColorPicker`, który pokazuje każdą opcję jako kropkę. Nie ma już mapy etykiet do rozszerzenia, więc w przeciwieństwie do dawnej listy próbek kompilator nie ostrzeże, gdy zapomnisz o nowej nazwie — dodaj ją do `ACCENT_COLOR_OPTIONS` ręcznie.
 
 ## Krok 5 — Zaktualizuj skrypt sprzed pierwszego renderu (nie pomijaj tego)
 
@@ -189,10 +149,12 @@ Jest **czwarta, niezależna kopia** pary hex base/light, wewnątrz inline `<scri
 </script>
 ```
 
+Skrypt ma też gałąź dla własnego koloru hex (jaśniejszy odcień wylicza tak samo jak `lighten()`); nowa nazwa presetu jej nie dotyka.
+
 Pomiń ten krok, a `teal` wciąż działa poprawnie — ale dopiero *po* tym, jak efekt `AccentProvider` uruchomi się przy montowaniu. Do tego czasu sam pierwszy render renderuje się bez żadnego nadpisania akcentu (zwykła wartość `--accent-color`, jaką definiuje `global.css`), a chwilę później widocznie przeskakuje na teal — dokładnie ten błysk złego koloru, któremu ten skrypt ma zapobiegać dla każdego innego akcentu. Trzymaj tę parę hex w zgodzie z `PROJECT_ACCENT_HEX` z kroku 4 ręcznie — nic nie wymusza, żeby się zgadzały.
 
 ## Testy
 
 - `resources/js/utils/colors.test.ts` — jego `test.each(AVAILABLE_COLORS)('returns a complete, color-matched theme for "%s"', ...)` już iteruje po tablicy generycznie; gdy krok 1 doda `'teal'`, a krok 2 doda jego wpis, ten test pokryje to bez żadnych zmian, *o ile* klasy z kroku 2 są zgodne z dokładnym wzorcem nazewnictwa `` bg-${color}-500 ``, względem którego test asercuje.
-- `resources/js/utils/accentColors.ts` nie ma dziś dedykowanego pliku testów — dodaj `resources/js/utils/accentColors.test.ts` pokrywający `getAccentSwatch('teal')` (zwraca hex `base`) oraz `getAccentCssVariables('teal', 'dark')`/`getAccentCssVariables('teal', 'light')` (zwraca właściwe `accentColor`/`accentLightColor` oraz alfa `accentColorOpacity` równe `0.2` dla dark vs. `0.12` dla light), na wzór istniejących asercji `resources/js/context/AccentContext.test.tsx` na kształt `getAccentCssVariables` dla kolorów, które już ćwiczy.
+- `resources/js/utils/accentColors.test.ts` już istnieje — rozszerz go o przypadek pokrywający `getAccentSwatch('teal')` (zwraca hex `base`) oraz `getAccentCssVariables('teal', 'dark')`/`getAccentCssVariables('teal', 'light')` (zwraca właściwe `accentColor`/`accentLightColor` oraz alfa `accentColorOpacity` równe `0.2` dla dark vs. `0.12` dla light), na wzór istniejących asercji `resources/js/context/AccentContext.test.tsx` na kształt `getAccentCssVariables` dla kolorów, które już ćwiczy.
 - `resources/js/context/AccentContext.test.tsx` — żadna zmiana nie jest wymagana; jego test `'setAccentColor updates state, persists to localStorage, and sets the CSS variables'` używa jako fixture ustalonego, istniejącego koloru i nie jest sparametryzowany po każdym `AccentColor`, więc nowa nazwa nie potrzebuje tu nowego przypadku, chyba że chcesz go dla dodatkowej pewności.
