@@ -30,9 +30,20 @@
                         pink: ['#ec4899', '#f472b6']
                     };
                     var accent = localStorage.getItem('accentColor');
+                    var base = null;
+                    var light = null;
                     if (accent && accent !== 'default' && accentHex[accent]) {
-                        var base = accentHex[accent][0];
-                        var light = accentHex[accent][1];
+                        base = accentHex[accent][0];
+                        light = accentHex[accent][1];
+                    } else if (accent && /^#[0-9a-fA-F]{6}$/.test(accent)) {
+                        // A custom color: its lighter shade is a quarter of the way to white.
+                        base = accent.toLowerCase();
+                        light = '#' + [1, 3, 5].map(function (i) {
+                            var c = parseInt(base.slice(i, i + 2), 16);
+                            return ('0' + Math.round(c + (255 - c) * 0.25).toString(16)).slice(-2);
+                        }).join('');
+                    }
+                    if (base) {
                         var r = parseInt(base.slice(1, 3), 16);
                         var g = parseInt(base.slice(3, 5), 16);
                         var b = parseInt(base.slice(5, 7), 16);

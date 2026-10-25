@@ -89,4 +89,39 @@ describe('AccentContext', () => {
             document.documentElement.style.getPropertyValue('--accent-color'),
         ).toBe('');
     });
+
+    test('reads a stored custom hex color and applies it', () => {
+        localStorage.setItem('accentColor', '#00aa99');
+        const { result } = renderHook(() => useAccent(), { wrapper });
+
+        expect(result.current.accentColor).toBe('#00aa99');
+        expect(
+            document.documentElement.style.getPropertyValue('--accent-color'),
+        ).toBe('#00aa99');
+        expect(
+            document.documentElement.style.getPropertyValue(
+                '--accent-light-color',
+            ),
+        ).toBe('#40bfb3');
+    });
+
+    test('falls back to "default" for a malformed stored hex', () => {
+        localStorage.setItem('accentColor', '#12');
+        const { result } = renderHook(() => useAccent(), { wrapper });
+
+        expect(result.current.accentColor).toBe('default');
+    });
+
+    test('setAccentColor accepts a custom hex and persists it', () => {
+        const { result } = renderHook(() => useAccent(), { wrapper });
+
+        act(() => {
+            result.current.setAccentColor('#7038f4');
+        });
+
+        expect(localStorage.getItem('accentColor')).toBe('#7038f4');
+        expect(
+            document.documentElement.style.getPropertyValue('--accent-color'),
+        ).toBe('#7038f4');
+    });
 });
