@@ -1,6 +1,7 @@
 import { icons } from 'lucide-react';
 import { ReactNode } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import ColorPicker from '@/Components/Molecules/ColorPicker/ColorPicker';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { cn } from '@/utils/cn';
 
@@ -40,7 +41,7 @@ export default function AppearancePicker({
         <Dropdown
             variant="panel"
             ariaLabel={ariaLabel}
-            width={280}
+            width={296}
             align="start"
             trigger={
                 <button
@@ -56,41 +57,14 @@ export default function AppearancePicker({
                     {children}
                 </button>
             }
-            panelClassName="rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3 shadow-2xl"
+            panelClassName="max-h-[min(34rem,80vh)] overflow-y-auto rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3 shadow-2xl"
         >
             <div className="space-y-3">
-                <div className="grid grid-cols-10 gap-1.5">
-                    {palette.map((swatch) => (
-                        <button
-                            key={swatch}
-                            type="button"
-                            data-nav
-                            onClick={() => onColorChange(swatch)}
-                            aria-label={`Use color ${swatch}`}
-                            aria-pressed={color.toLowerCase() === swatch}
-                            className={cn(
-                                'h-[22px] w-[22px] cursor-pointer justify-self-center rounded-full border-2 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
-                                color.toLowerCase() === swatch
-                                    ? 'scale-110 border-white'
-                                    : 'border-transparent hover:scale-110',
-                            )}
-                            style={{ backgroundColor: swatch }}
-                        />
-                    ))}
-                    <label
-                        className="relative flex h-[22px] w-[22px] cursor-pointer items-center justify-center justify-self-center rounded-full border border-dashed border-[var(--border-color-strong)] text-[var(--text-gray-color)] transition-colors hover:text-[var(--text-color)]"
-                        title="Custom color"
-                    >
-                        <Icon name="Plus" size={12} />
-                        <input
-                            type="color"
-                            value={HEX_COLOR.test(color) ? color : '#000000'}
-                            onChange={(e) => onColorChange(e.target.value)}
-                            aria-label="Pick a custom color"
-                            className="absolute inset-0 cursor-pointer opacity-0"
-                        />
-                    </label>
-                </div>
+                <ColorPicker
+                    value={color}
+                    onChange={onColorChange}
+                    palette={palette}
+                />
 
                 {offersIcons && (
                     <div className="grid grid-cols-8 gap-1 border-t border-[var(--border-color)] pt-3">

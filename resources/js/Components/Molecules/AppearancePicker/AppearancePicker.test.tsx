@@ -60,21 +60,17 @@ describe('AppearancePicker', () => {
         ).toHaveAttribute('aria-pressed', 'false');
     });
 
-    test('takes a custom color from the picker at the end', async () => {
+    test('opens up to a full picker for a color the palette lacks', async () => {
         const user = userEvent.setup();
         const { onColorChange } = renderPicker();
 
         await user.click(screen.getByRole('button', { name: 'Pick the look' }));
-        const custom = screen.getByLabelText('Pick a custom color');
-        custom.focus();
-        // jsdom has no color dialog: set the value the way a change would.
-        Object.getOwnPropertyDescriptor(
-            HTMLInputElement.prototype,
-            'value',
-        )!.set!.call(custom, '#00aa99');
-        custom.dispatchEvent(new Event('input', { bubbles: true }));
+        await user.click(screen.getByRole('button', { name: 'More colors' }));
+        const hex = screen.getByLabelText('Hex color');
+        await user.clear(hex);
+        await user.type(hex, '#00aa99');
 
-        expect(onColorChange).toHaveBeenCalledWith('#00aa99');
+        expect(onColorChange).toHaveBeenLastCalledWith('#00aa99');
     });
 
     test('offers no icons unless asked to', async () => {
