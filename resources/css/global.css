@@ -75,6 +75,29 @@ html, body, #app {
     }
 }
 
+/* The saturation/hue picker of ColorPicker (react-colorful), fitted to the app. */
+.orbit-colorful.react-colorful {
+    width: 100%;
+    height: 150px;
+}
+
+.orbit-colorful .react-colorful__saturation {
+    border-radius: 12px;
+    border-bottom: none;
+}
+
+.orbit-colorful .react-colorful__hue {
+    height: 12px;
+    margin-top: 12px;
+    border-radius: 999px;
+}
+
+.orbit-colorful .react-colorful__pointer {
+    width: 18px;
+    height: 18px;
+    border-width: 3px;
+}
+
 ::selection {
     background: var(--bg-light-color-hover);
     color: var(--accent-color);
