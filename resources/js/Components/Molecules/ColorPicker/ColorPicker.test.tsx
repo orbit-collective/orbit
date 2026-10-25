@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import ColorPicker from './ColorPicker';
@@ -82,7 +82,37 @@ describe('ColorPicker', () => {
 
         await user.click(screen.getByRole('button', { name: 'Fewer colors' }));
 
-        expect(screen.queryByLabelText('Hex color')).not.toBeInTheDocument();
+        // The picker folds away with an animation before it leaves the page.
+        await waitFor(() =>
+            expect(
+                screen.queryByLabelText('Hex color'),
+            ).not.toBeInTheDocument(),
+        );
+        expect(
+            screen.getByRole('button', { name: 'More colors' }),
+        ).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    test('only the selected color carries the selection ring, and it moves with the selection', () => {
+        const { container, rerender } = renderPicker();
+
+        expect(container.querySelectorAll('span.border-white')).toHaveLength(1);
+        expect(
+            swatch('#f44336').querySelector('span.border-white'),
+        ).not.toBeNull();
+
+        rerender(
+            <ColorPicker
+                value="#2196f3"
+                onChange={vi.fn()}
+                palette={palette}
+            />,
+        );
+
+        expect(container.querySelectorAll('span.border-white')).toHaveLength(1);
+        expect(
+            swatch('#2196f3').querySelector('span.border-white'),
+        ).not.toBeNull();
     });
 
     test('a pick still works while the picker is open', async () => {
