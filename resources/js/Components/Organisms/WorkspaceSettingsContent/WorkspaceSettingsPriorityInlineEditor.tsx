@@ -24,6 +24,8 @@ interface WorkspaceSettingsPriorityInlineEditorProps {
     priority: ProjectPriority | null;
     /** What the server objected to, keyed by field (e.g. a duplicate name). */
     errors?: Partial<Record<keyof PriorityFormValues, string>>;
+    /** A save is in flight: the row cannot be submitted again. */
+    saving?: boolean;
     onSave: (values: PriorityFormValues) => void;
     onCancel: () => void;
 }
@@ -35,6 +37,7 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 export default function WorkspaceSettingsPriorityInlineEditor({
     priority,
     errors = {},
+    saving = false,
     onSave,
     onCancel,
 }: WorkspaceSettingsPriorityInlineEditorProps) {
@@ -46,7 +49,7 @@ export default function WorkspaceSettingsPriorityInlineEditor({
     const isEditing = priority !== null;
     const isCurrentDefault = priority?.isDefault ?? false;
     const trimmedName = name.trim();
-    const canSave = trimmedName !== '' && HEX_COLOR.test(color);
+    const canSave = !saving && trimmedName !== '' && HEX_COLOR.test(color);
 
     const handleSave = () => {
         if (!canSave) return;
@@ -110,6 +113,7 @@ export default function WorkspaceSettingsPriorityInlineEditor({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Priority name"
                 aria-label="Priority name"
+                aria-invalid={Boolean(errors.name)}
                 autoComplete="off"
                 maxLength={50}
                 className={cn(inlineFieldClass, 'font-medium sm:flex-1')}
