@@ -113,7 +113,7 @@ const StatCard: React.FC<StatCardProps> = ({
                         {title}
                     </span>
                     <div className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
-                        <h4 className="text-xl font-bold leading-none tracking-tight text-[var(--text-color)]">
+                        <h4 className="min-w-0 max-w-full break-words text-xl font-bold leading-none tracking-tight text-[var(--text-color)]">
                             {value}
                         </h4>
                         {trend && (
@@ -200,7 +200,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
             <div className="mt-auto pt-3">
                 <div className="flex flex-wrap items-baseline gap-2">
-                    <h4 className="text-2xl font-bold leading-none tracking-tight text-[var(--text-color)]">
+                    <h4 className="min-w-0 max-w-full break-words text-2xl font-bold leading-none tracking-tight text-[var(--text-color)]">
                         {value}
                     </h4>
 
