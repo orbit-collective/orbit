@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Priority;
 use App\Models\Project;
 use App\Repositories\PriorityRepository;
+use App\Repositories\ProjectRepository;
 use App\Support\Cache\CacheVersion;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,7 @@ class PriorityService
 
     public function __construct(
         protected PriorityRepository $priorityRepository,
+        protected ProjectRepository $projectRepository,
         protected ActivityLogService $activityLogService,
     ) {}
 
@@ -77,6 +79,12 @@ class PriorityService
         return $this->priorityRepository->findDefault($project);
     }
 
+    /** The project's priority with this id, or null when it belongs to another project. */
+    public function findInProject(Project $project, int $id): ?Priority
+    {
+        return $this->priorityRepository->findForProject($project, $id);
+    }
+
     /** Resolves a priority by name (case-insensitive), or null when the project has none by that name. */
     public function findByName(Project $project, string $name): ?Priority
     {
@@ -92,7 +100,7 @@ class PriorityService
      */
     public function idByName(int $projectId, string $name): ?int
     {
-        $project = Project::query()->find($projectId);
+        $project = $this->projectRepository->findById($projectId);
 
         return $project ? $this->findByName($project, $name)?->id : null;
     }
@@ -100,7 +108,7 @@ class PriorityService
     /** The id of the project's default priority, seeding the starter scale first. */
     public function defaultId(int $projectId): ?int
     {
-        $project = Project::query()->find($projectId);
+        $project = $this->projectRepository->findById($projectId);
 
         return $project ? $this->defaultFor($project)?->id : null;
     }

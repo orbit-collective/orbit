@@ -59,7 +59,7 @@ class PriorityController extends Controller
         ]);
 
         $replacement = isset($validated['replacement_id'])
-            ? $project->priorities()->find($validated['replacement_id'])
+            ? $this->priorityService->findInProject($project, (int) $validated['replacement_id'])
             : null;
 
         $name = $priority->name;

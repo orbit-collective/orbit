@@ -115,6 +115,14 @@ test('the default cannot be unset without choosing another', function () {
     $this->service->updatePriority($this->project, $medium, ['is_default' => false]);
 })->throws(ValidationException::class);
 
+test('a priority is only found inside its own project', function () {
+    $own = $this->service->getPriorities($this->project)->first();
+    $other = Project::factory()->create();
+
+    expect($this->service->findInProject($this->project, $own->id)?->is($own))->toBeTrue()
+        ->and($this->service->findInProject($other, $own->id))->toBeNull();
+});
+
 test('reordering rewrites the positions', function () {
     $ids = $this->service->getPriorities($this->project)->pluck('id', 'name');
 
