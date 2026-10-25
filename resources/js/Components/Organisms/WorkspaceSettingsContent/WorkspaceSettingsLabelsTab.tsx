@@ -1,8 +1,9 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import AddRowButton from '@/Components/Molecules/AddRowButton/AddRowButton';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
+import RowAction from '@/Components/Molecules/RowAction/RowAction';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
@@ -188,32 +189,6 @@ export default function WorkspaceSettingsLabelsTab({
                 description={`Labels available for issues in ${selectedProject.name}.`}
                 icon="Tag"
             >
-                <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
-                    <p className="text-sm text-[var(--text-gray-color)]">
-                        {labels.length}{' '}
-                        {labels.length === 1 ? 'label' : 'labels'} configured
-                    </p>
-                    {canCreateLabels && (
-                        <Button
-                            type="button"
-                            onClick={toggleCreateEditor}
-                            className="gap-1.5"
-                        >
-                            <Icon name="Plus" size={14} />
-                            New label
-                        </Button>
-                    )}
-                </div>
-
-                {editorTarget === NEW_LABEL_EDITOR_TARGET && (
-                    <WorkspaceSettingsLabelInlineEditor
-                        key={NEW_LABEL_EDITOR_TARGET}
-                        label={null}
-                        onSave={handleSaveLabel}
-                        onCancel={() => setEditorTarget(null)}
-                    />
-                )}
-
                 {labels.length === 0 &&
                     editorTarget !== NEW_LABEL_EDITOR_TARGET && (
                         <div className="flex flex-col items-center gap-2 px-5 py-10 text-center">
@@ -241,61 +216,73 @@ export default function WorkspaceSettingsLabelsTab({
                     ) : (
                         <div
                             key={label.id}
-                            className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                            className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
                         >
-                            <div className="flex min-w-0 items-center gap-3">
+                            <span
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                                style={{ backgroundColor: `${label.color}1f` }}
+                            >
                                 <span
-                                    className="h-3 w-3 shrink-0 rounded-full"
+                                    className="h-3.5 w-3.5 rounded-full"
                                     style={{ backgroundColor: label.color }}
                                 />
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <p className="truncate text-sm font-medium text-[var(--text-color)]">
-                                            {label.name}
-                                        </p>
-                                        {label.isSystem && (
-                                            <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                                System
-                                            </span>
-                                        )}
-                                    </div>
-                                    {label.description && (
-                                        <p className="truncate text-sm text-[var(--text-gray-color)]">
-                                            {label.description}
-                                        </p>
-                                    )}
-                                </div>
+                            </span>
+                            <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                                <p className="shrink-0 text-sm font-medium text-[var(--text-color)]">
+                                    {label.name}
+                                </p>
+                                {label.isSystem && (
+                                    <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                        System
+                                    </span>
+                                )}
+                                {label.description && (
+                                    <p className="truncate text-xs text-[var(--text-muted-color)]">
+                                        {label.description}
+                                    </p>
+                                )}
                             </div>
                             {(canUpdateLabels || canDeleteLabels) && (
-                                <div className="flex shrink-0 items-center gap-1">
+                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:focus-within:opacity-100 sm:group-hover:opacity-100">
                                     {canUpdateLabels && (
-                                        <button
-                                            type="button"
+                                        <RowAction
                                             title="Edit label"
+                                            icon="Pencil"
                                             onClick={() =>
                                                 toggleEditEditor(label)
                                             }
-                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
-                                        >
-                                            <Icon name="Pencil" size={14} />
-                                        </button>
+                                        />
                                     )}
                                     {canDeleteLabels && (
-                                        <button
-                                            type="button"
+                                        <RowAction
                                             title="Delete label"
+                                            icon="Trash"
+                                            danger
                                             onClick={() =>
                                                 setDeletingLabel(label)
                                             }
-                                            className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
-                                        >
-                                            <Icon name="Trash" size={14} />
-                                        </button>
+                                        />
                                     )}
                                 </div>
                             )}
                         </div>
                     ),
+                )}
+
+                {editorTarget === NEW_LABEL_EDITOR_TARGET ? (
+                    <WorkspaceSettingsLabelInlineEditor
+                        key={NEW_LABEL_EDITOR_TARGET}
+                        label={null}
+                        onSave={handleSaveLabel}
+                        onCancel={() => setEditorTarget(null)}
+                    />
+                ) : (
+                    canCreateLabels && (
+                        <AddRowButton
+                            label="Add label"
+                            onClick={toggleCreateEditor}
+                        />
+                    )
                 )}
             </SettingsPanel>
 

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import Button from '@/Components/Atoms/Button/Button';
-import Icon from '@/Components/Atoms/Icon/Icon';
-import Input from '@/Components/Atoms/Input/Input';
-import TextArea from '@/Components/Atoms/TextArea/TextArea';
+import AppearancePicker from '@/Components/Molecules/AppearancePicker/AppearancePicker';
+import InlineEditRow, {
+    inlineFieldClass,
+} from '@/Components/Molecules/InlineEditRow/InlineEditRow';
 import { ProjectLabel } from '@/types/Labels';
+import { cn } from '@/utils/cn';
 import { LABEL_COLOR_PALETTE } from '@/utils/labelColors';
 
 interface WorkspaceSettingsLabelInlineEditorProps {
@@ -16,6 +17,7 @@ interface WorkspaceSettingsLabelInlineEditorProps {
     onCancel: () => void;
 }
 
+/** A label row in edit mode: color dot, name and description on one line. */
 export default function WorkspaceSettingsLabelInlineEditor({
     label,
     onSave,
@@ -34,76 +36,47 @@ export default function WorkspaceSettingsLabelInlineEditor({
     };
 
     return (
-        <div className="border-[var(--accent-color)]/40 mx-4 my-3 space-y-4 rounded-xl border bg-[var(--accent-color-opacity)] p-4 sm:mx-5">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--accent-color)]">
-                <Icon name={isEditing ? 'Pencil' : 'Sparkles'} size={13} />
-                {isEditing ? 'Editing label' : 'New label'}
-            </div>
-
-            <div className="flex flex-col gap-4 md:flex-row md:items-start">
-                <div className="flex flex-1 flex-col gap-3">
-                    <Input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Label name"
-                        variant="modal"
-                        autoComplete="off"
-                    />
-                    <TextArea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        placeholder="What should this label be used for? (optional)"
-                        variant="modal"
-                        className="min-h-[56px]"
-                    />
-                </div>
-
-                <div className="flex flex-1 flex-col gap-2">
-                    <span className="text-xs font-medium text-[var(--text-gray-color)]">
-                        Color
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                        {LABEL_COLOR_PALETTE.map((swatch) => (
-                            <button
-                                key={swatch}
-                                type="button"
-                                onClick={() => setColor(swatch)}
-                                aria-label={`Use color ${swatch}`}
-                                className={`h-6 w-6 shrink-0 rounded-full border transition-transform ${
-                                    color === swatch
-                                        ? 'scale-110 border-white'
-                                        : 'border-transparent hover:scale-110'
-                                }`}
-                                style={{ backgroundColor: swatch }}
-                            />
-                        ))}
-                    </div>
-                    <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-color)]">
-                        <span
-                            className="h-1.5 w-1.5 shrink-0 rounded-full"
-                            style={{ backgroundColor: color }}
-                        />
-                        {trimmedName || 'label name'}
-                    </span>
-                </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2">
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium text-[var(--text-gray-color)] transition-colors hover:text-[var(--text-color)]"
+        <InlineEditRow
+            leading={
+                <AppearancePicker
+                    color={color}
+                    onColorChange={setColor}
+                    palette={LABEL_COLOR_PALETTE}
+                    ariaLabel="Label color"
                 >
-                    Cancel
-                </button>
-                <Button
-                    type="button"
-                    onClick={handleSave}
-                    isDisabled={!trimmedName}
-                >
-                    {isEditing ? 'Save changes' : 'Create label'}
-                </Button>
-            </div>
-        </div>
+                    <span
+                        className="h-3.5 w-3.5 rounded-full"
+                        style={{ backgroundColor: color }}
+                    />
+                </AppearancePicker>
+            }
+            canSave={trimmedName !== ''}
+            saveLabel={isEditing ? 'Save label' : 'Create label'}
+            onSave={handleSave}
+            onCancel={onCancel}
+        >
+            <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Label name"
+                aria-label="Label name"
+                autoComplete="off"
+                maxLength={50}
+                className={cn(inlineFieldClass, 'font-medium sm:w-44')}
+            />
+            <input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Description (optional)"
+                aria-label="Label description"
+                autoComplete="off"
+                maxLength={255}
+                className={cn(
+                    inlineFieldClass,
+                    'text-[var(--text-gray-color)] sm:flex-1',
+                )}
+            />
+        </InlineEditRow>
     );
 }
