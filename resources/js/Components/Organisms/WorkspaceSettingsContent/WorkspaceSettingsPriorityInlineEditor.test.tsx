@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { priorities } from '@/stories/fixtures';
@@ -24,23 +24,56 @@ const renderEditor = (
 };
 
 describe('WorkspaceSettingsPriorityInlineEditor', () => {
-    test('starts a new priority empty, with the first color and icon', () => {
+    test('starts a new priority empty and focused, with nothing to save yet', () => {
         renderEditor();
 
-        expect(screen.getByText('New priority')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('Priority name')).toHaveValue('');
+        const name = screen.getByPlaceholderText('Priority name');
+        expect(name).toHaveValue('');
+        expect(name).toHaveFocus();
         expect(
             screen.getByRole('button', { name: 'Create priority' }),
         ).toBeDisabled();
     });
 
-    test('saves the typed name with the chosen color, icon and default flag', async () => {
+    test('Enter in the name saves with the starting color and icon', async () => {
         const user = userEvent.setup();
         const { onSave } = renderEditor();
 
         await user.type(
             screen.getByPlaceholderText('Priority name'),
-            '  Blocker ',
+            '  Blocker {Enter}',
+        );
+
+        expect(onSave).toHaveBeenCalledWith({
+            name: 'Blocker',
+            color: '#2196f3',
+            icon: 'Flag',
+            is_default: false,
+        });
+    });
+
+    test('Enter does nothing while the name is blank', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor();
+
+        await user.type(
+            screen.getByPlaceholderText('Priority name'),
+            '   {Enter}',
+        );
+
+        expect(onSave).not.toHaveBeenCalled();
+    });
+
+    test('the picker sets the color and the icon', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor();
+
+        await user.type(
+            screen.getByPlaceholderText('Priority name'),
+            'Blocker',
+        );
+        await user.click(
+            screen.getByRole('button', { name: 'Priority icon and color' }),
         );
         await user.click(
             screen.getByRole('button', { name: 'Use color #9c27b0' }),
@@ -48,59 +81,48 @@ describe('WorkspaceSettingsPriorityInlineEditor', () => {
         await user.click(
             screen.getByRole('button', { name: 'Use icon Flame' }),
         );
-        await user.click(screen.getByLabelText('Default for new issues'));
         await user.click(
             screen.getByRole('button', { name: 'Create priority' }),
         );
 
-        expect(onSave).toHaveBeenCalledWith({
-            name: 'Blocker',
-            color: '#9c27b0',
-            icon: 'Flame',
-            is_default: true,
-        });
+        expect(onSave).toHaveBeenCalledWith(
+            expect.objectContaining({
+                name: 'Blocker',
+                color: '#9c27b0',
+                icon: 'Flame',
+            }),
+        );
     });
 
-    test('accepts a custom color from the color picker', () => {
+    test('the star makes the new priority the default', async () => {
+        const user = userEvent.setup();
         const { onSave } = renderEditor();
 
-        fireEvent.change(screen.getByPlaceholderText('Priority name'), {
-            target: { value: 'Teal' },
+        await user.type(screen.getByPlaceholderText('Priority name'), 'Normal');
+        const star = screen.getByRole('button', {
+            name: 'Default for new issues',
         });
-        fireEvent.change(screen.getByLabelText('Pick a custom color'), {
-            target: { value: '#00aa99' },
-        });
-        fireEvent.click(
+        expect(star).toHaveAttribute('aria-pressed', 'false');
+        await user.click(star);
+        expect(star).toHaveAttribute('aria-pressed', 'true');
+        await user.click(
             screen.getByRole('button', { name: 'Create priority' }),
         );
 
         expect(onSave).toHaveBeenCalledWith(
-            expect.objectContaining({ color: '#00aa99' }),
+            expect.objectContaining({ is_default: true }),
         );
-    });
-
-    test('does not save a blank name', async () => {
-        const user = userEvent.setup();
-        const { onSave } = renderEditor();
-
-        await user.type(screen.getByPlaceholderText('Priority name'), '   ');
-
-        expect(
-            screen.getByRole('button', { name: 'Create priority' }),
-        ).toBeDisabled();
-        expect(onSave).not.toHaveBeenCalled();
     });
 
     test('edits an existing priority starting from its own values', async () => {
         const user = userEvent.setup();
         const { onSave } = renderEditor({ priority: priorities[0] });
 
-        expect(screen.getByText('Editing priority')).toBeInTheDocument();
         expect(screen.getByPlaceholderText('Priority name')).toHaveValue(
             'High',
         );
 
-        await user.click(screen.getByRole('button', { name: 'Save changes' }));
+        await user.click(screen.getByRole('button', { name: 'Save priority' }));
 
         expect(onSave).toHaveBeenCalledWith({
             name: 'High',
@@ -113,11 +135,14 @@ describe('WorkspaceSettingsPriorityInlineEditor', () => {
     test('the current default cannot be switched off on its own', () => {
         renderEditor({ priority: priorities[1] });
 
-        expect(screen.getByLabelText('Default for new issues')).toBeChecked();
-        expect(screen.getByLabelText('Default for new issues')).toBeDisabled();
+        const star = screen.getByRole('button', {
+            name: 'Default for new issues',
+        });
+        expect(star).toHaveAttribute('aria-pressed', 'true');
+        expect(star).toBeDisabled();
     });
 
-    test('shows what the server objected to under the name', () => {
+    test('shows what the server objected to under the row', () => {
         renderEditor({
             errors: { name: 'A priority named "High" already exists.' },
         });
@@ -127,19 +152,17 @@ describe('WorkspaceSettingsPriorityInlineEditor', () => {
         );
     });
 
-    test('previews the priority as it will look', () => {
-        renderEditor({ priority: priorities[0] });
-
-        expect(screen.getAllByText('High').length).toBeGreaterThan(0);
-    });
-
-    test('cancel closes the editor without saving', async () => {
+    test('Escape and the cancel button close the editor without saving', async () => {
         const user = userEvent.setup();
         const { onSave, onCancel } = renderEditor();
 
+        await user.type(
+            screen.getByPlaceholderText('Priority name'),
+            'x{Escape}',
+        );
         await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
-        expect(onCancel).toHaveBeenCalled();
+        expect(onCancel).toHaveBeenCalledTimes(2);
         expect(onSave).not.toHaveBeenCalled();
     });
 });

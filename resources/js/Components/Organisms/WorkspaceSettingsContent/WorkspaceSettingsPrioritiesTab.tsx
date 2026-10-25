@@ -1,9 +1,9 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import Button from '@/Components/Atoms/Button/Button';
-import Icon from '@/Components/Atoms/Icon/Icon';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
+import AddRowButton from '@/Components/Molecules/AddRowButton/AddRowButton';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
+import RowAction from '@/Components/Molecules/RowAction/RowAction';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
@@ -211,36 +211,6 @@ export default function WorkspaceSettingsPrioritiesTab({
                 description={`Priorities available for issues in ${selectedProject.name}, most important first.`}
                 icon="Flag"
             >
-                <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
-                    <p className="text-sm text-[var(--text-gray-color)]">
-                        {priorities.length}{' '}
-                        {priorities.length === 1 ? 'priority' : 'priorities'}{' '}
-                        configured
-                    </p>
-                    {canCreatePriorities && (
-                        <Button
-                            type="button"
-                            onClick={() =>
-                                toggleEditor(NEW_PRIORITY_EDITOR_TARGET)
-                            }
-                            className="gap-1.5"
-                        >
-                            <Icon name="Plus" size={14} />
-                            New priority
-                        </Button>
-                    )}
-                </div>
-
-                {editorTarget === NEW_PRIORITY_EDITOR_TARGET && (
-                    <WorkspaceSettingsPriorityInlineEditor
-                        key={NEW_PRIORITY_EDITOR_TARGET}
-                        priority={null}
-                        errors={errors}
-                        onSave={handleSave}
-                        onCancel={closeEditor}
-                    />
-                )}
-
                 {priorities.map((priority, index) =>
                     editorTarget === String(priority.id) ? (
                         <WorkspaceSettingsPriorityInlineEditor
@@ -253,60 +223,50 @@ export default function WorkspaceSettingsPrioritiesTab({
                     ) : (
                         <div
                             key={priority.id}
-                            className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                            className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
                         >
-                            <div className="flex min-w-0 items-center gap-3">
-                                <span
-                                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                                    style={{
-                                        backgroundColor: `${priority.color}1f`,
-                                    }}
-                                >
-                                    <PriorityIcon
-                                        priority={priority}
-                                        tooltip={false}
-                                    />
+                            <span
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                                style={{
+                                    backgroundColor: `${priority.color}1f`,
+                                }}
+                            >
+                                <PriorityIcon
+                                    priority={priority}
+                                    tooltip={false}
+                                />
+                            </span>
+                            <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                                <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                    {priority.name}
+                                </p>
+                                {priority.isDefault && (
+                                    <span className="bg-[var(--warning-color)]/15 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-[var(--warning-color)]">
+                                        Default
+                                    </span>
+                                )}
+                                <span className="shrink-0 text-xs text-[var(--text-muted-color)]">
+                                    {priority.issueCount === 1
+                                        ? '1 issue'
+                                        : `${priority.issueCount} issues`}
                                 </span>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <p className="truncate text-sm font-medium text-[var(--text-color)]">
-                                            {priority.name}
-                                        </p>
-                                        {priority.isDefault && (
-                                            <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                                Default
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="truncate text-sm text-[var(--text-gray-color)]">
-                                        {priority.issueCount === 1
-                                            ? '1 issue'
-                                            : `${priority.issueCount} issues`}
-                                    </p>
-                                </div>
                             </div>
                             {(canUpdatePriorities || canDeletePriorities) && (
-                                <div className="flex shrink-0 items-center gap-1">
+                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:focus-within:opacity-100 sm:group-hover:opacity-100">
                                     {canUpdatePriorities &&
                                         priorities.length > 1 && (
                                             <>
-                                                <button
-                                                    type="button"
+                                                <RowAction
                                                     title="Move up"
+                                                    icon="ArrowUp"
                                                     disabled={index === 0}
                                                     onClick={() =>
                                                         handleMove(index, -1)
                                                     }
-                                                    className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-                                                >
-                                                    <Icon
-                                                        name="ArrowUp"
-                                                        size={14}
-                                                    />
-                                                </button>
-                                                <button
-                                                    type="button"
+                                                />
+                                                <RowAction
                                                     title="Move down"
+                                                    icon="ArrowDown"
                                                     disabled={
                                                         index ===
                                                         priorities.length - 1
@@ -314,48 +274,56 @@ export default function WorkspaceSettingsPrioritiesTab({
                                                     onClick={() =>
                                                         handleMove(index, 1)
                                                     }
-                                                    className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
-                                                >
-                                                    <Icon
-                                                        name="ArrowDown"
-                                                        size={14}
-                                                    />
-                                                </button>
+                                                />
                                             </>
                                         )}
                                     {canUpdatePriorities && (
-                                        <button
-                                            type="button"
+                                        <RowAction
                                             title="Edit priority"
+                                            icon="Pencil"
                                             onClick={() =>
                                                 toggleEditor(
                                                     String(priority.id),
                                                 )
                                             }
-                                            className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
-                                        >
-                                            <Icon name="Pencil" size={14} />
-                                        </button>
+                                        />
                                     )}
                                     {canDeletePriorities &&
                                         priorities.length > 1 && (
-                                            <button
-                                                type="button"
+                                            <RowAction
                                                 title="Delete priority"
+                                                icon="Trash"
+                                                danger
                                                 onClick={() =>
                                                     setDeletingPriority(
                                                         priority,
                                                     )
                                                 }
-                                                className="hover:bg-[var(--error-color)]/10 flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
-                                            >
-                                                <Icon name="Trash" size={14} />
-                                            </button>
+                                            />
                                         )}
                                 </div>
                             )}
                         </div>
                     ),
+                )}
+
+                {editorTarget === NEW_PRIORITY_EDITOR_TARGET ? (
+                    <WorkspaceSettingsPriorityInlineEditor
+                        key={NEW_PRIORITY_EDITOR_TARGET}
+                        priority={null}
+                        errors={errors}
+                        onSave={handleSave}
+                        onCancel={closeEditor}
+                    />
+                ) : (
+                    canCreatePriorities && (
+                        <AddRowButton
+                            label="Add priority"
+                            onClick={() =>
+                                toggleEditor(NEW_PRIORITY_EDITOR_TARGET)
+                            }
+                        />
+                    )
                 )}
             </SettingsPanel>
 

@@ -50,15 +50,3 @@ export const DEFAULT_PRIORITY_ICON: keyof typeof icons = 'Flag';
 export function resolvePriorityIcon(name: string): keyof typeof icons {
     return name in icons ? (name as keyof typeof icons) : DEFAULT_PRIORITY_ICON;
 }
-
-/** Colors offered when creating a priority; the first one is the form's starting color. */
-export const PRIORITY_COLOR_OPTIONS = [
-    '#f44336',
-    '#ff9800',
-    '#ffc107',
-    '#4caf50',
-    '#2196f3',
-    '#9c27b0',
-    '#e91e63',
-    '#757575',
-] as const;
