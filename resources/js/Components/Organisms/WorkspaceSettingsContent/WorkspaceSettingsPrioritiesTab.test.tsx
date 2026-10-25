@@ -135,6 +135,27 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
         expect(screen.queryByText('Priority levels')).not.toBeInTheDocument();
     });
 
+    test('keeps the project picker when the selected project hides its priorities', async () => {
+        const other: MemberProjectSummary = {
+            id: 2,
+            name: 'Atlas',
+            color: 'green',
+        };
+        renderTab({
+            memberProjects: [project, other],
+            hasPrioritiesAccess: false,
+            priorities: [],
+        });
+
+        await userEvent.click(screen.getByText('Atlas'));
+
+        expect(mockRouterGet).toHaveBeenCalledWith(
+            '/settings/priorities?project=2',
+            {},
+            expect.anything(),
+        );
+    });
+
     describe('creating and editing', () => {
         test('a user with no priority capabilities sees neither Add priority nor edit controls', () => {
             renderTab();
