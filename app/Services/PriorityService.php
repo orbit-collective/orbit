@@ -180,19 +180,43 @@ class PriorityService
     {
         $this->ensureSystemPriorities($project);
 
-        if ($this->priorityRepository->getForProject($project)->count() <= 1) {
-            throw ValidationException::withMessages([
-                'priority' => 'A project needs at least one priority.',
-            ]);
-        }
-
         if ($replacement && ($replacement->project_id !== $project->id || $replacement->is($priority))) {
             throw ValidationException::withMessages([
                 'replacement_id' => 'Choose a different priority of this project to move the issues to.',
             ]);
         }
 
+        // The checks that depend on what is left run inside the transaction,
+        // under a lock on the project, and on fresh copies: two overlapping
+        // deletes would otherwise both pass an unlocked count, or act on a
+        // default flag the other one just moved.
         DB::transaction(function () use ($project, $priority, $replacement) {
+            $this->priorityRepository->lockProject($project);
+
+            $priority = $this->priorityRepository->findForProject($project, $priority->id);
+
+            if ($priority === null) {
+                throw ValidationException::withMessages([
+                    'priority' => 'This priority no longer exists.',
+                ]);
+            }
+
+            if ($replacement) {
+                $replacement = $this->priorityRepository->findForProject($project, $replacement->id);
+
+                if ($replacement === null) {
+                    throw ValidationException::withMessages([
+                        'replacement_id' => 'Choose a different priority of this project to move the issues to.',
+                    ]);
+                }
+            }
+
+            if ($this->priorityRepository->getForProject($project)->count() <= 1) {
+                throw ValidationException::withMessages([
+                    'priority' => 'A project needs at least one priority.',
+                ]);
+            }
+
             $this->priorityRepository->moveIssues($priority, $replacement);
             $this->priorityRepository->replaceNameReferences($project, $priority->name, $replacement?->name);
             $this->priorityRepository->removeFromSavedFilters($project, $priority->id);
@@ -231,6 +255,10 @@ class PriorityService
         DB::transaction(fn () => $this->priorityRepository->reorder($project, array_map('intval', $orderedIds)));
 
         $this->activityLogService->log($project->id, 'Reordered the priorities');
+
+        // Cached issue lists carry each priority's position: retire them once
+        // the new order is committed.
+        CacheVersion::bump(CacheVersion::ISSUES);
     }
 
     private function assertNameAvailable(Project $project, string $name): void

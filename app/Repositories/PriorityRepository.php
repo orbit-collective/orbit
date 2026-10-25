@@ -16,6 +16,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class PriorityRepository
 {
+    /**
+     * Takes a write lock on the project row for the rest of the transaction,
+     * so overlapping changes to its priority scale run one after the other.
+     */
+    public function lockProject(Project $project): void
+    {
+        Project::query()->whereKey($project->id)->lockForUpdate()->first();
+    }
+
     /** @return Collection<int, Priority> */
     public function getForProject(Project $project): Collection
     {

@@ -189,6 +189,26 @@ test('the replacement must be another priority of the same project', function ()
         ->toThrow(ValidationException::class);
 });
 
+test('a delete made from a stale copy of the default still leaves the project a default', function () {
+    $this->service->ensureSystemPriorities($this->project);
+    $staleHigh = seededPriority('High');
+
+    $this->service->deletePriority($this->project, seededPriority('Medium'));
+    $this->service->deletePriority($this->project, $staleHigh);
+
+    expect($this->service->getPriorities($this->project)->pluck('name')->all())->toBe(['Low'])
+        ->and($this->service->defaultFor($this->project)?->name)->toBe('Low');
+});
+
+test('reordering bumps the issue list version, since cached issues carry the position', function () {
+    $ids = $this->service->getPriorities($this->project)->pluck('id', 'name');
+    $before = CacheVersion::current(CacheVersion::ISSUES);
+
+    $this->service->reorder($this->project, [$ids['Low'], $ids['High'], $ids['Medium']]);
+
+    expect(CacheVersion::current(CacheVersion::ISSUES))->toBeGreaterThan($before);
+});
+
 test('deleting a priority bumps the issue list version after the commit', function () {
     $this->service->ensureSystemPriorities($this->project);
     $before = CacheVersion::current(CacheVersion::ISSUES);
