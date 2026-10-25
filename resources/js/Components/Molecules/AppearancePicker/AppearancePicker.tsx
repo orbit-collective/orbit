@@ -57,7 +57,7 @@ export default function AppearancePicker({
                     {children}
                 </button>
             }
-            panelClassName="slide-in-from-top-1 max-h-[min(34rem,80vh)] duration-200 overflow-y-auto rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3 shadow-2xl"
+            panelClassName="max-w-[calc(100vw-1rem)] slide-in-from-top-1 max-h-[min(34rem,80vh)] duration-200 overflow-y-auto rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3 shadow-2xl"
         >
             <div className="space-y-3">
                 <ColorPicker
@@ -77,7 +77,7 @@ export default function AppearancePicker({
                                 aria-label={`Use icon ${option}`}
                                 aria-pressed={icon === option}
                                 className={cn(
-                                    'flex h-8 w-8 cursor-pointer items-center justify-center justify-self-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                                    'flex h-8 w-8 cursor-pointer items-center justify-center justify-self-center touch-manipulation rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
                                     icon === option
                                         ? 'bg-[var(--bg-light-color-hover)] text-[var(--text-color)]'
                                         : 'text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
