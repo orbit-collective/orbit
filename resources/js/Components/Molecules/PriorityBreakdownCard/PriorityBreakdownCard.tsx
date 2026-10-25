@@ -63,16 +63,16 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                             key={item.key}
                             className="flex items-center justify-between text-xs"
                         >
-                            <div className="flex items-center gap-2">
+                            <div className="flex min-w-0 items-center gap-2">
                                 <span
                                     className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
                                     style={{ backgroundColor: item.color }}
                                 />
-                                <span className="font-medium text-[var(--text-color)]">
+                                <span className="truncate font-medium text-[var(--text-color)]">
                                     {item.label}
                                 </span>
                             </div>
-                            <span className="font-semibold text-[var(--text-color)]">
+                            <span className="shrink-0 pl-2 font-semibold text-[var(--text-color)]">
                                 {item.count}{' '}
                                 <span className="font-medium text-[var(--text-muted-color)]">
                                     ({item.pct}%)
