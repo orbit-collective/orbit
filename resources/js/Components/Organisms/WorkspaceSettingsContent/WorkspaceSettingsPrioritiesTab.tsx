@@ -245,7 +245,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                                     tooltip={false}
                                 />
                             </span>
-                            <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                            <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 sm:flex-nowrap">
                                 <p className="max-w-full truncate text-sm font-medium text-[var(--text-color)]">
                                     {priority.name}
                                 </p>

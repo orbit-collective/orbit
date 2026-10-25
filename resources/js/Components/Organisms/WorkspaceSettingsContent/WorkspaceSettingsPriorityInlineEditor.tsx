@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import AppearancePicker from '@/Components/Molecules/AppearancePicker/AppearancePicker';
 import InlineEditRow, {
@@ -41,6 +41,7 @@ export default function WorkspaceSettingsPriorityInlineEditor({
     onSave,
     onCancel,
 }: WorkspaceSettingsPriorityInlineEditorProps) {
+    const errorId = useId();
     const [name, setName] = useState(priority?.name ?? '');
     const [color, setColor] = useState(priority?.color ?? NEW_PRIORITY_COLOR);
     const [icon, setIcon] = useState(priority?.icon ?? DEFAULT_PRIORITY_ICON);
@@ -104,6 +105,7 @@ export default function WorkspaceSettingsPriorityInlineEditor({
             canSave={canSave}
             saveLabel={isEditing ? 'Save priority' : 'Create priority'}
             error={errors.name ?? errors.is_default}
+            errorId={errorId}
             onSave={handleSave}
             onCancel={onCancel}
         >
@@ -114,6 +116,7 @@ export default function WorkspaceSettingsPriorityInlineEditor({
                 placeholder="Priority name"
                 aria-label="Priority name"
                 aria-invalid={Boolean(errors.name)}
+                aria-describedby={errors.name ? errorId : undefined}
                 autoComplete="off"
                 maxLength={50}
                 className={cn(inlineFieldClass, 'font-medium sm:flex-1')}
