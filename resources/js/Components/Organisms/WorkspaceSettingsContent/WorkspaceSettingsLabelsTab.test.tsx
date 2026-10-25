@@ -60,15 +60,15 @@ describe('WorkspaceSettingsLabelsTab permission gating', () => {
     test('a user with no label capabilities sees neither create nor edit/delete controls', () => {
         renderTab({});
 
-        expect(screen.queryByText('New label')).not.toBeInTheDocument();
+        expect(screen.queryByText('Add label')).not.toBeInTheDocument();
         expect(screen.queryByTitle('Edit label')).not.toBeInTheDocument();
         expect(screen.queryByTitle('Delete label')).not.toBeInTheDocument();
     });
 
-    test('a create-only user sees the "New label" button but no edit or delete controls', () => {
+    test('a create-only user sees the "Add label" button but no edit or delete controls', () => {
         renderTab({ canCreateLabels: true });
 
-        expect(screen.getByText('New label')).toBeInTheDocument();
+        expect(screen.getByText('Add label')).toBeInTheDocument();
         expect(screen.queryByTitle('Edit label')).not.toBeInTheDocument();
         expect(screen.queryByTitle('Delete label')).not.toBeInTheDocument();
     });
@@ -76,7 +76,7 @@ describe('WorkspaceSettingsLabelsTab permission gating', () => {
     test('an update-only user sees the edit control but not create or delete', () => {
         renderTab({ canUpdateLabels: true });
 
-        expect(screen.queryByText('New label')).not.toBeInTheDocument();
+        expect(screen.queryByText('Add label')).not.toBeInTheDocument();
         expect(screen.getByTitle('Edit label')).toBeInTheDocument();
         expect(screen.queryByTitle('Delete label')).not.toBeInTheDocument();
     });
@@ -84,7 +84,7 @@ describe('WorkspaceSettingsLabelsTab permission gating', () => {
     test('a delete-only user sees the delete control but not create or edit', () => {
         renderTab({ canDeleteLabels: true });
 
-        expect(screen.queryByText('New label')).not.toBeInTheDocument();
+        expect(screen.queryByText('Add label')).not.toBeInTheDocument();
         expect(screen.queryByTitle('Edit label')).not.toBeInTheDocument();
         expect(screen.getByTitle('Delete label')).toBeInTheDocument();
     });
@@ -96,7 +96,7 @@ describe('WorkspaceSettingsLabelsTab permission gating', () => {
             canDeleteLabels: true,
         });
 
-        expect(screen.getByText('New label')).toBeInTheDocument();
+        expect(screen.getByText('Add label')).toBeInTheDocument();
         expect(screen.getByTitle('Edit label')).toBeInTheDocument();
         expect(screen.getByTitle('Delete label')).toBeInTheDocument();
     });
