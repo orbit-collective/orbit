@@ -42,7 +42,7 @@ import {
 import { Project, ProjectColors } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
-import { WorkflowStatus, WorkflowStatusCategory } from '@/types/Workflow';
+import { WorkflowStatus } from '@/types/Workflow';
 import type { StatusGroup } from '@/utils/workflow';
 
 export interface AvatarProps {
