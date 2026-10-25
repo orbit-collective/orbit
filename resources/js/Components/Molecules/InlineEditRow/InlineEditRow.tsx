@@ -42,6 +42,11 @@ export default function InlineEditRow({
     onCancel,
 }: InlineEditRowProps) {
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+        // A panel opened from the row (the appearance picker) is portaled out
+        // of it, but its key events still bubble here: they belong to the
+        // panel, which closes itself on Escape, not to the row.
+        if (!event.currentTarget.contains(event.target as Node)) return;
+
         if (event.key === 'Escape') {
             event.stopPropagation();
             onCancel();
