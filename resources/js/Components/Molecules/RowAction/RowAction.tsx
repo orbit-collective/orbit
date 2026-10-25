@@ -1,8 +1,12 @@
 import { icons } from 'lucide-react';
+import { ButtonHTMLAttributes } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { cn } from '@/utils/cn';
 
-interface RowActionProps {
+interface RowActionProps extends Omit<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    'title' | 'onClick' | 'disabled' | 'className' | 'children'
+> {
     title: string;
     icon: keyof typeof icons;
     onClick: () => void;
@@ -17,9 +21,11 @@ export default function RowAction({
     onClick,
     disabled = false,
     danger = false,
+    ...rest
 }: RowActionProps) {
     return (
         <button
+            {...rest}
             type="button"
             title={title}
             aria-label={title}

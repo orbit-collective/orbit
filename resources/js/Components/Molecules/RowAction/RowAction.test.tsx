@@ -42,4 +42,27 @@ describe('RowAction', () => {
             screen.getByRole('button', { name: 'Delete' }).className,
         ).toContain('hover:text-[var(--error-color)]');
     });
+
+    test('passes through the popup attributes a Dropdown adds to its trigger', () => {
+        render(
+            <RowAction
+                title="Configure"
+                icon="SlidersHorizontal"
+                onClick={() => {}}
+                aria-haspopup="menu"
+                aria-expanded={true}
+                aria-controls="menu-1"
+            />,
+        );
+
+        expect(
+            screen.getByRole('button', { name: 'Configure' }),
+        ).toHaveAttribute('aria-haspopup', 'menu');
+        expect(
+            screen.getByRole('button', { name: 'Configure' }),
+        ).toHaveAttribute('aria-expanded', 'true');
+        expect(
+            screen.getByRole('button', { name: 'Configure' }),
+        ).toHaveAttribute('aria-controls', 'menu-1');
+    });
 });
