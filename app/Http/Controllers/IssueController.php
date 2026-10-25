@@ -379,6 +379,13 @@ class IssueController extends Controller
         $this->priorityService->ensureSystemPriorities($project);
         $this->issueTypeService->ensureSystemIssueTypes($project);
 
+        // A request that leaves the priority out (quick-add) gets the project
+        // default now, so a type that requires a priority sees it; an explicit
+        // null is still "no priority" and is checked as such.
+        if (! array_key_exists('priority', $data)) {
+            $data['priority'] = $this->priorityService->defaultFor($project)?->name;
+        }
+
         $request->validate([
             'priority' => ['nullable', 'string', new ProjectPriorityName($project)],
             'labels.*' => [

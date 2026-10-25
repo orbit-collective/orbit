@@ -597,6 +597,30 @@ test('a new issue without a priority takes the project default', function () {
     expect(Issue::where('title', 'No priority given')->first()->priority->name)->toBe('Medium');
 });
 
+test('a quick-add without a priority satisfies a type that requires one', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+    $this->actingAs($user)->post('/issues', ['title' => 'seed', 'project_id' => $project->id])->assertRedirect();
+    $type = $project->issueTypes()->where('name', 'Bug')->first();
+    $type->update(['required_fields' => ['priority']]);
+
+    $this->actingAs($user)->post('/issues', ['title' => 'Quick add', 'project_id' => $project->id, 'issue_type_id' => $type->id])
+        ->assertSessionHasNoErrors();
+
+    expect(Issue::where('title', 'Quick add')->first()->priority->name)->toBe('Medium');
+});
+
+test('an explicit null priority still fails a type that requires one', function () {
+    $project = Project::factory()->create();
+    $user = actingAsProjectMember($project);
+    $this->actingAs($user)->post('/issues', ['title' => 'seed', 'project_id' => $project->id])->assertRedirect();
+    $type = $project->issueTypes()->where('name', 'Bug')->first();
+    $type->update(['required_fields' => ['priority']]);
+
+    $this->actingAs($user)->post('/issues', ['title' => 'Cleared', 'project_id' => $project->id, 'issue_type_id' => $type->id, 'priority' => null])
+        ->assertSessionHasErrors('priority');
+});
+
 test('a new issue takes a priority by name, ignoring case', function () {
     $project = Project::factory()->create();
     $user = actingAsProjectMember($project);
