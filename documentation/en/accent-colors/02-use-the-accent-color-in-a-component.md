@@ -29,31 +29,30 @@ Only when a component needs the **current color's identity**, not
 just its rendered value — the accent picker itself is the main case:
 
 ```tsx
+import ColorPicker from '@/Components/Molecules/ColorPicker/ColorPicker';
 import { useAccent } from '@/context/AccentContext';
-import { ACCENT_COLOR_OPTIONS, getAccentSwatch } from '@/utils/accentColors';
+import {
+    ACCENT_PALETTE,
+    accentFromHex,
+    getAccentSwatch,
+} from '@/utils/accentColors';
 
 const { accentColor, setAccentColor } = useAccent();
 
 return (
-    <div className="flex flex-wrap gap-3">
-        {ACCENT_COLOR_OPTIONS.map((color) => (
-            <button
-                key={color}
-                type="button"
-                onClick={() => setAccentColor(color)}
-                className={`h-8 w-8 rounded-full border-2 ${
-                    accentColor === color
-                        ? 'scale-110 border-[var(--text-color)]'
-                        : 'border-transparent'
-                }`}
-                style={{ backgroundColor: getAccentSwatch(color) }}
-            />
-        ))}
-    </div>
+    <ColorPicker
+        value={getAccentSwatch(accentColor)}
+        onChange={(hex) => setAccentColor(accentFromHex(hex))}
+        palette={ACCENT_PALETTE}
+    />
 );
 ```
 
-`getAccentSwatch()` returns a **hex string** for inline `style=`, not
+`accentFromHex()` turns a picked color back into the setting it stands
+for: `'default'` or a preset name when the hex is exactly one of those
+(so they keep following the theme), a custom `#rrggbb` otherwise.
+
+`getAccentSwatch()` returns a **hex string** for any `AccentColor`, including a custom one, suitable for inline `style=`, not
 a CSS variable — deliberately, since this swatch needs to show every
 option's real color simultaneously (including options that aren't the
 active accent, which have no CSS variable to read from). Compare this
@@ -65,7 +64,7 @@ the *currently active* one.
 
 ## Accent color vs. a project's badge color
 
-Both ultimately come from the same ten names (`ProjectColors` — see
+Both start from the same ten names (the accent can also be a custom hex, which a project color never is) (`ProjectColors` — see
 the [README](./README.md)), but they are not interchangeable and pull
 from different code:
 

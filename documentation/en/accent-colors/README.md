@@ -10,8 +10,7 @@ accent applies in both, just with a slightly different opacity) and,
 non-obviously, **shares its entire color-name vocabulary with a
 project's badge color** — the ten names a user can pick as their
 accent are exactly the ten colors available when creating a project,
-reused on purpose ("the same palette available when creating a
-project," per the Settings UI copy itself) but represented completely
+reused on purpose (the picker also takes any custom hex on top of them) but represented completely
 differently under the hood for each use. This category documents that
 whole system and the trap that comes with it.
 
@@ -29,10 +28,13 @@ whole system and the trap that comes with it.
 
 ## The architecture in one paragraph
 
-`AccentColor` (`resources/js/types/Accent.ts`) is `'default' |
-ProjectColors` — literally reusing `ProjectColors`
+`AccentColor` (`resources/js/types/Accent.ts`) is ``'default' |
+ProjectColors | `#${string}` `` — reusing `ProjectColors`
 (`resources/js/types/Projects.ts`), the same ten-value union a
-project's `color` field uses. `AccentProvider`
+project's `color` field uses, plus a custom 6-digit hex the user can
+pick in the shared `ColorPicker` (a hex that equals a preset or the
+default is stored as that name, via `accentFromHex()`; a custom one
+gets its light shade from `lighten()`). `AccentProvider`
 (`resources/js/context/AccentContext.tsx`) holds exactly one piece of
 state, the chosen `AccentColor`, persisted to `localStorage`; on every
 change (and every theme change, since the opacity differs per theme)

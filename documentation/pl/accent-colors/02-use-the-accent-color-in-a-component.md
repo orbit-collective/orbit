@@ -23,35 +23,32 @@ To wymaga zerowej świadomości `useAccent()`/`useTheme()` w samym komponencie �
 Tylko wtedy, gdy komponent potrzebuje **tożsamości aktualnego koloru**, nie tylko jego wyrenderowanej wartości — sam selektor akcentu to główny taki przypadek:
 
 ```tsx
+import ColorPicker from '@/Components/Molecules/ColorPicker/ColorPicker';
 import { useAccent } from '@/context/AccentContext';
-import { ACCENT_COLOR_OPTIONS, getAccentSwatch } from '@/utils/accentColors';
+import {
+    ACCENT_PALETTE,
+    accentFromHex,
+    getAccentSwatch,
+} from '@/utils/accentColors';
 
 const { accentColor, setAccentColor } = useAccent();
 
 return (
-    <div className="flex flex-wrap gap-3">
-        {ACCENT_COLOR_OPTIONS.map((color) => (
-            <button
-                key={color}
-                type="button"
-                onClick={() => setAccentColor(color)}
-                className={`h-8 w-8 rounded-full border-2 ${
-                    accentColor === color
-                        ? 'scale-110 border-[var(--text-color)]'
-                        : 'border-transparent'
-                }`}
-                style={{ backgroundColor: getAccentSwatch(color) }}
-            />
-        ))}
-    </div>
+    <ColorPicker
+        value={getAccentSwatch(accentColor)}
+        onChange={(hex) => setAccentColor(accentFromHex(hex))}
+        palette={ACCENT_PALETTE}
+    />
 );
 ```
 
-`getAccentSwatch()` zwraca **string hex** dla inline `style=`, nie zmienną CSS — celowo, ponieważ ta próbka musi jednocześnie pokazać prawdziwy kolor każdej opcji (włącznie z opcjami, które nie są aktywnym akcentem, a które nie mają żadnej zmiennej CSS do odczytania). Porównaj to z podglądami motywu w `AccountSettingsThemeCard.tsx`, które z tego samego powodu używają dosłownych wartości hex (zobacz własny komentarz dokumentacyjny tego komponentu) — oba selektory muszą jednocześnie wyrenderować prawdziwy wygląd każdego wyboru, czego sam `var(--accent-color)` nie potrafi, bo trzyma tylko ten *aktualnie aktywny*.
+`accentFromHex()` zamienia wybrany kolor z powrotem na ustawienie, które reprezentuje: `'default'` albo nazwę presetu, gdy hex jest dokładnie jednym z nich (dzięki temu dalej podążają za motywem), w przeciwnym razie własny `#rrggbb`.
+
+`getAccentSwatch()` zwraca **string hex** dla dowolnego `AccentColor`, także własnego, do użycia w inline `style=`, nie zmienną CSS — celowo, ponieważ ta próbka musi jednocześnie pokazać prawdziwy kolor każdej opcji (włącznie z opcjami, które nie są aktywnym akcentem, a które nie mają żadnej zmiennej CSS do odczytania). Porównaj to z podglądami motywu w `AccountSettingsThemeCard.tsx`, które z tego samego powodu używają dosłownych wartości hex (zobacz własny komentarz dokumentacyjny tego komponentu) — oba selektory muszą jednocześnie wyrenderować prawdziwy wygląd każdego wyboru, czego sam `var(--accent-color)` nie potrafi, bo trzyma tylko ten *aktualnie aktywny*.
 
 ## Kolor akcentu vs. kolor odznaki projektu
 
-Oba ostatecznie pochodzą z tych samych dziesięciu nazw (`ProjectColors` — zobacz [README](./README.md)), ale nie są wymienne i pochodzą z różnego kodu:
+Oba zaczynają od tych samych dziesięciu nazw (akcent może być też własnym hexem, czym kolor projektu nigdy nie jest) (`ProjectColors` — zobacz [README](./README.md)), ale nie są wymienne i pochodzą z różnego kodu:
 
 - **Kolor odznaki/karty projektu** (`project.color`, renderowany przez `getColorTheme()` w `resources/js/utils/colors.ts`) to stałe dane o tym projekcie, zapisane per projekt, renderowane dosłownymi klasami Tailwinda (`bg-red-500/10`, …), które wyglądają identycznie niezależnie od motywu widza albo jego własnej preferencji akcentu. Użyj tego dla wszystkiego, co jest z natury "kolorem tego projektu" — karta projektu, odznaka projektu na liście.
 - **Kolor akcentu** (`--accent-color` i towarzyszące) to preferencja per *widz*, stosowana do generycznego interaktywnego chromu — przyciski, linki, zaznaczone stany — całkowicie niezwiązana z tym, jaki projekt (jeśli w ogóle) jest na ekranie. Użyj tego dla wszystkiego, co powinno pasować do koloru marki, jaki wybrał aktualny użytkownik, nie do tożsamości konkretnego projektu.
