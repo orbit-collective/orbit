@@ -236,8 +236,8 @@ export default function WorkspaceSettingsPrioritiesTab({
                                     tooltip={false}
                                 />
                             </span>
-                            <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                                <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                            <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                <p className="max-w-full truncate text-sm font-medium text-[var(--text-color)]">
                                     {priority.name}
                                 </p>
                                 {priority.isDefault && (
@@ -252,7 +252,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                                 </span>
                             </div>
                             {(canUpdatePriorities || canDeletePriorities) && (
-                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:focus-within:opacity-100 sm:group-hover:opacity-100">
+                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:focus-within:opacity-100 [@media(hover:hover)]:sm:group-hover:opacity-100">
                                     {canUpdatePriorities &&
                                         priorities.length > 1 && (
                                             <>

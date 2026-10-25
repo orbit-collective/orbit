@@ -243,7 +243,7 @@ export default function WorkspaceSettingsLabelsTab({
                                 )}
                             </div>
                             {(canUpdateLabels || canDeleteLabels) && (
-                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:focus-within:opacity-100 sm:group-hover:opacity-100">
+                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:focus-within:opacity-100 [@media(hover:hover)]:sm:group-hover:opacity-100">
                                     {canUpdateLabels && (
                                         <RowAction
                                             title="Edit label"
