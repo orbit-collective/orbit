@@ -309,7 +309,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                                 configureOptions.length > 0 ||
                                 (canDeleteIssueTypes &&
                                     !issueType.isSystem)) && (
-                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity sm:opacity-0 sm:focus-within:opacity-100 sm:group-hover:opacity-100">
+                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:focus-within:opacity-100 [@media(hover:hover)]:sm:group-hover:opacity-100">
                                     {configureOptions.length > 0 && (
                                         <Dropdown
                                             variant="menu"
