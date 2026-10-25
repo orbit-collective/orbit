@@ -40,6 +40,8 @@ export default function WorkspaceSettingsPrioritiesTab({
     const [editorTarget, setEditorTarget] = useState<string | null>(null);
     const [deletingPriority, setDeletingPriority] =
         useState<SettingsPriority | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [reordering, setReordering] = useState(false);
     const [errors, setErrors] = useState<
         Partial<Record<keyof PriorityFormValues, string>>
     >({});
@@ -101,6 +103,8 @@ export default function WorkspaceSettingsPrioritiesTab({
         const options = {
             preserveScroll: true,
             preserveState: true,
+            onStart: () => setSaving(true),
+            onFinish: () => setSaving(false),
             onSuccess: closeEditor,
             onError: (serverErrors: Record<string, string>) => {
                 setErrors(serverErrors);
@@ -128,6 +132,8 @@ export default function WorkspaceSettingsPrioritiesTab({
     };
 
     const handleMove = (index: number, direction: -1 | 1) => {
+        if (reordering) return;
+
         const order = priorities.map((priority) => priority.id);
         const target = index + direction;
         [order[index], order[target]] = [order[target], order[index]];
@@ -138,6 +144,8 @@ export default function WorkspaceSettingsPrioritiesTab({
             {
                 preserveScroll: true,
                 preserveState: true,
+                onStart: () => setReordering(true),
+                onFinish: () => setReordering(false),
                 onError: () =>
                     addAlert('Could not reorder the priorities.', 'error'),
             },
@@ -217,6 +225,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                             key={priority.id}
                             priority={priority}
                             errors={errors}
+                            saving={saving}
                             onSave={handleSave}
                             onCancel={closeEditor}
                         />
@@ -259,7 +268,10 @@ export default function WorkspaceSettingsPrioritiesTab({
                                                 <RowAction
                                                     title="Move up"
                                                     icon="ArrowUp"
-                                                    disabled={index === 0}
+                                                    disabled={
+                                                        reordering ||
+                                                        index === 0
+                                                    }
                                                     onClick={() =>
                                                         handleMove(index, -1)
                                                     }
@@ -268,8 +280,10 @@ export default function WorkspaceSettingsPrioritiesTab({
                                                     title="Move down"
                                                     icon="ArrowDown"
                                                     disabled={
+                                                        reordering ||
                                                         index ===
-                                                        priorities.length - 1
+                                                            priorities.length -
+                                                                1
                                                     }
                                                     onClick={() =>
                                                         handleMove(index, 1)
@@ -312,6 +326,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                         key={NEW_PRIORITY_EDITOR_TARGET}
                         priority={null}
                         errors={errors}
+                        saving={saving}
                         onSave={handleSave}
                         onCancel={closeEditor}
                     />
