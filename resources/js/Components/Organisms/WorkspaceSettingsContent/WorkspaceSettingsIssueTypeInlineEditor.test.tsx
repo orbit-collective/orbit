@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { IssueType } from '@/types/IssueTypes';
 import WorkspaceSettingsIssueTypeInlineEditor from './WorkspaceSettingsIssueTypeInlineEditor';
@@ -16,215 +17,215 @@ const bugType: IssueType = {
     restrictedRoleTypes: [],
 };
 
-describe('WorkspaceSettingsIssueTypeInlineEditor', () => {
-    test('renders empty fields for a new issue type', () => {
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={null}
-                onSave={vi.fn()}
-                onCancel={vi.fn()}
-            />,
-        );
+const renderEditor = (issueType: IssueType | null = null) => {
+    const onSave = vi.fn();
+    const onCancel = vi.fn();
+    render(
+        <WorkspaceSettingsIssueTypeInlineEditor
+            issueType={issueType}
+            onSave={onSave}
+            onCancel={onCancel}
+        />,
+    );
 
-        expect(screen.getByText('New issue type')).toBeInTheDocument();
-        expect(screen.getByPlaceholderText('Issue type name')).toHaveValue('');
+    return { onSave, onCancel };
+};
+
+const chip = (name: string) => screen.getByRole('button', { name });
+
+describe('WorkspaceSettingsIssueTypeInlineEditor', () => {
+    test('starts a new issue type empty and focused, with nothing to save yet', () => {
+        renderEditor();
+
+        const name = screen.getByPlaceholderText('Issue type name');
+        expect(name).toHaveValue('');
+        expect(name).toHaveFocus();
+        expect(
+            screen.getByRole('button', { name: 'Create issue type' }),
+        ).toBeDisabled();
     });
 
-    test('pre-fills fields when editing an existing issue type', () => {
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={bugType}
-                onSave={vi.fn()}
-                onCancel={vi.fn()}
-            />,
-        );
+    test('pre-fills the fields when editing an existing issue type', () => {
+        renderEditor(bugType);
 
-        expect(screen.getByText('Edit issue type')).toBeInTheDocument();
         expect(screen.getByDisplayValue('Bug')).toBeInTheDocument();
         expect(
             screen.getByDisplayValue('Something is broken'),
         ).toBeInTheDocument();
+        expect(
+            screen.getByRole('button', { name: 'Save issue type' }),
+        ).toBeEnabled();
     });
 
-    test('the Create button is disabled until a name is entered', () => {
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={null}
-                onSave={vi.fn()}
-                onCancel={vi.fn()}
-            />,
+    test('Enter saves the trimmed values with the defaults of a new type', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor();
+
+        await user.type(
+            screen.getByPlaceholderText('Issue type name'),
+            '  Custom Type {Enter}',
         );
 
-        expect(screen.getByText('Create issue type')).toBeDisabled();
-
-        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
-            target: { value: 'Custom' },
+        expect(onSave).toHaveBeenCalledWith({
+            name: 'Custom Type',
+            icon: 'SquareCheck',
+            color: '#f44336',
+            description: '',
+            allows_children: false,
+            is_top_level: true,
+            required_fields: [],
+            restricted_role_types: [],
         });
-
-        expect(screen.getByText('Create issue type')).not.toBeDisabled();
     });
 
-    test('calls onSave with the trimmed field values', () => {
-        const handleSave = vi.fn();
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={null}
-                onSave={handleSave}
-                onCancel={vi.fn()}
-            />,
+    test('the picker sets the color and the icon', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor();
+
+        await user.type(
+            screen.getByPlaceholderText('Issue type name'),
+            'Custom',
+        );
+        await user.click(
+            screen.getByRole('button', { name: 'Issue type icon and color' }),
+        );
+        await user.click(
+            screen.getByRole('button', { name: 'Use color #ff5722' }),
+        );
+        await user.click(
+            screen.getByRole('button', { name: 'Use icon Rocket' }),
+        );
+        await user.click(
+            screen.getByRole('button', { name: 'Create issue type' }),
         );
 
-        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
-            target: { value: '  Custom Type  ' },
-        });
-        fireEvent.click(screen.getByText('Create issue type'));
-
-        expect(handleSave).toHaveBeenCalledWith(
-            expect.objectContaining({ name: 'Custom Type' }),
+        expect(onSave).toHaveBeenCalledWith(
+            expect.objectContaining({ color: '#ff5722', icon: 'Rocket' }),
         );
     });
 
-    test('toggling a required field checkbox includes it in the saved values', () => {
-        const handleSave = vi.fn();
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={null}
-                onSave={handleSave}
-                onCancel={vi.fn()}
-            />,
+    test('the description is part of the saved values', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor();
+
+        await user.type(
+            screen.getByPlaceholderText('Issue type name'),
+            'Custom',
+        );
+        await user.type(
+            screen.getByPlaceholderText('What is it used for? (optional)'),
+            ' A custom description ',
+        );
+        await user.click(
+            screen.getByRole('button', { name: 'Create issue type' }),
         );
 
-        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
-            target: { value: 'Custom' },
-        });
-        fireEvent.click(screen.getByLabelText('Description'));
-        fireEvent.click(screen.getByLabelText('Assignee'));
-        fireEvent.click(screen.getByText('Create issue type'));
+        expect(onSave).toHaveBeenCalledWith(
+            expect.objectContaining({ description: 'A custom description' }),
+        );
+    });
 
-        expect(handleSave).toHaveBeenCalledWith(
+    test('the hierarchy chips toggle the two flags', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor();
+
+        await user.type(screen.getByPlaceholderText('Issue type name'), 'Epic');
+        await user.click(chip('Allows sub-issues'));
+        await user.click(chip('Can be created on its own'));
+        await user.click(
+            screen.getByRole('button', { name: 'Create issue type' }),
+        );
+
+        expect(onSave).toHaveBeenCalledWith(
+            expect.objectContaining({
+                allows_children: true,
+                is_top_level: false,
+            }),
+        );
+    });
+
+    test('toggling required-field chips saves them in the order picked', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor();
+
+        await user.type(
+            screen.getByPlaceholderText('Issue type name'),
+            'Custom',
+        );
+        await user.click(chip('Description'));
+        await user.click(chip('Assignee'));
+        await user.click(
+            screen.getByRole('button', { name: 'Create issue type' }),
+        );
+
+        expect(onSave).toHaveBeenCalledWith(
             expect.objectContaining({
                 required_fields: ['description', 'assignee'],
             }),
         );
     });
 
-    test('pre-checks the required fields already set on an existing issue type', () => {
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={{ ...bugType, requiredFields: ['priority'] }}
-                onSave={vi.fn()}
-                onCancel={vi.fn()}
-            />,
+    test('a chip can be switched off again', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor({
+            ...bugType,
+            requiredFields: ['priority', 'labels'],
+        });
+
+        expect(chip('Priority')).toHaveAttribute('aria-pressed', 'true');
+        expect(chip('Description')).toHaveAttribute('aria-pressed', 'false');
+
+        await user.click(chip('Priority'));
+        await user.click(
+            screen.getByRole('button', { name: 'Save issue type' }),
         );
 
-        expect(screen.getByLabelText('Priority')).toBeChecked();
-        expect(screen.getByLabelText('Description')).not.toBeChecked();
+        expect(onSave).toHaveBeenCalledWith(
+            expect.objectContaining({ required_fields: ['labels'] }),
+        );
     });
 
-    test('toggling a role checkbox includes it in the saved values', () => {
-        const handleSave = vi.fn();
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={null}
-                onSave={handleSave}
-                onCancel={vi.fn()}
-            />,
+    test('the role chips restrict who can create the type', async () => {
+        const user = userEvent.setup();
+        const { onSave } = renderEditor();
+
+        expect(screen.getByText('Anyone who can create issues')).toBeVisible();
+
+        await user.type(
+            screen.getByPlaceholderText('Issue type name'),
+            'Custom',
+        );
+        await user.click(chip('Owner'));
+        await user.click(chip('Admin'));
+        await user.click(
+            screen.getByRole('button', { name: 'Create issue type' }),
         );
 
-        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
-            target: { value: 'Custom' },
-        });
-        fireEvent.click(screen.getByLabelText('Owner'));
-        fireEvent.click(screen.getByLabelText('Admin'));
-        fireEvent.click(screen.getByText('Create issue type'));
-
-        expect(handleSave).toHaveBeenCalledWith(
+        expect(onSave).toHaveBeenCalledWith(
             expect.objectContaining({
                 restricted_role_types: ['owner', 'admin'],
             }),
         );
     });
 
-    test('pre-checks the restricted role types already set on an existing issue type', () => {
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={{ ...bugType, restrictedRoleTypes: ['owner'] }}
-                onSave={vi.fn()}
-                onCancel={vi.fn()}
-            />,
-        );
+    test('pre-selects the restrictions already set on an existing type', () => {
+        renderEditor({ ...bugType, restrictedRoleTypes: ['owner'] });
 
-        expect(screen.getByLabelText('Owner')).toBeChecked();
-        expect(screen.getByLabelText('Admin')).not.toBeChecked();
+        expect(chip('Owner')).toHaveAttribute('aria-pressed', 'true');
+        expect(chip('Admin')).toHaveAttribute('aria-pressed', 'false');
     });
 
-    test('changing the description, color and icon includes them in the saved values', () => {
-        const handleSave = vi.fn();
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={null}
-                onSave={handleSave}
-                onCancel={vi.fn()}
-            />,
+    test('Escape and the cancel button close the editor without saving', async () => {
+        const user = userEvent.setup();
+        const { onSave, onCancel } = renderEditor();
+
+        await user.type(
+            screen.getByPlaceholderText('Issue type name'),
+            'x{Escape}',
         );
+        await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
-        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
-            target: { value: 'Custom' },
-        });
-        fireEvent.change(
-            screen.getByPlaceholderText(
-                'What is this issue type used for? (optional)',
-            ),
-            { target: { value: 'A custom description' } },
-        );
-        fireEvent.click(screen.getByLabelText('Use color #ff5722'));
-        fireEvent.click(screen.getByLabelText('Use icon Rocket'));
-        fireEvent.click(screen.getByText('Create issue type'));
-
-        expect(handleSave).toHaveBeenCalledWith(
-            expect.objectContaining({
-                description: 'A custom description',
-                color: '#ff5722',
-                icon: 'Rocket',
-            }),
-        );
-    });
-
-    test('toggling the allows-children checkbox includes it in the saved values', () => {
-        const handleSave = vi.fn();
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={null}
-                onSave={handleSave}
-                onCancel={vi.fn()}
-            />,
-        );
-
-        fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
-            target: { value: 'Custom' },
-        });
-        fireEvent.click(
-            screen.getByLabelText('Allows sub-issues (like an Epic)'),
-        );
-        fireEvent.click(screen.getByText('Create issue type'));
-
-        expect(handleSave).toHaveBeenCalledWith(
-            expect.objectContaining({ allows_children: true }),
-        );
-    });
-
-    test('calls onCancel when Cancel is clicked', () => {
-        const handleCancel = vi.fn();
-        render(
-            <WorkspaceSettingsIssueTypeInlineEditor
-                issueType={null}
-                onSave={vi.fn()}
-                onCancel={handleCancel}
-            />,
-        );
-
-        fireEvent.click(screen.getByText('Cancel'));
-
-        expect(handleCancel).toHaveBeenCalledTimes(1);
+        expect(onCancel).toHaveBeenCalledTimes(2);
+        expect(onSave).not.toHaveBeenCalled();
     });
 });

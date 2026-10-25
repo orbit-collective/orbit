@@ -1,12 +1,11 @@
-import { useState } from 'react';
-import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
+import { icons } from 'lucide-react';
+import { ReactNode, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
-import Input from '@/Components/Atoms/Input/Input';
-import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
-import Modal from '@/Components/Atoms/Modal/Modal';
-import TextArea from '@/Components/Atoms/TextArea/TextArea';
-import ModalFooter from '@/Components/Molecules/ModalFooter/ModalFooter';
-import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
+import AppearancePicker from '@/Components/Molecules/AppearancePicker/AppearancePicker';
+import InlineEditRow, {
+    inlineFieldClass,
+} from '@/Components/Molecules/InlineEditRow/InlineEditRow';
+import ToggleChip from '@/Components/Molecules/ToggleChip/ToggleChip';
 import { IssueType } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
 import { ISSUE_TYPE_ICON_OPTIONS } from '@/utils/issueTypeIcons';
@@ -28,21 +27,49 @@ const ROLE_TYPE_OPTIONS: { value: string; label: string }[] = [
     { value: 'viewer', label: 'Viewer' },
 ];
 
+export type IssueTypeFormValues = {
+    name: string;
+    icon: string;
+    color: string;
+    description: string;
+    allows_children: boolean;
+    is_top_level: boolean;
+    required_fields: string[];
+    restricted_role_types: string[];
+};
+
 interface WorkspaceSettingsIssueTypeInlineEditorProps {
     issueType: IssueType | null;
-    onSave: (values: {
-        name: string;
-        icon: string;
-        color: string;
-        description: string;
-        allows_children: boolean;
-        is_top_level: boolean;
-        required_fields: string[];
-        restricted_role_types: string[];
-    }) => void;
+    onSave: (values: IssueTypeFormValues) => void;
     onCancel: () => void;
 }
 
+const toggled = (list: string[], value: string) =>
+    list.includes(value)
+        ? list.filter((item) => item !== value)
+        : [...list, value];
+
+/** One labelled line of chips under the fields. */
+function OptionGroup({
+    label,
+    hint,
+    children,
+}: {
+    label: string;
+    hint?: string;
+    children: ReactNode;
+}) {
+    return (
+        <div className="flex flex-wrap items-center gap-1.5" title={hint}>
+            <span className="w-28 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+                {label}
+            </span>
+            {children}
+        </div>
+    );
+}
+
+/** An issue type row in edit mode: look, name and description on one line, its rules as chips below. */
 export default function WorkspaceSettingsIssueTypeInlineEditor({
     issueType,
     onSave,
@@ -55,7 +82,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
     const [color, setColor] = useState(
         issueType?.color ?? LABEL_COLOR_PALETTE[0],
     );
-    const [icon, setIcon] = useState(
+    const [icon, setIcon] = useState<string>(
         issueType?.icon ?? ISSUE_TYPE_ICON_OPTIONS[0],
     );
     const [allowsChildren, setAllowsChildren] = useState(
@@ -72,22 +99,6 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
     const isEditing = issueType !== null;
     const trimmedName = name.trim();
 
-    const toggleRequiredField = (field: string) => {
-        setRequiredFields((current) =>
-            current.includes(field)
-                ? current.filter((f) => f !== field)
-                : [...current, field],
-        );
-    };
-
-    const toggleRestrictedRoleType = (role: string) => {
-        setRestrictedRoleTypes((current) =>
-            current.includes(role)
-                ? current.filter((r) => r !== role)
-                : [...current, role],
-        );
-    };
-
     const handleSave = () => {
         if (!trimmedName) return;
         onSave({
@@ -103,188 +114,112 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
     };
 
     return (
-        <Modal isOpen onClose={onCancel} size="lg">
-            <ModalHeader
-                title={isEditing ? 'Edit issue type' : 'New issue type'}
-                onClose={onCancel}
-                icon={
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
-                        <Icon
-                            name={isEditing ? 'Pencil' : 'Sparkles'}
-                            size={16}
+        <InlineEditRow
+            leading={
+                <AppearancePicker
+                    color={color}
+                    onColorChange={setColor}
+                    palette={LABEL_COLOR_PALETTE}
+                    icon={icon}
+                    onIconChange={setIcon}
+                    iconOptions={ISSUE_TYPE_ICON_OPTIONS}
+                    ariaLabel="Issue type icon and color"
+                >
+                    <Icon
+                        name={icon as keyof typeof icons}
+                        size={17}
+                        color={color}
+                    />
+                </AppearancePicker>
+            }
+            canSave={trimmedName !== ''}
+            saveLabel={isEditing ? 'Save issue type' : 'Create issue type'}
+            onSave={handleSave}
+            onCancel={onCancel}
+            below={
+                <>
+                    <OptionGroup label="Hierarchy">
+                        <ToggleChip
+                            label="Allows sub-issues"
+                            pressed={allowsChildren}
+                            onClick={() =>
+                                setAllowsChildren((current) => !current)
+                            }
                         />
-                    </span>
-                }
+                        <ToggleChip
+                            label="Can be created on its own"
+                            pressed={isTopLevel}
+                            onClick={() => setIsTopLevel((current) => !current)}
+                        />
+                    </OptionGroup>
+                    <OptionGroup
+                        label="Required"
+                        hint="Fields that must be filled in before an issue of this type can be created."
+                    >
+                        {REQUIRED_FIELD_OPTIONS.map((option) => (
+                            <ToggleChip
+                                key={option.value}
+                                label={option.label}
+                                pressed={requiredFields.includes(option.value)}
+                                onClick={() =>
+                                    setRequiredFields((current) =>
+                                        toggled(current, option.value),
+                                    )
+                                }
+                            />
+                        ))}
+                    </OptionGroup>
+                    <OptionGroup
+                        label="Who can create"
+                        hint="Leave everything off to allow anyone who can create issues."
+                    >
+                        {ROLE_TYPE_OPTIONS.map((option) => (
+                            <ToggleChip
+                                key={option.value}
+                                label={option.label}
+                                pressed={restrictedRoleTypes.includes(
+                                    option.value,
+                                )}
+                                onClick={() =>
+                                    setRestrictedRoleTypes((current) =>
+                                        toggled(current, option.value),
+                                    )
+                                }
+                            />
+                        ))}
+                        <span
+                            className={cn(
+                                'text-xs text-[var(--text-muted-color)]',
+                                restrictedRoleTypes.length > 0 && 'hidden',
+                            )}
+                        >
+                            Anyone who can create issues
+                        </span>
+                    </OptionGroup>
+                </>
+            }
+        >
+            <input
+                autoFocus
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Issue type name"
+                aria-label="Issue type name"
+                autoComplete="off"
+                maxLength={50}
+                className={cn(inlineFieldClass, 'font-medium sm:w-44')}
             />
-
-            <div className="max-h-[70vh] overflow-y-auto px-6 py-6">
-                <div className="flex flex-col gap-8 md:flex-row">
-                    <div className="flex flex-1 flex-col gap-5">
-                        <div className="space-y-3">
-                            <Input
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="Issue type name"
-                                variant="modal"
-                                autoComplete="off"
-                            />
-                            <TextArea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="What is this issue type used for? (optional)"
-                                variant="modal"
-                                className="min-h-[56px]"
-                            />
-                            <Checkbox
-                                checked={allowsChildren}
-                                onChange={(e) =>
-                                    setAllowsChildren(e.target.checked)
-                                }
-                                label="Allows sub-issues (like an Epic)"
-                            />
-                            <Checkbox
-                                checked={isTopLevel}
-                                onChange={(e) =>
-                                    setIsTopLevel(e.target.checked)
-                                }
-                                label="Can be created on its own (otherwise sub-issue only)"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <h4 className="text-sm font-semibold text-[var(--text-color)]">
-                                Required fields
-                            </h4>
-                            <p className="text-xs text-[var(--text-gray-color)]">
-                                Fields that must be filled in before an issue of
-                                this type can be created.
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                                {REQUIRED_FIELD_OPTIONS.map((option) => (
-                                    <Checkbox
-                                        key={option.value}
-                                        checked={requiredFields.includes(
-                                            option.value,
-                                        )}
-                                        onChange={() =>
-                                            toggleRequiredField(option.value)
-                                        }
-                                        label={option.label}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h4 className="text-sm font-semibold text-[var(--text-color)]">
-                                Who can create this type
-                            </h4>
-                            <p className="text-xs text-[var(--text-gray-color)]">
-                                Leave everything unchecked to allow anyone who
-                                can create issues.
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                                {ROLE_TYPE_OPTIONS.map((option) => (
-                                    <Checkbox
-                                        key={option.value}
-                                        checked={restrictedRoleTypes.includes(
-                                            option.value,
-                                        )}
-                                        onChange={() =>
-                                            toggleRestrictedRoleType(
-                                                option.value,
-                                            )
-                                        }
-                                        label={option.label}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-1 flex-col gap-5">
-                        <div className="space-y-2">
-                            <h4 className="text-sm font-semibold text-[var(--text-color)]">
-                                Color
-                            </h4>
-                            <div className="flex flex-wrap gap-2 rounded-xl border border-[var(--border-color)] p-3">
-                                {LABEL_COLOR_PALETTE.map((swatch) => (
-                                    <button
-                                        key={swatch}
-                                        type="button"
-                                        onClick={() => setColor(swatch)}
-                                        aria-label={`Use color ${swatch}`}
-                                        className={cn(
-                                            'h-6 w-6 shrink-0 rounded-full border transition-transform',
-                                            color === swatch
-                                                ? 'scale-110 border-white'
-                                                : 'border-transparent hover:scale-110',
-                                        )}
-                                        style={{ backgroundColor: swatch }}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h4 className="text-sm font-semibold text-[var(--text-color)]">
-                                Icon
-                            </h4>
-                            <div className="flex flex-wrap gap-1.5 rounded-xl border border-[var(--border-color)] p-3">
-                                {ISSUE_TYPE_ICON_OPTIONS.map((option) => (
-                                    <button
-                                        key={option}
-                                        type="button"
-                                        onClick={() => setIcon(option)}
-                                        aria-label={`Use icon ${option}`}
-                                        className={cn(
-                                            'flex h-8 w-8 shrink-0 items-center justify-center rounded-md border transition-colors',
-                                            icon === option
-                                                ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)] text-[var(--accent-color)]'
-                                                : 'border-transparent text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)]',
-                                        )}
-                                    >
-                                        <Icon name={option} size={15} />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h4 className="text-sm font-semibold text-[var(--text-color)]">
-                                Preview
-                            </h4>
-                            <div className="rounded-xl border border-[var(--border-color)] p-4">
-                                <IssueTypeBadge
-                                    issueType={{
-                                        name: trimmedName || 'Issue type name',
-                                        icon,
-                                        color,
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <ModalFooter onCancel={onCancel}>
-                <button
-                    type="button"
-                    onClick={onCancel}
-                    className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-gray-color)] transition-colors duration-150 hover:text-[var(--text-color)]"
-                >
-                    Cancel
-                </button>
-                <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={!trimmedName}
-                    className="cursor-pointer rounded-lg bg-[var(--accent-color)] px-6 py-2 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                    {isEditing ? 'Save changes' : 'Create issue type'}
-                </button>
-            </ModalFooter>
-        </Modal>
+            <input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What is it used for? (optional)"
+                aria-label="Issue type description"
+                autoComplete="off"
+                className={cn(
+                    inlineFieldClass,
+                    'text-[var(--text-gray-color)] sm:flex-1',
+                )}
+            />
+        </InlineEditRow>
     );
 }

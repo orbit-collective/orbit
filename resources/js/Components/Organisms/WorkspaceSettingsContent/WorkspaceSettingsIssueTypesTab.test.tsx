@@ -13,6 +13,13 @@ vi.stubGlobal(
     ),
 );
 
+const routerMock = vi.hoisted(() => ({
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+}));
+
 vi.mock('@inertiajs/react', async () => {
     const actual =
         await vi.importActual<typeof import('@inertiajs/react')>(
@@ -21,13 +28,7 @@ vi.mock('@inertiajs/react', async () => {
     return {
         ...actual,
         usePage: () => ({ props: { flash: {} } }),
-        router: {
-            ...actual.router,
-            get: vi.fn(),
-            post: vi.fn(),
-            patch: vi.fn(),
-            delete: vi.fn(),
-        },
+        router: { ...actual.router, ...routerMock },
     };
 });
 
@@ -114,7 +115,7 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
             renderTab({});
 
             expect(
-                screen.queryByText('New issue type'),
+                screen.queryByText('Add issue type'),
             ).not.toBeInTheDocument();
             expect(
                 screen.queryByTitle('Edit issue type'),
@@ -124,10 +125,10 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
             ).not.toBeInTheDocument();
         });
 
-        test('a create-only user sees the "New issue type" button but no edit or delete controls', () => {
+        test('a create-only user sees the "Add issue type" row but no edit or delete controls', () => {
             renderTab({ canCreateIssueTypes: true });
 
-            expect(screen.getByText('New issue type')).toBeInTheDocument();
+            expect(screen.getByText('Add issue type')).toBeInTheDocument();
             expect(
                 screen.queryByTitle('Edit issue type'),
             ).not.toBeInTheDocument();
@@ -145,31 +146,67 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
             expect(screen.getAllByTitle('Delete issue type')).toHaveLength(1);
         });
 
-        test('without canUpdateWorkflow, no "Manage workflow" control is shown', () => {
+        test('without any configuration permission there is no Configure menu', () => {
             renderTab({});
 
-            expect(
-                screen.queryByTitle('Manage workflow'),
-            ).not.toBeInTheDocument();
+            expect(screen.queryByTitle('Configure')).not.toBeInTheDocument();
         });
 
-        test('a canUpdateWorkflow user sees a "Manage workflow" control on every type', () => {
+        test('a canUpdateWorkflow user gets a Configure menu with only the workflow on every type', () => {
             renderTab({ canUpdateWorkflow: true });
 
-            expect(screen.getAllByTitle('Manage workflow')).toHaveLength(2);
+            expect(screen.getAllByTitle('Configure')).toHaveLength(2);
+
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+
+            expect(
+                screen.getAllByRole('menuitem').map((item) => item.textContent),
+            ).toEqual(['Workflow']);
+        });
+
+        test("an update user's Configure menu offers hierarchy, templates and custom fields", () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+
+            expect(
+                screen.getAllByRole('menuitem').map((item) => item.textContent),
+            ).toEqual(['Hierarchy', 'Templates', 'Custom fields']);
+        });
+
+        test('with every permission the menu lists all four', () => {
+            renderTab({ canUpdateIssueTypes: true, canUpdateWorkflow: true });
+
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+
+            expect(
+                screen.getAllByRole('menuitem').map((item) => item.textContent),
+            ).toEqual(['Workflow', 'Hierarchy', 'Templates', 'Custom fields']);
         });
     });
 
     describe('inline editor', () => {
-        test('clicking "New issue type" opens the create editor with a live preview', () => {
+        test('clicking "Add issue type" opens an empty row in place of the add line', () => {
             renderTab({ canCreateIssueTypes: true });
 
-            fireEvent.click(screen.getByText('New issue type'));
+            fireEvent.click(screen.getByText('Add issue type'));
 
+            expect(screen.getByPlaceholderText('Issue type name')).toHaveValue(
+                '',
+            );
             expect(
-                screen.getByPlaceholderText('Issue type name'),
-            ).toBeInTheDocument();
-            expect(screen.getByText('Preview')).toBeInTheDocument();
+                screen.queryByText('Add issue type'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('the existing row turns into the editor where it stands', () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            fireEvent.click(screen.getAllByTitle('Edit issue type')[0]);
+
+            // Bug is now an editor; the other type keeps its plain row.
+            expect(screen.getByDisplayValue('Bug')).toBeInTheDocument();
+            expect(screen.getByText('Custom Type')).toBeInTheDocument();
         });
 
         test('clicking edit on an issue type opens the editor pre-filled with its name', () => {
@@ -182,30 +219,37 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
     });
 
     describe('workflow modal', () => {
-        test('clicking "Manage workflow" opens the workflow modal for that type', () => {
+        test('choosing Workflow in the Configure menu opens the workflow modal for that type', () => {
             renderTab({ canUpdateWorkflow: true });
 
-            fireEvent.click(screen.getAllByTitle('Manage workflow')[0]);
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+            fireEvent.click(screen.getByRole('menuitem', { name: 'Workflow' }));
 
             expect(screen.getByText('Bug workflow')).toBeInTheDocument();
         });
     });
 
     describe('hierarchy modal', () => {
-        test('clicking "Manage hierarchy" opens the hierarchy modal for that type', () => {
+        test('choosing Hierarchy in the Configure menu opens the hierarchy modal for that type', () => {
             renderTab({ canUpdateIssueTypes: true });
 
-            fireEvent.click(screen.getAllByTitle('Manage hierarchy')[0]);
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+            fireEvent.click(
+                screen.getByRole('menuitem', { name: 'Hierarchy' }),
+            );
 
             expect(screen.getByText('Bug hierarchy')).toBeInTheDocument();
         });
     });
 
     describe('templates modal', () => {
-        test('clicking "Manage templates" opens the templates modal for that type', () => {
+        test('choosing Templates in the Configure menu opens the templates modal for that type', () => {
             renderTab({ canUpdateIssueTypes: true });
 
-            fireEvent.click(screen.getAllByTitle('Manage templates')[0]);
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+            fireEvent.click(
+                screen.getByRole('menuitem', { name: 'Templates' }),
+            );
 
             expect(screen.getByText('Bug templates')).toBeInTheDocument();
         });
@@ -240,7 +284,8 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
         test('closing the workflow modal hides it', () => {
             renderTab({ canUpdateWorkflow: true });
 
-            fireEvent.click(screen.getAllByTitle('Manage workflow')[0]);
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+            fireEvent.click(screen.getByRole('menuitem', { name: 'Workflow' }));
             expect(screen.getByText('Bug workflow')).toBeInTheDocument();
 
             const closeButton = document.querySelector('header button');
@@ -252,13 +297,67 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
         test('closing the templates modal hides it', () => {
             renderTab({ canUpdateIssueTypes: true });
 
-            fireEvent.click(screen.getAllByTitle('Manage templates')[0]);
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+            fireEvent.click(
+                screen.getByRole('menuitem', { name: 'Templates' }),
+            );
             expect(screen.getByText('Bug templates')).toBeInTheDocument();
 
             const closeButton = document.querySelector('header button');
             fireEvent.click(closeButton as Element);
 
             expect(screen.queryByText('Bug templates')).not.toBeInTheDocument();
+        });
+    });
+
+    describe('fields modal', () => {
+        test('choosing Custom fields in the Configure menu opens the fields modal for that type', () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            fireEvent.click(screen.getAllByTitle('Configure')[0]);
+            fireEvent.click(
+                screen.getByRole('menuitem', { name: 'Custom fields' }),
+            );
+
+            expect(screen.getByText('Bug fields')).toBeInTheDocument();
+        });
+    });
+
+    describe('saving', () => {
+        test('creating an issue type posts it to the project', () => {
+            renderTab({ canCreateIssueTypes: true });
+
+            fireEvent.click(screen.getByText('Add issue type'));
+            fireEvent.change(screen.getByPlaceholderText('Issue type name'), {
+                target: { value: 'Incident' },
+            });
+            fireEvent.click(
+                screen.getByRole('button', { name: 'Create issue type' }),
+            );
+
+            expect(routerMock.post).toHaveBeenCalledWith(
+                '/projects.issue-types.store/1',
+                expect.objectContaining({ name: 'Incident' }),
+                expect.objectContaining({ preserveScroll: true }),
+            );
+        });
+
+        test('saving an edited issue type patches it', () => {
+            renderTab({ canUpdateIssueTypes: true });
+
+            fireEvent.click(screen.getAllByTitle('Edit issue type')[1]);
+            fireEvent.change(screen.getByDisplayValue('Custom Type'), {
+                target: { value: 'Renamed' },
+            });
+            fireEvent.click(
+                screen.getByRole('button', { name: 'Save issue type' }),
+            );
+
+            expect(routerMock.patch).toHaveBeenCalledWith(
+                '/projects.issue-types.update/1/2',
+                expect.objectContaining({ name: 'Renamed' }),
+                expect.objectContaining({ preserveScroll: true }),
+            );
         });
     });
 });
