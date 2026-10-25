@@ -112,7 +112,7 @@ export default function ColorPicker({
                 initial={false}
                 className={cn(
                     'relative shrink-0 cursor-pointer border-0 p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
-                    expanded ? 'h-6 w-full' : 'h-6 w-6',
+                    expanded ? 'h-[26px] w-[26px]' : 'h-6 w-6',
                 )}
                 style={{ backgroundColor: color, borderRadius: radius }}
             >
@@ -120,19 +120,21 @@ export default function ColorPicker({
                     <motion.span
                         layoutId="ring"
                         transition={SPRING}
-                        className="pointer-events-none absolute -inset-[3px] border-2 border-solid border-white"
-                        style={{ borderRadius: radius + 3 }}
+                        className="pointer-events-none absolute -inset-[4px] border-2 border-solid border-white shadow-[0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(0,0,0,0.45)]"
+                        style={{ borderRadius: radius + 4 }}
                     />
                 )}
                 <AnimatePresence initial={false}>
-                    {selected && expanded && (
-                        <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0 }}
-                            transition={SPRING}
-                            className="absolute left-1/2 top-1/2 -ml-[3px] -mt-[3px] h-1.5 w-1.5 rounded-full bg-white/90 shadow"
-                        />
+                    {selected && (
+                        <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                            <motion.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0 }}
+                                transition={SPRING}
+                                className="h-2 w-2 rounded-full bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.45)]"
+                            />
+                        </span>
                     )}
                 </AnimatePresence>
             </motion.button>
@@ -155,7 +157,7 @@ export default function ColorPicker({
             initial={false}
             className={cn(
                 'flex shrink-0 cursor-pointer items-center justify-center border-0 p-0 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
-                expanded ? 'h-6 w-full' : 'h-6 w-6',
+                expanded ? 'h-[26px] w-[26px]' : 'h-6 w-6',
             )}
             style={{ background: RAINBOW, borderRadius: radius }}
         >
@@ -180,7 +182,7 @@ export default function ColorPicker({
                 {/* Clipped so dots gliding in from the scrolled-off part of the row stay inside. */}
                 <div className="overflow-hidden">
                     {expanded ? (
-                        <div className="grid grid-cols-10 gap-1.5 px-1 py-1">
+                        <div className="flex flex-wrap gap-1.5 p-1.5">
                             {swatches.map(swatch)}
                             {toggle}
                         </div>
