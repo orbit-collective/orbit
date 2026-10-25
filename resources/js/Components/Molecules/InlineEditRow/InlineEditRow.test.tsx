@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { createPortal } from 'react-dom';
 import { describe, expect, test, vi } from 'vitest';
 import InlineEditRow, { inlineFieldClass } from './InlineEditRow';
 
@@ -86,5 +87,21 @@ describe('InlineEditRow', () => {
         expect(screen.getByRole('alert')).toHaveTextContent(
             'That name is taken.',
         );
+    });
+
+    test('Escape pressed in a panel portaled out of the row does not cancel the edit', () => {
+        const { onCancel } = renderRow({
+            leading: createPortal(
+                <button type="button">inside the panel</button>,
+                document.body,
+            ),
+        });
+
+        fireEvent.keyDown(
+            screen.getByRole('button', { name: 'inside the panel' }),
+            { key: 'Escape' },
+        );
+
+        expect(onCancel).not.toHaveBeenCalled();
     });
 });
