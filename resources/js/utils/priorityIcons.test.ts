@@ -2,7 +2,6 @@ import { icons } from 'lucide-react';
 import { describe, expect, test } from 'vitest';
 import {
     DEFAULT_PRIORITY_ICON,
-    PRIORITY_COLOR_OPTIONS,
     PRIORITY_ICON_OPTIONS,
     resolvePriorityIcon,
 } from './priorityIcons';
@@ -32,11 +31,5 @@ describe('priorityIcons', () => {
 
     test('falls back to the default icon for an unknown name', () => {
         expect(resolvePriorityIcon('NotAnIcon')).toBe(DEFAULT_PRIORITY_ICON);
-    });
-
-    test('offers hex colors only', () => {
-        PRIORITY_COLOR_OPTIONS.forEach((color) => {
-            expect(color).toMatch(/^#[0-9a-f]{6}$/i);
-        });
     });
 });

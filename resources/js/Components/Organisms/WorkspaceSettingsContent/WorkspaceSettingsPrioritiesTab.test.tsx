@@ -136,19 +136,19 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
     });
 
     describe('creating and editing', () => {
-        test('a user with no priority capabilities sees neither New priority nor edit controls', () => {
+        test('a user with no priority capabilities sees neither Add priority nor edit controls', () => {
             renderTab();
 
-            expect(screen.queryByText('New priority')).not.toBeInTheDocument();
+            expect(screen.queryByText('Add priority')).not.toBeInTheDocument();
             expect(
                 screen.queryByTitle('Edit priority'),
             ).not.toBeInTheDocument();
         });
 
-        test('a create-only user sees New priority but no edit controls', () => {
+        test('a create-only user sees Add priority but no edit controls', () => {
             renderTab({ canCreatePriorities: true });
 
-            expect(screen.getByText('New priority')).toBeInTheDocument();
+            expect(screen.getByText('Add priority')).toBeInTheDocument();
             expect(
                 screen.queryByTitle('Edit priority'),
             ).not.toBeInTheDocument();
@@ -157,7 +157,7 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
         test('an update-only user sees an edit control per row but cannot create', () => {
             renderTab({ canUpdatePriorities: true });
 
-            expect(screen.queryByText('New priority')).not.toBeInTheDocument();
+            expect(screen.queryByText('Add priority')).not.toBeInTheDocument();
             expect(screen.getAllByTitle('Edit priority')).toHaveLength(3);
         });
 
@@ -165,7 +165,7 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
             const user = userEvent.setup();
             renderTab({ canCreatePriorities: true });
 
-            await user.click(screen.getByText('New priority'));
+            await user.click(screen.getByText('Add priority'));
             await user.type(
                 screen.getByPlaceholderText('Priority name'),
                 'Blocker',
@@ -190,7 +190,7 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
             await user.clear(input);
             await user.type(input, 'Critical');
             await user.click(
-                screen.getByRole('button', { name: 'Save changes' }),
+                screen.getByRole('button', { name: 'Save priority' }),
             );
 
             expect(mockRouter.patch).toHaveBeenCalledWith(
@@ -204,20 +204,22 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
             const user = userEvent.setup();
             renderTab({ canCreatePriorities: true, canUpdatePriorities: true });
 
-            await user.click(screen.getByText('New priority'));
+            await user.click(screen.getByText('Add priority'));
             expect(
-                screen.getByText('New priority', { selector: 'div' }),
+                screen.getByPlaceholderText('Priority name'),
             ).toBeInTheDocument();
             await user.click(screen.getAllByTitle('Edit priority')[0]);
 
-            expect(screen.getByText('Editing priority')).toBeInTheDocument();
+            expect(screen.getByPlaceholderText('Priority name')).toHaveValue(
+                'High',
+            );
             expect(
                 screen.queryByRole('button', { name: 'Create priority' }),
             ).not.toBeInTheDocument();
 
             await user.click(screen.getByRole('button', { name: 'Cancel' }));
             expect(
-                screen.queryByText('Editing priority'),
+                screen.queryByPlaceholderText('Priority name'),
             ).not.toBeInTheDocument();
         });
 
@@ -232,7 +234,7 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
             );
             renderTab({ canCreatePriorities: true });
 
-            await user.click(screen.getByText('New priority'));
+            await user.click(screen.getByText('Add priority'));
             await user.type(
                 screen.getByPlaceholderText('Priority name'),
                 'High',
@@ -245,7 +247,7 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
                 'That name is taken.',
             );
             expect(
-                screen.getByText('New priority', { selector: 'div' }),
+                screen.getByPlaceholderText('Priority name'),
             ).toBeInTheDocument();
         });
     });
