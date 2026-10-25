@@ -152,6 +152,19 @@ describe('WorkspaceSettingsPriorityInlineEditor', () => {
         );
     });
 
+    test('ties the rejected name to its error for assistive tech', () => {
+        renderEditor({
+            errors: { name: 'A priority named "High" already exists.' },
+        });
+
+        const name = screen.getByPlaceholderText('Priority name');
+
+        expect(name).toHaveAttribute('aria-invalid', 'true');
+        expect(name).toHaveAccessibleDescription(
+            'A priority named "High" already exists.',
+        );
+    });
+
     test('Escape and the cancel button close the editor without saving', async () => {
         const user = userEvent.setup();
         const { onSave, onCancel } = renderEditor();

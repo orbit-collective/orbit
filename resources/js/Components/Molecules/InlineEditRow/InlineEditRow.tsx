@@ -19,6 +19,8 @@ interface InlineEditRowProps {
     /** Names the save button for assistive tech ("Create priority"). */
     saveLabel: string;
     error?: string;
+    /** Id given to the error message, so a field can point at it with `aria-describedby`. */
+    errorId?: string;
     onSave: () => void;
     onCancel: () => void;
 }
@@ -35,6 +37,7 @@ export default function InlineEditRow({
     canSave,
     saveLabel,
     error,
+    errorId,
     onSave,
     onCancel,
 }: InlineEditRowProps) {
@@ -96,6 +99,7 @@ export default function InlineEditRow({
             {below && <div className="mt-2.5 space-y-2.5 pl-12">{below}</div>}
             {error && (
                 <p
+                    id={errorId}
                     role="alert"
                     className="mt-1.5 pl-12 text-xs text-[var(--error-color)]"
                 >
