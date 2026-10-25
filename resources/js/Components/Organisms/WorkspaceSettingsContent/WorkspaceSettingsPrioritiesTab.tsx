@@ -66,24 +66,34 @@ export default function WorkspaceSettingsPrioritiesTab({
 
     if (!selectedProject || !hasPrioritiesAccess) {
         return (
-            <SettingsPanel
-                title="Priority scale"
-                description="Name, color and order the priorities issues can have."
-                icon="Flag"
-            >
-                <SettingsPanelRow
-                    title={
-                        !selectedProject
-                            ? "You're not part of any project yet"
-                            : "You don't have access to this project's priorities"
-                    }
-                    description={
-                        !selectedProject
-                            ? 'Create or join a project to manage its priorities here.'
-                            : 'Ask a project admin for the priorities.view permission to see priorities here.'
-                    }
-                />
-            </SettingsPanel>
+            <div className="space-y-5">
+                {selectedProject && (
+                    <ProjectPickerPanel
+                        projects={memberProjects}
+                        selectedProjectId={selectedProject.id}
+                        description="Choose which project's priority scale you're viewing."
+                        onSelect={switchProject}
+                    />
+                )}
+                <SettingsPanel
+                    title="Priority scale"
+                    description="Name, color and order the priorities issues can have."
+                    icon="Flag"
+                >
+                    <SettingsPanelRow
+                        title={
+                            !selectedProject
+                                ? "You're not part of any project yet"
+                                : "You don't have access to this project's priorities"
+                        }
+                        description={
+                            !selectedProject
+                                ? 'Create or join a project to manage its priorities here.'
+                                : 'Ask a project admin for the priorities.view permission to see priorities here.'
+                        }
+                    />
+                </SettingsPanel>
+            </div>
         );
     }
 
