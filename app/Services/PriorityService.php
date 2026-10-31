@@ -141,17 +141,31 @@ class PriorityService
 
     public function updatePriority(Project $project, Priority $priority, array $data): Priority
     {
-        if (array_key_exists('name', $data) && mb_strtolower(trim($data['name'])) !== mb_strtolower($priority->name)) {
-            $this->assertNameAvailable($project, $data['name']);
-        }
-
-        if (($data['is_default'] ?? null) === false && $priority->is_default) {
-            throw ValidationException::withMessages([
-                'is_default' => 'Choose another priority as the default instead of unsetting this one.',
-            ]);
-        }
-
+        // Everything that depends on the priority's current state runs inside
+        // the transaction, under a lock on the project and on a fresh copy:
+        // two overlapping renames would otherwise each rewrite the references
+        // from the name they loaded, and leave the other's name behind.
         $priority = DB::transaction(function () use ($project, $priority, $data) {
+            $this->priorityRepository->lockProject($project);
+
+            $priority = $this->priorityRepository->findForProject($project, $priority->id);
+
+            if ($priority === null) {
+                throw ValidationException::withMessages([
+                    'priority' => 'This priority no longer exists.',
+                ]);
+            }
+
+            if (array_key_exists('name', $data) && mb_strtolower(trim($data['name'])) !== mb_strtolower($priority->name)) {
+                $this->assertNameAvailable($project, $data['name']);
+            }
+
+            if (($data['is_default'] ?? null) === false && $priority->is_default) {
+                throw ValidationException::withMessages([
+                    'is_default' => 'Choose another priority as the default instead of unsetting this one.',
+                ]);
+            }
+
             $previousName = $priority->name;
 
             $priority = $this->priorityRepository->update($priority, array_filter([

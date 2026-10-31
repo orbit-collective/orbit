@@ -85,6 +85,19 @@ test('updating changes name, color and icon and keeps the position', function ()
         ->and($updated->position)->toBe(0);
 });
 
+test('a stale copy of a renamed priority still rewrites the current name', function () {
+    $this->service->ensureSystemPriorities($this->project);
+    $type = IssueType::factory()->create(['project_id' => $this->project->id]);
+    $template = $type->templates()->create(['name' => 'T', 'description' => '', 'default_priority' => 'High']);
+    $stale = seededPriority('High');
+
+    $this->service->updatePriority($this->project, seededPriority('High'), ['name' => 'Urgent']);
+    $this->service->updatePriority($this->project, $stale, ['name' => 'Critical']);
+
+    expect($template->fresh()->default_priority)->toBe('Critical')
+        ->and($this->project->priorities()->pluck('name')->all())->toContain('Critical')->not->toContain('Urgent');
+});
+
 test('a name with non-ASCII capitals is found whatever its case', function () {
     $created = $this->service->createPriority($this->project, ['name' => 'Łatwe', 'color' => '#2196f3', 'icon' => 'Flag']);
 
