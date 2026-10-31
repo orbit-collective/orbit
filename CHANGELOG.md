@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.11.2](https://github.com/orbit-collective/orbit/compare/v0.11.1...v0.11.2) (2026-10-31)
+
+
+### Features
+
+* **dashboard:** count issues at the top of their priority scale ([96c93a3](https://github.com/orbit-collective/orbit/commit/96c93a393c5c525c2d20dc0f2d0b9e97688349a4))
+* **filters:** filter and save views by project priority ids ([d32e73d](https://github.com/orbit-collective/orbit/commit/d32e73d2a32d03a547a0d8d544bccbb1285a9aa7))
+* **issues:** let an issue priority be cleared ([9ea4665](https://github.com/orbit-collective/orbit/commit/9ea46659d7c09188275f84bce38b709dda923c44))
+* **permissions:** add priorities view, create, update and delete ([de5a971](https://github.com/orbit-collective/orbit/commit/de5a971a70f93305cb42ce00ead18102900845dc))
+* **priorities:** add create, update and reorder endpoints ([e1ed81d](https://github.com/orbit-collective/orbit/commit/e1ed81df4ff2576b5d48b4f7e07db365173c37be))
+* **priorities:** add per-project priorities with a seeded scale ([03bf91e](https://github.com/orbit-collective/orbit/commit/03bf91ed93b6651d6d08b059932ab8483295c4e0))
+* **priorities:** delete a priority, moving its issues elsewhere ([5cf09fc](https://github.com/orbit-collective/orbit/commit/5cf09fc75c2a44aa6752bec324aa4592a6a26559))
+* **priorities:** validate and follow project priorities in templates and imports ([63b3450](https://github.com/orbit-collective/orbit/commit/63b3450435a2382ac9c44971bed3b5955ebf4e56))
+* **settings:** allow a custom hex as the accent color ([f09a3a5](https://github.com/orbit-collective/orbit/commit/f09a3a527d981d10c04f191d3c9ce90d36fc12d2))
+* **settings:** create and edit project priorities ([81a1379](https://github.com/orbit-collective/orbit/commit/81a1379440fa84bf2de8cfc271459d9ddc7f435a))
+* **settings:** pick project priorities in rules, templates and imports ([bff9dcb](https://github.com/orbit-collective/orbit/commit/bff9dcb132a2e2e18afc0960d14147cd92f4bab4))
+* **settings:** pick the accent with the shared ColorPicker ([de34fa9](https://github.com/orbit-collective/orbit/commit/de34fa9d11e89e05f0861641f512996e303ba04a))
+* **settings:** reorder and delete project priorities ([7afbdbb](https://github.com/orbit-collective/orbit/commit/7afbdbb7f455bfd6e0e371b59d15d093ce7d8f9e))
+* **settings:** send the project priorities to the tabs that pick one ([0ae80c2](https://github.com/orbit-collective/orbit/commit/0ae80c26778d3483e1ea60529113e4ded7cca3ca))
+* **settings:** turn the Priorities tab live ([384e996](https://github.com/orbit-collective/orbit/commit/384e9962c7ce79ddbb22e18994a7873a86c448ae))
+* **ui:** add a shared ColorPicker ([2de271a](https://github.com/orbit-collective/orbit/commit/2de271adef7ed6d1f9be32653559c9a637f902b3))
+* **ui:** add error handling for assistive tech in inline editor ([33614f3](https://github.com/orbit-collective/orbit/commit/33614f3e4dcbf66cc4589fe6c5be1666753c0245))
+* **ui:** add saving and reordering states to priorities tab ([70f12dc](https://github.com/orbit-collective/orbit/commit/70f12dc3ec0372e53ad17d3749f4ebeff8b1b7d4))
+* **ui:** add the building blocks of the inline settings rows ([65929df](https://github.com/orbit-collective/orbit/commit/65929dff8e737e1ac817c69916b8f5e7e9577d6e))
+* **ui:** animate the ColorPicker ([aa253e9](https://github.com/orbit-collective/orbit/commit/aa253e99178c9d813d318d079b567949554b8753))
+* **ui:** draw issue priorities from the project own scale ([7ba8106](https://github.com/orbit-collective/orbit/commit/7ba8106fac2bdf776b5cca337e3e2ceffa0795fd))
+* **ui:** ease the appearance picker open ([59610a8](https://github.com/orbit-collective/orbit/commit/59610a85b9266baa02d142b953c46a62cfae6c92))
+
+
+### Bug Fixes
+
+* **issues:** apply the default priority before required checks ([ce69157](https://github.com/orbit-collective/orbit/commit/ce69157bf7213cb7d9e33674a88a60db4defdfa8))
+* **priorities:** match priority names case-insensitively in PHP ([320d7a9](https://github.com/orbit-collective/orbit/commit/320d7a9c38a4c633c3a9f8ab05c804c18d3aebb6))
+* **priorities:** re-read a priority before renaming it ([28df051](https://github.com/orbit-collective/orbit/commit/28df051a90d663bf6530890ab92e2e7d6afa8de0))
+* **priorities:** serialize deletes and bump the cache on reorder ([cf09716](https://github.com/orbit-collective/orbit/commit/cf09716a77e374e74f94c696b3e40d2d205bf7ee))
+* **settings:** keep list row actions reachable on touch ([730416c](https://github.com/orbit-collective/orbit/commit/730416ce2061161c6c15d43a425e6bfe8345f1e9))
+* **settings:** keep the project picker without priority access ([b49b941](https://github.com/orbit-collective/orbit/commit/b49b941e12420111f1ba0a3819c86c5ac491ac7e))
+* **ui:** fit the appearance picker on narrow screens ([7bd95fc](https://github.com/orbit-collective/orbit/commit/7bd95fcdd82458a494b2f0bc80f216f3d085fc2d))
+* **ui:** forward button attributes from RowAction ([4bf6049](https://github.com/orbit-collective/orbit/commit/4bf6049b136776da117beb086e5fde73a0a4d82a))
+* **ui:** keep Escape in a row picker from cancelling the edit ([b02cd26](https://github.com/orbit-collective/orbit/commit/b02cd26dc623baeeadc1dd9b08665f1f94ba7075))
+* **ui:** stop long priority names overflowing cards ([8cb48a1](https://github.com/orbit-collective/orbit/commit/8cb48a1372ba9077efc7f9be43ec922cb99af847))
+
+
+### Miscellaneous Chores
+
+* release 0.11.2 ([4d809b9](https://github.com/orbit-collective/orbit/commit/4d809b93d6761d5eea2fdceb94ea4ac43fff9bb2))
+
 ## [0.11.1](https://github.com/orbit-collective/orbit/compare/v0.11.0...v0.11.1) (2026-10-17)
 
 
