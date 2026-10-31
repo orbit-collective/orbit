@@ -42,10 +42,17 @@ class PriorityRepository
         return $project->priorities()->whereKey($id)->first();
     }
 
-    /** Case-insensitive, so "high" finds the priority named "High". */
+    /**
+     * Case-insensitive, so "high" finds the priority named "High". Compared in
+     * PHP: SQLite's lower() only folds ASCII, so a name like "Łatwe" would
+     * never match its own lowercase form in SQL. A scale is a handful of rows.
+     */
     public function findByName(Project $project, string $name): ?Priority
     {
-        return $project->priorities()->whereRaw('lower(name) = ?', [mb_strtolower(trim($name))])->first();
+        $wanted = mb_strtolower(trim($name));
+
+        return $project->priorities()->get()
+            ->first(fn (Priority $priority) => mb_strtolower($priority->name) === $wanted);
     }
 
     public function findDefault(Project $project): ?Priority

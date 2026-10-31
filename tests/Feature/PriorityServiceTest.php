@@ -85,6 +85,14 @@ test('updating changes name, color and icon and keeps the position', function ()
         ->and($updated->position)->toBe(0);
 });
 
+test('a name with non-ASCII capitals is found whatever its case', function () {
+    $created = $this->service->createPriority($this->project, ['name' => 'Łatwe', 'color' => '#2196f3', 'icon' => 'Flag']);
+
+    expect($this->service->findByName($this->project, 'Łatwe')?->is($created))->toBeTrue()
+        ->and($this->service->findByName($this->project, 'łatwe')?->is($created))->toBeTrue()
+        ->and($this->service->findByName($this->project, 'ŁATWE')?->is($created))->toBeTrue();
+});
+
 test('a priority can be renamed to a different case of its own name', function () {
     $this->service->ensureSystemPriorities($this->project);
     $high = $this->project->priorities()->where('name', 'High')->first();
