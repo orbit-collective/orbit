@@ -8,6 +8,8 @@ interface LabelListProps {
     labels: IssueLabel[];
     badgeClassName?: string;
     isClosed?: boolean;
+    /** Extra classes for the row, e.g. `flex-wrap` for a fixed count in narrow text. */
+    className?: string;
     /** A fixed count, or `'auto'` to show as many badges as the container's width allows. */
     maxDisplay?: number | 'auto';
 }
@@ -15,12 +17,20 @@ interface LabelListProps {
 const GAP = 6; // gap-1.5
 const AUTO_FALLBACK = 2; // used until a width has been measured
 
-const fitCount = (widths: number[], plusWidth: number, available: number) => {
+/**
+ * `plusWidths[r - 1]` is the width of the "+r" badge, so each candidate count
+ * is checked against the badge it would really show (`total - n` left over).
+ */
+const fitCount = (
+    widths: number[],
+    plusWidths: number[],
+    available: number,
+) => {
     const total = widths.length;
     for (let n = total; n > 0; n--) {
         const badges = widths.slice(0, n).reduce((a, w) => a + w, 0);
         const gaps = (n - 1) * GAP;
-        const more = n < total ? GAP + plusWidth : 0;
+        const more = n < total ? GAP + (plusWidths[total - n - 1] ?? 0) : 0;
         if (badges + gaps + more <= available) return n;
     }
     // Not even one badge fits next to "+N": a lone label is kept (and
@@ -32,6 +42,7 @@ const LabelList: React.FC<LabelListProps> = ({
     labels,
     badgeClassName,
     isClosed = false,
+    className,
     maxDisplay = 2,
 }) => {
     const isAuto = maxDisplay === 'auto';
@@ -39,6 +50,7 @@ const LabelList: React.FC<LabelListProps> = ({
     const measureRef = useRef<HTMLDivElement>(null);
     const [autoCount, setAutoCount] = useState(AUTO_FALLBACK);
     const labelsKey = (labels ?? []).join('\u0000');
+    const labelsCount = labels?.length ?? 0;
 
     useLayoutEffect(() => {
         const container = containerRef.current;
@@ -51,15 +63,22 @@ const LabelList: React.FC<LabelListProps> = ({
             const nodes = Array.from(
                 measure.firstElementChild?.children ?? [],
             ) as HTMLElement[];
-            const plus = nodes.pop();
+            const plusWidths = nodes
+                .splice(labelsCount)
+                .map((n) => n.offsetWidth);
             const widths = nodes.map((n) => n.offsetWidth);
-            setAutoCount(fitCount(widths, plus?.offsetWidth ?? 0, available));
+            setAutoCount(fitCount(widths, plusWidths, available));
         };
 
         update();
         if (typeof ResizeObserver === 'undefined') return;
         const observer = new ResizeObserver(update);
         observer.observe(container);
+        // The container's width is fixed by its column, so a web font
+        // finishing loading only shows up as a size change of the badges.
+        if (measure.firstElementChild) {
+            observer.observe(measure.firstElementChild);
+        }
         return () => observer.disconnect();
     }, [isAuto, labelsKey]);
 
@@ -75,6 +94,7 @@ const LabelList: React.FC<LabelListProps> = ({
             className={cn(
                 'relative flex items-center gap-1.5',
                 isAuto && 'w-full min-w-0',
+                className,
             )}
         >
             {isAuto && (
@@ -91,14 +111,17 @@ const LabelList: React.FC<LabelListProps> = ({
                                 className={cn('shrink-0', badgeClassName)}
                             />
                         ))}
-                        <span
-                            className={cn(
-                                'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                                badgeClassName,
-                            )}
-                        >
-                            +{labels.length}
-                        </span>
+                        {labels.map((_, idx) => (
+                            <span
+                                key={idx}
+                                className={cn(
+                                    'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                    badgeClassName,
+                                )}
+                            >
+                                +{idx + 1}
+                            </span>
+                        ))}
                     </div>
                 </div>
             )}

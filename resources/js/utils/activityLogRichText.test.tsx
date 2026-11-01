@@ -83,6 +83,17 @@ describe('renderActivityLogBody', () => {
         expect(screen.getByText('ux')).toBeInTheDocument();
     });
 
+    test('lets the label row wrap so several labels cannot overflow a narrow log entry', () => {
+        render(
+            <p>
+                {renderActivityLogBody('labels changed to [bug, ux, design]')}
+            </p>,
+        );
+
+        const row = screen.getByText('bug').parentElement?.parentElement;
+        expect(row).toHaveClass('flex-wrap');
+    });
+
     test('renders "none" when the labels list is empty', () => {
         render(<p>{renderActivityLogBody('labels changed to [none]')}</p>);
 
