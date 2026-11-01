@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.11.3](https://github.com/orbit-collective/orbit/compare/v0.11.2...v0.11.3) (2026-11-01)
+
+
+### Features
+
+* **ui:** add auto maxDisplay functionality to LabelList ([ddb8666](https://github.com/orbit-collective/orbit/commit/ddb8666b4cf544ab4d1c9a6d7d28539091664b10))
+* **ui:** implement LabelList component for label display ([098af2a](https://github.com/orbit-collective/orbit/commit/098af2ab7959c9981867f14415069e35c9c768d7))
+* **ui:** update LabelList usage in activity log ([9c3ca29](https://github.com/orbit-collective/orbit/commit/9c3ca299a16cd49565ee36e5bd22be98700a44c8))
+
+
+### Bug Fixes
+
+* **ui:** address label list review findings ([2ae6d58](https://github.com/orbit-collective/orbit/commit/2ae6d5896560a4c89005db34414884ce96f5d637))
+* **ui:** measure rendered gap in auto LabelList ([2693049](https://github.com/orbit-collective/orbit/commit/26930499e42ddf02f8831864847a62adc8328dc6))
+
+
+### Miscellaneous Chores
+
+* release 0.11.3 ([0f4d8f9](https://github.com/orbit-collective/orbit/commit/0f4d8f923b33f362765fe895da908b4c3e176a2d))
+
 ## [0.11.2](https://github.com/orbit-collective/orbit/compare/v0.11.1...v0.11.2) (2026-10-31)
 
 
