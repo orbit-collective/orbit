@@ -23,7 +23,7 @@ const LabelBadge: React.FC<LabelBadgeProps> = ({
                 className="h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: getColor(label) }}
             />
-            {label}
+            <span className="min-w-0 truncate">{label}</span>
         </span>
     );
 };

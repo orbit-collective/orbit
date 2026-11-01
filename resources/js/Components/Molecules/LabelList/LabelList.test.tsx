@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { IssueLabel } from '@/types/Issues';
@@ -147,7 +147,7 @@ describe('LabelList maxDisplay="auto"', () => {
 
         render(<LabelList labels={labels} maxDisplay="auto" />);
 
-        expect(screen.getByText('+4')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '+4' })).toBeInTheDocument();
     });
 
     test('collapses everything into "+N" when not even one badge fits', () => {
@@ -178,9 +178,77 @@ describe('LabelList maxDisplay="auto"', () => {
         expect(screen.queryByRole('button', { name: /^\+/ })).toBeNull();
     });
 
+    test('sizes the "+N" badge for the labels left over, not for every label', () => {
+        // 10 labels of 40px; "+10" is 60px wide but "+8" only 20px. Two
+        // badges + the "+8" badge need 40 + 6 + 40 + 6 + 20 = 112 <= 120,
+        // while measuring "+10" for that candidate (152) would hide a label.
+        vi.spyOn(
+            HTMLElement.prototype,
+            'offsetWidth',
+            'get',
+        ).mockImplementation(function (this: HTMLElement) {
+            const text = this.textContent ?? '';
+            if (/^\+\d+$/.test(text)) return text.length >= 3 ? 60 : 20;
+            return 40;
+        });
+        vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(
+            120,
+        );
+
+        render(
+            <LabelList
+                labels={Array.from({ length: 10 }, (_, i) => `label-${i}`)}
+                maxDisplay="auto"
+            />,
+        );
+
+        expect(screen.getByRole('button', { name: '+8' })).toBeInTheDocument();
+    });
+
+    test('re-measures when the badges resize, e.g. after a web font loads', () => {
+        const observed: Element[] = [];
+        let notify: () => void = () => {};
+        vi.stubGlobal(
+            'ResizeObserver',
+            class {
+                constructor(callback: () => void) {
+                    notify = callback;
+                }
+                observe(target: Element) {
+                    observed.push(target);
+                }
+                unobserve() {}
+                disconnect() {}
+            },
+        );
+        let badgeWidth = 40;
+        vi.spyOn(
+            HTMLElement.prototype,
+            'offsetWidth',
+            'get',
+        ).mockImplementation(() => badgeWidth);
+        vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(
+            400,
+        );
+
+        render(<LabelList labels={labels} maxDisplay="auto" />);
+        expect(screen.queryByRole('button', { name: /^\+/ })).toBeNull();
+
+        // the measuring row is watched, not just the container
+        expect(observed.some((el) => el.closest('[aria-hidden="true"]'))).toBe(
+            true,
+        );
+
+        badgeWidth = 120;
+        act(() => notify());
+
+        expect(screen.getByRole('button', { name: /^\+/ })).toBeInTheDocument();
+        vi.unstubAllGlobals();
+    });
+
     test('falls back to 2 badges while no width is measurable', () => {
         render(<LabelList labels={labels} maxDisplay="auto" />);
 
-        expect(screen.getByText('+3')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '+3' })).toBeInTheDocument();
     });
 });

@@ -67,8 +67,18 @@ describe('LabelBadge Component', () => {
     test('merges a custom className', () => {
         render(<LabelBadge label="bug" className="my-custom-class" />);
 
-        expect(screen.getByText('bug').closest('span')).toHaveClass(
+        expect(screen.getByText('bug').parentElement).toHaveClass(
             'my-custom-class',
         );
+    });
+
+    test('keeps the label text in its own shrinkable element so a long label can be ellipsized', () => {
+        render(<LabelBadge label="a-very-long-label-name" />);
+
+        // text-overflow needs a block-level box with `overflow: hidden`;
+        // bare text inside the inline-flex badge cannot be truncated.
+        const text = screen.getByText('a-very-long-label-name');
+        expect(text).toHaveClass('min-w-0', 'truncate');
+        expect(text.parentElement).toHaveClass('inline-flex');
     });
 });

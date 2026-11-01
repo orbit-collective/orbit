@@ -82,6 +82,7 @@ const LabelsValue = ({ labelsCsv }: { labelsCsv: string }) => {
             <LabelList
                 labels={labels}
                 badgeClassName="mx-0.5 align-middle"
+                className="flex-wrap"
                 maxDisplay={3}
             />
         </span>
