@@ -14,7 +14,7 @@ interface LabelListProps {
     maxDisplay?: number | 'auto';
 }
 
-const GAP = 6; // gap-1.5
+const DEFAULT_GAP = 6; // gap-1.5 at a 16px root font size
 const AUTO_FALLBACK = 2; // used until a width has been measured
 
 /**
@@ -25,12 +25,13 @@ const fitCount = (
     widths: number[],
     plusWidths: number[],
     available: number,
+    gap: number,
 ) => {
     const total = widths.length;
     for (let n = total; n > 0; n--) {
         const badges = widths.slice(0, n).reduce((a, w) => a + w, 0);
-        const gaps = (n - 1) * GAP;
-        const more = n < total ? GAP + (plusWidths[total - n - 1] ?? 0) : 0;
+        const gaps = (n - 1) * gap;
+        const more = n < total ? gap + (plusWidths[total - n - 1] ?? 0) : 0;
         if (badges + gaps + more <= available) return n;
     }
     // Not even one badge fits next to "+N": a lone label is kept (and
@@ -67,7 +68,16 @@ const LabelList: React.FC<LabelListProps> = ({
                 .splice(labelsCount)
                 .map((n) => n.offsetWidth);
             const widths = nodes.map((n) => n.offsetWidth);
-            setAutoCount(fitCount(widths, plusWidths, available));
+            // `gap-1.5` is rem based, so read what was actually rendered.
+            const gap = parseFloat(getComputedStyle(container).columnGap);
+            setAutoCount(
+                fitCount(
+                    widths,
+                    plusWidths,
+                    available,
+                    Number.isNaN(gap) ? DEFAULT_GAP : gap,
+                ),
+            );
         };
 
         update();
