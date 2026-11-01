@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { IssueLabel } from '@/types/Issues';
@@ -8,8 +8,25 @@ interface LabelListProps {
     labels: IssueLabel[];
     badgeClassName?: string;
     isClosed?: boolean;
-    maxDisplay?: number;
+    /** A fixed count, or `'auto'` to show as many badges as the container's width allows. */
+    maxDisplay?: number | 'auto';
 }
+
+const GAP = 6; // gap-1.5
+const AUTO_FALLBACK = 2; // used until a width has been measured
+
+const fitCount = (widths: number[], plusWidth: number, available: number) => {
+    const total = widths.length;
+    for (let n = total; n > 0; n--) {
+        const badges = widths.slice(0, n).reduce((a, w) => a + w, 0);
+        const gaps = (n - 1) * GAP;
+        const more = n < total ? GAP + plusWidth : 0;
+        if (badges + gaps + more <= available) return n;
+    }
+    // Not even one badge fits next to "+N": a lone label is kept (and
+    // truncated), several collapse entirely into the "+N" badge.
+    return total === 1 ? 1 : 0;
+};
 
 const LabelList: React.FC<LabelListProps> = ({
     labels,
@@ -17,18 +34,86 @@ const LabelList: React.FC<LabelListProps> = ({
     isClosed = false,
     maxDisplay = 2,
 }) => {
+    const isAuto = maxDisplay === 'auto';
+    const containerRef = useRef<HTMLDivElement>(null);
+    const measureRef = useRef<HTMLDivElement>(null);
+    const [autoCount, setAutoCount] = useState(AUTO_FALLBACK);
+    const labelsKey = (labels ?? []).join('\u0000');
+
+    useLayoutEffect(() => {
+        const container = containerRef.current;
+        const measure = measureRef.current;
+        if (!isAuto || !container || !measure) return;
+
+        const update = () => {
+            const available = container.clientWidth;
+            if (available <= 0) return;
+            const nodes = Array.from(
+                measure.firstElementChild?.children ?? [],
+            ) as HTMLElement[];
+            const plus = nodes.pop();
+            const widths = nodes.map((n) => n.offsetWidth);
+            setAutoCount(fitCount(widths, plus?.offsetWidth ?? 0, available));
+        };
+
+        update();
+        if (typeof ResizeObserver === 'undefined') return;
+        const observer = new ResizeObserver(update);
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [isAuto, labelsKey]);
+
     if (!labels || labels.length === 0) return null;
 
-    const displayedLabels = labels.slice(0, maxDisplay);
-    const remainingLabels = labels.slice(maxDisplay);
+    const limit = isAuto ? autoCount : maxDisplay;
+    const displayedLabels = labels.slice(0, limit);
+    const remainingLabels = labels.slice(limit);
 
     return (
-        <div className="relative flex items-center gap-1.5">
+        <div
+            ref={containerRef}
+            className={cn(
+                'relative flex items-center gap-1.5',
+                isAuto && 'w-full min-w-0',
+            )}
+        >
+            {isAuto && (
+                <div
+                    ref={measureRef}
+                    aria-hidden="true"
+                    className="pointer-events-none invisible absolute left-0 top-0 h-0 w-0 overflow-hidden"
+                >
+                    <div className="flex w-max gap-1.5 whitespace-nowrap">
+                        {labels.map((label, idx) => (
+                            <LabelBadge
+                                key={idx}
+                                label={label}
+                                className={cn('shrink-0', badgeClassName)}
+                            />
+                        ))}
+                        <span
+                            className={cn(
+                                'inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                badgeClassName,
+                            )}
+                        >
+                            +{labels.length}
+                        </span>
+                    </div>
+                </div>
+            )}
             {displayedLabels.map((label, idx) => (
                 <LabelBadge
                     key={idx}
                     label={label}
-                    className={cn(badgeClassName, isClosed && 'opacity-40')}
+                    className={cn(
+                        isAuto &&
+                            (labels.length === 1
+                                ? 'min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap'
+                                : 'shrink-0 whitespace-nowrap'),
+                        badgeClassName,
+                        isClosed && 'opacity-40',
+                    )}
                 />
             ))}
             {remainingLabels.length > 0 && (

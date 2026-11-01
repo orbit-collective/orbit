@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { IssueLabel } from '@/types/Issues';
 import LabelList from './LabelList';
 
@@ -127,5 +127,60 @@ describe('LabelList', () => {
         );
 
         expect(container.querySelector('.my-custom-class')).toBeInTheDocument();
+    });
+});
+
+describe('LabelList maxDisplay="auto"', () => {
+    const labels = ['bug', 'feature', 'performance', 'design', 'ux'];
+
+    afterEach(() => vi.restoreAllMocks());
+
+    test('fits as many badges as the container width allows', () => {
+        // every measured badge is 40px wide, the container 130px: 2 badges
+        // (40 + 6 + 40) + gap + "+3" (40) = 132 > 130, so only 1 fits
+        vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(
+            40,
+        );
+        vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(
+            130,
+        );
+
+        render(<LabelList labels={labels} maxDisplay="auto" />);
+
+        expect(screen.getByText('+4')).toBeInTheDocument();
+    });
+
+    test('collapses everything into "+N" when not even one badge fits', () => {
+        vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(
+            40,
+        );
+        vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(
+            60,
+        );
+
+        render(<LabelList labels={labels} maxDisplay="auto" />);
+
+        expect(screen.getByRole('button', { name: '+5' })).toBeInTheDocument();
+        // only the invisible measuring copy remains
+        expect(screen.getAllByText('bug')).toHaveLength(1);
+    });
+
+    test('shows more badges in a wider container', () => {
+        vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(
+            40,
+        );
+        vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(
+            400,
+        );
+
+        render(<LabelList labels={labels} maxDisplay="auto" />);
+
+        expect(screen.queryByRole('button', { name: /^\+/ })).toBeNull();
+    });
+
+    test('falls back to 2 badges while no width is measurable', () => {
+        render(<LabelList labels={labels} maxDisplay="auto" />);
+
+        expect(screen.getByText('+3')).toBeInTheDocument();
     });
 });

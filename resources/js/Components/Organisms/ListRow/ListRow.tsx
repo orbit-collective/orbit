@@ -231,6 +231,7 @@ export const ListRow = ({
                             labels={issue.labels || []}
                             badgeClassName="text-[10px] px-1.5 py-0.2"
                             isClosed={isClosed}
+                            maxDisplay="auto"
                         />
                     </td>
                 )}
