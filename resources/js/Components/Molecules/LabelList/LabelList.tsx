@@ -8,17 +8,19 @@ interface LabelListProps {
     labels: IssueLabel[];
     badgeClassName?: string;
     isClosed?: boolean;
+    maxDisplay?: number;
 }
 
 const LabelList: React.FC<LabelListProps> = ({
     labels,
     badgeClassName,
     isClosed = false,
+    maxDisplay = 2,
 }) => {
     if (!labels || labels.length === 0) return null;
 
-    const displayedLabels = labels.slice(0, 2);
-    const remainingLabels = labels.slice(2);
+    const displayedLabels = labels.slice(0, maxDisplay);
+    const remainingLabels = labels.slice(maxDisplay);
 
     return (
         <div className="relative flex items-center gap-1.5">

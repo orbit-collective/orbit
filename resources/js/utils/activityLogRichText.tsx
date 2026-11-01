@@ -13,6 +13,7 @@ import { RoleNameSummary, RoleTypeValue } from '@/types/Roles';
 import { AssignableUser } from '@/types/Users';
 import { cn } from '@/utils/cn';
 import { ROLE_TYPE_THEME } from '@/utils/roleTheme';
+import LabelList from '@/Components/Molecules/LabelList/LabelList';
 
 const CHANGE_PATTERN =
     /(status|priority) changed from "([^"]+)" to "([^"]+)"|labels changed to \[([^\]]*)]|assignee changed from "((?:[^"\\]|\\.)*)"(?:#(\d+))? to "((?:[^"\\]|\\.)*)"(?:#(\d+))?|assignee changed from (.+?) to (.+?)(?=; |$)|(?<=\b(?:[Ii]ssue|task:|[Nn]otification:?|sub-issue of)\s)#(\d+)(?=\b|\s|"|$)|(?<=\bby\s)([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-ząćęłńóśźż0-9_-]+)*)(?=:|\s|$)|^([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż0-9_-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻa-ząćęłńóśźż0-9_-]+)*)(?=\s+(?:deleted|edited|commented|created|updated)\b)|(?<=\bthe )"([^"]+)"(?= label\b)|(?<=\bthe )"([^"]+)"(?= role\b)|transition from "([^"]+)" to "([^"]+)"|(?<=\bthe )"([^"]+)"(?= issue type\b)|(?<=\bthe )"([^"]+)"(?= workflow\b)|(?<=\bthe )"([^"]+)"(?= status\b)|(?<=\bMade )"([^"]+)"(?= the starting status\b)|(?<=sub-issues of )"([^"]+)"|(?<=\bthe )"([^"]+)"(?= template\b)/g;
@@ -78,9 +79,7 @@ const LabelsValue = ({ labelsCsv }: { labelsCsv: string }) => {
 
     return (
         <span className="mx-0.5 inline-flex flex-wrap items-center gap-1 align-middle">
-            {labels.map((label) => (
-                <LabelBadge key={label} label={label} />
-            ))}
+            <LabelList labels={labels} badgeClassName="mx-0.5 align-middle" maxDisplay={3} />
         </span>
     );
 };
