@@ -246,6 +246,27 @@ describe('LabelList maxDisplay="auto"', () => {
         vi.unstubAllGlobals();
     });
 
+    test('uses the rendered column gap, not an assumed 6px', () => {
+        // a root font size above 16px makes `gap-1.5` wider than 6px:
+        // 5 labels of 40px in 132px, "+N" 40px. With a 6px gap two badges fit
+        // (40 + 6 + 40 + 6 + 40 = 132), with the real 12px gap they do not.
+        vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(
+            40,
+        );
+        vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(
+            132,
+        );
+        const computedStyle = vi
+            .spyOn(window, 'getComputedStyle')
+            .mockReturnValue({ columnGap: '12px' } as CSSStyleDeclaration);
+
+        render(<LabelList labels={labels} maxDisplay="auto" />);
+        // Testing Library's role queries need the real implementation back.
+        computedStyle.mockRestore();
+
+        expect(screen.getByRole('button', { name: '+4' })).toBeInTheDocument();
+    });
+
     test('falls back to 2 badges while no width is measurable', () => {
         render(<LabelList labels={labels} maxDisplay="auto" />);
 
