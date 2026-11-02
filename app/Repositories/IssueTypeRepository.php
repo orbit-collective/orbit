@@ -77,6 +77,17 @@ class IssueTypeRepository
         $issueType->delete();
     }
 
+    /**
+     * The ids of the issue types this type restricts its sub-issues to; empty
+     * means no restriction.
+     *
+     * @return \Illuminate\Support\Collection<int, int>
+     */
+    public function allowedChildTypeIds(IssueType $issueType): \Illuminate\Support\Collection
+    {
+        return $issueType->allowedChildTypes()->pluck('issue_types.id');
+    }
+
     public function syncAllowedChildTypes(IssueType $issueType, array $childIssueTypeIds): void
     {
         $issueType->allowedChildTypes()->sync($childIssueTypeIds);
