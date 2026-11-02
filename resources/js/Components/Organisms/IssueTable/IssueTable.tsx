@@ -325,34 +325,47 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         issueTypeId: number | null,
         values: QuickAddIssueValues,
         parentId?: string,
-    ) => {
-        if (!project) return;
+    ): Promise<boolean> => {
+        if (!project) return Promise.resolve(false);
 
         setIsCreatingIssue(true);
-        router.post(
-            route('issues.store'),
-            {
-                title,
-                project_id: project.id,
-                ...values,
-                ...(issueTypeId ? { issue_type_id: issueTypeId } : {}),
-                ...(parentId ? { parent_id: parentId } : {}),
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                // Surface what the server actually objected to (a required
-                // custom field, a child type this parent rejects) - a generic
-                // toast leaves no way to tell those apart.
-                onError: (errors) =>
-                    addAlert(
-                        Object.values(errors)[0] ??
-                            'Could not create the issue',
-                        'error',
-                    ),
-                onFinish: () => setIsCreatingIssue(false),
-            },
-        );
+
+        // Resolves to whether the issue was created, so the quick-add row can
+        // keep what the user entered when the server rejects it.
+        return new Promise((resolve) => {
+            let created = false;
+
+            router.post(
+                route('issues.store'),
+                {
+                    title,
+                    project_id: project.id,
+                    ...values,
+                    ...(issueTypeId ? { issue_type_id: issueTypeId } : {}),
+                    ...(parentId ? { parent_id: parentId } : {}),
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    // Surface what the server actually objected to (a required
+                    // custom field, a child type this parent rejects) - a generic
+                    // toast leaves no way to tell those apart.
+                    onError: (errors) =>
+                        addAlert(
+                            Object.values(errors)[0] ??
+                                'Could not create the issue',
+                            'error',
+                        ),
+                    onSuccess: () => {
+                        created = true;
+                    },
+                    onFinish: () => {
+                        setIsCreatingIssue(false);
+                        resolve(created);
+                    },
+                },
+            );
+        });
     };
 
     const handleUpdateIssue = (issue: Issue, data: Record<string, unknown>) => {

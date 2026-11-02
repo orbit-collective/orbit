@@ -422,7 +422,9 @@ class IssueController extends Controller
 
         if ($template) {
             $data['description'] = ($data['description'] ?? null) ?: $template->description;
-            $data['labels'] = ! empty($data['labels'])
+            // An explicit (even empty) list is the caller's choice and wins;
+            // only a request that leaves labels out gets the template's.
+            $data['labels'] = isset($data['labels']) && is_array($data['labels'])
                 ? $data['labels']
                 : $this->labelService->filterToExisting($project, $template->default_labels ?? []);
         }

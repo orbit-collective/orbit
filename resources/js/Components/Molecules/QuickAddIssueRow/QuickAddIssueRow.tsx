@@ -78,11 +78,16 @@ interface QuickAddIssueRowProps {
     enabledColumns: Record<string, boolean>;
     issueTypes: IssueType[];
     users?: AssignableUser[];
+    /**
+     * Returning a promise keeps the draft until it settles and drops it only
+     * when it resolves to true, so a rejected create does not cost the user
+     * their title and choices. Anything else is treated as accepted.
+     */
     onSubmit: (
         title: string,
         issueTypeId: number | null,
         values: QuickAddIssueValues,
-    ) => void;
+    ) => void | Promise<boolean>;
     isSubmitting?: boolean;
     label?: string;
     indent?: number;
@@ -132,6 +137,9 @@ export const QuickAddIssueRow = forwardRef<
         >(undefined);
         const [assigneeId, setAssigneeId] = useState<number | null>(null);
         const [labels, setLabels] = useState<IssueLabel[]>([]);
+        // Clearing the labels is a choice too: it has to override the labels
+        // the type's template would otherwise add.
+        const [labelsTouched, setLabelsTouched] = useState(false);
         const [startDate, setStartDate] = useState('');
         const [endDate, setEndDate] = useState('');
         const inputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +149,7 @@ export const QuickAddIssueRow = forwardRef<
             setPriorityName(undefined);
             setAssigneeId(null);
             setLabels([]);
+            setLabelsTouched(false);
             setStartDate('');
             setEndDate('');
         };
@@ -195,7 +204,7 @@ export const QuickAddIssueRow = forwardRef<
         const submit = () => {
             const trimmed = title.trim();
             if (!trimmed) return;
-            onSubmit(trimmed, issueTypeId, {
+            const result = onSubmit(trimmed, issueTypeId, {
                 ...(chosenStatus
                     ? { workflow_status_id: chosenStatus.id }
                     : {}),
@@ -203,12 +212,22 @@ export const QuickAddIssueRow = forwardRef<
                     ? { priority: priorityName }
                     : {}),
                 ...(assigneeId !== null ? { assignee_id: assigneeId } : {}),
-                ...(labels.length > 0 ? { labels } : {}),
+                ...(labelsTouched ? { labels } : {}),
                 ...(startDate ? { start_date: startDate } : {}),
                 ...(endDate ? { end_date: endDate } : {}),
             });
-            setTitle('');
-            resetValues();
+            const clearDraft = () => {
+                setTitle('');
+                resetValues();
+            };
+
+            if (result instanceof Promise) {
+                void result.then((accepted) => {
+                    if (accepted) clearDraft();
+                });
+            } else {
+                clearDraft();
+            }
         };
 
         const cancel = () => {
@@ -352,7 +371,10 @@ export const QuickAddIssueRow = forwardRef<
                     <td className={cellBase}>
                         <EditableLabelList
                             labels={labels}
-                            onSave={setLabels}
+                            onSave={(next) => {
+                                setLabels(next);
+                                setLabelsTouched(true);
+                            }}
                             maxDisplay="auto"
                             disabled={isSubmitting}
                         />

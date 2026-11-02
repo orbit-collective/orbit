@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { ComponentProps, createRef } from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
 import { priorities } from '@/stories/fixtures';
 import { IssueType } from '@/types/IssueTypes';
@@ -365,5 +366,62 @@ describe('QuickAddIssueRow properties', () => {
         fireEvent.keyDown(input, { key: 'Enter' });
 
         expect(handleSubmit).toHaveBeenCalledWith('Oops', 2, {});
+    });
+
+    test('keeps the draft when a returned promise resolves to false, and clears it on true', async () => {
+        const handleSubmit = vi
+            .fn()
+            .mockResolvedValueOnce(false)
+            .mockResolvedValueOnce(true);
+        renderRow({ onSubmit: handleSubmit });
+
+        fireEvent.click(screen.getByText('New issue'));
+        const input = screen.getByPlaceholderText('What needs to be done?');
+        fireEvent.change(input, { target: { value: 'Rejected once' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+        await act(async () => {});
+
+        expect(input).toHaveValue('Rejected once');
+
+        fireEvent.keyDown(input, { key: 'Enter' });
+        await act(async () => {});
+
+        expect(handleSubmit).toHaveBeenCalledTimes(2);
+        expect(input).toHaveValue('');
+    });
+
+    test('sends an empty labels list once the labels were touched and cleared', () => {
+        const handleSubmit = vi.fn();
+        render(
+            <ProjectLabelsProvider
+                labels={[{ id: 1, name: 'bug', color: '#ef4444' } as never]}
+            >
+                <ProjectPrioritiesProvider priorities={[]}>
+                    <table>
+                        <tbody>
+                            <QuickAddIssueRow
+                                colSpan={5}
+                                enabledColumns={enabledColumns}
+                                issueTypes={issueTypes}
+                                onSubmit={handleSubmit}
+                            />
+                        </tbody>
+                    </table>
+                </ProjectPrioritiesProvider>
+            </ProjectLabelsProvider>,
+        );
+
+        fireEvent.click(screen.getByText('New issue'));
+        fireEvent.click(screen.getByLabelText('Edit labels'));
+        fireEvent.click(screen.getByRole('option', { name: /bug/ }));
+        fireEvent.click(screen.getByRole('option', { name: /bug/ }));
+
+        const input = screen.getByPlaceholderText('What needs to be done?');
+        fireEvent.change(input, { target: { value: 'Cleared' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+
+        expect(handleSubmit).toHaveBeenCalledWith('Cleared', 1, {
+            labels: [],
+        });
     });
 });
