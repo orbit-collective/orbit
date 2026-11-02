@@ -40,6 +40,12 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             'aria-haspopup': ariaHasPopup,
             'aria-controls': ariaControls,
             'aria-activedescendant': ariaActiveDescendant,
+            id,
+            rows,
+            'aria-label': ariaLabel,
+            'aria-describedby': ariaDescribedBy,
+            'aria-autocomplete': ariaAutocomplete,
+            'aria-busy': ariaBusy,
         },
         ref,
     ) => {
@@ -67,6 +73,12 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
                 aria-haspopup={ariaHasPopup}
                 aria-controls={ariaControls}
                 aria-activedescendant={ariaActiveDescendant}
+                id={id}
+                rows={rows}
+                aria-label={ariaLabel}
+                aria-describedby={ariaDescribedBy}
+                aria-autocomplete={ariaAutocomplete}
+                aria-busy={ariaBusy}
                 ref={ref}
                 onDrop={onDrop}
             ></textarea>

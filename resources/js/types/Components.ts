@@ -151,6 +151,12 @@ export interface TextAreaProps extends VariantProps<typeof textareaVariants> {
     'aria-haspopup'?: 'listbox';
     'aria-controls'?: string;
     'aria-activedescendant'?: string;
+    id?: string;
+    rows?: number;
+    'aria-label'?: string;
+    'aria-describedby'?: string;
+    'aria-autocomplete'?: 'list' | 'none';
+    'aria-busy'?: boolean;
 }
 export interface VisualCardProps {
     children: ReactNode;
