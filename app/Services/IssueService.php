@@ -12,6 +12,7 @@ use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\IssueRepository;
+use App\Repositories\IssueTypeRepository;
 use App\Services\Automation\AutomationDispatcher;
 use App\Support\Cache\CacheVersion;
 use BackedEnum;
@@ -38,6 +39,7 @@ class IssueService
 
     public function __construct(
         protected IssueRepository $issueRepository,
+        protected IssueTypeRepository $issueTypeRepository,
         protected ActivityLogService $activityLogService,
         protected UserService $userService,
         protected AutomationDispatcher $automationDispatcher,
@@ -566,7 +568,7 @@ class IssueService
     {
         $this->assertValidParent($issue->project, $parentId, $newType->id, $issue->id);
 
-        $childTypeIds = $issue->children()->pluck('issue_type_id')->filter()->unique();
+        $childTypeIds = $this->issueRepository->childIssueTypeIds($issue);
 
         if ($childTypeIds->isEmpty()) {
             return;
@@ -578,7 +580,7 @@ class IssueService
             ]);
         }
 
-        $allowedChildTypeIds = $newType->allowedChildTypes()->pluck('issue_types.id');
+        $allowedChildTypeIds = $this->issueTypeRepository->allowedChildTypeIds($newType);
 
         if ($allowedChildTypeIds->isNotEmpty() && $childTypeIds->diff($allowedChildTypeIds)->isNotEmpty()) {
             throw ValidationException::withMessages([

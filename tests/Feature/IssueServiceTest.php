@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkflowStatus;
 use App\Repositories\IssueRepository;
+use App\Repositories\IssueTypeRepository;
 use App\Services\ActivityLogService;
 use App\Services\Automation\AutomationDispatcher;
 use App\Services\IssueService;
@@ -25,7 +26,7 @@ beforeEach(function () {
     $this->issueRepository->shouldReceive('findWorkflowStatus')->andReturnUsing(fn ($id) => $id ? WorkflowStatus::find($id) : null);
     $this->userService = Mockery::mock(UserService::class);
     $this->userService->shouldReceive('getUserById')->andReturnUsing(fn ($id) => User::find($id));
-    $this->service = new IssueService($this->issueRepository, $this->activityLogService, $this->userService, app(AutomationDispatcher::class));
+    $this->service = new IssueService($this->issueRepository, app(IssueTypeRepository::class), $this->activityLogService, $this->userService, app(AutomationDispatcher::class));
     Event::fake();
 });
 

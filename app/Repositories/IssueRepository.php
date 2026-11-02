@@ -59,6 +59,16 @@ class IssueRepository
         return Issue::query()->where('project_id', $projectId)->where('number', $number)->first();
     }
 
+    /**
+     * The distinct issue types of an issue's direct sub-issues.
+     *
+     * @return Collection<int, int>
+     */
+    public function childIssueTypeIds(Issue $issue): Collection
+    {
+        return $issue->children()->pluck('issue_type_id')->filter()->unique()->values();
+    }
+
     /** Just enough of an issue to render it as a breadcrumb crumb. */
     public function findBasic(int $id): ?Issue
     {
