@@ -190,7 +190,7 @@ const Pagination = ({
     return (
         <div
             className={cn(
-                'mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 lg:flex-row lg:gap-0',
+                'relative mt-auto flex flex-col items-center justify-between gap-4 px-6 py-4 lg:flex-row lg:gap-0',
                 className,
             )}
         >
