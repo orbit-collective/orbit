@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import {
     diffTextEdit,
     insertMarkdownImage,
-    mapOffsetThroughEdit,
+    mapPendingRange,
     nextImageRange,
     TextEdit,
 } from '@/utils/imagePaste';
@@ -39,8 +39,7 @@ export const useImageInsertion = (
         const edit = diffTextEdit(valueRef.current, value);
 
         for (const range of pendingRef.current) {
-            range.start = mapOffsetThroughEdit(range.start, edit);
-            range.end = mapOffsetThroughEdit(range.end, edit);
+            Object.assign(range, mapPendingRange(range, edit));
         }
 
         valueRef.current = value;
@@ -86,15 +85,9 @@ export const useImageInsertion = (
                         for (const other of pendingRef.current) {
                             if (other === pending) continue;
 
-                            other.start = mapOffsetThroughEdit(
-                                other.start,
-                                edit,
-                                true,
-                            );
-                            other.end = mapOffsetThroughEdit(
-                                other.end,
-                                edit,
-                                true,
+                            Object.assign(
+                                other,
+                                mapPendingRange(other, edit, true),
                             );
                         }
 
