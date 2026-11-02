@@ -294,6 +294,21 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             : issueTypes;
     };
 
+    // A sub-issue may only take the types its parent allows, a top-level
+    // issue only top-level ones - the same limits the update endpoint checks.
+    const issueTypesFor = (issue: Issue) => {
+        if (issue.parent_id === null || issue.parent_id === undefined) {
+            return topLevelIssueTypes;
+        }
+
+        const parentType =
+            issue.parent?.issueType ??
+            issues.find((other) => String(other.id) === String(issue.parent_id))
+                ?.issueType;
+
+        return parentType ? childIssueTypesFor(parentType) : issueTypes;
+    };
+
     useEffect(() => {
         const handler = () => quickAddRef.current?.open();
         window.addEventListener(QUICK_ADD_ISSUE_EVENT, handler);
@@ -349,7 +364,12 @@ export const IssueTable: React.FC<IssueTableProps> = ({
 
     const editing: IssueRowEditing | undefined =
         project && issueAbilities
-            ? { users, abilities: issueAbilities, onUpdate: handleUpdateIssue }
+            ? {
+                  users,
+                  abilities: issueAbilities,
+                  issueTypesFor,
+                  onUpdate: handleUpdateIssue,
+              }
             : undefined;
 
     const headers: HeaderConfig[] = ISSUE_TABLE_COLUMNS.map(

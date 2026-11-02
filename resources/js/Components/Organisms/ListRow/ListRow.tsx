@@ -11,6 +11,7 @@ import {
     PriorityPicker,
     REVEAL_ON_ROW_HOVER,
     StatusPicker,
+    TypePicker,
 } from '@/Components/Molecules/IssuePropertyPickers/IssuePropertyPickers';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
@@ -278,7 +279,18 @@ export const ListRow = ({
                 )}
                 {enabledColumns.type && (
                     <td className={cellBase} data-column="type">
-                        {issue.issueType ? (
+                        {can?.update && issue.issueType ? (
+                            <Editable>
+                                <TypePicker
+                                    types={editing?.issueTypesFor(issue) ?? []}
+                                    value={issue.issueType}
+                                    revealOnRowHover
+                                    onChange={(type) =>
+                                        save({ issue_type_id: type.id })
+                                    }
+                                />
+                            </Editable>
+                        ) : issue.issueType ? (
                             <IssueTypeBadge issueType={issue.issueType} />
                         ) : (
                             <span className="text-[var(--text-muted-color)]">
