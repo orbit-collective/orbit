@@ -37,7 +37,7 @@ export const Empty: Story = {
     args: { comments: [] },
     play: async ({ canvasElement }) => {
         await expect(
-            within(canvasElement).getByText('No activity yet.'),
+            within(canvasElement).getByText('No comments yet'),
         ).toBeVisible();
     },
 };
