@@ -4,6 +4,7 @@ import BulkActionBar from '@/Components/Molecules/BulkActionBar/BulkActionBar';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
 import { IssueElement } from '@/Components/Molecules/IssueElement/IssueElement';
 import QuickAddIssueRow, {
+    QuickAddIssueValues,
     QuickAddIssueRowHandle,
 } from '@/Components/Molecules/QuickAddIssueRow/QuickAddIssueRow';
 import IssueTableHead from '@/Components/Organisms/IssueTableHead/IssueTableHead';
@@ -30,6 +31,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     project,
     bare = false,
     issueTypes = [],
+    users = [],
     nextIssueId = null,
 }) => {
     const { addAlert } = useAlert();
@@ -296,6 +298,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     const handleCreateIssue = (
         title: string,
         issueTypeId: number | null,
+        values: QuickAddIssueValues,
         parentId?: string,
     ) => {
         if (!project) return;
@@ -306,6 +309,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             {
                 title,
                 project_id: project.id,
+                ...values,
                 ...(issueTypeId ? { issue_type_id: issueTypeId } : {}),
                 ...(parentId ? { parent_id: parentId } : {}),
             },
@@ -383,10 +387,15 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                     colSpan={headers.length + 3}
                                     enabledColumns={enabledColumns}
                                     issueTypes={topLevelIssueTypes}
+                                    users={users}
                                     nextIssueId={nextIssueId}
                                     isSubmitting={isCreatingIssue}
-                                    onSubmit={(title, issueTypeId) =>
-                                        handleCreateIssue(title, issueTypeId)
+                                    onSubmit={(title, issueTypeId, values) =>
+                                        handleCreateIssue(
+                                            title,
+                                            issueTypeId,
+                                            values,
+                                        )
                                     }
                                 />
                             )}
@@ -432,6 +441,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                                         enabledColumns={
                                                             enabledColumns
                                                         }
+                                                        users={users}
                                                         issueTypes={childIssueTypesFor(
                                                             issue.issueType,
                                                         )}
@@ -446,10 +456,12 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                                         onSubmit={(
                                                             title,
                                                             issueTypeId,
+                                                            values,
                                                         ) =>
                                                             handleCreateIssue(
                                                                 title,
                                                                 issueTypeId,
+                                                                values,
                                                                 String(
                                                                     issue.id,
                                                                 ),

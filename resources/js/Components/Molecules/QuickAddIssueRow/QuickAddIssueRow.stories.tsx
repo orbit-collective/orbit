@@ -60,6 +60,7 @@ export const Expanded: Story = {
         await expect(args.onSubmit).toHaveBeenCalledWith(
             'Fix the login redirect',
             1,
+            {},
         );
     },
 };

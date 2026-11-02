@@ -5,16 +5,25 @@ import {
     useRef,
     useState,
     type KeyboardEvent,
+    type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
+import Calendar from '@/Components/Molecules/Calendar/Calendar';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
+import EditableLabelList from '@/Components/Molecules/EditableLabelList/EditableLabelList';
+import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
 import { DropdownOptionItem } from '@/types/Dropdown';
+import { IssueLabel } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
+import { AssignableUser } from '@/types/Users';
+import { WorkflowStatus } from '@/types/Workflow';
 import { cn } from '@/utils/cn';
+import { formatWeekdayDate, parseDateKey } from '@/utils/time';
 
 export interface QuickAddIssueRowHandle {
     open: () => void;
@@ -22,6 +31,68 @@ export interface QuickAddIssueRowHandle {
 
 const cellBase =
     'px-3 py-2 border-b border-[var(--border-color)] align-middle text-[12px] font-normal';
+
+/**
+ * What the row sends on top of the title and type. A field the user never
+ * touched is left out, so the server's own defaults (starting status, project
+ * default priority, type template) still apply.
+ */
+export interface QuickAddIssueValues {
+    workflow_status_id?: number;
+    priority?: string | null;
+    assignee_id?: number | null;
+    labels?: IssueLabel[];
+    start_date?: string;
+    end_date?: string;
+}
+
+/**
+ * The status to keep when the type changes. A status belongs to one type's
+ * workflow, so the old one is gone: prefer the new type's status of the same
+ * category (the first, which is the initial one when that category has it),
+ * and otherwise drop the choice so the type's initial status applies.
+ */
+export const fallbackStatus = (
+    chosen: WorkflowStatus | null,
+    type: IssueType | null,
+): WorkflowStatus | null => {
+    if (!chosen || !type?.statuses) return null;
+
+    const statuses = type.statuses;
+
+    return (
+        statuses.find((status) => status.id === chosen.id) ??
+        statuses.find(
+            (status) => status.category === chosen.category && status.isInitial,
+        ) ??
+        statuses.find((status) => status.category === chosen.category) ??
+        null
+    );
+};
+
+const pickerTrigger = (label: string, content: ReactNode) => (
+    <button
+        type="button"
+        aria-label={label}
+        className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+    >
+        {content}
+        <Icon
+            name="ChevronDown"
+            size={12}
+            className="text-[var(--text-muted-color)]"
+        />
+    </button>
+);
+
+const toLocalDateString = (date: Date) =>
+    [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+
+const parseDate = (value: string) => (value ? parseDateKey(value) : undefined);
 
 const mutedCell = (
     <span className="text-[var(--text-muted-color)]">&mdash;</span>
@@ -31,7 +102,12 @@ interface QuickAddIssueRowProps {
     colSpan: number;
     enabledColumns: Record<string, boolean>;
     issueTypes: IssueType[];
-    onSubmit: (title: string, issueTypeId: number | null) => void;
+    users?: AssignableUser[];
+    onSubmit: (
+        title: string,
+        issueTypeId: number | null,
+        values: QuickAddIssueValues,
+    ) => void;
     isSubmitting?: boolean;
     label?: string;
     indent?: number;
@@ -41,9 +117,9 @@ interface QuickAddIssueRowProps {
 /**
  * Jira-style inline "quick add": collapsed to a plain "+ New issue" link by
  * default, expands into a real-looking table row (matching ListRow's cell
- * layout) with only the title and issue type editable - the other cells
- * preview the defaults the issue will be created with, and are filled in
- * afterwards from the issue detail view, which is unchanged.
+ * layout) with only the title and every property cell editable. Status choices
+ * follow the selected type (falling back when the type changes), and a
+ * property left alone previews the default the issue will be created with.
  */
 export const QuickAddIssueRow = forwardRef<
     QuickAddIssueRowHandle,
@@ -54,6 +130,7 @@ export const QuickAddIssueRow = forwardRef<
             colSpan,
             enabledColumns,
             issueTypes,
+            users = [],
             onSubmit,
             isSubmitting = false,
             label = 'New issue',
@@ -62,7 +139,7 @@ export const QuickAddIssueRow = forwardRef<
         },
         ref,
     ) => {
-        const { defaultPriority } = useProjectPriorities();
+        const { priorities, defaultPriority } = useProjectPriorities();
         const [isEditing, setIsEditing] = useState(false);
         const [title, setTitle] = useState('');
         const defaultTypeId =
@@ -72,7 +149,29 @@ export const QuickAddIssueRow = forwardRef<
         const [issueTypeId, setIssueTypeId] = useState<number | null>(
             defaultTypeId,
         );
+        const [chosenStatus, setChosenStatus] = useState<WorkflowStatus | null>(
+            null,
+        );
+        const [priorityName, setPriorityName] = useState<
+            string | null | undefined
+        >(undefined);
+        const [assigneeId, setAssigneeId] = useState<number | null>(null);
+        const [labels, setLabels] = useState<IssueLabel[]>([]);
+        const [startDate, setStartDate] = useState('');
+        const [endDate, setEndDate] = useState('');
+        const [pickingDate, setPickingDate] = useState<'start' | 'end' | null>(
+            null,
+        );
         const inputRef = useRef<HTMLInputElement>(null);
+
+        const resetValues = () => {
+            setChosenStatus(null);
+            setPriorityName(undefined);
+            setAssigneeId(null);
+            setLabels([]);
+            setStartDate('');
+            setEndDate('');
+        };
 
         const selectedType =
             issueTypes.find((type) => type.id === issueTypeId) ?? null;
@@ -80,6 +179,89 @@ export const QuickAddIssueRow = forwardRef<
             selectedType?.statuses?.find((status) => status.isInitial) ??
             selectedType?.statuses?.[0] ??
             null;
+        const shownStatus = chosenStatus ?? initialStatus;
+        const assignee = users.find((user) => user.id === assigneeId) ?? null;
+        const shownPriority =
+            priorityName === undefined
+                ? defaultPriority
+                : (priorities.find(
+                      (priority) =>
+                          priority.name.toLowerCase() ===
+                          priorityName?.toLowerCase(),
+                  ) ?? null);
+
+        const changeType = (value: string) => {
+            const nextId = Number(value);
+            const nextType =
+                issueTypes.find((type) => type.id === nextId) ?? null;
+
+            setIssueTypeId(nextId);
+            setChosenStatus((current) => fallbackStatus(current, nextType));
+        };
+
+        const statusOptions = useMemo(
+            (): DropdownOptionItem[] =>
+                (selectedType?.statuses ?? []).map((status) => ({
+                    value: String(status.id),
+                    label: <WorkflowStatusBadge status={status} />,
+                    searchLabel: status.name,
+                })),
+            [selectedType],
+        );
+
+        const priorityOptions = useMemo(
+            (): DropdownOptionItem[] => [
+                ...priorities.map((priority) => ({
+                    value: priority.name,
+                    searchLabel: priority.name,
+                    label: (
+                        <span className="flex items-center gap-2">
+                            <PriorityIcon priority={priority} tooltip={false} />
+                            {priority.name}
+                        </span>
+                    ),
+                })),
+                {
+                    value: '',
+                    searchLabel: 'No priority',
+                    label: (
+                        <span className="flex items-center gap-2">
+                            <PriorityIcon priority={null} tooltip={false} />
+                            No priority
+                        </span>
+                    ),
+                },
+            ],
+            [priorities],
+        );
+
+        const assigneeOptions = useMemo(
+            (): DropdownOptionItem[] => [
+                {
+                    value: '',
+                    searchLabel: 'Unassigned',
+                    label: (
+                        <span className="flex items-center gap-2 text-[var(--text-gray-color)]">
+                            <Icon name="UserX" size={14} />
+                            Unassigned
+                        </span>
+                    ),
+                },
+                ...users.map((user) => ({
+                    value: String(user.id),
+                    searchLabel: user.name,
+                    label: (
+                        <UserBadge
+                            avatarSrc={user.avatar ?? undefined}
+                            name={user.name}
+                            size="sm"
+                            showTooltip={false}
+                        />
+                    ),
+                })),
+            ],
+            [users],
+        );
 
         // Rows are the same badges the list shows, so a type looks identical
         // wherever it appears.
@@ -96,6 +278,7 @@ export const QuickAddIssueRow = forwardRef<
         const reveal = () => {
             setIsEditing(true);
             setIssueTypeId(defaultTypeId);
+            resetValues();
             requestAnimationFrame(() => inputRef.current?.focus());
         };
 
@@ -104,8 +287,20 @@ export const QuickAddIssueRow = forwardRef<
         const submit = () => {
             const trimmed = title.trim();
             if (!trimmed) return;
-            onSubmit(trimmed, issueTypeId);
+            onSubmit(trimmed, issueTypeId, {
+                ...(chosenStatus
+                    ? { workflow_status_id: chosenStatus.id }
+                    : {}),
+                ...(priorityName !== undefined
+                    ? { priority: priorityName }
+                    : {}),
+                ...(assigneeId !== null ? { assignee_id: assigneeId } : {}),
+                ...(labels.length > 0 ? { labels } : {}),
+                ...(startDate ? { start_date: startDate } : {}),
+                ...(endDate ? { end_date: endDate } : {}),
+            });
             setTitle('');
+            resetValues();
         };
 
         const cancel = () => {
@@ -122,6 +317,65 @@ export const QuickAddIssueRow = forwardRef<
         };
 
         const paddingLeft = 16 + indent * 20;
+
+        const dateButton = (
+            label: string,
+            value: string,
+            field: 'start' | 'end',
+        ) => (
+            <button
+                type="button"
+                aria-label={label}
+                disabled={isSubmitting}
+                onClick={() => setPickingDate(field)}
+                className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-full border-none bg-transparent p-0 text-[11px] text-[var(--text-muted-color)] hover:text-[var(--text-color)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+            >
+                <Icon name={value ? 'CalendarDays' : 'CalendarX2'} size={12} />
+                {value ? formatWeekdayDate(value) : 'No date'}
+            </button>
+        );
+
+        // The same overlay the issue page uses, portalled out of the table.
+        const closePicker = () => setPickingDate(null);
+        const datePicker =
+            pickingDate &&
+            createPortal(
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
+                    onClick={closePicker}
+                >
+                    <div onClick={(e) => e.stopPropagation()}>
+                        {pickingDate === 'start' ? (
+                            <Calendar
+                                selectedDate={parseDate(startDate)}
+                                onSelect={(date) => {
+                                    const next = toLocalDateString(date);
+
+                                    setStartDate(next);
+                                    // An end before the new start is moved with it.
+                                    if (endDate && endDate < next) {
+                                        setEndDate(next);
+                                    }
+                                    closePicker();
+                                }}
+                                onClose={closePicker}
+                            />
+                        ) : (
+                            <Calendar
+                                selectedDate={parseDate(endDate)}
+                                minDate={parseDate(startDate)}
+                                rangeStart={parseDate(startDate)}
+                                onSelect={(date) => {
+                                    setEndDate(toLocalDateString(date));
+                                    closePicker();
+                                }}
+                                onClose={closePicker}
+                            />
+                        )}
+                    </div>
+                </div>,
+                document.body,
+            );
 
         if (!isEditing) {
             return (
@@ -188,9 +442,7 @@ export const QuickAddIssueRow = forwardRef<
                                         ? [String(issueTypeId)]
                                         : []
                                 }
-                                onSelect={(value) =>
-                                    setIssueTypeId(Number(value))
-                                }
+                                onSelect={changeType}
                                 trigger={
                                     <button
                                         type="button"
@@ -221,8 +473,28 @@ export const QuickAddIssueRow = forwardRef<
                 )}
                 {enabledColumns.status && (
                     <td className={cellBase}>
-                        {initialStatus ? (
-                            <WorkflowStatusBadge status={initialStatus} />
+                        {statusOptions.length > 0 && shownStatus ? (
+                            <Dropdown
+                                variant="select"
+                                title="Status"
+                                ariaLabel="Status"
+                                options={statusOptions}
+                                selectedValues={[String(shownStatus.id)]}
+                                onSelect={(value) =>
+                                    setChosenStatus(
+                                        selectedType?.statuses?.find(
+                                            (status) =>
+                                                status.id === Number(value),
+                                        ) ?? null,
+                                    )
+                                }
+                                trigger={pickerTrigger(
+                                    'Status',
+                                    <WorkflowStatusBadge
+                                        status={shownStatus}
+                                    />,
+                                )}
+                            />
                         ) : (
                             mutedCell
                         )}
@@ -230,25 +502,68 @@ export const QuickAddIssueRow = forwardRef<
                 )}
                 {enabledColumns.assignee && (
                     <td className={cellBase}>
-                        <span className="flex items-center gap-1.5 text-[var(--text-muted-color)]">
-                            <Icon name="UserX" size={13} />
-                            Unassigned
-                        </span>
+                        <Dropdown
+                            variant="select"
+                            title="Assignee"
+                            ariaLabel="Assignee"
+                            searchable="auto"
+                            options={assigneeOptions}
+                            selectedValues={[
+                                assigneeId !== null ? String(assigneeId) : '',
+                            ]}
+                            onSelect={(value) =>
+                                setAssigneeId(value ? Number(value) : null)
+                            }
+                            trigger={pickerTrigger(
+                                'Assignee',
+                                assignee ? (
+                                    <UserBadge
+                                        avatarSrc={assignee.avatar ?? undefined}
+                                        name={assignee.name}
+                                        size="sm"
+                                        showTooltip={false}
+                                    />
+                                ) : (
+                                    <span className="flex items-center gap-1.5 text-[var(--text-muted-color)]">
+                                        <Icon name="UserX" size={13} />
+                                        Unassigned
+                                    </span>
+                                ),
+                            )}
+                        />
                     </td>
                 )}
                 {enabledColumns.priority && (
                     <td className={cellBase}>
-                        <span className="flex items-center gap-1.5 text-[var(--text-color)]">
-                            <PriorityIcon
-                                priority={defaultPriority}
-                                tooltip={false}
-                            />
-                            {defaultPriority?.name ?? 'None'}
-                        </span>
+                        <Dropdown
+                            variant="select"
+                            title="Priority"
+                            ariaLabel="Priority"
+                            options={priorityOptions}
+                            selectedValues={[shownPriority?.name ?? '']}
+                            onSelect={(value) => setPriorityName(value || null)}
+                            trigger={pickerTrigger(
+                                'Priority',
+                                <span className="flex items-center gap-1.5 text-[var(--text-color)]">
+                                    <PriorityIcon
+                                        priority={shownPriority}
+                                        tooltip={false}
+                                    />
+                                    {shownPriority?.name ?? 'None'}
+                                </span>,
+                            )}
+                        />
                     </td>
                 )}
                 {enabledColumns.labels && (
-                    <td className={cellBase}>{mutedCell}</td>
+                    <td className={cellBase}>
+                        <EditableLabelList
+                            labels={labels}
+                            onSave={setLabels}
+                            maxDisplay="auto"
+                            disabled={isSubmitting}
+                        />
+                    </td>
                 )}
                 {enabledColumns.updated && (
                     <td
@@ -261,10 +576,14 @@ export const QuickAddIssueRow = forwardRef<
                     </td>
                 )}
                 {enabledColumns.start_date && (
-                    <td className={cellBase}>{mutedCell}</td>
+                    <td className={cellBase}>
+                        {dateButton('Start date', startDate, 'start')}
+                    </td>
                 )}
                 {enabledColumns.end_date && (
-                    <td className={cellBase}>{mutedCell}</td>
+                    <td className={cellBase}>
+                        {dateButton('End date', endDate, 'end')}
+                    </td>
                 )}
                 <td className={cellBase} aria-hidden="true" />
                 <td className={cn(cellBase, 'w-[50px] text-right')}>
@@ -276,6 +595,7 @@ export const QuickAddIssueRow = forwardRef<
                     >
                         <Icon name="X" size={13} />
                     </button>
+                    {datePicker}
                 </td>
             </tr>
         );
