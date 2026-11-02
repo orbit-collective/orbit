@@ -36,12 +36,19 @@ const rowMenuOptions = (removeDisabled: boolean): DropdownOptionItem[] => [
 /**
  * An editable cell sits inside a clickable row, and its pickers portal their
  * menus out of it - React still bubbles those clicks up to the row, which
- * would open the issue, so they are stopped here.
+ * would open the issue, so they are stopped here. A cell the user cannot edit
+ * is plain text and leaves the click to the row, like any other cell.
  */
-const Editable = ({ children }: { children: React.ReactNode }) => (
+const Editable = ({
+    children,
+    enabled = true,
+}: {
+    children: React.ReactNode;
+    enabled?: boolean;
+}) => (
     <div
         className="inline-flex max-w-full items-center"
-        onClick={(e) => e.stopPropagation()}
+        onClick={enabled ? (e) => e.stopPropagation() : undefined}
     >
         {children}
     </div>
@@ -301,7 +308,7 @@ export const ListRow = ({
                 )}
                 {enabledColumns.status && (
                     <td className={cellBase} data-column="status">
-                        <Editable>
+                        <Editable enabled={!!can?.changeStatus}>
                             <StatusPicker
                                 statuses={getReachableStatuses(issue)}
                                 value={issue.workflowStatus ?? null}
@@ -411,7 +418,7 @@ export const ListRow = ({
                         )}
                         data-column="start_date"
                     >
-                        <Editable>
+                        <Editable enabled={!!can?.update}>
                             <DatePicker
                                 label="Start date"
                                 value={issue.start_date}
@@ -439,7 +446,7 @@ export const ListRow = ({
                         )}
                         data-column="end_date"
                     >
-                        <Editable>
+                        <Editable enabled={!!can?.update}>
                             <DatePicker
                                 label="End date"
                                 value={issue.end_date}
