@@ -6,13 +6,14 @@ import React, {
     useRef,
     useState,
 } from 'react';
-import IconButton from '@/Components/Atoms/IconButton/IconButton';
+import Icon from '@/Components/Atoms/Icon/Icon';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
 import { useImageInsertion } from '@/hooks/useImageInsertion';
 import { CommentFormProps, IssueSuggestion } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
 import { getCaretCoordinates } from '@/utils/caretPosition';
+import { cn } from '@/utils/cn';
 import { extractImageFiles } from '@/utils/imagePaste';
 import {
     applyRangeEdit,
@@ -66,6 +67,8 @@ const CommentForm: React.FC<CommentFormProps> = ({
         items: IssueSuggestion[];
     } | null>(null);
     const listboxId = useId();
+    const textareaId = useId();
+    const hintId = useId();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     // The selection right before the current edit is applied - captured on
     // keydown/paste/cut, since that's the only reliable way to know exactly
@@ -327,6 +330,15 @@ const CommentForm: React.FC<CommentFormProps> = ({
             }
         }
 
+        // Enter sends; Shift+Enter inserts a newline. Ignored while an IME
+        // composition is confirming a candidate, or the mention menu has
+        // nothing to pick (handled above when it does).
+        if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            submit();
+            return;
+        }
+
         if (mention && e.key === 'Escape') {
             e.preventDefault();
             setMention(null);
@@ -409,9 +421,10 @@ const CommentForm: React.FC<CommentFormProps> = ({
         syncMentionState(e.currentTarget);
     };
 
-    const handleSubmit = (e: SyntheticEvent) => {
-        e.preventDefault();
-        if (!body.trim()) return;
+    const canSubmit = !isSubmitting && body.trim().length > 0;
+
+    const submit = () => {
+        if (!canSubmit) return;
 
         const finalBody = tokenizeMentionRanges(body, mentionRanges);
         const mentionedUserIds = [
@@ -428,14 +441,25 @@ const CommentForm: React.FC<CommentFormProps> = ({
         setMention(null);
     };
 
+    const handleSubmit = (e: SyntheticEvent) => {
+        e.preventDefault();
+        submit();
+    };
+
     return (
         <form
             onSubmit={handleSubmit}
-            className="relative flex flex-col gap-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)] p-3"
+            aria-label="New comment"
+            className="relative flex flex-col rounded-xl border border-[var(--border-color)] bg-[var(--bg-color-hover)] transition-colors focus-within:border-[var(--accent-color)]"
         >
+            <label htmlFor={textareaId} className="sr-only">
+                Comment
+            </label>
             <TextArea
+                id={textareaId}
                 ref={textareaRef}
                 value={body}
+                rows={3}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 onClick={handleSelectionChange}
@@ -444,7 +468,10 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 onCut={handleCut}
                 onBlur={() => setMention(null)}
                 role="combobox"
+                aria-autocomplete="list"
                 aria-haspopup="listbox"
+                aria-describedby={hintId}
+                aria-busy={isSubmitting}
                 aria-expanded={mention !== null && optionCount > 0}
                 aria-controls={
                     mention !== null && optionCount > 0 ? listboxId : undefined
@@ -455,19 +482,35 @@ const CommentForm: React.FC<CommentFormProps> = ({
                         : undefined
                 }
                 placeholder="Leave a comment..."
-                className="min-h-[60px] resize-none border-none bg-transparent p-0 text-sm focus:border-none"
+                className="min-h-[84px] resize-none rounded-t-xl border-none bg-transparent px-4 pb-2 pt-3 text-sm focus:border-none"
                 isDisabled={isSubmitting}
                 onDrop={handleDrop}
             />
-            <div className="flex justify-end">
-                <IconButton
+            <div className="flex items-center justify-between gap-3 px-3 pb-3 pt-1">
+                <p
+                    id={hintId}
+                    className="text-xs text-[var(--text-muted-color)]"
+                >
+                    <kbd className="font-sans font-medium">Enter</kbd> to send,{' '}
+                    <kbd className="font-sans font-medium">Shift + Enter</kbd>{' '}
+                    for a new line. Use <span aria-hidden="true">@</span>
+                    <span className="sr-only">at sign</span> to mention.
+                </p>
+                <button
                     type="submit"
-                    iconName="ArrowUp"
-                    iconSize={14}
-                    ariaLabel="Post comment"
-                    disabled={isSubmitting || !body.trim()}
-                    className="h-7 w-7 rounded-full bg-[var(--bg-light-color-hover)] text-[var(--text-color)] hover:bg-[var(--accent-color)]"
-                />
+                    aria-label="Post comment"
+                    disabled={!canSubmit}
+                    className={cn(
+                        'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
+                        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)]',
+                        canSubmit
+                            ? 'cursor-pointer bg-[var(--accent-color)] text-[var(--text-color)] hover:bg-[var(--accent-light-color)]'
+                            : 'cursor-not-allowed bg-[var(--bg-light-color)] text-[var(--text-muted-color)]',
+                    )}
+                >
+                    <Icon name="SendHorizontal" size={14} />
+                    <span>Comment</span>
+                </button>
             </div>
             {mention && (
                 <MentionSuggestions
