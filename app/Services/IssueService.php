@@ -557,6 +557,37 @@ class IssueService
     }
 
     /**
+     * Guards retyping an existing issue: the new type must fit where the
+     * issue sits (a top-level type at the root, one its parent accepts under
+     * a parent) and must still suit the issue's own sub-issues - it has to
+     * allow children, and accept their types when it restricts them.
+     */
+    public function assertValidTypeChange(Issue $issue, IssueType $newType, ?int $parentId): void
+    {
+        $this->assertValidParent($issue->project, $parentId, $newType->id, $issue->id);
+
+        $childTypeIds = $issue->children()->pluck('issue_type_id')->filter()->unique();
+
+        if ($childTypeIds->isEmpty()) {
+            return;
+        }
+
+        if (! $newType->allows_children) {
+            throw ValidationException::withMessages([
+                'issue_type_id' => "The \"$newType->name\" issue type does not allow sub-issues, and this issue has some.",
+            ]);
+        }
+
+        $allowedChildTypeIds = $newType->allowedChildTypes()->pluck('issue_types.id');
+
+        if ($allowedChildTypeIds->isNotEmpty() && $childTypeIds->diff($allowedChildTypeIds)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'issue_type_id' => "The \"$newType->name\" issue type does not accept the types of this issue's sub-issues.",
+            ]);
+        }
+    }
+
+    /**
      * Types with is_top_level off exist only as sub-issues (e.g. a Spike
      * lives inside an Epic), so they cannot be created as a root row - which
      * is what keeps the "New issue" picker down to the handful of types a

@@ -269,6 +269,15 @@ class IssueController extends Controller
                 $this->authorize('createOfType', [Issue::class, $issue->project, $newType]);
                 $issueType = $newType;
 
+                // Retyping must keep the hierarchy valid: a sub-issue only
+                // takes types its parent accepts, a root issue only top-level
+                // ones, and the issue's own children must still fit.
+                if ($newType->id !== $issue->issue_type_id) {
+                    $parentId = array_key_exists('parent_id', $data) ? $data['parent_id'] : $issue->parent_id;
+
+                    $this->issueService->assertValidTypeChange($issue, $newType, $parentId === null ? null : (int) $parentId);
+                }
+
                 // The old workflow_status_id almost certainly doesn't belong
                 // to the new type's workflow - reset to its initial status
                 // unless this same request also picks an explicit one below.
