@@ -1115,6 +1115,66 @@ test('an issue can be moved to a custom workflow status by id', function () {
     expect($issue->workflow_status_id)->toBe($inReview->id);
 });
 
+function retypeFixture(): array
+{
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+    app(IssueTypeService::class)->ensureSystemIssueTypes($project);
+    $types = $project->issueTypes()->get()->keyBy('name');
+
+    $make = fn (string $typeName, array $extra = []) => $project->issues()->create([
+        'title' => "A $typeName", 'project_id' => $project->id, 'user_id' => $member->id,
+        'issue_type_id' => $types[$typeName]->id,
+        'workflow_status_id' => $types[$typeName]->statuses()->where('is_initial', true)->first()->id,
+        'priority' => 'low',
+    ] + $extra);
+
+    return [$member, $types, $make];
+}
+
+test('a root issue can be retyped to another top-level type but not to a sub-issue-only one', function () {
+    [$member, $types, $make] = retypeFixture();
+    $issue = $make('Task');
+
+    $this->actingAs($member)->patch("/issues/$issue->id", ['issue_type_id' => $types['Bug']->id])
+        ->assertSessionHasNoErrors();
+    expect($issue->refresh()->issue_type_id)->toBe($types['Bug']->id);
+
+    $this->actingAs($member)->patch("/issues/$issue->id", ['issue_type_id' => $types['Spike']->id])
+        ->assertSessionHasErrors('issue_type_id');
+    expect($issue->refresh()->issue_type_id)->toBe($types['Bug']->id);
+});
+
+test('a sub-issue can only be retyped to a type its parent accepts', function () {
+    [$member, $types, $make] = retypeFixture();
+    $types['Epic']->update(['allows_children' => true]);
+    $types['Epic']->allowedChildTypes()->sync([$types['Task']->id, $types['Story']->id]);
+    $parent = $make('Epic');
+    $child = $make('Task', ['parent_id' => $parent->id]);
+
+    $this->actingAs($member)->patch("/issues/$child->id", ['issue_type_id' => $types['Bug']->id])
+        ->assertSessionHasErrors();
+    expect($child->refresh()->issue_type_id)->toBe($types['Task']->id);
+
+    $this->actingAs($member)->patch("/issues/$child->id", ['issue_type_id' => $types['Story']->id])
+        ->assertSessionHasNoErrors();
+    expect($child->refresh()->issue_type_id)->toBe($types['Story']->id);
+});
+
+test('an issue with sub-issues cannot be retyped to a type that forbids them', function () {
+    [$member, $types, $make] = retypeFixture();
+    $types['Epic']->update(['allows_children' => true]);
+    $types['Epic']->allowedChildTypes()->sync([]);
+    $types['Bug']->update(['allows_children' => false]);
+    $parent = $make('Epic');
+    $make('Task', ['parent_id' => $parent->id]);
+
+    $this->actingAs($member)->patch("/issues/$parent->id", ['issue_type_id' => $types['Bug']->id])
+        ->assertSessionHasErrors('issue_type_id');
+    expect($parent->refresh()->issue_type_id)->toBe($types['Epic']->id);
+});
+
 test('a workflow status from another issue type is rejected', function () {
     $project = Project::factory()->create();
     $member = User::factory()->create();
