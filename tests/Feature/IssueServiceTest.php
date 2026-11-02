@@ -95,7 +95,7 @@ test('it can create an issue and log activity', function () {
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with(1, 'Added new task: #123');
+        ->with(1, 'Added new task: #123', null, 123);
 
     $result = $this->service->createIssue($data);
 
@@ -197,7 +197,7 @@ test('updateIssue logs activity and fires IssueUpdated with the actor when there
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'status changed from "Todo status" to "Done"')));
+        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'status changed from "Todo status" to "Done"')), null, Mockery::any());
 
     $this->service->updateIssue($issue, ['workflow_status_id' => doneStatusFor($issue)->id]);
 
@@ -358,7 +358,7 @@ test('updateIssue describes a description-only change', function () {
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'description was updated')));
+        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'description was updated')), null, Mockery::any());
 
     $this->service->updateIssue($issue, ['description' => 'A brand new description']);
 
@@ -390,7 +390,7 @@ test('updateIssue quotes assignee names in the logged body, escaping any embedde
         ->with($project->id, Mockery::on(fn ($body) => str_contains(
             $body,
             'assignee changed from "Unassigned" to "Bob \\"The Builder\\" Smith"'
-        )));
+        )), null, Mockery::any());
 
     $this->service->updateIssue($issue, ['assignee_id' => $newAssignee->id]);
 });
@@ -417,7 +417,7 @@ test('updateIssue embeds the new assignee\'s id in the logged body, so same-name
         ->with($project->id, Mockery::on(fn ($body) => str_contains(
             $body,
             'assignee changed from "Unassigned" to "Jane Cooper"#55'
-        )));
+        )), null, Mockery::any());
 
     $this->service->updateIssue($issue, ['assignee_id' => $newAssignee->id]);
 });
@@ -444,7 +444,7 @@ test('updateIssue does not append an id when the new assignee is Unassigned', fu
         ->with($project->id, Mockery::on(fn ($body) => str_contains(
             $body,
             'assignee changed from "Jane Cooper"#7 to "Unassigned"'
-        )));
+        )), null, Mockery::any());
 
     $this->service->updateIssue($issue, ['assignee_id' => null]);
 });
@@ -526,7 +526,7 @@ test('updateIssue describes labels changing to a non-empty set', function () {
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'labels changed to [bug]')));
+        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'labels changed to [bug]')), null, Mockery::any());
 
     $this->service->updateIssue($issue, ['labels' => ['bug']]);
 
@@ -558,7 +558,7 @@ test('updateIssue describes labels being cleared as "none"', function () {
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'labels changed to [none]')));
+        ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'labels changed to [none]')), null, Mockery::any());
 
     $this->service->updateIssue($issue, ['labels' => null]);
 
@@ -592,7 +592,7 @@ test('updateIssue describes start_date and end_date changes, including clearing 
     $this->activityLogService->shouldReceive('log')
         ->once()
         ->with($project->id, Mockery::on(fn ($body) => str_contains($body, 'start date changed to none')
-            && str_contains($body, 'end date changed to none')));
+            && str_contains($body, 'end date changed to none')), null, Mockery::any());
 
     $this->service->updateIssue($issue, ['start_date' => null, 'end_date' => null]);
 

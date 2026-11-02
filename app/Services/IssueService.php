@@ -50,10 +50,10 @@ class IssueService
         $data['user_id'] = auth()->id();
 
         $issue = $this->issueRepository->store($data);
-        $this->activityLogService->log($issue->project_id, "Added new task: #$issue->number");
+        $this->activityLogService->log($issue->project_id, "Added new task: #$issue->number", null, $issue->id);
 
         if ($issue->parent_id) {
-            $this->activityLogService->log($issue->project_id, "Issue #$issue->number added as a sub-issue of #".$this->numberOfIssue($issue->parent_id));
+            $this->activityLogService->log($issue->project_id, "Issue #$issue->number added as a sub-issue of #".$this->numberOfIssue($issue->parent_id), null, $issue->id);
         }
 
         event(new IssueCreated($issue, auth()->user()));
@@ -80,7 +80,7 @@ class IssueService
         $data['user_id'] = $importedBy->id;
 
         $issue = $this->issueRepository->store($data);
-        $this->activityLogService->log($issue->project_id, "Imported task: #$issue->number", $importedBy->id);
+        $this->activityLogService->log($issue->project_id, "Imported task: #$issue->number", $importedBy->id, $issue->id);
 
         return $issue;
     }
@@ -111,6 +111,7 @@ class IssueService
             $issue->project_id,
             "Issue #$issue->number \"$issue->title\" synced from Jira: ".$this->summarize($changes),
             $syncedBy->id,
+            $issue->id,
         );
 
         return $issue;
@@ -213,7 +214,9 @@ class IssueService
 
         $this->activityLogService->log(
             $issue->project_id,
-            "Issue #$issue->number \"$issue->title\" updated by ".($actor?->name ?? 'someone').': '.$this->summarize($changes)
+            "Issue #$issue->number \"$issue->title\" updated by ".($actor?->name ?? 'someone').': '.$this->summarize($changes),
+            null,
+            $issue->id,
         );
 
         $this->notifyIssueUpdate($issue, $actor, $changes);
