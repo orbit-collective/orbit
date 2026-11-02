@@ -69,6 +69,33 @@ html, body, #app {
     --overlay-color: rgba(0, 0, 0, 0.06);
 }
 
+/* @tailwindcss/forms paints a focused field with its own blue (#2563eb) border
+   and ring, which ignored the accent color - e.g. the search box in every
+   dropdown. Same selectors as the plugin's focus rules, so the accent wins on
+   specificity (including `input` without a type, which the plugin
+   styles separately), and any `focus:` utility on a field still overrides this. */
+@layer base {
+    input:not([type]):focus,
+    [type='text']:focus,
+    [type='email']:focus,
+    [type='url']:focus,
+    [type='password']:focus,
+    [type='number']:focus,
+    [type='date']:focus,
+    [type='datetime-local']:focus,
+    [type='month']:focus,
+    [type='search']:focus,
+    [type='tel']:focus,
+    [type='time']:focus,
+    [type='week']:focus,
+    [multiple]:focus,
+    textarea:focus,
+    select:focus {
+        --tw-ring-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+}
+
 @layer utilities {
     .no-scrollbar::-webkit-scrollbar {
         display: none;
