@@ -46,6 +46,31 @@ test('an issue detail page can be viewed', function () {
         ->and($page['props'])->toHaveKeys(['project', 'projects', 'users', 'projectRole']);
 });
 
+test('the issue page carries only the activity logs of that issue', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $other = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+
+    $mine = \App\Models\ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $issue->id, 'body' => 'Mine']);
+    \App\Models\ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $other->id]);
+    \App\Models\ActivityLog::factory()->create(['project_id' => $project->id]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $page = $this->actingAs($user)
+        ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id")
+        ->assertOk()
+        ->json();
+
+    expect($page['props']['activityLogs']['data'])->toHaveCount(1)
+        ->and($page['props']['activityLogs']['total'])->toBe(1)
+        ->and($page['props']['activityLogs']['data'][0]['id'])->toBe($mine->id)
+        ->and($page['props']['activityLogs']['data'][0]['body'])->toBe('Mine');
+});
+
 test('a linked github pull request is exposed with its rich development metadata', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);

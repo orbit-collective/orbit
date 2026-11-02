@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Repositories\GithubRepositoryRepository;
 use App\Repositories\ProjectIntegrationRepository;
 use App\Rules\ProjectPriorityName;
+use App\Services\ActivityLogService;
 use App\Services\Integrations\Github\GithubBranchService;
 use App\Services\IssueService;
 use App\Services\IssueTypeFieldService;
@@ -43,6 +44,7 @@ class IssueController extends Controller
         protected ProjectIntegrationRepository $projectIntegrationRepository,
         protected GithubRepositoryRepository $githubRepositoryRepository,
         protected GithubBranchService $githubBranchService,
+        protected ActivityLogService $activityLogService,
     ) {}
 
     public function show(Request $request, Project $project, Issue $issue): Response
@@ -69,6 +71,15 @@ class IssueController extends Controller
             'githubRepositories' => $this->mapGithubRepositories($project),
             'githubDefaultBranchName' => $this->githubBranchService->defaultBranchName($issue),
             'issueAbilities' => $this->issueAbilities($request, $issue),
+            'activityLogs' => $this->activityLogService->paginateForIssue($issue->id, $request->integer(ActivityLogService::PER_PAGE_NAME, 20))->through(fn ($entry) => [
+                'id' => $entry->id,
+                'body' => $entry->body,
+                'userId' => $entry->user_id,
+                'userName' => $entry->user?->name,
+                'userAvatar' => $entry->user?->avatar,
+                'createdAt' => $entry->created_at->toJSON(),
+            ]),
+            'queryParams' => $request->query() ?: null,
             'projectRole' => $project->roleOf($request->user()),
             'canCreateGithubDevelopment' => $request->user()->can('createGithubDevelopment', $issue),
             'githubAccountLinked' => $request->user()->github_id !== null,

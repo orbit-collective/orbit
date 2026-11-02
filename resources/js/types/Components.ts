@@ -28,6 +28,7 @@ import {
     IssueLabel,
     IssuePageLooks,
     LinkedPullRequest,
+    PaginatedResponse,
     ProductivityTrendProps,
     Sorting,
     SortingColumn,
@@ -623,6 +624,8 @@ export interface IssuePageProps {
     issueAbilities?: IssueAbilities;
     /** The acting user's role tier in the project, which decides the issue types they may use. */
     projectRole?: string | null;
+    activityLogs?: PaginatedResponse<ActivityLogEntry>;
+    queryParams?: PaginationProps['queryParams'] | null;
 }
 export interface IssuePageHeaderProps {
     project: Project;
