@@ -5,17 +5,17 @@ import {
     useRef,
     useState,
     type KeyboardEvent,
-    type ReactNode,
 } from 'react';
-import { createPortal } from 'react-dom';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
-import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
-import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
-import Calendar from '@/Components/Molecules/Calendar/Calendar';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import EditableLabelList from '@/Components/Molecules/EditableLabelList/EditableLabelList';
-import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
+import {
+    AssigneePicker,
+    DatePicker,
+    PriorityPicker,
+    StatusPicker,
+} from '@/Components/Molecules/IssuePropertyPickers/IssuePropertyPickers';
 import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { IssueLabel } from '@/types/Issues';
@@ -23,7 +23,6 @@ import { IssueType } from '@/types/IssueTypes';
 import { AssignableUser } from '@/types/Users';
 import { WorkflowStatus } from '@/types/Workflow';
 import { cn } from '@/utils/cn';
-import { formatWeekdayDate, parseDateKey } from '@/utils/time';
 
 export interface QuickAddIssueRowHandle {
     open: () => void;
@@ -69,30 +68,6 @@ export const fallbackStatus = (
         null
     );
 };
-
-const pickerTrigger = (label: string, content: ReactNode) => (
-    <button
-        type="button"
-        aria-label={label}
-        className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
-    >
-        {content}
-        <Icon
-            name="ChevronDown"
-            size={12}
-            className="text-[var(--text-muted-color)]"
-        />
-    </button>
-);
-
-const toLocalDateString = (date: Date) =>
-    [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, '0'),
-        String(date.getDate()).padStart(2, '0'),
-    ].join('-');
-
-const parseDate = (value: string) => (value ? parseDateKey(value) : undefined);
 
 const mutedCell = (
     <span className="text-[var(--text-muted-color)]">&mdash;</span>
@@ -159,9 +134,6 @@ export const QuickAddIssueRow = forwardRef<
         const [labels, setLabels] = useState<IssueLabel[]>([]);
         const [startDate, setStartDate] = useState('');
         const [endDate, setEndDate] = useState('');
-        const [pickingDate, setPickingDate] = useState<'start' | 'end' | null>(
-            null,
-        );
         const inputRef = useRef<HTMLInputElement>(null);
 
         const resetValues = () => {
@@ -198,70 +170,6 @@ export const QuickAddIssueRow = forwardRef<
             setIssueTypeId(nextId);
             setChosenStatus((current) => fallbackStatus(current, nextType));
         };
-
-        const statusOptions = useMemo(
-            (): DropdownOptionItem[] =>
-                (selectedType?.statuses ?? []).map((status) => ({
-                    value: String(status.id),
-                    label: <WorkflowStatusBadge status={status} />,
-                    searchLabel: status.name,
-                })),
-            [selectedType],
-        );
-
-        const priorityOptions = useMemo(
-            (): DropdownOptionItem[] => [
-                ...priorities.map((priority) => ({
-                    value: priority.name,
-                    searchLabel: priority.name,
-                    label: (
-                        <span className="flex items-center gap-2">
-                            <PriorityIcon priority={priority} tooltip={false} />
-                            {priority.name}
-                        </span>
-                    ),
-                })),
-                {
-                    value: '',
-                    searchLabel: 'No priority',
-                    label: (
-                        <span className="flex items-center gap-2">
-                            <PriorityIcon priority={null} tooltip={false} />
-                            No priority
-                        </span>
-                    ),
-                },
-            ],
-            [priorities],
-        );
-
-        const assigneeOptions = useMemo(
-            (): DropdownOptionItem[] => [
-                {
-                    value: '',
-                    searchLabel: 'Unassigned',
-                    label: (
-                        <span className="flex items-center gap-2 text-[var(--text-gray-color)]">
-                            <Icon name="UserX" size={14} />
-                            Unassigned
-                        </span>
-                    ),
-                },
-                ...users.map((user) => ({
-                    value: String(user.id),
-                    searchLabel: user.name,
-                    label: (
-                        <UserBadge
-                            avatarSrc={user.avatar ?? undefined}
-                            name={user.name}
-                            size="sm"
-                            showTooltip={false}
-                        />
-                    ),
-                })),
-            ],
-            [users],
-        );
 
         // Rows are the same badges the list shows, so a type looks identical
         // wherever it appears.
@@ -317,65 +225,6 @@ export const QuickAddIssueRow = forwardRef<
         };
 
         const paddingLeft = 16 + indent * 20;
-
-        const dateButton = (
-            label: string,
-            value: string,
-            field: 'start' | 'end',
-        ) => (
-            <button
-                type="button"
-                aria-label={label}
-                disabled={isSubmitting}
-                onClick={() => setPickingDate(field)}
-                className="inline-flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-full border-none bg-transparent p-0 text-[11px] text-[var(--text-muted-color)] hover:text-[var(--text-color)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
-            >
-                <Icon name={value ? 'CalendarDays' : 'CalendarX2'} size={12} />
-                {value ? formatWeekdayDate(value) : 'No date'}
-            </button>
-        );
-
-        // The same overlay the issue page uses, portalled out of the table.
-        const closePicker = () => setPickingDate(null);
-        const datePicker =
-            pickingDate &&
-            createPortal(
-                <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
-                    onClick={closePicker}
-                >
-                    <div onClick={(e) => e.stopPropagation()}>
-                        {pickingDate === 'start' ? (
-                            <Calendar
-                                selectedDate={parseDate(startDate)}
-                                onSelect={(date) => {
-                                    const next = toLocalDateString(date);
-
-                                    setStartDate(next);
-                                    // An end before the new start is moved with it.
-                                    if (endDate && endDate < next) {
-                                        setEndDate(next);
-                                    }
-                                    closePicker();
-                                }}
-                                onClose={closePicker}
-                            />
-                        ) : (
-                            <Calendar
-                                selectedDate={parseDate(endDate)}
-                                minDate={parseDate(startDate)}
-                                rangeStart={parseDate(startDate)}
-                                onSelect={(date) => {
-                                    setEndDate(toLocalDateString(date));
-                                    closePicker();
-                                }}
-                                onClose={closePicker}
-                            />
-                        )}
-                    </div>
-                </div>,
-                document.body,
-            );
 
         if (!isEditing) {
             return (
@@ -473,85 +322,29 @@ export const QuickAddIssueRow = forwardRef<
                 )}
                 {enabledColumns.status && (
                     <td className={cellBase}>
-                        {statusOptions.length > 0 && shownStatus ? (
-                            <Dropdown
-                                variant="select"
-                                title="Status"
-                                ariaLabel="Status"
-                                options={statusOptions}
-                                selectedValues={[String(shownStatus.id)]}
-                                onSelect={(value) =>
-                                    setChosenStatus(
-                                        selectedType?.statuses?.find(
-                                            (status) =>
-                                                status.id === Number(value),
-                                        ) ?? null,
-                                    )
-                                }
-                                trigger={pickerTrigger(
-                                    'Status',
-                                    <WorkflowStatusBadge
-                                        status={shownStatus}
-                                    />,
-                                )}
-                            />
-                        ) : (
-                            mutedCell
-                        )}
+                        <StatusPicker
+                            statuses={selectedType?.statuses ?? []}
+                            value={shownStatus}
+                            onChange={setChosenStatus}
+                        />
                     </td>
                 )}
                 {enabledColumns.assignee && (
                     <td className={cellBase}>
-                        <Dropdown
-                            variant="select"
-                            title="Assignee"
-                            ariaLabel="Assignee"
-                            searchable="auto"
-                            options={assigneeOptions}
-                            selectedValues={[
-                                assigneeId !== null ? String(assigneeId) : '',
-                            ]}
-                            onSelect={(value) =>
-                                setAssigneeId(value ? Number(value) : null)
-                            }
-                            trigger={pickerTrigger(
-                                'Assignee',
-                                assignee ? (
-                                    <UserBadge
-                                        avatarSrc={assignee.avatar ?? undefined}
-                                        name={assignee.name}
-                                        size="sm"
-                                        showTooltip={false}
-                                    />
-                                ) : (
-                                    <span className="flex items-center gap-1.5 text-[var(--text-muted-color)]">
-                                        <Icon name="UserX" size={13} />
-                                        Unassigned
-                                    </span>
-                                ),
-                            )}
+                        <AssigneePicker
+                            users={users}
+                            value={assignee}
+                            selectedId={assigneeId}
+                            onChange={setAssigneeId}
                         />
                     </td>
                 )}
                 {enabledColumns.priority && (
                     <td className={cellBase}>
-                        <Dropdown
-                            variant="select"
-                            title="Priority"
-                            ariaLabel="Priority"
-                            options={priorityOptions}
-                            selectedValues={[shownPriority?.name ?? '']}
-                            onSelect={(value) => setPriorityName(value || null)}
-                            trigger={pickerTrigger(
-                                'Priority',
-                                <span className="flex items-center gap-1.5 text-[var(--text-color)]">
-                                    <PriorityIcon
-                                        priority={shownPriority}
-                                        tooltip={false}
-                                    />
-                                    {shownPriority?.name ?? 'None'}
-                                </span>,
-                            )}
+                        <PriorityPicker
+                            priorities={priorities}
+                            value={shownPriority}
+                            onChange={setPriorityName}
                         />
                     </td>
                 )}
@@ -577,12 +370,29 @@ export const QuickAddIssueRow = forwardRef<
                 )}
                 {enabledColumns.start_date && (
                     <td className={cellBase}>
-                        {dateButton('Start date', startDate, 'start')}
+                        <DatePicker
+                            label="Start date"
+                            value={startDate}
+                            disabled={isSubmitting}
+                            onChange={(next) => {
+                                setStartDate(next);
+                                // An end before the new start moves with it.
+                                if (endDate && endDate < next) {
+                                    setEndDate(next);
+                                }
+                            }}
+                        />
                     </td>
                 )}
                 {enabledColumns.end_date && (
                     <td className={cellBase}>
-                        {dateButton('End date', endDate, 'end')}
+                        <DatePicker
+                            label="End date"
+                            value={endDate}
+                            minDate={startDate}
+                            disabled={isSubmitting}
+                            onChange={setEndDate}
+                        />
                     </td>
                 )}
                 <td className={cellBase} aria-hidden="true" />
@@ -595,7 +405,6 @@ export const QuickAddIssueRow = forwardRef<
                     >
                         <Icon name="X" size={13} />
                     </button>
-                    {datePicker}
                 </td>
             </tr>
         );
