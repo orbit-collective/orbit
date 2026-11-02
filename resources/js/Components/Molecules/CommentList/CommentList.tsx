@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
 import CommentItem from '@/Components/Molecules/CommentItem/CommentItem';
 import { CommentListProps } from '@/types/Components';
 
@@ -12,9 +13,16 @@ const CommentList: React.FC<CommentListProps> = ({
 }) => {
     if (comments.length === 0) {
         return (
-            <p className="text-sm italic text-[var(--text-gray-color)]">
-                No activity yet.
-            </p>
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 py-10 text-center">
+                <Icon
+                    name="MessageSquare"
+                    size={22}
+                    className="text-[var(--text-muted-color)]"
+                />
+                <p className="text-xs font-medium text-[var(--text-muted-color)]">
+                    No comments yet
+                </p>
+            </div>
         );
     }
 

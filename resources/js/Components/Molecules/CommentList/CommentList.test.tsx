@@ -18,10 +18,10 @@ const makeComment = (overrides: Partial<Comment> = {}): Comment => ({
 });
 
 describe('CommentList Component', () => {
-    test('renders "No activity yet." when there are no comments', () => {
+    test('renders "No comments yet" when there are no comments', () => {
         render(<CommentList comments={[]} />);
 
-        expect(screen.getByText('No activity yet.')).toBeInTheDocument();
+        expect(screen.getByText('No comments yet')).toBeInTheDocument();
     });
 
     test('renders every comment', () => {
