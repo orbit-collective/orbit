@@ -493,6 +493,7 @@ export default function Show({
                                             onSave={(labels: IssueLabel[]) =>
                                                 updateIssue({ labels })
                                             }
+                                            maxDisplay={'auto'}
                                         />
                                     </SidebarField>
 
