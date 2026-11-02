@@ -174,6 +174,8 @@ export interface EditableLabelListProps {
     labels: IssueLabel[];
     onSave: (labels: IssueLabel[]) => void;
     disabled?: boolean;
+    /** Shows the labels through a LabelList that collapses the overflow into "+N" (`'auto'` fits the width) instead of listing every one. */
+    maxDisplay?: number | 'auto';
 }
 export interface EditableMarkdownProps {
     value: string;

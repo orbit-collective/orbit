@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
+import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { EditableLabelListProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
@@ -11,6 +12,7 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
     labels,
     onSave,
     disabled = false,
+    maxDisplay,
 }) => {
     const availableLabels = useProjectLabels().labels.map(
         (label) => label.name,
@@ -42,15 +44,29 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
         availableLabels.every((label) => labels.includes(label));
 
     return (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div
+            className={
+                maxDisplay === undefined
+                    ? 'flex flex-wrap items-center gap-1.5'
+                    : 'flex min-w-0 items-center gap-1.5'
+            }
+        >
             {labels.length === 0 && (
                 <span className="text-sm text-[var(--text-gray-color)]">
                     None
                 </span>
             )}
-            {labels.map((label) => (
-                <LabelBadge key={label} label={label} />
-            ))}
+            {maxDisplay === undefined ? (
+                labels.map((label) => <LabelBadge key={label} label={label} />)
+            ) : (
+                <div className="min-w-0 flex-1">
+                    <LabelList
+                        labels={labels}
+                        badgeClassName="text-[10px] px-1.5 py-0.2"
+                        maxDisplay={maxDisplay}
+                    />
+                </div>
+            )}
             <Dropdown
                 variant="multiselect"
                 title="Labels"
