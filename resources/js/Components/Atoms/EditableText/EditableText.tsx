@@ -1,13 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
+import { useImageInsertion } from '@/hooks/useImageInsertion';
 import { EditableTextProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import {
-    extractImageFiles,
-    insertMarkdownImage,
-    nextImageRange,
-} from '@/utils/imagePaste';
+import { extractImageFiles } from '@/utils/imagePaste';
 
 const EditableText: React.FC<EditableTextProps> = ({
     value,
@@ -63,10 +60,11 @@ const EditableText: React.FC<EditableTextProps> = ({
         }
     };
 
+    const { insertImages: spliceImages } = useImageInsertion(draft, setDraft);
+
     /**
-     * Uploads a batch one at a time and moves the insertion point past each
-     * image as it lands, so several files pasted at once keep their order
-     * instead of every one of them splicing into the original range.
+     * Uploads a batch and splices each image in where it was pasted, however
+     * the text changed while it uploaded (see useImageInsertion).
      */
     const insertImages = async (
         files: File[],
@@ -76,32 +74,23 @@ const EditableText: React.FC<EditableTextProps> = ({
 
         pendingUploadsRef.current += files.length;
 
-        let target = range;
-
-        for (const file of files) {
-            const at = target;
-
-            try {
-                const url = await onImageUpload(file);
-
-                setDraft((current) => {
-                    const result = insertMarkdownImage(current, at, file, url);
-
-                    setPendingCaret(result.caret);
-
-                    return result.body;
-                });
-
-                target = nextImageRange(at, file, url);
-            } catch {
-                // The uploader already reported the failure to the user.
-            } finally {
-                pendingUploadsRef.current = Math.max(
-                    0,
-                    pendingUploadsRef.current - 1,
-                );
-            }
-        }
+        // Every file goes through the uploader exactly once, so each one
+        // releases its own share of the count.
+        await spliceImages(
+            files,
+            range,
+            async (file) => {
+                try {
+                    return await onImageUpload(file);
+                } finally {
+                    pendingUploadsRef.current = Math.max(
+                        0,
+                        pendingUploadsRef.current - 1,
+                    );
+                }
+            },
+            ({ caret }) => setPendingCaret(caret),
+        );
     };
 
     const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {

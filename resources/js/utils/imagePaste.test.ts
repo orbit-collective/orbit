@@ -4,6 +4,8 @@ import {
     insertMarkdownImage,
     markdownImage,
     markdownImageAlt,
+    diffTextEdit,
+    mapOffsetThroughEdit,
     nextImageRange,
     splitMarkdownImages,
 } from './imagePaste';
@@ -275,5 +277,71 @@ describe('markdownImageAlt', () => {
         expect(markdownImage(file, '/storage/a.png')).toBe(
             '![ab.png](/storage/a.png)',
         );
+    });
+});
+
+describe('diffTextEdit', () => {
+    test('finds an insertion in the middle', () => {
+        expect(diffTextEdit('abcd', 'abXYcd')).toEqual({
+            start: 2,
+            end: 2,
+            insertedLength: 2,
+        });
+    });
+
+    test('finds a deletion', () => {
+        expect(diffTextEdit('abcd', 'ad')).toEqual({
+            start: 1,
+            end: 3,
+            insertedLength: 0,
+        });
+    });
+
+    test('finds a replacement', () => {
+        expect(diffTextEdit('abcd', 'aXd')).toEqual({
+            start: 1,
+            end: 3,
+            insertedLength: 1,
+        });
+    });
+
+    test('reports no change for equal text', () => {
+        expect(diffTextEdit('abc', 'abc')).toEqual({
+            start: 3,
+            end: 3,
+            insertedLength: 0,
+        });
+    });
+});
+
+describe('mapOffsetThroughEdit', () => {
+    const insertion = { start: 4, end: 4, insertedLength: 3 };
+
+    test('leaves an offset before the edit alone', () => {
+        expect(mapOffsetThroughEdit(2, insertion)).toBe(2);
+    });
+
+    test('shifts an offset after the edit', () => {
+        expect(mapOffsetThroughEdit(9, insertion)).toBe(12);
+    });
+
+    test('keeps a point at the edit start in front unless told to stick to the end', () => {
+        expect(mapOffsetThroughEdit(4, insertion)).toBe(4);
+        expect(mapOffsetThroughEdit(4, insertion, true)).toBe(7);
+    });
+
+    test('collapses an offset inside a replaced run onto the edit', () => {
+        expect(
+            mapOffsetThroughEdit(5, { start: 3, end: 8, insertedLength: 2 }),
+        ).toBe(5);
+        expect(
+            mapOffsetThroughEdit(4, { start: 3, end: 8, insertedLength: 1 }),
+        ).toBe(4);
+    });
+
+    test('shifts an offset at the end of a replaced run', () => {
+        expect(
+            mapOffsetThroughEdit(8, { start: 3, end: 8, insertedLength: 1 }),
+        ).toBe(4);
     });
 });

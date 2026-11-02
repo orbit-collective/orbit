@@ -9,16 +9,13 @@ import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/In
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
 import { useAlert } from '@/context/AlertContext';
 import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
+import { useImageInsertion } from '@/hooks/useImageInsertion';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { IssueType, IssueTypeTemplate } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { ProjectPriority } from '@/types/Priorities';
 import { cn } from '@/utils/cn';
-import {
-    extractImageFiles,
-    insertMarkdownImage,
-    nextImageRange,
-} from '@/utils/imagePaste';
+import { extractImageFiles } from '@/utils/imagePaste';
 
 interface WorkspaceSettingsTemplatesModalProps {
     isOpen: boolean;
@@ -58,6 +55,10 @@ export default function WorkspaceSettingsTemplatesModal({
     const [description, setDescription] = useState('');
     const [defaultPriority, setDefaultPriority] = useState<string | null>(null);
     const [defaultLabels, setDefaultLabels] = useState<string[]>([]);
+    const { insertImages: spliceImages } = useImageInsertion(
+        description,
+        setDescription,
+    );
 
     if (!issueType) return null;
 
@@ -89,46 +90,22 @@ export default function WorkspaceSettingsTemplatesModal({
     };
 
     /**
-     * Uploads a batch one at a time and moves the insertion point past each
-     * image as it lands, so several files pasted at once keep their order
-     * instead of every one of them splicing into the original range.
+     * Splices each uploaded image in where it was pasted, however the text
+     * changed while it uploaded (see useImageInsertion).
      */
-    const insertImages = async (
+    const insertImages = (
         files: File[],
         range: { start: number; end: number },
-    ) => {
-        let target = range;
-
-        for (const file of files) {
-            const at = target;
-
-            try {
-                const url = await uploadImage(file);
-
-                setDescription((current) => {
-                    const result = insertMarkdownImage(current, at, file, url);
-
-                    // This component has no pendingCaret effect the way
-                    // CommentForm does, and needs none for a single field - the
-                    // textarea is still mounted, it just lost its selection to
-                    // the re-render.
-                    requestAnimationFrame(() => {
-                        descriptionRef.current?.focus();
-                        descriptionRef.current?.setSelectionRange(
-                            result.caret,
-                            result.caret,
-                        );
-                    });
-
-                    return result.body;
-                });
-
-                target = nextImageRange(at, file, url);
-            } catch {
-                // The uploader already reported the failure to the user.
-            }
-        }
-    };
+    ) =>
+        spliceImages(files, range, uploadImage, ({ caret }) => {
+            // This component has no pendingCaret effect the way CommentForm
+            // does, and needs none for a single field - the textarea is still
+            // mounted, it just lost its selection to the re-render.
+            requestAnimationFrame(() => {
+                descriptionRef.current?.focus();
+                descriptionRef.current?.setSelectionRange(caret, caret);
+            });
+        });
 
     const handleDescriptionPaste = (
         e: React.ClipboardEvent<HTMLTextAreaElement>,

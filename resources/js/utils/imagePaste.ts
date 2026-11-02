@@ -87,6 +87,64 @@ export const nextImageRange = (
     return { start: caret, end: caret };
 };
 
+export interface TextEdit {
+    /** Where the replaced run starts, in the text before the edit. */
+    start: number;
+    /** Where the replaced run ends, in the text before the edit. */
+    end: number;
+    /** How many characters took its place. */
+    insertedLength: number;
+}
+
+/**
+ * The single edit that turns `prev` into `next`, found by trimming the common
+ * prefix and suffix. A textarea reports no edit ranges of its own, and an
+ * upload that is still in flight only needs to know how far text moved, so the
+ * smallest enclosing replacement is enough.
+ */
+export const diffTextEdit = (prev: string, next: string): TextEdit => {
+    const shortest = Math.min(prev.length, next.length);
+    let start = 0;
+
+    while (start < shortest && prev[start] === next[start]) start++;
+
+    let suffix = 0;
+
+    while (
+        suffix < shortest - start &&
+        prev[prev.length - 1 - suffix] === next[next.length - 1 - suffix]
+    ) {
+        suffix++;
+    }
+
+    return {
+        start,
+        end: prev.length - suffix,
+        insertedLength: next.length - suffix - start,
+    };
+};
+
+/**
+ * Carries an offset through an edit. A point at the edit's start stays in
+ * front of the new text unless `stickToEnd` is set, a point inside the
+ * replaced run collapses onto the edit, and anything after it shifts.
+ */
+export const mapOffsetThroughEdit = (
+    offset: number,
+    edit: TextEdit,
+    stickToEnd = false,
+): number => {
+    if (offset > edit.end || (offset === edit.end && edit.end > edit.start)) {
+        return offset + edit.insertedLength - (edit.end - edit.start);
+    }
+
+    if (offset < edit.start) return offset;
+
+    if (offset === edit.start && !stickToEnd) return offset;
+
+    return edit.start + edit.insertedLength;
+};
+
 export interface MarkdownImageSegment {
     type: 'text' | 'image';
     /** The raw text, or - for an image - its alt text. */
