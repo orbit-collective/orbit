@@ -83,7 +83,9 @@ class AutomationDispatcher
 
                 $this->activityLogService->log(
                     $issue->project_id,
-                    "The \"$rule->name\" automation rule ran on issue #$issue->number \"$issue->title\""
+                    "The \"$rule->name\" automation rule ran on issue #$issue->number \"$issue->title\"",
+                    null,
+                    $issue->id,
                 );
             }
         } finally {
