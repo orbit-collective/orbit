@@ -3,6 +3,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { TableKit } from '@tiptap/extension-table';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
+import { Transaction } from '@tiptap/pm/state';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import React, { useEffect, useId, useRef, useState } from 'react';
@@ -97,9 +98,12 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
 
     /**
      * Uploads sequentially and inserts each image as soon as its URL comes
-     * back, so a multi-image paste doesn't wait for the slowest file - the
-     * position is re-read from the live document every time rather than
-     * pre-computed, because earlier insertions have already shifted it.
+     * back, so a multi-image paste doesn't wait for the slowest file. The
+     * insertion point is captured when the paste or drop happens and carried
+     * through every transaction that lands while the upload runs, so it keeps
+     * pointing at the same spot in the document however the text around it
+     * changed - another image landing there included, which `assoc = 1` puts
+     * after it.
      */
     const insertImages = async (files: File[], at?: number) => {
         if (!editor || !onImageUpload) return;
@@ -107,42 +111,55 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         setPendingUploads((count) => count + files.length);
         pendingUploadsRef.current += files.length;
 
-        let position = at;
+        let position = at ?? editor.state.selection.to;
 
-        for (const file of files) {
-            try {
-                const url = await onImageUpload(file);
-
-                const target = Math.min(
-                    position ?? editor.state.selection.to,
-                    editor.state.doc.content.size,
-                );
-
-                editor
-                    .chain()
-                    .focus()
-                    .insertContentAt(target, {
-                        type: 'image',
-                        // Serialized back out as `![alt](src)`, so the alt has
-                        // to survive the round trip the same way a textarea
-                        // surface's does.
-                        attrs: { src: url, alt: markdownImageAlt(file.name) },
-                    })
-                    .run();
-
-                if (position !== undefined) {
-                    position = editor.state.selection.to;
-                }
-            } catch {
-                // The uploader already reported the failure to the user; the
-                // remaining files in this batch still get their turn.
-            } finally {
-                setPendingUploads((count) => Math.max(0, count - 1));
-                pendingUploadsRef.current = Math.max(
-                    0,
-                    pendingUploadsRef.current - 1,
-                );
+        const trackPosition = ({
+            transaction,
+        }: {
+            transaction: Transaction;
+        }) => {
+            if (transaction.docChanged) {
+                position = transaction.mapping.map(position, 1);
             }
+        };
+
+        editor.on('transaction', trackPosition);
+
+        try {
+            for (const file of files) {
+                try {
+                    const url = await onImageUpload(file);
+
+                    editor
+                        .chain()
+                        .focus()
+                        .insertContentAt(
+                            Math.min(position, editor.state.doc.content.size),
+                            {
+                                type: 'image',
+                                // Serialized back out as `![alt](src)`, so the
+                                // alt has to survive the round trip the same
+                                // way a textarea surface's does.
+                                attrs: {
+                                    src: url,
+                                    alt: markdownImageAlt(file.name),
+                                },
+                            },
+                        )
+                        .run();
+                } catch {
+                    // The uploader already reported the failure to the user;
+                    // the remaining files in this batch still get their turn.
+                } finally {
+                    setPendingUploads((count) => Math.max(0, count - 1));
+                    pendingUploadsRef.current = Math.max(
+                        0,
+                        pendingUploadsRef.current - 1,
+                    );
+                }
+            }
+        } finally {
+            editor.off('transaction', trackPosition);
         }
     };
 

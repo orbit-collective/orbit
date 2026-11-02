@@ -9,14 +9,11 @@ import React, {
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
 import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
+import { useImageInsertion } from '@/hooks/useImageInsertion';
 import { CommentFormProps, IssueSuggestion } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
 import { getCaretCoordinates } from '@/utils/caretPosition';
-import {
-    extractImageFiles,
-    insertMarkdownImage,
-    nextImageRange,
-} from '@/utils/imagePaste';
+import { extractImageFiles } from '@/utils/imagePaste';
 import {
     applyRangeEdit,
     filterUsersByMention,
@@ -345,10 +342,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
         }
     };
 
+    const { insertImages: spliceImages } = useImageInsertion(body, setBody);
+
     /**
-     * Uploads a batch one at a time and moves the insertion point past each
-     * image as it lands, so several files pasted at once keep their order
-     * instead of every one of them splicing into the original range.
+     * Splices each uploaded image in where it was pasted, however the text
+     * changed while it uploaded (see useImageInsertion), and shifts the
+     * tracked mentions by exactly what that splice inserted.
      */
     const insertImages = async (
         files: File[],
@@ -356,31 +355,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
     ) => {
         if (!onImageUpload) return;
 
-        let target = range;
-
-        for (const file of files) {
-            const at = target;
-
-            try {
-                const url = await onImageUpload(file);
-
-                setBody((current) => {
-                    const result = insertMarkdownImage(current, at, file, url);
-
-                    setMentionRanges((prev) =>
-                        applyRangeEdit(prev, at.start, at.end, result.length),
-                    );
-                    setPendingCaret(result.caret);
-
-                    return result.body;
-                });
-
-                target = nextImageRange(at, file, url);
-            } catch {
-                // The uploader already reported the failure to the user; the
-                // remaining files in this batch still get their turn.
-            }
-        }
+        await spliceImages(files, range, onImageUpload, ({ edit, caret }) => {
+            setMentionRanges((prev) =>
+                applyRangeEdit(prev, edit.start, edit.end, edit.insertedLength),
+            );
+            setPendingCaret(caret);
+        });
     };
 
     const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {

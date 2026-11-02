@@ -55,6 +55,25 @@ class FakeEditor {
         posAtCoords: vi.fn(() => ({ pos: 7 })),
     };
 
+    private listeners = new Set<(args: unknown) => void>();
+    on = vi.fn((_event: string, listener: (args: unknown) => void) => {
+        this.listeners.add(listener);
+    });
+    off = vi.fn((_event: string, listener: (args: unknown) => void) => {
+        this.listeners.delete(listener);
+    });
+    /** Fires a document-changing transaction that moves every position by `shift`. */
+    transact(shift: number) {
+        for (const listener of this.listeners) {
+            listener({
+                transaction: {
+                    docChanged: true,
+                    mapping: { map: (pos: number) => pos + shift },
+                },
+            });
+        }
+    }
+
     constructor(options: EditorOptions) {
         this.markdown = options.content;
         this.onBlur = options.onBlur;
@@ -228,6 +247,39 @@ describe('EditableMarkdown Component', () => {
                 attrs: { src: '/storage/a.png', alt: 'shot.png' },
             }),
         );
+    });
+
+    test('an image lands where it was pasted after the document changed during the upload', async () => {
+        let resolveUpload: (url: string) => void = () => {};
+        const onImageUpload = vi.fn(
+            () =>
+                new Promise<string>((resolve) => {
+                    resolveUpload = resolve;
+                }),
+        );
+        const { getEditor, paste } = setup(
+            'Text',
+            vi.fn(),
+            false,
+            onImageUpload,
+        );
+
+        paste({
+            preventDefault: vi.fn(),
+            clipboardData: transfer([imageFile()]),
+        });
+
+        // Typing at the start of the document while the upload runs.
+        getEditor().transact(5);
+        resolveUpload('/storage/a.png');
+
+        await waitFor(() =>
+            expect(getEditor().insertContentAt).toHaveBeenCalledWith(8, {
+                type: 'image',
+                attrs: { src: '/storage/a.png', alt: 'shot.png' },
+            }),
+        );
+        expect(getEditor().off).toHaveBeenCalled();
     });
 
     test('a filename that would break the markdown link is sanitized', async () => {
