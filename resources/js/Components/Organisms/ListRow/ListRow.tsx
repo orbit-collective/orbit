@@ -120,7 +120,7 @@ export const ListRow = ({
                     }
                 }}
                 className={cn(
-                    'group/row cursor-pointer select-none transition-colors hover:bg-[var(--bg-light-color)]',
+                    'group/row cursor-pointer select-none outline-none transition-colors hover:bg-[var(--bg-light-color)]',
                 )}
                 style={{ height: rowHeight }}
             >
@@ -194,7 +194,10 @@ export const ListRow = ({
                             )}
                             <span
                                 className={cn(
-                                    'truncate font-medium',
+                                    // The row is the tab stop for the title, and a ring
+                                    // on a table row itself doesn't render, so the title
+                                    // shows the row's keyboard focus.
+                                    '-mx-1 truncate rounded px-1 font-medium group-focus-visible/row:ring-2 group-focus-visible/row:ring-[var(--accent-color)]',
                                     isClosed &&
                                         'text-[var(--text-muted-color)] line-through',
                                 )}
