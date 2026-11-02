@@ -38,6 +38,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     issueTypes = [],
     users = [],
     issueAbilities,
+    projectRole = null,
     nextIssueId = null,
 }) => {
     const { addAlert } = useAlert();
@@ -311,6 +312,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             hasParent
                 ? { typeId: parent?.issueType?.id ?? parent?.issue_type_id }
                 : null,
+            projectRole,
         );
     };
 

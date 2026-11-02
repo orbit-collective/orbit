@@ -54,6 +54,7 @@ export default function Show({
     canCreateGithubDevelopment = false,
     githubAccountLinked = false,
     issueAbilities,
+    projectRole = null,
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
@@ -190,6 +191,7 @@ export default function Show({
         parentIssue
             ? { typeId: parentIssue.issue_type_id ?? parentIssue.issueType?.id }
             : null,
+        projectRole,
     ).map((type) => ({
         value: String(type.id),
         searchLabel: type.name,

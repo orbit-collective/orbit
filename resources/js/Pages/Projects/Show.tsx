@@ -60,6 +60,7 @@ export default function Show({
     issueTypes = [],
     nextIssueId = null,
     issueAbilities,
+    projectRole = null,
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
@@ -77,6 +78,7 @@ export default function Show({
     issueTypes?: IssueType[];
     nextIssueId?: number | null;
     issueAbilities?: IssueAbilities;
+    projectRole?: string | null;
 }) {
     const [filterPanelOpen, setFilterPanelOpen] = useState(false);
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
@@ -169,6 +171,7 @@ export default function Show({
                                         issueTypes={issueTypes}
                                         users={users}
                                         issueAbilities={issueAbilities}
+                                        projectRole={projectRole}
                                         nextIssueId={nextIssueId}
                                         pagination={
                                             <Pagination

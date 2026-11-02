@@ -43,7 +43,7 @@ test('an issue detail page can be viewed', function () {
 
     expect($page['component'])->toBe('Issues/Show')
         ->and($page['props']['issue']['id'])->toBe($issue->id)
-        ->and($page['props'])->toHaveKeys(['project', 'projects', 'users']);
+        ->and($page['props'])->toHaveKeys(['project', 'projects', 'users', 'projectRole']);
 });
 
 test('a linked github pull request is exposed with its rich development metadata', function () {

@@ -6,8 +6,15 @@ const type = (
     id: number,
     isTopLevel: boolean,
     allowedChildTypeIds: number[] = [],
+    restrictedRoleTypes: string[] = [],
 ): IssueType =>
-    ({ id, name: `T${id}`, isTopLevel, allowedChildTypeIds }) as IssueType;
+    ({
+        id,
+        name: `T${id}`,
+        isTopLevel,
+        allowedChildTypeIds,
+        restrictedRoleTypes,
+    }) as IssueType;
 
 const types = [
     type(1, true, [3]),
@@ -43,5 +50,29 @@ describe('retypeOptions', () => {
         expect(retypeOptions(types, types[2], null).map((t) => t.id)).toEqual([
             1, 2, 3,
         ]);
+    });
+
+    test('leaves out a type restricted to roles the user does not have, but keeps the current one', () => {
+        const restricted = [
+            type(1, true),
+            type(2, true, [], ['admin']),
+            type(3, true, [], ['owner']),
+        ];
+
+        expect(
+            retypeOptions(restricted, restricted[0], null, 'admin').map(
+                (t) => t.id,
+            ),
+        ).toEqual([1, 2]);
+        expect(
+            retypeOptions(restricted, restricted[2], null, 'member').map(
+                (t) => t.id,
+            ),
+        ).toEqual([1, 3]);
+        expect(
+            retypeOptions(restricted, restricted[0], null, null).map(
+                (t) => t.id,
+            ),
+        ).toEqual([1]);
     });
 });

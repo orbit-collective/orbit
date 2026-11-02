@@ -145,6 +145,7 @@ test('the project show page tells a member which issue properties they may edit'
         ->where('issueAbilities.assign', true)
         ->where('issueAbilities.changePriority', true)
         ->where('issueAbilities.changeLabels', true)
+        ->where('projectRole', 'member')
     );
 
     $this->actingAs($viewer)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page

@@ -615,6 +615,8 @@ export interface IssuePageProps {
     canCreateGithubDevelopment?: boolean;
     githubAccountLinked?: boolean;
     issueAbilities?: IssueAbilities;
+    /** The acting user's role tier in the project, which decides the issue types they may use. */
+    projectRole?: string | null;
 }
 export interface IssuePageHeaderProps {
     project: Project;
@@ -696,6 +698,8 @@ export interface IssueTableProps {
     users?: AssignableUser[];
     /** What the user may edit in place; omit it for a read-only table. */
     issueAbilities?: IssueAbilities;
+    /** The acting user's role tier in the project, which decides the issue types they may use. */
+    projectRole?: string | null;
     nextIssueId?: number | null;
 }
 export interface NewProjectModalProps {
