@@ -2,9 +2,12 @@
 
 use App\Models\ActivityLog;
 use App\Models\Issue;
+use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ProjectUser;
 use App\Models\SavedFilter;
 use App\Models\User;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -150,6 +153,31 @@ test('the project show page tells a member which issue properties they may edit'
         ->where('issueAbilities.assign', false)
         ->where('issueAbilities.changePriority', false)
         ->where('issueAbilities.changeLabels', false)
+    );
+});
+
+test('a property permission without update does not offer that editor', function () {
+    $project = Project::factory()->create();
+    $user = User::factory()->create();
+    addProjectMember($project, $user->id, 'viewer');
+    $role = $project->roles()->create(['name' => 'Assigner', 'slug' => 'assigner', 'role' => 'custom']);
+    $role->permissions()->sync(Permission::where('key', 'issues.assign')->pluck('id'));
+    ProjectUser::where('user_id', $user->id)->first()->roles()->attach($role->id);
+
+    $this->actingAs($user)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->where('issueAbilities.update', false)
+        ->where('issueAbilities.assign', false)
+    );
+
+    $withUpdate = $project->roles()->create(['name' => 'Editor', 'slug' => 'editor', 'role' => 'custom']);
+    $withUpdate->permissions()->sync(Permission::whereIn('key', ['issues.assign', 'issues.update'])->pluck('id'));
+    ProjectUser::where('user_id', $user->id)->first()->roles()->attach($withUpdate->id);
+    CacheVersion::bump(CacheVersion::MEMBERSHIP);
+
+    $this->actingAs($user)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->where('issueAbilities.update', true)
+        ->where('issueAbilities.assign', true)
+        ->where('issueAbilities.changeStatus', false)
     );
 });
 
