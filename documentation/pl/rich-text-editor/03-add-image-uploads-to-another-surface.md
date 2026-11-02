@@ -236,6 +236,8 @@ Upuszczenie na textareę nie przesuwa najpierw kursora, więc punktem wstawienia
 
 **Wysyłaj wsad sekwencyjnie, a nie przez `files.forEach`.** Odpalenie uploadów równolegle i pozwolenie każdemu wkleić się niezależnie wygląda w porządku — każde wywołanie `setBody`/`setMentionRanges` to aktualizacja funkcyjna czytająca najświeższy stan — ale *zakres* przechwycony przez każdy z nich jest ten pierwotny. Dwa wklejone obrazy wstawiają się więc w tym samym punkcie, czyli lądują w odwrotnej kolejności, a na zaznaczeniu drugi przecina markdown, który zapisał już pierwszy. Oczekiwanie na każdy plik po kolei i przesuwanie się przez `nextImageRange()` jest tym, co utrzymuje ich kolejność. Nadal nigdy nie wciągaj `body` do domknięcia: wklejenie musi czytać najświeższy stan, bo użytkownik może pisać między uploadami.
 
+**Na powierzchni z textarea nie wstawiaj obrazu po surowym offsecie — użyj `useImageInsertion(value, setValue)`.** Offset przechwycony przy wklejeniu przestaje być aktualny, gdy tylko użytkownik coś wpisze albo wyląduje inny obraz, zanim upload się zakończy. Hook trzyma każdy oczekujący punkt wstawienia jako żywy zakres, przesuwa go przez każdą edycję wyliczoną z `value` (`diffTextEdit()` / `mapOffsetThroughEdit()`) i wstawia względem refa z najświeższą wartością, więc dwa uploady nie nadpisują się nawzajem. Wywołaj `insertImages(files, range, upload, onInserted)`; w callbacku `onInserted({ edit, caret })` `CommentForm` przekazuje edycję do `applyRangeEdit()`. Powierzchnia Tiptap (`EditableMarkdown`) robi to samo przez `transaction.mapping.map(position, 1)` na zdarzeniu `transaction` edytora.
+
 ### Krok 4 — Edycja istniejącego komentarza
 
 Plik: `resources/js/Components/Atoms/EditableText/EditableText.tsx`
