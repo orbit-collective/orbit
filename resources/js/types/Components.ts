@@ -339,7 +339,7 @@ export interface SavedFiltersDropdownProps {
 export interface IssueRowEditing {
     users: AssignableUser[];
     abilities: IssueAbilities;
-    /** The types a listed issue may be changed to (a sub-issue is limited by its parent). */
+    /** The types a listed issue may be changed to (see utils/issueTypes.ts). */
     issueTypesFor: (issue: Issue) => IssueType[];
     onUpdate: (issue: Issue, data: Record<string, unknown>) => void;
 }
