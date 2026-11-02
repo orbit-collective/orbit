@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.11.4](https://github.com/orbit-collective/orbit/compare/v0.11.3...v0.11.4) (2026-11-02)
+
+
+### Features
+
+* **icons:** add new SVG icons for various emotions ([8148e87](https://github.com/orbit-collective/orbit/commit/8148e87372c0892b0c6cd310e46ed1dae417bbed))
+* **issues:** change a listed issue type inline ([871f98f](https://github.com/orbit-collective/orbit/commit/871f98ffe84292e887101558318cf40f20bd7949))
+* **issues:** edit a listed issue title inline ([c98b41f](https://github.com/orbit-collective/orbit/commit/c98b41fe43bbd8fefa60759c12a205bbd54c34ff))
+* **issues:** edit issue properties inline in the list ([8bdc24f](https://github.com/orbit-collective/orbit/commit/8bdc24f3fd03156e2e8c0ead80c2152986cfd35d))
+* **issues:** expose issue abilities on the project page ([6f4e6d2](https://github.com/orbit-collective/orbit/commit/6f4e6d2ca93dae35c01e13f23ffd98f966e75ce7))
+* **issues:** set properties when quick-adding an issue ([f3a41b7](https://github.com/orbit-collective/orbit/commit/f3a41b784c034c7eba9a807f70176eeb44bd8c14))
+* **Show:** add maxDisplay prop to IssueLabel component ([25f85c5](https://github.com/orbit-collective/orbit/commit/25f85c58fc9adcb72283212a73ff22b129b96cb1))
+* **ui:** add maxDisplay to EditableLabelList ([34ecd0c](https://github.com/orbit-collective/orbit/commit/34ecd0cb936fd7477df1fc2c02bfd94b98c67970))
+
+
+### Bug Fixes
+
+* **issues:** hide role-restricted types from the type picker ([3e69ed0](https://github.com/orbit-collective/orbit/commit/3e69ed0e425efa901597032f1ce0a1d6718cb23c))
+* **issues:** honor cleared labels and keep the quick-add draft ([e3711af](https://github.com/orbit-collective/orbit/commit/e3711af7b4be4c9e28612ab41a60dcd6e5f7e5b4))
+* **issues:** lock quick-add editors while the issue is created ([83f79a5](https://github.com/orbit-collective/orbit/commit/83f79a5c773c2dd58447f9d94a59b348c44fdc42))
+* **issues:** offer property editors only together with update ([1c13510](https://github.com/orbit-collective/orbit/commit/1c135102ea1063c8dff2425b3e3d7eb370ce52fa))
+* **issues:** validate hierarchy when changing an issue type ([b395cec](https://github.com/orbit-collective/orbit/commit/b395cec7da97de62198810ae710062edae3b8864))
+* **ui:** keep in-flight image uploads at their paste point ([e1d6315](https://github.com/orbit-collective/orbit/commit/e1d63153360291a75f24e957a6f75d9a05d9f9a1)), closes [#274](https://github.com/orbit-collective/orbit/issues/274)
+* **ui:** keep text typed over a pasted-on selection ([f342afe](https://github.com/orbit-collective/orbit/commit/f342afe2b760f63ac23f2c4aba33c7b560e2f0fd))
+* **ui:** let read-only list cells open the issue ([735319b](https://github.com/orbit-collective/orbit/commit/735319bf6075eaf7f1fb56111ed8542c5a8f1a02))
+* **ui:** offer only valid types when changing issue type ([c71e6ba](https://github.com/orbit-collective/orbit/commit/c71e6ba6d2315a305e333aabf71f492f94e38875))
+* **ui:** show keyboard focus on a listed issue title ([8f0c3d8](https://github.com/orbit-collective/orbit/commit/8f0c3d8dac31f4e1f61b40fb041f16d7ce9949f3))
+* **ui:** show keyboard focus on titles and labels ([a0f6ed1](https://github.com/orbit-collective/orbit/commit/a0f6ed1c5cf66e584200c8c53c4b02b54989541b))
+* **ui:** track the real edit and paste order for pending images ([d5a7736](https://github.com/orbit-collective/orbit/commit/d5a77360055ffad20a017e7fbdc2ecf6acd4568f))
+* **ui:** use the accent color for focused fields ([a17bad4](https://github.com/orbit-collective/orbit/commit/a17bad4af6d194b789ffa5f7eccf4d98660965c8))
+
+
+### Miscellaneous Chores
+
+* release 0.11.4 ([92668f7](https://github.com/orbit-collective/orbit/commit/92668f7540e53e787f0f043d96f2f5a711a6ee05))
+
 ## [0.11.3](https://github.com/orbit-collective/orbit/compare/v0.11.2...v0.11.3) (2026-11-01)
 
 
