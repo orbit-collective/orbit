@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
@@ -9,6 +9,7 @@ import {
     AssigneePicker,
     DatePicker,
     PriorityPicker,
+    REVEAL_ON_ROW_HOVER,
     StatusPicker,
 } from '@/Components/Molecules/IssuePropertyPickers/IssuePropertyPickers';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
@@ -104,6 +105,33 @@ export const ListRow = ({
     const save = (data: Record<string, unknown>) =>
         editing?.onUpdate(issue, data);
 
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [titleDraft, setTitleDraft] = useState(issue.title);
+    const titleInputRef = useRef<HTMLInputElement>(null);
+    // Enter and Escape unmount the input, which blurs it - that blur must not
+    // save a second time (or save at all after Escape).
+    const titleEditDone = useRef(false);
+
+    const startTitleEdit = () => {
+        titleEditDone.current = false;
+        setTitleDraft(issue.title);
+        setIsEditingTitle(true);
+        requestAnimationFrame(() => {
+            titleInputRef.current?.focus();
+            titleInputRef.current?.select();
+        });
+    };
+
+    const commitTitle = () => {
+        if (titleEditDone.current) return;
+
+        titleEditDone.current = true;
+        const next = titleDraft.trim();
+
+        setIsEditingTitle(false);
+        if (next && next !== issue.title) save({ title: next });
+    };
+
     return (
         <>
             <tr
@@ -192,18 +220,59 @@ export const ListRow = ({
                             ) : (
                                 depth > 0 && <span className="w-4 shrink-0" />
                             )}
-                            <span
-                                className={cn(
-                                    // The row is the tab stop for the title, and a ring
-                                    // on a table row itself doesn't render, so the title
-                                    // shows the row's keyboard focus.
-                                    '-mx-1 truncate rounded px-1 font-medium group-focus-visible/row:ring-2 group-focus-visible/row:ring-[var(--accent-color)]',
-                                    isClosed &&
-                                        'text-[var(--text-muted-color)] line-through',
-                                )}
-                            >
-                                {issue.title}
-                            </span>
+                            {isEditingTitle ? (
+                                <input
+                                    ref={titleInputRef}
+                                    value={titleDraft}
+                                    maxLength={255}
+                                    aria-label="Issue title"
+                                    onChange={(e) =>
+                                        setTitleDraft(e.target.value)
+                                    }
+                                    onClick={(e) => e.stopPropagation()}
+                                    onBlur={commitTitle}
+                                    onKeyDown={(e) => {
+                                        e.stopPropagation();
+                                        if (e.key === 'Enter') commitTitle();
+                                        if (e.key === 'Escape') {
+                                            titleEditDone.current = true;
+                                            setIsEditingTitle(false);
+                                        }
+                                    }}
+                                    className="min-w-0 flex-1 rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+                                />
+                            ) : (
+                                <>
+                                    <span
+                                        className={cn(
+                                            // The row is the tab stop for the title, and a ring
+                                            // on a table row itself doesn't render, so the title
+                                            // shows the row's keyboard focus.
+                                            '-mx-1 truncate rounded px-1 font-medium group-focus-visible/row:ring-2 group-focus-visible/row:ring-[var(--accent-color)]',
+                                            isClosed &&
+                                                'text-[var(--text-muted-color)] line-through',
+                                        )}
+                                    >
+                                        {issue.title}
+                                    </span>
+                                    {can?.update && (
+                                        <button
+                                            type="button"
+                                            aria-label="Edit title"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                startTitleEdit();
+                                            }}
+                                            className={cn(
+                                                'flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded border-none bg-transparent p-0 text-[var(--text-muted-color)] hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                                                REVEAL_ON_ROW_HOVER,
+                                            )}
+                                        >
+                                            <Icon name="Pencil" size={12} />
+                                        </button>
+                                    )}
+                                </>
+                            )}
                         </div>
                     </td>
                 )}
