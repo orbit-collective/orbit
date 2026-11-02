@@ -14,6 +14,7 @@ import MainLayout from '@/Layouts/MainLayout';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import {
     Issue,
+    IssueAbilities,
     IssuePageLooks,
     PaginatedResponse,
     Sorting,
@@ -58,6 +59,7 @@ export default function Show({
     roles = [],
     issueTypes = [],
     nextIssueId = null,
+    issueAbilities,
 }: {
     project: Project;
     issues: PaginatedResponse<Issue>;
@@ -74,6 +76,7 @@ export default function Show({
     roles?: RoleNameSummary[];
     issueTypes?: IssueType[];
     nextIssueId?: number | null;
+    issueAbilities?: IssueAbilities;
 }) {
     const [filterPanelOpen, setFilterPanelOpen] = useState(false);
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
@@ -165,6 +168,7 @@ export default function Show({
                                         project={project}
                                         issueTypes={issueTypes}
                                         users={users}
+                                        issueAbilities={issueAbilities}
                                         nextIssueId={nextIssueId}
                                         pagination={
                                             <Pagination

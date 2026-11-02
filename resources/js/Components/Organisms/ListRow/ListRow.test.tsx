@@ -420,3 +420,113 @@ describe('ListRow Component', () => {
         });
     });
 });
+
+describe('ListRow inline editing', () => {
+    const abilities = {
+        update: true,
+        changeStatus: true,
+        assign: true,
+        changePriority: true,
+        changeLabels: true,
+    };
+    const doing = { ...todoStatus, id: 2, name: 'Doing', isInitial: false };
+    const issue = makeIssue({
+        issueType: {
+            id: 1,
+            name: 'Task',
+            icon: 'SquareCheck',
+            color: '#3b82f6',
+            description: null,
+            isSystem: true,
+            allowsChildren: false,
+            isTopLevel: true,
+            requiredFields: [],
+            restrictedRoleTypes: [],
+            statuses: [todoStatus, doing],
+            transitions: [
+                {
+                    id: 1,
+                    issueTypeId: 1,
+                    fromStatusId: todoStatus.id,
+                    toStatusId: doing.id,
+                },
+            ],
+        },
+        start_date: '2026-11-03',
+        end_date: '2026-11-05',
+    });
+
+    test('has no pickers without an editing config', () => {
+        renderRow({ issue });
+
+        expect(screen.queryByLabelText('Status')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Assignee')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Start date')).not.toBeInTheDocument();
+    });
+
+    test('has no pickers for a property the user may not change', () => {
+        renderRow({
+            issue,
+            editing: {
+                users: [],
+                abilities: { ...abilities, changeStatus: false, update: false },
+                onUpdate: vi.fn(),
+            },
+        });
+
+        expect(screen.queryByLabelText('Status')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Start date')).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Assignee')).toBeInTheDocument();
+    });
+
+    test('picking a reachable status saves it without opening the issue', () => {
+        const onUpdate = vi.fn();
+        const onClick = vi.fn();
+        renderRow({
+            issue,
+            onClick,
+            editing: { users: [], abilities, onUpdate },
+        });
+
+        fireEvent.click(screen.getByLabelText('Status'));
+        fireEvent.click(screen.getByText('Doing'));
+
+        expect(onUpdate).toHaveBeenCalledWith(issue, {
+            workflow_status_id: 2,
+        });
+        expect(onClick).not.toHaveBeenCalled();
+    });
+
+    test('picking an assignee saves its id', () => {
+        const onUpdate = vi.fn();
+        renderRow({
+            issue,
+            editing: {
+                users: [{ id: 7, name: 'Ada' }],
+                abilities,
+                onUpdate,
+            },
+        });
+
+        fireEvent.click(screen.getByLabelText('Assignee'));
+        fireEvent.click(screen.getByText('Ada'));
+
+        expect(onUpdate).toHaveBeenCalledWith(issue, { assignee_id: 7 });
+    });
+
+    test('the chevrons stay hidden until the row is hovered', () => {
+        renderRow({
+            issue,
+            editing: { users: [], abilities, onUpdate: vi.fn() },
+        });
+
+        const chevron = screen
+            .getByLabelText('Status')
+            .querySelector('svg:last-child');
+
+        expect(chevron?.getAttribute('class')).toContain('opacity-0');
+        expect(chevron?.getAttribute('class')).toContain(
+            'group-hover/row:opacity-100',
+        );
+    });
+});

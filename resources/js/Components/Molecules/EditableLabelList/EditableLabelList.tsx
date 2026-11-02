@@ -2,17 +2,20 @@ import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
+import { REVEAL_ON_ROW_HOVER } from '@/Components/Molecules/IssuePropertyPickers/IssuePropertyPickers';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import { useProjectLabels } from '@/context/ProjectLabelsContext';
 import { EditableLabelListProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { IssueLabel } from '@/types/Issues';
+import { cn } from '@/utils/cn';
 
 const EditableLabelList: React.FC<EditableLabelListProps> = ({
     labels,
     onSave,
     disabled = false,
     maxDisplay,
+    revealTrigger = false,
 }) => {
     const availableLabels = useProjectLabels().labels.map(
         (label) => label.name,
@@ -88,7 +91,10 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
                         type="button"
                         disabled={disabled}
                         aria-label="Edit labels"
-                        className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                        className={cn(
+                            'flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:hover:bg-transparent',
+                            revealTrigger && REVEAL_ON_ROW_HOVER,
+                        )}
                     >
                         <Icon name="Plus" size={12} />
                     </button>

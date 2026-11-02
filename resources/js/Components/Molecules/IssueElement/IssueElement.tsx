@@ -15,6 +15,7 @@ export const IssueElement = ({
     hasChildren,
     isCollapsed,
     onToggleCollapse,
+    editing,
 }: IssueElementProps) => {
     const removeIssue = (issue: Issue) => {
         router.delete(route('issues.destroy', issue.id));
@@ -40,6 +41,7 @@ export const IssueElement = ({
             hasChildren={hasChildren}
             isCollapsed={isCollapsed}
             onToggleCollapse={onToggleCollapse}
+            editing={editing}
         />
     );
 };

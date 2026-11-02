@@ -11,7 +11,11 @@ import IssueTableHead from '@/Components/Organisms/IssueTableHead/IssueTableHead
 import { useAlert } from '@/context/AlertContext';
 import { useIssueHierarchy } from '@/hooks/useIssueHierarchy';
 import { useTableResizing } from '@/hooks/useTableResizing';
-import { HeaderConfig, IssueTableProps } from '@/types/Components';
+import {
+    HeaderConfig,
+    IssueRowEditing,
+    IssueTableProps,
+} from '@/types/Components';
 import { Issue, Sorting, SortingColumn } from '@/types/Issues';
 import { IssueType } from '@/types/IssueTypes';
 import { cn } from '@/utils/cn';
@@ -32,6 +36,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     bare = false,
     issueTypes = [],
     users = [],
+    issueAbilities,
     nextIssueId = null,
 }) => {
     const { addAlert } = useAlert();
@@ -330,6 +335,23 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         );
     };
 
+    const handleUpdateIssue = (issue: Issue, data: Record<string, unknown>) => {
+        router.patch(route('issues.update', issue.id), data as never, {
+            preserveScroll: true,
+            preserveState: true,
+            onError: (errors) =>
+                addAlert(
+                    Object.values(errors)[0] ?? 'Could not update the issue',
+                    'error',
+                ),
+        });
+    };
+
+    const editing: IssueRowEditing | undefined =
+        project && issueAbilities
+            ? { users, abilities: issueAbilities, onUpdate: handleUpdateIssue }
+            : undefined;
+
     const headers: HeaderConfig[] = ISSUE_TABLE_COLUMNS.map(
         (column): HeaderConfig => ({
             label: column.label,
@@ -420,6 +442,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                                     handleSelectIssueCheckbox
                                                 }
                                                 enabledColumns={enabledColumns}
+                                                editing={editing}
                                                 rowHeight={rowHeight}
                                                 depth={depth}
                                                 hasChildren={hasChildren}

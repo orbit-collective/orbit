@@ -3,15 +3,23 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
-import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
+import EditableLabelList from '@/Components/Molecules/EditableLabelList/EditableLabelList';
+import {
+    AssigneePicker,
+    DatePicker,
+    PriorityPicker,
+    StatusPicker,
+} from '@/Components/Molecules/IssuePropertyPickers/IssuePropertyPickers';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
+import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
 import { ListRowProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { cn } from '@/utils/cn';
 import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
-import { formatTimeAgo, formatWeekdayDate } from '@/utils/time';
+import { formatTimeAgo } from '@/utils/time';
+import { getReachableStatuses } from '@/utils/workflow';
 
 const rowMenuOptions = (removeDisabled: boolean): DropdownOptionItem[] => [
     { value: 'open', label: 'Open issue', icon: 'Maximize2' },
@@ -22,6 +30,20 @@ const rowMenuOptions = (removeDisabled: boolean): DropdownOptionItem[] => [
         disabled: removeDisabled,
     },
 ];
+
+/**
+ * An editable cell sits inside a clickable row, and its pickers portal their
+ * menus out of it - React still bubbles those clicks up to the row, which
+ * would open the issue, so they are stopped here.
+ */
+const Editable = ({ children }: { children: React.ReactNode }) => (
+    <div
+        className="inline-flex max-w-full items-center"
+        onClick={(e) => e.stopPropagation()}
+    >
+        {children}
+    </div>
+);
 
 const cellBase =
     'px-3 py-2 border-b border-[var(--border-color)] align-middle text-[12px] font-normal';
@@ -38,7 +60,9 @@ export const ListRow = ({
     hasChildren = false,
     isCollapsed = false,
     onToggleCollapse,
+    editing,
 }: ListRowProps) => {
+    const { priorities } = useProjectPriorities();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     // Set while the menu was opened by right-click, so it opens at the cursor.
     const [menuAnchor, setMenuAnchor] = useState<{
@@ -75,6 +99,10 @@ export const ListRow = ({
         }
         onClick();
     };
+
+    const can = editing?.abilities;
+    const save = (data: Record<string, unknown>) =>
+        editing?.onUpdate(issue, data);
 
     return (
         <>
@@ -189,15 +217,17 @@ export const ListRow = ({
                 )}
                 {enabledColumns.status && (
                     <td className={cellBase} data-column="status">
-                        {issue.workflowStatus ? (
-                            <WorkflowStatusBadge
-                                status={issue.workflowStatus}
+                        <Editable>
+                            <StatusPicker
+                                statuses={getReachableStatuses(issue)}
+                                value={issue.workflowStatus ?? null}
+                                disabled={!can?.changeStatus}
+                                revealOnRowHover
+                                onChange={(status) =>
+                                    save({ workflow_status_id: status.id })
+                                }
                             />
-                        ) : (
-                            <span className="text-[var(--text-muted-color)]">
-                                —
-                            </span>
-                        )}
+                        </Editable>
                     </td>
                 )}
                 {enabledColumns.assignee && (
@@ -208,31 +238,71 @@ export const ListRow = ({
                         )}
                         data-column="assignee"
                     >
-                        <UserBadge
-                            avatarSrc={issue.assignee?.avatar}
-                            name={issue.assignee?.name ?? 'Unassigned'}
-                            size="sm"
-                        />
+                        {can?.assign ? (
+                            <Editable>
+                                <AssigneePicker
+                                    users={editing?.users ?? []}
+                                    value={issue.assignee ?? null}
+                                    selectedId={issue.assignee_id ?? null}
+                                    revealOnRowHover
+                                    onChange={(userId) =>
+                                        save({ assignee_id: userId })
+                                    }
+                                />
+                            </Editable>
+                        ) : (
+                            <UserBadge
+                                avatarSrc={issue.assignee?.avatar}
+                                name={issue.assignee?.name ?? 'Unassigned'}
+                                size="sm"
+                            />
+                        )}
                     </td>
                 )}
                 {enabledColumns.priority && (
                     <td className={cellBase} data-column="priority">
-                        <div className="flex items-center gap-1.5">
-                            <PriorityIcon priority={issue.priorityDetails} />
-                            <span className="truncate capitalize text-[var(--text-color)]">
-                                {issue.priority ?? 'None'}
-                            </span>
-                        </div>
+                        {can?.changePriority ? (
+                            <Editable>
+                                <PriorityPicker
+                                    priorities={priorities}
+                                    value={issue.priorityDetails ?? null}
+                                    revealOnRowHover
+                                    onChange={(name) =>
+                                        save({ priority: name })
+                                    }
+                                />
+                            </Editable>
+                        ) : (
+                            <div className="flex items-center gap-1.5">
+                                <PriorityIcon
+                                    priority={issue.priorityDetails}
+                                />
+                                <span className="truncate capitalize text-[var(--text-color)]">
+                                    {issue.priority ?? 'None'}
+                                </span>
+                            </div>
+                        )}
                     </td>
                 )}
                 {enabledColumns.labels && (
                     <td className={cellBase} data-column="labels">
-                        <LabelList
-                            labels={issue.labels || []}
-                            badgeClassName="text-[10px] px-1.5 py-0.2"
-                            isClosed={isClosed}
-                            maxDisplay="auto"
-                        />
+                        {can?.changeLabels ? (
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <EditableLabelList
+                                    labels={issue.labels || []}
+                                    onSave={(labels) => save({ labels })}
+                                    maxDisplay="auto"
+                                    revealTrigger
+                                />
+                            </div>
+                        ) : (
+                            <LabelList
+                                labels={issue.labels || []}
+                                badgeClassName="text-[10px] px-1.5 py-0.2"
+                                isClosed={isClosed}
+                                maxDisplay="auto"
+                            />
+                        )}
                     </td>
                 )}
                 {enabledColumns.updated && (
@@ -257,23 +327,24 @@ export const ListRow = ({
                         )}
                         data-column="start_date"
                     >
-                        <div className={'flex items-center gap-1'}>
-                            <Icon
-                                name={
-                                    issue.start_date
-                                        ? 'CalendarDays'
-                                        : 'CalendarX2'
+                        <Editable>
+                            <DatePicker
+                                label="Start date"
+                                value={issue.start_date}
+                                disabled={!can?.update}
+                                revealOnRowHover
+                                onChange={(date) =>
+                                    // An end before the new start moves with it.
+                                    save({
+                                        start_date: date,
+                                        ...(issue.end_date &&
+                                        issue.end_date.slice(0, 10) < date
+                                            ? { end_date: date }
+                                            : {}),
+                                    })
                                 }
-                                size={12}
                             />
-                            {issue.start_date ? (
-                                formatWeekdayDate(issue.start_date)
-                            ) : (
-                                <span className="text-[var(--text-muted-color)]">
-                                    No date
-                                </span>
-                            )}
-                        </div>
+                        </Editable>
                     </td>
                 )}
                 {enabledColumns.end_date && (
@@ -284,23 +355,16 @@ export const ListRow = ({
                         )}
                         data-column="end_date"
                     >
-                        <div className={'flex items-center gap-1'}>
-                            <Icon
-                                name={
-                                    issue.end_date
-                                        ? 'CalendarDays'
-                                        : 'CalendarX2'
-                                }
-                                size={12}
+                        <Editable>
+                            <DatePicker
+                                label="End date"
+                                value={issue.end_date}
+                                minDate={issue.start_date}
+                                disabled={!can?.update}
+                                revealOnRowHover
+                                onChange={(date) => save({ end_date: date })}
                             />
-                            {issue.end_date ? (
-                                formatWeekdayDate(issue.end_date)
-                            ) : (
-                                <span className="text-[var(--text-muted-color)]">
-                                    No date
-                                </span>
-                            )}
-                        </div>
+                        </Editable>
                     </td>
                 )}
                 <td className={cellBase} aria-hidden="true" />
