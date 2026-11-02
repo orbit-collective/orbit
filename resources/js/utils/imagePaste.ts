@@ -101,8 +101,35 @@ export interface TextEdit {
  * prefix and suffix. A textarea reports no edit ranges of its own, and an
  * upload that is still in flight only needs to know how far text moved, so the
  * smallest enclosing replacement is enough.
+ *
+ * Trimming alone is ambiguous when the typed text repeats its neighbours:
+ * typing "f" over the selected "fo" of "foo" looks like deleting the last "o".
+ * `caret`, the textarea's caret right after the edit, pins down where the new
+ * text ends, so the unchanged tail is whatever follows it. It is only used
+ * when that reading really turns `prev` into `next`.
  */
-export const diffTextEdit = (prev: string, next: string): TextEdit => {
+export const diffTextEdit = (
+    prev: string,
+    next: string,
+    caret?: number,
+): TextEdit => {
+    if (caret !== undefined && caret >= 0 && caret <= next.length) {
+        const tail = next.length - caret;
+
+        if (
+            tail <= prev.length &&
+            prev.slice(prev.length - tail) === next.slice(caret)
+        ) {
+            const end = prev.length - tail;
+            const limit = Math.min(end, caret);
+            let start = 0;
+
+            while (start < limit && prev[start] === next[start]) start++;
+
+            return { start, end, insertedLength: caret - start };
+        }
+    }
+
     const shortest = Math.min(prev.length, next.length);
     let start = 0;
 

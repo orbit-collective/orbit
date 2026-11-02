@@ -58,6 +58,7 @@ export default function WorkspaceSettingsTemplatesModal({
     const { insertImages: spliceImages } = useImageInsertion(
         description,
         setDescription,
+        descriptionRef,
     );
 
     if (!issueType) return null;
