@@ -159,7 +159,7 @@ const LabelList: React.FC<LabelListProps> = ({
                         <button
                             type="button"
                             className={cn(
-                                'inline-flex cursor-pointer items-center rounded-full border-none bg-[var(--bg-light-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color-hover)]',
+                                'inline-flex cursor-pointer items-center rounded-full border-none bg-[var(--bg-light-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
                                 badgeClassName,
                                 isClosed && 'opacity-40',
                             )}

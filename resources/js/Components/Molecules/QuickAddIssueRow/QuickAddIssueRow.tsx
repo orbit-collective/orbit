@@ -274,7 +274,7 @@ export const QuickAddIssueRow = forwardRef<
                             onKeyDown={handleKeyDown}
                             disabled={isSubmitting}
                             placeholder="What needs to be done?"
-                            className="w-full min-w-[160px] rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] disabled:opacity-60"
+                            className="w-full min-w-[160px] rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] disabled:opacity-60"
                         />
                     </td>
                 )}
