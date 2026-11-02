@@ -91,3 +91,20 @@ test('it reads the page from a custom page name and clamps the page size', funct
     expect($this->repository->paginateForProject($project->id, 0)->perPage())->toBe(1)
         ->and($this->repository->paginateForProject($project->id, 5000)->perPage())->toBe(ActivityLogRepository::MAX_PER_PAGE);
 });
+
+test('it paginates only the logs of the given issue, newest first', function () {
+    $project = Project::factory()->create();
+    $issue = \App\Models\Issue::factory()->create(['project_id' => $project->id]);
+    $other = \App\Models\Issue::factory()->create(['project_id' => $project->id]);
+
+    $first = ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $issue->id]);
+    $second = ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $issue->id]);
+    ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $other->id]);
+    ActivityLog::factory()->create(['project_id' => $project->id]);
+
+    $page = $this->repository->paginateForIssue($issue->id, 1, 'activityPage');
+
+    expect($page->total())->toBe(2)
+        ->and($page->lastPage())->toBe(2)
+        ->and($page->items()[0]->id)->toBe($second->id);
+});
