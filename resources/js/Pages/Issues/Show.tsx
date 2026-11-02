@@ -28,6 +28,7 @@ import { IssuePageProps } from '@/types/Components';
 import { Comment, Issue, IssueLabel } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
 import { ProjectPriority } from '@/types/Priorities';
+import { retypeOptions } from '@/utils/issueTypes';
 import { formatDate } from '@/utils/time';
 import { getReachableStatuses } from '@/utils/workflow';
 
@@ -182,7 +183,14 @@ export default function Show({
             custom_fields: { [fieldId]: value } as never,
         });
 
-    const issueTypeOptions = issueTypes.map((type) => ({
+    const parentIssue = ancestors[ancestors.length - 1];
+    const issueTypeOptions = retypeOptions(
+        issueTypes,
+        issue.issueType,
+        parentIssue
+            ? { typeId: parentIssue.issue_type_id ?? parentIssue.issueType?.id }
+            : null,
+    ).map((type) => ({
         value: String(type.id),
         searchLabel: type.name,
         label: <IssueTypeBadge issueType={type} />,

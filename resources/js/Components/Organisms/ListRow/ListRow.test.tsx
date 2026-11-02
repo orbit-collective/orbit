@@ -442,10 +442,6 @@ describe('ListRow inline editing', () => {
         restrictedRoleTypes: [],
     };
     const doing = { ...todoStatus, id: 2, name: 'Doing', isInitial: false };
-    const issueTypesFor = () => [
-        bug,
-        ...(issue.issueType ? [issue.issueType] : []),
-    ];
     const issue = makeIssue({
         issueType: {
             id: 1,
@@ -471,6 +467,11 @@ describe('ListRow inline editing', () => {
         start_date: '2026-11-03',
         end_date: '2026-11-05',
     });
+
+    const issueTypesFor = () => [
+        bug,
+        ...(issue.issueType ? [issue.issueType] : []),
+    ];
 
     test('has no pickers without an editing config', () => {
         renderRow({ issue });
