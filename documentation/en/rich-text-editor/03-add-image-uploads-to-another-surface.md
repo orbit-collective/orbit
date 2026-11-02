@@ -306,6 +306,19 @@ them in order. Still never hoist `body` into the closure: the splice
 has to read the latest state, since the user can type between
 uploads.
 
+**Don't splice with a raw offset on a textarea surface — use
+`useImageInsertion(value, setValue)`.** The offset captured at paste
+time goes stale as soon as the user types, or another image lands,
+before the upload resolves. The hook keeps every pending insertion
+point as a live range, carries it through each edit it diffs out of
+`value` (`diffTextEdit()` / `mapOffsetThroughEdit()`), and splices
+against a ref holding the latest value, so two uploads never overwrite
+each other. Call `insertImages(files, range, upload, onInserted)`; the
+`onInserted({ edit, caret })` callback is where `CommentForm` feeds the
+edit to `applyRangeEdit()`. The Tiptap surface (`EditableMarkdown`)
+does the same with `transaction.mapping.map(position, 1)` on the
+editor's `transaction` event.
+
 ### Step 4 — Editing an existing comment
 
 File: `resources/js/Components/Atoms/EditableText/EditableText.tsx`
