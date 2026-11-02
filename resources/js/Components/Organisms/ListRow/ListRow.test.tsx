@@ -529,4 +529,65 @@ describe('ListRow inline editing', () => {
             'group-hover/row:opacity-100',
         );
     });
+
+    test('the pencil edits the title and Enter saves it once, without opening the issue', () => {
+        const onUpdate = vi.fn();
+        const onClick = vi.fn();
+        renderRow({
+            issue,
+            onClick,
+            editing: { users: [], abilities, onUpdate },
+        });
+
+        fireEvent.click(screen.getByLabelText('Edit title'));
+        const input = screen.getByLabelText('Issue title');
+        fireEvent.change(input, { target: { value: '  New title ' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+
+        expect(onUpdate).toHaveBeenCalledTimes(1);
+        expect(onUpdate).toHaveBeenCalledWith(issue, { title: 'New title' });
+        expect(onClick).not.toHaveBeenCalled();
+    });
+
+    test('Escape discards the title edit', () => {
+        const onUpdate = vi.fn();
+        renderRow({
+            issue,
+            editing: { users: [], abilities, onUpdate },
+        });
+
+        fireEvent.click(screen.getByLabelText('Edit title'));
+        const input = screen.getByLabelText('Issue title');
+        fireEvent.change(input, { target: { value: 'Changed' } });
+        fireEvent.keyDown(input, { key: 'Escape' });
+
+        expect(onUpdate).not.toHaveBeenCalled();
+        expect(screen.getByText('Fix the login page')).toBeInTheDocument();
+    });
+
+    test('an empty or unchanged title is not saved, and the pencil needs the update ability', () => {
+        const onUpdate = vi.fn();
+        const { unmount } = renderRow({
+            issue,
+            editing: { users: [], abilities, onUpdate },
+        });
+
+        fireEvent.click(screen.getByLabelText('Edit title'));
+        fireEvent.change(screen.getByLabelText('Issue title'), {
+            target: { value: '   ' },
+        });
+        fireEvent.blur(screen.getByLabelText('Issue title'));
+        expect(onUpdate).not.toHaveBeenCalled();
+        unmount();
+
+        renderRow({
+            issue,
+            editing: {
+                users: [],
+                abilities: { ...abilities, update: false },
+                onUpdate,
+            },
+        });
+        expect(screen.queryByLabelText('Edit title')).not.toBeInTheDocument();
+    });
 });
