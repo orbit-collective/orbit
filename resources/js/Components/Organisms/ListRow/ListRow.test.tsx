@@ -5,6 +5,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { priorityFields } from '@/stories/fixtures';
 import { todoStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
+import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
 import { ListRow } from './ListRow';
 
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
@@ -636,5 +637,33 @@ describe('ListRow inline editing', () => {
         });
 
         expect(screen.queryByLabelText('Issue type')).not.toBeInTheDocument();
+    });
+
+    test('a read-only status or date cell still opens the issue on click', () => {
+        const onClick = vi.fn();
+        renderRow({
+            issue,
+            onClick,
+            enabledColumns: {
+                ...DEFAULT_ENABLED_COLUMNS,
+                start_date: true,
+                end_date: true,
+            },
+            editing: {
+                users: [],
+                abilities: {
+                    ...abilities,
+                    update: false,
+                    changeStatus: false,
+                },
+                issueTypesFor,
+                onUpdate: vi.fn(),
+            },
+        });
+
+        fireEvent.click(screen.getAllByText('To Do')[0]);
+        fireEvent.click(screen.getByText(/3 Nov 2026/));
+
+        expect(onClick).toHaveBeenCalledTimes(2);
     });
 });
