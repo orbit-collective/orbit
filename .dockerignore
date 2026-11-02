@@ -16,3 +16,5 @@ storage/debugbar
 *.log
 storage/inertia-devtools
 backup
+storage/app/private
+storage/app/public
