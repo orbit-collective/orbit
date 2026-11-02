@@ -249,6 +249,8 @@ class ProjectController extends Controller
      * What the acting user may change on the project's issues, so the table
      * only offers the inline editors the update endpoint would accept. Every
      * issue ability is a project permission, so one answer covers all rows.
+     * The endpoint requires `update` before it looks at the property
+     * permissions, so a property is only editable together with `update`.
      *
      * @return array<string, bool>
      */
@@ -256,12 +258,14 @@ class ProjectController extends Controller
     {
         $user = $request->user();
 
+        $canUpdate = $project->hasPermission($user, Permission::ISSUES_UPDATE);
+
         return [
-            'update' => $project->hasPermission($user, Permission::ISSUES_UPDATE),
-            'changeStatus' => $project->hasPermission($user, Permission::ISSUES_CHANGE_STATUS),
-            'assign' => $project->hasPermission($user, Permission::ISSUES_ASSIGN),
-            'changePriority' => $project->hasPermission($user, Permission::ISSUES_CHANGE_PRIORITY),
-            'changeLabels' => $project->hasPermission($user, Permission::ISSUES_CHANGE_LABELS),
+            'update' => $canUpdate,
+            'changeStatus' => $canUpdate && $project->hasPermission($user, Permission::ISSUES_CHANGE_STATUS),
+            'assign' => $canUpdate && $project->hasPermission($user, Permission::ISSUES_ASSIGN),
+            'changePriority' => $canUpdate && $project->hasPermission($user, Permission::ISSUES_CHANGE_PRIORITY),
+            'changeLabels' => $canUpdate && $project->hasPermission($user, Permission::ISSUES_CHANGE_LABELS),
         ];
     }
 }
