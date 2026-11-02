@@ -424,4 +424,19 @@ describe('QuickAddIssueRow properties', () => {
             labels: [],
         });
     });
+
+    test('offers no editable property while the create request is in flight', () => {
+        renderRow(
+            { isSubmitting: true, users: [{ id: 5, name: 'Ada' }] },
+            priorities,
+        );
+
+        fireEvent.click(screen.getByText('New issue'));
+
+        expect(screen.getByLabelText('Issue type')).toBeDisabled();
+        expect(screen.queryByLabelText('Status')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Assignee')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Priority')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Start date')).not.toBeInTheDocument();
+    });
 });
