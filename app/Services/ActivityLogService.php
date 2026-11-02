@@ -18,9 +18,10 @@ class ActivityLogService
         protected ActivityLogRepository $activityLogRepository
     ) {}
 
-    public function log(?int $projectId, string $body, ?int $userId = null): ActivityLog {
+    public function log(?int $projectId, string $body, ?int $userId = null, ?int $issueId = null): ActivityLog {
         return ActivityLog::query()->create([
             'project_id' => $projectId,
+            'issue_id' => $issueId,
             'user_id' => $userId ?? auth()->id(),
             'body' => $body,
         ]);
@@ -36,6 +37,11 @@ class ActivityLogService
     public function paginateForProject(int $projectId, int $perPage): LengthAwarePaginator
     {
         return $this->activityLogRepository->paginateForProject($projectId, $perPage, self::PAGE_NAME);
+    }
+
+    public function paginateForIssue(int $issueId, int $perPage): LengthAwarePaginator
+    {
+        return $this->activityLogRepository->paginateForIssue($issueId, $perPage, self::PAGE_NAME);
     }
 
     public function paginateForUser(int $userId, int $perPage): LengthAwarePaginator

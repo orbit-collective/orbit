@@ -25,6 +25,11 @@ class ActivityLogRepository
         return $this->paginate(ActivityLog::query()->where('project_id', $projectId), $perPage, $pageName);
     }
 
+    public function paginateForIssue(int $issueId, int $perPage, string $pageName = 'page'): LengthAwarePaginator
+    {
+        return $this->paginate(ActivityLog::query()->where('issue_id', $issueId), $perPage, $pageName);
+    }
+
     public function paginateForUser(int $userId, int $perPage, string $pageName = 'page'): LengthAwarePaginator
     {
         return $this->paginate(ActivityLog::query()->where('user_id', $userId), $perPage, $pageName);
