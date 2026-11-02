@@ -271,3 +271,37 @@ test('creating an issue with a template_id prefills description and labels when 
     ]);
     expect($project->issues()->where('title', 'Login fails')->first()->labelNames())->toBe(['bug']);
 });
+
+test('an explicit empty labels list on create overrides the template labels', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+    $this->actingAs($member)->post('/issues', ['title' => 'seed', 'project_id' => $project->id, 'priority' => 'low']);
+    $bugType = $project->issueTypes()->where('name', 'Bug')->first();
+    $template = $bugType->templates()->create([
+        'name' => 'Standard Bug Report',
+        'description' => 'Steps to reproduce...',
+        'default_labels' => ['bug'],
+    ]);
+
+    $this->actingAs($member)->post('/issues', [
+        'title' => 'No labels wanted',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'issue_type_id' => $bugType->id,
+        'template_id' => $template->id,
+        'labels' => [],
+    ])->assertRedirect();
+
+    expect($project->issues()->where('title', 'No labels wanted')->first()->labelNames())->toBe([]);
+
+    $this->actingAs($member)->post('/issues', [
+        'title' => 'Labels left out',
+        'project_id' => $project->id,
+        'priority' => 'high',
+        'issue_type_id' => $bugType->id,
+        'template_id' => $template->id,
+    ])->assertRedirect();
+
+    expect($project->issues()->where('title', 'Labels left out')->first()->labelNames())->toBe(['bug']);
+});
