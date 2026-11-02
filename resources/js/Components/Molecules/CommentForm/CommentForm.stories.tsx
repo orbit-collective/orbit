@@ -39,6 +39,17 @@ export const Default: Story = {
     },
 };
 
+export const SendWithEnter: Story = {
+    play: async ({ args, canvasElement }) => {
+        const textbox = within(canvasElement).getByLabelText('Comment');
+        await userEvent.type(textbox, 'Sent with the keyboard{Enter}');
+        await expect(args.onSubmit).toHaveBeenCalledWith(
+            'Sent with the keyboard',
+            [],
+        );
+    },
+};
+
 export const Submitting: Story = {
     args: { isSubmitting: true },
 };

@@ -663,4 +663,87 @@ describe('CommentForm image uploads', () => {
         expect(await screen.findByText('In Progress')).toBeInTheDocument();
         expect(screen.getByText('Unassigned')).toBeInTheDocument();
     });
+
+    describe('keyboard and accessibility', () => {
+        test('Enter sends the comment', async () => {
+            const handleSubmit = vi.fn();
+            render(<CommentForm onSubmit={handleSubmit} />);
+
+            const textarea = screen.getByLabelText('Comment');
+            await userEvent.type(textarea, 'Ship it{Enter}');
+
+            expect(handleSubmit).toHaveBeenCalledWith('Ship it', []);
+            expect(textarea).toHaveValue('');
+        });
+
+        test('Shift+Enter inserts a newline instead of sending', async () => {
+            const handleSubmit = vi.fn();
+            render(<CommentForm onSubmit={handleSubmit} />);
+
+            const textarea = screen.getByLabelText('Comment');
+            await userEvent.type(textarea, 'one{Shift>}{Enter}{/Shift}two');
+
+            expect(handleSubmit).not.toHaveBeenCalled();
+            expect(textarea).toHaveValue('one\ntwo');
+        });
+
+        test('Enter on an empty or whitespace-only field sends nothing', async () => {
+            const handleSubmit = vi.fn();
+            render(<CommentForm onSubmit={handleSubmit} />);
+
+            await userEvent.type(
+                screen.getByLabelText('Comment'),
+                '   {Enter}',
+            );
+
+            expect(handleSubmit).not.toHaveBeenCalled();
+        });
+
+        test('Enter does not send while a submit is in flight', () => {
+            const handleSubmit = vi.fn();
+            render(<CommentForm onSubmit={handleSubmit} isSubmitting />);
+
+            const textarea = screen.getByLabelText('Comment');
+            fireEvent.change(textarea, { target: { value: 'hi' } });
+            fireEvent.keyDown(textarea, { key: 'Enter' });
+
+            expect(handleSubmit).not.toHaveBeenCalled();
+        });
+
+        test('Enter confirming an IME composition does not send', () => {
+            const handleSubmit = vi.fn();
+            render(<CommentForm onSubmit={handleSubmit} />);
+
+            const textarea = screen.getByLabelText('Comment');
+            fireEvent.change(textarea, { target: { value: 'konnichiwa' } });
+            fireEvent.keyDown(textarea, { key: 'Enter', isComposing: true });
+
+            expect(handleSubmit).not.toHaveBeenCalled();
+        });
+
+        test('Enter picks a mention instead of sending the comment', async () => {
+            const handleSubmit = vi.fn();
+            render(<CommentForm onSubmit={handleSubmit} users={users} />);
+
+            const textarea = screen.getByLabelText('Comment');
+            await userEvent.type(textarea, 'hi @Jane{Enter}');
+
+            expect(handleSubmit).not.toHaveBeenCalled();
+            expect(textarea).toHaveValue('hi @Jane Cooper ');
+        });
+
+        test('exposes a labelled form, a described textarea and a disabled button when empty', () => {
+            render(<CommentForm onSubmit={() => {}} />);
+
+            expect(
+                screen.getByRole('form', { name: 'New comment' }),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByLabelText('Comment'),
+            ).toHaveAccessibleDescription(/Enter to send/);
+            expect(
+                screen.getByRole('button', { name: 'Post comment' }),
+            ).toBeDisabled();
+        });
+    });
 });
