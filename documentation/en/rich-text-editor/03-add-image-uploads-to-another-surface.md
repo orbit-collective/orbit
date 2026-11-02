@@ -203,13 +203,15 @@ There is a second trap in the same component: `handleChange` drops
 **all** tracked ranges whenever a change arrives without a captured
 edit range (see its comment about IME, drag-and-drop and undo). A
 programmatic `setBody()` never reaches `handleChange` at all, so the
-reconciliation is done by hand, inside the functional update:
+reconciliation is done by hand, in the `onInserted` callback:
 
 ```tsx
+const { insertImages: spliceImages } = useImageInsertion(body, setBody);
+
 /**
- * Uploads a batch one at a time and moves the insertion point past each
- * image as it lands, so several files pasted at once keep their order
- * instead of every one of them splicing into the original range.
+ * Splices each uploaded image in where it was pasted, however the text
+ * changed while it uploaded (see useImageInsertion), and shifts the
+ * tracked mentions by exactly what that splice inserted.
  */
 const insertImages = async (
     files: File[],
@@ -217,33 +219,21 @@ const insertImages = async (
 ) => {
     if (!onImageUpload) return;
 
-    let target = range;
-
-    for (const file of files) {
-        const at = target;
-
-        try {
-            const url = await onImageUpload(file);
-
-            setBody((current) => {
-                const result = insertMarkdownImage(current, at, file, url);
-
-                setMentionRanges((prev) =>
-                    applyRangeEdit(prev, at.start, at.end, result.length),
-                );
-                setPendingCaret(result.caret);
-
-                return result.body;
-            });
-
-            target = nextImageRange(at, file, url);
-        } catch {
-            // The uploader already reported the failure to the user; the
-            // remaining files in this batch still get their turn.
-        }
-    }
+    await spliceImages(files, range, onImageUpload, ({ edit, caret }) => {
+        setMentionRanges((prev) =>
+            applyRangeEdit(prev, edit.start, edit.end, edit.insertedLength),
+        );
+        setPendingCaret(caret);
+    });
 };
 ```
+
+The hook does the splice itself, against a ref holding the latest body,
+so there is no `setBody((current) => ...)` here and nothing to reconcile
+by hand inside a functional update: `onInserted` receives the `edit` the
+splice made (`start`, `end`, `insertedLength`) and hands it to
+`applyRangeEdit()`, which is the same reconciliation the old code did,
+now with the range the text really had at that moment.
 
 `setPendingCaret` is the component's existing mechanism — the
 `useEffect` watching `[body, pendingCaret]` re-focuses the textarea
@@ -294,28 +284,21 @@ A drop onto a textarea does not move the caret first, so the
 insertion point is wherever the caret already was — unlike the Tiptap
 surface, there is no `posAtCoords()` equivalent worth reaching for.
 
-**Upload the batch sequentially, not with `files.forEach`.** Firing
-the uploads in parallel and letting each one splice independently
-looks fine — every `setBody`/`setMentionRanges` call is a functional
-update reading the latest state — but the *range* each one captured
-is the original. Two pasted images then both insert at the same
-point, so they land in reverse order, and over a selection the second
-one cuts through the markdown the first already wrote. Awaiting each
-file in turn and advancing through `nextImageRange()` is what keeps
-them in order. Still never hoist `body` into the closure: the splice
-has to read the latest state, since the user can type between
-uploads.
-
-**Don't splice with a raw offset on a textarea surface — use
-`useImageInsertion(value, setValue)`.** The offset captured at paste
-time goes stale as soon as the user types, or another image lands,
-before the upload resolves. The hook keeps every pending insertion
-point as a live range, carries it through each edit it diffs out of
-`value` (`diffTextEdit()` / `mapOffsetThroughEdit()`), and splices
-against a ref holding the latest value, so two uploads never overwrite
-each other. Call `insertImages(files, range, upload, onInserted)`; the
-`onInserted({ edit, caret })` callback is where `CommentForm` feeds the
-edit to `applyRangeEdit()`. The Tiptap surface (`EditableMarkdown`)
+**Don't splice with a raw offset, and don't upload a batch in
+parallel — use `useImageInsertion(value, setValue)`.** An offset captured
+at paste time goes stale as soon as the user types, or another image
+lands, before the upload resolves, and a batch uploaded in parallel with
+the original range for every file inserts in reverse order and cuts
+through the markdown an earlier file wrote. The hook keeps every pending
+insertion point as a live range, uploads a batch in order, and carries
+each range through the edits it diffs out of `value`
+(`diffTextEdit()` / `mapPendingRange()`): an edit before a range moves
+it, an edit after it leaves it alone, and one that touches a selected
+range collapses it, so text typed over a selection survives the image
+that was pasted onto it. After each file it advances the point past the
+inserted image with `nextImageRange()` and splices against a ref holding
+the latest value, so two uploads never overwrite each other. Never hoist
+`body` into your own closure. The Tiptap surface (`EditableMarkdown`)
 does the same with `transaction.mapping.map(position, 1)` on the
 editor's `transaction` event.
 
@@ -329,6 +312,8 @@ mode, so the upload support lives in that atom rather than in
 gets it by passing one prop.
 
 ```tsx
+const { insertImages: spliceImages } = useImageInsertion(draft, setDraft);
+
 const insertImages = async (
     files: File[],
     range: { start: number; end: number },
@@ -337,32 +322,23 @@ const insertImages = async (
 
     pendingUploadsRef.current += files.length;
 
-    let target = range;
-
-    for (const file of files) {
-        const at = target;
-
-        try {
-            const url = await onImageUpload(file);
-
-            setDraft((current) => {
-                const result = insertMarkdownImage(current, at, file, url);
-
-                setPendingCaret(result.caret);
-
-                return result.body;
-            });
-
-            target = nextImageRange(at, file, url);
-        } catch {
-            // The uploader already reported the failure to the user.
-        } finally {
-            pendingUploadsRef.current = Math.max(
-                0,
-                pendingUploadsRef.current - 1,
-            );
-        }
-    }
+    // Every file goes through the uploader exactly once, so each one
+    // releases its own share of the count.
+    await spliceImages(
+        files,
+        range,
+        async (file) => {
+            try {
+                return await onImageUpload(file);
+            } finally {
+                pendingUploadsRef.current = Math.max(
+                    0,
+                    pendingUploadsRef.current - 1,
+                );
+            }
+        },
+        ({ caret }) => setPendingCaret(caret),
+    );
 };
 ```
 
@@ -492,42 +468,24 @@ splice.
 ### Step B2 — Paste and drop on the description textarea
 
 ```tsx
-const insertImages = async (
+const { insertImages: spliceImages } = useImageInsertion(
+    description,
+    setDescription,
+);
+
+const insertImages = (
     files: File[],
     range: { start: number; end: number },
-) => {
-    let target = range;
-
-    for (const file of files) {
-        const at = target;
-
-        try {
-            const url = await uploadImage(file);
-
-            setDescription((current) => {
-                const result = insertMarkdownImage(current, at, file, url);
-
-                // This component has no pendingCaret effect the way
-                // CommentForm does, and needs none for a single field - the
-                // textarea is still mounted, it just lost its selection to
-                // the re-render.
-                requestAnimationFrame(() => {
-                    descriptionRef.current?.focus();
-                    descriptionRef.current?.setSelectionRange(
-                        result.caret,
-                        result.caret,
-                    );
-                });
-
-                return result.body;
-            });
-
-            target = nextImageRange(at, file, url);
-        } catch {
-            // The uploader already reported the failure to the user.
-        }
-    }
-};
+) =>
+    spliceImages(files, range, uploadImage, ({ caret }) => {
+        // This component has no pendingCaret effect the way CommentForm
+        // does, and needs none for a single field - the textarea is still
+        // mounted, it just lost its selection to the re-render.
+        requestAnimationFrame(() => {
+            descriptionRef.current?.focus();
+            descriptionRef.current?.setSelectionRange(caret, caret);
+        });
+    });
 
 const handleDescriptionPaste = (
     e: React.ClipboardEvent<HTMLTextAreaElement>,
@@ -575,8 +533,8 @@ The `requestAnimationFrame` stands in for `CommentForm`'s
 `pendingCaret` effect — this component has no such mechanism and
 doesn't need a general one for a single field.
 
-`uploadImage` already toasts and re-throws on failure, so the
-`catch` here is empty on purpose and `insertImages`'s promise is left
+`uploadImage` already toasts and re-throws on failure, which the hook
+swallows for that file only, and `insertImages`'s promise is left
 unawaited (`void`): a rejected upload has already been surfaced to
 the user, the description is left exactly as it was, and the rest of
 the batch still gets its turn.
@@ -619,6 +577,11 @@ modelled on:
   image, two consecutive images with an empty alt, and the two
   negative cases that keep the parser honest (a plain `[link](url)`
   and prose that merely contains brackets).
+- `resources/js/hooks/useImageInsertion.test.ts` and the `diffTextEdit`,
+  `mapOffsetThroughEdit` and `mapPendingRange` blocks of
+  `imagePaste.test.ts` — a pending insertion point following text typed
+  in front of it, two concurrent pastes at one point keeping their
+  order, and text typed over a pasted-on selection surviving the image.
 - `resources/js/Components/Molecules/CommentForm/CommentForm.test.tsx` —
   paste uploads and submits the markdown link; **the mention
   regression**: with a mention already selected, paste an image

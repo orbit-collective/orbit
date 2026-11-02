@@ -150,13 +150,15 @@ To miejsce, w którym komentarz różni się od każdej innej powierzchni, i cz�
 
 `CommentForm` śledzi każdą wzmiankę `@mention` jako **zakres znaków** w treści (`mentionRanges`) i uzgadnia te zakresy z każdą edycją przez `applyRangeEdit(prev, start, end, insertedLength)`. To właśnie zakresy są tym, czego `tokenizeMentionRanges()` używa przy wysyłce, żeby zamienić wyświetlane nazwy z powrotem na id użytkowników, więc wstawienie pomijające uzgodnienie przesuwa każdą wzmiankę znajdującą się za nim i komentarz powiadamia niewłaściwą osobę — bez niczego widocznie nie tak na ekranie.
 
-W tym samym komponencie czai się druga pułapka: `handleChange` porzuca **wszystkie** śledzone zakresy, kiedy zmiana przychodzi bez przechwyconego zakresu edycji (zobacz jego komentarz o IME, przeciąganiu i cofaniu). Programowe `setBody()` w ogóle nie dociera do `handleChange`, więc uzgodnienie wykonywane jest ręcznie, wewnątrz aktualizacji funkcyjnej:
+W tym samym komponencie czai się druga pułapka: `handleChange` porzuca **wszystkie** śledzone zakresy, kiedy zmiana przychodzi bez przechwyconego zakresu edycji (zobacz jego komentarz o IME, przeciąganiu i cofaniu). Programowe `setBody()` w ogóle nie dociera do `handleChange`, więc uzgodnienie wykonywane jest ręcznie, w callbacku `onInserted`:
 
 ```tsx
+const { insertImages: spliceImages } = useImageInsertion(body, setBody);
+
 /**
- * Uploads a batch one at a time and moves the insertion point past each
- * image as it lands, so several files pasted at once keep their order
- * instead of every one of them splicing into the original range.
+ * Splices each uploaded image in where it was pasted, however the text
+ * changed while it uploaded (see useImageInsertion), and shifts the
+ * tracked mentions by exactly what that splice inserted.
  */
 const insertImages = async (
     files: File[],
@@ -164,33 +166,16 @@ const insertImages = async (
 ) => {
     if (!onImageUpload) return;
 
-    let target = range;
-
-    for (const file of files) {
-        const at = target;
-
-        try {
-            const url = await onImageUpload(file);
-
-            setBody((current) => {
-                const result = insertMarkdownImage(current, at, file, url);
-
-                setMentionRanges((prev) =>
-                    applyRangeEdit(prev, at.start, at.end, result.length),
-                );
-                setPendingCaret(result.caret);
-
-                return result.body;
-            });
-
-            target = nextImageRange(at, file, url);
-        } catch {
-            // The uploader already reported the failure to the user; the
-            // remaining files in this batch still get their turn.
-        }
-    }
+    await spliceImages(files, range, onImageUpload, ({ edit, caret }) => {
+        setMentionRanges((prev) =>
+            applyRangeEdit(prev, edit.start, edit.end, edit.insertedLength),
+        );
+        setPendingCaret(caret);
+    });
 };
 ```
+
+Hook sam wykonuje wstawienie, względem refa z najświeższą treścią, więc nie ma tu `setBody((current) => ...)` ani ręcznego uzgadniania wewnątrz aktualizacji funkcyjnej: `onInserted` dostaje `edit` wykonanej edycji (`start`, `end`, `insertedLength`) i przekazuje go do `applyRangeEdit()`. To to samo uzgodnienie co w starym kodzie, tyle że z zakresem, jaki tekst faktycznie miał w tamtej chwili.
 
 `setPendingCaret` to istniejący już mechanizm komponentu — `useEffect` obserwujący `[body, pendingCaret]` przywraca fokus na textareę i odtwarza zaznaczenie po przerenderowaniu.
 
@@ -234,9 +219,7 @@ wraz z `onDrop={handleDrop}` na `TextArea`. Przejście do `captureEditRange`, gd
 
 Upuszczenie na textareę nie przesuwa najpierw kursora, więc punktem wstawienia jest miejsce, w którym kursor już był — w odróżnieniu od powierzchni Tiptapa nie ma tu odpowiednika `posAtCoords()`, po który warto by sięgać.
 
-**Wysyłaj wsad sekwencyjnie, a nie przez `files.forEach`.** Odpalenie uploadów równolegle i pozwolenie każdemu wkleić się niezależnie wygląda w porządku — każde wywołanie `setBody`/`setMentionRanges` to aktualizacja funkcyjna czytająca najświeższy stan — ale *zakres* przechwycony przez każdy z nich jest ten pierwotny. Dwa wklejone obrazy wstawiają się więc w tym samym punkcie, czyli lądują w odwrotnej kolejności, a na zaznaczeniu drugi przecina markdown, który zapisał już pierwszy. Oczekiwanie na każdy plik po kolei i przesuwanie się przez `nextImageRange()` jest tym, co utrzymuje ich kolejność. Nadal nigdy nie wciągaj `body` do domknięcia: wklejenie musi czytać najświeższy stan, bo użytkownik może pisać między uploadami.
-
-**Na powierzchni z textarea nie wstawiaj obrazu po surowym offsecie — użyj `useImageInsertion(value, setValue)`.** Offset przechwycony przy wklejeniu przestaje być aktualny, gdy tylko użytkownik coś wpisze albo wyląduje inny obraz, zanim upload się zakończy. Hook trzyma każdy oczekujący punkt wstawienia jako żywy zakres, przesuwa go przez każdą edycję wyliczoną z `value` (`diffTextEdit()` / `mapOffsetThroughEdit()`) i wstawia względem refa z najświeższą wartością, więc dwa uploady nie nadpisują się nawzajem. Wywołaj `insertImages(files, range, upload, onInserted)`; w callbacku `onInserted({ edit, caret })` `CommentForm` przekazuje edycję do `applyRangeEdit()`. Powierzchnia Tiptap (`EditableMarkdown`) robi to samo przez `transaction.mapping.map(position, 1)` na zdarzeniu `transaction` edytora.
+**Nie wstawiaj po surowym offsecie i nie wysyłaj wsadu równolegle — użyj `useImageInsertion(value, setValue)`.** Offset przechwycony przy wklejeniu przestaje być aktualny, gdy tylko użytkownik coś wpisze albo wyląduje inny obraz, zanim upload się zakończy, a wsad wysyłany równolegle z pierwotnym zakresem dla każdego pliku wstawia się w odwrotnej kolejności i przecina markdown zapisany przez wcześniejszy plik. Hook trzyma każdy oczekujący punkt wstawienia jako żywy zakres, wysyła wsad po kolei i przesuwa każdy zakres przez edycje wyliczone z `value` (`diffTextEdit()` / `mapPendingRange()`): edycja przed zakresem go przesuwa, edycja za nim go nie rusza, a edycja, która go dotyka, zwija go — tekst wpisany na zaznaczeniu, na które wklejono obraz, przeżywa więc wstawienie. Po każdym pliku przesuwa punkt za wstawiony obraz przez `nextImageRange()` i wstawia względem refa z najświeższą wartością, więc dwa uploady nie nadpisują się nawzajem. Nigdy nie wciągaj `body` do własnego domknięcia. Powierzchnia Tiptap (`EditableMarkdown`) robi to samo przez `transaction.mapping.map(position, 1)` na zdarzeniu `transaction` edytora.
 
 ### Krok 4 — Edycja istniejącego komentarza
 
@@ -245,6 +228,8 @@ Plik: `resources/js/Components/Atoms/EditableText/EditableText.tsx`
 Istniejący komentarz edytuje się przez `EditableText` w trybie `multiline`, więc obsługa uploadu mieszka w tym atomie, a nie w `CommentItem` — co oznacza też, że każdy inny wielolinijkowy `EditableText` dostaje ją po przekazaniu jednego propa.
 
 ```tsx
+const { insertImages: spliceImages } = useImageInsertion(draft, setDraft);
+
 const insertImages = async (
     files: File[],
     range: { start: number; end: number },
@@ -253,32 +238,23 @@ const insertImages = async (
 
     pendingUploadsRef.current += files.length;
 
-    let target = range;
-
-    for (const file of files) {
-        const at = target;
-
-        try {
-            const url = await onImageUpload(file);
-
-            setDraft((current) => {
-                const result = insertMarkdownImage(current, at, file, url);
-
-                setPendingCaret(result.caret);
-
-                return result.body;
-            });
-
-            target = nextImageRange(at, file, url);
-        } catch {
-            // The uploader already reported the failure to the user.
-        } finally {
-            pendingUploadsRef.current = Math.max(
-                0,
-                pendingUploadsRef.current - 1,
-            );
-        }
-    }
+    // Every file goes through the uploader exactly once, so each one
+    // releases its own share of the count.
+    await spliceImages(
+        files,
+        range,
+        async (file) => {
+            try {
+                return await onImageUpload(file);
+            } finally {
+                pendingUploadsRef.current = Math.max(
+                    0,
+                    pendingUploadsRef.current - 1,
+                );
+            }
+        },
+        ({ caret }) => setPendingCaret(caret),
+    );
 };
 ```
 
@@ -367,42 +343,24 @@ const descriptionRef = useRef<HTMLTextAreaElement>(null);
 ### Krok B2 — Wklejanie i upuszczanie na textarei opisu
 
 ```tsx
-const insertImages = async (
+const { insertImages: spliceImages } = useImageInsertion(
+    description,
+    setDescription,
+);
+
+const insertImages = (
     files: File[],
     range: { start: number; end: number },
-) => {
-    let target = range;
-
-    for (const file of files) {
-        const at = target;
-
-        try {
-            const url = await uploadImage(file);
-
-            setDescription((current) => {
-                const result = insertMarkdownImage(current, at, file, url);
-
-                // This component has no pendingCaret effect the way
-                // CommentForm does, and needs none for a single field - the
-                // textarea is still mounted, it just lost its selection to
-                // the re-render.
-                requestAnimationFrame(() => {
-                    descriptionRef.current?.focus();
-                    descriptionRef.current?.setSelectionRange(
-                        result.caret,
-                        result.caret,
-                    );
-                });
-
-                return result.body;
-            });
-
-            target = nextImageRange(at, file, url);
-        } catch {
-            // The uploader already reported the failure to the user.
-        }
-    }
-};
+) =>
+    spliceImages(files, range, uploadImage, ({ caret }) => {
+        // This component has no pendingCaret effect the way CommentForm
+        // does, and needs none for a single field - the textarea is still
+        // mounted, it just lost its selection to the re-render.
+        requestAnimationFrame(() => {
+            descriptionRef.current?.focus();
+            descriptionRef.current?.setSelectionRange(caret, caret);
+        });
+    });
 
 const handleDescriptionPaste = (
     e: React.ClipboardEvent<HTMLTextAreaElement>,
@@ -465,6 +423,7 @@ Modal renderuje formularz tylko wtedy, gdy `canManageTemplates` jest prawdą, co
 Pokrycie Części A już istnieje i to na nim należy wzorować nową powierzchnię:
 
 - `resources/js/utils/imagePaste.test.ts` — `insertMarkdownImage` przy zwiniętym kursorze, na zaznaczonym zakresie i na pustej treści, plus round-trip asercujący, że to, co produkuje, `splitMarkdownImages` parsuje z powrotem; `markdownImageAlt` usuwające znaki łamiące link i spadające na `image`, gdy nie zostaje nic użytecznego; `nextImageRange` zgodne z kursorem raportowanym przez `insertMarkdownImage` i sklejające wsad w kolejności; oraz sam `splitMarkdownImages`: brak obrazu, pusta treść, tekst dookoła obrazu, dwa obrazy pod rząd z pustym altem i dwa przypadki negatywne trzymające parser w ryzach (zwykły `[link](url)` i proza, która jedynie zawiera nawiasy).
+- `resources/js/hooks/useImageInsertion.test.ts` oraz bloki `diffTextEdit`, `mapOffsetThroughEdit` i `mapPendingRange` w `imagePaste.test.ts` — oczekujący punkt wstawienia podążający za tekstem wpisanym przed nim, dwa równoległe wklejenia w jednym punkcie zachowujące kolejność oraz tekst wpisany na zaznaczeniu, na które wklejono obraz, przeżywający wstawienie obrazu.
 - `resources/js/Components/Molecules/CommentForm/CommentForm.test.tsx` — wklejenie uploaduje i wysyła link markdown; **regresja wzmianek**: mając już wybraną wzmiankę, wklej obraz *przed* nią i asercuj, że wysyłana treść dalej niesie `@[Jane Cooper](1)`, a `mentioned_user_ids` dalej niesie to id; upuszczenie w kursorze; wklejenie dwóch obrazów naraz lądujące w kolejności, na zaznaczeniu zastępujące je dokładnie raz, oraz nieudany pierwszy upload niezatrzymujący drugiego; a także wklejenie zostawione przeglądarce zarówno wtedy, gdy nie ma uploadera, jak i wtedy, gdy w schowku nie ma obrazu (`defaultPrevented === false`).
 - `resources/js/Components/Atoms/EditableText/EditableText.test.tsx` — wklejenie w kursorze, wklejenie zastępujące zaznaczenie, upuszczenie, nieudany upload zostawiający draft nietknięty, wklejenie bez uploadera oraz blur w trakcie trwającego uploadu, który ani nie zatwierdza, ani nie gubi obrazu.
 - `resources/js/Components/Molecules/CommentItem/CommentItem.test.tsx` — treść z obrazem renderuje `<img>`, a nie dosłowny markdown, obraz linkuje do pliku bez rozpoczynania edycji, a wzmianki dalej renderują się obok niego.
