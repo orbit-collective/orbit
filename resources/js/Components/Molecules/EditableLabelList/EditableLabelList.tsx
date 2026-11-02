@@ -93,6 +93,7 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
                         aria-label="Edit labels"
                         className={cn(
                             'flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:hover:bg-transparent',
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
                             revealTrigger && REVEAL_ON_ROW_HOVER,
                         )}
                     >
