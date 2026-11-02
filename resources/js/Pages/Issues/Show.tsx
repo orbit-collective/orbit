@@ -13,8 +13,11 @@ import EditableLabelList from '@/Components/Molecules/EditableLabelList/Editable
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import EditableSelect from '@/Components/Molecules/EditableSelect/EditableSelect';
 import IssueCustomField from '@/Components/Molecules/IssueCustomField/IssueCustomField';
+import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
+import TabSelection from '@/Components/Molecules/TabSelection/TabSelection';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
+import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
 import IssueChildrenPanel from '@/Components/Organisms/IssueChildrenPanel/IssueChildrenPanel';
 import IssueDevelopmentPanel from '@/Components/Organisms/IssueDevelopmentPanel/IssueDevelopmentPanel';
 import IssuePageHeader from '@/Components/Organisms/IssuePageHeader/IssuePageHeader';
@@ -24,10 +27,15 @@ import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useIssueCommands } from '@/hooks/useIssueCommands';
+import { ActivityLogEntry } from '@/types/ActivityLog';
 import { IssuePageProps } from '@/types/Components';
-import { Comment, Issue, IssueLabel } from '@/types/Issues';
+import { Comment, Issue, IssueLabel, PaginatedResponse } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
 import { ProjectPriority } from '@/types/Priorities';
+import {
+    ACTIVITY_PAGE_PARAM,
+    ACTIVITY_PER_PAGE_PARAM,
+} from '@/utils/activityLog';
 import { retypeOptions } from '@/utils/issueTypes';
 import { formatDate } from '@/utils/time';
 import { getReachableStatuses } from '@/utils/workflow';
@@ -38,6 +46,22 @@ import { getReachableStatuses } from '@/utils/workflow';
 const NO_LABELS: ProjectLabel[] = [];
 const NO_ANCESTORS: Issue[] = [];
 const NO_PRIORITIES: ProjectPriority[] = [];
+const ACTIVITY_DEFAULT_PER_PAGE = 20;
+const NO_LOGS: PaginatedResponse<ActivityLogEntry> = {
+    current_page: 1,
+    data: [],
+    first_page_url: '',
+    from: 0,
+    last_page: 1,
+    last_page_url: '',
+    links: [],
+    next_page_url: null,
+    path: '',
+    per_page: ACTIVITY_DEFAULT_PER_PAGE,
+    prev_page_url: null,
+    to: 0,
+    total: 0,
+};
 
 export default function Show({
     project,
@@ -55,6 +79,8 @@ export default function Show({
     githubAccountLinked = false,
     issueAbilities,
     projectRole = null,
+    activityLogs = NO_LOGS,
+    queryParams = null,
 }: IssuePageProps) {
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
@@ -245,6 +271,15 @@ export default function Show({
         })),
     ];
 
+    type Tab = 'Comments' | 'Activity';
+
+    const tabs: { name: Tab; count?: number }[] = [
+        { name: 'Comments', count: issue.comments?.length ?? 0 },
+        { name: 'Activity' },
+    ];
+
+    const [selectedTab, setSelectedTab] = useState<Tab>('Comments');
+
     return (
         <ProjectLabelsProvider labels={labels}>
             <ProjectPrioritiesProvider priorities={priorities}>
@@ -290,23 +325,59 @@ export default function Show({
                                     )}
 
                                     <div className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
-                                        <span className="text-sm font-medium text-[var(--text-color)]">
-                                            Activity
-                                        </span>
-                                        <CommentList
-                                            comments={issue.comments || []}
-                                            users={users}
-                                            projectId={project.id}
-                                            onEdit={editComment}
-                                            onDelete={deleteComment}
-                                            onImageUpload={uploadImage}
+                                        <TabSelection
+                                            tabs={tabs}
+                                            selectedTab={selectedTab}
+                                            onSelectTab={setSelectedTab}
                                         />
-                                        <CommentForm
-                                            onSubmit={addComment}
-                                            users={users}
-                                            projectId={project.id}
-                                            onImageUpload={uploadImage}
-                                        />
+                                        {selectedTab === 'Comments' ? (
+                                            <>
+                                                <CommentList
+                                                    comments={
+                                                        issue.comments || []
+                                                    }
+                                                    users={users}
+                                                    projectId={project.id}
+                                                    onEdit={editComment}
+                                                    onDelete={deleteComment}
+                                                    onImageUpload={uploadImage}
+                                                />
+                                                <CommentForm
+                                                    onSubmit={addComment}
+                                                    users={users}
+                                                    projectId={project.id}
+                                                    onImageUpload={uploadImage}
+                                                />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <ActivityLogs
+                                                    logs={activityLogs.data}
+                                                    users={users}
+                                                    issueTypes={issueTypes}
+                                                />
+                                                <Pagination
+                                                    links={activityLogs.links}
+                                                    from={activityLogs.from}
+                                                    to={activityLogs.to}
+                                                    total={activityLogs.total}
+                                                    queryParams={
+                                                        queryParams ?? {}
+                                                    }
+                                                    pageParam={
+                                                        ACTIVITY_PAGE_PARAM
+                                                    }
+                                                    perPageParam={
+                                                        ACTIVITY_PER_PAGE_PARAM
+                                                    }
+                                                    defaultPerPage={
+                                                        ACTIVITY_DEFAULT_PER_PAGE
+                                                    }
+                                                    preserveState
+                                                    className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
+                                                />
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
