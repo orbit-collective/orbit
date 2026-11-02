@@ -113,6 +113,7 @@ class ProjectController extends Controller
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
             'nextIssueId' => $this->issueService->peekNextIssueId($project),
             'issueAbilities' => $this->issueAbilities($request, $project),
+            'projectRole' => $project->roleOf($request->user()),
         ]);
     }
 

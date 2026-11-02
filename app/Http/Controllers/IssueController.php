@@ -69,6 +69,7 @@ class IssueController extends Controller
             'githubRepositories' => $this->mapGithubRepositories($project),
             'githubDefaultBranchName' => $this->githubBranchService->defaultBranchName($issue),
             'issueAbilities' => $this->issueAbilities($request, $issue),
+            'projectRole' => $project->roleOf($request->user()),
             'canCreateGithubDevelopment' => $request->user()->can('createGithubDevelopment', $issue),
             'githubAccountLinked' => $request->user()->github_id !== null,
         ]);
