@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { RefObject, useCallback, useEffect, useRef } from 'react';
 import {
     diffTextEdit,
     insertMarkdownImage,
@@ -29,6 +29,7 @@ interface InsertedImage {
 export const useImageInsertion = (
     value: string,
     setValue: (next: string) => void,
+    textareaRef?: RefObject<HTMLTextAreaElement | null>,
 ) => {
     const valueRef = useRef(value);
     const pendingRef = useRef(new Set<Range>());
@@ -36,7 +37,15 @@ export const useImageInsertion = (
     useEffect(() => {
         if (valueRef.current === value) return;
 
-        const edit = diffTextEdit(valueRef.current, value);
+        // The caret a user's keystroke leaves behind says where the typed
+        // text ends, which settles an edit the two values alone leave
+        // ambiguous (see diffTextEdit).
+        const textarea = textareaRef?.current;
+        const caret =
+            textarea && textarea.selectionStart === textarea.selectionEnd
+                ? textarea.selectionStart
+                : undefined;
+        const edit = diffTextEdit(valueRef.current, value, caret);
 
         for (const range of pendingRef.current) {
             Object.assign(range, mapPendingRange(range, edit));
@@ -82,12 +91,21 @@ export const useImageInsertion = (
                             insertedLength: result.length,
                         };
 
+                        // Pastes keep their paste order: a point registered
+                        // before this one stays in front of the image, one
+                        // registered after it moves behind. The set iterates
+                        // in registration order.
+                        let registeredBefore = true;
+
                         for (const other of pendingRef.current) {
-                            if (other === pending) continue;
+                            if (other === pending) {
+                                registeredBefore = false;
+                                continue;
+                            }
 
                             Object.assign(
                                 other,
-                                mapPendingRange(other, edit, true),
+                                mapPendingRange(other, edit, !registeredBefore),
                             );
                         }
 

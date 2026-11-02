@@ -127,4 +127,71 @@ describe('useImageInsertion', () => {
 
         expect(result.current.value).toBe('aX![a.png](/a.png)d');
     });
+
+    test('typing a character that also ends the selection does not make the image delete text', async () => {
+        // "fo" of "foo" is selected and typed over with "f": the value diff
+        // alone cannot tell which characters were replaced.
+        // The caret the keystroke left behind, as the textarea would report it.
+        const textarea = { selectionStart: 1, selectionEnd: 1 };
+        const { result } = renderHook(() => {
+            const [value, setValue] = useState('foo');
+
+            return {
+                value,
+                setValue,
+                ...useImageInsertion(value, setValue, {
+                    current: textarea,
+                } as never),
+            };
+        });
+        const upload = deferred();
+        let done: Promise<void> = Promise.resolve();
+
+        act(() => {
+            done = result.current.insertImages(
+                [file('a.png')],
+                { start: 0, end: 2 },
+                () => upload.promise,
+            );
+        });
+        act(() => result.current.setValue('fo'));
+        await act(async () => {
+            upload.resolve('/a.png');
+            await done;
+        });
+
+        expect(result.current.value).toBe('f![a.png](/a.png)o');
+    });
+
+    test('two pastes at one caret keep paste order when the second upload finishes first', async () => {
+        const { result } = setup('ab');
+        const first = deferred();
+        const second = deferred();
+        let done: Promise<unknown> = Promise.resolve();
+
+        act(() => {
+            done = Promise.all([
+                result.current.insertImages(
+                    [file('1.png')],
+                    { start: 1, end: 1 },
+                    () => first.promise,
+                ),
+                result.current.insertImages(
+                    [file('2.png')],
+                    { start: 1, end: 1 },
+                    () => second.promise,
+                ),
+            ]);
+        });
+        await act(async () => {
+            second.resolve('/2.png');
+            await Promise.resolve();
+        });
+        await act(async () => {
+            first.resolve('/1.png');
+            await done;
+        });
+
+        expect(result.current.value).toBe('a![1.png](/1.png)![2.png](/2.png)b');
+    });
 });

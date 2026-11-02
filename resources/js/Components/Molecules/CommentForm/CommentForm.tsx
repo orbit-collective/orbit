@@ -342,7 +342,11 @@ const CommentForm: React.FC<CommentFormProps> = ({
         }
     };
 
-    const { insertImages: spliceImages } = useImageInsertion(body, setBody);
+    const { insertImages: spliceImages } = useImageInsertion(
+        body,
+        setBody,
+        textareaRef,
+    );
 
     /**
      * Splices each uploaded image in where it was pasted, however the text

@@ -60,7 +60,11 @@ const EditableText: React.FC<EditableTextProps> = ({
         }
     };
 
-    const { insertImages: spliceImages } = useImageInsertion(draft, setDraft);
+    const { insertImages: spliceImages } = useImageInsertion(
+        draft,
+        setDraft,
+        textareaRef,
+    );
 
     /**
      * Uploads a batch and splices each image in where it was pasted, however

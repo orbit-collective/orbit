@@ -315,6 +315,44 @@ describe('diffTextEdit', () => {
     });
 });
 
+describe('diffTextEdit with a caret', () => {
+    test('settles an edit the values alone leave ambiguous', () => {
+        // "fo" of "foo" typed over with "f".
+        expect(diffTextEdit('foo', 'fo')).toEqual({
+            start: 2,
+            end: 3,
+            insertedLength: 0,
+        });
+        expect(diffTextEdit('foo', 'fo', 1)).toEqual({
+            start: 1,
+            end: 2,
+            insertedLength: 0,
+        });
+    });
+
+    test('reads a plain insertion and a backspace the same as without a caret', () => {
+        expect(diffTextEdit('abc', 'axbc', 2)).toEqual({
+            start: 1,
+            end: 1,
+            insertedLength: 1,
+        });
+        expect(diffTextEdit('abc', 'ac', 1)).toEqual({
+            start: 1,
+            end: 2,
+            insertedLength: 0,
+        });
+    });
+
+    test('ignores a caret that does not describe the change', () => {
+        expect(diffTextEdit('abcd', 'abXYcd', 0)).toEqual(
+            diffTextEdit('abcd', 'abXYcd'),
+        );
+        expect(diffTextEdit('abcd', 'abXYcd', 99)).toEqual(
+            diffTextEdit('abcd', 'abXYcd'),
+        );
+    });
+});
+
 describe('mapOffsetThroughEdit', () => {
     const insertion = { start: 4, end: 4, insertedLength: 3 };
 
