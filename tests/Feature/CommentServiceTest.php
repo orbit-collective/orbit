@@ -54,7 +54,7 @@ test('addComment stamps the authenticated user, stores the comment and logs acti
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with($issue->project_id, 'Jane Cooper commented on issue #3 "Fix login crash"');
+        ->with($issue->project_id, 'Jane Cooper commented on issue #3 "Fix login crash"', null, $issue->id);
 
     $result = $this->service->addComment($issue, ['body' => 'Looks good']);
 
@@ -311,7 +311,7 @@ test('deleteComment removes the comment and logs activity', function () {
 
     $this->activityLogService->shouldReceive('log')
         ->once()
-        ->with($issue->project_id, 'Jane Cooper deleted a comment on issue #5 "Fix login crash"');
+        ->with($issue->project_id, 'Jane Cooper deleted a comment on issue #5 "Fix login crash"', null, $issue->id);
 
     $this->service->deleteComment($comment);
 });

@@ -39,7 +39,9 @@ class CommentService
 
         $this->activityLogService->log(
             $issue->project_id,
-            "$actorName commented on issue #$issue->number \"$issue->title\""
+            "$actorName commented on issue #$issue->number \"$issue->title\"",
+            null,
+            $issue->id,
         );
 
         event(new CommentAdded($comment, $issue, auth()->user()));
@@ -66,7 +68,9 @@ class CommentService
 
         $this->activityLogService->log(
             $issue->project_id,
-            "$actorName edited a comment on issue #$issue->number \"$issue->title\""
+            "$actorName edited a comment on issue #$issue->number \"$issue->title\"",
+            null,
+            $issue->id,
         );
 
         $this->fireMentionEvents($issue, $comment, $newlyMentionedUserIds);
@@ -139,7 +143,9 @@ class CommentService
 
         $this->activityLogService->log(
             $issue->project_id,
-            "$actorName deleted a comment on issue #$issue->number \"$issue->title\""
+            "$actorName deleted a comment on issue #$issue->number \"$issue->title\"",
+            null,
+            $issue->id,
         );
     }
 }
