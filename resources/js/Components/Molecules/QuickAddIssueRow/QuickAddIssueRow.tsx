@@ -305,6 +305,7 @@ export const QuickAddIssueRow = forwardRef<
                                 title="Issue type"
                                 ariaLabel="Issue type"
                                 options={typeOptions}
+                                disabled={isSubmitting}
                                 selectedValues={
                                     issueTypeId !== null
                                         ? [String(issueTypeId)]
@@ -315,6 +316,7 @@ export const QuickAddIssueRow = forwardRef<
                                     <button
                                         type="button"
                                         aria-label="Issue type"
+                                        disabled={isSubmitting}
                                         className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
                                     >
                                         {selectedType ? (
@@ -345,6 +347,7 @@ export const QuickAddIssueRow = forwardRef<
                             statuses={selectedType?.statuses ?? []}
                             value={shownStatus}
                             onChange={setChosenStatus}
+                            disabled={isSubmitting}
                         />
                     </td>
                 )}
@@ -355,6 +358,7 @@ export const QuickAddIssueRow = forwardRef<
                             value={assignee}
                             selectedId={assigneeId}
                             onChange={setAssigneeId}
+                            disabled={isSubmitting}
                         />
                     </td>
                 )}
@@ -364,6 +368,7 @@ export const QuickAddIssueRow = forwardRef<
                             priorities={priorities}
                             value={shownPriority}
                             onChange={setPriorityName}
+                            disabled={isSubmitting}
                         />
                     </td>
                 )}
