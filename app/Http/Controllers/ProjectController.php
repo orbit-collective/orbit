@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Permissions\Permission;
 use App\Models\Label;
 use App\Models\Project;
 use App\Models\Role;
@@ -111,6 +112,7 @@ class ProjectController extends Controller
             'roles' => $this->mapRoleNames($this->roleService->getRoles($project)),
             'issueTypes' => $this->issueTypeService->getIssueTypes($project),
             'nextIssueId' => $this->issueService->peekNextIssueId($project),
+            'issueAbilities' => $this->issueAbilities($request, $project),
         ]);
     }
 
@@ -241,5 +243,25 @@ class ProjectController extends Controller
         $this->projectService->deleteProject($project);
 
         return redirect()->route('projects.index')->with('success', "\"$project->name\" has been deleted.");
+    }
+
+    /**
+     * What the acting user may change on the project's issues, so the table
+     * only offers the inline editors the update endpoint would accept. Every
+     * issue ability is a project permission, so one answer covers all rows.
+     *
+     * @return array<string, bool>
+     */
+    private function issueAbilities(Request $request, Project $project): array
+    {
+        $user = $request->user();
+
+        return [
+            'update' => $project->hasPermission($user, Permission::ISSUES_UPDATE),
+            'changeStatus' => $project->hasPermission($user, Permission::ISSUES_CHANGE_STATUS),
+            'assign' => $project->hasPermission($user, Permission::ISSUES_ASSIGN),
+            'changePriority' => $project->hasPermission($user, Permission::ISSUES_CHANGE_PRIORITY),
+            'changeLabels' => $project->hasPermission($user, Permission::ISSUES_CHANGE_LABELS),
+        ];
     }
 }

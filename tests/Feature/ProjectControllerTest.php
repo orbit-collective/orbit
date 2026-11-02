@@ -129,6 +129,30 @@ test('the project show page returns the expected Inertia props', function () {
     );
 });
 
+test('the project show page tells a member which issue properties they may edit', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create();
+    $viewer = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+    addProjectMember($project, $viewer->id, 'viewer');
+
+    $this->actingAs($member)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->where('issueAbilities.update', true)
+        ->where('issueAbilities.changeStatus', true)
+        ->where('issueAbilities.assign', true)
+        ->where('issueAbilities.changePriority', true)
+        ->where('issueAbilities.changeLabels', true)
+    );
+
+    $this->actingAs($viewer)->get("/projects/$project->id")->assertInertia(fn (Assert $page) => $page
+        ->where('issueAbilities.update', false)
+        ->where('issueAbilities.changeStatus', false)
+        ->where('issueAbilities.assign', false)
+        ->where('issueAbilities.changePriority', false)
+        ->where('issueAbilities.changeLabels', false)
+    );
+});
+
 test('the project show page defaults to 10 issues per page', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
