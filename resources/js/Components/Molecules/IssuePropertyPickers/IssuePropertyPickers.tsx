@@ -1,12 +1,14 @@
 import { ReactNode, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import Calendar from '@/Components/Molecules/Calendar/Calendar';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import { DropdownOptionItem } from '@/types/Dropdown';
+import { IssueType } from '@/types/IssueTypes';
 import { PriorityDetails, ProjectPriority } from '@/types/Priorities';
 import { AssignableUser } from '@/types/Users';
 import { WorkflowStatus } from '@/types/Workflow';
@@ -51,6 +53,54 @@ const trigger = (
         />
     </button>
 );
+
+interface TypePickerProps extends PickerProps {
+    /** The types the issue may be changed to. */
+    types: IssueType[];
+    value: IssueType | null;
+    onChange: (type: IssueType) => void;
+}
+
+export const TypePicker = ({
+    types,
+    value,
+    onChange,
+    disabled = false,
+    revealOnRowHover,
+}: TypePickerProps) => {
+    const options = useMemo(
+        (): DropdownOptionItem[] =>
+            types.map((type) => ({
+                value: String(type.id),
+                label: <IssueTypeBadge issueType={type} />,
+                searchLabel: type.name,
+            })),
+        [types],
+    );
+
+    if (!value) {
+        return <span className="text-[var(--text-muted-color)]">&mdash;</span>;
+    }
+
+    const badge = <IssueTypeBadge issueType={value} />;
+
+    if (disabled || options.length === 0) return badge;
+
+    return (
+        <Dropdown
+            variant="select"
+            title="Issue type"
+            ariaLabel="Issue type"
+            options={options}
+            selectedValues={[String(value.id)]}
+            onSelect={(id) => {
+                const next = types.find((type) => type.id === Number(id));
+                if (next && next.id !== value.id) onChange(next);
+            }}
+            trigger={trigger('Issue type', badge, revealOnRowHover)}
+        />
+    );
+};
 
 interface StatusPickerProps extends PickerProps {
     /** The statuses that may be picked. */

@@ -429,7 +429,23 @@ describe('ListRow inline editing', () => {
         changePriority: true,
         changeLabels: true,
     };
+    const bug = {
+        id: 2,
+        name: 'Bug',
+        icon: 'Bug',
+        color: '#ef4444',
+        description: null,
+        isSystem: true,
+        allowsChildren: false,
+        isTopLevel: true,
+        requiredFields: [],
+        restrictedRoleTypes: [],
+    };
     const doing = { ...todoStatus, id: 2, name: 'Doing', isInitial: false };
+    const issueTypesFor = () => [
+        bug,
+        ...(issue.issueType ? [issue.issueType] : []),
+    ];
     const issue = makeIssue({
         issueType: {
             id: 1,
@@ -469,6 +485,7 @@ describe('ListRow inline editing', () => {
             issue,
             editing: {
                 users: [],
+                issueTypesFor,
                 abilities: { ...abilities, changeStatus: false, update: false },
                 onUpdate: vi.fn(),
             },
@@ -485,7 +502,7 @@ describe('ListRow inline editing', () => {
         renderRow({
             issue,
             onClick,
-            editing: { users: [], abilities, onUpdate },
+            editing: { users: [], abilities, issueTypesFor, onUpdate },
         });
 
         fireEvent.click(screen.getByLabelText('Status'));
@@ -503,6 +520,7 @@ describe('ListRow inline editing', () => {
             issue,
             editing: {
                 users: [{ id: 7, name: 'Ada' }],
+                issueTypesFor,
                 abilities,
                 onUpdate,
             },
@@ -517,7 +535,7 @@ describe('ListRow inline editing', () => {
     test('the chevrons stay hidden until the row is hovered', () => {
         renderRow({
             issue,
-            editing: { users: [], abilities, onUpdate: vi.fn() },
+            editing: { users: [], abilities, issueTypesFor, onUpdate: vi.fn() },
         });
 
         const chevron = screen
@@ -536,7 +554,7 @@ describe('ListRow inline editing', () => {
         renderRow({
             issue,
             onClick,
-            editing: { users: [], abilities, onUpdate },
+            editing: { users: [], abilities, issueTypesFor, onUpdate },
         });
 
         fireEvent.click(screen.getByLabelText('Edit title'));
@@ -553,7 +571,7 @@ describe('ListRow inline editing', () => {
         const onUpdate = vi.fn();
         renderRow({
             issue,
-            editing: { users: [], abilities, onUpdate },
+            editing: { users: [], abilities, issueTypesFor, onUpdate },
         });
 
         fireEvent.click(screen.getByLabelText('Edit title'));
@@ -569,7 +587,7 @@ describe('ListRow inline editing', () => {
         const onUpdate = vi.fn();
         const { unmount } = renderRow({
             issue,
-            editing: { users: [], abilities, onUpdate },
+            editing: { users: [], abilities, issueTypesFor, onUpdate },
         });
 
         fireEvent.click(screen.getByLabelText('Edit title'));
@@ -584,10 +602,38 @@ describe('ListRow inline editing', () => {
             issue,
             editing: {
                 users: [],
+                issueTypesFor,
                 abilities: { ...abilities, update: false },
                 onUpdate,
             },
         });
         expect(screen.queryByLabelText('Edit title')).not.toBeInTheDocument();
+    });
+
+    test('picking another issue type saves its id, and the current one is not offered as a change', () => {
+        const onUpdate = vi.fn();
+        renderRow({
+            issue,
+            editing: { users: [], abilities, issueTypesFor, onUpdate },
+        });
+
+        fireEvent.click(screen.getByLabelText('Issue type'));
+        fireEvent.click(screen.getByText('Bug'));
+
+        expect(onUpdate).toHaveBeenCalledWith(issue, { issue_type_id: 2 });
+    });
+
+    test('the type stays a plain badge without the update ability', () => {
+        renderRow({
+            issue,
+            editing: {
+                users: [],
+                abilities: { ...abilities, update: false },
+                issueTypesFor,
+                onUpdate: vi.fn(),
+            },
+        });
+
+        expect(screen.queryByLabelText('Issue type')).not.toBeInTheDocument();
     });
 });
