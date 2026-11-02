@@ -176,6 +176,8 @@ export interface EditableLabelListProps {
     disabled?: boolean;
     /** Shows the labels through a LabelList that collapses the overflow into "+N" (`'auto'` fits the width) instead of listing every one. */
     maxDisplay?: number | 'auto';
+    /** Hides the "+" button until the surrounding `group/row` is hovered or focused. */
+    revealTrigger?: boolean;
 }
 export interface EditableMarkdownProps {
     value: string;
@@ -329,6 +331,16 @@ export interface SavedFiltersDropdownProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
 }
+/**
+ * What a list row needs to let its cells be edited in place: the members to
+ * assign, what the acting user may change (a project-wide answer, since every
+ * issue ability is a project permission) and how to save a change.
+ */
+export interface IssueRowEditing {
+    users: AssignableUser[];
+    abilities: IssueAbilities;
+    onUpdate: (issue: Issue, data: Record<string, unknown>) => void;
+}
 export interface IssueElementProps {
     issue: Issue;
     type?: 'list' | 'board';
@@ -339,6 +351,7 @@ export interface IssueElementProps {
     hasChildren?: boolean;
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
+    editing?: IssueRowEditing;
 }
 export interface IssuePropertyProps {
     label: string;
@@ -677,8 +690,10 @@ export interface IssueTableProps {
     project?: Project;
     bare?: boolean;
     issueTypes?: IssueType[];
-    /** Project members offered by the quick-add row's assignee picker. */
+    /** Project members offered by the quick-add row's and the rows' assignee pickers. */
     users?: AssignableUser[];
+    /** What the user may edit in place; omit it for a read-only table. */
+    issueAbilities?: IssueAbilities;
     nextIssueId?: number | null;
 }
 export interface NewProjectModalProps {
@@ -727,6 +742,8 @@ export interface ListRowProps {
     hasChildren?: boolean;
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
+    /** Omit it and the property cells are read-only. */
+    editing?: IssueRowEditing;
 }
 
 export interface AuthShowcaseProps {
