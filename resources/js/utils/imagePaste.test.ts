@@ -6,6 +6,7 @@ import {
     markdownImageAlt,
     diffTextEdit,
     mapOffsetThroughEdit,
+    mapPendingRange,
     nextImageRange,
     splitMarkdownImages,
 } from './imagePaste';
@@ -343,5 +344,53 @@ describe('mapOffsetThroughEdit', () => {
         expect(
             mapOffsetThroughEdit(8, { start: 3, end: 8, insertedLength: 1 }),
         ).toBe(4);
+    });
+});
+
+describe('mapPendingRange', () => {
+    test('collapses a selection that was replaced, so what was typed survives', () => {
+        // "bc" selected in "abcd", then typed over with "X".
+        expect(
+            mapPendingRange(
+                { start: 1, end: 3 },
+                { start: 1, end: 3, insertedLength: 1 },
+            ),
+        ).toEqual({ start: 2, end: 2 });
+    });
+
+    test('does not let text typed at the start of a selection join it', () => {
+        expect(
+            mapPendingRange(
+                { start: 1, end: 3 },
+                { start: 1, end: 1, insertedLength: 2 },
+            ),
+        ).toEqual({ start: 3, end: 5 });
+    });
+
+    test('leaves a selection alone when the edit is after it', () => {
+        expect(
+            mapPendingRange(
+                { start: 1, end: 3 },
+                { start: 3, end: 3, insertedLength: 4 },
+            ),
+        ).toEqual({ start: 1, end: 3 });
+    });
+
+    test('collapses a selection when text is typed inside it', () => {
+        expect(
+            mapPendingRange(
+                { start: 1, end: 5 },
+                { start: 3, end: 3, insertedLength: 2 },
+            ),
+        ).toEqual({ start: 7, end: 7 });
+    });
+
+    test('moves a collapsed point like an offset', () => {
+        expect(
+            mapPendingRange(
+                { start: 4, end: 4 },
+                { start: 0, end: 0, insertedLength: 3 },
+            ),
+        ).toEqual({ start: 7, end: 7 });
     });
 });

@@ -106,4 +106,25 @@ describe('useImageInsertion', () => {
         expect(edits).toEqual([{ start: 1, end: 1, insertedLength: 16 }]);
         expect(result.current.value).toBe('a![a.png](/a.png)b');
     });
+
+    test('keeps text typed over a selection that an image was pasted onto', async () => {
+        const { result } = setup('abcd');
+        const upload = deferred();
+        let done: Promise<void> = Promise.resolve();
+
+        act(() => {
+            done = result.current.insertImages(
+                [file('a.png')],
+                { start: 1, end: 3 },
+                () => upload.promise,
+            );
+        });
+        act(() => result.current.setValue('aXd'));
+        await act(async () => {
+            upload.resolve('/a.png');
+            await done;
+        });
+
+        expect(result.current.value).toBe('aX![a.png](/a.png)d');
+    });
 });

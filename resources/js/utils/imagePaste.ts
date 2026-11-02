@@ -145,6 +145,38 @@ export const mapOffsetThroughEdit = (
     return edit.start + edit.insertedLength;
 };
 
+/**
+ * Carries a pending insertion range through an edit. A collapsed point moves
+ * like any offset. A range that still covers selected text must never grow to
+ * swallow what the user typed meanwhile, or the image replacing it would erase
+ * that text: an edit before it moves the whole range, one after it leaves it
+ * alone, and one that touches it collapses it to just after what was written.
+ */
+export const mapPendingRange = (
+    range: { start: number; end: number },
+    edit: TextEdit,
+    stickToEnd = false,
+): { start: number; end: number } => {
+    if (range.start === range.end) {
+        const point = mapOffsetThroughEdit(range.start, edit, stickToEnd);
+
+        return { start: point, end: point };
+    }
+
+    if (edit.end <= range.start) {
+        return {
+            start: mapOffsetThroughEdit(range.start, edit, true),
+            end: mapOffsetThroughEdit(range.end, edit, true),
+        };
+    }
+
+    if (edit.start >= range.end) return range;
+
+    const point = mapOffsetThroughEdit(range.end, edit, true);
+
+    return { start: point, end: point };
+};
+
 export interface MarkdownImageSegment {
     type: 'text' | 'image';
     /** The raw text, or - for an image - its alt text. */
