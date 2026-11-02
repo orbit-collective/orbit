@@ -5,7 +5,32 @@ import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
 import { priorities } from '@/stories/fixtures';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectPriority } from '@/types/Priorities';
-import QuickAddIssueRow, { QuickAddIssueRowHandle } from './QuickAddIssueRow';
+import { WorkflowStatus } from '@/types/Workflow';
+import QuickAddIssueRow, {
+    fallbackStatus,
+    QuickAddIssueRowHandle,
+} from './QuickAddIssueRow';
+
+// Stands in for the real calendar: picks a fixed day per mount, the start
+// calendar picks 3 Nov 2026 and the end calendar (which gets a minDate) 10 Nov.
+vi.mock('@/Components/Molecules/Calendar/Calendar', () => ({
+    default: ({
+        onSelect,
+        minDate,
+    }: {
+        onSelect: (date: Date) => void;
+        minDate?: Date;
+    }) => (
+        <button
+            type="button"
+            onClick={() =>
+                onSelect(new Date(2026, minDate ? 10 : 10, minDate ? 10 : 3))
+            }
+        >
+            pick day
+        </button>
+    ),
+}));
 
 const issueTypes: IssueType[] = [
     {
@@ -96,7 +121,7 @@ describe('QuickAddIssueRow', () => {
         fireEvent.change(input, { target: { value: 'Fix the bug' } });
         fireEvent.keyDown(input, { key: 'Enter' });
 
-        expect(handleSubmit).toHaveBeenCalledWith('Fix the bug', 1);
+        expect(handleSubmit).toHaveBeenCalledWith('Fix the bug', 1, {});
         expect(input).toHaveValue('');
     });
 
@@ -112,7 +137,7 @@ describe('QuickAddIssueRow', () => {
         fireEvent.change(input, { target: { value: 'Something broke' } });
         fireEvent.keyDown(input, { key: 'Enter' });
 
-        expect(handleSubmit).toHaveBeenCalledWith('Something broke', 2);
+        expect(handleSubmit).toHaveBeenCalledWith('Something broke', 2, {});
     });
 
     test('pressing Enter with an empty title does not submit', () => {
@@ -203,7 +228,7 @@ describe('QuickAddIssueRow', () => {
 
         fireEvent.click(screen.getByText('New issue'));
 
-        expect(screen.getByText('None')).toBeInTheDocument();
+        expect(screen.getByLabelText('Priority')).toHaveTextContent('None');
     });
 
     test('the type stays selectable while the title is still empty', () => {
@@ -219,7 +244,7 @@ describe('QuickAddIssueRow', () => {
         fireEvent.change(input, { target: { value: 'Broken' } });
         fireEvent.keyDown(input, { key: 'Enter' });
 
-        expect(handleSubmit).toHaveBeenCalledWith('Broken', 2);
+        expect(handleSubmit).toHaveBeenCalledWith('Broken', 2, {});
     });
 
     test('indents the title through its cell so the field is never wider than it', () => {
@@ -241,5 +266,104 @@ describe('QuickAddIssueRow', () => {
         expect(trigger).toHaveTextContent('Task');
         expect(trigger.querySelector('.rounded-full')).not.toBeNull();
         expect(trigger.querySelectorAll('svg').length).toBeGreaterThan(1);
+    });
+});
+
+const status = (
+    id: number,
+    category: WorkflowStatus['category'],
+    isInitial = false,
+): WorkflowStatus => ({
+    id,
+    issueTypeId: 1,
+    name: `S${id}`,
+    color: '#000',
+    category,
+    isInitial,
+});
+
+describe('fallbackStatus', () => {
+    const type = {
+        statuses: [
+            status(20, 'todo', true),
+            status(21, 'in_progress'),
+            status(22, 'in_progress'),
+            status(23, 'done'),
+        ],
+    } as IssueType;
+
+    test('keeps a status the new type also has', () => {
+        expect(fallbackStatus(status(22, 'in_progress'), type)?.id).toBe(22);
+    });
+
+    test('falls back to the same category of the new type', () => {
+        expect(fallbackStatus(status(99, 'in_progress'), type)?.id).toBe(21);
+        expect(fallbackStatus(status(99, 'done'), type)?.id).toBe(23);
+    });
+
+    test('drops the choice when the new type has no such category or no statuses', () => {
+        const todoOnly = { statuses: [status(30, 'todo', true)] } as IssueType;
+
+        expect(fallbackStatus(status(99, 'done'), todoOnly)).toBeNull();
+        expect(fallbackStatus(status(99, 'done'), {} as IssueType)).toBeNull();
+        expect(fallbackStatus(null, type)).toBeNull();
+    });
+});
+
+describe('QuickAddIssueRow properties', () => {
+    test('submits the dates and assignee that were picked', () => {
+        const handleSubmit = vi.fn();
+        renderRow({
+            onSubmit: handleSubmit,
+            users: [{ id: 5, name: 'Ada' }],
+        });
+
+        fireEvent.click(screen.getByText('New issue'));
+        fireEvent.click(screen.getByLabelText('Start date'));
+        fireEvent.click(screen.getByText('pick day'));
+        fireEvent.click(screen.getByLabelText('End date'));
+        fireEvent.click(screen.getByText('pick day'));
+        fireEvent.click(screen.getByLabelText('Assignee'));
+        fireEvent.click(screen.getByText('Ada'));
+
+        const input = screen.getByPlaceholderText('What needs to be done?');
+        fireEvent.change(input, { target: { value: 'Plan' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+
+        expect(handleSubmit).toHaveBeenCalledWith('Plan', 1, {
+            assignee_id: 5,
+            start_date: '2026-11-03',
+            end_date: '2026-11-10',
+        });
+    });
+
+    test('a chosen status is dropped when the new type has none to match', () => {
+        const handleSubmit = vi.fn();
+        const types = [
+            {
+                ...issueTypes[0],
+                statuses: [status(10, 'todo', true), status(11, 'done')],
+            } as IssueType,
+            {
+                id: 2,
+                name: 'Bug',
+                icon: 'Bug',
+                color: '#ef4444',
+                statuses: [{ ...status(40, 'todo', true), issueTypeId: 2 }],
+            } as IssueType,
+        ];
+        renderRow({ onSubmit: handleSubmit, issueTypes: types });
+
+        fireEvent.click(screen.getByText('New issue'));
+        fireEvent.click(screen.getByLabelText('Status'));
+        fireEvent.click(screen.getByText('S11'));
+        fireEvent.click(screen.getByText('Task'));
+        fireEvent.click(screen.getByText('Bug'));
+
+        const input = screen.getByPlaceholderText('What needs to be done?');
+        fireEvent.change(input, { target: { value: 'Oops' } });
+        fireEvent.keyDown(input, { key: 'Enter' });
+
+        expect(handleSubmit).toHaveBeenCalledWith('Oops', 2, {});
     });
 });

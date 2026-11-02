@@ -164,6 +164,7 @@ export default function Show({
                                         queryParams={queryParams}
                                         project={project}
                                         issueTypes={issueTypes}
+                                        users={users}
                                         nextIssueId={nextIssueId}
                                         pagination={
                                             <Pagination

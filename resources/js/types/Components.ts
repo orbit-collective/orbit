@@ -677,6 +677,8 @@ export interface IssueTableProps {
     project?: Project;
     bare?: boolean;
     issueTypes?: IssueType[];
+    /** Project members offered by the quick-add row's assignee picker. */
+    users?: AssignableUser[];
     nextIssueId?: number | null;
 }
 export interface NewProjectModalProps {
