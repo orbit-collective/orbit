@@ -89,6 +89,7 @@ const Pagination = ({
     perPageParam = 'perPage',
     defaultPerPage = rowsPerPageCounts[0],
     preserveState = false,
+    only,
     className,
 }: PaginationProps) => {
     const { addAlert } = useAlert();
@@ -117,6 +118,7 @@ const Pagination = ({
         router.get(window.location.pathname, newParams, {
             preserveScroll: true,
             preserveState: true,
+            ...(only && { only }),
             onSuccess: () =>
                 addAlert(
                     `Rows per page changed to ${newPerPage}`,
@@ -178,6 +180,7 @@ const Pagination = ({
                 key={key}
                 href={link.url!}
                 preserveState={preserveState}
+                only={only}
                 className={className}
                 aria-label={getLinkAriaLabel(link.label)}
                 aria-current={link.active ? 'page' : undefined}

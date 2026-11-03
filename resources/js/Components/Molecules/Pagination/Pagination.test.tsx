@@ -11,17 +11,20 @@ vi.mock('@inertiajs/react', () => ({
         href,
         className,
         preserveState,
+        only,
         ...rest
     }: {
         children: React.ReactNode;
         href?: string;
         className?: string;
         preserveState?: boolean;
+        only?: string[];
     }) => (
         <a
             href={href}
             className={className}
             data-preserve-state={String(preserveState)}
+            data-only={only ? only.join(',') : undefined}
             {...rest}
         >
             {children}
@@ -331,6 +334,45 @@ describe('Pagination Component', () => {
         expect(links.length).toBeGreaterThan(0);
         links.forEach((link) =>
             expect(link).toHaveAttribute('data-preserve-state', 'true'),
+        );
+    });
+
+    test('limits page links to the named props when only is set', () => {
+        render(
+            <Pagination
+                links={buildLinks()}
+                from={1}
+                to={10}
+                total={25}
+                only={['activityLogs']}
+            />,
+        );
+
+        const links = screen.getAllByRole('link');
+        expect(links.length).toBeGreaterThan(0);
+        links.forEach((link) =>
+            expect(link).toHaveAttribute('data-only', 'activityLogs'),
+        );
+    });
+
+    test('requests only the named props when the rows per page change', async () => {
+        render(
+            <Pagination
+                links={buildLinks()}
+                from={1}
+                to={10}
+                total={25}
+                only={['activityLogs']}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole('button'));
+        await userEvent.click(screen.getByText('20 rows'));
+
+        expect(router.get).toHaveBeenLastCalledWith(
+            window.location.pathname,
+            expect.any(Object),
+            expect.objectContaining({ only: ['activityLogs'] }),
         );
     });
 

@@ -411,6 +411,8 @@ export interface PaginationProps {
      * remount by default.
      */
     preserveState?: boolean;
+    /** Props to request on a page change; the rest stay as they are (a partial reload). */
+    only?: string[];
     /** Extra classes for the root element, merged over the defaults (e.g. `px-0` inside a padded panel). */
     className?: string;
 }
