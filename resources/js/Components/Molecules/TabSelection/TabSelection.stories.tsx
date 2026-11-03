@@ -16,6 +16,7 @@ const meta = {
     args: {
         tabs: [{ name: 'Comments', count: 3 }, { name: 'Activity' }],
         selectedTab: 'Comments',
+        idPrefix: 'story-tabs',
         onSelectTab: fn(),
     },
 } satisfies Meta<typeof TabSelection>;

@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import TabSelection from './TabSelection';
+import TabSelection, { tabIds } from './TabSelection';
 
 const tabs = [{ name: 'Comments', count: 3 }, { name: 'Activity' }];
 
@@ -11,6 +11,7 @@ describe('TabSelection Component', () => {
             <TabSelection
                 tabs={tabs}
                 selectedTab="Comments"
+                idPrefix="t"
                 onSelectTab={() => {}}
             />,
         );
@@ -24,6 +25,7 @@ describe('TabSelection Component', () => {
             <TabSelection
                 tabs={tabs}
                 selectedTab="Activity"
+                idPrefix="t"
                 onSelectTab={() => {}}
             />,
         );
@@ -43,6 +45,7 @@ describe('TabSelection Component', () => {
             <TabSelection
                 tabs={[{ name: 'Comments', count: 0 }, { name: 'Activity' }]}
                 selectedTab="Comments"
+                idPrefix="t"
                 onSelectTab={() => {}}
             />,
         );
@@ -60,6 +63,7 @@ describe('TabSelection Component', () => {
             <TabSelection
                 tabs={tabs}
                 selectedTab="Comments"
+                idPrefix="t"
                 onSelectTab={onSelectTab}
             />,
         );
@@ -67,5 +71,91 @@ describe('TabSelection Component', () => {
         await user.click(screen.getByRole('tab', { name: 'Activity' }));
 
         expect(onSelectTab).toHaveBeenCalledWith('Activity');
+    });
+
+    describe('keyboard and aria wiring', () => {
+        test('links every tab to its panel with stable ids', () => {
+            render(
+                <TabSelection
+                    tabs={tabs}
+                    selectedTab="Comments"
+                    idPrefix="issue-tabs"
+                    onSelectTab={() => {}}
+                />,
+            );
+
+            const tab = screen.getByRole('tab', { name: 'Activity' });
+
+            expect(tab).toHaveAttribute(
+                'id',
+                tabIds('issue-tabs', 'Activity').tab,
+            );
+            expect(tab).toHaveAttribute(
+                'aria-controls',
+                tabIds('issue-tabs', 'Activity').panel,
+            );
+        });
+
+        test('only the selected tab is in the tab order', () => {
+            render(
+                <TabSelection
+                    tabs={tabs}
+                    selectedTab="Comments"
+                    idPrefix="t"
+                    onSelectTab={() => {}}
+                />,
+            );
+
+            expect(
+                screen.getByRole('tab', { name: /Comments/ }),
+            ).toHaveAttribute('tabindex', '0');
+            expect(
+                screen.getByRole('tab', { name: 'Activity' }),
+            ).toHaveAttribute('tabindex', '-1');
+        });
+
+        test('arrow keys move to the next and previous tab, wrapping around', async () => {
+            const user = userEvent.setup();
+            const onSelectTab = vi.fn();
+            render(
+                <TabSelection
+                    tabs={tabs}
+                    selectedTab="Comments"
+                    idPrefix="t"
+                    onSelectTab={onSelectTab}
+                />,
+            );
+
+            screen.getByRole('tab', { name: /Comments/ }).focus();
+            await user.keyboard('{ArrowRight}');
+            expect(onSelectTab).toHaveBeenLastCalledWith('Activity');
+            expect(screen.getByRole('tab', { name: 'Activity' })).toHaveFocus();
+
+            await user.keyboard('{ArrowRight}');
+            expect(onSelectTab).toHaveBeenLastCalledWith('Comments');
+
+            await user.keyboard('{ArrowLeft}');
+            expect(onSelectTab).toHaveBeenLastCalledWith('Activity');
+        });
+
+        test('Home and End jump to the first and last tab', async () => {
+            const user = userEvent.setup();
+            const onSelectTab = vi.fn();
+            render(
+                <TabSelection
+                    tabs={tabs}
+                    selectedTab="Comments"
+                    idPrefix="t"
+                    onSelectTab={onSelectTab}
+                />,
+            );
+
+            screen.getByRole('tab', { name: /Comments/ }).focus();
+            await user.keyboard('{End}');
+            expect(onSelectTab).toHaveBeenLastCalledWith('Activity');
+
+            await user.keyboard('{Home}');
+            expect(onSelectTab).toHaveBeenLastCalledWith('Comments');
+        });
     });
 });

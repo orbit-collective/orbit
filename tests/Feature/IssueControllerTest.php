@@ -1,6 +1,7 @@
 <?php
 
 use App\DataTransferObjects\Github\GithubRelayEventDTO;
+use App\Models\ActivityLog;
 use App\Models\ExternalIssueLink;
 use App\Models\Issue;
 use App\Models\Project;
@@ -46,21 +47,44 @@ test('an issue detail page can be viewed', function () {
         ->and($page['props'])->toHaveKeys(['project', 'projects', 'users', 'projectRole']);
 });
 
-test('the issue page carries only the activity logs of that issue', function () {
+test('the issue page leaves the activity logs out until they are asked for', function () {
     $project = Project::factory()->create();
     $issue = Issue::factory()->create(['project_id' => $project->id]);
-    $other = Issue::factory()->create(['project_id' => $project->id]);
     $user = actingAsProjectMember($project);
-
-    $mine = \App\Models\ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $issue->id, 'body' => 'Mine']);
-    \App\Models\ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $other->id]);
-    \App\Models\ActivityLog::factory()->create(['project_id' => $project->id]);
+    ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $issue->id]);
 
     $manifest = public_path('build/manifest.json');
     $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
 
     $page = $this->actingAs($user)
         ->withHeaders(['X-Inertia' => 'true', 'X-Inertia-Version' => $version])
+        ->get("/projects/$project->id/issues/$issue->id")
+        ->assertOk()
+        ->json();
+
+    expect($page['props'])->not->toHaveKey('activityLogs');
+});
+
+test('a partial reload carries only the activity logs of that issue', function () {
+    $project = Project::factory()->create();
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $other = Issue::factory()->create(['project_id' => $project->id]);
+    $user = actingAsProjectMember($project);
+
+    $mine = ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $issue->id, 'body' => 'Mine']);
+    ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $other->id]);
+    ActivityLog::factory()->create(['project_id' => $project->id]);
+
+    $manifest = public_path('build/manifest.json');
+    $version = file_exists($manifest) ? hash_file('xxh128', $manifest) : '';
+
+    $page = $this->actingAs($user)
+        ->withHeaders([
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => $version,
+            'X-Inertia-Partial-Component' => 'Issues/Show',
+            'X-Inertia-Partial-Data' => 'activityLogs',
+        ])
         ->get("/projects/$project->id/issues/$issue->id")
         ->assertOk()
         ->json();
