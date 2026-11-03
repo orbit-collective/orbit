@@ -1105,6 +1105,38 @@ describe('Issues/Show custom fields', () => {
             expect(screen.getByText(/Added new task/)).toBeInTheDocument();
         });
 
+        test('asks for the activity logs again when a save drops them while Activity is open', async () => {
+            const { rerender } = render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                    activityLogs={logs}
+                />,
+            );
+
+            await userEvent.click(
+                screen.getByRole('tab', { name: 'Activity' }),
+            );
+            expect(mockReload).not.toHaveBeenCalled();
+
+            // A save answers with a full page that no longer carries the feed.
+            rerender(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue({ title: 'Renamed' })}
+                    users={users}
+                />,
+            );
+
+            expect(mockReload).toHaveBeenCalledTimes(1);
+            expect(mockReload).toHaveBeenCalledWith({
+                only: ['activityLogs', 'queryParams'],
+            });
+        });
+
         test('keeps a comment draft while Activity is open', async () => {
             render(
                 <Show

@@ -1,6 +1,6 @@
 import type { FormDataConvertible } from '@inertiajs/core';
 import { Link, router } from '@inertiajs/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
@@ -270,14 +270,16 @@ export default function Show({
     const commentsIds = tabIds('issue-tabs', 'Comments');
     const activityIds = tabIds('issue-tabs', 'Activity');
 
-    // The activity feed is not part of the page until it is asked for.
-    const selectTab = (tab: Tab) => {
-        setSelectedTab(tab);
+    // The activity feed is not part of the page until it is asked for, and a
+    // save answers with a full page that leaves it out again, so request it
+    // whenever Activity is showing without it.
+    const activityMissing = !activityLogs;
 
-        if (tab === 'Activity' && !activityLogs) {
+    useEffect(() => {
+        if (selectedTab === 'Activity' && activityMissing) {
             router.reload({ only: ACTIVITY_ONLY });
         }
-    };
+    }, [selectedTab, activityMissing]);
 
     return (
         <ProjectLabelsProvider labels={labels}>
@@ -328,7 +330,7 @@ export default function Show({
                                             tabs={tabs}
                                             selectedTab={selectedTab}
                                             idPrefix="issue-tabs"
-                                            onSelectTab={selectTab}
+                                            onSelectTab={setSelectedTab}
                                         />
                                         {/* Stays mounted while Activity is open so a half-written comment survives the switch. */}
                                         <div
