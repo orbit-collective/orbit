@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ActivityLogRepository;
@@ -94,8 +95,8 @@ test('it reads the page from a custom page name and clamps the page size', funct
 
 test('it paginates only the logs of the given issue, newest first', function () {
     $project = Project::factory()->create();
-    $issue = \App\Models\Issue::factory()->create(['project_id' => $project->id]);
-    $other = \App\Models\Issue::factory()->create(['project_id' => $project->id]);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    $other = Issue::factory()->create(['project_id' => $project->id]);
 
     $first = ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $issue->id]);
     $second = ActivityLog::factory()->create(['project_id' => $project->id, 'issue_id' => $issue->id]);
