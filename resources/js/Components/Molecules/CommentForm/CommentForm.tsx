@@ -319,7 +319,13 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 });
                 return;
             }
-            if (e.key === 'Enter' || e.key === 'Tab') {
+            const picksOption =
+                e.key === 'Tab' ||
+                (e.key === 'Enter' &&
+                    !e.shiftKey &&
+                    !e.nativeEvent.isComposing);
+
+            if (picksOption) {
                 e.preventDefault();
                 if (mention.kind === 'issue') {
                     selectIssue(issueSuggestions[mention.activeIndex]);
@@ -328,6 +334,24 @@ const CommentForm: React.FC<CommentFormProps> = ({
                 }
                 return;
             }
+        }
+
+        // An issue search still waiting for its results would make Enter send
+        // a half-written "#2" instead of picking the suggestion about to
+        // arrive, so hold the key until the lookup has answered.
+        const issueSearchPending =
+            mention?.kind === 'issue' &&
+            issueQuery !== '' &&
+            issueResults?.query !== issueQuery;
+
+        if (
+            e.key === 'Enter' &&
+            !e.shiftKey &&
+            !e.nativeEvent.isComposing &&
+            issueSearchPending
+        ) {
+            e.preventDefault();
+            return;
         }
 
         // Enter sends; Shift+Enter inserts a newline. Ignored while an IME
