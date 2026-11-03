@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.11.5](https://github.com/orbit-collective/orbit/compare/v0.11.4...v0.11.5) (2026-11-03)
+
+
+### Features
+
+* **automation:** record the issue when a rule runs ([77c54d2](https://github.com/orbit-collective/orbit/commit/77c54d2ee4e8dc3370f60f71ea75fbbe631b0288))
+* **comments:** rebuild CommentForm with keyboard send and a11y ([1d6221b](https://github.com/orbit-collective/orbit/commit/1d6221b613321d5db046f431c8e11353a554ab2f))
+* **comments:** record the issue on comment activity entries ([21c29e7](https://github.com/orbit-collective/orbit/commit/21c29e7ac47bdb7738e02909c987f2ef1c44f13f))
+* **issues:** record the issue on its activity log entries ([b88f229](https://github.com/orbit-collective/orbit/commit/b88f22919ba7e2875662969f730f699696938fae))
+* **issues:** show comments and activity in tabs on the issue page ([99f114c](https://github.com/orbit-collective/orbit/commit/99f114cf546c8f4e18394c5ea5f7cc04f69627ec))
+* **issues:** tie activity log entries to an issue ([ba7557f](https://github.com/orbit-collective/orbit/commit/ba7557f2134910348e90a272755552ce40c1f020))
+* **ui:** add TabSelection molecule ([73083a1](https://github.com/orbit-collective/orbit/commit/73083a1d2da4a3ac7dd1df65a53f2fa2db42339e))
+* **ui:** let Pagination request only the named props ([9912b6b](https://github.com/orbit-collective/orbit/commit/9912b6bdd5e0fd9b23f9a468fd754429e8a91ec8))
+* **ui:** pass id, rows and aria attributes through TextArea ([74a9afd](https://github.com/orbit-collective/orbit/commit/74a9afdbc075ffd72d41e81e4701f8d86525c0cf))
+
+
+### Bug Fixes
+
+* **comments:** guard Enter against mention picking and pending search ([a08d63c](https://github.com/orbit-collective/orbit/commit/a08d63cd0e66c4264191161cf8852a608c903a8c))
+* **issues:** load activity on demand and wire tabs to panels ([6f8e2fa](https://github.com/orbit-collective/orbit/commit/6f8e2fa2e0f690f4c1cdfdc4fea34173d96e8049))
+* **issues:** reload the activity feed after a save drops it ([36dccfc](https://github.com/orbit-collective/orbit/commit/36dccfc05792a4310fa6f55645f3a88d082edbbf))
+* **ui:** contain the sr-only label inside Pagination ([fc2321a](https://github.com/orbit-collective/orbit/commit/fc2321aab90ccb289f7d9c279602fadba0fd2bd6))
+
+
+### Miscellaneous Chores
+
+* release 0.11.5 ([ba598c8](https://github.com/orbit-collective/orbit/commit/ba598c846beba1e83ec21e49f1156f66fa2cd432))
+
 ## [0.11.4](https://github.com/orbit-collective/orbit/compare/v0.11.3...v0.11.4) (2026-11-02)
 
 
