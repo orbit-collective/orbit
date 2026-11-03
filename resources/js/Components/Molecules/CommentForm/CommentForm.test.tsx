@@ -732,6 +732,54 @@ describe('CommentForm image uploads', () => {
             expect(textarea).toHaveValue('hi @Jane Cooper ');
         });
 
+        test('Shift+Enter inserts a newline instead of picking a mention', async () => {
+            const handleSubmit = vi.fn();
+            render(<CommentForm onSubmit={handleSubmit} users={users} />);
+
+            const textarea = screen.getByLabelText('Comment');
+            await userEvent.type(textarea, '@Jane{Shift>}{Enter}{/Shift}');
+
+            expect(textarea).toHaveValue('@Jane\n');
+            expect(handleSubmit).not.toHaveBeenCalled();
+        });
+
+        test('Enter confirming an IME composition does not pick a mention', () => {
+            const handleSubmit = vi.fn();
+            render(<CommentForm onSubmit={handleSubmit} users={users} />);
+
+            const textarea = screen.getByLabelText('Comment');
+            fireEvent.change(textarea, { target: { value: '@Jane' } });
+            fireEvent.keyDown(textarea, { key: 'Enter', isComposing: true });
+
+            expect(textarea).toHaveValue('@Jane');
+            expect(handleSubmit).not.toHaveBeenCalled();
+        });
+
+        test('Enter does not send while an issue mention search is pending', async () => {
+            const handleSubmit = vi.fn();
+            mockAxios.get.mockReturnValue(new Promise(() => {}));
+            render(<CommentForm onSubmit={handleSubmit} projectId={7} />);
+
+            const textarea = screen.getByLabelText('Comment');
+            await userEvent.type(textarea, 'See #2{Enter}');
+
+            expect(handleSubmit).not.toHaveBeenCalled();
+            expect(textarea).toHaveValue('See #2');
+        });
+
+        test('Enter sends again once the issue search finds nothing', async () => {
+            const handleSubmit = vi.fn();
+            mockAxios.get.mockResolvedValue({ data: [] });
+            render(<CommentForm onSubmit={handleSubmit} projectId={7} />);
+
+            const textarea = screen.getByLabelText('Comment');
+            await userEvent.type(textarea, 'See #2');
+            await screen.findByText('No issues found');
+            await userEvent.keyboard('{Enter}');
+
+            expect(handleSubmit).toHaveBeenCalledWith('See #2', []);
+        });
+
         test('exposes a labelled form, a described textarea and a disabled button when empty', () => {
             render(<CommentForm onSubmit={() => {}} />);
 
