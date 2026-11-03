@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { priorities, priorityFields } from '@/stories/fixtures';
 import { todoStatus } from '@/tests/statuses';
 import { Comment, Issue } from '@/types/Issues';
@@ -11,6 +11,7 @@ import Show from './Show';
 const mockPatch = vi.hoisted(() => vi.fn());
 const mockPost = vi.hoisted(() => vi.fn());
 const mockDelete = vi.hoisted(() => vi.fn());
+const mockReload = vi.hoisted(() => vi.fn());
 const mockRoute = vi.hoisted(() =>
     vi.fn(
         (name: string, id?: string | number) =>
@@ -29,6 +30,7 @@ vi.mock('@inertiajs/react', async () => {
             patch: mockPatch,
             post: mockPost,
             delete: mockDelete,
+            reload: mockReload,
         },
         usePage: () => ({
             props: {
@@ -1031,6 +1033,131 @@ describe('Issues/Show custom fields', () => {
                 '/issues.update/42',
                 { priority: 'Medium' },
                 { preserveScroll: true },
+            );
+        });
+    });
+
+    describe('comments and activity tabs', () => {
+        const logs = {
+            current_page: 1,
+            data: [
+                {
+                    id: 1,
+                    body: 'Added new task: #42',
+                    userId: 1,
+                    userName: 'Jane Cooper',
+                    userAvatar: null,
+                    createdAt: new Date().toISOString(),
+                },
+            ],
+            first_page_url: '',
+            from: 1,
+            last_page: 1,
+            last_page_url: '',
+            links: [],
+            next_page_url: null,
+            path: '',
+            per_page: 20,
+            prev_page_url: null,
+            to: 1,
+            total: 1,
+        };
+
+        beforeEach(() => mockReload.mockReset());
+
+        test('asks the server for the activity logs the first time Activity opens', async () => {
+            render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                />,
+            );
+
+            expect(mockReload).not.toHaveBeenCalled();
+
+            await userEvent.click(
+                screen.getByRole('tab', { name: 'Activity' }),
+            );
+
+            expect(mockReload).toHaveBeenCalledWith({
+                only: ['activityLogs', 'queryParams'],
+            });
+        });
+
+        test('does not ask again when the logs are already on the page', async () => {
+            render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                    activityLogs={logs}
+                />,
+            );
+
+            await userEvent.click(
+                screen.getByRole('tab', { name: 'Activity' }),
+            );
+
+            expect(mockReload).not.toHaveBeenCalled();
+            expect(screen.getByText(/Added new task/)).toBeInTheDocument();
+        });
+
+        test('keeps a comment draft while Activity is open', async () => {
+            render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                    activityLogs={logs}
+                />,
+            );
+
+            await userEvent.type(
+                screen.getByPlaceholderText('Leave a comment...'),
+                'half a thought',
+            );
+            await userEvent.click(
+                screen.getByRole('tab', { name: 'Activity' }),
+            );
+            await userEvent.click(
+                screen.getByRole('tab', { name: /Comments/ }),
+            );
+
+            expect(
+                screen.getByPlaceholderText('Leave a comment...'),
+            ).toHaveValue('half a thought');
+        });
+
+        test('labels each visible panel by its tab', async () => {
+            render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                    activityLogs={logs}
+                />,
+            );
+
+            const comments = screen.getByRole('tab', { name: /Comments/ });
+            expect(screen.getByRole('tabpanel')).toHaveAccessibleName(
+                comments.textContent ?? '',
+            );
+            expect(comments).toHaveAttribute(
+                'aria-controls',
+                screen.getByRole('tabpanel').id,
+            );
+
+            await userEvent.click(
+                screen.getByRole('tab', { name: 'Activity' }),
+            );
+
+            expect(screen.getByRole('tabpanel')).toHaveAccessibleName(
+                'Activity',
             );
         });
     });
