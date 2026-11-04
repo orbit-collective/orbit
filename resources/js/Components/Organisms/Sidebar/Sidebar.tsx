@@ -48,11 +48,22 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
     );
     const {
         url,
-        props: { auth },
+        props: { auth, developerPortalEnabled },
     } = usePage<PageProps>();
 
     const isSettingsPage = url.startsWith('/settings');
     const activeSettingsTab = useMemo(() => getSettingsTabByPath(url), [url]);
+    // The Developer section exists only where the portal is enabled
+    // (APP_ENV=local) and the user holds `developer.portal.view`.
+    const visibleSettingsTabs = useMemo(
+        () =>
+            SETTINGS_TABS.filter(
+                (tab) =>
+                    tab.section !== 'developer' ||
+                    developerPortalEnabled === true,
+            ),
+        [developerPortalEnabled],
+    );
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -237,7 +248,11 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             data-tour="settings-nav"
                             className="mt-5 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto"
                         >
-                            {SETTINGS_NAV_SECTIONS.map(({ title, section }) => (
+                            {SETTINGS_NAV_SECTIONS.filter(({ section }) =>
+                                visibleSettingsTabs.some(
+                                    (tab) => tab.section === section,
+                                ),
+                            ).map(({ title, section }) => (
                                 <div key={section}>
                                     {!isCollapsed && (
                                         <h3 className="mb-1.5 px-2.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
@@ -248,21 +263,25 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                         aria-label={title}
                                         className="flex flex-col"
                                     >
-                                        {SETTINGS_TABS.filter(
-                                            (tab) => tab.section === section,
-                                        ).map((tab) => (
-                                            <NavItem
-                                                key={tab.id}
-                                                icon={tab.icon}
-                                                label={tab.label}
-                                                link={tab.path}
-                                                isActive={
-                                                    tab.id === activeSettingsTab
-                                                }
-                                                disabled={!tab.enabled}
-                                                collapsed={isCollapsed}
-                                            />
-                                        ))}
+                                        {visibleSettingsTabs
+                                            .filter(
+                                                (tab) =>
+                                                    tab.section === section,
+                                            )
+                                            .map((tab) => (
+                                                <NavItem
+                                                    key={tab.id}
+                                                    icon={tab.icon}
+                                                    label={tab.label}
+                                                    link={tab.path}
+                                                    isActive={
+                                                        tab.id ===
+                                                        activeSettingsTab
+                                                    }
+                                                    disabled={!tab.enabled}
+                                                    collapsed={isCollapsed}
+                                                />
+                                            ))}
                                     </nav>
                                 </div>
                             ))}
