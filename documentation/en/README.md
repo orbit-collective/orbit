@@ -148,6 +148,11 @@ documentation/
       03-react-to-a-change-in-the-ui.md
       04-presence-and-edit-hints.md
       05-fallback-and-troubleshooting.md
+    developer-portal/
+      README.md              <- index for this category
+      01-enable-and-protect-the-portal.md
+      02-add-a-section-to-the-portal.md
+      03-chart-components.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -164,6 +169,7 @@ documentation/
     storybook/               <- Polish translation of every guide above
     redis/                   <- Polish translation of every guide above
     live-updates/            <- Polish translation of every guide above
+    developer-portal/        <- Polish translation of every guide above
     content-moderation/      <- Polish translation of every guide above
     project-invitations/     <- Polish translation of every guide above
     activity-log/            <- Polish translation of every guide above

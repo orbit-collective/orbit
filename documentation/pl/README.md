@@ -27,6 +27,7 @@ documentation/
     storybook/               <- angielskie tłumaczenie każdego przewodnika poniżej
     redis/                   <- angielskie tłumaczenie każdego przewodnika poniżej
     live-updates/            <- angielskie tłumaczenie każdego przewodnika poniżej
+    developer-portal/        <- angielskie tłumaczenie każdego przewodnika poniżej
     content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -170,6 +171,11 @@ documentation/
       03-react-to-a-change-in-the-ui.md
       04-presence-and-edit-hints.md
       05-fallback-and-troubleshooting.md
+    developer-portal/
+      README.md              <- indeks tej kategorii
+      01-enable-and-protect-the-portal.md
+      02-add-a-section-to-the-portal.md
+      03-chart-components.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
