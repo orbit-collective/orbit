@@ -64,12 +64,15 @@ ws.example.com {
 }
 ```
 
-nginx:
+nginx (wymaga certyfikatu dla hosta; przy Let's Encrypt polecenie `certbot certonly --nginx -d ws.example.com` tworzy oba wskazane niżej pliki i je odnawia):
 
 ```nginx
 server {
     listen 443 ssl;
     server_name ws.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/ws.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ws.example.com/privkey.pem;
 
     location / {
         proxy_pass http://reverb:8080;
