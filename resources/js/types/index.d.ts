@@ -1,3 +1,4 @@
+import { LiveConfig } from './Live';
 import { Notification } from './Notification';
 
 export interface User {
@@ -23,6 +24,8 @@ export type PageProps<
     notifications: Notification[];
     /** Unread across the whole inbox, not just `notifications`. */
     notificationUnreadCount: number;
+    /** Live-updates connection, or `{ enabled: false }` when Reverb is not set up. */
+    live: LiveConfig;
     hasProjects: boolean;
     emailEnabled: boolean;
 };
