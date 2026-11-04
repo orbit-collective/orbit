@@ -68,7 +68,7 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
                 </div>
 
                 <BarPlot
-                    className="mt-6"
+                    className="mt-8"
                     ariaLabel={`${title}: ${bars
                         .map((bar) => `${bar.label} ${bar.percent}%`)
                         .join(', ')}`}

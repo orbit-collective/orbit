@@ -73,7 +73,7 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
                     </p>
                 ) : (
                     <BarPlot
-                        className="mt-6"
+                        className="mt-8"
                         ariaLabel={`${title}: ${items
                             .map(
                                 (item) =>

@@ -197,4 +197,53 @@ describe('BarPlot', () => {
             expect(bar.parentElement).not.toHaveClass('w-fit');
         });
     });
+
+    test('bars scroll and snap instead of squeezing, like the mobile board', () => {
+        renderPlot();
+
+        const scroller = screen.getByTestId('plot-scroller');
+        expect(scroller).toHaveClass(
+            'overflow-x-auto',
+            'snap-x',
+            'snap-mandatory',
+            'no-scrollbar',
+        );
+        screen.getAllByTestId('plot-column').forEach((column) => {
+            expect(column).toHaveClass('snap-center', 'min-w-[3.25rem]');
+        });
+    });
+
+    test('the plot grows with the number of bars so none gets narrower than its column', () => {
+        const many = Array.from({ length: 20 }, (_, i) => ({
+            key: String(i),
+            label: `bar ${i}`,
+            heightPercent: 10 + i,
+        }));
+        const { rerender } = renderPlot();
+        const few = parseFloat(
+            screen.getByTestId('plot-content').style.minWidth,
+        );
+
+        rerender(<BarPlot bars={many} ticks={ticks} ariaLabel="many" />);
+
+        expect(
+            parseFloat(screen.getByTestId('plot-content').style.minWidth),
+        ).toBeGreaterThan(few);
+        expect(screen.getByTestId('plot-content').style.minWidth).toBe('67rem');
+        expect(screen.getAllByTestId('plot-column')).toHaveLength(20);
+    });
+
+    test('the axis stays outside the scroller so it does not scroll away', () => {
+        renderPlot({ marker: { percent: 50, label: 'Avg 50%' } });
+
+        const axis = screen.getByTestId('plot-axis');
+        expect(screen.getByTestId('plot-scroller').contains(axis)).toBe(false);
+        expect(axis).toHaveTextContent('100%');
+        expect(axis).toHaveTextContent('Avg 50%');
+        expect(
+            screen
+                .getByTestId('plot-scroller')
+                .contains(screen.getByTestId('marker-line')),
+        ).toBe(true);
+    });
 });
