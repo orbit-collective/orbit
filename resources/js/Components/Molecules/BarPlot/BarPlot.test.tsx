@@ -188,7 +188,13 @@ describe('BarPlot', () => {
         renderPlot();
 
         screen.getAllByTestId('bar').forEach((bar) => {
-            expect(bar.parentElement).toHaveClass('absolute', 'inset-0');
+            expect(bar.parentElement).toHaveClass(
+                'absolute',
+                'inset-0',
+                'h-full',
+                'w-full',
+            );
+            expect(bar.parentElement).not.toHaveClass('w-fit');
         });
     });
 });

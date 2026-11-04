@@ -92,8 +92,9 @@ export default function DeveloperPortalTab({
         color: 'info' | 'accent' | 'success' | 'warning',
         fresh?: number,
     ) => (
-        <motion.div variants={riseIn}>
+        <motion.div variants={riseIn} className="h-full">
             <StatCard
+                className="h-full"
                 variant="glass"
                 title={title}
                 value={<AnimatedNumber value={value} />}
