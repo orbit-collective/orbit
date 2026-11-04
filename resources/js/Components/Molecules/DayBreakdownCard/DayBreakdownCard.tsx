@@ -127,7 +127,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                                 FOCUS_RING,
                                                 active
                                                     ? 'text-white'
-                                                    : 'bg-[var(--bg-light-color)]/60 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                                                    : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]',
                                             )}
                                         >
                                             {active && (
