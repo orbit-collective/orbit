@@ -21,7 +21,9 @@ All in `resources/js/live/`:
 ## Step 1 — Make the props lazy
 
 A partial reload (`only: [...]`) still *builds* every prop that is a plain value.
-Make each prop a closure so a live refresh pays only for what it asks for:
+Make every prop that costs a query or a computation a closure, so a live refresh
+pays only for what it asks for (cheap values such as the `$project` already
+loaded by route binding can stay plain):
 
 File: `app/Http/Controllers/MilestoneController.php`
 
@@ -89,6 +91,13 @@ export function useMilestonesLive(projectId: number): void {
 `broadcastAs()` name to a callback; the latest callbacks are always used without
 resubscribing, and a `null` channel or live updates being off subscribes to
 nothing. The channel may also be an array.
+
+A change to the **current user's own** access (their membership or role) arrives
+on `user.{id}` as `access.changed` and is handled once for the whole app by
+`LiveBridge` (`resources/js/Components/Organisms/LiveBridge/LiveBridge.tsx`),
+which re-reads the whole page. A page hook therefore does not subscribe to it;
+it only reacts to the project's `members` and `roles` changes through
+`project.changed`, as `ACCESS_TYPES` does above.
 
 Call it from the page: `useMilestonesLive(project.id);`. Existing examples:
 `useProjectLive` (project page, takes the visible view and the calendar range),

@@ -2,8 +2,9 @@
 
 Presence answers "who else has this open?" and carries small client-to-client
 hints ("Ada is editing the description"). It uses a Reverb **presence channel**
-and *whispers*: messages that go from one browser to the others and never touch
-the server or the database. The worked example adds an avatar stack to a
+and *whispers*: messages that go from one browser to the others through Reverb
+and never reach the Laravel application or the database (Reverb relays them, so
+they are not private from the WebSocket server). The worked example adds an avatar stack to a
 hypothetical milestone page.
 
 ## Step 1 — Authorise the channel
@@ -39,10 +40,39 @@ File: `routes/channels.php`
 Broadcast::channel('issue.{issueId}', fn ($user, int $issueId) => LiveChannels::joinIssue($user, $issueId));
 ```
 
-Only put what every other viewer may already see in the card. Add a
-`LiveChannels::milestone(int $id)` name helper and a matching `joinMilestone`
-for the new page, plus tests next to `LiveChannelsTest.php` (a member joins, a
-stranger is forbidden, a missing record is refused).
+Only put what every other viewer may already see in the card. For the milestone
+page add the same three pieces for `Milestone`: a name helper, a
+`joinMilestone` and the route (the existing `issue` ones above are the model):
+
+File: `app/Broadcasting/LiveChannels.php`
+
+```php
+    public static function milestone(int $milestoneId): string
+    {
+        return "milestone.$milestoneId";
+    }
+
+    /** @return array{id: int, name: string, avatar: string|null}|false */
+    public static function joinMilestone(User $user, int $milestoneId): array|false
+    {
+        $milestone = Milestone::query()->select(['id', 'project_id'])->find($milestoneId);
+
+        if ($milestone === null || ! self::canJoinProject($user, $milestone->project_id)) {
+            return false;
+        }
+
+        return ['id' => $user->id, 'name' => $user->name, 'avatar' => $user->avatar];
+    }
+```
+
+File: `routes/channels.php`
+
+```php
+Broadcast::channel('milestone.{milestoneId}', fn ($user, int $milestoneId) => LiveChannels::joinMilestone($user, $milestoneId));
+```
+
+Add tests next to `LiveChannelsTest.php` (a member joins, a stranger is
+forbidden, a missing record is refused).
 
 ## Step 2 — Join it in the page
 

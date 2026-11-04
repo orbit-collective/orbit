@@ -20,7 +20,7 @@ Bez odpytywania: obecność (nie ma czego pobrać z serwera) i strony ustawień 
 
 ## Model bezpieczeństwa
 
-- Kanały są **prywatne**; `POST /broadcasting/auth` wymaga zalogowanego użytkownika, ma throttle (120 na minutę) i odpowiada JSON 401/403 zamiast przekierowania do logowania. Kanały użytkownika: tylko właściciel. Kanały projektu: członkowie z `projects.view`, przez `Project::hasPermission`. Kanały presence zgłoszeń: członkowie, którzy mogą zobaczyć projekt zgłoszenia.
+- Kanały są **prywatne**; `POST /broadcasting/auth` wymaga zalogowanego użytkownika, ma throttle (120 na minutę) i odpowiada JSON 401/403 zamiast przekierowania do logowania. Kanały użytkownika: tylko właściciel. Kanały projektu: członkowie z uprawnieniem `projects.view`, sprawdzanym przez `Project::hasPermission`. Kanały presence zgłoszeń: członkowie, którzy mogą zobaczyć projekt zgłoszenia.
 - Zdarzenia niosą identyfikatory i rodzaje; dane są pobierane ponownie autoryzowanymi trasami ([przewodnik 02](./02-announce-a-change.md)). Otwarta karta usuniętego członka może jeszcze dostawać podpowiedzi do czasu ponownego połączenia; niczego się z nich nie dowie, a `AccessChanged` i tak każe jej pobrać stronę od nowa.
 - Sekret nigdy nie trafia do przeglądarki (tylko klucz). Gniazda są przyjmowane wyłącznie z `REVERB_ALLOWED_ORIGINS`; Reverb ogranicza tempo na połączenie oraz liczbę połączeń (`REVERB_APP_MAX_CONNECTIONS`) i rozmiar wiadomości.
 - Nic z aktualizacji na żywo nie jest konfigurowane w czasie budowania, więc ten sam build działa z Reverb i bez niego.

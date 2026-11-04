@@ -4,7 +4,7 @@ Klienci na żywo dowiadują się o zapisie tylko wtedy, gdy zapis o sobie powie.
 
 ## Najważniejsza zasada
 
-**Zdarzenie niesie identyfikatory i rodzaje zmian, nigdy zawartość rekordów.** `ProjectChanged` to `{changes: [{type, id, action}], actor}`. Klient używa go wyłącznie do ustalenia, które propsy Inertia pobrać ponownie, a to pobranie idzie zwykłymi, autoryzowanymi trasami. Właśnie to czyni kanał bezpiecznym: klient, który nadal jest zasubskrybowany po utracie dostępu (otwarta karta usuniętego członka), dostaje podpowiedzi o rzeczach, których nie może już pobrać. Jedynym wyjątkiem jest `NotificationsChanged`, które niesie nowe powiadomienie — ale podróżuje prywatnym kanałem samego adresata.
+**Zdarzenie niesie identyfikatory i rodzaje zmian, ale nigdy nie zawiera zawartości rekordów.** `ProjectChanged` to `{changes: [{type, id, action}], actor}`. Klient używa go wyłącznie do ustalenia, które propsy Inertia pobrać ponownie, a to pobranie idzie zwykłymi, autoryzowanymi trasami. Właśnie to czyni kanał bezpiecznym: klient, który nadal jest zasubskrybowany po utracie dostępu (otwarta karta usuniętego członka), dostaje podpowiedzi o rzeczach, których nie może już pobrać. Jedynym wyjątkiem jest zdarzenie `NotificationsChanged`, które niesie nowe powiadomienie — ale podróżuje prywatnym kanałem samego adresata.
 
 ## Krok 1 — Modele: użyj traita
 
@@ -56,7 +56,7 @@ class Milestone extends Model
 }
 ```
 
-`type` to słowo, po którym przełącza się klient (Krok 3 w [Zareaguj na zmianę w UI](./03-react-to-a-change-in-the-ui.md)). `id` to rekord albo `null`, gdy zmiana nie dotyczy jednego rekordu. Istniejący użytkownicy: `Issue` (`issue`), `Comment` (`comment`, z id swojego zgłoszenia, bo komentarz jest wyświetlany przy zgłoszeniu), `Project`, `Label` (`labels`), `Priority` (`priorities`) i `IssueType` (`issue-types`).
+`type` to słowo, po którym przełącza się klient (Krok 3 w [Zareaguj na zmianę w UI](./03-react-to-a-change-in-the-ui.md)). `id` to rekord albo `null`, gdy zmiana nie dotyczy jednego rekordu. Istniejące modele: `Issue` (`issue`), `Comment` (`comment`, z id swojego zgłoszenia, bo komentarz jest wyświetlany przy zgłoszeniu), `Project`, `Label` (`labels`), `Priority` (`priorities`) i `IssueType` (`issue-types`).
 
 ## Krok 2 — Zapisy omijające zdarzenia modeli
 
@@ -95,7 +95,7 @@ Zdarzenia podróżują kolejką `live` (`LiveChannels::QUEUE`); worker czyta ją
 Dwa zdarzenia trafiają na kanał `user.{id}` jednego użytkownika:
 
 - `AccessChanged` — zmieniło się jego członkostwo lub rola; otwarte karty pobierają stronę ponownie. Wysyła je `LiveUpdates::membership()`.
-- `NotificationsChanged` — zmieniła się jego skrzynka. **Każdy zapis powiadomień już przechodzi przez `NotificationService`**, którego `store()` ogłasza nowy wiersz, a `forget()` ogłasza całą resztę (odczyt, usunięcie, czyszczenie). Nowa ścieżka zapisu powiadomień musi wywoływać `forget()` jak istniejące i nie potrzebuje wtedy żadnego dodatkowego kodu.
+- `NotificationsChanged` — zmieniła się jego skrzynka. **Każdy zapis powiadomień już przechodzi przez `NotificationService`**, którego `store()` ogłasza nowy wiersz, a `forget()` ogłasza całą resztę (odczyt, usunięcie, czyszczenie). Ścieżka, która *zmienia* istniejące powiadomienia, musi wywoływać `forget()` jak istniejące. Ścieżka, która *tworzy* powiadomienie, musi użyć `store()` (albo `notify()`, które je wywołuje), bo tylko `store()` dodaje utworzony wiersz do zdarzenia, z którego korzysta powiadomienie przeglądarki.
 
 ## Krok 5 — Testy
 

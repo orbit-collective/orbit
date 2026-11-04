@@ -66,7 +66,7 @@ class Milestone extends Model
 
 `type` is the word the client switches on (Step 3 of
 [React to a change in the UI](./03-react-to-a-change-in-the-ui.md)). `id` is the
-record, or `null` when the change is not about one record. Existing users:
+record, or `null` when the change is not about one record. Existing models:
 `Issue` (`issue`), `Comment` (`comment`, with its issue's id, because a comment
 is shown on its issue), `Project`, `Label` (`labels`), `Priority`
 (`priorities`) and `IssueType` (`issue-types`).
@@ -124,9 +124,11 @@ Two events go to a single user's channel `user.{id}`:
   Sent by `LiveUpdates::membership()`.
 - `NotificationsChanged` — their inbox changed. **Every notification write already
   goes through `NotificationService`**, whose `store()` announces the new row and
-  whose `forget()` announces everything else (read, delete, clean-up). A new
-  write path for notifications must call `forget()` like the existing ones, and
-  then needs no extra code.
+  whose `forget()` announces everything else (read, delete, clean-up). A path that
+  *changes* existing notifications must call `forget()` like the existing ones. A
+  path that *creates* a notification must use `store()` (or `notify()`, which calls
+  it), because only `store()` puts the created row in the event for the browser
+  notification.
 
 ## Step 5 — Tests
 

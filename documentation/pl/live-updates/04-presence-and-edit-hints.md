@@ -1,6 +1,6 @@
 # Obecność i podpowiedzi o edycji
 
-Obecność odpowiada na pytanie „kto jeszcze to ma otwarte?" i przenosi drobne podpowiedzi między klientami („Ada edytuje opis"). Używa **kanału presence** Reverb oraz *szeptów*: wiadomości, które idą z jednej przeglądarki do pozostałych i nigdy nie dotykają serwera ani bazy danych. Przerobiony przykład dodaje stos awatarów do hipotetycznej strony kamienia milowego.
+Obecność odpowiada na pytanie „kto jeszcze to ma otwarte?” i przenosi drobne podpowiedzi między klientami („Ada edytuje opis”). Używa **kanału presence** Reverb oraz *szeptów*: wiadomości, które idą z jednej przeglądarki do pozostałych przez Reverb i nigdy nie trafiają do aplikacji Laravel ani do bazy danych (Reverb je przekazuje, więc nie są ukryte przed serwerem WebSocket). Przerobiony przykład dodaje stos awatarów do hipotetycznej strony kamienia milowego.
 
 ## Krok 1 — Autoryzuj kanał
 
@@ -34,7 +34,36 @@ Plik: `routes/channels.php`
 Broadcast::channel('issue.{issueId}', fn ($user, int $issueId) => LiveChannels::joinIssue($user, $issueId));
 ```
 
-Do karty wkładaj tylko to, co każdy inny widz już może zobaczyć. Dodaj helper nazwy `LiveChannels::milestone(int $id)` i odpowiadające mu `joinMilestone` dla nowej strony oraz testy obok `LiveChannelsTest.php` (członek dołącza, obcy dostaje 403, brakujący rekord jest odrzucany).
+Do karty wkładaj tylko to, co każdy inny widz już może zobaczyć. Dla strony kamienia milowego dodaj te same trzy elementy dla `Milestone`: helper nazwy, `joinMilestone` i trasę (istniejące elementy dla `issue` powyżej są wzorem):
+
+Plik: `app/Broadcasting/LiveChannels.php`
+
+```php
+    public static function milestone(int $milestoneId): string
+    {
+        return "milestone.$milestoneId";
+    }
+
+    /** @return array{id: int, name: string, avatar: string|null}|false */
+    public static function joinMilestone(User $user, int $milestoneId): array|false
+    {
+        $milestone = Milestone::query()->select(['id', 'project_id'])->find($milestoneId);
+
+        if ($milestone === null || ! self::canJoinProject($user, $milestone->project_id)) {
+            return false;
+        }
+
+        return ['id' => $user->id, 'name' => $user->name, 'avatar' => $user->avatar];
+    }
+```
+
+Plik: `routes/channels.php`
+
+```php
+Broadcast::channel('milestone.{milestoneId}', fn ($user, int $milestoneId) => LiveChannels::joinMilestone($user, $milestoneId));
+```
+
+Dodaj testy obok `LiveChannelsTest.php` (członek dołącza, obcy dostaje 403, brakujący rekord jest odrzucany).
 
 ## Krok 2 — Dołącz na stronie
 
@@ -60,7 +89,7 @@ Plik: `resources/js/Components/Molecules/PresenceStack/PresenceStack.tsx`
 <PresenceStack users={viewers} />
 ```
 
-Nakładające się awatary, „+N" powyżej `max` (domyślnie 4), imiona po najechaniu i dla czytników ekranu, a gdy nikogo innego nie ma — nic. Strona zgłoszenia umieszcza go w nagłówku przez slot `presence` w `IssuePageHeader`.
+Nakładające się awatary, „+N” powyżej `max` (domyślnie 4), imiona po najechaniu i dla czytników ekranu, a gdy nikogo innego nie ma — nic. Strona zgłoszenia umieszcza go w nagłówku przez slot `presence` w `IssuePageHeader`.
 
 ## Krok 4 — Ostrzegaj przed równoczesną edycją
 
