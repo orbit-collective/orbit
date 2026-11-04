@@ -119,3 +119,36 @@ test('the error list is paginated and keeps the other pagers in its links', func
     array_map('unlink', glob($dir.'/*'));
     rmdir($dir);
 });
+
+test('the container log endpoint returns json for a project container', function () {
+    config(['developer-portal.docker.socket' => __FILE__]);
+    Http::fake([
+        'localhost/containers/json*' => Http::response([['Id' => str_repeat('a', 64), 'Names' => ['/orbit-app-1'], 'Image' => 'x', 'State' => 'running', 'Status' => 'Up', 'Labels' => ['com.docker.compose.service' => 'app']]]),
+        'localhost/containers/'.str_repeat('a', 64).'/json' => Http::response(['State' => ['Running' => true, 'StartedAt' => now()->toIso8601String()]]),
+        'localhost/containers/'.str_repeat('a', 12).'/logs*' => Http::response("2026-11-04T10:00:00Z hello\n"),
+    ]);
+
+    $this->actingAs($this->user)->getJson('/settings/dev-portal/containers/'.str_repeat('a', 12).'/logs?tail=50')
+        ->assertOk()
+        ->assertJsonPath('lines.0.text', 'hello');
+});
+
+test('the log endpoint 404s for an unknown container, 403s without permission and 404s when off', function () {
+    config(['developer-portal.docker.socket' => __FILE__]);
+    Http::fake(['localhost/containers/json*' => Http::response([])]);
+
+    $this->actingAs($this->user)->getJson('/settings/dev-portal/containers/'.str_repeat('b', 12).'/logs')
+        ->assertNotFound()->assertJsonPath('found', false);
+
+    $member = User::factory()->create();
+    addProjectMember($this->project, $member->id, 'member');
+    $this->actingAs($member)->getJson('/settings/dev-portal/containers/'.str_repeat('b', 12).'/logs')->assertForbidden();
+
+    config(['developer-portal.enabled' => false]);
+    $this->actingAs($this->user)->getJson('/settings/dev-portal/containers/'.str_repeat('b', 12).'/logs')->assertNotFound();
+});
+
+test('a container id that is not hex does not reach the controller', function () {
+    $this->actingAs($this->user)->getJson('/settings/dev-portal/containers/..%2Fetc/logs')->assertNotFound();
+    $this->actingAs($this->user)->getJson('/settings/dev-portal/containers/not-hex-id/logs')->assertNotFound();
+});
