@@ -14,7 +14,8 @@ File: `docker-compose.yml`
 | Service | Image/build target | What it does |
 |---|---|---|
 | `app` | `Dockerfile` target `php` | Runs `php artisan serve --host=0.0.0.0 --port=8000 --no-reload` — the actual Laravel app, port `8000` |
-| `queue` | Same `php` target, same image | Runs `php artisan queue:work --tries=3` instead of `serve` — this is what actually sends queued mail (see [`../notifications/README.md`](../notifications/README.md)) and webhook jobs (see [`../integrations/README.md`](../integrations/README.md)); nothing gets delivered if this container isn't running |
+| `queue` | Same `php` target, same image | Runs `php artisan queue:work --queue=live,default --tries=3` instead of `serve` — this is what actually sends queued mail (see [`../notifications/README.md`](../notifications/README.md)) and webhook jobs (see [`../integrations/README.md`](../integrations/README.md)); nothing gets delivered if this container isn't running |
+| `reverb` | Same `php` target, same image | Runs `php artisan reverb:start` — the WebSocket server behind live updates, port `8080`; see [`../live-updates/README.md`](../live-updates/README.md). Without `REVERB_*` credentials it idles and the app falls back to polling |
 | `vite` | `Dockerfile` target `node` | Runs `npm run dev -- --host` — the Vite dev server with HMR, port `5173` |
 | `nsfwjs` | `andresribeiroo/nsfwjs` (pulled, not built) | The image-moderation service — see [`../content-moderation/README.md`](../content-moderation/README.md) |
 | `uptime-kuma` | `louislam/uptime-kuma:2` | Optional monitoring dashboard, kept behind a Compose `profiles: [monitoring]` block so `make up`/`make setup` never starts it — only `make up-monitoring` does |

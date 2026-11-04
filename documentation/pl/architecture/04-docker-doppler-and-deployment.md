@@ -9,7 +9,8 @@ Plik: `docker-compose.yml`
 | Serwis | Obraz/build target | Co robi |
 |---|---|---|
 | `app` | target `php` w `Dockerfile` | Uruchamia `php artisan serve --host=0.0.0.0 --port=8000 --no-reload` — faktyczna aplikacja Laravel, port `8000` |
-| `queue` | Ten sam target `php`, ten sam obraz | Uruchamia `php artisan queue:work --tries=3` zamiast `serve` — to właśnie ono faktycznie wysyła kolejkowaną pocztę (zobacz [`../notifications/README.md`](../notifications/README.md)) i zadania webhooków (zobacz [`../integrations/README.md`](../integrations/README.md)); nic się nie dostarcza, jeśli ten kontener nie działa |
+| `queue` | Ten sam target `php`, ten sam obraz | Uruchamia `php artisan queue:work --queue=live,default --tries=3` zamiast `serve` — to właśnie ono faktycznie wysyła kolejkowaną pocztę (zobacz [`../notifications/README.md`](../notifications/README.md)) i zadania webhooków (zobacz [`../integrations/README.md`](../integrations/README.md)); nic się nie dostarcza, jeśli ten kontener nie działa |
+| `reverb` | Ten sam target `php`, ten sam obraz | Uruchamia `php artisan reverb:start` — serwer WebSocket stojący za aktualizacjami na żywo, port `8080`; zobacz [`../live-updates/README.md`](../live-updates/README.md). Bez danych `REVERB_*` pozostaje bezczynny, a aplikacja przechodzi na odpytywanie |
 | `vite` | target `node` w `Dockerfile` | Uruchamia `npm run dev -- --host` — dev server Vite z HMR, port `5173` |
 | `nsfwjs` | `andresribeiroo/nsfwjs` (pobierany, nie budowany) | Serwis moderacji obrazów — zobacz [`../content-moderation/README.md`](../content-moderation/README.md) |
 | `uptime-kuma` | `louislam/uptime-kuma:2` | Opcjonalny dashboard monitoringu, trzymany za blokiem Compose `profiles: [monitoring]`, więc `make up`/`make setup` nigdy go nie startuje — tylko `make up-monitoring` to robi |

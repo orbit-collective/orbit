@@ -26,6 +26,7 @@ documentation/
     command-palette/         <- angielskie tłumaczenie każdego przewodnika poniżej
     storybook/               <- angielskie tłumaczenie każdego przewodnika poniżej
     redis/                   <- angielskie tłumaczenie każdego przewodnika poniżej
+    live-updates/            <- angielskie tłumaczenie każdego przewodnika poniżej
     content-moderation/      <- angielskie tłumaczenie każdego przewodnika poniżej
     project-invitations/     <- angielskie tłumaczenie każdego przewodnika poniżej
     activity-log/            <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -162,6 +163,13 @@ documentation/
       01-run-and-operate-redis.md
       02-cache-a-value-and-invalidate-it.md
       03-sessions-on-redis.md
+    live-updates/
+      README.md              <- indeks tej kategorii
+      01-set-up-reverb.md
+      02-announce-a-change.md
+      03-react-to-a-change-in-the-ui.md
+      04-presence-and-edit-hints.md
+      05-fallback-and-troubleshooting.md
 ```
 
 ## Kiedy dodać lub zaktualizować przewodnik
