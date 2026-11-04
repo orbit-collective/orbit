@@ -249,4 +249,17 @@ describe('DeveloperPortalTab', () => {
                 .className,
         ).toContain('focus-visible:ring-2');
     });
+
+    test('the stat cards stretch to the same height whatever they contain', () => {
+        const { container } = renderTab();
+
+        const cells = Array.from(
+            container.querySelector('.grid.grid-cols-1')!.children,
+        );
+        expect(cells).toHaveLength(4);
+        cells.forEach((cell) => {
+            expect(cell).toHaveClass('h-full');
+            expect(cell.firstElementChild).toHaveClass('h-full');
+        });
+    });
 });
