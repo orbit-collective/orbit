@@ -3,11 +3,15 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ProjectChange } from '@/types/Live';
 
 const mocks = vi.hoisted(() => ({
+    useLiveFallback: vi.fn(),
     useLiveChannel: vi.fn(),
     requestLiveReload: vi.fn(),
     visit: vi.fn(),
 }));
 
+vi.mock('./useLiveFallback', () => ({
+    useLiveFallback: mocks.useLiveFallback,
+}));
 vi.mock('./useLiveChannel', () => ({ useLiveChannel: mocks.useLiveChannel }));
 vi.mock('./reloadQueue', () => ({
     requestLiveReload: mocks.requestLiveReload,
@@ -33,12 +37,42 @@ const handler = () =>
 
 beforeEach(() => {
     mocks.useLiveChannel.mockReset();
+    mocks.useLiveFallback.mockReset();
     mocks.requestLiveReload.mockReset();
     mocks.visit.mockReset();
     vi.stubGlobal('route', (name: string, id: number) => `/${name}/${id}`);
 });
 
+/** What the hook asks the fallback to re-read. */
+const fallbackReloads = () => mocks.useLiveFallback.mock.calls.at(-1)![0]();
+
 describe('useProjectLive', () => {
+    test('without a socket it re-reads the visible view on a timer', () => {
+        const range = {
+            current: ['2026-11-01', '2026-11-30'] as [string, string],
+        };
+        const { rerender } = renderHook(
+            ({ view }) => useProjectLive(7, view, range),
+            { initialProps: { view: 'List' as const } },
+        );
+
+        expect(fallbackReloads()).toEqual([{ only: ['issues'] }]);
+
+        rerender({ view: 'Activity' as unknown as 'List' });
+        expect(fallbackReloads()).toEqual([{ only: ['activityLogs'] }]);
+
+        rerender({ view: 'Calendar' as unknown as 'List' });
+        expect(fallbackReloads()).toEqual([
+            {
+                only: ['calendarIssues', 'upcomingDeadlines'],
+                data: {
+                    calendar_from: '2026-11-01',
+                    calendar_to: '2026-11-30',
+                },
+            },
+        ]);
+    });
+
     test('listens on the project channel and reloads what the view shows', () => {
         const range = { current: null };
         renderHook(() => useProjectLive(7, 'Board', range));
@@ -190,6 +224,19 @@ describe('useIssueLive', () => {
         activityVisible: false,
     };
 
+    test('without a socket it re-reads the issue on a timer', () => {
+        const { rerender } = renderHook((props) => useIssueLive(props), {
+            initialProps: options,
+        });
+
+        expect(fallbackReloads()).toEqual([
+            { only: ['issue', 'ancestors', 'linkedPullRequests'] },
+        ]);
+
+        rerender({ ...options, activityVisible: true });
+        expect(fallbackReloads()[0].only).toContain('activityLogs');
+    });
+
     test('re-reads the issue when it changes', () => {
         renderHook(() => useIssueLive(options));
 
@@ -234,6 +281,21 @@ describe('useIssueLive', () => {
 });
 
 describe('useDashboardLive', () => {
+    test('without a socket it refreshes the counters and feed on a timer', () => {
+        renderHook(() => useDashboardLive([1]));
+
+        expect(fallbackReloads()).toEqual([
+            {
+                only: [
+                    'issueStats',
+                    'productivity_trend',
+                    'projects',
+                    'activityLogs',
+                ],
+            },
+        ]);
+    });
+
     test('listens on every project channel and refreshes the counters', () => {
         renderHook(() => useDashboardLive([1, 2]));
 
