@@ -1,13 +1,21 @@
 export type LiveConfig =
-    | { enabled: false }
+    | {
+          enabled: false;
+          /** Seconds between fallback refreshes, 0 when polling is off. */
+          pollInterval: number;
+      }
     | {
           enabled: true;
+          pollInterval: number;
           /** Public Reverb app key (never the secret). */
           key: string;
           host: string;
           port: number;
           scheme: 'http' | 'https';
       };
+
+/** Where the socket stands. `live` is the only state that needs no polling. */
+export type LiveStatus = 'off' | 'connecting' | 'live' | 'offline';
 
 /** The enabled shape of `LiveConfig`, i.e. what Echo needs to connect. */
 export type LiveConnection = Extract<LiveConfig, { enabled: true }>;

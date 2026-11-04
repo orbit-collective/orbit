@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Echo from 'laravel-echo';
 import Pusher, { type ChannelAuthorizationCallback } from 'pusher-js';
-import { LiveConnection } from '@/types/Live';
+import { LiveConnection, LiveStatus } from '@/types/Live';
 
 type Reverb = Echo<'reverb'>;
 type AuthData = Parameters<ChannelAuthorizationCallback>[1];
@@ -58,6 +58,49 @@ export function getEcho(connection: LiveConnection): Reverb {
     signature = next;
 
     return instance;
+}
+
+const STATUS_OF: Record<string, LiveStatus> = {
+    initialized: 'connecting',
+    connecting: 'connecting',
+    connected: 'live',
+    unavailable: 'offline',
+    failed: 'offline',
+    disconnected: 'offline',
+};
+
+interface PusherConnection {
+    state: string;
+    bind: (
+        event: 'state_change',
+        callback: (states: { current: string }) => void,
+    ) => void;
+    unbind: (
+        event: 'state_change',
+        callback: (states: { current: string }) => void,
+    ) => void;
+}
+
+/**
+ * Report the socket's state now and on every change. Returns the function
+ * that stops listening.
+ */
+export function onLiveStatus(
+    connection: LiveConnection,
+    callback: (status: LiveStatus) => void,
+): () => void {
+    const pusher = (
+        getEcho(connection).connector as unknown as {
+            pusher: { connection: PusherConnection };
+        }
+    ).pusher.connection;
+    const listener = ({ current }: { current: string }) =>
+        callback(STATUS_OF[current] ?? 'connecting');
+
+    callback(STATUS_OF[pusher.state] ?? 'connecting');
+    pusher.bind('state_change', listener);
+
+    return () => pusher.unbind('state_change', listener);
 }
 
 /** Echo's id for this browser tab's socket, once connected (sent as X-Socket-ID). */
