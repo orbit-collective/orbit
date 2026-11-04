@@ -19,14 +19,15 @@ function sharedLive(): array
 }
 
 test('live updates are off and nothing leaks while Reverb is not configured', function () {
-    config(['live.enabled' => false]);
+    config(['live.enabled' => false, 'live.poll_interval' => 30]);
 
-    expect(sharedLive())->toBe(['enabled' => false]);
+    expect(sharedLive())->toBe(['enabled' => false, 'pollInterval' => 30]);
 });
 
 test('the browser gets the public connection but never the secret', function () {
     config([
         'live.enabled' => true,
+        'live.poll_interval' => 15,
         'live.client' => ['key' => 'pub-key', 'host' => 'ws.example.com', 'port' => 443, 'scheme' => 'https'],
         'broadcasting.connections.reverb.secret' => 'top-secret',
     ]);
@@ -35,6 +36,7 @@ test('the browser gets the public connection but never the secret', function () 
 
     expect($live)->toBe([
         'enabled' => true,
+        'pollInterval' => 15,
         'key' => 'pub-key',
         'host' => 'ws.example.com',
         'port' => 443,
@@ -45,7 +47,7 @@ test('the browser gets the public connection but never the secret', function () 
 test('guests are never handed a connection', function () {
     config(['live.enabled' => true]);
 
-    $this->get('/login')->assertOk()->assertInertia(fn ($page) => $page->where('live', ['enabled' => false]));
+    $this->get('/login')->assertOk()->assertInertia(fn ($page) => $page->where('live', ['enabled' => false, 'pollInterval' => 0]));
 });
 
 /**
@@ -151,4 +153,14 @@ test('the Reverb origin allow-list defaults to the app host, also when the varia
     expect($reverbOrigins(['APP_URL' => 'http://localhost:8000', 'REVERB_ALLOWED_ORIGINS' => '']))->toBe(['localhost'])
         ->and($reverbOrigins(['APP_URL' => 'https://orbit.example.com', 'REVERB_ALLOWED_ORIGINS' => null]))->toBe(['orbit.example.com'])
         ->and($reverbOrigins(['APP_URL' => 'https://orbit.example.com', 'REVERB_ALLOWED_ORIGINS' => 'a.com, b.com']))->toBe(['a.com', 'b.com']);
+});
+
+test('the poll interval defaults to 30 seconds, is raised to 10 and can be switched off', function () {
+    $interval = fn (?string $value) => configFilesWith(['LIVE_POLL_INTERVAL' => $value])[1]['poll_interval'];
+
+    expect($interval(null))->toBe(30)
+        ->and($interval('45'))->toBe(45)
+        ->and($interval('3'))->toBe(10)
+        ->and($interval('0'))->toBe(0)
+        ->and($interval('-5'))->toBe(0);
 });

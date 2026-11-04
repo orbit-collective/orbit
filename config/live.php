@@ -34,6 +34,24 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Fallback polling
+    |--------------------------------------------------------------------------
+    |
+    | Without Reverb - or while the socket is down - an open page re-reads the
+    | props it shows every LIVE_POLL_INTERVAL seconds (visible tabs only, with
+    | jitter). 0 turns polling off, leaving the app as it was before live
+    | updates. Anything below 10 seconds is raised to 10.
+    |
+    */
+
+    'poll_interval' => (static function (): int {
+        $seconds = (int) env('LIVE_POLL_INTERVAL', 30);
+
+        return $seconds <= 0 ? 0 : max(10, $seconds);
+    })(),
+
     'client' => [
         'key' => env('REVERB_APP_KEY'),
         'host' => env('REVERB_PUBLIC_HOST', env('REVERB_HOST')),
