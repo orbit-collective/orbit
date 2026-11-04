@@ -59,6 +59,10 @@ export interface BadgeProps
     children: ReactNode;
     tooltip?: boolean;
     tooltipText?: ReactNode;
+    /** Which side of the badge the tooltip opens on. It also shows on keyboard focus. */
+    tooltipPlacement?: 'top' | 'bottom';
+    /** Classes for the outer, positioning element (e.g. to let the badge fill its parent). */
+    wrapperClassName?: string;
 }
 export interface ButtonProps
     extends

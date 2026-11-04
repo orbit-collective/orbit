@@ -47,4 +47,49 @@ describe('Badge Component', () => {
 
         expect(screen.getByText('Hover')).toHaveAttribute('title', 'A tooltip');
     });
+
+    test('the tooltip opens below by default and above on request', () => {
+        const { rerender } = render(
+            <Badge tooltip tooltipText="Below">
+                x
+            </Badge>,
+        );
+        expect(screen.getByText('Below').className).toContain(
+            'top-[calc(100%+6px)]',
+        );
+
+        rerender(
+            <Badge tooltip tooltipText="Above" tooltipPlacement="top">
+                x
+            </Badge>,
+        );
+        expect(screen.getByText('Above').className).toContain(
+            'bottom-[calc(100%+6px)]',
+        );
+    });
+
+    test('the tooltip also appears when the badge has keyboard focus', () => {
+        render(
+            <Badge tooltip tooltipText="Tip" tabIndex={0}>
+                x
+            </Badge>,
+        );
+
+        expect(screen.getByText('Tip').className).toContain(
+            'group-focus-within:opacity-100',
+        );
+    });
+
+    test('wrapperClassName reaches the outer element, not the badge', () => {
+        render(
+            <Badge wrapperClassName="w-full" className="inner-class">
+                x
+            </Badge>,
+        );
+
+        const badge = screen.getByText('x');
+        expect(badge).toHaveClass('inner-class');
+        expect(badge.parentElement).toHaveClass('w-full');
+        expect(badge.parentElement).not.toHaveClass('w-fit');
+    });
 });

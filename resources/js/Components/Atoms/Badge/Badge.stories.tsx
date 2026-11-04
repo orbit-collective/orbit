@@ -67,3 +67,20 @@ export const Colors: Story = {
 export const WithTooltip: Story = {
     args: { tooltip: true, tooltipText: 'Not started yet', color: 'todo' },
 };
+
+/** The tooltip can open above the badge; it also shows when the badge is focused with TAB. */
+export const TooltipAbove: Story = {
+    args: {
+        tooltip: true,
+        tooltipText: 'Opens upwards',
+        tooltipPlacement: 'top',
+        tabIndex: 0,
+    },
+    decorators: [
+        (Story) => (
+            <div className="pt-12">
+                <Story />
+            </div>
+        ),
+    ],
+};
