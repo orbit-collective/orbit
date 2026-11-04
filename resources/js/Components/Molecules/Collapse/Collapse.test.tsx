@@ -65,4 +65,29 @@ describe('Collapse', () => {
         );
         await waitFor(() => expect(screen.getByText('body')).toBeVisible());
     });
+
+    test('unmountWhenClosed mounts only while open and removes the body after closing', async () => {
+        const { rerender } = render(
+            <Collapse open={false} unmountWhenClosed>
+                <p>lazy</p>
+            </Collapse>,
+        );
+        expect(screen.queryByText('lazy')).not.toBeInTheDocument();
+
+        rerender(
+            <Collapse open unmountWhenClosed>
+                <p>lazy</p>
+            </Collapse>,
+        );
+        expect(await screen.findByText('lazy')).toBeInTheDocument();
+
+        rerender(
+            <Collapse open={false} unmountWhenClosed>
+                <p>lazy</p>
+            </Collapse>,
+        );
+        await waitFor(() =>
+            expect(screen.queryByText('lazy')).not.toBeInTheDocument(),
+        );
+    });
 });
