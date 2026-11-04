@@ -1,6 +1,7 @@
 import {
     Paginated,
     PortalContainers,
+    PortalErrorEntry,
     PortalErrorLog,
     PortalProject,
     PortalTotals,
@@ -70,43 +71,6 @@ const day = (
     };
 };
 
-export const portalErrorLog: PortalErrorLog = {
-    daily: [
-        day(2, 'Mon', [1, 2, 0]),
-        day(1, 'Tue', [0, 1, 0]),
-        day(0, 'Wed', [3, 4, 1]),
-    ],
-    entries: [
-        {
-            id: 'e1',
-            level: 'critical',
-            message: 'SQLSTATE[HY000]: disk I/O error',
-            loggedAt: '2026-11-04 10:15:00',
-            trace: [
-                '#0 /app/vendor/laravel/framework/Connection.php(1): run()',
-            ],
-        },
-        {
-            id: 'e2',
-            level: 'error',
-            message: 'Undefined array key "foo"',
-            loggedAt: '2026-11-04 09:00:00',
-            trace: [],
-        },
-    ],
-};
-
-export const portalTotals: PortalTotals = {
-    users: 12,
-    projects: 4,
-    issues: 100,
-    comments: 37,
-    newIssues: 9,
-    newUsers: 2,
-    recentDays: 7,
-    categories: { todo: 40, in_progress: 35, done: 25 },
-};
-
 export const paginated = <T>(data: T[], total = data.length): Paginated<T> => ({
     data,
     total,
@@ -120,6 +84,43 @@ export const paginated = <T>(data: T[], total = data.length): Paginated<T> => ({
         { url: null, label: 'Next &raquo;', active: false },
     ],
 });
+
+const errorEntries: PortalErrorEntry[] = [
+    {
+        id: 'e1',
+        level: 'critical',
+        message: 'SQLSTATE[HY000]: disk I/O error',
+        loggedAt: '2026-11-04 10:15:00',
+        trace: ['#0 /app/vendor/laravel/framework/Connection.php(1): run()'],
+    },
+    {
+        id: 'e2',
+        level: 'error',
+        message: 'Undefined array key "foo"',
+        loggedAt: '2026-11-04 09:00:00',
+        trace: [],
+    },
+];
+
+export const portalErrorLog: PortalErrorLog = {
+    daily: [
+        day(2, 'Mon', [1, 2, 0]),
+        day(1, 'Tue', [0, 1, 0]),
+        day(0, 'Wed', [3, 4, 1]),
+    ],
+    entries: paginated(errorEntries),
+};
+
+export const portalTotals: PortalTotals = {
+    users: 12,
+    projects: 4,
+    issues: 100,
+    comments: 37,
+    newIssues: 9,
+    newUsers: 2,
+    recentDays: 7,
+    categories: { todo: 40, in_progress: 35, done: 25 },
+};
 
 export const portalUsers: PortalUser[] = [
     {

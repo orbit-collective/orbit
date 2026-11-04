@@ -1,10 +1,32 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
-import { portalErrorLog } from '@/stories/developerPortalFixtures';
+import React from 'react';
+import { describe, expect, test, vi } from 'vitest';
+import { paginated, portalErrorLog } from '@/stories/developerPortalFixtures';
 import PortalErrorsSection, {
     buildDays,
     deltaPercent,
 } from './PortalErrorsSection';
+
+vi.mock('@inertiajs/react', () => ({
+    router: { get: vi.fn() },
+    Link: ({
+        children,
+        href,
+        only,
+        ...rest
+    }: {
+        children: React.ReactNode;
+        href?: string;
+        only?: string[];
+    }) => (
+        <a href={href} data-only={only?.join(',')} {...rest}>
+            {children}
+        </a>
+    ),
+}));
+vi.mock('@/context/AlertContext', () => ({
+    useAlert: () => ({ addAlert: vi.fn() }),
+}));
 
 describe('deltaPercent', () => {
     test('is the percent change from the previous day', () => {
@@ -98,10 +120,53 @@ describe('PortalErrorsSection', () => {
     test('says so when the log has no errors', () => {
         render(
             <PortalErrorsSection
-                errorLog={{ entries: [], daily: portalErrorLog.daily }}
+                errorLog={{
+                    entries: paginated([]),
+                    daily: portalErrorLog.daily,
+                }}
             />,
         );
 
         expect(screen.getByText(/No errors in the log/)).toBeInTheDocument();
+    });
+
+    test('pages through the errors, reloading only the log', () => {
+        render(
+            <PortalErrorsSection
+                errorLog={{
+                    daily: portalErrorLog.daily,
+                    entries: {
+                        ...paginated(portalErrorLog.entries.data, 25),
+                        links: [
+                            {
+                                url: null,
+                                label: '&laquo; Previous',
+                                active: false,
+                            },
+                            {
+                                url: '/p?errors_page=1',
+                                label: '1',
+                                active: true,
+                            },
+                            {
+                                url: '/p?errors_page=2',
+                                label: '2',
+                                active: false,
+                            },
+                            {
+                                url: '/p?errors_page=2',
+                                label: 'Next &raquo;',
+                                active: false,
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+
+        const next = screen.getByRole('link', { name: 'Page 2' });
+        expect(next).toHaveAttribute('href', '/p?errors_page=2');
+        expect(next).toHaveAttribute('data-only', 'errorLog');
+        expect(screen.getByText(/of/)).toBeInTheDocument();
     });
 });

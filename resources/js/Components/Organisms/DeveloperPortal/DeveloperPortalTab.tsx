@@ -128,7 +128,10 @@ export default function DeveloperPortalTab({
             />
 
             <PortalContainersSection containers={containers} />
-            <PortalErrorsSection errorLog={errorLog} />
+            <PortalErrorsSection
+                errorLog={errorLog}
+                queryParams={queryParams}
+            />
             <PortalUsersPanel users={portalUsers} queryParams={queryParams} />
             <PortalProjectsPanel
                 projects={portalProjects}
