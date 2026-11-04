@@ -1,5 +1,6 @@
 import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
 import WorkspaceSettingsMembersTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsMembersTab';
+import { useSettingsLive } from '@/live/useSettingsLive';
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
@@ -42,6 +43,9 @@ export default function SettingsMembers({
     canUpdateProjectDetails = false,
     canDeleteProject = false,
 }: SettingsMembersProps) {
+    // Other admins' changes to this project's settings arrive live.
+    useSettingsLive(selectedProjectId);
+
     return (
         <SettingsLayout tabId="members" projects={projects}>
             <WorkspaceSettingsMembersTab
