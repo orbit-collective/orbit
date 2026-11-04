@@ -174,8 +174,11 @@ describe('PortalProjectsPanel', () => {
         );
         expect(screen.getByText('orbit · 3 members')).toBeInTheDocument();
         expect(screen.getByText('website · 1 member')).toBeInTheDocument();
-        expect(screen.getByText('4 to do')).toBeInTheDocument();
-        expect(screen.getByText('9 done')).toBeInTheDocument();
+        expect(screen.getByLabelText('4 to do')).toBeInTheDocument();
+        expect(screen.getByLabelText('9 done')).toBeInTheDocument();
+        expect(
+            screen.getByLabelText('Issue counts legend'),
+        ).toBeInTheDocument();
     });
 
     test('says so when nothing matches', () => {

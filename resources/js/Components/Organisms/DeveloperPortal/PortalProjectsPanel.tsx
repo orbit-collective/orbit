@@ -34,13 +34,24 @@ export default function PortalProjectsPanel({
             icon="FolderGit2"
             description={`Every project on this instance (${projects.total}).`}
         >
-            <div className="px-4 py-3 sm:px-5">
+            <div className="space-y-2 px-4 py-3 sm:px-5">
                 <Input
                     type="search"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search by name or slug"
                 />
+                <ul
+                    aria-label="Issue counts legend"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-muted-color)]"
+                >
+                    {CATEGORIES.map(({ key, label }) => (
+                        <li key={key} className="flex items-center gap-1.5">
+                            <StatusDot status={key} size="xs" />
+                            {label}
+                        </li>
+                    ))}
+                </ul>
             </div>
             {projects.data.length === 0 ? (
                 <p className="px-5 py-6 text-sm text-[var(--text-gray-color)]">
@@ -50,36 +61,36 @@ export default function PortalProjectsPanel({
                 projects.data.map((project) => (
                     <div
                         key={project.id}
-                        className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                        className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
                     >
-                        <div className="flex min-w-0 items-center gap-3">
-                            <StatusDot
-                                color={project.color ?? undefined}
-                                size="md"
-                            />
-                            <div className="min-w-0">
-                                <Link
-                                    href={`/projects/${project.id}`}
-                                    className="block truncate text-sm font-medium text-[var(--text-color)] no-underline hover:text-[var(--accent-color)]"
-                                >
-                                    {project.name}
-                                </Link>
-                                <p className="truncate text-xs text-[var(--text-gray-color)]">
-                                    {project.slug} · {project.membersCount}{' '}
-                                    {project.membersCount === 1
-                                        ? 'member'
-                                        : 'members'}
-                                </p>
-                            </div>
+                        <StatusDot
+                            color={project.color ?? 'var(--text-muted-color)'}
+                            size="md"
+                        />
+                        <div className="min-w-0 flex-1">
+                            <Link
+                                href={`/projects/${project.id}`}
+                                className="block truncate text-sm font-medium text-[var(--text-color)] no-underline hover:text-[var(--accent-color)]"
+                            >
+                                {project.name}
+                            </Link>
+                            <p className="truncate text-xs text-[var(--text-gray-color)]">
+                                {project.slug} · {project.membersCount}{' '}
+                                {project.membersCount === 1
+                                    ? 'member'
+                                    : 'members'}
+                            </p>
                         </div>
-                        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--text-gray-color)]">
+                        <ul className="flex shrink-0 items-center gap-2.5 text-xs tabular-nums text-[var(--text-gray-color)]">
                             {CATEGORIES.map(({ key, label }) => (
                                 <li
                                     key={key}
-                                    className="flex items-center gap-1.5"
+                                    title={`${project.issues[key]} ${label}`}
+                                    aria-label={`${project.issues[key]} ${label}`}
+                                    className="flex items-center gap-1"
                                 >
                                     <StatusDot status={key} size="xs" />
-                                    {project.issues[key]} {label}
+                                    {project.issues[key]}
                                 </li>
                             ))}
                         </ul>
