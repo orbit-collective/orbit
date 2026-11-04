@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\Notifications\NotificationChannel;
 use App\Enums\Notifications\NotificationType;
+use App\Events\Live\NotificationsChanged;
 use App\Models\Notification;
 use App\Repositories\NotificationRepository;
 use App\Support\Cache\CachedModels;
@@ -77,7 +78,8 @@ class NotificationService
     {
         $notification = $this->notificationRepository->store($data);
 
-        $this->forget($notification->user_id);
+        $this->forget($notification->user_id, announce: false);
+        $this->broadcast($notification->user_id, $notification);
 
         return $notification;
     }
@@ -150,10 +152,24 @@ class NotificationService
         return "user:$userId:notifications:unread";
     }
 
-    public function forget(int $userId): void
+    public function forget(int $userId, bool $announce = true): void
     {
         Cache::forget(self::cacheKey($userId));
         Cache::forget(self::unreadCacheKey($userId));
+
+        // Every write ends here, so this is the one place the user's other
+        // open tabs hear about a read, a delete or a clean-up. A new
+        // notification is announced by store() instead, with its content.
+        if ($announce) {
+            $this->broadcast($userId);
+        }
+    }
+
+    private function broadcast(int $userId, ?Notification $created = null): void
+    {
+        if (config('live.enabled')) {
+            NotificationsChanged::dispatch($userId, $created);
+        }
     }
 
     /**

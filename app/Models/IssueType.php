@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BroadcastsLiveChanges;
 use App\Models\Concerns\BumpsIssueCache;
 use Database\Factories\IssueTypeFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class IssueType extends Model
 {
     /** @use HasFactory<IssueTypeFactory> */
-    use BumpsIssueCache, HasFactory;
+    use BroadcastsLiveChanges, BumpsIssueCache, HasFactory;
 
     protected $fillable = [
         'project_id',
@@ -137,5 +138,10 @@ class IssueType extends Model
         }
 
         return $array;
+    }
+
+    protected function liveChange(): ?array
+    {
+        return $this->project_id ? ['project' => $this->project_id, 'type' => 'issue-types', 'id' => null] : null;
     }
 }

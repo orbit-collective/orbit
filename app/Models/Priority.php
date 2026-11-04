@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BroadcastsLiveChanges;
 use App\Models\Concerns\BumpsIssueCache;
 use Database\Factories\PriorityFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Priority extends Model
 {
     /** @use HasFactory<PriorityFactory> */
-    use BumpsIssueCache, HasFactory;
+    use BroadcastsLiveChanges, BumpsIssueCache, HasFactory;
 
     protected $fillable = [
         'project_id',
@@ -60,5 +61,10 @@ class Priority extends Model
             'icon' => $this->icon,
             'position' => $this->position,
         ];
+    }
+
+    protected function liveChange(): ?array
+    {
+        return $this->project_id ? ['project' => $this->project_id, 'type' => 'priorities', 'id' => null] : null;
     }
 }
