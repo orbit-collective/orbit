@@ -161,3 +161,30 @@ export const portalProjects: PortalProject[] = [
         createdAt: null,
     },
 ];
+
+export const portalLogs = {
+    found: true,
+    error: null,
+    lines: [
+        {
+            time: '2026-11-04T10:00:00Z',
+            stream: 'stdout',
+            text: 'INFO  Server running on [http://0.0.0.0:8000]',
+        },
+        {
+            time: '2026-11-04T10:00:03Z',
+            stream: 'stdout',
+            text: 'Deprecated: Implicit conversion from float',
+        },
+        {
+            time: '2026-11-04T10:00:05Z',
+            stream: 'stdout',
+            text: 'GET /settings/dev-portal ..... 200',
+        },
+        {
+            time: '2026-11-04T10:00:09Z',
+            stream: 'stderr',
+            text: 'Exception: SQLSTATE[HY000]: disk I/O error',
+        },
+    ],
+};

@@ -4,10 +4,12 @@ import {
     paginated,
     portalContainers,
     portalErrorLog,
+    portalLogs,
     portalProjects,
     portalTotals,
     portalUsers,
 } from '@/stories/developerPortalFixtures';
+import ContainerLogs from './ContainerLogs';
 import DeveloperPortalTab from './DeveloperPortalTab';
 import PortalContainersSection from './PortalContainersSection';
 import PortalErrorsSection from './PortalErrorsSection';
@@ -103,4 +105,17 @@ export const Projects: StoryObj<typeof PortalProjectsPanel> = {
             queryParams={{}}
         />
     ),
+};
+
+/** The live log viewer; its requests are answered by the network mock. */
+export const Logs: StoryObj<typeof ContainerLogs> = {
+    parameters: {
+        network: [{ url: /containers\/.*\/logs/, response: portalLogs }],
+    },
+    render: () => <ContainerLogs containerId="a1" />,
+    play: async ({ canvasElement }) => {
+        await expect(
+            await within(canvasElement).findByText(/disk I\/O error/),
+        ).toBeVisible();
+    },
 };

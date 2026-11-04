@@ -3,10 +3,10 @@ import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import BarChartCard from '@/Components/Molecules/BarChartCard/BarChartCard';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
-import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import { PortalContainer, PortalContainers } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
 import { containerUptimeSeconds, formatUptime } from '@/utils/uptime';
+import ContainerLogs from './ContainerLogs';
 
 interface PortalContainersSectionProps {
     /** Undefined while the deferred prop is still loading. */
@@ -37,6 +37,22 @@ const hours = (seconds: number) =>
         ? `${(seconds / 86400).toFixed(1)}d`
         : `${(seconds / 3600).toFixed(1)}h`;
 
+function Detail({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="min-w-0">
+            <dt className="text-[11px] uppercase tracking-wide text-[var(--text-muted-color)]">
+                {label}
+            </dt>
+            <dd
+                className="truncate text-xs text-[var(--text-color)]"
+                title={value}
+            >
+                {value}
+            </dd>
+        </div>
+    );
+}
+
 function ContainerRow({
     container,
     now,
@@ -44,14 +60,36 @@ function ContainerRow({
     container: PortalContainer;
     now: number;
 }) {
+    const [open, setOpen] = useState(false);
     const running = container.state === 'running';
+    const panelId = `container-${container.id}`;
 
     return (
-        <SettingsPanelRow
-            title={container.service}
-            description={`${container.name} · ${container.image}`}
-            action={
-                <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="hover:bg-[var(--bg-light-color)]/50 transition-colors">
+            <button
+                type="button"
+                aria-expanded={open}
+                aria-controls={panelId}
+                onClick={() => setOpen((value) => !value)}
+                className="flex w-full items-center gap-3 px-4 py-3.5 text-left sm:px-5"
+            >
+                <Icon
+                    name="ChevronRight"
+                    size={14}
+                    className={cn(
+                        'shrink-0 text-[var(--text-muted-color)] transition-transform',
+                        open && 'rotate-90',
+                    )}
+                />
+                <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-[var(--text-color)]">
+                        {container.service}
+                    </span>
+                    <span className="block truncate text-xs text-[var(--text-gray-color)]">
+                        {container.name} · {container.image}
+                    </span>
+                </span>
+                <span className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                     {container.health && (
                         <Badge
                             variant="outline"
@@ -84,9 +122,39 @@ function ContainerRow({
                               )
                             : container.state}
                     </span>
+                </span>
+            </button>
+
+            {open && (
+                <div
+                    id={panelId}
+                    className="space-y-4 border-t border-[var(--border-color)] px-4 py-4 sm:px-5"
+                >
+                    <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <Detail label="Container" value={container.id} />
+                        <Detail
+                            label="Status"
+                            value={container.status || container.state}
+                        />
+                        <Detail
+                            label="Started"
+                            value={
+                                container.startedAt
+                                    ? new Date(
+                                          container.startedAt,
+                                      ).toLocaleString()
+                                    : 'not running'
+                            }
+                        />
+                        <Detail
+                            label="Restarts"
+                            value={String(container.restartCount)}
+                        />
+                    </dl>
+                    <ContainerLogs containerId={container.id} />
                 </div>
-            }
-        />
+            )}
+        </div>
     );
 }
 
@@ -178,7 +246,7 @@ export default function PortalContainersSection({
             <SettingsPanel
                 title="Containers"
                 icon="Container"
-                description="Uptime of this project's Docker containers."
+                description="Click a container for its details and live logs."
             >
                 {containers.containers.map((container) => (
                     <ContainerRow

@@ -1,7 +1,13 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { portalContainers } from '@/stories/developerPortalFixtures';
 import PortalContainersSection from './PortalContainersSection';
+
+vi.mock('./ContainerLogs', () => ({
+    default: ({ containerId }: { containerId: string }) => (
+        <div data-testid="logs" data-id={containerId} />
+    ),
+}));
 
 beforeEach(() => {
     vi.useFakeTimers();
@@ -106,5 +112,30 @@ describe('PortalContainersSection', () => {
         );
 
         expect(screen.getByText('No running containers.')).toBeInTheDocument();
+    });
+
+    test('clicking a container opens its details and logs, clicking again closes them', () => {
+        render(<PortalContainersSection containers={portalContainers} />);
+        expect(screen.queryByTestId('logs')).not.toBeInTheDocument();
+
+        const row = screen.getByRole('button', { name: /orbit-redis-1/ });
+        expect(row).toHaveAttribute('aria-expanded', 'false');
+
+        fireEvent.click(row);
+
+        expect(row).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByTestId('logs')).toHaveAttribute('data-id', 'b2');
+        expect(screen.getByText('Up 2 days (healthy)')).toBeInTheDocument();
+
+        fireEvent.click(row);
+        expect(screen.queryByTestId('logs')).not.toBeInTheDocument();
+    });
+
+    test('a stopped container still opens, with "not running" as its start', () => {
+        render(<PortalContainersSection containers={portalContainers} />);
+
+        fireEvent.click(screen.getByRole('button', { name: /orbit-backup-1/ }));
+
+        expect(screen.getByText('not running')).toBeInTheDocument();
     });
 });
