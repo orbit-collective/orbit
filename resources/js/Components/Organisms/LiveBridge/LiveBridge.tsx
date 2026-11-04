@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { requestLiveReload } from '@/live/reloadQueue';
 import { useLiveChannel } from '@/live/useLiveChannel';
+import { useLiveFallback } from '@/live/useLiveFallback';
 import {
     AccessChangedPayload,
     NotificationsChangedPayload,
@@ -16,6 +17,12 @@ import { showBrowserNotification } from '@/utils/browserNotifications';
  */
 export default function LiveBridge() {
     const userId = usePage().props.auth?.user?.id;
+
+    // No socket: the bell catches up on a timer, at half the page's pace.
+    useLiveFallback(
+        () => [{ only: ['notifications', 'notificationUnreadCount'] }],
+        2,
+    );
 
     useLiveChannel<{
         'notifications.changed': NotificationsChangedPayload;

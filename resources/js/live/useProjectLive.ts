@@ -4,6 +4,7 @@ import { ProjectChangedPayload } from '@/types/Live';
 import { projectPageReloads } from './changeProps';
 import { requestLiveReload } from './reloadQueue';
 import { useLiveChannel } from './useLiveChannel';
+import { useLiveFallback } from './useLiveFallback';
 
 /**
  * Keep the project page (list, board, calendar, activity) in step with other
@@ -17,6 +18,15 @@ export function useProjectLive(
 ): void {
     const latest = useRef(view);
     latest.current = view;
+
+    // No socket: re-read what the visible view shows on a timer instead.
+    useLiveFallback(() =>
+        projectPageReloads(
+            [{ type: 'issue', id: null, action: 'bulk' }],
+            latest.current,
+            calendarRange.current,
+        ),
+    );
 
     useLiveChannel<{ 'project.changed': ProjectChangedPayload }>(
         `project.${projectId}`,

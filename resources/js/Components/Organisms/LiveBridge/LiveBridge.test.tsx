@@ -2,6 +2,7 @@ import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+    useLiveFallback: vi.fn(),
     useLiveChannel: vi.fn(),
     requestLiveReload: vi.fn(),
     showBrowserNotification: vi.fn(),
@@ -14,6 +15,9 @@ vi.mock('@inertiajs/react', () => ({
     usePage: () => ({
         props: { auth: { user: mocks.userId ? { id: mocks.userId } : null } },
     }),
+}));
+vi.mock('@/live/useLiveFallback', () => ({
+    useLiveFallback: mocks.useLiveFallback,
 }));
 vi.mock('@/live/useLiveChannel', () => ({
     useLiveChannel: mocks.useLiveChannel,
@@ -30,6 +34,17 @@ import LiveBridge from './LiveBridge';
 const handlers = () => mocks.useLiveChannel.mock.calls.at(-1)![1];
 
 describe('LiveBridge', () => {
+    test('without a socket the bell polls at half the page pace', () => {
+        render(<LiveBridge />);
+
+        const [reloads, scale] = mocks.useLiveFallback.mock.calls[0];
+
+        expect(reloads()).toEqual([
+            { only: ['notifications', 'notificationUnreadCount'] },
+        ]);
+        expect(scale).toBe(2);
+    });
+
     beforeEach(() => {
         Object.values(mocks).forEach((mock) => {
             if (typeof mock === 'function' && 'mockReset' in mock)
