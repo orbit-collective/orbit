@@ -15,6 +15,7 @@ import BoardColumn from '@/Components/Molecules/BoardColumn/BoardColumn';
 import { BoardCardOverlay } from '@/Components/Organisms/BoardCard/BoardCard';
 import { useAlert } from '@/context/AlertContext';
 import { useProjectPriorities } from '@/context/ProjectPrioritiesContext';
+import { useLivePause } from '@/live/useLiveReload';
 import {
     BoardColumnMeta,
     BoardGroupBy,
@@ -97,6 +98,8 @@ function IssueBoard({ issues }: IssueBoardProps) {
     const { addAlert } = useAlert();
     const [boardIssues, setBoardIssues] = useState<Issue[]>(issues);
     const [draggingIssue, setDraggingIssue] = useState<Issue | null>(null);
+    // A live refresh mid-drag would pull the card out from under the pointer.
+    useLivePause(draggingIssue !== null);
     const [groupBy, setGroupBy] = useState<BoardGroupBy>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('boardGroupBy');

@@ -11,6 +11,7 @@ import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
 import { SavedFilter } from '@/hooks/useSavedFilters';
 import MainLayout from '@/Layouts/MainLayout';
+import { useProjectLive } from '@/live/useProjectLive';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import {
     Issue,
@@ -97,6 +98,9 @@ export default function Show({
     });
 
     const calendarRange = useRef<[string, string] | null>(null);
+
+    // Other people's changes re-read only what the visible view shows.
+    useProjectLive(project.id, selectedLook, calendarRange);
 
     const loadCalendar = useCallback((from: string, to: string) => {
         calendarRange.current = [from, to];
