@@ -153,8 +153,8 @@ npm-install: ensure-env
 # Run this after adding/updating/removing a composer package.
 
 composer-install: ensure-env
-	$(COMPOSE) build app
-	$(COMPOSE) up -d --renew-anon-volumes app
+	$(COMPOSE) build app queue scheduler reverb
+	$(COMPOSE) up -d --renew-anon-volumes app queue scheduler reverb
 
 
 # Run the PHP (Pest) test suite.
