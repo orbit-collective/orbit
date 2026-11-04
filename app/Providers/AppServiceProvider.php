@@ -18,6 +18,7 @@ use App\Repositories\NotificationSettingRepository;
 use App\Support\Live\LiveUpdates;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
@@ -109,5 +110,13 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->terminating($flush);
         Event::listen([JobProcessed::class, JobFailed::class, JobExceptionOccurred::class], $flush);
+
+        // A logged error refreshes the Developer Portal's error list. The
+        // log file is read by the portal itself; this only says "look again".
+        Event::listen(MessageLogged::class, function (MessageLogged $event): void {
+            if (in_array($event->level, ['error', 'critical', 'alert', 'emergency'], true)) {
+                $this->app->make(LiveUpdates::class)->portal('errors');
+            }
+        });
     }
 }
