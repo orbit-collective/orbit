@@ -20,10 +20,13 @@ export default function LiveBridge() {
     const userId = usePage().props.auth?.user?.id;
 
     // No socket: the bell catches up on a timer, at half the page's pace.
-    useLiveFallback(
-        () => [{ only: ['notifications', 'notificationUnreadCount'] }],
-        2,
-    );
+    useLiveFallback(() => {
+        // The popup's own older pages are not part of the shared props, so
+        // tell it to re-read them too (a row deleted elsewhere would stay).
+        announceNotificationsChanged();
+
+        return [{ only: ['notifications', 'notificationUnreadCount'] }];
+    }, 2);
 
     useLiveChannel<{
         'notifications.changed': NotificationsChangedPayload;
