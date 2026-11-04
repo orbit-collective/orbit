@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import DayBreakdownCard from './DayBreakdownCard';
 
 const days = [
@@ -56,12 +56,16 @@ describe('DayBreakdownCard', () => {
         );
     });
 
-    test('switching day updates the headline and rows', () => {
+    test('switching day updates the headline and rows', async () => {
         renderCard();
 
         fireEvent.click(screen.getByRole('tab', { name: /03/ }));
 
-        expect(screen.getByTestId('headline')).toHaveTextContent('1 problems');
+        await waitFor(() =>
+            expect(screen.getByTestId('headline')).toHaveTextContent(
+                '1 problems',
+            ),
+        );
         expect(screen.getByRole('tab', { name: /03/ })).toHaveAttribute(
             'aria-selected',
             'true',
@@ -108,5 +112,54 @@ describe('DayBreakdownCard', () => {
         );
         fireEvent.click(screen.getByRole('button', { name: /Errors/ }));
         expect(toggle).toHaveBeenCalledTimes(1);
+    });
+
+    test('arrow keys, Home and End move between days; every pill stays in the TAB order', async () => {
+        renderCard();
+        const tabs = screen.getAllByRole('tab');
+        tabs.forEach((tab) =>
+            expect(tab).not.toHaveAttribute('tabindex', '-1'),
+        );
+
+        fireEvent.keyDown(tabs[1], { key: 'ArrowLeft' });
+        await waitFor(() =>
+            expect(tabs[0]).toHaveAttribute('aria-selected', 'true'),
+        );
+        expect(tabs[0]).toHaveFocus();
+
+        fireEvent.keyDown(tabs[0], { key: 'ArrowRight' });
+        await waitFor(() =>
+            expect(tabs[1]).toHaveAttribute('aria-selected', 'true'),
+        );
+
+        fireEvent.keyDown(tabs[1], { key: 'Home' });
+        await waitFor(() =>
+            expect(tabs[0]).toHaveAttribute('aria-selected', 'true'),
+        );
+
+        fireEvent.keyDown(tabs[0], { key: 'End' });
+        await waitFor(() =>
+            expect(tabs[1]).toHaveAttribute('aria-selected', 'true'),
+        );
+    });
+
+    test('arrows at the ends stay put and other keys are left alone', () => {
+        renderCard();
+        const tabs = screen.getAllByRole('tab');
+
+        fireEvent.keyDown(tabs[1], { key: 'ArrowRight' });
+        fireEvent.keyDown(tabs[1], { key: 'a' });
+
+        expect(tabs[1]).toHaveAttribute('aria-selected', 'true');
+    });
+
+    test('the pills are linked to the day panel and show a focus ring', () => {
+        renderCard();
+
+        const selected = screen.getByRole('tab', { selected: true });
+        const panel = screen.getByRole('tabpanel');
+        expect(selected).toHaveAttribute('aria-controls', panel.id);
+        expect(panel).toHaveAttribute('aria-labelledby', selected.id);
+        expect(selected.className).toContain('focus-visible:ring-2');
     });
 });
