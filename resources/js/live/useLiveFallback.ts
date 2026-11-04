@@ -26,6 +26,10 @@ export function useLiveFallback(reloads: () => LiveReload[], scale = 1): void {
     // since (a short reconnect counts: events sent meanwhile are missed too)?
     const wasLive = useRef(false);
     const missedEvents = useRef(false);
+    // When the next poll is due. Kept across status changes: an unstable
+    // connection flipping between `offline` and `connecting` must not restart
+    // the wait every time, or the poll would never fire.
+    const dueAt = useRef<number | null>(null);
 
     const run = () =>
         latest.current().forEach((reload) => requestLiveReload(reload));
@@ -36,6 +40,7 @@ export function useLiveFallback(reloads: () => LiveReload[], scale = 1): void {
             if (missedEvents.current) run();
             missedEvents.current = false;
             wasLive.current = true;
+            dueAt.current = null;
             return;
         }
 
@@ -44,20 +49,25 @@ export function useLiveFallback(reloads: () => LiveReload[], scale = 1): void {
         if (wasLive.current || status === 'offline') {
             missedEvents.current = true;
         }
-        if (interval <= 0 || status === 'connecting') return;
+        // The very first connection attempt is not polled; one after an outage
+        // is (the socket may stay `connecting` for as long as it keeps failing).
+        const inOutage = missedEvents.current;
+        if (interval <= 0 || (status === 'connecting' && !inOutage)) return;
 
-        const wait = interval * 1000 * scale;
+        const nextWait = () =>
+            interval * 1000 * scale * (1 + Math.random() * POLL_JITTER);
         let timer: ReturnType<typeof setTimeout>;
-        const schedule = () => {
-            timer = setTimeout(
-                () => {
-                    run();
-                    schedule();
-                },
-                wait * (1 + Math.random() * POLL_JITTER),
-            );
+        const schedule = (delay: number) => {
+            timer = setTimeout(() => {
+                run();
+                const wait = nextWait();
+                dueAt.current = Date.now() + wait;
+                schedule(wait);
+            }, delay);
         };
-        schedule();
+
+        if (dueAt.current === null) dueAt.current = Date.now() + nextWait();
+        schedule(Math.max(0, dueAt.current - Date.now()));
 
         return () => clearTimeout(timer);
     }, [status, interval, scale]);
