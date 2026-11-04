@@ -1,5 +1,6 @@
 import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
 import WorkspaceSettingsLabelsTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsLabelsTab';
+import { useSettingsLive } from '@/live/useSettingsLive';
 import { ProjectLabel } from '@/types/Labels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { Project } from '@/types/Projects';
@@ -25,6 +26,9 @@ export default function SettingsLabels({
     canUpdateLabels = false,
     canDeleteLabels = false,
 }: SettingsLabelsProps) {
+    // Other admins' changes to this project's settings arrive live.
+    useSettingsLive(selectedProjectId);
+
     return (
         <SettingsLayout tabId="labels" projects={projects}>
             <WorkspaceSettingsLabelsTab

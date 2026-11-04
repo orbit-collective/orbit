@@ -1,5 +1,6 @@
 import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
 import WorkspaceSettingsRolesTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsRolesTab';
+import { useSettingsLive } from '@/live/useSettingsLive';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { Project } from '@/types/Projects';
 import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
@@ -27,6 +28,9 @@ export default function SettingsRolesManagement({
     canDeleteRoles = false,
     hasSettingsAccess = false,
 }: SettingsRolesManagementProps) {
+    // Other admins' changes to this project's settings arrive live.
+    useSettingsLive(selectedProjectId);
+
     return (
         <SettingsLayout tabId="roles-management" projects={projects}>
             <WorkspaceSettingsRolesTab

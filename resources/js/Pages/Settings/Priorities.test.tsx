@@ -32,6 +32,10 @@ vi.mock(
     }),
 );
 
+vi.mock('@/live/useSettingsLive', () => ({
+    useSettingsLive: vi.fn(),
+}));
+
 describe('Settings SettingsPriorities page', () => {
     test('renders its tab inside the settings layout', () => {
         render(

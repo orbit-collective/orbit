@@ -1,5 +1,6 @@
 import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
 import WorkspaceSettingsIssueTypesTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIssueTypesTab';
+import { useSettingsLive } from '@/live/useSettingsLive';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { ProjectPriority } from '@/types/Priorities';
@@ -33,6 +34,9 @@ export default function SettingsIssueTypes({
     canDeleteIssueTypes = false,
     canUpdateWorkflow = false,
 }: SettingsIssueTypesProps) {
+    // Other admins' changes to this project's settings arrive live.
+    useSettingsLive(selectedProjectId);
+
     return (
         <SettingsLayout tabId="issue-types" projects={projects}>
             <WorkspaceSettingsIssueTypesTab

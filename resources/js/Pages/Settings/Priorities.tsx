@@ -1,5 +1,6 @@
 import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
 import WorkspaceSettingsPrioritiesTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsPrioritiesTab';
+import { useSettingsLive } from '@/live/useSettingsLive';
 import { SettingsPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { Project } from '@/types/Projects';
@@ -25,6 +26,9 @@ export default function SettingsPriorities({
     canUpdatePriorities = false,
     canDeletePriorities = false,
 }: SettingsPrioritiesProps) {
+    // Other admins' changes to this project's settings arrive live.
+    useSettingsLive(selectedProjectId);
+
     return (
         <SettingsLayout tabId="priorities" projects={projects}>
             <WorkspaceSettingsPrioritiesTab
