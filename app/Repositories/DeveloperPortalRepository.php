@@ -62,7 +62,8 @@ class DeveloperPortalRepository
                 $query->where('name', 'like', $like)->orWhere('email', 'like', $like);
             }))
             ->latest('id')
-            ->paginate($perPage, pageName: $pageName);
+            ->paginate($perPage, pageName: $pageName)
+            ->withQueryString();
     }
 
     /** Projects, newest first, each with its member count. */
@@ -76,7 +77,8 @@ class DeveloperPortalRepository
                 $query->where('name', 'like', $like)->orWhere('slug', 'like', $like);
             }))
             ->latest('id')
-            ->paginate($perPage, pageName: $pageName);
+            ->paginate($perPage, pageName: $pageName)
+            ->withQueryString();
     }
 
     /**
