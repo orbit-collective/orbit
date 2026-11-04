@@ -198,6 +198,8 @@ export interface EditableMarkdownProps {
     users?: AssignableUser[];
     /** Project whose issues "#12" mentions resolve against. Omit to disable issue mentions. */
     projectId?: number;
+    /** Called when editing starts or ends, e.g. to tell others a text is being edited. */
+    onEditingChange?: (editing: boolean) => void;
 }
 export interface LabelBadgeProps {
     label: IssueLabel;
@@ -634,6 +636,8 @@ export interface IssuePageHeaderProps {
     issue: Issue;
     /** The issue's ancestors, root-first, rendered as breadcrumb crumbs. */
     ancestors?: Issue[];
+    /** Rendered at the end of the header, e.g. who else is viewing the issue. */
+    presence?: React.ReactNode;
 }
 export interface CommentItemProps {
     projectId?: number;

@@ -24,6 +24,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     className,
     users,
     projectId,
+    onEditingChange,
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
@@ -84,6 +85,10 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         },
         onBlur: ({ editor }) => commit(editor),
     });
+
+    useEffect(() => {
+        onEditingChange?.(isEditing);
+    }, [isEditing]);
 
     useEffect(() => {
         if (!editor || isEditing) return;

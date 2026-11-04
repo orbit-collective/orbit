@@ -37,6 +37,18 @@ const issue: Issue = {
 };
 
 describe('IssuePageHeader Component', () => {
+    test('renders the presence slot before the copy-link button', () => {
+        render(
+            <IssuePageHeader
+                project={project}
+                issue={issue}
+                presence={<span data-testid="presence">viewers</span>}
+            />,
+        );
+
+        expect(screen.getByTestId('presence')).toBeInTheDocument();
+    });
+
     test('renders the breadcrumb with the project name and issue title', () => {
         render(<IssuePageHeader project={project} issue={issue} />);
 
