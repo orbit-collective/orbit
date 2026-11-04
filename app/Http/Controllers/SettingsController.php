@@ -14,6 +14,9 @@ use App\Models\Project;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Automation\AutomationRuleService;
+use App\Services\DeveloperPortal\DeveloperPortalService;
+use App\Services\DeveloperPortal\DockerContainerService;
+use App\Services\DeveloperPortal\ErrorLogService;
 use App\Services\Integrations\Github\GithubIntegrationService;
 use App\Services\Integrations\Jira\JiraIntegrationService;
 use App\Services\IssueTypeService;
@@ -62,6 +65,9 @@ class SettingsController extends Controller
         protected PriorityService $priorityService,
         protected IssueTypeService $issueTypeService,
         protected AutomationRuleService $automationRuleService,
+        protected DeveloperPortalService $developerPortalService,
+        protected DockerContainerService $dockerContainerService,
+        protected ErrorLogService $errorLogService,
     ) {}
 
     public function preferences(Request $request): Response
@@ -95,9 +101,31 @@ class SettingsController extends Controller
         ]);
     }
 
+    /**
+     * Guarded by the `developer-portal` middleware (APP_ENV=local +
+     * developer.portal.view). The slow reads (Docker, the log file) are
+     * deferred so the page paints first; the two lists page and search
+     * independently through partial reloads.
+     */
     public function developerPortal(Request $request): Response
     {
-        return Inertia::render('Settings/DeveloperPortal');
+        $users = fn () => $this->developerPortalService->users(
+            $request->integer(DeveloperPortalService::USERS_PER_PAGE),
+            $request->string('users_search')->trim()->value() ?: null,
+        );
+        $projects = fn () => $this->developerPortalService->projects(
+            $request->integer(DeveloperPortalService::PROJECTS_PER_PAGE),
+            $request->string('projects_search')->trim()->value() ?: null,
+        );
+
+        return Inertia::render('Settings/DeveloperPortal', [
+            'projects' => $this->projects($request),
+            'totals' => fn () => $this->developerPortalService->totals(),
+            'portalUsers' => $users,
+            'portalProjects' => $projects,
+            'containers' => Inertia::defer(fn () => $this->dockerContainerService->containers()),
+            'errorLog' => Inertia::defer(fn () => $this->errorLogService->recent()),
+        ]);
     }
 
     public function labels(Request $request): Response
