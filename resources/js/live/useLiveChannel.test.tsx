@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => {
         stopListening,
         leave,
         privateChannel,
-        live: { enabled: false } as unknown as LiveConfig,
+        live: { enabled: false, pollInterval: 0 } as unknown as LiveConfig,
     };
 });
 
@@ -28,6 +28,7 @@ import { useLiveChannel } from './useLiveChannel';
 
 const enabled: LiveConfig = {
     enabled: true,
+    pollInterval: 30,
     key: 'k',
     host: 'h',
     port: 80,
@@ -44,7 +45,7 @@ describe('useLiveChannel', () => {
     });
 
     test('does nothing while live updates are off', () => {
-        mocks.live = { enabled: false };
+        mocks.live = { enabled: false, pollInterval: 0 };
         renderHook(() => useLiveChannel('project.1', { 'a.b': vi.fn() }));
 
         expect(mocks.privateChannel).not.toHaveBeenCalled();

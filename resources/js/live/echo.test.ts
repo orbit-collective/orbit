@@ -7,21 +7,30 @@ const mocks = vi.hoisted(() => ({
     post: vi.fn(),
 }));
 
+const pusher = vi.hoisted(() => ({
+    state: 'connecting',
+    bind: vi.fn(),
+    unbind: vi.fn(),
+}));
+
 vi.mock('laravel-echo', () => ({
     default: class {
         constructor(options: unknown) {
             mocks.ctor(options);
         }
         disconnect = mocks.disconnect;
+        socketId = () => '12.34';
+        connector = { pusher: { connection: pusher } };
     },
 }));
 vi.mock('pusher-js', () => ({ default: class {} }));
 vi.mock('axios', () => ({ default: { post: mocks.post } }));
 
-import { disconnectEcho, getEcho } from './echo';
+import { currentSocketId, disconnectEcho, getEcho, onLiveStatus } from './echo';
 
 const connection: LiveConnection = {
     enabled: true,
+    pollInterval: 30,
     key: 'abc',
     host: 'ws.example.com',
     port: 443,
@@ -107,6 +116,56 @@ describe('getEcho', () => {
         authorizer({ name: 'private-project.9' }).authorize('1.2', callback);
         await vi.waitFor(() =>
             expect(callback).toHaveBeenCalledWith(failure, null),
+        );
+    });
+
+    test("exposes this tab's socket id once connected", () => {
+        expect(currentSocketId()).toBeUndefined();
+
+        getEcho(connection);
+
+        expect(currentSocketId()).toBe('12.34');
+    });
+});
+
+describe('onLiveStatus', () => {
+    afterEach(() => {
+        disconnectEcho();
+        pusher.bind.mockReset();
+        pusher.unbind.mockReset();
+        pusher.state = 'connecting';
+    });
+
+    test('reports the current state, then every change', () => {
+        const seen: string[] = [];
+        pusher.state = 'connected';
+
+        onLiveStatus(connection, (status) => seen.push(status));
+        const listener = pusher.bind.mock.calls[0][1] as (s: {
+            current: string;
+        }) => void;
+
+        for (const current of ['unavailable', 'connecting', 'failed', 'x']) {
+            listener({ current });
+        }
+
+        expect(seen).toEqual([
+            'live',
+            'offline',
+            'connecting',
+            'offline',
+            'connecting',
+        ]);
+    });
+
+    test('stops listening when asked', () => {
+        const stop = onLiveStatus(connection, vi.fn());
+
+        stop();
+
+        expect(pusher.unbind).toHaveBeenCalledWith(
+            'state_change',
+            pusher.bind.mock.calls[0][1],
         );
     });
 });
