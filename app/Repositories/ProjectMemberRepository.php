@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectUser;
 use App\Models\Role;
 use App\Support\Cache\CacheVersion;
+use App\Support\Live\LiveUpdates;
 use Illuminate\Database\Eloquent\Collection;
 
 class ProjectMemberRepository
@@ -48,6 +49,7 @@ class ProjectMemberRepository
     {
         $project->users()->detach($userId);
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        app(LiveUpdates::class)->membership($project->id, $userId);
     }
 
     /**
@@ -64,6 +66,7 @@ class ProjectMemberRepository
         }
 
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        app(LiveUpdates::class)->membership($project->id, $userId);
     }
 
     /**
@@ -76,6 +79,7 @@ class ProjectMemberRepository
 
         $projectUser?->roles()->syncWithoutDetaching($roleIds);
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        app(LiveUpdates::class)->membership($project->id, $userId);
     }
 
     public function syncSystemRole(Project $project, int $userId, Role $targetSystemRole, array $systemRoleIds): void
@@ -89,5 +93,6 @@ class ProjectMemberRepository
         $projectUser->roles()->detach($systemRoleIds);
         $projectUser->roles()->attach($targetSystemRole->id);
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        app(LiveUpdates::class)->membership($project->id, $userId);
     }
 }

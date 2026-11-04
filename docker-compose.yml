@@ -113,7 +113,7 @@ services:
             dockerfile: Dockerfile
             target: php
 
-        command: ["php", "artisan", "queue:work", "--tries=3"]
+        command: ["php", "artisan", "queue:work", "--queue=live,default", "--tries=3"]
 
         environment:
             APP_NAME: ${APP_NAME}

@@ -6,6 +6,7 @@ use App\Enums\Permissions\RoleType;
 use App\Models\Project;
 use App\Models\Role;
 use App\Support\Cache\CacheVersion;
+use App\Support\Live\LiveUpdates;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -81,12 +82,18 @@ class RoleRepository
     {
         $role->delete();
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        if ($role->project_id) {
+            app(LiveUpdates::class)->project($role->project_id, 'roles', $role->id, 'deleted');
+        }
     }
 
     public function syncPermissions(Role $role, array $permissionIds): Role
     {
         $role->permissions()->sync($permissionIds);
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        if ($role->project_id) {
+            app(LiveUpdates::class)->project($role->project_id, 'roles', $role->id);
+        }
 
         return $role->load('permissions');
     }

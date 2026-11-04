@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Repositories\ProjectMemberRepository;
 use App\Support\Cache\CacheVersion;
+use App\Support\Live\LiveUpdates;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -73,6 +74,8 @@ class ProjectMemberService
             $this->roleService->syncSystemRoleForMember($project, $newOwner->id, RoleType::OWNER);
         });
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        app(LiveUpdates::class)->membership($project->id, $currentOwner->id);
+        app(LiveUpdates::class)->membership($project->id, $newOwner->id);
 
         $this->activityLogService->log(
             $project->id,

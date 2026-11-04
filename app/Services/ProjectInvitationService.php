@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Repositories\ProjectInvitationRepository;
 use App\Repositories\ProjectMemberRepository;
 use App\Support\Cache\CacheVersion;
+use App\Support\Live\LiveUpdates;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -126,6 +127,7 @@ class ProjectInvitationService
             $this->projectInvitationRepository->markAccepted($invitation);
         });
         CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        app(LiveUpdates::class)->membership($project->id, $user->id);
 
         return $project;
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Permissions\Permission as PermissionEnum;
 use App\Enums\Permissions\RoleType;
+use App\Models\Concerns\BroadcastsLiveChanges;
 use App\Support\Cache\CacheVersion;
 use Database\Factories\ProjectFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
-    use HasFactory;
+    use BroadcastsLiveChanges, HasFactory;
 
     /** Seconds a membership lookup stays cached; writes retire it sooner (see membershipOf()). */
     private const int MEMBERSHIP_CACHE_TTL = 600;
@@ -162,5 +163,10 @@ class Project extends Model
         }
 
         return in_array($permission->value, $membership['permissions'], true);
+    }
+
+    protected function liveChange(): ?array
+    {
+        return ['project' => $this->id, 'type' => 'project', 'id' => $this->id];
     }
 }
