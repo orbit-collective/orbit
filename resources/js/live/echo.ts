@@ -60,6 +60,11 @@ export function getEcho(connection: LiveConnection): Reverb {
     return instance;
 }
 
+/** Echo's id for this browser tab's socket, once connected (sent as X-Socket-ID). */
+export function currentSocketId(): string | undefined {
+    return instance?.socketId();
+}
+
 export function disconnectEcho(): void {
     instance?.disconnect();
     instance = null;
