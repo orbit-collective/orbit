@@ -809,3 +809,14 @@ export interface GuestLayoutProps {
     showcaseTitle: ReactNode;
     showcaseDescription: ReactNode;
 }
+
+export interface ChartTrend {
+    /** Signed percent change. */
+    value: number;
+    /** When true a positive value is shown as good (green). Default: yes. */
+    positiveIsGood?: boolean;
+}
+
+export interface TrendBadgeProps extends ChartTrend {
+    className?: string;
+}
