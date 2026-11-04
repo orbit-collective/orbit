@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
     useLiveChannel: vi.fn(),
     requestLiveReload: vi.fn(),
     showBrowserNotification: vi.fn(),
+    announce: vi.fn(),
     visit: vi.fn(),
     userId: 7 as number | undefined,
 }));
@@ -17,6 +18,9 @@ vi.mock('@inertiajs/react', () => ({
 }));
 vi.mock('@/live/useLiveChannel', () => ({
     useLiveChannel: mocks.useLiveChannel,
+}));
+vi.mock('@/live/notificationsEvent', () => ({
+    announceNotificationsChanged: mocks.announce,
 }));
 vi.mock('@/live/reloadQueue', () => ({
     requestLiveReload: mocks.requestLiveReload,
@@ -60,6 +64,7 @@ describe('LiveBridge', () => {
         expect(mocks.requestLiveReload).toHaveBeenCalledWith({
             only: ['notifications', 'notificationUnreadCount'],
         });
+        expect(mocks.announce).toHaveBeenCalledTimes(1);
         expect(mocks.showBrowserNotification).not.toHaveBeenCalled();
     });
 

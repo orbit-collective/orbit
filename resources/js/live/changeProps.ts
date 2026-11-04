@@ -114,6 +114,8 @@ export function dashboardReloads(changes: ProjectChange[]): LiveReload[] {
                       'productivity_trend',
                       'projects',
                       'activityLogs',
+                      // The feed draws type icons and status colours from it.
+                      'issueTypes',
                   ],
               },
           ]
