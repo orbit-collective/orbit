@@ -14,6 +14,7 @@
 FROM php:8.5-cli AS php
 
 # System libraries + PHP extensions required by Laravel and SQLite.
+# pcntl is required by Laravel Reverb (signal handling in `reverb:start`).
 # phpredis is the Redis client (REDIS_CLIENT=phpredis) for the cache, session
 # and queue drivers.
 # pcov powers `make test-coverage` / `composer test-coverage` (code coverage
@@ -26,7 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libicu-dev \
         libonig-dev \
         $PHPIZE_DEPS \
-    && docker-php-ext-install pdo pdo_sqlite bcmath zip intl mbstring \
+    && docker-php-ext-install pdo pdo_sqlite bcmath zip intl mbstring pcntl \
     && pecl install pcov redis \
     && docker-php-ext-enable pcov redis \
     && apt-get clean \
