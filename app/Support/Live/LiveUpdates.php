@@ -3,6 +3,7 @@
 namespace App\Support\Live;
 
 use App\Events\Live\AccessChanged;
+use App\Events\Live\DeveloperPortalChanged;
 use App\Events\Live\ProjectChanged;
 
 /**
@@ -32,6 +33,9 @@ final class LiveUpdates
     /** @var array<int, int|null> user id => project id (null = everything) */
     private array $access = [];
 
+    /** @var array<string, true> kinds the Developer Portal shows that changed */
+    private array $portal = [];
+
     public function enabled(): bool
     {
         return (bool) config('live.enabled');
@@ -55,6 +59,26 @@ final class LiveUpdates
         }
 
         $this->projects[$projectId]["$type:$id:$action"] = ['type' => $type, 'id' => $id, 'action' => $action];
+
+        $this->portal(match ($type) {
+            'issue', 'comment' => 'issues',
+            'project', 'members' => 'projects',
+            default => null,
+        });
+    }
+
+    /**
+     * The Developer Portal's totals or lists changed (`users`, `projects`,
+     * `issues`, `errors`). A no-op unless the portal is on (APP_ENV=local), so
+     * production never broadcasts it.
+     */
+    public function portal(?string $kind): void
+    {
+        if ($kind === null || ! $this->enabled() || ! config('developer-portal.enabled')) {
+            return;
+        }
+
+        $this->portal[$kind] = true;
     }
 
     /** A member joined, left or got another role: the project's people and that person's abilities changed. */
@@ -75,15 +99,17 @@ final class LiveUpdates
 
     public function hasPending(): bool
     {
-        return $this->projects !== [] || $this->access !== [];
+        return $this->projects !== [] || $this->access !== [] || $this->portal !== [];
     }
 
     public function flush(): void
     {
         $projects = $this->projects;
         $access = $this->access;
+        $portal = array_keys($this->portal);
         $this->projects = [];
         $this->access = [];
+        $this->portal = [];
 
         $actor = auth()->id();
 
@@ -99,6 +125,10 @@ final class LiveUpdates
 
         foreach ($access as $userId => $projectId) {
             AccessChanged::dispatch($userId, $projectId);
+        }
+
+        if ($portal !== []) {
+            DeveloperPortalChanged::dispatch($portal);
         }
     }
 

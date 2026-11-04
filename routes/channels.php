@@ -8,3 +8,5 @@ Broadcast::channel('user.{userId}', fn ($user, int $userId) => LiveChannels::can
 Broadcast::channel('project.{projectId}', fn ($user, int $projectId) => LiveChannels::canJoinProject($user, $projectId));
 
 Broadcast::channel('issue.{issueId}', fn ($user, int $issueId) => LiveChannels::joinIssue($user, $issueId));
+
+Broadcast::channel('developer-portal', fn ($user) => LiveChannels::canJoinDeveloperPortal($user));

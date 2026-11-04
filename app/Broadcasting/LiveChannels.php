@@ -6,12 +6,14 @@ use App\Enums\Permissions\Permission;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\DeveloperPortal\DeveloperPortalAccessService;
 
 /**
  * Names and authorisation of the private channels live updates travel on.
  *
- * Two kinds only: one per user (their notifications) and one per project
- * (everything that happens in it). Channels never carry data a user could not
+ * One per user (their notifications), one per project (everything that
+ * happens in it) and the single Developer Portal channel, open only to users
+ * who may open the portal. Channels never carry data a user could not
  * read anyway - events are ids and hints, the page re-fetches through the
  * normal, authorised Inertia routes - so a stale subscription (a member
  * removed while connected) cannot leak anything.
@@ -24,6 +26,9 @@ final class LiveChannels
      * webhook jobs never delays a screen update.
      */
     public const string QUEUE = 'live';
+
+    /** Private channel of the Developer Portal (instance-wide, local development only). */
+    public const string DEVELOPER_PORTAL = 'developer-portal';
 
     public static function user(int $userId): string
     {
@@ -44,6 +49,11 @@ final class LiveChannels
     public static function canJoinUser(User $user, int $userId): bool
     {
         return $user->id === $userId;
+    }
+
+    public static function canJoinDeveloperPortal(User $user): bool
+    {
+        return app(DeveloperPortalAccessService::class)->canAccess($user);
     }
 
     public static function canJoinProject(User $user, int $projectId): bool

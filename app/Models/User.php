@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BumpsUserCache;
+use App\Support\Live\LiveUpdates;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,6 +17,14 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use BumpsUserCache, HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        // Only the Developer Portal cares about people appearing or leaving
+        // (a no-op unless it is on); the user's own channel has nothing to say.
+        static::created(fn () => app(LiveUpdates::class)->portal('users'));
+        static::deleted(fn () => app(LiveUpdates::class)->portal('users'));
+    }
 
     protected $fillable = [
         'id',
