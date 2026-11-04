@@ -1,6 +1,6 @@
 import { icons } from 'lucide-react';
 
-export type SettingsSectionId = 'account' | 'workspace';
+export type SettingsSectionId = 'account' | 'workspace' | 'developer';
 
 export type SettingsTabId =
     | 'preferences'
@@ -15,7 +15,8 @@ export type SettingsTabId =
     | 'priorities'
     | 'documents'
     | 'members'
-    | 'roles-management';
+    | 'roles-management'
+    | 'dev-portal';
 
 export interface SettingsTab {
     id: SettingsTabId;
@@ -157,6 +158,15 @@ export const SETTINGS_TABS: SettingsTab[] = [
         icon: 'Zap',
         section: 'workspace',
         description: 'Automatically act on issue and pull request events.',
+        enabled: true,
+    },
+    {
+        id: 'dev-portal',
+        path: '/settings/dev-portal',
+        label: 'Developer Portal',
+        icon: 'Code',
+        section: 'developer',
+        description: 'Manage your developer portal settings.',
         enabled: true,
     },
 ];
