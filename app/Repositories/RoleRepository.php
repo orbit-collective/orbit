@@ -68,12 +68,18 @@ class RoleRepository
 
     public function create(Project $project, array $data): Role
     {
-        return $project->roles()->create($data);
+        $role = $project->roles()->create($data);
+        app(LiveUpdates::class)->project($project->id, 'roles', $role->id, 'created');
+
+        return $role;
     }
 
     public function update(Role $role, array $data): Role
     {
         $role->update($data);
+        if ($role->project_id) {
+            app(LiveUpdates::class)->project($role->project_id, 'roles', $role->id);
+        }
 
         return $role;
     }

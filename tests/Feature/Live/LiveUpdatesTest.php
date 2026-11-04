@@ -5,11 +5,16 @@ use App\Events\Live\NotificationsChanged;
 use App\Events\Live\ProjectChanged;
 use App\Models\Comment;
 use App\Models\Issue;
+use App\Models\IssueType;
+use App\Models\Label;
 use App\Models\Notification;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\WorkflowStatus;
+use App\Models\WorkflowTransition;
 use App\Repositories\IssueRepository;
 use App\Repositories\ProjectMemberRepository;
+use App\Repositories\RoleRepository;
 use App\Services\NotificationService;
 use App\Support\Live\LiveUpdates;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -116,7 +121,7 @@ test('a comment tells clients to refresh its issue', function () {
     ));
 });
 
-test('bulk deleting issues announces each affected project once', function () {
+test('bulk deleting issues announces each deleted issue, once per project', function () {
     $project = Project::factory()->create();
     $ids = Issue::factory()->count(3)->create(['project_id' => $project->id])->pluck('id')->all();
     app(LiveUpdates::class)->flush();
@@ -126,8 +131,131 @@ test('bulk deleting issues announces each affected project once', function () {
     app(LiveUpdates::class)->flush();
 
     Event::assertDispatchedTimes(ProjectChanged::class, 1);
-    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => in_array(
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => collect($event->changes)
+        ->where('action', 'deleted')->pluck('id')->sort()->values()->all() === collect($ids)->sort()->values()->all());
+});
+
+test('a large flush keeps the ids of deleted issues and collapses everything else', function () {
+    $live = app(LiveUpdates::class);
+
+    foreach (range(1, 30) as $id) {
+        $live->issue(1, $id, 'deleted');
+    }
+    foreach (range(100, 140) as $id) {
+        $live->issue(1, $id);
+    }
+    $live->flush();
+
+    Event::assertDispatched(ProjectChanged::class, function (ProjectChanged $event) {
+        $deleted = array_filter($event->changes, fn ($change) => $change['action'] === 'deleted');
+
+        return count($deleted) === 30
+            && in_array(['type' => 'issue', 'id' => null, 'action' => 'bulk'], $event->changes, true)
+            && count($event->changes) === 31;
+    });
+});
+
+test('past the cap deleted issues collapse too, so a message never outgrows the socket limit', function () {
+    $live = app(LiveUpdates::class);
+
+    foreach (range(1, 201) as $id) {
+        $live->issue(1, $id, 'deleted');
+    }
+    $live->flush();
+
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => $event->changes === [
         ['type' => 'issue', 'id' => null, 'action' => 'bulk'],
+    ]);
+});
+
+test('editing only an issue\'s labels is announced', function () {
+    $project = Project::factory()->create();
+    Label::factory()->create(['project_id' => $project->id, 'name' => 'bug']);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+    app(LiveUpdates::class)->flush();
+    Event::fake([ProjectChanged::class]);
+
+    $issue->labels = ['bug'];
+    $issue->save();
+    app(LiveUpdates::class)->flush();
+
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => in_array(
+        ['type' => 'issue', 'id' => $issue->id, 'action' => 'updated'],
+        $event->changes,
+        true,
+    ));
+});
+
+test('a new sub-issue also announces its parent', function () {
+    $project = Project::factory()->create();
+    $parent = Issue::factory()->create(['project_id' => $project->id]);
+    app(LiveUpdates::class)->flush();
+    Event::fake([ProjectChanged::class]);
+
+    $child = Issue::factory()->create(['project_id' => $project->id, 'parent_id' => $parent->id]);
+    app(LiveUpdates::class)->flush();
+
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => in_array(
+        ['type' => 'issue', 'id' => $parent->id, 'action' => 'updated'],
+        $event->changes,
+        true,
+    ) && in_array(['type' => 'issue', 'id' => $child->id, 'action' => 'created'], $event->changes, true));
+});
+
+test('moving a sub-issue announces both its old and new parent', function () {
+    $project = Project::factory()->create();
+    [$old, $new] = Issue::factory()->count(2)->create(['project_id' => $project->id]);
+    $child = Issue::factory()->create(['project_id' => $project->id, 'parent_id' => $old->id]);
+    app(LiveUpdates::class)->flush();
+    Event::fake([ProjectChanged::class]);
+
+    $child->update(['parent_id' => $new->id]);
+    app(LiveUpdates::class)->flush();
+
+    Event::assertDispatched(ProjectChanged::class, function (ProjectChanged $event) use ($old, $new) {
+        foreach ([$old, $new] as $parent) {
+            if (! in_array(['type' => 'issue', 'id' => $parent->id, 'action' => 'updated'], $event->changes, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+});
+
+test('editing a workflow status or transition announces its issue type', function () {
+    $project = Project::factory()->create();
+    $type = IssueType::factory()->create(['project_id' => $project->id]);
+    $status = WorkflowStatus::factory()->create(['issue_type_id' => $type->id]);
+    $other = WorkflowStatus::factory()->create(['issue_type_id' => $type->id]);
+    app(LiveUpdates::class)->flush();
+    Event::fake([ProjectChanged::class]);
+
+    $status->update(['name' => 'Renamed']);
+    WorkflowTransition::query()->create(['issue_type_id' => $type->id, 'from_status_id' => $status->id, 'to_status_id' => $other->id]);
+    app(LiveUpdates::class)->flush();
+
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => $event->projectId === $project->id
+        && in_array(['type' => 'issue-types', 'id' => $type->id, 'action' => 'updated'], $event->changes, true));
+});
+
+test('creating or renaming a role is announced to its project', function () {
+    $project = Project::factory()->create();
+    $roles = app(RoleRepository::class);
+    Event::fake([ProjectChanged::class]);
+
+    $role = $roles->create($project, ['name' => 'Tester', 'slug' => 'tester', 'role' => 'custom']);
+    app(LiveUpdates::class)->flush();
+    $roles->update($role, ['name' => 'QA']);
+    app(LiveUpdates::class)->flush();
+
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => in_array(
+        ['type' => 'roles', 'id' => $role->id, 'action' => 'created'],
+        $event->changes,
+        true,
+    ));
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => in_array(
+        ['type' => 'roles', 'id' => $role->id, 'action' => 'updated'],
         $event->changes,
         true,
     ));

@@ -25,6 +25,17 @@ trait BroadcastsLiveChanges
     /** @return array{project: int, type: string, id: int|null}|null */
     abstract protected function liveChange(): ?array;
 
+    /**
+     * Other records this write changes what clients see of (a sub-issue's
+     * parent, whose children list grows), as further `liveChange()` shapes.
+     *
+     * @return list<array{project: int, type: string, id: int|null}>
+     */
+    protected function liveAlsoAffects(): array
+    {
+        return [];
+    }
+
     protected function broadcastLive(string $action): void
     {
         $live = app(LiveUpdates::class);
@@ -37,6 +48,10 @@ trait BroadcastsLiveChanges
 
         if ($change !== null) {
             $live->project($change['project'], $change['type'], $change['id'], $action);
+        }
+
+        foreach ($this->liveAlsoAffects() as $other) {
+            $live->project($other['project'], $other['type'], $other['id'], 'updated');
         }
     }
 }
