@@ -37,7 +37,7 @@ Bez odpytywania: obecność (nie ma czego pobrać z serwera) i strony ustawień 
 | Objaw | Sprawdź |
 | --- | --- |
 | Nic nie dociera, brak błędów | Współdzielony prop `live` (zakładka sieci, `props.live` w odpowiedzi Inertia): czy `enabled` jest prawdziwe? Jeśli nie, brakuje `BROADCAST_CONNECTION` albo któregoś z danych `REVERB_*` w środowisku kontenera **app** |
-| `enabled: true`, a nadal nic | Czy worker kolejki działa z `--queue=live,default`? `make logs` dla kontenera `queue`; przy kolejkach Redis `docker compose exec redis redis-cli --scan --pattern '*queues:live*'` nie powinno pokazywać rosnącej zaległości |
+| `enabled: true`, a nadal nic | Czy worker kolejki działa z `--queue=live,default`? `make logs` dla kontenera `queue`; przy kolejkach Redis `docker compose exec redis redis-cli llen orbit-database-queues:live` pokazuje liczbę oczekujących zadań live (klucz to `<REDIS_PREFIX>queues:live`; prawdziwą nazwę wypiszesz przez `redis-cli --scan --pattern '*queues:live'`). Uruchom je kilka razy w odstępie paru sekund: powinno zostawać blisko 0, a liczba, która ciągle rośnie, oznacza, że żaden worker nie czyta kolejki `live` |
 | W konsoli przeglądarki: WebSocket connection failed | `REVERB_PUBLIC_*` musi być tym, do czego **przeglądarka** ma dostęp (`localhost:8080` w developmencie, `wss` na 443 za proxy); `make logs-reverb` |
 | Odrzucone połączenie z kodem 4009 w logu Reverb | Origin strony nie jest w `REVERB_ALLOWED_ORIGINS` |
 | `Class "Laravel\Reverb\ReverbServiceProvider" not found` w `queue`/`scheduler` | Uruchom `make composer-install`: każda usługa PHP ma własny wolumen `vendor` |

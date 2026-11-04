@@ -62,7 +62,7 @@ Not polled: presence (nothing to read from the server) and the settings pages
 | Symptom | Check |
 | --- | --- |
 | Nothing arrives, no errors | The shared `live` prop (network tab, an Inertia response's `props.live`): is `enabled` true? If not, `BROADCAST_CONNECTION` or a `REVERB_*` credential is missing in the environment of the **app** container |
-| `enabled: true` but still nothing | Is the queue worker running with `--queue=live,default`? `make logs` for the `queue` container; with Redis queues, `docker compose exec redis redis-cli --scan --pattern '*queues:live*'` should show no growing backlog |
+| `enabled: true` but still nothing | Is the queue worker running with `--queue=live,default`? `make logs` for the `queue` container; with Redis queues, `docker compose exec redis redis-cli llen orbit-database-queues:live` is the number of waiting live jobs (the key is `<REDIS_PREFIX>queues:live`; list the real name with `redis-cli --scan --pattern '*queues:live'`). Run it a few times a few seconds apart: it should stay near 0, a number that keeps growing means no worker reads the `live` queue |
 | Browser console: WebSocket connection failed | `REVERB_PUBLIC_*` must be what the **browser** can reach (`localhost:8080` in development, `wss` on 443 behind the proxy); `make logs-reverb` |
 | Connection refused with code 4009 in the Reverb log | The page's origin is not in `REVERB_ALLOWED_ORIGINS` |
 | `Class "Laravel\Reverb\ReverbServiceProvider" not found` in `queue`/`scheduler` | Run `make composer-install`: every PHP service keeps its own `vendor` volume |
