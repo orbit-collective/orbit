@@ -95,6 +95,71 @@ describe('useNotificationsFeed', () => {
         await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(2));
     });
 
+    describe('a live refresh with older pages loaded', () => {
+        const page = (ids: number[], next: number | null, unread = 3) => ({
+            data: {
+                data: ids.map((id) => make(id)),
+                next_cursor: next,
+                unread_count: unread,
+            },
+        });
+        const firstPageIds = Array.from({ length: 20 }, (_, i) => 100 - i);
+
+        const withOlderRows = async () => {
+            mocks.get.mockResolvedValueOnce(page([80, 79], null));
+            const hook = renderHook(() => useNotificationsFeed(fullPage(), 20));
+            await act(async () => {
+                await hook.result.current.loadMore();
+            });
+            mocks.get.mockReset();
+
+            return hook;
+        };
+
+        test('re-reads every page it shows and keeps the older rows', async () => {
+            const { result } = await withOlderRows();
+            expect(result.current.items).toHaveLength(22);
+            mocks.get
+                .mockResolvedValueOnce(page(firstPageIds, 81, 1))
+                .mockResolvedValueOnce(page([80, 79], null, 1));
+
+            act(() => announceNotificationsChanged());
+
+            await waitFor(() => expect(result.current.unreadCount).toBe(1));
+            expect(mocks.get).toHaveBeenCalledTimes(2);
+            expect(mocks.get.mock.calls[1][1].params.before).toBe(81);
+            expect(result.current.items.map((item) => item.id)).toEqual([
+                ...firstPageIds,
+                80,
+                79,
+            ]);
+        });
+
+        test('drops an older row the server no longer has', async () => {
+            const { result } = await withOlderRows();
+            mocks.get
+                .mockResolvedValueOnce(page(firstPageIds, 81))
+                .mockResolvedValueOnce(page([79], null));
+
+            act(() => announceNotificationsChanged());
+
+            await waitFor(() => expect(result.current.items).toHaveLength(21));
+            expect(result.current.items.map((item) => item.id)).not.toContain(
+                80,
+            );
+        });
+
+        test('leaves the list alone when the refresh fails', async () => {
+            const { result } = await withOlderRows();
+            mocks.get.mockRejectedValue(new Error('offline'));
+
+            act(() => announceNotificationsChanged());
+
+            await waitFor(() => expect(mocks.get).toHaveBeenCalled());
+            expect(result.current.items).toHaveLength(22);
+        });
+    });
+
     test('stops listening when it unmounts', async () => {
         mocks.get.mockResolvedValue({
             data: { data: [], next_cursor: null, unread_count: 0 },

@@ -12,6 +12,9 @@ import {
 /** Matches NotificationRepository::PER_PAGE, the size of the shared first page. */
 export const NOTIFICATIONS_PAGE_SIZE = 20;
 
+/** Most pages one live refresh re-reads to cover what the popup shows (200 rows). */
+const NOTIFICATIONS_REFRESH_MAX_PAGES = 10;
+
 /** Matches NotificationRepository::MAX_BULK_IDS, the most ids one bulk request takes. */
 export const NOTIFICATIONS_BULK_LIMIT = 200;
 
@@ -121,22 +124,6 @@ export function useNotificationsFeed(
         setReloadToken((token) => token + 1);
     }, []);
 
-    // The inbox changed in another tab or by someone else: the shared first
-    // page is reloaded on its own, but anything beyond it (older pages, a
-    // filtered view) is only this feed's, so fetch it again.
-    const needsOwnRefresh = useRef(false);
-    needsOwnRefresh.current =
-        !isDefaultQuery || items.length > NOTIFICATIONS_PAGE_SIZE;
-    useEffect(() => {
-        const onChange = () => {
-            if (needsOwnRefresh.current) refresh();
-        };
-        window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, onChange);
-
-        return () =>
-            window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, onChange);
-    }, [refresh]);
-
     // The shared props changed (a write finished, or something outside the
     // popup such as the "mark all as read" command ran): reconcile the rows.
     useEffect(() => {
@@ -192,6 +179,51 @@ export function useNotificationsFeed(
         },
         [],
     );
+
+    // The inbox changed in another tab or by someone else. The shared first page
+    // is reloaded on its own; anything beyond it (older pages, a filtered view)
+    // belongs to this feed, so read the range it already shows again - not just
+    // the first page, which would drop the older rows (and the selection on
+    // them) the user is looking at. Rows the server no longer has disappear.
+    const needsOwnRefresh = useRef(false);
+    needsOwnRefresh.current =
+        !isDefaultQuery || items.length > NOTIFICATIONS_PAGE_SIZE;
+    const refreshLoaded = useCallback(async () => {
+        const oldest = itemsRef.current[itemsRef.current.length - 1]?.id;
+        let rows: Notification[] = [];
+        let before: number | null = null;
+        let nextCursor: number | null = null;
+        let unread = unreadRef.current;
+
+        for (let page = 0; page < NOTIFICATIONS_REFRESH_MAX_PAGES; page++) {
+            const result = await fetchPage(query, before);
+            // A newer request, or a failure, leaves the list as it is.
+            if (result.status !== 'ok') return;
+
+            rows = [...rows, ...result.page.data];
+            nextCursor = result.page.next_cursor;
+            unread = result.page.unread_count;
+
+            const reachedOldest =
+                oldest === undefined ||
+                (rows[rows.length - 1]?.id ?? 0) <= oldest;
+            if (nextCursor === null || reachedOldest) break;
+            before = nextCursor;
+        }
+
+        setItems(rows);
+        setCursor(nextCursor);
+        setUnreadCount(unread);
+    }, [fetchPage, query]);
+    useEffect(() => {
+        const onChange = () => {
+            if (needsOwnRefresh.current) void refreshLoaded();
+        };
+        window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, onChange);
+
+        return () =>
+            window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, onChange);
+    }, [refreshLoaded]);
 
     // (Re)load the first page whenever the filters change or a refresh is asked for.
     useEffect(() => {
