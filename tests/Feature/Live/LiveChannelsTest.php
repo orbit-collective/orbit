@@ -85,3 +85,17 @@ test('a project that does not exist is never joinable', function () {
     expect(LiveChannels::canJoinProject($user, 999_999))->toBeFalse();
     authorizeChannel(LiveChannels::project(999_999), $user)->assertForbidden();
 });
+
+test('an idle-expired session gets a JSON 401 from channel authorisation, not the login page', function () {
+    $user = User::factory()->create(['session_lifetime' => 30]);
+
+    $response = test()->actingAs($user)
+        ->withSession(['last_activity_at' => now()->subMinutes(31)->toISOString()])
+        ->postJson('/broadcasting/auth', [
+            'socket_id' => '1234.5678',
+            'channel_name' => 'private-'.LiveChannels::user($user->id),
+        ]);
+
+    $response->assertUnauthorized()->assertJson(['message' => 'Unauthenticated.']);
+    test()->assertGuest();
+});
