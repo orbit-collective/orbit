@@ -1,5 +1,11 @@
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
-import React, { KeyboardEvent, useId, useRef, useState } from 'react';
+import React, {
+    KeyboardEvent,
+    useEffect,
+    useId,
+    useRef,
+    useState,
+} from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import TrendBadge from '@/Components/Atoms/TrendBadge/TrendBadge';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
@@ -34,6 +40,19 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
         setSelectedKey(key);
         tabs.current[key]?.focus();
     };
+
+    // Keep the chosen day in view when the pills scroll (on first paint too).
+    const selectedDay = selected?.key;
+    const settled = useRef(false);
+    useEffect(() => {
+        if (!selectedDay) return;
+        tabs.current[selectedDay]?.scrollIntoView?.({
+            inline: 'center',
+            block: 'nearest',
+            behavior: settled.current ? 'smooth' : 'auto',
+        });
+        settled.current = true;
+    }, [selectedDay]);
 
     // Arrow keys, Home and End move between days; TAB still visits every pill.
     const onKeyDown = (event: KeyboardEvent, index: number) => {
@@ -94,10 +113,12 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                         </div>
 
                         <LayoutGroup id={bodyId}>
+                            {/* Pills keep a readable width: when the card is too narrow for all of them they scroll sideways and snap. Padding leaves room for the focus ring. */}
                             <div
                                 role="tablist"
                                 aria-label={`${title} days`}
-                                className="mt-5 flex justify-between gap-1 sm:gap-2"
+                                data-testid="day-scroller"
+                                className="no-scrollbar -mx-1 mt-4 flex snap-x snap-mandatory justify-between gap-1 overflow-x-auto p-1 sm:gap-2"
                             >
                                 {days.map((day, index) => {
                                     const active = day.key === selected.key;
@@ -123,7 +144,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                                 onKeyDown(event, index)
                                             }
                                             className={cn(
-                                                'relative flex h-[5.25rem] min-w-0 max-w-[3.25rem] flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-full border-0 px-0.5 text-[11px] transition-colors duration-200',
+                                                'relative flex h-[5.25rem] min-w-[2.75rem] max-w-[3.25rem] flex-1 shrink-0 cursor-pointer snap-center flex-col items-center justify-center gap-1.5 rounded-full border-0 px-0.5 text-[11px] transition-colors duration-200',
                                                 FOCUS_RING,
                                                 active
                                                     ? 'text-white'
