@@ -81,4 +81,19 @@ describe('PercentBarsCard', () => {
             'Issues by status: To do 20%, In progress 69%, Done 11%',
         );
     });
+
+    test('marks the highlighted bar level with a tag and renders extra summary', () => {
+        renderCard({ summary: <span>Open: 89</span> });
+
+        expect(screen.getByText('Open: 89')).toBeInTheDocument();
+        expect(screen.getByTestId('marker-line').style.bottom).toBe('69%');
+    });
+
+    test('draws no marker when everything is zero', () => {
+        renderCard({
+            bars: bars.map((bar) => ({ ...bar, percent: 0 })),
+        });
+
+        expect(screen.queryByTestId('marker-line')).not.toBeInTheDocument();
+    });
 });

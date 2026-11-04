@@ -1,5 +1,6 @@
 import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import BarPlot from '@/Components/Molecules/BarPlot/BarPlot';
 import { BarChartCardProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
@@ -33,15 +34,15 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
             item.value > (items[best]?.value ?? -1) ? index : best,
         -1,
     );
-    const ticks = Array.from(
-        { length: TICKS + 1 },
-        (_, i) => (max / TICKS) * i,
-    );
+    const ticks = Array.from({ length: TICKS + 1 }, (_, i) => ({
+        percent: (100 / TICKS) * i,
+        label: formatValue((max / TICKS) * i),
+    }));
 
     return (
         <section
             className={cn(
-                'rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-5',
+                'rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4 sm:p-5',
                 className,
             )}
         >
@@ -65,82 +66,27 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
                     {emptyText}
                 </p>
             ) : (
-                <div className="mt-5 flex gap-3">
-                    <div
-                        aria-hidden="true"
-                        className="flex h-44 shrink-0 flex-col-reverse justify-between text-[11px] text-[var(--text-muted-color)]"
-                    >
-                        {ticks.map((tick) => (
-                            <span key={tick}>{formatValue(tick)}</span>
-                        ))}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                        <div
-                            role="img"
-                            aria-label={`${title}: ${items
-                                .map(
-                                    (item) =>
-                                        `${item.label} ${item.valueLabel ?? formatValue(item.value)}`,
-                                )
-                                .join(', ')}`}
-                            className="relative flex h-44 items-end gap-1.5 sm:gap-2"
-                        >
-                            <div
-                                aria-hidden="true"
-                                data-testid="average-line"
-                                className="pointer-events-none absolute inset-x-0 border-t border-dashed border-[var(--text-muted-color)]"
-                                style={{ bottom: `${(average / max) * 100}%` }}
-                            >
-                                <span className="absolute -top-2.5 right-0 rounded bg-[var(--bg-dark-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                    Avg {formatValue(average)}
-                                </span>
-                            </div>
-
-                            {items.map((item, index) => (
-                                <div
-                                    key={item.key}
-                                    className="bg-[var(--bg-light-color)]/40 group relative flex h-full min-w-0 flex-1 items-end rounded-full"
-                                >
-                                    <div
-                                        data-testid="bar"
-                                        data-highlighted={index === highlighted}
-                                        className={cn(
-                                            'w-full rounded-full transition-all duration-300',
-                                            index === highlighted
-                                                ? 'bg-[var(--accent-color)]'
-                                                : 'bg-[var(--bg-light-color)] group-hover:bg-[var(--text-muted-color)]',
-                                        )}
-                                        style={{
-                                            height: `${Math.max((item.value / max) * 100, item.value > 0 ? 3 : 0)}%`,
-                                        }}
-                                    />
-                                    <span className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-[var(--bg-dark-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-color)] opacity-0 transition-opacity group-hover:opacity-100">
-                                        {item.valueLabel ??
-                                            formatValue(item.value)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="mt-2 flex gap-1.5 sm:gap-2">
-                            {items.map((item, index) => (
-                                <span
-                                    key={item.key}
-                                    className={cn(
-                                        'min-w-0 flex-1 truncate text-center text-[11px]',
-                                        index === highlighted
-                                            ? 'font-semibold text-[var(--text-color)]'
-                                            : 'text-[var(--text-muted-color)]',
-                                    )}
-                                    title={item.label}
-                                >
-                                    {item.label}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                <BarPlot
+                    className="mt-6"
+                    ariaLabel={`${title}: ${items
+                        .map(
+                            (item) =>
+                                `${item.label} ${item.valueLabel ?? formatValue(item.value)}`,
+                        )
+                        .join(', ')}`}
+                    ticks={ticks}
+                    highlightKey={items[highlighted]?.key}
+                    marker={{
+                        percent: (average / max) * 100,
+                        label: `Avg ${formatValue(average)}`,
+                    }}
+                    bars={items.map((item) => ({
+                        key: item.key,
+                        label: item.label,
+                        heightPercent: (item.value / max) * 100,
+                        tooltip: item.valueLabel ?? formatValue(item.value),
+                    }))}
+                />
             )}
         </section>
     );
