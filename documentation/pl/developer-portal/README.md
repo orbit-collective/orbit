@@ -12,6 +12,12 @@ Settings → Developer Portal to strona diagnostyczna na lokalne środowisko dew
 2. **[Dodaj sekcję do portalu](./02-add-a-section-to-the-portal.md)** — nowe źródło danych od początku do końca: serwis, odroczony prop, komponent sekcji, rodzaj zmiany live, testy i story.
 3. **[Komponenty wykresów](./03-chart-components.md)** — `BarChartCard`, `DayBreakdownCard`, `PercentBarsCard` i `TrendBadge` oraz jak je zasilać.
 
+## Interakcje
+
+- **Logi kontenera.** Kliknij wiersz kontenera, żeby otworzyć jego szczegóły i podgląd logów na żywo (filtr, tylko błędy, śledzenie co 3 s, gdy karta jest widoczna, odśwież, kopiuj). Podgląd czyta `GET /settings/dev-portal/containers/{id}/logs`, które siedzi za tym samym middleware `developer-portal`, przyjmuje wyłącznie id kontenerów tego projektu Compose i zwraca najwyżej 500 linii (`DockerContainerService::logs()` rozdziela ramki stdout/stderr Dockera, obsługuje wyjście TTY i usuwa kody ANSI).
+- **Zwijanie.** Każda karta i panel zwija się z nagłówka i w zwiniętym stanie zachowuje jednolinijkowe podsumowanie; wybór jest pamiętany per przeglądarka (`useCollapsedSections`, klucz `developer-portal-sections`), a na górze jest przycisk Collapse / Expand all. Listy użytkowników i projektów startują zwinięte. Nowa sekcja dołącza przez dodanie swojego id do `SECTION_DEFAULTS` w `DeveloperPortalTab.tsx` i rozpięcie `collapse('<id>', summary)` na jej `SettingsPanel` lub karcie wykresu.
+- **Ostatnie błędy** są paginowane (`errors_page` / `errors_perPage`) tak jak listy użytkowników i projektów.
+
 ## Dostęp do Dockera
 
 Uptime kontenerów jest czytany z Docker Engine API przez gniazdo Unix (`developer-portal.docker.socket`, domyślnie `/var/run/docker.sock`), a lista obejmuje wyłącznie kontenery z etykietą `com.docker.compose.project=<developer-portal.docker.project>` (domyślnie `orbit`). Usługa `app` potrzebuje więc gniazda zamontowanego tylko do odczytu:
