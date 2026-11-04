@@ -874,3 +874,25 @@ export interface DayBreakdownCardProps {
     emptyText?: string;
     className?: string;
 }
+
+export interface PercentBarsCardBar {
+    key: string;
+    label: string;
+    /** Share of the whole, 0-100. */
+    percent: number;
+}
+
+export interface PercentBarsCardProps {
+    title: string;
+    icon: keyof typeof icons;
+    /** The big number under the title. */
+    total: string;
+    totalLabel: string;
+    trend?: ChartTrend;
+    bars: PercentBarsCardBar[];
+    /** Key of the highlighted bar; defaults to the largest. */
+    highlightKey?: string;
+    /** Sentence under the chart. */
+    footnote?: React.ReactNode;
+    className?: string;
+}
