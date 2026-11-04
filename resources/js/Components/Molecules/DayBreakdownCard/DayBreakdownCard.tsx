@@ -30,10 +30,12 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
 }) => {
     const bodyId = useId();
     const tabs = useRef<Record<string, HTMLButtonElement | null>>({});
-    const [selectedKey, setSelectedKey] = useState(
-        initialDayKey ?? days[days.length - 1]?.key,
+    // Until a day is picked, the card follows the newest one, so a page left
+    // open past midnight moves on to the new day by itself.
+    const [pickedKey, setSelectedKey] = useState<string | undefined>(
+        initialDayKey,
     );
-    const selected = days.find((day) => day.key === selectedKey) ?? days.at(-1);
+    const selected = days.find((day) => day.key === pickedKey) ?? days.at(-1);
     const total = selected?.rows.reduce((sum, row) => sum + row.value, 0) ?? 0;
 
     const select = (key: string) => {
