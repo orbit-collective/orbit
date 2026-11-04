@@ -1,7 +1,9 @@
 import { usePage } from '@inertiajs/react';
 import { useMemo } from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
 import PercentBarsCard from '@/Components/Molecules/PercentBarsCard/PercentBarsCard';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
+import { useCollapsedSections } from '@/hooks/useCollapsedSections';
 import { useDeveloperPortalLive } from '@/live/useDeveloperPortalLive';
 import {
     Paginated,
@@ -24,6 +26,19 @@ interface DeveloperPortalTabProps {
     errorLog?: PortalErrorLog;
 }
 
+/** First-visit state: the glanceable parts open, the long lists folded. */
+export const SECTION_DEFAULTS = {
+    status: false,
+    uptime: false,
+    containers: false,
+    activity: false,
+    errors: false,
+    users: true,
+    projects: true,
+};
+
+const SECTIONS_STORAGE_KEY = 'developer-portal-sections';
+
 const percent = (part: number, whole: number) =>
     whole === 0 ? 0 : Math.round((part / whole) * 100);
 
@@ -35,6 +50,10 @@ export default function DeveloperPortalTab({
     errorLog,
 }: DeveloperPortalTabProps) {
     useDeveloperPortalLive();
+    const { collapse, setAll, allCollapsed } = useCollapsedSections(
+        SECTIONS_STORAGE_KEY,
+        SECTION_DEFAULTS,
+    );
 
     const { url } = usePage();
     const queryParams = useMemo(
@@ -49,6 +68,22 @@ export default function DeveloperPortalTab({
 
     return (
         <div className="space-y-6">
+            <div className="flex justify-end">
+                <button
+                    type="button"
+                    onClick={() => setAll(!allCollapsed)}
+                    className="flex items-center gap-1.5 rounded-md border-0 bg-transparent px-2 py-1 text-xs font-medium text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                >
+                    <Icon
+                        name={
+                            allCollapsed ? 'ChevronsUpDown' : 'ChevronsDownUp'
+                        }
+                        size={14}
+                    />
+                    {allCollapsed ? 'Expand all' : 'Collapse all'}
+                </button>
+            </div>
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <StatCard
                     variant="glass"
@@ -99,6 +134,10 @@ export default function DeveloperPortalTab({
             </div>
 
             <PercentBarsCard
+                {...collapse(
+                    'status',
+                    `${totals.issues} issues · ${percent(done, totals.issues)}% done`,
+                )}
                 title="Issues by status"
                 icon="ChartColumn"
                 totalLabel="Total issues"
@@ -149,15 +188,24 @@ export default function DeveloperPortalTab({
                 }
             />
 
-            <PortalContainersSection containers={containers} />
+            <PortalContainersSection
+                containers={containers}
+                collapse={collapse}
+            />
             <PortalErrorsSection
                 errorLog={errorLog}
                 queryParams={queryParams}
+                collapse={collapse}
             />
-            <PortalUsersPanel users={portalUsers} queryParams={queryParams} />
+            <PortalUsersPanel
+                users={portalUsers}
+                queryParams={queryParams}
+                collapse={collapse}
+            />
             <PortalProjectsPanel
                 projects={portalProjects}
                 queryParams={queryParams}
+                collapse={collapse}
             />
         </div>
     );

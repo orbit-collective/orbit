@@ -3,6 +3,7 @@ import Badge from '@/Components/Atoms/Badge/Badge';
 import DayBreakdownCard from '@/Components/Molecules/DayBreakdownCard/DayBreakdownCard';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { DayBreakdownDay, DayBreakdownRow } from '@/types/Components';
 import { PortalErrorEntry, PortalErrorLog } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
@@ -13,6 +14,7 @@ interface PortalErrorsSectionProps {
     errorLog?: PortalErrorLog;
     /** The page's current query string, so a page change keeps the other lists. */
     queryParams?: Record<string, string>;
+    collapse?: CollapseProps;
 }
 
 const COLORS = {
@@ -103,6 +105,7 @@ function ErrorEntry({ entry }: { entry: PortalErrorEntry }) {
 export default function PortalErrorsSection({
     errorLog,
     queryParams = {},
+    collapse,
 }: PortalErrorsSectionProps) {
     const days = useMemo(
         () => (errorLog ? buildDays(errorLog) : []),
@@ -115,6 +118,7 @@ export default function PortalErrorsSection({
                 title="Recent errors"
                 icon="Bug"
                 description="The newest errors from the application log."
+                {...collapse?.('errors')}
             >
                 <p
                     role="status"
@@ -129,6 +133,10 @@ export default function PortalErrorsSection({
     return (
         <div className="space-y-5">
             <DayBreakdownCard
+                {...collapse?.(
+                    'activity',
+                    `${errorLog.daily.reduce((sum, day) => sum + day.total, 0)} problems this week`,
+                )}
                 title="Log activity this week"
                 icon="Activity"
                 days={days}
@@ -142,6 +150,10 @@ export default function PortalErrorsSection({
                 title="Recent errors"
                 icon="Bug"
                 description="The newest errors from the application log."
+                {...collapse?.(
+                    'errors',
+                    `${errorLog.entries.total} ${errorLog.entries.total === 1 ? 'error' : 'errors'}`,
+                )}
             >
                 {errorLog.entries.data.length === 0 ? (
                     <p className="px-5 py-6 text-sm text-[var(--text-gray-color)]">

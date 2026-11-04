@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
     paginated,
@@ -8,7 +8,7 @@ import {
     portalTotals,
     portalUsers,
 } from '@/stories/developerPortalFixtures';
-import DeveloperPortalTab from './DeveloperPortalTab';
+import DeveloperPortalTab, { SECTION_DEFAULTS } from './DeveloperPortalTab';
 
 const live = vi.hoisted(() => ({ useDeveloperPortalLive: vi.fn() }));
 
@@ -43,6 +43,7 @@ const renderTab = (props = {}) =>
     );
 
 beforeEach(() => {
+    localStorage.clear();
     live.useDeveloperPortalLive.mockClear();
 });
 
@@ -104,13 +105,13 @@ describe('DeveloperPortalTab', () => {
 
         expect(screen.getByText('Container uptime')).toBeInTheDocument();
         expect(
-            screen.getByRole('heading', { name: 'Recent errors' }),
+            screen.getByRole('heading', { name: /^Recent errors/ }),
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('heading', { name: 'Users' }),
+            screen.getByRole('heading', { name: /^Users/ }),
         ).toBeInTheDocument();
         expect(
-            screen.getByRole('heading', { name: 'Projects' }),
+            screen.getByRole('heading', { name: /^Projects/ }),
         ).toBeInTheDocument();
         expect(
             screen.getByPlaceholderText(/Search by name or email/),
@@ -123,5 +124,84 @@ describe('DeveloperPortalTab', () => {
         renderTab({ containers: undefined, errorLog: undefined });
 
         expect(screen.getAllByRole('status')).toHaveLength(2);
+    });
+
+    test('the long lists start folded, the glanceable parts open', () => {
+        renderTab();
+
+        expect(screen.getByTestId('total')).toBeVisible();
+        expect(screen.getByRole('button', { name: /Users/ })).toHaveAttribute(
+            'aria-expanded',
+            'false',
+        );
+        expect(
+            screen.getByRole('button', { name: /Projects/ }),
+        ).toHaveAttribute('aria-expanded', 'false');
+        expect(
+            screen.getByRole('button', { name: /Recent errors/ }),
+        ).toHaveAttribute('aria-expanded', 'true');
+        expect(SECTION_DEFAULTS.users).toBe(true);
+    });
+
+    test('a folded section still summarises itself', () => {
+        renderTab();
+
+        const users = screen.getByRole('button', { name: /Users/ });
+        expect(
+            within(users).getByTestId('collapsed-summary'),
+        ).toHaveTextContent('12 users');
+    });
+
+    test('opening a folded section and reloading remembers it', () => {
+        const { unmount } = renderTab();
+        fireEvent.click(screen.getByRole('button', { name: /Users/ }));
+        expect(screen.getByRole('button', { name: /Users/ })).toHaveAttribute(
+            'aria-expanded',
+            'true',
+        );
+        unmount();
+
+        renderTab();
+
+        expect(screen.getByRole('button', { name: /Users/ })).toHaveAttribute(
+            'aria-expanded',
+            'true',
+        );
+    });
+
+    test('"Collapse all" folds everything, then "Expand all" opens everything', () => {
+        renderTab();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }));
+        expect(screen.getByRole('button', { name: /Users/ })).toHaveAttribute(
+            'aria-expanded',
+            'false',
+        );
+        expect(
+            screen.getByRole('button', { name: /Recent errors/ }),
+        ).toHaveAttribute('aria-expanded', 'false');
+
+        fireEvent.click(screen.getByRole('button', { name: 'Expand all' }));
+        expect(screen.getByRole('button', { name: /Users/ })).toHaveAttribute(
+            'aria-expanded',
+            'true',
+        );
+        expect(
+            screen.getByRole('button', { name: /Recent errors/ }),
+        ).toHaveAttribute('aria-expanded', 'true');
+        expect(
+            screen.getByRole('button', { name: 'Collapse all' }),
+        ).toBeInTheDocument();
+    });
+
+    test('the deferred loading panels fold too', () => {
+        renderTab({ containers: undefined, errorLog: undefined });
+
+        expect(
+            screen.getByRole('button', { name: /Containers/ }),
+        ).toHaveAttribute('aria-expanded', 'true');
+        expect(
+            screen.getByRole('button', { name: /Recent errors/ }),
+        ).toHaveAttribute('aria-expanded', 'true');
     });
 });
