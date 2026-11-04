@@ -39,17 +39,15 @@ class DashboardController extends Controller
     {
         $userId = $request->user()->id;
 
-        $issueStats = $this->issueService->getStatsForUser($userId);
-        $projects = $this->projectService->withIssueCounts($this->projectService->getAllForUser($userId));
-        $productivity_trend = $this->issueService->getProductivityTrendForUser($userId);
-
         return Inertia::render('Dashboard', [
-            'issueStats' => $issueStats,
-            'projects' => $projects,
-            'productivity_trend' => $productivity_trend,
-            'users' => $this->userService->getAssignableUsersForUserProjects($userId),
+            // Closures, so a live update that re-reads only some of these
+            // (see useDashboardLive) does not pay for the rest.
+            'issueStats' => fn () => $this->issueService->getStatsForUser($userId),
+            'projects' => fn () => $this->projectService->withIssueCounts($this->projectService->getAllForUser($userId)),
+            'productivity_trend' => fn () => $this->issueService->getProductivityTrendForUser($userId),
+            'users' => fn () => $this->userService->getAssignableUsersForUserProjects($userId),
             'queryParams' => $request->query() ?: null,
-            'activityLogs' => $this->activityLogService->paginateForUser($userId, $request->integer(ActivityLogService::PER_PAGE_NAME, 10))->through(fn ($entry) => [
+            'activityLogs' => fn () => $this->activityLogService->paginateForUser($userId, $request->integer(ActivityLogService::PER_PAGE_NAME, 10))->through(fn ($entry) => [
                 'id' => $entry->id,
                 'body' => $entry->body,
                 'userId' => $entry->user_id,
@@ -57,7 +55,7 @@ class DashboardController extends Controller
                 'userAvatar' => $entry->user?->avatar,
                 'createdAt' => $entry->created_at->toJSON(),
             ]),
-            'issueTypes' => $this->issueTypeService->getIssueTypesForProjects($projects->pluck('id')->all()),
+            'issueTypes' => fn () => $this->issueTypeService->getIssueTypesForProjects($this->projectService->getAllForUser($userId)->pluck('id')->all()),
         ]);
     }
 }

@@ -55,22 +55,28 @@ class IssueController extends Controller
 
         $this->authorize('view', $issue);
 
-        $issueWithRelations = $this->issueService->getIssueWithRelations($issue->id);
+        // Closures, so a live update that re-reads only the issue (see
+        // useIssueLive) does not rebuild everything else on the page. The
+        // issue is loaded once and shared by the props that derive from it.
+        $loaded = null;
+        $issueWithRelations = function () use (&$loaded, $issue) {
+            return $loaded ??= $this->issueService->getIssueWithRelations($issue->id);
+        };
 
         return Inertia::render('Issues/Show', [
             'project' => $project,
-            'projects' => $this->projectService->getAllForUser($request->user()->id),
-            'issue' => $issueWithRelations,
-            'users' => $this->userService->getAssignableUsersForProject($project->id),
-            'labels' => $this->mapLabels($this->labelService->getLabels($project)),
-            'priorities' => $this->priorityService->getPriorities($project)->map->toOption()->values(),
-            'issueTypes' => $this->issueTypeService->getIssueTypes($project),
-            'nextIssueId' => $this->issueService->peekNextIssueId($project),
-            'ancestors' => $this->issueService->ancestorsOf($issue)->values(),
-            'linkedPullRequests' => $this->mapLinkedPullRequests($issueWithRelations->externalLinks),
-            'githubRepositories' => $this->mapGithubRepositories($project),
-            'githubDefaultBranchName' => $this->githubBranchService->defaultBranchName($issue),
-            'issueAbilities' => $this->issueAbilities($request, $issue),
+            'projects' => fn () => $this->projectService->getAllForUser($request->user()->id),
+            'issue' => fn () => $issueWithRelations(),
+            'users' => fn () => $this->userService->getAssignableUsersForProject($project->id),
+            'labels' => fn () => $this->mapLabels($this->labelService->getLabels($project)),
+            'priorities' => fn () => $this->priorityService->getPriorities($project)->map->toOption()->values(),
+            'issueTypes' => fn () => $this->issueTypeService->getIssueTypes($project),
+            'nextIssueId' => fn () => $this->issueService->peekNextIssueId($project),
+            'ancestors' => fn () => $this->issueService->ancestorsOf($issue)->values(),
+            'linkedPullRequests' => fn () => $this->mapLinkedPullRequests($issueWithRelations()->externalLinks),
+            'githubRepositories' => fn () => $this->mapGithubRepositories($project),
+            'githubDefaultBranchName' => fn () => $this->githubBranchService->defaultBranchName($issue),
+            'issueAbilities' => fn () => $this->issueAbilities($request, $issue),
             'activityLogs' => Inertia::optional(fn () => $this->activityLogService->paginateForIssue($issue->id, $request->integer(ActivityLogService::PER_PAGE_NAME, 20))->through(fn ($entry) => [
                 'id' => $entry->id,
                 'body' => $entry->body,
@@ -80,9 +86,9 @@ class IssueController extends Controller
                 'createdAt' => $entry->created_at->toJSON(),
             ])),
             'queryParams' => $request->query() ?: null,
-            'projectRole' => $project->roleOf($request->user()),
-            'canCreateGithubDevelopment' => $request->user()->can('createGithubDevelopment', $issue),
-            'githubAccountLinked' => $request->user()->github_id !== null,
+            'projectRole' => fn () => $project->roleOf($request->user()),
+            'canCreateGithubDevelopment' => fn () => $request->user()->can('createGithubDevelopment', $issue),
+            'githubAccountLinked' => fn () => $request->user()->github_id !== null,
         ]);
     }
 
