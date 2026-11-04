@@ -810,7 +810,7 @@ export interface GuestLayoutProps {
     showcaseDescription: ReactNode;
 }
 
-export interface ChartTrend {
+interface ChartTrend {
     /** Signed percent change. */
     value: number;
     /** When true a positive value is shown as good (green). Default: yes. */
@@ -821,7 +821,7 @@ export interface TrendBadgeProps extends ChartTrend {
     className?: string;
 }
 
-export interface BarChartCardItem {
+interface BarChartCardItem {
     key: string;
     /** X-axis label under the bar. */
     label: string;
@@ -875,7 +875,7 @@ export interface DayBreakdownCardProps {
     className?: string;
 }
 
-export interface PercentBarsCardBar {
+interface PercentBarsCardBar {
     key: string;
     label: string;
     /** Share of the whole, 0-100. */

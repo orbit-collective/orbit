@@ -1,4 +1,4 @@
-export type ContainerState =
+type ContainerState =
     | 'running'
     | 'exited'
     | 'restarting'
@@ -28,7 +28,7 @@ export interface PortalContainers {
     containers: PortalContainer[];
 }
 
-export type ErrorLevel = 'error' | 'critical' | 'alert' | 'emergency';
+type ErrorLevel = 'error' | 'critical' | 'alert' | 'emergency';
 
 export interface PortalErrorEntry {
     id: string;
@@ -38,7 +38,7 @@ export interface PortalErrorEntry {
     trace: string[];
 }
 
-export interface PortalDailyErrors {
+interface PortalDailyErrors {
     /** YYYY-MM-DD */
     date: string;
     /** Short weekday, e.g. "Mon". */
