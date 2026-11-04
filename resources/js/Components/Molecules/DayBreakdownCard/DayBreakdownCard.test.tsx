@@ -162,4 +162,46 @@ describe('DayBreakdownCard', () => {
         expect(panel).toHaveAttribute('aria-labelledby', selected.id);
         expect(selected.className).toContain('focus-visible:ring-2');
     });
+
+    test('the pills scroll and snap instead of squeezing when the card is narrow', () => {
+        renderCard();
+
+        expect(screen.getByTestId('day-scroller')).toHaveClass(
+            'overflow-x-auto',
+            'snap-x',
+            'snap-mandatory',
+            'no-scrollbar',
+        );
+        screen.getAllByRole('tab').forEach((tab) => {
+            expect(tab).toHaveClass(
+                'snap-center',
+                'shrink-0',
+                'min-w-[2.75rem]',
+            );
+        });
+    });
+
+    test('the chosen day is scrolled into view on first paint and when it changes', async () => {
+        const scrollIntoView = vi.fn();
+        Element.prototype.scrollIntoView = scrollIntoView;
+        renderCard();
+
+        expect(scrollIntoView).toHaveBeenLastCalledWith({
+            inline: 'center',
+            block: 'nearest',
+            behavior: 'auto',
+        });
+
+        fireEvent.click(screen.getAllByRole('tab')[0]);
+
+        await waitFor(() =>
+            expect(scrollIntoView).toHaveBeenLastCalledWith({
+                inline: 'center',
+                block: 'nearest',
+                behavior: 'smooth',
+            }),
+        );
+        delete (Element.prototype as { scrollIntoView?: unknown })
+            .scrollIntoView;
+    });
 });
