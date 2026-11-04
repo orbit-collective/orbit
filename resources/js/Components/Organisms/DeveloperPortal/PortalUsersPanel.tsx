@@ -44,17 +44,20 @@ export default function PortalUsersPanel({
                 users.data.map((user) => (
                     <div
                         key={user.id}
-                        className="flex flex-col gap-1 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                        className="flex flex-col gap-1.5 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5"
                     >
-                        <UserBadge
-                            name={user.name}
-                            email={user.email}
-                            avatarSrc={user.avatar ?? undefined}
-                            size="lg"
-                            showDetails
-                            showTooltip={false}
-                        />
-                        <p className="text-xs text-[var(--text-gray-color)]">
+                        <div className="min-w-0 sm:flex-1">
+                            <UserBadge
+                                name={user.name}
+                                email={user.email}
+                                avatarSrc={user.avatar ?? undefined}
+                                size="lg"
+                                showDetails
+                                showTooltip={false}
+                                className="max-w-full"
+                            />
+                        </div>
+                        <p className="pl-[2.875rem] text-xs text-[var(--text-gray-color)] sm:shrink-0 sm:pl-0">
                             {user.projectsCount}{' '}
                             {user.projectsCount === 1 ? 'project' : 'projects'}
                             {user.createdAt &&
