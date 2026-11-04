@@ -842,3 +842,35 @@ export interface BarChartCardProps {
     emptyText?: string;
     className?: string;
 }
+
+export interface DayBreakdownRow {
+    key: string;
+    label: string;
+    value: number;
+    /** A CSS color for the row's dot. */
+    color: string;
+    /** Change against the previous day, in percent. */
+    delta?: number;
+}
+
+export interface DayBreakdownDay {
+    key: string;
+    /** Short weekday, e.g. "Mon". */
+    label: string;
+    /** Day of the month, e.g. "09". */
+    dayNumber: string;
+    rows: DayBreakdownRow[];
+}
+
+export interface DayBreakdownCardProps {
+    title: string;
+    icon: keyof typeof icons;
+    days: DayBreakdownDay[];
+    /** Key of the day selected at first; defaults to the last one. */
+    initialDayKey?: string;
+    /** Headline above the day picker; receives the selected day's total. */
+    headline: (total: number) => string;
+    headlineTrend?: ChartTrend;
+    emptyText?: string;
+    className?: string;
+}
