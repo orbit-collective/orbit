@@ -112,3 +112,46 @@ test('the error list can be paginated from the one cached read', function () {
         ->and(app(ErrorLogService::class)->paginated(5000)['entries']->perPage())->toBe(100)
         ->and(app(ErrorLogService::class)->paginated(0)['entries']->perPage())->toBe((int) config('developer-portal.per_page'));
 });
+
+test('the days roll over: tomorrow shows today as a separate yesterday and its own errors as today', function () {
+    CarbonImmutable::setTestNow('2026-11-04 23:30:00');
+    file_put_contents($this->dir.'/laravel.log',
+        logLine('2026-11-04 10:00:00', 'ERROR', 'a')
+        .logLine('2026-11-04 23:00:00', 'ERROR', 'b')
+        .logLine('2026-11-04 12:00:00', 'WARNING', 'w'));
+
+    $today = collect(app(ErrorLogService::class)->recent()['daily']);
+    expect($today->last())->toMatchArray(['date' => '2026-11-04', 'error' => 2, 'warning' => 1, 'total' => 3])
+        ->and($today->first()['date'])->toBe('2026-10-29');
+
+    // Midnight passes, new errors are logged on the new day.
+    CarbonImmutable::setTestNow('2026-11-05 00:10:00');
+    Cache::flush();
+    file_put_contents($this->dir.'/laravel.log',
+        logLine('2026-11-05 00:05:00', 'CRITICAL', 'c'),
+        FILE_APPEND);
+
+    $days = collect(app(ErrorLogService::class)->recent()['daily'])->keyBy('date');
+
+    expect($days)->toHaveCount(7)
+        ->and($days->has('2026-10-29'))->toBeFalse()
+        ->and($days['2026-11-04'])->toMatchArray(['error' => 2, 'warning' => 1, 'critical' => 0, 'total' => 3])
+        ->and($days['2026-11-05'])->toMatchArray(['error' => 0, 'warning' => 0, 'critical' => 1, 'total' => 1])
+        ->and(collect(app(ErrorLogService::class)->recent()['daily'])->last()['date'])->toBe('2026-11-05');
+
+    CarbonImmutable::setTestNow();
+});
+
+test('an error logged just before and just after midnight lands on two different days', function () {
+    CarbonImmutable::setTestNow('2026-11-05 00:30:00');
+    file_put_contents($this->dir.'/laravel.log',
+        logLine('2026-11-04 23:59:59', 'ERROR', 'late')
+        .logLine('2026-11-05 00:00:00', 'ERROR', 'early'));
+
+    $days = collect(app(ErrorLogService::class)->recent()['daily'])->keyBy('date');
+
+    expect($days['2026-11-04']['error'])->toBe(1)
+        ->and($days['2026-11-05']['error'])->toBe(1);
+
+    CarbonImmutable::setTestNow();
+});
