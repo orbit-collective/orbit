@@ -33,6 +33,13 @@ class EnforceSessionLifetime
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
+            // Echo's channel authorisation wants a status code: a redirect
+            // would be followed to the login page and handed to Echo as if it
+            // were a successful answer.
+            if ($request->is('broadcasting/auth')) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
             return redirect()->route('login')
                 ->with('warning', 'You have been signed out due to inactivity.');
         }
