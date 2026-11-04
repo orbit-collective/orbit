@@ -90,9 +90,9 @@ describe('BarChartCard', () => {
     test('describes the chart for assistive technology', () => {
         render(<BarChartCard title="Uptime" icon="Activity" items={items} />);
 
-        expect(screen.getByRole('img')).toHaveAccessibleName(
-            'Uptime: app 2, queue 8h, redis 5',
-        );
+        expect(
+            screen.getByRole('group', { name: /Uptime/ }),
+        ).toHaveAccessibleName('Uptime: app 2, queue 8h, redis 5');
     });
 
     test('collapses to its header, keeping a summary, and toggles on click', async () => {

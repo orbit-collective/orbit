@@ -1,8 +1,15 @@
 import { render, screen } from '@testing-library/react';
+import { describe, expect, test } from 'vitest';
 import BarPlot from './BarPlot';
 
 const bars = [
-    { key: 'a', label: 'To do', heightPercent: 25, caption: '25%' },
+    {
+        key: 'a',
+        label: 'To do',
+        heightPercent: 25,
+        caption: '25%',
+        tooltip: '181 issues',
+    },
     { key: 'b', label: 'Done', heightPercent: 140, tooltip: '74 of 100' },
     { key: 'c', label: 'Empty', heightPercent: 0 },
 ];
@@ -29,47 +36,79 @@ describe('BarPlot', () => {
         expect(screen.getAllByTestId('bar')).toHaveLength(3);
         expect(screen.getByText('To do')).toBeInTheDocument();
         expect(screen.getByText('50%')).toBeInTheDocument();
-        expect(screen.getByRole('img')).toHaveAccessibleName(
+        expect(screen.getByRole('group')).toHaveAccessibleName(
             'Plot description',
         );
     });
 
-    test('clamps heights into 0-100 and gives non-empty bars a minimum', () => {
+    test('clamps heights into 0-100', () => {
         renderPlot();
 
-        const [first, second, third] = screen.getAllByTestId('bar');
-        expect(first.style.height).toBe('25%');
-        expect(second.style.height).toBe('100%');
-        expect(third.style.height).toBe('0%');
-        expect(first.style.minHeight).toBe('0.75rem');
-        expect(third.style.minHeight).toBe('0px');
+        expect(
+            screen
+                .getAllByTestId('bar')
+                .map((bar) => bar.dataset.heightPercent),
+        ).toEqual(['25', '100', '0']);
+    });
+
+    test('non-empty bars keep a minimum height so a tiny share stays visible', () => {
+        renderPlot();
+
+        const [first, , third] = screen.getAllByTestId('bar');
+        const motionBox = (bar: HTMLElement) =>
+            bar.parentElement?.parentElement as HTMLElement;
+
+        expect(motionBox(first).style.minHeight).toBe('0.75rem');
+        expect(motionBox(third).style.minHeight).toBe('0px');
+    });
+
+    test('every bar is a labelled image the keyboard can reach', () => {
+        renderPlot();
+
+        const first = screen.getByRole('img', { name: 'To do: 181 issues' });
+        expect(first).toHaveAttribute('tabindex', '0');
+        expect(
+            screen.getByRole('img', { name: 'Done: 74 of 100' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole('img', { name: 'Empty: 0%' }),
+        ).toBeInTheDocument();
+    });
+
+    test('hover and focus tooltips come from the Badge, opening upwards', () => {
+        renderPlot();
+
+        const tip = screen.getByText('181 issues');
+        expect(tip.className).toContain('bottom-[calc(100%+6px)]');
+        expect(tip.className).toContain('group-focus-within:opacity-100');
+        expect(tip).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    test('a bar without a tooltip has no tooltip element', () => {
+        renderPlot();
+
+        expect(
+            screen
+                .getByRole('img', { name: 'Empty: 0%' })
+                .parentElement?.querySelectorAll('[aria-hidden="true"]'),
+        ).toHaveLength(0);
     });
 
     test('highlights one bar and puts the dot on it', () => {
         renderPlot({ highlightKey: 'b' });
 
         expect(
-            screen
-                .getAllByTestId('bar')
-                .map((bar) => (bar as HTMLElement).dataset.highlighted),
+            screen.getAllByTestId('bar').map((bar) => bar.dataset.highlighted),
         ).toEqual(['false', 'true', 'false']);
-        expect(
-            screen.getAllByTestId('bar')[1].querySelectorAll('span'),
-        ).toHaveLength(1);
         expect(screen.getAllByTestId('highlight-dot')).toHaveLength(1);
     });
 
-    test('shows captions and hover tooltips', () => {
+    test('shows captions under the x labels', () => {
         renderPlot();
 
         expect(
-            screen.getByText('25%', { selector: 'span.absolute' }),
+            screen.getByText('25%', { selector: 'span.block' }),
         ).toBeInTheDocument();
-        expect(screen.getAllByText('74 of 100').length).toBeGreaterThan(0);
-        expect(screen.getAllByTestId('bar')[1]).toHaveAttribute(
-            'title',
-            '74 of 100',
-        );
     });
 
     test('draws the marker line with its tag only when asked', () => {
@@ -85,7 +124,10 @@ describe('BarPlot', () => {
             />,
         );
 
-        expect(screen.getByTestId('marker-line').style.bottom).toBe('60%');
+        expect(screen.getByTestId('marker-line')).toHaveAttribute(
+            'data-percent',
+            '60',
+        );
         expect(screen.getByText('Avg 60%')).toBeInTheDocument();
     });
 
@@ -99,7 +141,15 @@ describe('BarPlot', () => {
         renderPlot();
 
         screen.getAllByTestId('bar').forEach((bar) => {
-            expect(bar).toHaveClass('rounded-t-full', 'rounded-b-none');
+            expect(bar).toHaveClass('rounded-t-full', 'rounded-none');
         });
+    });
+
+    test('bars carry the shared keyboard focus ring', () => {
+        renderPlot();
+
+        expect(screen.getAllByTestId('bar')[0].className).toContain(
+            'focus-visible:ring-2',
+        );
     });
 });

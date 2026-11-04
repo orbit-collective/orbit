@@ -34,8 +34,8 @@ describe('PercentBarsCard', () => {
 
         const heights = screen
             .getAllByTestId('percent-bar')
-            .map((bar) => (bar as HTMLElement).style.height);
-        expect(heights).toEqual(['20%', '69%', '11%']);
+            .map((bar) => (bar as HTMLElement).dataset.heightPercent);
+        expect(heights).toEqual(['20', '69', '11']);
     });
 
     test('highlights the largest bar by default', () => {
@@ -64,8 +64,9 @@ describe('PercentBarsCard', () => {
         });
 
         expect(
-            (screen.getByTestId('percent-bar') as HTMLElement).style.height,
-        ).toBe('100%');
+            (screen.getByTestId('percent-bar') as HTMLElement).dataset
+                .heightPercent,
+        ).toBe('100');
     });
 
     test('renders trend, footnote and a chart description', () => {
@@ -78,7 +79,9 @@ describe('PercentBarsCard', () => {
         expect(
             screen.getByText('Most issues are in progress'),
         ).toBeInTheDocument();
-        expect(screen.getByRole('img')).toHaveAccessibleName(
+        expect(
+            screen.getByRole('group', { name: /Issues by status/ }),
+        ).toHaveAccessibleName(
             'Issues by status: To do 20%, In progress 69%, Done 11%',
         );
     });
@@ -87,7 +90,10 @@ describe('PercentBarsCard', () => {
         renderCard({ summary: <span>Open: 89</span> });
 
         expect(screen.getByText('Open: 89')).toBeInTheDocument();
-        expect(screen.getByTestId('marker-line').style.bottom).toBe('69%');
+        expect(screen.getByTestId('marker-line')).toHaveAttribute(
+            'data-percent',
+            '69',
+        );
     });
 
     test('draws no marker when everything is zero', () => {

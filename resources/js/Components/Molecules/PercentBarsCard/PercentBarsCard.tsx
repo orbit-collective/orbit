@@ -87,6 +87,7 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
                         label: bar.label,
                         heightPercent: bar.percent,
                         caption: `${bar.percent}%`,
+                        tooltip: bar.tooltip ?? `${bar.label}: ${bar.percent}%`,
                     }))}
                 />
 

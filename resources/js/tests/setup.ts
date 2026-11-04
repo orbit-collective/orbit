@@ -1,6 +1,11 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
+import { MotionGlobalConfig } from 'framer-motion';
 import { afterEach, vi } from 'vitest';
+
+// Animations jump straight to their end state under test, so assertions never
+// race a transition (components that must be tested mid-flight can opt back in).
+MotionGlobalConfig.skipAnimations = true;
 
 // jsdom's `window.performance` has no `getEntriesByType` inside the VM
 // context that `pool: 'vmThreads'` uses, and some dependencies call it while
