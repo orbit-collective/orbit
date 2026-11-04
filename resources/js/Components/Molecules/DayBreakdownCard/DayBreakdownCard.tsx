@@ -23,7 +23,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
     return (
         <section
             className={cn(
-                'rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-5',
+                'rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4 sm:p-5',
                 className,
             )}
         >
@@ -55,7 +55,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                     <div
                         role="tablist"
                         aria-label={`${title} days`}
-                        className="mt-4 flex justify-between gap-1.5"
+                        className="mt-5 flex justify-between gap-1 sm:gap-2"
                     >
                         {days.map((day) => {
                             const active = day.key === selected.key;
@@ -71,13 +71,13 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                     aria-selected={active}
                                     onClick={() => setSelectedKey(day.key)}
                                     className={cn(
-                                        'flex min-w-0 flex-1 flex-col items-center gap-1 rounded-full border border-solid px-1 py-2.5 text-[11px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)]',
+                                        'flex h-[5.25rem] min-w-0 max-w-[3.25rem] flex-1 flex-col items-center justify-center gap-1.5 rounded-full border-0 px-0.5 text-[11px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)]',
                                         active
-                                            ? 'border-[var(--accent-color)] bg-[var(--accent-color)] text-white'
-                                            : 'border-[var(--border-color)] bg-[var(--bg-light-color)]/40 text-[var(--text-gray-color)] hover:border-[var(--border-color-strong)]',
+                                            ? 'bg-[var(--accent-color)] text-white'
+                                            : 'bg-[var(--bg-light-color)]/60 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)]',
                                     )}
                                 >
-                                    <span className="uppercase opacity-80">
+                                    <span className="text-[10px] uppercase opacity-70">
                                         {day.label.slice(0, 2)}
                                     </span>
                                     <span className="text-sm font-semibold">
@@ -99,24 +99,22 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                         })}
                     </div>
 
-                    <ul className="mt-4 space-y-2.5">
+                    <ul className="mt-5 divide-y divide-[var(--border-color)] rounded-xl border border-[var(--border-color)]">
                         {selected.rows.map((row) => (
                             <li
                                 key={row.key}
-                                className="flex items-center gap-3 text-sm"
+                                className="flex items-center gap-3 px-3.5 py-2.5 text-sm"
                             >
                                 <span
                                     aria-hidden="true"
                                     className="h-2.5 w-2.5 shrink-0 rounded-full"
                                     style={{ backgroundColor: row.color }}
                                 />
-                                <span className="min-w-0 flex-1 truncate text-[var(--text-color)]">
-                                    <strong className="font-semibold">
+                                <span className="min-w-0 flex-1 truncate text-[var(--text-gray-color)]">
+                                    <strong className="mr-1 font-semibold text-[var(--text-color)]">
                                         {row.value}
-                                    </strong>{' '}
-                                    <span className="text-[var(--text-gray-color)]">
-                                        {row.label}
-                                    </span>
+                                    </strong>
+                                    {row.label}
                                 </span>
                                 {row.delta !== undefined && (
                                     <TrendBadge
