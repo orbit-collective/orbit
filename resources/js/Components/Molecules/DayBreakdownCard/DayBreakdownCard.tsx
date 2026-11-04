@@ -113,72 +113,76 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                         </div>
 
                         <LayoutGroup id={bodyId}>
-                            {/* Pills keep a readable width: when the card is too narrow for all of them they scroll sideways and snap. Padding leaves room for the focus ring. */}
+                            {/* Pills have a fixed width and sit together in the middle; when the card is too narrow for all of them the row scrolls from the start and snaps. Padding leaves room for the focus ring. */}
                             <div
-                                role="tablist"
-                                aria-label={`${title} days`}
                                 data-testid="day-scroller"
-                                className="no-scrollbar -mx-1 mt-4 flex snap-x snap-mandatory justify-between gap-1 overflow-x-auto p-1 sm:gap-2"
+                                className="no-scrollbar -mx-1 mt-4 snap-x snap-mandatory overflow-x-auto p-1"
                             >
-                                {days.map((day, index) => {
-                                    const active = day.key === selected.key;
-                                    const hasData = day.rows.some(
-                                        (row) => row.value > 0,
-                                    );
+                                <div
+                                    role="tablist"
+                                    aria-label={`${title} days`}
+                                    className="mx-auto flex w-max gap-2"
+                                >
+                                    {days.map((day, index) => {
+                                        const active = day.key === selected.key;
+                                        const hasData = day.rows.some(
+                                            (row) => row.value > 0,
+                                        );
 
-                                    return (
-                                        <button
-                                            key={day.key}
-                                            ref={(el) => {
-                                                tabs.current[day.key] = el;
-                                            }}
-                                            id={`${bodyId}-tab-${day.key}`}
-                                            type="button"
-                                            role="tab"
-                                            aria-selected={active}
-                                            aria-controls={`${bodyId}-panel`}
-                                            onClick={() =>
-                                                setSelectedKey(day.key)
-                                            }
-                                            onKeyDown={(event) =>
-                                                onKeyDown(event, index)
-                                            }
-                                            className={cn(
-                                                'relative flex h-[5.25rem] min-w-[2.75rem] max-w-[3.25rem] flex-1 shrink-0 cursor-pointer snap-center flex-col items-center justify-center gap-1.5 rounded-full border-0 px-0.5 text-[11px] transition-colors duration-200',
-                                                FOCUS_RING,
-                                                active
-                                                    ? 'text-white'
-                                                    : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]',
-                                            )}
-                                        >
-                                            {active && (
-                                                <motion.span
-                                                    layoutId="day-indicator"
-                                                    transition={SPRING}
-                                                    aria-hidden="true"
-                                                    className="absolute inset-0 rounded-full bg-[var(--accent-color)]"
-                                                />
-                                            )}
-                                            <span className="relative text-[10px] uppercase opacity-70">
-                                                {day.label.slice(0, 2)}
-                                            </span>
-                                            <span className="relative text-sm font-semibold">
-                                                {day.dayNumber}
-                                            </span>
-                                            <span
-                                                aria-hidden="true"
+                                        return (
+                                            <button
+                                                key={day.key}
+                                                ref={(el) => {
+                                                    tabs.current[day.key] = el;
+                                                }}
+                                                id={`${bodyId}-tab-${day.key}`}
+                                                type="button"
+                                                role="tab"
+                                                aria-selected={active}
+                                                aria-controls={`${bodyId}-panel`}
+                                                onClick={() =>
+                                                    setSelectedKey(day.key)
+                                                }
+                                                onKeyDown={(event) =>
+                                                    onKeyDown(event, index)
+                                                }
                                                 className={cn(
-                                                    'relative h-1 w-1 rounded-full transition-colors duration-200',
-                                                    hasData
-                                                        ? active
-                                                            ? 'bg-white'
-                                                            : 'bg-[var(--accent-color)]'
-                                                        : 'bg-transparent',
+                                                    'relative flex h-[5.25rem] w-12 shrink-0 cursor-pointer snap-center flex-col items-center justify-center gap-1.5 rounded-full border-0 px-0.5 text-[11px] transition-colors duration-200',
+                                                    FOCUS_RING,
+                                                    active
+                                                        ? 'text-white'
+                                                        : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]',
                                                 )}
-                                            />
-                                        </button>
-                                    );
-                                })}
+                                            >
+                                                {active && (
+                                                    <motion.span
+                                                        layoutId="day-indicator"
+                                                        transition={SPRING}
+                                                        aria-hidden="true"
+                                                        className="absolute inset-0 rounded-full bg-[var(--accent-color)]"
+                                                    />
+                                                )}
+                                                <span className="relative text-[10px] uppercase opacity-70">
+                                                    {day.label.slice(0, 2)}
+                                                </span>
+                                                <span className="relative text-sm font-semibold">
+                                                    {day.dayNumber}
+                                                </span>
+                                                <span
+                                                    aria-hidden="true"
+                                                    className={cn(
+                                                        'relative h-1 w-1 rounded-full transition-colors duration-200',
+                                                        hasData
+                                                            ? active
+                                                                ? 'bg-white'
+                                                                : 'bg-[var(--accent-color)]'
+                                                            : 'bg-transparent',
+                                                    )}
+                                                />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         </LayoutGroup>
 

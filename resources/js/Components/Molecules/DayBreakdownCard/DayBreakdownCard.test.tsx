@@ -173,11 +173,7 @@ describe('DayBreakdownCard', () => {
             'no-scrollbar',
         );
         screen.getAllByRole('tab').forEach((tab) => {
-            expect(tab).toHaveClass(
-                'snap-center',
-                'shrink-0',
-                'min-w-[2.75rem]',
-            );
+            expect(tab).toHaveClass('snap-center', 'shrink-0', 'w-12');
         });
     });
 
@@ -203,5 +199,13 @@ describe('DayBreakdownCard', () => {
         );
         delete (Element.prototype as { scrollIntoView?: unknown })
             .scrollIntoView;
+    });
+
+    test('the pills sit together in the middle with a small gap, not spread to the edges', () => {
+        renderCard();
+
+        const row = screen.getByRole('tablist');
+        expect(row).toHaveClass('mx-auto', 'w-max', 'gap-2');
+        expect(row.className).not.toContain('justify-between');
     });
 });
