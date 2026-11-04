@@ -1,8 +1,9 @@
 import { icons } from 'lucide-react';
-import React from 'react';
-import Icon from '@/Components/Atoms/Icon/Icon';
+import React, { useId } from 'react';
+import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
+import { CollapsibleProps } from '@/types/Components';
 
-interface SettingsPanelProps {
+interface SettingsPanelProps extends CollapsibleProps {
     title: string;
     description?: string;
     icon?: keyof typeof icons;
@@ -14,16 +15,34 @@ export default function SettingsPanel({
     description,
     icon,
     children,
+    collapsed = false,
+    onToggleCollapse,
+    collapsedSummary,
 }: SettingsPanelProps) {
+    const bodyId = useId();
+
     return (
         <section className="overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] backdrop-blur-sm">
-            <header className="flex items-start gap-3 border-b border-[var(--border-color)] px-5 py-4">
-                {icon && (
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
-                        <Icon name={icon} size={15} />
-                    </span>
-                )}
-                <div className="min-w-0">
+            {icon ? (
+                <header
+                    className={
+                        collapsed
+                            ? 'px-5 py-4'
+                            : 'border-b border-[var(--border-color)] px-5 py-4'
+                    }
+                >
+                    <CardHeader
+                        icon={icon}
+                        title={title}
+                        description={description}
+                        collapsed={collapsed}
+                        onToggleCollapse={onToggleCollapse}
+                        collapsedSummary={collapsedSummary}
+                        controls={bodyId}
+                    />
+                </header>
+            ) : (
+                <header className="border-b border-[var(--border-color)] px-5 py-4">
                     <h3 className="text-sm font-semibold text-[var(--text-color)]">
                         {title}
                     </h3>
@@ -32,9 +51,13 @@ export default function SettingsPanel({
                             {description}
                         </p>
                     )}
-                </div>
-            </header>
-            <div className="divide-y divide-[var(--border-color)]">
+                </header>
+            )}
+            <div
+                id={bodyId}
+                hidden={collapsed}
+                className="divide-y divide-[var(--border-color)]"
+            >
                 {children}
             </div>
         </section>

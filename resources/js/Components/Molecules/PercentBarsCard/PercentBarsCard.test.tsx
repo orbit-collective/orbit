@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import PercentBarsCard from './PercentBarsCard';
 
 const bars = [
@@ -95,5 +96,23 @@ describe('PercentBarsCard', () => {
         });
 
         expect(screen.queryByTestId('marker-line')).not.toBeInTheDocument();
+    });
+
+    test('can be collapsed from its header', () => {
+        const toggle = vi.fn();
+        renderCard({
+            collapsed: true,
+            onToggleCollapse: toggle,
+            collapsedSummary: '725 issues',
+        });
+
+        expect(screen.getByTestId('total')).not.toBeVisible();
+        expect(screen.getByTestId('collapsed-summary')).toHaveTextContent(
+            '725 issues',
+        );
+        fireEvent.click(
+            screen.getByRole('button', { name: /Issues by status/ }),
+        );
+        expect(toggle).toHaveBeenCalledTimes(1);
     });
 });

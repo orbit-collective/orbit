@@ -830,7 +830,7 @@ interface BarChartCardItem {
     valueLabel?: string;
 }
 
-export interface BarChartCardProps {
+export interface BarChartCardProps extends CollapsibleProps {
     title: string;
     icon: keyof typeof icons;
     items: BarChartCardItem[];
@@ -862,7 +862,7 @@ export interface DayBreakdownDay {
     rows: DayBreakdownRow[];
 }
 
-export interface DayBreakdownCardProps {
+export interface DayBreakdownCardProps extends CollapsibleProps {
     title: string;
     icon: keyof typeof icons;
     days: DayBreakdownDay[];
@@ -882,7 +882,7 @@ interface PercentBarsCardBar {
     percent: number;
 }
 
-export interface PercentBarsCardProps {
+export interface PercentBarsCardProps extends CollapsibleProps {
     title: string;
     icon: keyof typeof icons;
     /** The big number under the title. */
@@ -929,4 +929,21 @@ export interface BarPlotProps {
     /** Test id put on every bar. */
     barTestId?: string;
     className?: string;
+}
+
+/** Opt-in collapsing, controlled by the parent so it can remember and collapse all. */
+export interface CollapsibleProps {
+    collapsed?: boolean;
+    /** Providing this makes the header a toggle. */
+    onToggleCollapse?: () => void;
+    /** Shown in the header while collapsed, so a closed card still says something. */
+    collapsedSummary?: React.ReactNode;
+}
+
+export interface CardHeaderProps extends CollapsibleProps {
+    icon: keyof typeof icons;
+    title: string;
+    description?: string;
+    /** Id of the region the toggle controls. */
+    controls?: string;
 }

@@ -1,7 +1,7 @@
-import React from 'react';
-import Icon from '@/Components/Atoms/Icon/Icon';
+import React, { useId } from 'react';
 import TrendBadge from '@/Components/Atoms/TrendBadge/TrendBadge';
 import BarPlot from '@/Components/Molecules/BarPlot/BarPlot';
+import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
 import { PercentBarsCardProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
@@ -22,8 +22,12 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
     bars,
     highlightKey,
     footnote,
+    collapsed = false,
+    onToggleCollapse,
+    collapsedSummary,
     className,
 }) => {
+    const bodyId = useId();
     const largest = bars.reduce<(typeof bars)[number] | undefined>(
         (best, bar) => (bar.percent > (best?.percent ?? -1) ? bar : best),
         undefined,
@@ -37,58 +41,60 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
                 className,
             )}
         >
-            <header className="flex items-center gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
-                    <Icon name={icon} size={15} />
-                </span>
-                <h3 className="text-sm font-semibold text-[var(--text-color)]">
-                    {title}
-                </h3>
-            </header>
-
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-gray-color)]">
-                <span className="flex items-center gap-2">
-                    {totalLabel}:{' '}
-                    <strong
-                        data-testid="total"
-                        className="text-sm font-semibold text-[var(--text-color)]"
-                    >
-                        {total}
-                    </strong>
-                    {trend && <TrendBadge {...trend} />}
-                </span>
-                {summary}
-            </div>
-
-            <BarPlot
-                className="mt-6"
-                ariaLabel={`${title}: ${bars
-                    .map((bar) => `${bar.label} ${bar.percent}%`)
-                    .join(', ')}`}
-                barTestId="percent-bar"
-                ticks={TICKS}
-                highlightKey={highlighted?.key}
-                marker={
-                    highlighted && highlighted.percent > 0
-                        ? {
-                              percent: clamp(highlighted.percent),
-                              label: `${highlighted.percent}%`,
-                          }
-                        : undefined
-                }
-                bars={bars.map((bar) => ({
-                    key: bar.key,
-                    label: bar.label,
-                    heightPercent: bar.percent,
-                    caption: `${bar.percent}%`,
-                }))}
+            <CardHeader
+                icon={icon}
+                title={title}
+                collapsed={collapsed}
+                onToggleCollapse={onToggleCollapse}
+                collapsedSummary={collapsedSummary}
+                controls={bodyId}
             />
 
-            {footnote && (
-                <p className="mt-5 text-center text-xs text-[var(--accent-color)]">
-                    {footnote}
-                </p>
-            )}
+            <div id={bodyId} hidden={collapsed}>
+                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-gray-color)]">
+                    <span className="flex items-center gap-2">
+                        {totalLabel}:{' '}
+                        <strong
+                            data-testid="total"
+                            className="text-sm font-semibold text-[var(--text-color)]"
+                        >
+                            {total}
+                        </strong>
+                        {trend && <TrendBadge {...trend} />}
+                    </span>
+                    {summary}
+                </div>
+
+                <BarPlot
+                    className="mt-6"
+                    ariaLabel={`${title}: ${bars
+                        .map((bar) => `${bar.label} ${bar.percent}%`)
+                        .join(', ')}`}
+                    barTestId="percent-bar"
+                    ticks={TICKS}
+                    highlightKey={highlighted?.key}
+                    marker={
+                        highlighted && highlighted.percent > 0
+                            ? {
+                                  percent: clamp(highlighted.percent),
+                                  label: `${highlighted.percent}%`,
+                              }
+                            : undefined
+                    }
+                    bars={bars.map((bar) => ({
+                        key: bar.key,
+                        label: bar.label,
+                        heightPercent: bar.percent,
+                        caption: `${bar.percent}%`,
+                    }))}
+                />
+
+                {footnote && (
+                    <p className="mt-5 text-center text-xs text-[var(--accent-color)]">
+                        {footnote}
+                    </p>
+                )}
+            </div>
         </section>
     );
 };

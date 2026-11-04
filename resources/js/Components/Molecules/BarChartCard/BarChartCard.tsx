@@ -1,6 +1,6 @@
-import React from 'react';
-import Icon from '@/Components/Atoms/Icon/Icon';
+import React, { useId } from 'react';
 import BarPlot from '@/Components/Molecules/BarPlot/BarPlot';
+import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
 import { BarChartCardProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
@@ -22,8 +22,12 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
     formatValue = (value) => String(Math.round(value)),
     summary,
     emptyText = 'Nothing to chart yet.',
+    collapsed = false,
+    onToggleCollapse,
+    collapsedSummary,
     className,
 }) => {
+    const bodyId = useId();
     const max = niceMax(Math.max(0, ...items.map((item) => item.value)));
     const average =
         items.length > 0
@@ -46,48 +50,50 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
                 className,
             )}
         >
-            <header className="flex items-center gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
-                    <Icon name={icon} size={15} />
-                </span>
-                <h3 className="text-sm font-semibold text-[var(--text-color)]">
-                    {title}
-                </h3>
-            </header>
+            <CardHeader
+                icon={icon}
+                title={title}
+                collapsed={collapsed}
+                onToggleCollapse={onToggleCollapse}
+                collapsedSummary={collapsedSummary}
+                controls={bodyId}
+            />
 
-            {summary && (
-                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-gray-color)]">
-                    {summary}
-                </div>
-            )}
+            <div id={bodyId} hidden={collapsed}>
+                {summary && (
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-gray-color)]">
+                        {summary}
+                    </div>
+                )}
 
-            {items.length === 0 ? (
-                <p className="py-10 text-center text-sm text-[var(--text-gray-color)]">
-                    {emptyText}
-                </p>
-            ) : (
-                <BarPlot
-                    className="mt-6"
-                    ariaLabel={`${title}: ${items
-                        .map(
-                            (item) =>
-                                `${item.label} ${item.valueLabel ?? formatValue(item.value)}`,
-                        )
-                        .join(', ')}`}
-                    ticks={ticks}
-                    highlightKey={items[highlighted]?.key}
-                    marker={{
-                        percent: (average / max) * 100,
-                        label: `Avg ${formatValue(average)}`,
-                    }}
-                    bars={items.map((item) => ({
-                        key: item.key,
-                        label: item.label,
-                        heightPercent: (item.value / max) * 100,
-                        tooltip: item.valueLabel ?? formatValue(item.value),
-                    }))}
-                />
-            )}
+                {items.length === 0 ? (
+                    <p className="py-10 text-center text-sm text-[var(--text-gray-color)]">
+                        {emptyText}
+                    </p>
+                ) : (
+                    <BarPlot
+                        className="mt-6"
+                        ariaLabel={`${title}: ${items
+                            .map(
+                                (item) =>
+                                    `${item.label} ${item.valueLabel ?? formatValue(item.value)}`,
+                            )
+                            .join(', ')}`}
+                        ticks={ticks}
+                        highlightKey={items[highlighted]?.key}
+                        marker={{
+                            percent: (average / max) * 100,
+                            label: `Avg ${formatValue(average)}`,
+                        }}
+                        bars={items.map((item) => ({
+                            key: item.key,
+                            label: item.label,
+                            heightPercent: (item.value / max) * 100,
+                            tooltip: item.valueLabel ?? formatValue(item.value),
+                        }))}
+                    />
+                )}
+            </div>
         </section>
     );
 };
