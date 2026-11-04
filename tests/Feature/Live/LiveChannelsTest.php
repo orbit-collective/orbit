@@ -1,6 +1,7 @@
 <?php
 
 use App\Broadcasting\LiveChannels;
+use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
 use App\Support\Cache\CacheVersion;
@@ -98,4 +99,27 @@ test('an idle-expired session gets a JSON 401 from channel authorisation, not th
 
     $response->assertUnauthorized()->assertJson(['message' => 'Unauthenticated.']);
     test()->assertGuest();
+});
+
+test('an issue presence channel shows the member card to those who can view its project', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create(['name' => 'Ada']);
+    $stranger = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
+
+    $response = test()->actingAs($member)->postJson('/broadcasting/auth', [
+        'socket_id' => '1234.5678',
+        'channel_name' => 'presence-'.LiveChannels::issue($issue->id),
+    ])->assertOk();
+
+    expect(json_decode($response->json('channel_data'), true)['user_info'])
+        ->toBe(['id' => $member->id, 'name' => 'Ada', 'avatar' => $member->avatar]);
+
+    test()->actingAs($stranger)->postJson('/broadcasting/auth', [
+        'socket_id' => '1234.5678',
+        'channel_name' => 'presence-'.LiveChannels::issue($issue->id),
+    ])->assertForbidden();
+
+    expect(LiveChannels::joinIssue($member, 999_999))->toBeFalse();
 });
