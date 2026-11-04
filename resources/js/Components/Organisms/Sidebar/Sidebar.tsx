@@ -35,6 +35,7 @@ const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed';
 const SETTINGS_NAV_SECTIONS = [
     { title: 'Account', section: 'account' as const },
     { title: 'Workspace', section: 'workspace' as const },
+    { title: 'Developer', section: 'developer' as const },
 ];
 
 const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
