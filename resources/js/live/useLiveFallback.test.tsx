@@ -123,6 +123,36 @@ describe('useLiveFallback', () => {
         expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
     });
 
+    test('an unstable connection flipping faster than the interval still polls', () => {
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+        mocks.status = 'offline';
+        const { rerender } = renderHook(() => useLiveFallback(reloads));
+
+        // offline <-> connecting every 10 s, the poll is due after 30 s.
+        for (let second = 10; second <= 30; second += 10) {
+            vi.advanceTimersByTime(10_000);
+            mocks.status =
+                mocks.status === 'offline' ? 'connecting' : 'offline';
+            rerender();
+        }
+
+        expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
+        vi.restoreAllMocks();
+    });
+
+    test('keeps polling while a connection that went down keeps retrying', () => {
+        vi.spyOn(Math, 'random').mockReturnValue(0);
+        mocks.status = 'live';
+        const { rerender } = renderHook(() => useLiveFallback(reloads));
+        mocks.status = 'connecting';
+        rerender();
+
+        vi.advanceTimersByTime(30_000);
+
+        expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
+        vi.restoreAllMocks();
+    });
+
     test('a first connection needs no catch-up', () => {
         mocks.status = 'connecting';
         const { rerender } = renderHook(() => useLiveFallback(reloads));
