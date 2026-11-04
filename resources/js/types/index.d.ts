@@ -28,4 +28,6 @@ export type PageProps<
     live: LiveConfig;
     hasProjects: boolean;
     emailEnabled: boolean;
+    /** Settings → Developer Portal exists and the user may open it (APP_ENV=local + `developer.portal.view`). */
+    developerPortalEnabled?: boolean;
 };
