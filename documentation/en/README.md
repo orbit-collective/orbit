@@ -141,6 +141,13 @@ documentation/
       01-run-and-operate-redis.md
       02-cache-a-value-and-invalidate-it.md
       03-sessions-on-redis.md
+    live-updates/
+      README.md              <- index for this category
+      01-set-up-reverb.md
+      02-announce-a-change.md
+      03-react-to-a-change-in-the-ui.md
+      04-presence-and-edit-hints.md
+      05-fallback-and-troubleshooting.md
   pl/
     README.md                <- Polish translation of this file
     integrations/            <- Polish translation of every guide above
@@ -156,6 +163,7 @@ documentation/
     command-palette/         <- Polish translation of every guide above
     storybook/               <- Polish translation of every guide above
     redis/                   <- Polish translation of every guide above
+    live-updates/            <- Polish translation of every guide above
     content-moderation/      <- Polish translation of every guide above
     project-invitations/     <- Polish translation of every guide above
     activity-log/            <- Polish translation of every guide above
