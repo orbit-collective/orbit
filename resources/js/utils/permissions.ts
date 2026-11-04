@@ -183,7 +183,7 @@ const PERMISSION_META: Record<string, PermissionMeta> = {
     'developer.portal.view': {
         label: 'View developer portal',
         description:
-            'Open Settings → Developer Portal: containers, errors, users and projects of the whole instance. Only available in local development.',
+            'See Developer Portal data. Only available in local development.',
     },
 };
 

@@ -51,7 +51,7 @@ export default function DeveloperPortalTab({
         <div className="space-y-6">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <StatCard
-                    variant="vivid"
+                    variant="glass"
                     title="Users"
                     value={totals.users}
                     icon="Users"
@@ -67,14 +67,14 @@ export default function DeveloperPortalTab({
                     }
                 />
                 <StatCard
-                    variant="vivid"
+                    variant="glass"
                     title="Projects"
                     value={totals.projects}
                     icon="FolderGit2"
                     color="accent"
                 />
                 <StatCard
-                    variant="vivid"
+                    variant="glass"
                     title="Issues"
                     value={totals.issues}
                     icon="CircleDot"
@@ -90,7 +90,7 @@ export default function DeveloperPortalTab({
                     }
                 />
                 <StatCard
-                    variant="vivid"
+                    variant="glass"
                     title="Comments"
                     value={totals.comments}
                     icon="MessageSquare"
