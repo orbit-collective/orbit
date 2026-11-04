@@ -120,6 +120,28 @@ export default function DeveloperPortalTab({
                         percent: percent(done, totals.issues),
                     },
                 ]}
+                summary={
+                    <>
+                        <span>
+                            To do:{' '}
+                            <strong className="text-[var(--text-color)]">
+                                {todo}
+                            </strong>
+                        </span>
+                        <span>
+                            In progress:{' '}
+                            <strong className="text-[var(--text-color)]">
+                                {in_progress}
+                            </strong>
+                        </span>
+                        <span>
+                            Done:{' '}
+                            <strong className="text-[var(--text-color)]">
+                                {done}
+                            </strong>
+                        </span>
+                    </>
+                }
                 footnote={
                     totals.issues > 0
                         ? `${percent(done, totals.issues)}% of all issues are done.`

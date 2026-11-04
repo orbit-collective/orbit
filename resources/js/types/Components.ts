@@ -889,10 +889,44 @@ export interface PercentBarsCardProps {
     total: string;
     totalLabel: string;
     trend?: ChartTrend;
+    /** More inline figures next to the total, e.g. per-status counts. */
+    summary?: React.ReactNode;
     bars: PercentBarsCardBar[];
     /** Key of the highlighted bar; defaults to the largest. */
     highlightKey?: string;
     /** Sentence under the chart. */
     footnote?: React.ReactNode;
+    className?: string;
+}
+
+export interface BarPlotBar {
+    key: string;
+    /** X-axis label under the bar. */
+    label: string;
+    /** Bar height, 0-100 (percent of the plot). */
+    heightPercent: number;
+    /** Shown on hover (and as the native title). */
+    tooltip?: string;
+    /** Always visible above the bar. */
+    caption?: string;
+}
+
+export interface BarPlotTick {
+    /** Position, 0-100 (percent of the plot height). */
+    percent: number;
+    label: string;
+}
+
+export interface BarPlotProps {
+    bars: BarPlotBar[];
+    ticks: BarPlotTick[];
+    /** Key of the accent-coloured bar, which also gets the dot on top. */
+    highlightKey?: string;
+    /** A dashed line across the plot with a dark tag over the axis. */
+    marker?: { percent: number; label: string };
+    /** Accessible description of the whole plot. */
+    ariaLabel: string;
+    /** Test id put on every bar. */
+    barTestId?: string;
     className?: string;
 }
