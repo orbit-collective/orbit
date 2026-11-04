@@ -51,7 +51,7 @@ export default function PortalProjectsPanel({
                 />
                 <ul
                     aria-label="Issue counts legend"
-                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-muted-color)]"
+                    className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-muted-color)] md:flex"
                 >
                     {CATEGORIES.map(({ key, label }) => (
                         <li key={key} className="flex items-center gap-1.5">
@@ -73,30 +73,36 @@ export default function PortalProjectsPanel({
                         initial="hidden"
                         animate="show"
                         transition={{ delay: rowDelay(index) }}
-                        className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                        className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:items-center md:gap-3"
                     >
-                        <StatusDot
-                            color={project.color ?? 'var(--text-muted-color)'}
-                            size="md"
-                        />
-                        <div className="min-w-0 flex-1">
-                            <Link
-                                href={`/projects/${project.id}`}
-                                className={cn(
-                                    'block truncate rounded text-sm font-medium text-[var(--text-color)] no-underline transition-colors duration-200 hover:text-[var(--accent-color)]',
-                                    FOCUS_RING,
-                                )}
-                            >
-                                {project.name}
-                            </Link>
-                            <p className="truncate text-xs text-[var(--text-gray-color)]">
-                                {project.slug} · {project.membersCount}{' '}
-                                {project.membersCount === 1
-                                    ? 'member'
-                                    : 'members'}
-                            </p>
+                        <div className="flex min-w-0 items-center gap-3 md:flex-1">
+                            <StatusDot
+                                color={
+                                    project.color ?? 'var(--text-muted-color)'
+                                }
+                                size="md"
+                                className="shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                                <Link
+                                    href={`/projects/${project.id}`}
+                                    className={cn(
+                                        'block truncate rounded text-sm font-medium text-[var(--text-color)] no-underline transition-colors duration-200 hover:text-[var(--accent-color)]',
+                                        FOCUS_RING,
+                                    )}
+                                >
+                                    {project.name}
+                                </Link>
+                                <p className="truncate text-xs text-[var(--text-gray-color)]">
+                                    {project.slug} · {project.membersCount}{' '}
+                                    {project.membersCount === 1
+                                        ? 'member'
+                                        : 'members'}
+                                </p>
+                            </div>
                         </div>
-                        <ul className="flex shrink-0 items-center gap-2.5 text-xs tabular-nums text-[var(--text-gray-color)]">
+                        {/* Narrow: its own line under the name, with the words. Wide: compact, on the right. */}
+                        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-[1.375rem] text-xs tabular-nums text-[var(--text-gray-color)] md:shrink-0 md:flex-nowrap md:gap-x-2.5 md:pl-0">
                             {CATEGORIES.map(({ key, label }) => (
                                 <li
                                     key={key}
@@ -106,6 +112,7 @@ export default function PortalProjectsPanel({
                                 >
                                     <StatusDot status={key} size="xs" />
                                     {project.issues[key]}
+                                    <span className="md:hidden">{label}</span>
                                 </li>
                             ))}
                         </ul>

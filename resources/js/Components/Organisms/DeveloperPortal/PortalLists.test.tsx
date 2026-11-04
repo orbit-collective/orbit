@@ -215,4 +215,40 @@ describe('PortalProjectsPanel', () => {
         });
         expect(options).toMatchObject({ only: ['portalProjects'] });
     });
+
+    test('on a narrow panel a row stacks: counts get their own line with words, the legend is hidden', () => {
+        render(
+            <PortalProjectsPanel
+                projects={paginated(portalProjects, 4)}
+                queryParams={{}}
+            />,
+        );
+
+        const counts = screen.getByLabelText('4 to do').parentElement!;
+        expect(counts.className).toContain('flex-wrap');
+        expect(counts.className).toContain('md:flex-nowrap');
+        expect(
+            screen.getByLabelText('4 to do').querySelector('.md\\:hidden'),
+        ).toHaveTextContent('to do');
+        expect(
+            screen.getByLabelText('Issue counts legend').className,
+        ).toContain('hidden');
+        expect(
+            screen.getByLabelText('Issue counts legend').className,
+        ).toContain('md:flex');
+    });
+
+    test('a long name or slug truncates and never pushes the counts out', () => {
+        render(
+            <PortalProjectsPanel
+                projects={paginated(portalProjects, 4)}
+                queryParams={{}}
+            />,
+        );
+
+        const link = screen.getByRole('link', { name: 'Orbit' });
+        expect(link).toHaveClass('truncate');
+        expect(link.parentElement).toHaveClass('min-w-0');
+        expect(screen.getByText('orbit · 3 members')).toHaveClass('truncate');
+    });
 });
