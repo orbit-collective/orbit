@@ -82,3 +82,13 @@ test('a member without the permission cannot read any portal data', function () 
 
     $this->actingAs($member)->get('/settings/dev-portal')->assertForbidden();
 });
+
+test('a pager link keeps the other list on its page', function () {
+    User::factory()->count(12)->create();
+    Project::factory()->count(12)->create();
+
+    $this->actingAs($this->user)->get('/settings/dev-portal?users_perPage=5&projects_page=2&projects_perPage=5')
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('portalUsers.links.2.url', fn ($url) => str_contains($url, 'projects_page=2') && str_contains($url, 'users_page=2'))
+        );
+});
