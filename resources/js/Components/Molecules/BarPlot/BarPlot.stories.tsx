@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 import BarPlot from './BarPlot';
 
 const meta = {
@@ -46,7 +46,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
     play: async ({ canvasElement }) => {
-        await expect(within(canvasElement).getByText('Max 80%')).toBeVisible();
+        await waitFor(() =>
+            expect(within(canvasElement).getByText('Max 80%')).toBeVisible(),
+        );
     },
 };
 

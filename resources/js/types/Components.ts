@@ -884,6 +884,8 @@ interface PercentBarsCardBar {
     label: string;
     /** Share of the whole, 0-100. */
     percent: number;
+    /** Hover/focus text; defaults to "label: percent%". */
+    tooltip?: string;
 }
 
 export interface PercentBarsCardProps extends CollapsibleProps {
@@ -911,7 +913,7 @@ export interface BarPlotBar {
     heightPercent: number;
     /** Shown on hover (and as the native title). */
     tooltip?: string;
-    /** Always visible above the bar. */
+    /** Always visible, under the x label. */
     caption?: string;
 }
 

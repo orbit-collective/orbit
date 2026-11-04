@@ -74,8 +74,8 @@ describe('DeveloperPortalTab', () => {
 
         const heights = screen
             .getAllByTestId('percent-bar')
-            .map((bar) => (bar as HTMLElement).style.height);
-        expect(heights).toEqual(['40%', '35%', '25%']);
+            .map((bar) => (bar as HTMLElement).dataset.heightPercent);
+        expect(heights).toEqual(['40', '35', '25']);
         expect(
             screen.getByText('25% of all issues are done.'),
         ).toBeInTheDocument();
@@ -93,8 +93,8 @@ describe('DeveloperPortalTab', () => {
         expect(
             screen
                 .getAllByTestId('percent-bar')
-                .map((bar) => (bar as HTMLElement).style.height),
-        ).toEqual(['0%', '0%', '0%']);
+                .map((bar) => (bar as HTMLElement).dataset.heightPercent),
+        ).toEqual(['0', '0', '0']);
         expect(
             screen.queryByText(/of all issues are done/),
         ).not.toBeInTheDocument();
