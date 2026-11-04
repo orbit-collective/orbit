@@ -36,9 +36,9 @@ prints a fresh trio. Nothing is written anywhere; paste it into Doppler (or
 
 ```dotenv
 BROADCAST_CONNECTION=reverb
-REVERB_APP_ID=268696
-REVERB_APP_KEY=a78920cb20354742cb7dfe8bbda3c499
-REVERB_APP_SECRET=a8f2d1da5822e2164e800f233ff56090
+REVERB_APP_ID=<generated id>
+REVERB_APP_KEY=<generated key>
+REVERB_APP_SECRET=<generated secret>
 ```
 
 The key is public (the browser receives it); the secret never leaves the server.

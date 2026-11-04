@@ -4,7 +4,7 @@ Zmiany innych osób i nowe powiadomienia pojawiają się na otwartych stronach b
 
 ## Architektura w jednym akapicie
 
-Zapis wywołuje `LiveUpdates` (bezpośrednio albo przez trait modelu `BroadcastsLiveChanges`). `LiveUpdates` zbiera i deduplikuje zmiany z jednego żądania lub zadania, a po jego zakończeniu wysyła jedno zdarzenie `ProjectChanged` na projekt (oraz `AccessChanged` / `NotificationsChanged` na użytkownika) w kolejce `live`. Reverb dostarcza je na **prywatne** kanały `project.{id}` i `user.{id}`. Zdarzenie niesie **tylko identyfikatory i rodzaje zmian, nigdy zawartości rekordów**. W przeglądarce `useLiveChannel` je odbiera, `changeProps.ts` zamienia je na propsy Inertia, które się zestarzały, a `requestLiveReload` pobiera ponownie tylko te propsy zwykłymi, autoryzowanymi trasami (łączone w jedno żądanie, wstrzymywane gdy karta jest ukryta albo przeciągana jest karta). Gdy gniazdo jest wyłączone lub nie działa, `useLiveFallback` robi to samo w interwałach. Obecność („kto ogląda zgłoszenie", „ktoś edytuje opis") korzysta z kanału presence i szeptów między klientami; wymaga gniazda i nie ma zamiennika.
+Zapis wywołuje `LiveUpdates` (bezpośrednio albo przez trait modelu `BroadcastsLiveChanges`). `LiveUpdates` zbiera i deduplikuje zmiany z jednego żądania lub zadania, a po jego zakończeniu wysyła jedno zdarzenie `ProjectChanged` na projekt (oraz `AccessChanged` / `NotificationsChanged` na użytkownika) w kolejce `live`. Reverb dostarcza je na **prywatne** kanały `project.{id}` i `user.{id}`. Zdarzenie niesie **tylko identyfikatory i rodzaje zmian, a nie zawartość rekordów**. W przeglądarce `useLiveChannel` je odbiera, `changeProps.ts` zamienia je na propsy Inertia, które się zestarzały, a `requestLiveReload` pobiera ponownie tylko te propsy zwykłymi, autoryzowanymi trasami (łączone w jedno żądanie, wstrzymywane, gdy karta jest ukryta albo przeciągana jest karta). Gdy gniazdo jest wyłączone lub nie działa, `useLiveFallback` robi to samo w interwałach. Obecność („kto ogląda zgłoszenie”, „ktoś edytuje opis”) korzysta z kanału presence i szeptów między klientami; wymaga gniazda i nie ma zamiennika.
 
 ## Przewodniki, w kolejności, w jakiej faktycznie będą potrzebne
 
@@ -21,7 +21,7 @@ Zapis wywołuje `LiveUpdates` (bezpośrednio albo przez trait modelu `Broadcasts
 | Dzwonek i popup powiadomień, powiadomienia przeglądarki | `notifications.changed` na `user.{id}` | `notifications`, `notificationUnreadCount` |
 | Uprawnienia użytkownika i lista projektów | `access.changed` na `user.{id}` | całą stronę |
 | Lista projektu, tablica, kalendarz, aktywność | `project.changed` na `project.{id}` | propsy widocznego widoku |
-| Strona zgłoszenia (pola, komentarze, aktywność) | `project.changed` | `issue`, `ancestors`, `linkedPullRequests`, aktywność gdy otwarta |
+| Strona zgłoszenia (pola, komentarze, aktywność) | `project.changed` | `issue`, `ancestors`, `linkedPullRequests`, aktywność, gdy otwarta |
 | Liczniki, trend i feed na dashboardzie | `project.changed` na każdym projekcie użytkownika | `issueStats`, `productivity_trend`, `projects`, `activityLogs` |
 | Ustawienia: członkowie, role, etykiety, priorytety, typy zgłoszeń | `project.changed` | całą stronę |
 | Kto ogląda zgłoszenie, ostrzeżenie o edycji opisu | kanał presence `issue.{id}` | bez przeładowania (stan klienta) |

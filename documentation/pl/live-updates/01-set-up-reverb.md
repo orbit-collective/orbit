@@ -27,9 +27,9 @@ wypisuje nowy zestaw. Nic nie jest nigdzie zapisywane; wklej go do Doppler (albo
 
 ```dotenv
 BROADCAST_CONNECTION=reverb
-REVERB_APP_ID=268696
-REVERB_APP_KEY=a78920cb20354742cb7dfe8bbda3c499
-REVERB_APP_SECRET=a8f2d1da5822e2164e800f233ff56090
+REVERB_APP_ID=<generated id>
+REVERB_APP_KEY=<generated key>
+REVERB_APP_SECRET=<generated secret>
 ```
 
 Klucz jest publiczny (dostaje go przeglądarka); sekret nigdy nie opuszcza serwera.

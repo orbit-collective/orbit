@@ -12,13 +12,13 @@ Wszystko w `resources/js/live/`:
 | `useLiveConnection.ts` | połączenie Reverb ze współdzielonego propa `live` albo `null`, gdy aktualizacje na żywo są wyłączone |
 | `useLiveChannel.ts` | subskrypcja kanału(ów) prywatnych na czas życia komponentu, z licznikiem referencji na kanał |
 | `reloadQueue.ts` / `useLiveReload.ts` | łączenie i wykonywanie wywołań `router.reload`; ich wstrzymywanie |
-| `changeProps.ts` | czyste funkcje: „te zmiany unieważniają te propsy" |
+| `changeProps.ts` | czyste funkcje: „te zmiany unieważniają te propsy” |
 | `useLiveFallback.ts` | odpytywanie, gdy nie ma gniazda ([przewodnik 05](./05-fallback-and-troubleshooting.md)) |
 | `socketHeader.ts` | wysyła `X-Socket-ID`, żeby karta, która dokonała zmiany, nie była o niej informowana ponownie |
 
 ## Krok 1 — Zrób propsy leniwymi
 
-Częściowe przeładowanie (`only: [...]`) nadal *buduje* każdy prop będący zwykłą wartością. Zrób z każdego propa closure, żeby odświeżenie na żywo płaciło tylko za to, o co prosi:
+Częściowe przeładowanie (`only: [...]`) nadal *buduje* każdy prop będący zwykłą wartością. Zrób closure z każdego propa, który kosztuje zapytanie lub obliczenie, żeby odświeżenie na żywo płaciło tylko za to, o co prosi (tanie wartości, jak `$project` załadowany już przez route binding, mogą zostać zwykłe):
 
 Plik: `app/Http/Controllers/MilestoneController.php`
 
@@ -34,7 +34,7 @@ Plik: `app/Http/Controllers/MilestoneController.php`
 
 ## Krok 2 — Powiedz, które propsy zmiana unieważnia
 
-Plik: `resources/js/live/changeProps.ts` — dodaj czystą funkcję (i test w `changeProps.test.ts`; w tych funkcjach żyją wszystkie decyzje „co odświeża co"):
+Plik: `resources/js/live/changeProps.ts` — dodaj czystą funkcję (i test w `changeProps.test.ts`; w tych funkcjach żyją wszystkie decyzje „co odświeża co”):
 
 ```ts
 /** The milestones page re-reads its list when a milestone changes. */
@@ -79,6 +79,8 @@ export function useMilestonesLive(projectId: number): void {
 ```
 
 `useLiveChannel(channel, handlers)`: `handlers` mapuje nazwę z `broadcastAs()` po stronie serwera na callback; zawsze używane są najnowsze callbacki bez ponownej subskrypcji, a `null` w miejscu kanału albo wyłączone aktualizacje na żywo nie subskrybują niczego. Kanał może być też tablicą.
+
+Zmiana **własnego** dostępu bieżącego użytkownika (jego członkostwa lub roli) przychodzi na `user.{id}` jako `access.changed` i jest obsługiwana raz dla całej aplikacji przez `LiveBridge` (`resources/js/Components/Organisms/LiveBridge/LiveBridge.tsx`), który pobiera ponownie całą stronę. Hook strony nie subskrybuje go więc; reaguje tylko na zmiany `members` i `roles` projektu przez `project.changed`, tak jak robi to `ACCESS_TYPES` powyżej.
 
 Wywołaj go ze strony: `useMilestonesLive(project.id);`. Istniejące przykłady: `useProjectLive` (strona projektu, przyjmuje widoczny widok i zakres kalendarza), `useIssueLive` (opuszcza stronę także, gdy zgłoszenie zostanie usunięte), `useDashboardLive`, `useSettingsLive`.
 
