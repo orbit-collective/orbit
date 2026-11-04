@@ -1,6 +1,7 @@
 <?php
 
 use App\Broadcasting\LiveChannels;
+use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
 use App\Support\Cache\CacheVersion;
@@ -91,7 +92,7 @@ test('an issue presence channel shows the member card to those who can view its 
     $member = User::factory()->create(['name' => 'Ada']);
     $stranger = User::factory()->create();
     addProjectMember($project, $member->id, 'member');
-    $issue = App\Models\Issue::factory()->create(['project_id' => $project->id]);
+    $issue = Issue::factory()->create(['project_id' => $project->id]);
 
     $response = test()->actingAs($member)->postJson('/broadcasting/auth', [
         'socket_id' => '1234.5678',
