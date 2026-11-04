@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => {
         channel,
         join: vi.fn(() => channel),
         leave: vi.fn(),
-        live: { enabled: false } as unknown as LiveConfig,
+        live: { enabled: false, pollInterval: 0 } as unknown as LiveConfig,
     };
 });
 
@@ -34,6 +34,7 @@ import { usePresence } from './usePresence';
 
 const enabled: LiveConfig = {
     enabled: true,
+    pollInterval: 30,
     key: 'k',
     host: 'h',
     port: 80,
@@ -51,7 +52,7 @@ describe('usePresence', () => {
     });
 
     test('does not join while live updates are off', () => {
-        mocks.live = { enabled: false };
+        mocks.live = { enabled: false, pollInterval: 0 };
         const { result } = renderHook(() => usePresence('issue.5', 1));
 
         expect(mocks.join).not.toHaveBeenCalled();
