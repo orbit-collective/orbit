@@ -5,7 +5,10 @@ import { Project } from '@/types/Projects';
 import { setTourSidebarOpen } from '@/utils/tourSidebar';
 import Sidebar from './Sidebar';
 
-const pageState = vi.hoisted(() => ({ url: '/' }));
+const pageState = vi.hoisted(() => ({
+    url: '/',
+    developerPortalEnabled: false,
+}));
 const mockRouterPost = vi.hoisted(() => vi.fn());
 const mockRouterVisit = vi.hoisted(() => vi.fn());
 const mockUseCommands = vi.hoisted(() => vi.fn());
@@ -32,6 +35,7 @@ vi.mock('@inertiajs/react', async () => {
         usePage: () => ({
             url: pageState.url,
             props: {
+                developerPortalEnabled: pageState.developerPortalEnabled,
                 auth: {
                     user: {
                         id: 1,
@@ -80,6 +84,7 @@ const makeProject = (overrides: Partial<Project> = {}): Project => ({
 describe('Sidebar Component', () => {
     beforeEach(() => {
         pageState.url = '/';
+        pageState.developerPortalEnabled = false;
         mockRouterPost.mockClear();
         mockRouterVisit.mockClear();
         mockUseCommands.mockClear();
@@ -470,6 +475,23 @@ describe('Sidebar Component', () => {
         expect(screen.getByText('Members')).toBeInTheDocument();
         expect(screen.queryByText('Test Project')).not.toBeInTheDocument();
         expect(screen.queryByText('PROJECTS')).not.toBeInTheDocument();
+    });
+
+    test('hides the Developer section while the portal is not available', () => {
+        pageState.url = '/settings';
+        render(<Sidebar projects={[]} />);
+
+        expect(screen.queryByText('Developer')).not.toBeInTheDocument();
+        expect(screen.queryByText('Developer Portal')).not.toBeInTheDocument();
+    });
+
+    test('shows the Developer Portal tab when the portal is available', () => {
+        pageState.url = '/settings';
+        pageState.developerPortalEnabled = true;
+        render(<Sidebar projects={[]} />);
+
+        expect(screen.getByText('Developer')).toBeInTheDocument();
+        expect(screen.getByText('Developer Portal')).toBeInTheDocument();
     });
 
     test('marks the active settings tab based on the url path', () => {
