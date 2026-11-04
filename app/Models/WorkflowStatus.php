@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\WorkflowStatusCategory;
+use App\Models\Concerns\BroadcastsLiveChanges;
 use App\Models\Concerns\BumpsIssueCache;
 use Database\Factories\WorkflowStatusFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class WorkflowStatus extends Model
 {
     /** @use HasFactory<WorkflowStatusFactory> */
-    use BumpsIssueCache, HasFactory;
+    use BroadcastsLiveChanges, BumpsIssueCache, HasFactory;
 
     protected $fillable = [
         'issue_type_id',
@@ -61,5 +62,13 @@ class WorkflowStatus extends Model
             'category' => $this->category->value,
             'isInitial' => $this->is_initial,
         ];
+    }
+
+    /** Statuses and transitions are part of the issue type's workflow, so clients re-read the type. */
+    protected function liveChange(): ?array
+    {
+        $projectId = IssueType::query()->whereKey($this->issue_type_id)->value('project_id');
+
+        return $projectId ? ['project' => $projectId, 'type' => 'issue-types', 'id' => $this->issue_type_id] : null;
     }
 }

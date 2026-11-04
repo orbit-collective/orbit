@@ -529,15 +529,16 @@ class IssueRepository
 
     public function bulkDelete(array $ids): void
     {
-        $projectIds = Issue::whereIn('id', $ids)->distinct()->pluck('project_id');
+        $projectsByIssue = Issue::whereIn('id', $ids)->pluck('project_id', 'id');
 
         Issue::whereIn('id', $ids)->delete();
 
         // A query-builder delete fires no model events.
         CacheVersion::bump(CacheVersion::ISSUES);
 
-        foreach ($projectIds as $projectId) {
-            app(LiveUpdates::class)->issue($projectId, null, 'bulk');
+        // One entry per issue: a client showing one of them must learn it is gone.
+        foreach ($projectsByIssue as $issueId => $projectId) {
+            app(LiveUpdates::class)->issue($projectId, $issueId, 'deleted');
         }
     }
 

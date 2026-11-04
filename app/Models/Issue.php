@@ -6,6 +6,7 @@ use App\Models\Concerns\BroadcastsLiveChanges;
 use App\Models\Concerns\BumpsIssueCache;
 use App\Services\PriorityService;
 use App\Support\Cache\CacheVersion;
+use App\Support\Live\LiveUpdates;
 use Database\Factories\IssueFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -235,6 +236,9 @@ class Issue extends Model
 
         if (array_filter($changes)) {
             CacheVersion::bump(CacheVersion::ISSUES);
+
+            // A label-only edit changes no column, so no model event fired.
+            app(LiveUpdates::class)->issue($this->project_id, $this->id);
         }
     }
 
@@ -325,5 +329,19 @@ class Issue extends Model
     protected function liveChange(): ?array
     {
         return $this->project_id ? ['project' => $this->project_id, 'type' => 'issue', 'id' => $this->id] : null;
+    }
+
+    /** The parent shows its children, so a new, moved or removed sub-issue changes it too (both parents when it moves). */
+    protected function liveAlsoAffects(): array
+    {
+        $parents = array_filter([
+            $this->parent_id,
+            $this->wasChanged('parent_id') ? $this->getOriginal('parent_id') : null,
+        ]);
+
+        return array_map(
+            fn ($parentId) => ['project' => $this->project_id, 'type' => 'issue', 'id' => (int) $parentId],
+            array_values(array_unique($parents)),
+        );
     }
 }

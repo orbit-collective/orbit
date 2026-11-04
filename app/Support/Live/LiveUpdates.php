@@ -19,6 +19,13 @@ final class LiveUpdates
     /** More changes than this in one flush collapse into a single "bulk" hint. */
     private const int MAX_CHANGES = 25;
 
+    /**
+     * Deleted issues keep their ids when a flush collapses (a client showing
+     * one must leave it), up to this many, which keeps a message well under
+     * Reverb's 10 KB limit. Past it they collapse like everything else.
+     */
+    private const int MAX_DELETED_IDS = 200;
+
     /** @var array<int, array<string, array{type: string, id: int|null, action: string}>> */
     private array $projects = [];
 
@@ -84,11 +91,7 @@ final class LiveUpdates
             $changes = array_values($changes);
 
             if (count($changes) > self::MAX_CHANGES) {
-                $changes = array_values(array_unique(array_map(
-                    fn (array $change) => $change['type'],
-                    $changes,
-                )));
-                $changes = array_map(fn (string $type) => ['type' => $type, 'id' => null, 'action' => 'bulk'], $changes);
+                $changes = $this->collapse($changes);
             }
 
             ProjectChanged::dispatch($projectId, $changes, $actor);
@@ -97,5 +100,26 @@ final class LiveUpdates
         foreach ($access as $userId => $projectId) {
             AccessChanged::dispatch($userId, $projectId);
         }
+    }
+
+    /**
+     * @param  list<array{type: string, id: int|null, action: string}>  $changes
+     * @return list<array{type: string, id: int|null, action: string}>
+     */
+    private function collapse(array $changes): array
+    {
+        $deleted = array_values(array_filter(
+            $changes,
+            fn (array $change) => $change['type'] === 'issue' && $change['action'] === 'deleted' && $change['id'] !== null,
+        ));
+        $keep = count($deleted) <= self::MAX_DELETED_IDS ? $deleted : [];
+        $rest = array_filter($changes, fn (array $change) => ! in_array($change, $keep, true));
+
+        $bulk = array_map(
+            fn (string $type) => ['type' => $type, 'id' => null, 'action' => 'bulk'],
+            array_values(array_unique(array_map(fn (array $change) => $change['type'], $rest))),
+        );
+
+        return [...$keep, ...$bulk];
     }
 }
