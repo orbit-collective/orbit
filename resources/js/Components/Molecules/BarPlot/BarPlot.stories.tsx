@@ -74,3 +74,17 @@ export const Empty: Story = {
         marker: undefined,
     },
 };
+
+/** Too many bars to fit: they keep their width, scroll sideways and snap into place; the axis stays. */
+export const ManyBars: Story = {
+    args: {
+        bars: Array.from({ length: 24 }, (_, i) => ({
+            key: String(i),
+            label: `svc-${i + 1}`,
+            heightPercent: 20 + ((i * 37) % 70),
+            tooltip: `${20 + ((i * 37) % 70)}%`,
+        })),
+        highlightKey: '5',
+        marker: { percent: 55, label: 'Avg 55%' },
+    },
+};
