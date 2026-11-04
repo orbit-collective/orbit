@@ -10,6 +10,12 @@ import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import Show from './Show';
 
+const liveMocks = vi.hoisted(() => ({ useProjectLive: vi.fn() }));
+
+vi.mock('@/live/useProjectLive', () => ({
+    useProjectLive: liveMocks.useProjectLive,
+}));
+
 vi.mock('@/Layouts/MainLayout', () => ({
     default: ({
         children,
@@ -178,6 +184,26 @@ const makeUser = (overrides: Partial<AssignableUser> = {}): AssignableUser => ({
 describe('Projects Show Page', () => {
     beforeEach(() => {
         localStorage.clear();
+    });
+
+    test('follows live changes of its project for the visible view', () => {
+        liveMocks.useProjectLive.mockClear();
+        render(
+            <Show
+                project={makeProject({ id: 7 })}
+                issues={makePaginated([])}
+                projects={[]}
+                savedFilters={[]}
+                users={[makeUser()]}
+                activityLogs={makePaginated([])}
+            />,
+        );
+
+        expect(liveMocks.useProjectLive).toHaveBeenCalledWith(
+            7,
+            'List',
+            expect.objectContaining({ current: null }),
+        );
     });
 
     test('renders FilterBar and MainLayout with the wired project/filters/users data', () => {

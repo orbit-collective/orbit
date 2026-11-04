@@ -33,8 +33,12 @@ const mockRoute = vi.hoisted(() =>
 // capture the onDragEnd handler IssueBoard registers and invoke it directly —
 // that's where all the actual "which field gets patched" logic lives.
 const capturedHandlers = vi.hoisted<{
+    onDragStart?: (event: unknown) => void;
     onDragEnd?: (event: unknown) => void;
 }>(() => ({}));
+
+const pauseMock = vi.hoisted(() => vi.fn());
+vi.mock('@/live/useLiveReload', () => ({ useLivePause: pauseMock }));
 
 vi.mock('@dnd-kit/core', async () => {
     const actual =
@@ -43,11 +47,14 @@ vi.mock('@dnd-kit/core', async () => {
         ...actual,
         DndContext: ({
             children,
+            onDragStart,
             onDragEnd,
         }: {
             children: ReactNode;
+            onDragStart?: (event: unknown) => void;
             onDragEnd?: (event: unknown) => void;
         }) => {
+            capturedHandlers.onDragStart = onDragStart;
             capturedHandlers.onDragEnd = onDragEnd;
             return children;
         },
@@ -101,6 +108,24 @@ const columnOf = (name: string) =>
         ?.parentElement?.parentElement?.parentElement as HTMLElement;
 
 describe('IssueBoard Component', () => {
+    test('holds live refreshes back only while a card is being dragged', () => {
+        const issue = makeIssue();
+        renderBoard([issue]);
+
+        expect(pauseMock).toHaveBeenLastCalledWith(false);
+
+        act(() => capturedHandlers.onDragStart?.({ active: { id: issue.id } }));
+        expect(pauseMock).toHaveBeenLastCalledWith(true);
+
+        act(() =>
+            capturedHandlers.onDragEnd?.({
+                active: { id: issue.id },
+                over: null,
+            }),
+        );
+        expect(pauseMock).toHaveBeenLastCalledWith(false);
+    });
+
     test('renders a column for each priority of the project, then one for no priority', () => {
         renderBoard([]);
 
