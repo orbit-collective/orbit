@@ -2,6 +2,7 @@ import Input from '@/Components/Atoms/Input/Input';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
+import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { Paginated, PortalUser } from '@/types/DeveloperPortal';
 import { formatShortDate } from '@/utils/time';
 import { usePortalSearch } from './usePortalSearch';
@@ -9,11 +10,13 @@ import { usePortalSearch } from './usePortalSearch';
 interface PortalUsersPanelProps {
     users: Paginated<PortalUser>;
     queryParams: Record<string, string>;
+    collapse?: CollapseProps;
 }
 
 export default function PortalUsersPanel({
     users,
     queryParams,
+    collapse,
 }: PortalUsersPanelProps) {
     const [search, setSearch] = usePortalSearch(
         'users_search',
@@ -26,6 +29,7 @@ export default function PortalUsersPanel({
         <SettingsPanel
             title="Users"
             icon="Users"
+            {...collapse?.('users', `${users.total} users`)}
             description={`Every account on this instance (${users.total}).`}
         >
             <div className="px-4 py-3 sm:px-5">

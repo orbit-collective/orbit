@@ -3,6 +3,7 @@ import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import BarChartCard from '@/Components/Molecules/BarChartCard/BarChartCard';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { PortalContainer, PortalContainers } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
 import { containerUptimeSeconds, formatUptime } from '@/utils/uptime';
@@ -11,6 +12,7 @@ import ContainerLogs from './ContainerLogs';
 interface PortalContainersSectionProps {
     /** Undefined while the deferred prop is still loading. */
     containers?: PortalContainers;
+    collapse?: CollapseProps;
 }
 
 const STATE_DOT: Record<string, string> = {
@@ -160,6 +162,7 @@ function ContainerRow({
 
 export default function PortalContainersSection({
     containers,
+    collapse,
 }: PortalContainersSectionProps) {
     const now = useNow();
 
@@ -169,6 +172,7 @@ export default function PortalContainersSection({
                 title="Containers"
                 icon="Container"
                 description="Uptime of this project's Docker containers."
+                {...collapse?.('containers')}
             >
                 <p
                     role="status"
@@ -186,6 +190,7 @@ export default function PortalContainersSection({
                 title="Containers"
                 icon="Container"
                 description="Uptime of this project's Docker containers."
+                {...collapse?.('containers')}
             >
                 <p
                     role="alert"
@@ -209,6 +214,7 @@ export default function PortalContainersSection({
     return (
         <div className="space-y-5">
             <BarChartCard
+                {...collapse?.('uptime', `${running.length} running`)}
                 title="Container uptime"
                 icon="ChartColumn"
                 formatValue={hours}
@@ -247,6 +253,10 @@ export default function PortalContainersSection({
                 title="Containers"
                 icon="Container"
                 description="Click a container for its details and live logs."
+                {...collapse?.(
+                    'containers',
+                    `${running.length}/${containers.containers.length} running`,
+                )}
             >
                 {containers.containers.map((container) => (
                     <ContainerRow

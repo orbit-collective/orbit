@@ -3,12 +3,14 @@ import Input from '@/Components/Atoms/Input/Input';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { Paginated, PortalProject } from '@/types/DeveloperPortal';
 import { usePortalSearch } from './usePortalSearch';
 
 interface PortalProjectsPanelProps {
     projects: Paginated<PortalProject>;
     queryParams: Record<string, string>;
+    collapse?: CollapseProps;
 }
 
 const CATEGORIES = [
@@ -20,6 +22,7 @@ const CATEGORIES = [
 export default function PortalProjectsPanel({
     projects,
     queryParams,
+    collapse,
 }: PortalProjectsPanelProps) {
     const [search, setSearch] = usePortalSearch(
         'projects_search',
@@ -32,6 +35,7 @@ export default function PortalProjectsPanel({
         <SettingsPanel
             title="Projects"
             icon="FolderGit2"
+            {...collapse?.('projects', `${projects.total} projects`)}
             description={`Every project on this instance (${projects.total}).`}
         >
             <div className="space-y-2 px-4 py-3 sm:px-5">
