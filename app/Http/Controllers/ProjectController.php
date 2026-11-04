@@ -70,8 +70,6 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
-        $projects = $this->projectService->getAllForUser($request->user()->id);
-
         $sortParams = request()->only(['sort', 'direction']);
         $perPage = (int) request()->get('perPage', 10);
         $searchParams = request()->only(['search']);
@@ -85,20 +83,22 @@ class ProjectController extends Controller
 
         [$calendarFrom, $calendarTo] = $this->calendarRange($request);
 
-        // Closures and optional props are only evaluated when the response
+        // Every prop but the cheap ones is a closure: a live update re-reads
+        // just the data it needs (see useProjectLive). Closures and optional
+        // props are only evaluated when the response
         // actually includes them: the calendar's month navigation reloads just
         // its own props, and the calendar data is never sent to the table,
         // board or activity views at all.
         return Inertia::render('Projects/Show', [
             'project' => $project,
-            'projects' => $projects,
+            'projects' => fn () => $this->projectService->getAllForUser($request->user()->id),
             'issues' => fn () => $this->issueService->getAllByProjectID($project->id, $sortParams, $perPage, $searchParams, $filters),
             'calendarIssues' => Inertia::optional(fn () => $this->issueService->getCalendarIssues($project->id, $calendarFrom, $calendarTo, $searchParams, $filters)),
             'upcomingDeadlines' => Inertia::optional(fn () => $this->issueService->getUpcomingDeadlines($project->id, $searchParams, $filters)),
             'queryParams' => request()->query() ?: null,
             'filters' => $filters,
-            'savedFilters' => $project->savedFilters()->latest()->get(),
-            'users' => $this->userService->getAssignableUsersForProject($project->id),
+            'savedFilters' => fn () => $project->savedFilters()->latest()->get(),
+            'users' => fn () => $this->userService->getAssignableUsersForProject($project->id),
             'activityLogs' => fn () => $this->activityLogService->paginateForProject($project->id, $request->integer(ActivityLogService::PER_PAGE_NAME, 20))->through(fn ($entry) => [
                 'id' => $entry->id,
                 'body' => $entry->body,
@@ -107,13 +107,13 @@ class ProjectController extends Controller
                 'userAvatar' => $entry->user?->avatar,
                 'createdAt' => $entry->created_at->toJSON(),
             ]),
-            'labels' => $this->mapLabels($this->labelService->getLabels($project)),
-            'priorities' => $this->priorityService->getPriorities($project)->map->toOption()->values(),
-            'roles' => $this->mapRoleNames($this->roleService->getRoles($project)),
-            'issueTypes' => $this->issueTypeService->getIssueTypes($project),
-            'nextIssueId' => $this->issueService->peekNextIssueId($project),
-            'issueAbilities' => $this->issueAbilities($request, $project),
-            'projectRole' => $project->roleOf($request->user()),
+            'labels' => fn () => $this->mapLabels($this->labelService->getLabels($project)),
+            'priorities' => fn () => $this->priorityService->getPriorities($project)->map->toOption()->values(),
+            'roles' => fn () => $this->mapRoleNames($this->roleService->getRoles($project)),
+            'issueTypes' => fn () => $this->issueTypeService->getIssueTypes($project),
+            'nextIssueId' => fn () => $this->issueService->peekNextIssueId($project),
+            'issueAbilities' => fn () => $this->issueAbilities($request, $project),
+            'projectRole' => fn () => $project->roleOf($request->user()),
         ]);
     }
 
