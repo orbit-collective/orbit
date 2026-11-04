@@ -152,4 +152,43 @@ describe('BarPlot', () => {
             'focus-visible:ring-2',
         );
     });
+
+    test('the marker is born at its final height, so it never climbs from the bottom', () => {
+        render(
+            <BarPlot
+                bars={bars}
+                ticks={ticks}
+                ariaLabel="x"
+                marker={{ percent: 74, label: '74%' }}
+            />,
+        );
+
+        expect(screen.getByTestId('marker-line').style.bottom).toBe('74%');
+    });
+
+    test('the marker tag looks like the Badge tooltip', () => {
+        render(
+            <BarPlot
+                bars={bars}
+                ticks={ticks}
+                ariaLabel="x"
+                marker={{ percent: 74, label: '74%' }}
+            />,
+        );
+
+        expect(screen.getByText('74%').className).toContain(
+            'border-[var(--border-color)]',
+        );
+        expect(screen.getByText('74%').className).toContain(
+            'bg-[var(--bg-color)]',
+        );
+    });
+
+    test('every bar fills its own box, even a tiny one, so it sits on the baseline', () => {
+        renderPlot();
+
+        screen.getAllByTestId('bar').forEach((bar) => {
+            expect(bar.parentElement).toHaveClass('absolute', 'inset-0');
+        });
+    });
 });

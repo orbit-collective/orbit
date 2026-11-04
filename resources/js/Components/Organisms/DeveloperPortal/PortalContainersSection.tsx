@@ -79,7 +79,7 @@ function ContainerRow({
             initial="hidden"
             animate="show"
             transition={{ delay: rowDelay(index) }}
-            className="hover:bg-[var(--bg-light-color)]/50 transition-colors duration-200"
+            className="transition-colors duration-200 hover:bg-[var(--bg-light-color)]"
         >
             <button
                 type="button"
@@ -255,14 +255,14 @@ export default function PortalContainersSection({
                 })}
                 summary={
                     <>
-                        <Badge className="border-[var(--success-color)]/20 bg-[var(--success-color)]/10 gap-1.5 px-2.5 py-1 text-xs text-[var(--success-color)]">
+                        <Badge className="gap-1.5 border-[#4caf50]/20 bg-[#4caf50]/10 px-2.5 py-1 text-xs text-[var(--success-color)]">
                             Running
                             <strong>
                                 {running.length}/{containers.containers.length}
                             </strong>
                         </Badge>
                         {containers.containers.length > running.length && (
-                            <Badge className="border-[var(--error-color)]/20 bg-[var(--error-color)]/10 gap-1.5 px-2.5 py-1 text-xs text-[var(--error-color)]">
+                            <Badge className="gap-1.5 border-[#f44336]/20 bg-[#f44336]/10 px-2.5 py-1 text-xs text-[var(--error-color)]">
                                 <Icon name="CircleAlert" size={12} />
                                 {containers.containers.length -
                                     running.length}{' '}

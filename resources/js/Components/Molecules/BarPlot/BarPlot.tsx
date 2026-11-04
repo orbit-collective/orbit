@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import React from 'react';
-import Badge from '@/Components/Atoms/Badge/Badge';
+import Badge, { BADGE_TOOLTIP_LOOK } from '@/Components/Atoms/Badge/Badge';
 import { BarPlotProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
@@ -79,7 +79,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                     tooltip={Boolean(bar.tooltip)}
                                     tooltipText={bar.tooltip}
                                     tooltipPlacement="top"
-                                    wrapperClassName="h-full w-full"
+                                    wrapperClassName="absolute inset-0"
                                     tabIndex={0}
                                     role="img"
                                     aria-label={`${bar.label}: ${bar.tooltip ?? `${Math.round(height)}%`}`}
@@ -91,7 +91,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                         FOCUS_RING,
                                         highlighted
                                             ? 'bg-[var(--accent-color)]'
-                                            : 'bg-[var(--bg-light-color)] hover:bg-[var(--text-muted-color)]/60 focus-visible:bg-[var(--text-muted-color)]/60',
+                                            : 'bg-[var(--bg-light-color)] hover:bg-[color-mix(in_srgb,var(--text-muted-color)_60%,transparent)] focus-visible:bg-[color-mix(in_srgb,var(--text-muted-color)_60%,transparent)]',
                                     )}
                                 >
                                     {highlighted && (
@@ -120,7 +120,12 @@ const BarPlot: React.FC<BarPlotProps> = ({
                     aria-hidden="true"
                     data-testid="marker-line"
                     data-percent={clamp(marker.percent)}
-                    initial={{ scaleX: 0, opacity: 0 }}
+                    initial={{
+                        scaleX: 0,
+                        opacity: 0,
+                        // Born at its final height: it draws across, never climbs.
+                        bottom: `${clamp(marker.percent)}%`,
+                    }}
                     animate={{
                         scaleX: 1,
                         opacity: 1,
@@ -134,7 +139,12 @@ const BarPlot: React.FC<BarPlotProps> = ({
                     style={{ transformOrigin: 'left' }}
                     className="pointer-events-none absolute inset-x-0 z-[5] border-t border-dashed border-[var(--text-gray-color)]"
                 >
-                    <span className="absolute right-full top-0 mr-1.5 -translate-y-1/2 whitespace-nowrap rounded-full bg-[var(--text-color)] px-2 py-1 text-[10px] font-medium leading-none text-[var(--bg-color)]">
+                    <span
+                        className={cn(
+                            'absolute right-full top-0 mr-1.5 -translate-y-1/2 leading-none',
+                            BADGE_TOOLTIP_LOOK,
+                        )}
+                    >
                         {marker.label}
                     </span>
                 </motion.div>

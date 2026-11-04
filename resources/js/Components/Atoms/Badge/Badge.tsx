@@ -3,8 +3,11 @@ import React from 'react';
 import { BadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
-const tooltipStyles =
-    'absolute flex gap-1.5 items-center left-1/2 -translate-x-1/2 bg-[var(--bg-color)] text-[var(--text-gray-color)] px-2 py-1 rounded-md text-[10px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 ease-in-out pointer-events-none z-50 border border-[var(--border-color)] shadow-lg';
+/** The look of the tooltip, reused by anything that should read as the same small floating label. */
+export const BADGE_TOOLTIP_LOOK =
+    'bg-[var(--bg-color)] text-[var(--text-gray-color)] px-2 py-1 rounded-md text-[10px] font-medium whitespace-nowrap border border-[var(--border-color)] shadow-lg';
+
+const tooltipStyles = `absolute flex gap-1.5 items-center left-1/2 -translate-x-1/2 ${BADGE_TOOLTIP_LOOK} opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 ease-in-out pointer-events-none z-50`;
 
 const tooltipPlacements = {
     bottom: 'top-[calc(100%+6px)] -translate-y-1 group-hover:translate-y-0 group-focus-within:translate-y-0',
