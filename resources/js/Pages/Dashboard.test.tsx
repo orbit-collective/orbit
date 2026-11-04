@@ -8,6 +8,12 @@ import { IssueStats, ProductivityTrendProps } from '@/types/Issues';
 import { Project } from '@/types/Projects';
 import Dashboard from './Dashboard';
 
+const mocks = vi.hoisted(() => ({ useDashboardLive: vi.fn() }));
+
+vi.mock('@/live/useDashboardLive', () => ({
+    useDashboardLive: mocks.useDashboardLive,
+}));
+
 vi.mock('@/context/CommandContext', () => ({
     useCommandPalette: () => ({
         runCommand: vi.fn(),
@@ -115,6 +121,19 @@ const makeProject = (overrides: Partial<Project> = {}): Project => ({
 });
 
 describe('Dashboard Page', () => {
+    test('follows live changes in every project of the user', () => {
+        render(
+            <Dashboard
+                issueStats={makeIssueStats()}
+                projects={[makeProject({ id: 4 }), makeProject({ id: 9 })]}
+                productivity_trend={[]}
+                activityLogs={makePaginated([])}
+            />,
+        );
+
+        expect(mocks.useDashboardLive).toHaveBeenCalledWith([4, 9]);
+    });
+
     test('renders the Sidebar with the provided projects and a Dashboard page header', () => {
         const projects = [makeProject({ id: 1 }), makeProject({ id: 2 })];
         render(

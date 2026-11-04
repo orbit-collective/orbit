@@ -8,6 +8,7 @@ import DashboardVisuals from '@/Components/Organisms/DashboardVisuals/DashboardV
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useCommandPalette } from '@/context/CommandContext';
+import { useDashboardLive } from '@/live/useDashboardLive';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import {
     IssueStats,
@@ -53,6 +54,9 @@ export default function Dashboard({
 
     const hasProjects = projects && projects.length > 0;
     const { runCommand } = useCommandPalette();
+
+    // Counters, trend and feed follow changes in any of the user's projects.
+    useDashboardLive((projects ?? []).map((project) => project.id));
 
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
