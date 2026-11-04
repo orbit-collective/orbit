@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import AccountSettingsBrowserNotifications from '@/Components/Organisms/AccountSettingsContent/AccountSettingsBrowserNotifications';
 import AccountSettingsNotificationCleanup from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationCleanup';
 import AccountSettingsNotificationTypeRow from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationTypeRow';
 import { useAlert } from '@/context/AlertContext';
@@ -232,6 +233,8 @@ export default function AccountSettingsNotificationsTab({
                     />
                 ))}
             </SettingsPanel>
+
+            <AccountSettingsBrowserNotifications />
 
             <AccountSettingsNotificationCleanup
                 retention={notificationRetention}

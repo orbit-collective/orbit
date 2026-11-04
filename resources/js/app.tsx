@@ -7,6 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import CommandPalette from '@/Components/Organisms/CommandPalette/CommandPalette';
 import GlobalCommands from '@/Components/Organisms/GlobalCommands/GlobalCommands';
+import LiveBridge from '@/Components/Organisms/LiveBridge/LiveBridge';
 import { ModalContainer } from '@/Components/Organisms/Modal';
 import OnboardingGate from '@/Components/Organisms/OnboardingGate/OnboardingGate';
 import { AccentProvider } from '@/context/AccentContext';
@@ -55,6 +56,7 @@ createInertiaApp({
                                                 {...pageProps}
                                                 key={key}
                                             />
+                                            <LiveBridge />
                                             <OnboardingGate />
                                             <CommandPalette />
                                         </CommandProvider>
