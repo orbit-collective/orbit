@@ -1,4 +1,5 @@
 import React, { useId } from 'react';
+import Badge from '@/Components/Atoms/Badge/Badge';
 import TrendBadge from '@/Components/Atoms/TrendBadge/TrendBadge';
 import BarPlot from '@/Components/Molecules/BarPlot/BarPlot';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
@@ -52,17 +53,17 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
             />
 
             <Collapse id={bodyId} open={!collapsed}>
-                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-gray-color)]">
-                    <span className="flex items-center gap-2">
-                        {totalLabel}:{' '}
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[var(--text-gray-color)]">
+                    <Badge className="gap-1.5 px-2.5 py-1 text-xs">
+                        {totalLabel}
                         <strong
                             data-testid="total"
                             className="text-sm font-semibold text-[var(--text-color)]"
                         >
                             {total}
                         </strong>
-                        {trend && <TrendBadge {...trend} />}
-                    </span>
+                    </Badge>
+                    {trend && <TrendBadge {...trend} />}
                     {summary}
                 </div>
 

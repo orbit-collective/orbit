@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import {
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
     paginated,
@@ -126,10 +132,10 @@ describe('DeveloperPortalTab', () => {
         expect(screen.getAllByRole('status')).toHaveLength(2);
     });
 
-    test('the long lists start folded, the glanceable parts open', () => {
+    test('the long lists start folded, the glanceable parts open', async () => {
         renderTab();
 
-        expect(screen.getByTestId('total')).toBeVisible();
+        await waitFor(() => expect(screen.getByTestId('total')).toBeVisible());
         expect(screen.getByRole('button', { name: /Users/ })).toHaveAttribute(
             'aria-expanded',
             'false',
@@ -169,10 +175,12 @@ describe('DeveloperPortalTab', () => {
         );
     });
 
-    test('"Collapse all" folds everything, then "Expand all" opens everything', () => {
+    test('"Collapse all" folds everything, then "Expand all" opens everything', async () => {
         renderTab();
 
-        fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }));
+        fireEvent.click(
+            await screen.findByRole('button', { name: 'Collapse all' }),
+        );
         expect(screen.getByRole('button', { name: /Users/ })).toHaveAttribute(
             'aria-expanded',
             'false',
@@ -181,7 +189,9 @@ describe('DeveloperPortalTab', () => {
             screen.getByRole('button', { name: /Recent errors/ }),
         ).toHaveAttribute('aria-expanded', 'false');
 
-        fireEvent.click(screen.getByRole('button', { name: 'Expand all' }));
+        fireEvent.click(
+            await screen.findByRole('button', { name: 'Expand all' }),
+        );
         expect(screen.getByRole('button', { name: /Users/ })).toHaveAttribute(
             'aria-expanded',
             'true',
@@ -190,7 +200,7 @@ describe('DeveloperPortalTab', () => {
             screen.getByRole('button', { name: /Recent errors/ }),
         ).toHaveAttribute('aria-expanded', 'true');
         expect(
-            screen.getByRole('button', { name: 'Collapse all' }),
+            await screen.findByRole('button', { name: 'Collapse all' }),
         ).toBeInTheDocument();
     });
 
@@ -203,5 +213,40 @@ describe('DeveloperPortalTab', () => {
         expect(
             screen.getByRole('button', { name: /Recent errors/ }),
         ).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    test('issue statuses are Badges with counts, focusable, with a share tooltip', () => {
+        renderTab();
+
+        const todo = screen
+            .getAllByText('To do', {
+                selector: 'span[tabindex] *, span[tabindex]',
+            })
+            .map((el) => el.closest('span[tabindex]'))
+            .find(Boolean)!;
+        expect(todo).toHaveAttribute('tabindex', '0');
+        expect(todo).toHaveTextContent('To do40');
+        expect(screen.getByText('40% of all issues')).toBeInTheDocument();
+        expect(screen.getByText('35% of all issues')).toBeInTheDocument();
+        expect(screen.getByText('25% of all issues')).toBeInTheDocument();
+    });
+
+    test('the status bars explain themselves on hover and focus', () => {
+        renderTab();
+
+        expect(
+            screen.getByRole('img', {
+                name: /Done: 25 done · 25% of all issues/,
+            }),
+        ).toHaveAttribute('tabindex', '0');
+    });
+
+    test('the controls carry the keyboard focus ring', () => {
+        renderTab();
+
+        expect(
+            screen.getByRole('button', { name: /Collapse all|Expand all/ })
+                .className,
+        ).toContain('focus-visible:ring-2');
     });
 });

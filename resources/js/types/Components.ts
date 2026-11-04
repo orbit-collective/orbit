@@ -891,8 +891,8 @@ interface PercentBarsCardBar {
 export interface PercentBarsCardProps extends CollapsibleProps {
     title: string;
     icon: keyof typeof icons;
-    /** The big number under the title. */
-    total: string;
+    /** The total shown next to its label. */
+    total: React.ReactNode;
     totalLabel: string;
     trend?: ChartTrend;
     /** More inline figures next to the total, e.g. per-status counts. */
