@@ -7,6 +7,7 @@ const GROUP_META: Record<string, { label: string; icon: keyof typeof icons }> =
         projects: { label: 'Project', icon: 'FolderKanban' },
         issues: { label: 'Issues', icon: 'ListTodo' },
         comments: { label: 'Comments', icon: 'MessageSquare' },
+        developer: { label: 'Developer', icon: 'Code' },
     };
 
 export interface PermissionSection {
