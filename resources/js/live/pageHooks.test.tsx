@@ -71,6 +71,75 @@ describe('useProjectLive', () => {
     });
 });
 
+describe('useProjectLive missed changes', () => {
+    const range = { current: null };
+
+    test('re-reads the list when it opens after changes arrived during Activity', () => {
+        const { rerender } = renderHook(
+            ({ view }) => useProjectLive(7, view, range),
+            { initialProps: { view: 'Activity' as unknown as 'List' } },
+        );
+
+        handler()({ changes: [change('issue', 5, 'created')], actor: 2 });
+        expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
+        mocks.requestLiveReload.mockClear();
+
+        rerender({ view: 'List' });
+
+        expect(mocks.requestLiveReload).toHaveBeenCalledWith({
+            only: ['issues'],
+        });
+    });
+
+    test('does not re-read twice for the same changes', () => {
+        const { rerender } = renderHook(
+            ({ view }) => useProjectLive(7, view, range),
+            { initialProps: { view: 'Activity' as unknown as 'List' } },
+        );
+        handler()({ changes: [change('issue', 5)], actor: 2 });
+
+        rerender({ view: 'List' });
+        mocks.requestLiveReload.mockClear();
+        rerender({ view: 'Board' as unknown as 'List' });
+        rerender({ view: 'Activity' as unknown as 'List' });
+        rerender({ view: 'List' });
+
+        expect(mocks.requestLiveReload).not.toHaveBeenCalled();
+    });
+
+    test('the list and the board share their data, so switching between them reloads nothing', () => {
+        const { rerender } = renderHook(
+            ({ view }) => useProjectLive(7, view, range),
+            { initialProps: { view: 'List' as const } },
+        );
+        handler()({ changes: [change('issue', 5)], actor: 2 });
+        mocks.requestLiveReload.mockClear();
+
+        rerender({ view: 'Board' as unknown as 'List' });
+
+        expect(mocks.requestLiveReload).not.toHaveBeenCalled();
+    });
+
+    test('the calendar catches up on what happened while the list was open', () => {
+        const calendarRange = {
+            current: ['2026-11-01', '2026-11-30'] as [string, string],
+        };
+        const { rerender } = renderHook(
+            ({ view }) => useProjectLive(7, view, calendarRange),
+            { initialProps: { view: 'List' as const } },
+        );
+        handler()({ changes: [change('issue', 5)], actor: 2 });
+        mocks.requestLiveReload.mockClear();
+
+        rerender({ view: 'Calendar' as unknown as 'List' });
+
+        expect(mocks.requestLiveReload).toHaveBeenCalledWith({
+            only: ['calendarIssues', 'upcomingDeadlines'],
+            data: { calendar_from: '2026-11-01', calendar_to: '2026-11-30' },
+        });
+    });
+});
+
 describe('useIssueLive', () => {
     const options = {
         projectId: 3,
