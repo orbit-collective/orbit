@@ -208,4 +208,58 @@ describe('DayBreakdownCard', () => {
         expect(row).toHaveClass('mx-auto', 'w-max', 'gap-2');
         expect(row.className).not.toContain('justify-between');
     });
+
+    test('until a day is picked the card follows the newest day, e.g. after midnight', () => {
+        const { rerender } = renderCard();
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
+            '04',
+        );
+
+        const tomorrow = {
+            key: '2026-11-05',
+            label: 'Thu',
+            dayNumber: '05',
+            rows: [
+                { key: 'error', label: 'Errors', value: 9, color: '#f44336' },
+            ],
+        };
+        rerender(
+            <DayBreakdownCard
+                title="Errors"
+                icon="Bug"
+                days={[...days, tomorrow]}
+                headline={(total) => `${total} problems`}
+            />,
+        );
+
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
+            '05',
+        );
+    });
+
+    test('a day the user picked stays selected when a newer day appears', () => {
+        const { rerender } = renderCard();
+        fireEvent.click(screen.getByRole('tab', { name: /03/ }));
+
+        rerender(
+            <DayBreakdownCard
+                title="Errors"
+                icon="Bug"
+                days={[
+                    ...days,
+                    {
+                        key: '2026-11-05',
+                        label: 'Thu',
+                        dayNumber: '05',
+                        rows: [],
+                    },
+                ]}
+                headline={(total) => `${total} problems`}
+            />,
+        );
+
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent(
+            '03',
+        );
+    });
 });
