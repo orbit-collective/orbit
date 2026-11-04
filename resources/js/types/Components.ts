@@ -820,3 +820,25 @@ export interface ChartTrend {
 export interface TrendBadgeProps extends ChartTrend {
     className?: string;
 }
+
+export interface BarChartCardItem {
+    key: string;
+    /** X-axis label under the bar. */
+    label: string;
+    value: number;
+    /** Shown in the tooltip of the highlighted bar; defaults to the value. */
+    valueLabel?: string;
+}
+
+export interface BarChartCardProps {
+    title: string;
+    icon: keyof typeof icons;
+    items: BarChartCardItem[];
+    /** Formats the y-axis ticks and the average tag. */
+    formatValue?: (value: number) => string;
+    /** Free content above the chart, e.g. `Stat` summaries. */
+    summary?: React.ReactNode;
+    /** Shown instead of the chart while `items` is empty. */
+    emptyText?: string;
+    className?: string;
+}
