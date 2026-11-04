@@ -11,6 +11,7 @@ use App\Models\WorkflowStatus;
 use App\Repositories\IssueTypeRepository;
 use App\Repositories\WorkflowRepository;
 use App\Support\Cache\CacheVersion;
+use App\Support\Live\LiveUpdates;
 use App\Support\SystemIssueTypeDefaults;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -541,6 +542,7 @@ class IssueTypeService
         // narrow the type rather than widen it.
         if ($allowed->isNotEmpty() && ! $allowed->contains($childIssueTypeId)) {
             $parentType->allowedChildTypes()->syncWithoutDetaching([$childIssueTypeId]);
+            app(LiveUpdates::class)->project($parentType->project_id, 'issue-types', $parentType->id);
         }
     }
 

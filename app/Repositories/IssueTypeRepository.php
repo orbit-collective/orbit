@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\IssueType;
 use App\Models\Project;
+use App\Support\Live\LiveUpdates;
 use Illuminate\Database\Eloquent\Collection;
 
 class IssueTypeRepository
@@ -91,5 +92,8 @@ class IssueTypeRepository
     public function syncAllowedChildTypes(IssueType $issueType, array $childIssueTypeIds): void
     {
         $issueType->allowedChildTypes()->sync($childIssueTypeIds);
+
+        // A pivot write fires no model event: clients must re-read the types.
+        app(LiveUpdates::class)->project($issueType->project_id, 'issue-types', $issueType->id);
     }
 }

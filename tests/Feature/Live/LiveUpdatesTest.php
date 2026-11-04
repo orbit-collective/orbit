@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\WorkflowStatus;
 use App\Models\WorkflowTransition;
 use App\Repositories\IssueRepository;
+use App\Repositories\IssueTypeRepository;
 use App\Repositories\ProjectMemberRepository;
 use App\Repositories\RoleRepository;
 use App\Services\NotificationService;
@@ -343,4 +344,17 @@ test('a request that changes an issue sends its event once the response is done'
 
     Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => $event->projectId === $project->id
         && $event->actorId === $user->id);
+});
+
+test('changing the allowed child types of an issue type is announced', function () {
+    $project = Project::factory()->create();
+    [$parent, $child] = IssueType::factory()->count(2)->create(['project_id' => $project->id]);
+    app(LiveUpdates::class)->flush();
+    Event::fake([ProjectChanged::class]);
+
+    app(IssueTypeRepository::class)->syncAllowedChildTypes($parent, [$child->id]);
+    app(LiveUpdates::class)->flush();
+
+    Event::assertDispatched(ProjectChanged::class, fn (ProjectChanged $event) => $event->projectId === $project->id
+        && in_array(['type' => 'issue-types', 'id' => $parent->id, 'action' => 'updated'], $event->changes, true));
 });
