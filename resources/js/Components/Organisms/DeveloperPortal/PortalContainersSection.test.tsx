@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import {
+    act,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { portalContainers } from '@/stories/developerPortalFixtures';
 import PortalContainersSection from './PortalContainersSection';
@@ -114,7 +120,8 @@ describe('PortalContainersSection', () => {
         expect(screen.getByText('No running containers.')).toBeInTheDocument();
     });
 
-    test('clicking a container opens its details and logs, clicking again closes them', () => {
+    test('clicking a container opens its details and logs, clicking again closes them', async () => {
+        vi.useRealTimers();
         render(<PortalContainersSection containers={portalContainers} />);
         expect(screen.queryByTestId('logs')).not.toBeInTheDocument();
 
@@ -124,18 +131,26 @@ describe('PortalContainersSection', () => {
         fireEvent.click(row);
 
         expect(row).toHaveAttribute('aria-expanded', 'true');
-        expect(screen.getByTestId('logs')).toHaveAttribute('data-id', 'b2');
-        expect(screen.getByText('Up 2 days (healthy)')).toBeInTheDocument();
+        expect(await screen.findByTestId('logs')).toHaveAttribute(
+            'data-id',
+            'b2',
+        );
+        expect(
+            await screen.findByText('Up 2 days (healthy)'),
+        ).toBeInTheDocument();
 
         fireEvent.click(row);
-        expect(screen.queryByTestId('logs')).not.toBeInTheDocument();
+        await waitFor(() =>
+            expect(screen.queryByTestId('logs')).not.toBeInTheDocument(),
+        );
     });
 
-    test('a stopped container still opens, with "not running" as its start', () => {
+    test('a stopped container still opens, with "not running" as its start', async () => {
+        vi.useRealTimers();
         render(<PortalContainersSection containers={portalContainers} />);
 
         fireEvent.click(screen.getByRole('button', { name: /orbit-backup-1/ }));
 
-        expect(screen.getByText('not running')).toBeInTheDocument();
+        expect(await screen.findByText('not running')).toBeInTheDocument();
     });
 });

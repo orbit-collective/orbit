@@ -1,5 +1,8 @@
+import { motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
+import Reveal from '@/Components/Atoms/Reveal/Reveal';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import DayBreakdownCard from '@/Components/Molecules/DayBreakdownCard/DayBreakdownCard';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
@@ -7,6 +10,8 @@ import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { DayBreakdownDay, DayBreakdownRow } from '@/types/Components';
 import { PortalErrorEntry, PortalErrorLog } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
+import { FOCUS_RING_INSET } from '@/utils/focusRing';
+import { rowDelay, rowIn } from '@/utils/motion';
 import { formatDate } from '@/utils/time';
 
 interface PortalErrorsSectionProps {
@@ -57,16 +62,31 @@ export function buildDays(errorLog: PortalErrorLog): DayBreakdownDay[] {
     });
 }
 
-function ErrorEntry({ entry }: { entry: PortalErrorEntry }) {
+function ErrorEntry({
+    entry,
+    index,
+}: {
+    entry: PortalErrorEntry;
+    index: number;
+}) {
     const [open, setOpen] = useState(false);
 
     return (
-        <div className="px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5">
+        <motion.div
+            variants={rowIn}
+            initial="hidden"
+            animate="show"
+            transition={{ delay: rowDelay(index) }}
+            className="transition-colors duration-200 hover:bg-[var(--bg-light-color)]"
+        >
             <button
                 type="button"
                 aria-expanded={open}
                 onClick={() => setOpen((value) => !value)}
-                className="flex w-full items-start gap-3 text-left"
+                className={cn(
+                    'flex w-full cursor-pointer items-start gap-3 border-0 bg-transparent px-4 py-3 text-left sm:px-5',
+                    FOCUS_RING_INSET,
+                )}
             >
                 <Badge
                     variant="outline"
@@ -93,12 +113,18 @@ function ErrorEntry({ entry }: { entry: PortalErrorEntry }) {
                     </span>
                 </span>
             </button>
-            {open && entry.trace.length > 0 && (
-                <pre className="mt-2 overflow-x-auto rounded-lg bg-[var(--bg-dark-color)] p-3 text-[11px] leading-relaxed text-[var(--text-gray-color)]">
+            <Collapse open={open && entry.trace.length > 0} unmountWhenClosed>
+                <pre
+                    tabIndex={0}
+                    className={cn(
+                        'mx-4 mb-3 overflow-x-auto rounded-lg bg-[var(--bg-dark-color)] p-3 text-[11px] leading-relaxed text-[var(--text-gray-color)] sm:mx-5',
+                        FOCUS_RING_INSET,
+                    )}
+                >
                     {entry.trace.join('\n')}
                 </pre>
-            )}
-        </div>
+            </Collapse>
+        </motion.div>
     );
 }
 
@@ -114,24 +140,26 @@ export default function PortalErrorsSection({
 
     if (!errorLog) {
         return (
-            <SettingsPanel
-                title="Recent errors"
-                icon="Bug"
-                description="The newest errors from the application log."
-                {...collapse?.('errors')}
-            >
-                <p
-                    role="status"
-                    className="animate-pulse px-5 py-6 text-sm text-[var(--text-gray-color)]"
+            <Reveal key="loading">
+                <SettingsPanel
+                    title="Recent errors"
+                    icon="Bug"
+                    description="The newest errors from the application log."
+                    {...collapse?.('errors')}
                 >
-                    Reading the log…
-                </p>
-            </SettingsPanel>
+                    <p
+                        role="status"
+                        className="animate-pulse px-5 py-6 text-sm text-[var(--text-gray-color)]"
+                    >
+                        Reading the log…
+                    </p>
+                </SettingsPanel>
+            </Reveal>
         );
     }
 
     return (
-        <div className="space-y-5">
+        <Reveal key="loaded" className="space-y-5">
             <DayBreakdownCard
                 {...collapse?.(
                     'activity',
@@ -160,8 +188,12 @@ export default function PortalErrorsSection({
                         No errors in the log. Nice.
                     </p>
                 ) : (
-                    errorLog.entries.data.map((entry) => (
-                        <ErrorEntry key={entry.id} entry={entry} />
+                    errorLog.entries.data.map((entry, index) => (
+                        <ErrorEntry
+                            key={entry.id}
+                            entry={entry}
+                            index={index}
+                        />
                     ))
                 )}
                 <Pagination
@@ -176,6 +208,6 @@ export default function PortalErrorsSection({
                     only={['errorLog']}
                 />
             </SettingsPanel>
-        </div>
+        </Reveal>
     );
 }

@@ -6,6 +6,7 @@ import { useAlert } from '@/context/AlertContext';
 import { useContainerLogs } from '@/hooks/useContainerLogs';
 import { PortalLogLine } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
+import { FOCUS_RING, FOCUS_RING_INSET } from '@/utils/focusRing';
 
 interface ContainerLogsProps {
     containerId: string;
@@ -87,7 +88,10 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                     type="button"
                     aria-label="Refresh logs"
                     onClick={() => void refresh()}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                    className={cn(
+                        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-gray-color)] transition-colors duration-200 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                        FOCUS_RING,
+                    )}
                 >
                     <Icon
                         name="RefreshCw"
@@ -99,7 +103,10 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                     type="button"
                     aria-label="Copy logs"
                     onClick={() => void copy()}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                    className={cn(
+                        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-gray-color)] transition-colors duration-200 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                        FOCUS_RING,
+                    )}
                 >
                     <Icon name="Copy" size={14} />
                 </button>
@@ -109,7 +116,11 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                 ref={scroller}
                 role="log"
                 aria-label="Container logs"
-                className="max-h-80 overflow-auto rounded-lg bg-[var(--bg-dark-color)] p-3 font-mono text-[11px] leading-relaxed"
+                tabIndex={0}
+                className={cn(
+                    'max-h-80 overflow-auto rounded-lg bg-[var(--bg-dark-color)] p-3 font-mono text-[11px] leading-relaxed',
+                    FOCUS_RING_INSET,
+                )}
             >
                 {!loaded ? (
                     <p className="animate-pulse text-[var(--text-gray-color)]">

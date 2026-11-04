@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { paginated, portalErrorLog } from '@/stories/developerPortalFixtures';
@@ -90,7 +90,7 @@ describe('PortalErrorsSection', () => {
         expect(screen.getByTestId('headline')).toHaveTextContent('8 problems');
     });
 
-    test('expands an entry to show its stack trace', () => {
+    test('expands an entry to show its stack trace', async () => {
         render(<PortalErrorsSection errorLog={portalErrorLog} />);
 
         const first = screen.getByRole('button', {
@@ -100,11 +100,15 @@ describe('PortalErrorsSection', () => {
 
         fireEvent.click(first);
 
-        expect(screen.getByText(/Connection\.php/)).toBeInTheDocument();
+        expect(await screen.findByText(/Connection\.php/)).toBeInTheDocument();
         expect(first).toHaveAttribute('aria-expanded', 'true');
 
         fireEvent.click(first);
-        expect(screen.queryByText(/Connection\.php/)).not.toBeInTheDocument();
+        await waitFor(() =>
+            expect(
+                screen.queryByText(/Connection\.php/),
+            ).not.toBeInTheDocument(),
+        );
     });
 
     test('an entry without a trace expands to nothing extra', () => {
