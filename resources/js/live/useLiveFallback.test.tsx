@@ -105,6 +105,24 @@ describe('useLiveFallback', () => {
         expect(mocks.requestLiveReload).toHaveBeenCalledTimes(2);
     });
 
+    test('a short reconnect (live, connecting, live) also catches up', () => {
+        mocks.status = 'live';
+        const { rerender } = renderHook(() => useLiveFallback(reloads));
+        expect(mocks.requestLiveReload).not.toHaveBeenCalled();
+
+        mocks.status = 'connecting';
+        rerender();
+        expect(mocks.requestLiveReload).not.toHaveBeenCalled();
+
+        mocks.status = 'live';
+        rerender();
+        expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
+
+        // A later steady state does not repeat it.
+        rerender();
+        expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
+    });
+
     test('a first connection needs no catch-up', () => {
         mocks.status = 'connecting';
         const { rerender } = renderHook(() => useLiveFallback(reloads));

@@ -134,3 +134,80 @@ export function deletesIssue(
             change.id === issueId,
     );
 }
+
+/**
+ * Props that can change under an open page without anyone telling it (no
+ * socket): the project's settings, the people and what the user may do.
+ */
+const SETTINGS_AND_ACCESS = [
+    'labels',
+    'priorities',
+    'issueTypes',
+    'users',
+    'issueAbilities',
+    'projectRole',
+];
+
+/** What a project page re-reads on a timer: its view's data and every prop other people can change. */
+export function projectPageFallbackReloads(
+    view: IssuePageLooks,
+    calendarRange: [string, string] | null,
+): LiveReload[] {
+    if (view === 'Activity') {
+        return [{ only: ['activityLogs', ...SETTINGS_AND_ACCESS] }];
+    }
+
+    const reloads: LiveReload[] = [
+        { only: ['project', 'projects', ...SETTINGS_AND_ACCESS, 'roles'] },
+    ];
+
+    if (view === 'Calendar') {
+        if (calendarRange) {
+            reloads.push({
+                only: ['calendarIssues', 'upcomingDeadlines'],
+                data: {
+                    calendar_from: calendarRange[0],
+                    calendar_to: calendarRange[1],
+                },
+            });
+        }
+    } else {
+        reloads.push({ only: ['issues'] });
+    }
+
+    return reloads;
+}
+
+/** What an issue page re-reads on a timer. */
+export function issuePageFallbackReloads(
+    activityVisible: boolean,
+): LiveReload[] {
+    return [
+        {
+            only: [
+                'issue',
+                'ancestors',
+                'linkedPullRequests',
+                'project',
+                ...SETTINGS_AND_ACCESS,
+                ...(activityVisible ? ['activityLogs', 'queryParams'] : []),
+            ],
+        },
+    ];
+}
+
+/** What the dashboard re-reads on a timer. */
+export function dashboardFallbackReloads(): LiveReload[] {
+    return [
+        {
+            only: [
+                'issueStats',
+                'productivity_trend',
+                'projects',
+                'activityLogs',
+                'users',
+                'issueTypes',
+            ],
+        },
+    ];
+}

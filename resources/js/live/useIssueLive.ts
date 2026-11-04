@@ -1,7 +1,11 @@
 import { router } from '@inertiajs/react';
 import { useRef } from 'react';
 import { ProjectChangedPayload } from '@/types/Live';
-import { deletesIssue, issuePageReloads } from './changeProps';
+import {
+    deletesIssue,
+    issuePageFallbackReloads,
+    issuePageReloads,
+} from './changeProps';
 import { requestLiveReload } from './reloadQueue';
 import { useLiveChannel } from './useLiveChannel';
 import { useLiveFallback } from './useLiveFallback';
@@ -31,12 +35,7 @@ export function useIssueLive({
 
     // No socket: re-read the issue on a timer instead.
     useLiveFallback(() =>
-        issuePageReloads(
-            [{ type: 'issue', id: issueId, action: 'updated' }],
-            issueId,
-            latest.current.related,
-            latest.current.activityVisible,
-        ),
+        issuePageFallbackReloads(latest.current.activityVisible),
     );
 
     useLiveChannel<{ 'project.changed': ProjectChangedPayload }>(

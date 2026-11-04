@@ -1,9 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import { ProjectChange } from '@/types/Live';
 import {
+    dashboardFallbackReloads,
     dashboardReloads,
     deletesIssue,
+    issuePageFallbackReloads,
     issuePageReloads,
+    projectPageFallbackReloads,
     projectPageReloads,
 } from './changeProps';
 
@@ -189,5 +192,81 @@ describe('deletesIssue', () => {
         expect(deletesIssue([change('issue', 6, 'deleted')], 5)).toBe(false);
         expect(deletesIssue([change('issue', 5, 'updated')], 5)).toBe(false);
         expect(deletesIssue([change('comment', 5, 'deleted')], 5)).toBe(false);
+    });
+});
+
+describe('fallback reloads', () => {
+    const SETTINGS_AND_ACCESS = [
+        'labels',
+        'priorities',
+        'issueTypes',
+        'users',
+        'issueAbilities',
+        'projectRole',
+    ];
+
+    test('a list or board page re-reads its issues and everything other people can change', () => {
+        for (const view of ['List', 'Board'] as const) {
+            expect(projectPageFallbackReloads(view, null)).toEqual([
+                {
+                    only: [
+                        'project',
+                        'projects',
+                        ...SETTINGS_AND_ACCESS,
+                        'roles',
+                    ],
+                },
+                { only: ['issues'] },
+            ]);
+        }
+    });
+
+    test('the calendar re-reads its range, and waits for one', () => {
+        expect(
+            projectPageFallbackReloads('Calendar', [
+                '2026-11-01',
+                '2026-11-30',
+            ]),
+        ).toContainEqual({
+            only: ['calendarIssues', 'upcomingDeadlines'],
+            data: { calendar_from: '2026-11-01', calendar_to: '2026-11-30' },
+        });
+        expect(projectPageFallbackReloads('Calendar', null)).toHaveLength(1);
+    });
+
+    test('the activity view re-reads its feed and the settings', () => {
+        expect(projectPageFallbackReloads('Activity', null)).toEqual([
+            { only: ['activityLogs', ...SETTINGS_AND_ACCESS] },
+        ]);
+    });
+
+    test('an issue page re-reads the issue, its settings and access, and the feed only when open', () => {
+        const closed = issuePageFallbackReloads(false)[0].only!;
+        const open = issuePageFallbackReloads(true)[0].only!;
+
+        expect(closed).toEqual(
+            expect.arrayContaining([
+                'issue',
+                'ancestors',
+                'linkedPullRequests',
+                'project',
+                ...SETTINGS_AND_ACCESS,
+            ]),
+        );
+        expect(closed).not.toContain('activityLogs');
+        expect(open).toEqual(
+            expect.arrayContaining(['activityLogs', 'queryParams']),
+        );
+    });
+
+    test('the dashboard re-reads its counters, feed and lookups', () => {
+        expect(dashboardFallbackReloads()[0].only).toEqual([
+            'issueStats',
+            'productivity_trend',
+            'projects',
+            'activityLogs',
+            'users',
+            'issueTypes',
+        ]);
     });
 });

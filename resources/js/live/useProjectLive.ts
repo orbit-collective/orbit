@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { IssuePageLooks } from '@/types/Issues';
 import { ProjectChange, ProjectChangedPayload } from '@/types/Live';
-import { projectPageReloads } from './changeProps';
+import { projectPageFallbackReloads, projectPageReloads } from './changeProps';
 import { requestLiveReload } from './reloadQueue';
 import { useLiveChannel } from './useLiveChannel';
 import { useLiveFallback } from './useLiveFallback';
@@ -75,11 +75,7 @@ export function useProjectLive(
 
     // No socket: re-read what the visible view shows on a timer instead.
     useLiveFallback(() =>
-        projectPageReloads(
-            [{ type: 'issue', id: null, action: 'bulk' }],
-            latest.current,
-            calendarRange.current,
-        ),
+        projectPageFallbackReloads(latest.current, calendarRange.current),
     );
 
     useLiveChannel<{ 'project.changed': ProjectChangedPayload }>(
