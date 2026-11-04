@@ -49,6 +49,17 @@ describe('LiveBridge', () => {
         expect(scale).toBe(2);
     });
 
+    test('each fallback read also tells the popup to re-read its older pages', () => {
+        render(<LiveBridge />);
+        const [reloads] = mocks.useLiveFallback.mock.calls[0];
+
+        expect(mocks.announce).not.toHaveBeenCalled();
+        reloads();
+        reloads();
+
+        expect(mocks.announce).toHaveBeenCalledTimes(2);
+    });
+
     beforeEach(() => {
         Object.values(mocks).forEach((mock) => {
             if (typeof mock === 'function' && 'mockReset' in mock)
