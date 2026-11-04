@@ -36,6 +36,19 @@ services:
 
             BROADCAST_CONNECTION: ${BROADCAST_CONNECTION}
 
+            REVERB_APP_ID: ${REVERB_APP_ID:-}
+            REVERB_APP_KEY: ${REVERB_APP_KEY:-}
+            REVERB_APP_SECRET: ${REVERB_APP_SECRET:-}
+            # Hardcoded (not ${REVERB_HOST}): the app and queue workers publish to the
+            # reverb service over the Docker network, never through localhost.
+            REVERB_HOST: reverb
+            REVERB_PORT: 8080
+            REVERB_SCHEME: http
+            REVERB_PUBLIC_HOST: ${REVERB_PUBLIC_HOST:-localhost}
+            REVERB_PUBLIC_PORT: ${REVERB_PUBLIC_PORT:-8080}
+            REVERB_PUBLIC_SCHEME: ${REVERB_PUBLIC_SCHEME:-http}
+            REVERB_ALLOWED_ORIGINS: ${REVERB_ALLOWED_ORIGINS:-}
+
             FILESYSTEM_DISK: ${FILESYSTEM_DISK}
 
             QUEUE_CONNECTION: ${QUEUE_CONNECTION}
@@ -129,6 +142,19 @@ services:
             SESSION_DOMAIN: ${SESSION_DOMAIN}
 
             BROADCAST_CONNECTION: ${BROADCAST_CONNECTION}
+
+            REVERB_APP_ID: ${REVERB_APP_ID:-}
+            REVERB_APP_KEY: ${REVERB_APP_KEY:-}
+            REVERB_APP_SECRET: ${REVERB_APP_SECRET:-}
+            # Hardcoded (not ${REVERB_HOST}): the app and queue workers publish to the
+            # reverb service over the Docker network, never through localhost.
+            REVERB_HOST: reverb
+            REVERB_PORT: 8080
+            REVERB_SCHEME: http
+            REVERB_PUBLIC_HOST: ${REVERB_PUBLIC_HOST:-localhost}
+            REVERB_PUBLIC_PORT: ${REVERB_PUBLIC_PORT:-8080}
+            REVERB_PUBLIC_SCHEME: ${REVERB_PUBLIC_SCHEME:-http}
+            REVERB_ALLOWED_ORIGINS: ${REVERB_ALLOWED_ORIGINS:-}
 
             FILESYSTEM_DISK: ${FILESYSTEM_DISK}
 
@@ -224,6 +250,19 @@ services:
 
             BROADCAST_CONNECTION: ${BROADCAST_CONNECTION}
 
+            REVERB_APP_ID: ${REVERB_APP_ID:-}
+            REVERB_APP_KEY: ${REVERB_APP_KEY:-}
+            REVERB_APP_SECRET: ${REVERB_APP_SECRET:-}
+            # Hardcoded (not ${REVERB_HOST}): the app and queue workers publish to the
+            # reverb service over the Docker network, never through localhost.
+            REVERB_HOST: reverb
+            REVERB_PORT: 8080
+            REVERB_SCHEME: http
+            REVERB_PUBLIC_HOST: ${REVERB_PUBLIC_HOST:-localhost}
+            REVERB_PUBLIC_PORT: ${REVERB_PUBLIC_PORT:-8080}
+            REVERB_PUBLIC_SCHEME: ${REVERB_PUBLIC_SCHEME:-http}
+            REVERB_ALLOWED_ORIGINS: ${REVERB_ALLOWED_ORIGINS:-}
+
             FILESYSTEM_DISK: ${FILESYSTEM_DISK}
 
             QUEUE_CONNECTION: ${QUEUE_CONNECTION}
@@ -272,6 +311,73 @@ services:
         depends_on:
             app:
                 condition: service_started
+            redis:
+                condition: service_healthy
+
+        networks:
+            - orbit-network
+
+    reverb:
+        # Laravel Reverb, the WebSocket server behind live updates. Same image as
+        # `app`, different command. The app and queue workers publish to it as
+        # `reverb:8080` on the internal network; browsers connect to the published
+        # port (development) or to a TLS reverse proxy in front of it (production,
+        # see documentation/en/live-updates/). Without REVERB_APP_KEY/SECRET/ID the
+        # server idles and the app keeps working on periodic reloads.
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: php
+
+        command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080", "--no-interaction"]
+
+        ports:
+            - "${REVERB_PUBLISHED_PORT:-8080}:8080"
+
+        environment:
+            APP_NAME: ${APP_NAME}
+            APP_ENV: ${APP_ENV}
+            APP_KEY: ${APP_KEY}
+            APP_DEBUG: ${APP_DEBUG}
+            APP_URL: ${APP_URL}
+
+            LOG_CHANNEL: ${LOG_CHANNEL}
+            LOG_STACK: ${LOG_STACK}
+            LOG_LEVEL: ${LOG_LEVEL}
+
+            BROADCAST_CONNECTION: ${BROADCAST_CONNECTION}
+
+            REVERB_APP_ID: ${REVERB_APP_ID:-}
+            REVERB_APP_KEY: ${REVERB_APP_KEY:-}
+            REVERB_APP_SECRET: ${REVERB_APP_SECRET:-}
+            REVERB_HOST: reverb
+            REVERB_ALLOWED_ORIGINS: ${REVERB_ALLOWED_ORIGINS:-}
+            REVERB_SCALING_ENABLED: ${REVERB_SCALING_ENABLED:-false}
+            REVERB_APP_MAX_CONNECTIONS: ${REVERB_APP_MAX_CONNECTIONS:-1000}
+            REVERB_APP_RATE_LIMITING_ENABLED: ${REVERB_APP_RATE_LIMITING_ENABLED:-true}
+
+            # Scaling publishes through Redis pub/sub (REVERB_SCALING_ENABLED=true).
+            REDIS_CLIENT: ${REDIS_CLIENT}
+            REDIS_HOST: ${REDIS_HOST}
+            REDIS_PASSWORD: ${REDIS_PASSWORD}
+            REDIS_PORT: ${REDIS_PORT}
+
+        volumes:
+            - .:/app
+
+            # Keep the image-installed dependencies instead of the host's.
+            - /app/vendor
+
+        healthcheck:
+            test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 8080) ? 0 : 1);'"]
+            interval: 15s
+            timeout: 3s
+            retries: 5
+            start_period: 10s
+
+        restart: unless-stopped
+
+        depends_on:
             redis:
                 condition: service_healthy
 
