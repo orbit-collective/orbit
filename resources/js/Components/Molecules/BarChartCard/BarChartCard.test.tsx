@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import BarChartCard, { niceMax } from './BarChartCard';
 
@@ -95,7 +95,7 @@ describe('BarChartCard', () => {
         );
     });
 
-    test('collapses to its header, keeping a summary, and toggles on click', () => {
+    test('collapses to its header, keeping a summary, and toggles on click', async () => {
         const toggle = vi.fn();
         const { rerender } = render(
             <BarChartCard
@@ -118,7 +118,9 @@ describe('BarChartCard', () => {
                 collapsedSummary="Avg 5"
             />,
         );
-        expect(screen.getAllByTestId('bar')[0]).not.toBeVisible();
+        await waitFor(() =>
+            expect(screen.getAllByTestId('bar')[0]).not.toBeVisible(),
+        );
         expect(screen.getByTestId('collapsed-summary')).toHaveTextContent(
             'Avg 5',
         );

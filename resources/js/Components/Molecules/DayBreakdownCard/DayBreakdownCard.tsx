@@ -1,6 +1,7 @@
 import React, { useId, useState } from 'react';
 import TrendBadge from '@/Components/Atoms/TrendBadge/TrendBadge';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import { DayBreakdownCardProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
@@ -40,7 +41,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                 controls={bodyId}
             />
 
-            <div id={bodyId} hidden={collapsed}>
+            <Collapse id={bodyId} open={!collapsed}>
                 {days.length === 0 || !selected ? (
                     <p className="py-10 text-center text-sm text-[var(--text-gray-color)]">
                         {emptyText}
@@ -132,7 +133,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                         </ul>
                     </>
                 )}
-            </div>
+            </Collapse>
         </section>
     );
 };

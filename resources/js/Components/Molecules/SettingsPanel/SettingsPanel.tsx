@@ -1,6 +1,7 @@
 import { icons } from 'lucide-react';
 import React, { useId } from 'react';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import { CollapsibleProps } from '@/types/Components';
 
 interface SettingsPanelProps extends CollapsibleProps {
@@ -53,13 +54,11 @@ export default function SettingsPanel({
                     )}
                 </header>
             )}
-            <div
-                id={bodyId}
-                hidden={collapsed}
-                className="divide-y divide-[var(--border-color)]"
-            >
-                {children}
-            </div>
+            <Collapse id={bodyId} open={!collapsed}>
+                <div className="divide-y divide-[var(--border-color)]">
+                    {children}
+                </div>
+            </Collapse>
         </section>
     );
 }

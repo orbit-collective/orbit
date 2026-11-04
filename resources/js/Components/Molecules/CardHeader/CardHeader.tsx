@@ -2,6 +2,7 @@ import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { CardHeaderProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { FOCUS_RING } from '@/utils/focusRing';
 
 const iconBox =
     'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]';
@@ -41,7 +42,7 @@ const CardHeader: React.FC<CardHeaderProps> = ({
                     name="ChevronDown"
                     size={16}
                     className={cn(
-                        'shrink-0 text-[var(--text-muted-color)] transition-transform',
+                        'shrink-0 text-[var(--text-muted-color)] transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
                         collapsed && '-rotate-90',
                     )}
                 />
@@ -58,7 +59,11 @@ const CardHeader: React.FC<CardHeaderProps> = ({
                 aria-expanded={!collapsed}
                 aria-controls={controls}
                 onClick={onToggleCollapse}
-                className="flex w-full items-center gap-3 rounded-lg border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--accent-color)]"
+                className={cn(
+                    'flex w-full items-center gap-3 rounded-lg border-0 bg-transparent p-0',
+                    FOCUS_RING,
+                    'focus-visible:ring-offset-4',
+                )}
             >
                 {content}
             </button>

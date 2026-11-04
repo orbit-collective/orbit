@@ -1,6 +1,7 @@
 import React, { useId } from 'react';
 import BarPlot from '@/Components/Molecules/BarPlot/BarPlot';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import { BarChartCardProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
@@ -59,7 +60,7 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
                 controls={bodyId}
             />
 
-            <div id={bodyId} hidden={collapsed}>
+            <Collapse id={bodyId} open={!collapsed}>
                 {summary && (
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-gray-color)]">
                         {summary}
@@ -93,7 +94,7 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
                         }))}
                     />
                 )}
-            </div>
+            </Collapse>
         </section>
     );
 };

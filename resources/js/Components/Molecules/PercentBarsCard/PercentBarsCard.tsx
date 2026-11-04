@@ -2,6 +2,7 @@ import React, { useId } from 'react';
 import TrendBadge from '@/Components/Atoms/TrendBadge/TrendBadge';
 import BarPlot from '@/Components/Molecules/BarPlot/BarPlot';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import { PercentBarsCardProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
@@ -50,7 +51,7 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
                 controls={bodyId}
             />
 
-            <div id={bodyId} hidden={collapsed}>
+            <Collapse id={bodyId} open={!collapsed}>
                 <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-gray-color)]">
                     <span className="flex items-center gap-2">
                         {totalLabel}:{' '}
@@ -94,7 +95,7 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
                         {footnote}
                     </p>
                 )}
-            </div>
+            </Collapse>
         </section>
     );
 };
