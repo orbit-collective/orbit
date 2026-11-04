@@ -85,3 +85,26 @@ test('a project that does not exist is never joinable', function () {
     expect(LiveChannels::canJoinProject($user, 999_999))->toBeFalse();
     authorizeChannel(LiveChannels::project(999_999), $user)->assertForbidden();
 });
+
+test('an issue presence channel shows the member card to those who can view its project', function () {
+    $project = Project::factory()->create();
+    $member = User::factory()->create(['name' => 'Ada']);
+    $stranger = User::factory()->create();
+    addProjectMember($project, $member->id, 'member');
+    $issue = App\Models\Issue::factory()->create(['project_id' => $project->id]);
+
+    $response = test()->actingAs($member)->postJson('/broadcasting/auth', [
+        'socket_id' => '1234.5678',
+        'channel_name' => 'presence-'.LiveChannels::issue($issue->id),
+    ])->assertOk();
+
+    expect(json_decode($response->json('channel_data'), true)['user_info'])
+        ->toBe(['id' => $member->id, 'name' => 'Ada', 'avatar' => $member->avatar]);
+
+    test()->actingAs($stranger)->postJson('/broadcasting/auth', [
+        'socket_id' => '1234.5678',
+        'channel_name' => 'presence-'.LiveChannels::issue($issue->id),
+    ])->assertForbidden();
+
+    expect(LiveChannels::joinIssue($member, 999_999))->toBeFalse();
+});
