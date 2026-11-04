@@ -58,13 +58,15 @@ describe('useLiveFallback', () => {
     });
 
     test('scales the interval for slower-changing data', () => {
+        vi.spyOn(Math, 'random').mockReturnValue(0);
         renderHook(() => useLiveFallback(reloads, 2));
 
         vi.advanceTimersByTime(59_999);
         expect(mocks.requestLiveReload).not.toHaveBeenCalled();
 
-        vi.advanceTimersByTime(MAX_WAIT(60));
+        vi.advanceTimersByTime(1);
         expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
+        vi.restoreAllMocks();
     });
 
     test('does not poll when the server switched polling off', () => {
