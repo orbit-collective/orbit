@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\DeveloperPortal\DeveloperPortalAccessService;
 use App\Services\MailConfigurationService;
 use App\Services\NotificationService;
 use App\Services\ProjectService;
@@ -13,7 +14,8 @@ class HandleInertiaRequests extends Middleware
     public function __construct(
         protected NotificationService $notificationService,
         protected ProjectService $projectService,
-        protected MailConfigurationService $mailConfigurationService
+        protected MailConfigurationService $mailConfigurationService,
+        protected DeveloperPortalAccessService $developerPortalAccess
     ) {}
 
     /**
@@ -56,6 +58,7 @@ class HandleInertiaRequests extends Middleware
             'hasProjects' => fn () => $request->user()
                 ? $this->projectService->hasAnyProjectsForUser($request->user()->id)
                 : true,
+            'developerPortalEnabled' => fn () => $this->developerPortalAccess->canAccess($request->user()),
             'emailEnabled' => fn () => $this->mailConfigurationService->isEnabled(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

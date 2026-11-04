@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnforceSessionLifetime;
+use App\Http\Middleware\EnsureDeveloperPortalAccess;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -29,7 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        $middleware->alias([
+            'developer-portal' => EnsureDeveloperPortalAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Attachment uploads, the command palette search and the WebSocket

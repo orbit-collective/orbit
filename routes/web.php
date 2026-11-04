@@ -124,8 +124,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/roles-management', [SettingsController::class, 'rolesManagement'])->name('settings.roles-management');
     Route::get('/settings/integrations', [SettingsController::class, 'integrations'])->name('settings.integrations');
     Route::get('/settings/automation', [SettingsController::class, 'automation'])->name('settings.automation');
-//    Routes for the new developer settings tab
-    Route::get('/settings/dev-portal', [SettingsController::class, 'developerPortal'])->name('settings.dev-portal');
+    // Instance-wide diagnostics: 404 unless APP_ENV=local, 403 without developer.portal.view.
+    Route::get('/settings/dev-portal', [SettingsController::class, 'developerPortal'])
+        ->middleware('developer-portal')
+        ->name('settings.dev-portal');
 });
 
 Route::get('/invitations/{token}', [ProjectInvitationController::class, 'accept'])->name('invitations.accept');
