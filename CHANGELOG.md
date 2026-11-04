@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.12.0](https://github.com/orbit-collective/orbit/compare/v0.11.5...v0.12.0) (2026-11-04)
+
+
+### Features
+
+* **docker:** add reverb service ([c2c537e](https://github.com/orbit-collective/orbit/commit/c2c537e26851581025959cdf5e13bab2e0468c6b))
+* **live:** add channel, reload queue and socket header ([2ed65df](https://github.com/orbit-collective/orbit/commit/2ed65dfa6d1708906b183294c50b7db6faf2747f))
+* **live:** add Echo client for Reverb ([8f1378b](https://github.com/orbit-collective/orbit/commit/8f1378b8dba09a62f00719e905c22b6d7352bfed))
+* **live:** add live events and the update buffer ([86f9156](https://github.com/orbit-collective/orbit/commit/86f91568c320344fca5cc5356e2d825173f2b71e))
+* **live:** add LIVE_POLL_INTERVAL for the fallback ([b530d54](https://github.com/orbit-collective/orbit/commit/b530d54382baa9b675f767445686316277c2059c))
+* **live:** add Reverb config and private channels ([2f6381d](https://github.com/orbit-collective/orbit/commit/2f6381d90b0aa867fa21f0a4c7a590363363ba3f))
+* **live:** announce issue, comment, member and inbox changes ([86bcf13](https://github.com/orbit-collective/orbit/commit/86bcf1332e7da1cfa31ae2452a8e4c91ad09aac1))
+* **live:** detect the socket state and poll as a fallback ([8c5dbe1](https://github.com/orbit-collective/orbit/commit/8c5dbe1283bd1f48317d5a6d1b9019a9a5ff9a2b))
+* **live:** fall back to polling on every live page ([dc12231](https://github.com/orbit-collective/orbit/commit/dc1223159437e66862079e6565ee8ad3d397ae56))
+* **live:** refresh project settings pages live ([45d4ae7](https://github.com/orbit-collective/orbit/commit/45d4ae74528f4225eeceab56cb339fac2b2e35f6))
+* **live:** refresh project views and dashboard live ([7f3a805](https://github.com/orbit-collective/orbit/commit/7f3a805982804a840c3b4189dede42bedb24f04b))
+* **live:** show issue changes, viewers and edit conflicts ([0e1195c](https://github.com/orbit-collective/orbit/commit/0e1195c93d66441239a6d0077c51b6674c50b9e1))
+* **live:** update notifications live ([d861877](https://github.com/orbit-collective/orbit/commit/d861877c56e06cd8534c78e44a50cea787aee5ac))
+
+
+### Bug Fixes
+
+* **docker:** install pcntl and refresh all php services ([65a1997](https://github.com/orbit-collective/orbit/commit/65a1997f8bcab42734b2876447018bea657f5f7c))
+* **live:** announce changes to the allowed child types ([4218184](https://github.com/orbit-collective/orbit/commit/42181849daa587b1208672151c4035933acff8ab))
+* **live:** announce label edits, parents, workflow and role changes ([f1136c5](https://github.com/orbit-collective/orbit/commit/f1136c5d9ce26c7c813eb28cc38ff9c9fc7678ac))
+* **live:** answer channel auth with 401 when the session expired ([86ad43e](https://github.com/orbit-collective/orbit/commit/86ad43ee4960827e8df9fb1f66d9edfda248c752))
+* **live:** catch up after short reconnects and poll every mutable prop ([b5a4a6a](https://github.com/orbit-collective/orbit/commit/b5a4a6a690c50975e0230e62c31a933f4f6b03a7))
+* **live:** keep settings changes, issue types and older notifications fresh ([d32256a](https://github.com/orbit-collective/orbit/commit/d32256ae1698f872cb7d8adf6604ff9a3afd265d))
+* **live:** keep the poll deadline across connection flaps ([9b9cf20](https://github.com/orbit-collective/orbit/commit/9b9cf201b578f43e7502447f8cc4f80d6403fbe4))
+* **live:** re-read a project view that missed changes when it opens ([6e60aa1](https://github.com/orbit-collective/orbit/commit/6e60aa1812137b89fd5031a9a60abc12790d6b95))
+* **live:** refresh the notifications the popup shows without dropping them ([b76f8cb](https://github.com/orbit-collective/orbit/commit/b76f8cb14e82f131fdc6ade9d30cb81b56567dae))
+* **live:** refresh the popup's older pages from the notification fallback too ([b80e9a2](https://github.com/orbit-collective/orbit/commit/b80e9a221604977f1d41d55035b13220f49a7c7f))
+* **live:** treat an empty REVERB_ALLOWED_ORIGINS as unset ([298a461](https://github.com/orbit-collective/orbit/commit/298a46127ebe844601c3713bf27069e0e504916b))
+
+
+### Performance Improvements
+
+* **live:** load page props lazily for partial reloads ([8226a01](https://github.com/orbit-collective/orbit/commit/8226a019d301d9b842b97cf8958ecb5306b8213c))
+
 ## [0.11.5](https://github.com/orbit-collective/orbit/compare/v0.11.4...v0.11.5) (2026-11-03)
 
 
