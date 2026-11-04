@@ -56,21 +56,36 @@ describe('useProjectLive', () => {
             { initialProps: { view: 'List' as const } },
         );
 
-        expect(fallbackReloads()).toEqual([{ only: ['issues'] }]);
+        const only = (index: number) => fallbackReloads()[index].only;
+
+        // The view's data plus the props other people can change.
+        expect(only(1)).toEqual(['issues']);
+        expect(only(0)).toEqual(
+            expect.arrayContaining([
+                'project',
+                'labels',
+                'priorities',
+                'issueTypes',
+            ]),
+        );
 
         rerender({ view: 'Activity' as unknown as 'List' });
-        expect(fallbackReloads()).toEqual([{ only: ['activityLogs'] }]);
+        expect(only(0)).toEqual(
+            expect.arrayContaining([
+                'activityLogs',
+                'labels',
+                'issueAbilities',
+            ]),
+        );
 
         rerender({ view: 'Calendar' as unknown as 'List' });
-        expect(fallbackReloads()).toEqual([
-            {
-                only: ['calendarIssues', 'upcomingDeadlines'],
-                data: {
-                    calendar_from: '2026-11-01',
-                    calendar_to: '2026-11-30',
-                },
+        expect(fallbackReloads()).toContainEqual({
+            only: ['calendarIssues', 'upcomingDeadlines'],
+            data: {
+                calendar_from: '2026-11-01',
+                calendar_to: '2026-11-30',
             },
-        ]);
+        });
     });
 
     test('listens on the project channel and reloads what the view shows', () => {
@@ -229,9 +244,18 @@ describe('useIssueLive', () => {
             initialProps: options,
         });
 
-        expect(fallbackReloads()).toEqual([
-            { only: ['issue', 'ancestors', 'linkedPullRequests'] },
-        ]);
+        expect(fallbackReloads()).toHaveLength(1);
+        expect(fallbackReloads()[0].only).toEqual(
+            expect.arrayContaining([
+                'issue',
+                'linkedPullRequests',
+                'labels',
+                'priorities',
+                'issueTypes',
+                'issueAbilities',
+            ]),
+        );
+        expect(fallbackReloads()[0].only).not.toContain('activityLogs');
 
         rerender({ ...options, activityVisible: true });
         expect(fallbackReloads()[0].only).toContain('activityLogs');
@@ -284,16 +308,16 @@ describe('useDashboardLive', () => {
     test('without a socket it refreshes the counters and feed on a timer', () => {
         renderHook(() => useDashboardLive([1]));
 
-        expect(fallbackReloads()).toEqual([
-            {
-                only: [
-                    'issueStats',
-                    'productivity_trend',
-                    'projects',
-                    'activityLogs',
-                ],
-            },
-        ]);
+        expect(fallbackReloads()[0].only).toEqual(
+            expect.arrayContaining([
+                'issueStats',
+                'productivity_trend',
+                'projects',
+                'activityLogs',
+                'users',
+                'issueTypes',
+            ]),
+        );
     });
 
     test('listens on every project channel and refreshes the counters', () => {
