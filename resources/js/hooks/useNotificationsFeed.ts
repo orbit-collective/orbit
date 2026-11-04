@@ -2,6 +2,7 @@ import type { VisitHelperOptions } from '@inertiajs/core';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { NOTIFICATIONS_CHANGED_EVENT } from '@/live/notificationsEvent';
 import {
     Notification,
     NotificationPage,
@@ -119,6 +120,22 @@ export function useNotificationsFeed(
     const refresh = useCallback(() => {
         setReloadToken((token) => token + 1);
     }, []);
+
+    // The inbox changed in another tab or by someone else: the shared first
+    // page is reloaded on its own, but anything beyond it (older pages, a
+    // filtered view) is only this feed's, so fetch it again.
+    const needsOwnRefresh = useRef(false);
+    needsOwnRefresh.current =
+        !isDefaultQuery || items.length > NOTIFICATIONS_PAGE_SIZE;
+    useEffect(() => {
+        const onChange = () => {
+            if (needsOwnRefresh.current) refresh();
+        };
+        window.addEventListener(NOTIFICATIONS_CHANGED_EVENT, onChange);
+
+        return () =>
+            window.removeEventListener(NOTIFICATIONS_CHANGED_EVENT, onChange);
+    }, [refresh]);
 
     // The shared props changed (a write finished, or something outside the
     // popup such as the "mark all as read" command ran): reconcile the rows.

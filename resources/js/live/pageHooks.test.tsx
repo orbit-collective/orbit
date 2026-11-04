@@ -16,7 +16,7 @@ vi.mock('@inertiajs/react', () => ({ router: { visit: mocks.visit } }));
 
 import { useDashboardLive } from './useDashboardLive';
 import { useIssueLive } from './useIssueLive';
-import { useProjectLive } from './useProjectLive';
+import { mergeMissed, useProjectLive } from './useProjectLive';
 
 const change = (
     type: string,
@@ -71,7 +71,49 @@ describe('useProjectLive', () => {
     });
 });
 
+describe('mergeMissed', () => {
+    test('de-duplicates repeated changes', () => {
+        expect(
+            mergeMissed(
+                [change('issue', 1)],
+                [change('issue', 1), change('issue', 2)],
+            ),
+        ).toEqual([change('issue', 1), change('issue', 2)]);
+    });
+
+    test('keeps a settings change however many issue edits follow it', () => {
+        const edits = Array.from({ length: 80 }, (_, i) => change('issue', i));
+
+        const merged = mergeMissed([change('labels', null)], edits);
+
+        expect(merged).toEqual([
+            { type: 'labels', id: null, action: 'bulk' },
+            { type: 'issue', id: null, action: 'bulk' },
+        ]);
+    });
+});
+
 describe('useProjectLive missed changes', () => {
+    test('a label change is not forgotten after a burst of issue edits', () => {
+        const range = { current: null };
+        const { rerender } = renderHook(
+            ({ view }) => useProjectLive(7, view, range),
+            { initialProps: { view: 'Activity' as unknown as 'List' } },
+        );
+
+        handler()({ changes: [change('labels', null)], actor: 2 });
+        for (let i = 0; i < 60; i++) {
+            handler()({ changes: [change('issue', i)], actor: 2 });
+        }
+        mocks.requestLiveReload.mockClear();
+
+        rerender({ view: 'List' });
+
+        expect(mocks.requestLiveReload).toHaveBeenCalledWith({
+            only: ['labels', 'issues'],
+        });
+    });
+
     const range = { current: null };
 
     test('re-reads the list when it opens after changes arrived during Activity', () => {
@@ -208,6 +250,7 @@ describe('useDashboardLive', () => {
                 'productivity_trend',
                 'projects',
                 'activityLogs',
+                'issueTypes',
             ],
         });
     });

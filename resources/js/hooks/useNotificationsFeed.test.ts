@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { announceNotificationsChanged } from '@/live/notificationsEvent';
 import { Notification } from '@/types/Notification';
 import {
     NOTIFICATIONS_PAGE_SIZE,
@@ -49,6 +50,67 @@ describe('useNotificationsFeed', () => {
         expect(result.current.hasMore).toBe(false);
         expect(result.current.unreadCount).toBe(2);
         expect(mocks.get).not.toHaveBeenCalled();
+    });
+
+    test('re-fetches its own list when the inbox changes elsewhere and older pages are loaded', async () => {
+        // Only the shared first page is shown: reloading it is enough.
+        renderHook(() => useNotificationsFeed(fullPage(), 20));
+        act(() => announceNotificationsChanged());
+        expect(mocks.get).not.toHaveBeenCalled();
+
+        mocks.get.mockResolvedValue({
+            data: {
+                data: [make(81), make(80)],
+                next_cursor: null,
+                unread_count: 20,
+            },
+        });
+        const { result } = renderHook(() =>
+            useNotificationsFeed(fullPage(), 20),
+        );
+        await act(async () => {
+            await result.current.loadMore();
+        });
+        mocks.get.mockClear();
+
+        act(() => announceNotificationsChanged());
+
+        await waitFor(() => expect(mocks.get).toHaveBeenCalled());
+    });
+
+    test('re-fetches a filtered view when the inbox changes', async () => {
+        mocks.get.mockResolvedValue({
+            data: { data: [], next_cursor: null, unread_count: 0 },
+        });
+        renderHook(() =>
+            useNotificationsFeed([make(1)], 1, {
+                onlyUnread: true,
+                type: 'all',
+            }),
+        );
+        await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(1));
+
+        act(() => announceNotificationsChanged());
+
+        await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(2));
+    });
+
+    test('stops listening when it unmounts', async () => {
+        mocks.get.mockResolvedValue({
+            data: { data: [], next_cursor: null, unread_count: 0 },
+        });
+        const { unmount } = renderHook(() =>
+            useNotificationsFeed([make(1)], 1, {
+                onlyUnread: true,
+                type: 'all',
+            }),
+        );
+        await waitFor(() => expect(mocks.get).toHaveBeenCalledTimes(1));
+        unmount();
+
+        act(() => announceNotificationsChanged());
+
+        expect(mocks.get).toHaveBeenCalledTimes(1);
     });
 
     test('only offers more when the first page was full', () => {

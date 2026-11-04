@@ -1,4 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
+import { announceNotificationsChanged } from '@/live/notificationsEvent';
 import { requestLiveReload } from '@/live/reloadQueue';
 import { useLiveChannel } from '@/live/useLiveChannel';
 import {
@@ -25,6 +26,7 @@ export default function LiveBridge() {
             requestLiveReload({
                 only: ['notifications', 'notificationUnreadCount'],
             });
+            announceNotificationsChanged();
 
             if (created) {
                 showBrowserNotification(

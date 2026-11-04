@@ -162,6 +162,7 @@ describe('dashboardReloads', () => {
                     'productivity_trend',
                     'projects',
                     'activityLogs',
+                    'issueTypes',
                 ],
             },
         ];

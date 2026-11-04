@@ -13,8 +13,31 @@ const groupOf = (view: IssuePageLooks): DataGroup =>
 
 const GROUPS: DataGroup[] = ['issues', 'Calendar', 'Activity'];
 
-/** Changes remembered per group; more than this are as good as "everything". */
+/** Distinct changes remembered per group; more than this collapse to one per type. */
 const MAX_MISSED = 50;
+
+/**
+ * Add `incoming` to what a group missed. Entries are de-duplicated, so a burst
+ * of changes to one issue is one entry, and past the limit they collapse to one
+ * `bulk` entry per type: the types stay known (a label rename must not be
+ * pushed out by fifty issue edits), only the ids are given up.
+ */
+export function mergeMissed(
+    missed: ProjectChange[],
+    incoming: ProjectChange[],
+): ProjectChange[] {
+    const distinct = new Map<string, ProjectChange>();
+
+    for (const change of [...missed, ...incoming]) {
+        distinct.set(`${change.type}:${change.id}:${change.action}`, change);
+    }
+
+    if (distinct.size <= MAX_MISSED) return [...distinct.values()];
+
+    return [
+        ...new Set([...distinct.values()].map((change) => change.type)),
+    ].map((type) => ({ type, id: null, action: 'bulk' }));
+}
 
 /**
  * Keep the project page (list, board, calendar, activity) in step with other
@@ -58,9 +81,7 @@ export function useProjectLive(
                     missed.current[group] =
                         group === open
                             ? []
-                            : [...missed.current[group], ...changes].slice(
-                                  -MAX_MISSED,
-                              );
+                            : mergeMissed(missed.current[group], changes);
                 }
 
                 projectPageReloads(
