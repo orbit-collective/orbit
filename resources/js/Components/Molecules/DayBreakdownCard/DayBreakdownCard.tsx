@@ -40,19 +40,26 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
 
     const select = (key: string) => {
         setSelectedKey(key);
-        tabs.current[key]?.focus();
+        // The horizontal scroll is handled below; never let focus scroll the page.
+        tabs.current[key]?.focus({ preventScroll: true });
     };
 
     // Keep the chosen day in view when the pills scroll (on first paint too).
+    // Only the pill row scrolls, sideways: scrollIntoView would also move the
+    // whole page down to the card on every visit and refresh.
+    const scroller = useRef<HTMLDivElement>(null);
     const selectedDay = selected?.key;
     const settled = useRef(false);
     useEffect(() => {
-        if (!selectedDay) return;
-        tabs.current[selectedDay]?.scrollIntoView?.({
-            inline: 'center',
-            block: 'nearest',
-            behavior: settled.current ? 'smooth' : 'auto',
-        });
+        const row = scroller.current;
+        const tab = selectedDay ? tabs.current[selectedDay] : null;
+
+        if (row && tab && typeof row.scrollTo === 'function') {
+            row.scrollTo({
+                left: tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2,
+                behavior: settled.current ? 'smooth' : 'auto',
+            });
+        }
         settled.current = true;
     }, [selectedDay]);
 
@@ -117,6 +124,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                         <LayoutGroup id={bodyId}>
                             {/* Pills have a fixed width and sit together in the middle; when the card is too narrow for all of them the row scrolls from the start and snaps. Padding leaves room for the focus ring. */}
                             <div
+                                ref={scroller}
                                 data-testid="day-scroller"
                                 className="no-scrollbar -mx-1 mt-4 snap-x snap-mandatory overflow-x-auto p-1"
                             >

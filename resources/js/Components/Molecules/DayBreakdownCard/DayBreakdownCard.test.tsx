@@ -177,26 +177,27 @@ describe('DayBreakdownCard', () => {
         });
     });
 
-    test('the chosen day is scrolled into view on first paint and when it changes', async () => {
+    test('only the pill row scrolls, sideways, to the chosen day on first paint and when it changes', async () => {
+        const scrollTo = vi.fn();
         const scrollIntoView = vi.fn();
+        Element.prototype.scrollTo = scrollTo;
         Element.prototype.scrollIntoView = scrollIntoView;
         renderCard();
 
-        expect(scrollIntoView).toHaveBeenLastCalledWith({
-            inline: 'center',
-            block: 'nearest',
-            behavior: 'auto',
-        });
+        expect(scrollTo).toHaveBeenLastCalledWith(
+            expect.objectContaining({ behavior: 'auto' }),
+        );
 
         fireEvent.click(screen.getAllByRole('tab')[0]);
 
         await waitFor(() =>
-            expect(scrollIntoView).toHaveBeenLastCalledWith({
-                inline: 'center',
-                block: 'nearest',
-                behavior: 'smooth',
-            }),
+            expect(scrollTo).toHaveBeenLastCalledWith(
+                expect.objectContaining({ behavior: 'smooth' }),
+            ),
         );
+        // The page itself must never be scrolled by the card.
+        expect(scrollIntoView).not.toHaveBeenCalled();
+        delete (Element.prototype as { scrollTo?: unknown }).scrollTo;
         delete (Element.prototype as { scrollIntoView?: unknown })
             .scrollIntoView;
     });
