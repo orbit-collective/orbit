@@ -4,7 +4,12 @@ import { BadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
 const tooltipStyles =
-    'absolute top-[calc(100%+6px)] flex gap-1.5 items-center left-1/2 -translate-x-1/2 bg-[var(--bg-color)] text-[var(--text-gray-color)] px-2 py-1 rounded-md text-[10px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-200 ease-in-out pointer-events-none z-50 border border-[var(--border-color)] shadow-lg -translate-y-1 group-hover:translate-y-0';
+    'absolute flex gap-1.5 items-center left-1/2 -translate-x-1/2 bg-[var(--bg-color)] text-[var(--text-gray-color)] px-2 py-1 rounded-md text-[10px] font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 ease-in-out pointer-events-none z-50 border border-[var(--border-color)] shadow-lg';
+
+const tooltipPlacements = {
+    bottom: 'top-[calc(100%+6px)] -translate-y-1 group-hover:translate-y-0 group-focus-within:translate-y-0',
+    top: 'bottom-[calc(100%+6px)] translate-y-1 group-hover:translate-y-0 group-focus-within:translate-y-0',
+};
 
 export const badgeVariants = cva(
     'relative inline-flex items-center justify-center py-[2px] px-2 rounded-lg text-[10px] font-medium whitespace-nowrap transition-colors border border-solid border-transparent',
@@ -48,10 +53,14 @@ const Badge: React.FC<BadgeProps> = ({
     className,
     tooltip,
     tooltipText,
+    tooltipPlacement = 'bottom',
+    wrapperClassName,
     ...props
 }) => {
     return (
-        <span className="group relative inline-flex w-fit">
+        <span
+            className={cn('group relative inline-flex w-fit', wrapperClassName)}
+        >
             <span
                 className={cn(badgeVariants({ variant, color }), className)}
                 {...props}
@@ -59,7 +68,13 @@ const Badge: React.FC<BadgeProps> = ({
                 {children}
             </span>
             {tooltip && (
-                <span className={tooltipStyles} aria-hidden="true">
+                <span
+                    className={cn(
+                        tooltipStyles,
+                        tooltipPlacements[tooltipPlacement],
+                    )}
+                    aria-hidden="true"
+                >
                     {tooltipText ? tooltipText : children}
                 </span>
             )}
