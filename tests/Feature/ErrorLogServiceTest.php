@@ -93,3 +93,22 @@ test('with daily logs the newest file wins', function () {
 
     expect($entries)->toHaveCount(1)->and($entries[0]['message'])->toBe('new file');
 });
+
+test('the error list can be paginated from the one cached read', function () {
+    $today = CarbonImmutable::now()->format('Y-m-d');
+    $lines = '';
+    for ($i = 1; $i <= 7; $i++) {
+        $lines .= logLine("$today 10:00:0$i", 'ERROR', "failure $i");
+    }
+    file_put_contents($this->dir.'/laravel.log', $lines);
+
+    $result = app(ErrorLogService::class)->paginated(3);
+
+    expect($result['entries']->total())->toBe(7)
+        ->and($result['entries']->perPage())->toBe(3)
+        ->and($result['entries']->items())->toHaveCount(3)
+        ->and($result['entries']->items()[0]['message'])->toBe('failure 7')
+        ->and($result['daily'])->toHaveCount(7)
+        ->and(app(ErrorLogService::class)->paginated(5000)['entries']->perPage())->toBe(100)
+        ->and(app(ErrorLogService::class)->paginated(0)['entries']->perPage())->toBe((int) config('developer-portal.per_page'));
+});

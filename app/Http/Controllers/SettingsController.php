@@ -124,7 +124,7 @@ class SettingsController extends Controller
             'portalUsers' => $users,
             'portalProjects' => $projects,
             'containers' => Inertia::defer(fn () => $this->dockerContainerService->containers()),
-            'errorLog' => Inertia::defer(fn () => $this->errorLogService->recent()),
+            'errorLog' => Inertia::defer(fn () => $this->errorLogService->paginated($request->integer(ErrorLogService::PER_PAGE))),
         ]);
     }
 

@@ -47,7 +47,8 @@ test('the deferred props load containers and errors on request', function () {
         ->get('/settings/dev-portal', ['X-Inertia' => 'true', 'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()), 'X-Inertia-Partial-Component' => 'Settings/DeveloperPortal', 'X-Inertia-Partial-Data' => 'containers,errorLog'])
         ->assertOk()
         ->assertJsonPath('props.containers.available', true)
-        ->assertJsonPath('props.errorLog.entries', []);
+        ->assertJsonPath('props.errorLog.entries.data', [])
+        ->assertJsonPath('props.errorLog.entries.total', 0);
 
     rmdir($dir);
 });
@@ -91,4 +92,30 @@ test('a pager link keeps the other list on its page', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('portalUsers.links.2.url', fn ($url) => str_contains($url, 'projects_page=2') && str_contains($url, 'users_page=2'))
         );
+});
+
+test('the error list is paginated and keeps the other pagers in its links', function () {
+    $dir = sys_get_temp_dir().'/orbit-portal-'.uniqid();
+    mkdir($dir);
+    config(['developer-portal.errors.directory' => $dir]);
+    $today = now()->format('Y-m-d');
+    $lines = '';
+    for ($i = 1; $i <= 25; $i++) {
+        $lines .= "[$today 10:00:".str_pad((string) $i, 2, '0', STR_PAD_LEFT)."] local.ERROR: failure $i\n";
+    }
+    file_put_contents($dir.'/laravel.log', $lines);
+
+    $headers = ['X-Inertia' => 'true', 'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request()), 'X-Inertia-Partial-Component' => 'Settings/DeveloperPortal', 'X-Inertia-Partial-Data' => 'errorLog'];
+
+    $response = $this->actingAs($this->user)->get('/settings/dev-portal?errors_perPage=10&errors_page=3&users_page=2', $headers)->assertOk();
+
+    $response->assertJsonPath('props.errorLog.entries.total', 25)
+        ->assertJsonPath('props.errorLog.entries.current_page', 3)
+        ->assertJsonPath('props.errorLog.entries.per_page', 10)
+        ->assertJsonCount(5, 'props.errorLog.entries.data')
+        ->assertJsonPath('props.errorLog.entries.data.0.message', 'failure 5');
+    expect($response->json('props.errorLog.entries.links.1.url'))->toContain('users_page=2');
+
+    array_map('unlink', glob($dir.'/*'));
+    rmdir($dir);
 });
