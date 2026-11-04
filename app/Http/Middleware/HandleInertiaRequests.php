@@ -64,9 +64,13 @@ class HandleInertiaRequests extends Middleware
                 'information' => fn () => $request->session()->get('information'),
                 'action_url' => fn () => $request->session()->get('action_url'),
             ],
-            'live' => fn () => $request->user() && config('live.enabled')
-                ? ['enabled' => true, ...config('live.client')]
-                : ['enabled' => false],
+            'live' => fn () => $request->user()
+                ? [
+                    'enabled' => (bool) config('live.enabled'),
+                    'pollInterval' => (int) config('live.poll_interval'),
+                    ...(config('live.enabled') ? config('live.client') : []),
+                ]
+                : ['enabled' => false, 'pollInterval' => 0],
             'notifications' => fn () => $request->user()
                 ? $this->notificationService->getAllForUser($request->user()->id)
                 : [],
