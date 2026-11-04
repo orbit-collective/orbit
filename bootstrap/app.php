@@ -16,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    // Private channel authorisation (POST /broadcasting/auth). Signed-in users
+    // only, and throttled: Echo asks once per channel per (re)connect.
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        ['middleware' => ['web', 'auth', 'throttle:120,1']],
+    )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             EnforceSessionLifetime::class,
@@ -26,15 +32,18 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Attachment uploads and the command palette search are the web routes
-        // answered with JSON rather than an Inertia redirect (the Tiptap
-        // paste/drop handler needs the stored URL back, the palette is a
-        // global overlay), so their failures - validation, a policy denial,
-        // a moderation rejection, a guest - have to come back as JSON too.
+        // Attachment uploads, the command palette search and the WebSocket
+        // channel authorisation are the web routes answered with JSON rather
+        // than an Inertia redirect (the Tiptap paste/drop handler needs the
+        // stored URL back, the palette is a global overlay, Echo wants a status
+        // code instead of a login page), so their failures - validation, a
+        // policy denial, a moderation rejection, a guest - have to come back
+        // as JSON too.
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*')
                 || $request->is('projects/*/attachments')
-                || $request->is('command-palette/*'),
+                || $request->is('command-palette/*')
+                || $request->is('broadcasting/auth'),
         );
 
         // Inertia's client shows a full-page reload of Laravel's own 403 HTML
