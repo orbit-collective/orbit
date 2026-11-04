@@ -1,4 +1,5 @@
 import {
+    act,
     cleanup,
     fireEvent,
     render,
@@ -122,6 +123,7 @@ const setup = (
     onSave = vi.fn(),
     disabled = false,
     onImageUpload?: (file: File) => Promise<string>,
+    onEditingChange?: (editing: boolean) => void,
 ) => {
     // Real TipTap memoizes a single Editor instance across re-renders, so the
     // mock must too — otherwise clicking (which triggers a state update and
@@ -140,6 +142,7 @@ const setup = (
             value={value}
             onSave={onSave}
             disabled={disabled}
+            onEditingChange={onEditingChange}
             onImageUpload={onImageUpload}
         />,
     );
@@ -160,6 +163,26 @@ const transfer = (files: File[]) =>
     ({ files, items: [] }) as unknown as DataTransfer;
 
 describe('EditableMarkdown Component', () => {
+    test('reports when editing starts and ends', async () => {
+        const onEditingChange = vi.fn();
+        const { getEditor } = setup(
+            'Text',
+            vi.fn(),
+            false,
+            undefined,
+            onEditingChange,
+        );
+
+        expect(onEditingChange).toHaveBeenLastCalledWith(false);
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+        expect(onEditingChange).toHaveBeenLastCalledWith(true);
+
+        const editor = getEditor();
+        act(() => editor.onBlur?.({ editor }));
+        expect(onEditingChange).toHaveBeenLastCalledWith(false);
+    });
+
     test('renders the editor content initialized with the current value', () => {
         setup('# Hello');
 
