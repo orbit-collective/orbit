@@ -4,6 +4,7 @@ import { ProjectChange, ProjectChangedPayload } from '@/types/Live';
 import { projectPageReloads } from './changeProps';
 import { requestLiveReload } from './reloadQueue';
 import { useLiveChannel } from './useLiveChannel';
+import { useLiveFallback } from './useLiveFallback';
 
 /** The list and the board show the same `issues` prop, so they share one data group. */
 type DataGroup = 'issues' | 'Calendar' | 'Activity';
@@ -71,6 +72,15 @@ export function useProjectLive(
             (reload) => requestLiveReload(reload),
         );
     }, [view, calendarRange]);
+
+    // No socket: re-read what the visible view shows on a timer instead.
+    useLiveFallback(() =>
+        projectPageReloads(
+            [{ type: 'issue', id: null, action: 'bulk' }],
+            latest.current,
+            calendarRange.current,
+        ),
+    );
 
     useLiveChannel<{ 'project.changed': ProjectChangedPayload }>(
         `project.${projectId}`,
