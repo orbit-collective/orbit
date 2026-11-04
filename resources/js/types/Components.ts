@@ -431,7 +431,7 @@ export interface SidebarFieldProps {
 }
 export interface StatCardProps extends VariantProps<typeof statCardVariants> {
     title: string;
-    value: string | number;
+    value: React.ReactNode;
     icon: keyof typeof icons;
     description?: string;
     trend?: {
@@ -952,4 +952,11 @@ export interface CardHeaderProps extends CollapsibleProps {
     description?: string;
     /** Id of the region the toggle controls. */
     controls?: string;
+}
+
+export interface AnimatedNumberProps {
+    value: number;
+    /** Formats the number on every frame; defaults to locale grouping. */
+    format?: (value: number) => string;
+    className?: string;
 }
