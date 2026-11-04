@@ -46,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*')
                 || $request->is('projects/*/attachments')
                 || $request->is('command-palette/*')
+                || $request->is('settings/dev-portal/containers/*')
                 || $request->is('broadcasting/auth'),
         );
 

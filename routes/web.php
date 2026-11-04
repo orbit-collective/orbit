@@ -5,6 +5,7 @@ use App\Http\Controllers\AutomationController;
 use App\Http\Controllers\CommandPaletteController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeveloperPortalController;
 use App\Http\Controllers\GithubIntegrationController;
 use App\Http\Controllers\IssueController;
 use App\Http\Controllers\IssueGithubDevelopmentController;
@@ -128,6 +129,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/dev-portal', [SettingsController::class, 'developerPortal'])
         ->middleware('developer-portal')
         ->name('settings.dev-portal');
+    Route::get('/settings/dev-portal/containers/{container}/logs', [DeveloperPortalController::class, 'containerLogs'])
+        ->middleware(['developer-portal', 'throttle:120,1'])
+        ->where('container', '[a-f0-9]{12,64}')
+        ->name('settings.dev-portal.logs');
 });
 
 Route::get('/invitations/{token}', [ProjectInvitationController::class, 'accept'])->name('invitations.accept');
