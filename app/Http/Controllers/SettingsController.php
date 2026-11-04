@@ -95,6 +95,11 @@ class SettingsController extends Controller
         ]);
     }
 
+    public function developerPortal(Request $request): Response
+    {
+        return Inertia::render('Settings/DeveloperPortal');
+    }
+
     public function labels(Request $request): Response
     {
         $user = $request->user();

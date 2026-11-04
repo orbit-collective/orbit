@@ -124,6 +124,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/roles-management', [SettingsController::class, 'rolesManagement'])->name('settings.roles-management');
     Route::get('/settings/integrations', [SettingsController::class, 'integrations'])->name('settings.integrations');
     Route::get('/settings/automation', [SettingsController::class, 'automation'])->name('settings.automation');
+//    Routes for the new developer settings tab
+    Route::get('/settings/dev-portal', [SettingsController::class, 'developerPortal'])->name('settings.dev-portal');
 });
 
 Route::get('/invitations/{token}', [ProjectInvitationController::class, 'accept'])->name('invitations.accept');
