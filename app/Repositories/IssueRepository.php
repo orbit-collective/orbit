@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\WorkflowStatus;
 use App\Support\Cache\CacheVersion;
 use App\Support\LikePattern;
+use App\Support\Live\LiveUpdates;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -528,10 +529,16 @@ class IssueRepository
 
     public function bulkDelete(array $ids): void
     {
+        $projectIds = Issue::whereIn('id', $ids)->distinct()->pluck('project_id');
+
         Issue::whereIn('id', $ids)->delete();
 
         // A query-builder delete fires no model events.
         CacheVersion::bump(CacheVersion::ISSUES);
+
+        foreach ($projectIds as $projectId) {
+            app(LiveUpdates::class)->issue($projectId, null, 'bulk');
+        }
     }
 
     public function getMany(array $ids): Collection

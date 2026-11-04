@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BroadcastsLiveChanges;
 use App\Models\Concerns\BumpsIssueCache;
 use App\Services\PriorityService;
 use App\Support\Cache\CacheVersion;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 class Issue extends Model
 {
     /** @use HasFactory<IssueFactory> */
-    use BumpsIssueCache, HasFactory;
+    use BroadcastsLiveChanges, BumpsIssueCache, HasFactory;
 
     /**
      * Serialize eager-loaded relations under their camelCase names so the
@@ -319,5 +320,10 @@ class Issue extends Model
     public function workflowStatus(): BelongsTo
     {
         return $this->belongsTo(WorkflowStatus::class);
+    }
+
+    protected function liveChange(): ?array
+    {
+        return $this->project_id ? ['project' => $this->project_id, 'type' => 'issue', 'id' => $this->id] : null;
     }
 }
