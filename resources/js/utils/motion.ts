@@ -23,7 +23,7 @@ export const DURATION = {
 /** Delay between siblings entering one after another. */
 export const STAGGER = 0.06;
 
-export const TWEEN: Transition = { duration: DURATION.base, ease: EASE };
+const TWEEN: Transition = { duration: DURATION.base, ease: EASE };
 
 /** For things that should feel physical: the sliding day indicator. */
 export const SPRING: Transition = {

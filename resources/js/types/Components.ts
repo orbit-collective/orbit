@@ -905,7 +905,7 @@ export interface PercentBarsCardProps extends CollapsibleProps {
     className?: string;
 }
 
-export interface BarPlotBar {
+interface BarPlotBar {
     key: string;
     /** X-axis label under the bar. */
     label: string;
@@ -917,7 +917,7 @@ export interface BarPlotBar {
     caption?: string;
 }
 
-export interface BarPlotTick {
+interface BarPlotTick {
     /** Position, 0-100 (percent of the plot height). */
     percent: number;
     label: string;
