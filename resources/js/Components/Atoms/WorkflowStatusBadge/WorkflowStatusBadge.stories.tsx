@@ -36,3 +36,8 @@ export const Clickable: Story = {
         await expect(args.onClick).toHaveBeenCalledTimes(1);
     },
 };
+
+/** With a count and the shared tooltip (also on keyboard focus). */
+export const WithCountAndTooltip: Story = {
+    args: { suffix: 181, tooltip: '25% of all issues' },
+};

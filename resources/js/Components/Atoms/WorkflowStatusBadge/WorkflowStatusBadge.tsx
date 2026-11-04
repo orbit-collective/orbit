@@ -1,13 +1,17 @@
 import React from 'react';
+import Badge from '@/Components/Atoms/Badge/Badge';
 import { WorkflowStatusBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { FOCUS_RING } from '@/utils/focusRing';
 
 const WorkflowStatusBadge: React.FC<WorkflowStatusBadgeProps> = ({
     status,
     className,
     onClick,
+    suffix,
+    tooltip,
 }) => {
-    return (
+    const badge = (
         <span
             onClick={onClick}
             className={cn(
@@ -21,7 +25,28 @@ const WorkflowStatusBadge: React.FC<WorkflowStatusBadgeProps> = ({
                 style={{ backgroundColor: status.color }}
             />
             {status.name}
+            {suffix !== undefined && (
+                <strong className="font-semibold">{suffix}</strong>
+            )}
         </span>
+    );
+
+    if (!tooltip) return badge;
+
+    // The shared Badge tooltip, which also opens on keyboard focus.
+    return (
+        <Badge
+            variant="ghost"
+            tooltip
+            tooltipText={tooltip}
+            tabIndex={0}
+            className={cn(
+                'rounded-full border-0 bg-transparent p-0 text-xs',
+                FOCUS_RING,
+            )}
+        >
+            {badge}
+        </Badge>
     );
 };
 
