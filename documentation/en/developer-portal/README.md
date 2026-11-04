@@ -31,6 +31,26 @@ stale; `useDeveloperPortalLive` re-reads only those.
 3. **[The chart components](./03-chart-components.md)** — `BarChartCard`,
    `DayBreakdownCard`, `PercentBarsCard` and `TrendBadge`, and how to feed them.
 
+## Interactions
+
+- **Container logs.** Click a container row to open its details and a live log
+  viewer (filter, errors only, follow every 3 s while the tab is visible,
+  refresh, copy). The viewer reads
+  `GET /settings/dev-portal/containers/{id}/logs`, which sits behind the same
+  `developer-portal` middleware, accepts only ids of this Compose project's
+  containers and returns at most 500 lines (`DockerContainerService::logs()`
+  demultiplexes Docker's stdout/stderr frames, handles TTY output and strips
+  ANSI codes).
+- **Folding.** Every card and panel folds from its header and keeps a one-line
+  summary while folded; the choice is remembered per browser
+  (`useCollapsedSections`, key `developer-portal-sections`) and a Collapse /
+  Expand all button sits on top. The users and projects lists start folded.
+  A new section joins by adding its id to `SECTION_DEFAULTS` in
+  `DeveloperPortalTab.tsx` and spreading `collapse('<id>', summary)` onto its
+  `SettingsPanel` or chart card.
+- **Recent errors** are paginated (`errors_page` / `errors_perPage`) like the
+  user and project lists.
+
 ## Docker access
 
 Container uptime is read from the Docker Engine API through the Unix socket
