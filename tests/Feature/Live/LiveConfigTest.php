@@ -120,3 +120,35 @@ test('credentials alone do not turn live updates on while another broadcaster is
 
     expect($broadcasting['default'])->toBe('log')->and($live['enabled'])->toBeFalse();
 });
+
+test('the Reverb origin allow-list defaults to the app host, also when the variable is empty', function () {
+    $reverbOrigins = function (array $env): array {
+        $saved = [];
+
+        foreach ($env as $key => $value) {
+            $saved[$key] = [getenv($key), $_ENV[$key] ?? null, $_SERVER[$key] ?? null];
+            putenv($value === null ? $key : "$key=$value");
+            $_ENV[$key] = $_SERVER[$key] = $value;
+        }
+
+        try {
+            return (require config_path('reverb.php'))['apps']['apps'][0]['allowed_origins'];
+        } finally {
+            foreach ($saved as $key => [$process, $envValue, $serverValue]) {
+                putenv($process === false ? $key : "$key=$process");
+                $envValue === null ? $_ENV[$key] = null : $_ENV[$key] = $envValue;
+                $serverValue === null ? $_SERVER[$key] = null : $_SERVER[$key] = $serverValue;
+                if ($envValue === null) {
+                    unset($_ENV[$key]);
+                }
+                if ($serverValue === null) {
+                    unset($_SERVER[$key]);
+                }
+            }
+        }
+    };
+
+    expect($reverbOrigins(['APP_URL' => 'http://localhost:8000', 'REVERB_ALLOWED_ORIGINS' => '']))->toBe(['localhost'])
+        ->and($reverbOrigins(['APP_URL' => 'https://orbit.example.com', 'REVERB_ALLOWED_ORIGINS' => null]))->toBe(['orbit.example.com'])
+        ->and($reverbOrigins(['APP_URL' => 'https://orbit.example.com', 'REVERB_ALLOWED_ORIGINS' => 'a.com, b.com']))->toBe(['a.com', 'b.com']);
+});

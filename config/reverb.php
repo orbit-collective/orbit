@@ -84,9 +84,11 @@ return [
                 ],
                 // Only the app's own origin(s) may open a socket. Comma separated hosts
                 // in REVERB_ALLOWED_ORIGINS; defaults to the APP_URL host.
+                // An empty variable (Docker Compose passes unset ones as "") counts
+                // as unset: an empty list would refuse every connection.
                 'allowed_origins' => array_values(array_filter(array_map(
                     'trim',
-                    explode(',', (string) env('REVERB_ALLOWED_ORIGINS', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost')),
+                    explode(',', (string) (env('REVERB_ALLOWED_ORIGINS') ?: parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST) ?: 'localhost')),
                 ))),
                 'ping_interval' => env('REVERB_APP_PING_INTERVAL', 60),
                 'activity_timeout' => env('REVERB_APP_ACTIVITY_TIMEOUT', 30),
