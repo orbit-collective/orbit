@@ -180,6 +180,11 @@ const PERMISSION_META: Record<string, PermissionMeta> = {
         label: 'Delete any comment',
         description: 'Remove comments written by anyone.',
     },
+    'developer.portal.view': {
+        label: 'View developer portal',
+        description:
+            'Open Settings → Developer Portal: containers, errors, users and projects of the whole instance. Only available in local development.',
+    },
 };
 
 function humanize(value: string): string {

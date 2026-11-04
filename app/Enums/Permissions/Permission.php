@@ -49,6 +49,10 @@ enum Permission: string
     case ISSUE_TYPES_DELETE = 'projects.issue_types.delete';
     case WORKFLOW_UPDATE = 'projects.issue_types.workflow_update';
 
+    // DEVELOPER PERMISSIONS
+    /** Opens Settings → Developer Portal (instance-wide diagnostics). Only ever honoured while the portal is enabled (APP_ENV=local). */
+    case DEVELOPER_PORTAL_VIEW = 'developer.portal.view';
+
     // ISSUES PERMISSIONS
     case ISSUES_VIEW = 'issues.view';
     case ISSUES_CREATE = 'issues.create';
