@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
 import BarChartCard, { niceMax } from './BarChartCard';
 
 const items = [
@@ -92,5 +93,37 @@ describe('BarChartCard', () => {
         expect(screen.getByRole('img')).toHaveAccessibleName(
             'Uptime: app 2, queue 8h, redis 5',
         );
+    });
+
+    test('collapses to its header, keeping a summary, and toggles on click', () => {
+        const toggle = vi.fn();
+        const { rerender } = render(
+            <BarChartCard
+                title="Uptime"
+                icon="Activity"
+                items={items}
+                onToggleCollapse={toggle}
+                collapsedSummary="Avg 5"
+            />,
+        );
+        expect(screen.getAllByTestId('bar')[0]).toBeVisible();
+
+        rerender(
+            <BarChartCard
+                title="Uptime"
+                icon="Activity"
+                items={items}
+                onToggleCollapse={toggle}
+                collapsed
+                collapsedSummary="Avg 5"
+            />,
+        );
+        expect(screen.getAllByTestId('bar')[0]).not.toBeVisible();
+        expect(screen.getByTestId('collapsed-summary')).toHaveTextContent(
+            'Avg 5',
+        );
+
+        fireEvent.click(screen.getByRole('button', { name: /Uptime/ }));
+        expect(toggle).toHaveBeenCalledTimes(1);
     });
 });

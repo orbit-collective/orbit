@@ -93,4 +93,20 @@ describe('DayBreakdownCard', () => {
         expect(screen.getByText('Nothing logged')).toBeInTheDocument();
         expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
     });
+
+    test('can be collapsed from its header', () => {
+        const toggle = vi.fn();
+        renderCard({
+            collapsed: true,
+            onToggleCollapse: toggle,
+            collapsedSummary: '6 problems',
+        });
+
+        expect(screen.getByTestId('headline')).not.toBeVisible();
+        expect(screen.getByTestId('collapsed-summary')).toHaveTextContent(
+            '6 problems',
+        );
+        fireEvent.click(screen.getByRole('button', { name: /Errors/ }));
+        expect(toggle).toHaveBeenCalledTimes(1);
+    });
 });
