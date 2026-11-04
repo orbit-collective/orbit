@@ -1,10 +1,14 @@
 import { Link } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import Input from '@/Components/Atoms/Input/Input';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { Paginated, PortalProject } from '@/types/DeveloperPortal';
+import { cn } from '@/utils/cn';
+import { FOCUS_RING } from '@/utils/focusRing';
+import { rowDelay, rowIn } from '@/utils/motion';
 import { usePortalSearch } from './usePortalSearch';
 
 interface PortalProjectsPanelProps {
@@ -62,9 +66,13 @@ export default function PortalProjectsPanel({
                     No projects match.
                 </p>
             ) : (
-                projects.data.map((project) => (
-                    <div
+                projects.data.map((project, index) => (
+                    <motion.div
                         key={project.id}
+                        variants={rowIn}
+                        initial="hidden"
+                        animate="show"
+                        transition={{ delay: rowDelay(index) }}
                         className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
                     >
                         <StatusDot
@@ -74,7 +82,10 @@ export default function PortalProjectsPanel({
                         <div className="min-w-0 flex-1">
                             <Link
                                 href={`/projects/${project.id}`}
-                                className="block truncate text-sm font-medium text-[var(--text-color)] no-underline hover:text-[var(--accent-color)]"
+                                className={cn(
+                                    'block truncate rounded text-sm font-medium text-[var(--text-color)] no-underline transition-colors duration-200 hover:text-[var(--accent-color)]',
+                                    FOCUS_RING,
+                                )}
                             >
                                 {project.name}
                             </Link>
@@ -98,7 +109,7 @@ export default function PortalProjectsPanel({
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                    </motion.div>
                 ))
             )}
             <Pagination

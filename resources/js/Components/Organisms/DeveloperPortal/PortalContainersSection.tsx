@@ -1,11 +1,16 @@
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import BarChartCard from '@/Components/Molecules/BarChartCard/BarChartCard';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { PortalContainer, PortalContainers } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
+import { FOCUS_RING_INSET } from '@/utils/focusRing';
+import { rowIn, rowDelay } from '@/utils/motion';
 import { containerUptimeSeconds, formatUptime } from '@/utils/uptime';
 import ContainerLogs from './ContainerLogs';
 
@@ -58,28 +63,39 @@ function Detail({ label, value }: { label: string; value: string }) {
 function ContainerRow({
     container,
     now,
+    index,
 }: {
     container: PortalContainer;
     now: number;
+    index: number;
 }) {
     const [open, setOpen] = useState(false);
     const running = container.state === 'running';
     const panelId = `container-${container.id}`;
 
     return (
-        <div className="hover:bg-[var(--bg-light-color)]/50 transition-colors">
+        <motion.div
+            variants={rowIn}
+            initial="hidden"
+            animate="show"
+            transition={{ delay: rowDelay(index) }}
+            className="hover:bg-[var(--bg-light-color)]/50 transition-colors duration-200"
+        >
             <button
                 type="button"
                 aria-expanded={open}
                 aria-controls={panelId}
                 onClick={() => setOpen((value) => !value)}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left sm:px-5"
+                className={cn(
+                    'flex w-full cursor-pointer items-center gap-3 border-0 bg-transparent px-4 py-3.5 text-left sm:px-5',
+                    FOCUS_RING_INSET,
+                )}
             >
                 <Icon
                     name="ChevronRight"
                     size={14}
                     className={cn(
-                        'shrink-0 text-[var(--text-muted-color)] transition-transform',
+                        'shrink-0 text-[var(--text-muted-color)] transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
                         open && 'rotate-90',
                     )}
                 />
@@ -112,12 +128,19 @@ function ContainerRow({
                     <span className="flex items-center gap-1.5 text-sm tabular-nums text-[var(--text-color)]">
                         <span
                             aria-hidden="true"
-                            className={cn(
-                                'h-2 w-2 rounded-full',
-                                STATE_DOT[container.state] ??
-                                    'bg-[var(--error-color)]',
+                            className="relative flex h-2 w-2"
+                        >
+                            {running && (
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--success-color)] opacity-50 [animation-duration:2.4s] motion-reduce:hidden" />
                             )}
-                        />
+                            <span
+                                className={cn(
+                                    'relative inline-flex h-2 w-2 rounded-full',
+                                    STATE_DOT[container.state] ??
+                                        'bg-[var(--error-color)]',
+                                )}
+                            />
+                        </span>
                         {running
                             ? formatUptime(
                                   containerUptimeSeconds(container, now),
@@ -127,11 +150,8 @@ function ContainerRow({
                 </span>
             </button>
 
-            {open && (
-                <div
-                    id={panelId}
-                    className="space-y-4 border-t border-[var(--border-color)] px-4 py-4 sm:px-5"
-                >
+            <Collapse open={open} id={panelId} unmountWhenClosed>
+                <div className="space-y-4 border-t border-[var(--border-color)] px-4 py-4 sm:px-5">
                     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                         <Detail label="Container" value={container.id} />
                         <Detail
@@ -155,8 +175,8 @@ function ContainerRow({
                     </dl>
                     <ContainerLogs containerId={container.id} />
                 </div>
-            )}
-        </div>
+            </Collapse>
+        </motion.div>
     );
 }
 
@@ -168,42 +188,46 @@ export default function PortalContainersSection({
 
     if (!containers) {
         return (
-            <SettingsPanel
-                title="Containers"
-                icon="Container"
-                description="Uptime of this project's Docker containers."
-                {...collapse?.('containers')}
-            >
-                <p
-                    role="status"
-                    className="animate-pulse px-5 py-6 text-sm text-[var(--text-gray-color)]"
+            <Reveal key="loading">
+                <SettingsPanel
+                    title="Containers"
+                    icon="Container"
+                    description="Uptime of this project's Docker containers."
+                    {...collapse?.('containers')}
                 >
-                    Reading Docker…
-                </p>
-            </SettingsPanel>
+                    <p
+                        role="status"
+                        className="animate-pulse px-5 py-6 text-sm text-[var(--text-gray-color)]"
+                    >
+                        Reading Docker…
+                    </p>
+                </SettingsPanel>
+            </Reveal>
         );
     }
 
     if (!containers.available) {
         return (
-            <SettingsPanel
-                title="Containers"
-                icon="Container"
-                description="Uptime of this project's Docker containers."
-                {...collapse?.('containers')}
-            >
-                <p
-                    role="alert"
-                    className="flex items-start gap-2 px-5 py-4 text-sm text-[var(--warning-color)]"
+            <Reveal key="unavailable">
+                <SettingsPanel
+                    title="Containers"
+                    icon="Container"
+                    description="Uptime of this project's Docker containers."
+                    {...collapse?.('containers')}
                 >
-                    <Icon
-                        name="TriangleAlert"
-                        size={16}
-                        className="mt-0.5 shrink-0"
-                    />
-                    {containers.error ?? 'Docker is not available.'}
-                </p>
-            </SettingsPanel>
+                    <p
+                        role="alert"
+                        className="flex items-start gap-2 px-5 py-4 text-sm text-[var(--warning-color)]"
+                    >
+                        <Icon
+                            name="TriangleAlert"
+                            size={16}
+                            className="mt-0.5 shrink-0"
+                        />
+                        {containers.error ?? 'Docker is not available.'}
+                    </p>
+                </SettingsPanel>
+            </Reveal>
         );
     }
 
@@ -212,7 +236,7 @@ export default function PortalContainersSection({
     );
 
     return (
-        <div className="space-y-5">
+        <Reveal key="loaded" className="space-y-5">
             <BarChartCard
                 {...collapse?.('uptime', `${running.length} running`)}
                 title="Container uptime"
@@ -220,30 +244,30 @@ export default function PortalContainersSection({
                 formatValue={hours}
                 emptyText="No running containers."
                 items={running.map((container) => {
-                    const seconds = containerUptimeSeconds(container, now);
-
+                    // The server's reading, not the ticking clock: the chart
+                    // glides at each refresh instead of re-animating every second.
                     return {
                         key: container.id,
                         label: container.service,
-                        value: seconds,
-                        valueLabel: formatUptime(seconds),
+                        value: container.uptimeSeconds,
+                        valueLabel: formatUptime(container.uptimeSeconds),
                     };
                 })}
                 summary={
                     <>
-                        <span>
-                            Running:{' '}
-                            <strong className="text-[var(--text-color)]">
+                        <Badge className="border-[var(--success-color)]/20 bg-[var(--success-color)]/10 gap-1.5 px-2.5 py-1 text-xs text-[var(--success-color)]">
+                            Running
+                            <strong>
                                 {running.length}/{containers.containers.length}
                             </strong>
-                        </span>
+                        </Badge>
                         {containers.containers.length > running.length && (
-                            <span className="flex items-center gap-1 text-[var(--error-color)]">
+                            <Badge className="border-[var(--error-color)]/20 bg-[var(--error-color)]/10 gap-1.5 px-2.5 py-1 text-xs text-[var(--error-color)]">
                                 <Icon name="CircleAlert" size={12} />
                                 {containers.containers.length -
                                     running.length}{' '}
                                 not running
-                            </span>
+                            </Badge>
                         )}
                     </>
                 }
@@ -258,14 +282,15 @@ export default function PortalContainersSection({
                     `${running.length}/${containers.containers.length} running`,
                 )}
             >
-                {containers.containers.map((container) => (
+                {containers.containers.map((container, index) => (
                     <ContainerRow
                         key={container.id}
                         container={container}
                         now={now}
+                        index={index}
                     />
                 ))}
             </SettingsPanel>
-        </div>
+        </Reveal>
     );
 }

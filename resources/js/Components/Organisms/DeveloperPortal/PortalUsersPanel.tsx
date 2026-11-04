@@ -1,9 +1,11 @@
+import { motion } from 'framer-motion';
 import Input from '@/Components/Atoms/Input/Input';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { Paginated, PortalUser } from '@/types/DeveloperPortal';
+import { rowDelay, rowIn } from '@/utils/motion';
 import { formatShortDate } from '@/utils/time';
 import { usePortalSearch } from './usePortalSearch';
 
@@ -45,9 +47,13 @@ export default function PortalUsersPanel({
                     No users match.
                 </p>
             ) : (
-                users.data.map((user) => (
-                    <div
+                users.data.map((user, index) => (
+                    <motion.div
                         key={user.id}
+                        variants={rowIn}
+                        initial="hidden"
+                        animate="show"
+                        transition={{ delay: rowDelay(index) }}
                         className="flex flex-col gap-1.5 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5"
                     >
                         <div className="min-w-0 sm:flex-1">
@@ -67,7 +73,7 @@ export default function PortalUsersPanel({
                             {user.createdAt &&
                                 ` · joined ${formatShortDate(user.createdAt)}`}
                         </p>
-                    </div>
+                    </motion.div>
                 ))
             )}
             <Pagination
