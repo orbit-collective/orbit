@@ -100,3 +100,16 @@ export type PortalChangeKind = 'users' | 'projects' | 'issues' | 'errors';
 export interface DeveloperPortalChangedPayload {
     kinds: PortalChangeKind[];
 }
+
+export interface PortalLogLine {
+    /** ISO time Docker stamped the line with, when it did. */
+    time: string | null;
+    stream: 'stdout' | 'stderr';
+    text: string;
+}
+
+export interface PortalLogs {
+    found: boolean;
+    error: string | null;
+    lines: PortalLogLine[];
+}
