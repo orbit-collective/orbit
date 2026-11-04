@@ -53,7 +53,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                 data-highlighted={highlighted}
                                 title={bar.tooltip}
                                 className={cn(
-                                    'relative w-full max-w-10 rounded-full transition-all duration-300',
+                                    'relative w-full max-w-10 rounded-b-none rounded-t-full transition-all duration-300',
                                     highlighted
                                         ? 'bg-[var(--accent-color)]'
                                         : 'bg-[var(--bg-light-color)] group-hover:bg-[var(--text-muted-color)]/60',
@@ -66,11 +66,18 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                 {highlighted && (
                                     <span
                                         aria-hidden="true"
-                                        className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rounded-full border-2 border-[var(--surface-color)] bg-[var(--accent-color)]"
+                                        data-testid="highlight-dot"
+                                        className="absolute bottom-full left-1/2 mb-1.5 h-2 w-2 -translate-x-1/2 rounded-full bg-[var(--accent-color)]"
                                     />
                                 )}
                                 {bar.caption && (
-                                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold text-[var(--text-color)]">
+                                    <span
+                                        className={cn(
+                                            'absolute bottom-full left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-semibold text-[var(--text-color)]',
+                                            // Clear of the dot on the highlighted bar.
+                                            highlighted ? 'mb-5' : 'mb-1.5',
+                                        )}
+                                    >
                                         {bar.caption}
                                     </span>
                                 )}

@@ -46,7 +46,7 @@ describe('BarPlot', () => {
     });
 
     test('highlights one bar and puts the dot on it', () => {
-        const { container } = renderPlot({ highlightKey: 'b' });
+        renderPlot({ highlightKey: 'b' });
 
         expect(
             screen
@@ -56,9 +56,7 @@ describe('BarPlot', () => {
         expect(
             screen.getAllByTestId('bar')[1].querySelectorAll('span'),
         ).toHaveLength(1);
-        expect(container.querySelectorAll('[class*="border-2"]')).toHaveLength(
-            1,
-        );
+        expect(screen.getAllByTestId('highlight-dot')).toHaveLength(1);
     });
 
     test('shows captions and hover tooltips', () => {
@@ -95,5 +93,13 @@ describe('BarPlot', () => {
         renderPlot({ barTestId: 'custom' });
 
         expect(screen.getAllByTestId('custom')).toHaveLength(3);
+    });
+
+    test('bars are rounded only on top, flat at the base', () => {
+        renderPlot();
+
+        screen.getAllByTestId('bar').forEach((bar) => {
+            expect(bar).toHaveClass('rounded-t-full', 'rounded-b-none');
+        });
     });
 });
