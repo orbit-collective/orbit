@@ -61,7 +61,7 @@ export const DockerUnavailable: Story = {
 };
 
 export const QuietLog: Story = {
-    args: { errorLog: { entries: [], daily: portalErrorLog.daily } },
+    args: { errorLog: { entries: paginated([]), daily: portalErrorLog.daily } },
 };
 
 export const NoData: Story = {

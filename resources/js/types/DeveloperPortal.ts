@@ -50,7 +50,7 @@ interface PortalDailyErrors {
 }
 
 export interface PortalErrorLog {
-    entries: PortalErrorEntry[];
+    entries: Paginated<PortalErrorEntry>;
     daily: PortalDailyErrors[];
 }
 

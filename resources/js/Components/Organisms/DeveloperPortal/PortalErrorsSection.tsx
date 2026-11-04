@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import DayBreakdownCard from '@/Components/Molecules/DayBreakdownCard/DayBreakdownCard';
+import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import { DayBreakdownDay, DayBreakdownRow } from '@/types/Components';
 import { PortalErrorEntry, PortalErrorLog } from '@/types/DeveloperPortal';
@@ -10,6 +11,8 @@ import { formatDate } from '@/utils/time';
 interface PortalErrorsSectionProps {
     /** Undefined while the deferred prop is still loading. */
     errorLog?: PortalErrorLog;
+    /** The page's current query string, so a page change keeps the other lists. */
+    queryParams?: Record<string, string>;
 }
 
 const COLORS = {
@@ -99,6 +102,7 @@ function ErrorEntry({ entry }: { entry: PortalErrorEntry }) {
 
 export default function PortalErrorsSection({
     errorLog,
+    queryParams = {},
 }: PortalErrorsSectionProps) {
     const days = useMemo(
         () => (errorLog ? buildDays(errorLog) : []),
@@ -139,15 +143,26 @@ export default function PortalErrorsSection({
                 icon="Bug"
                 description="The newest errors from the application log."
             >
-                {errorLog.entries.length === 0 ? (
+                {errorLog.entries.data.length === 0 ? (
                     <p className="px-5 py-6 text-sm text-[var(--text-gray-color)]">
                         No errors in the log. Nice.
                     </p>
                 ) : (
-                    errorLog.entries.map((entry) => (
+                    errorLog.entries.data.map((entry) => (
                         <ErrorEntry key={entry.id} entry={entry} />
                     ))
                 )}
+                <Pagination
+                    links={errorLog.entries.links}
+                    from={errorLog.entries.from ?? 0}
+                    to={errorLog.entries.to ?? 0}
+                    total={errorLog.entries.total}
+                    queryParams={queryParams}
+                    pageParam="errors_page"
+                    perPageParam="errors_perPage"
+                    preserveState
+                    only={['errorLog']}
+                />
             </SettingsPanel>
         </div>
     );
