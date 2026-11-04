@@ -51,6 +51,30 @@ stale; `useDeveloperPortalLive` re-reads only those.
 - **Recent errors** are paginated (`errors_page` / `errors_perPage`) like the
   user and project lists.
 
+## Motion and accessibility
+
+- **One motion language** (`resources/js/utils/motion.ts`): a single easing
+  (`EASE`), three durations (`DURATION.fast/base/slow`), one stagger and the
+  shared variants (`riseIn`, `rowIn`, `collapseVariants`, `SPRING`). Import
+  these instead of picking numbers, so everything on the screen moves in step.
+  The tab is wrapped in `<MotionConfig reducedMotion="user">`, and
+  `AnimatedNumber` shows its value at once for people who prefer reduced motion.
+- **Building blocks:** `Collapse` (animated fold; `unmountWhenClosed` for bodies
+  that poll), `Reveal` (fade-up on mount, replayed when its `key` changes),
+  `AnimatedNumber` (counts up, glides on live updates). `BarPlot` bars grow in
+  one after another and the day picker's indicator slides (`layoutId`).
+- **Under test animations jump to their end state**
+  (`MotionGlobalConfig.skipAnimations` in `resources/js/tests/setup.ts`), but
+  state that changes through an animation (a swapping label, an unmounting
+  body) still settles on the next frame: assert it with `findBy…`/`waitFor`.
+- **Keyboard:** `FOCUS_RING` / `FOCUS_RING_INSET` (`utils/focusRing.ts`) give
+  every control the same TAB highlight (use the inset one for full-width rows
+  inside clipped panels). Chart bars are focusable images whose tooltip is the
+  shared `Badge` tooltip (`tooltipPlacement="top"`), which opens on hover and on
+  focus. The day picker keeps every pill in the TAB order and adds arrow keys,
+  Home and End; scrollable log and trace areas are focusable so they can be
+  scrolled with the keyboard.
+
 ## Docker access
 
 Container uptime is read from the Docker Engine API through the Unix socket
