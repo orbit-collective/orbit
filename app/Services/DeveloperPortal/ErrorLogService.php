@@ -3,6 +3,7 @@
 namespace App\Services\DeveloperPortal;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -32,6 +33,35 @@ class ErrorLogService
     public function recent(): array
     {
         return Cache::remember('developer-portal:errors', self::CACHE_TTL, fn () => $this->read());
+    }
+
+    public const string PAGE = 'errors_page';
+
+    public const string PER_PAGE = 'errors_perPage';
+
+    /**
+     * The same data with the error list paginated for the page (`errors_page`
+     * in the query string). All entries come from one cached read, so paging
+     * costs a slice, not another look at the log.
+     *
+     * @return array{entries: LengthAwarePaginator, daily: list<array<string, mixed>>}
+     */
+    public function paginated(int $perPage): array
+    {
+        $perPage = $perPage > 0 ? min($perPage, 100) : (int) config('developer-portal.per_page');
+        $recent = $this->recent();
+        $page = LengthAwarePaginator::resolveCurrentPage(self::PAGE);
+
+        return [
+            'entries' => (new LengthAwarePaginator(
+                array_slice($recent['entries'], ($page - 1) * $perPage, $perPage),
+                count($recent['entries']),
+                $perPage,
+                $page,
+                ['path' => LengthAwarePaginator::resolveCurrentPath(), 'pageName' => self::PAGE],
+            ))->withQueryString(),
+            'daily' => $recent['daily'],
+        ];
     }
 
     /** @return array{entries: list<array<string, mixed>>, daily: list<array<string, mixed>>} */

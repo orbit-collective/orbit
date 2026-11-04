@@ -45,9 +45,9 @@ return [
     'errors' => [
         // Directory holding laravel.log / laravel-YYYY-MM-DD.log (the newest is read).
         'directory' => storage_path('logs'),
-        // Newest entries shown, and how much of the log's tail is scanned for them
+        // Newest entries kept (paged on the page), and how much of the log's tail is scanned for them
         // and for the per-day counts (older history is not read).
-        'limit' => 50,
+        'limit' => 200,
         'tail_bytes' => 1024 * 1024,
         'days' => 7,
     ],
