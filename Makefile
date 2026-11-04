@@ -1,4 +1,4 @@
-.PHONY: setup up dev up-d down build ensure-env npm-install composer-install test test-coverage test-js test-js-coverage lint type-check storybook storybook-d storybook-stop storybook-build test-stories logs-storybook knip knip-fix unused unused-fix unused-fix-dangerous cleanup logs shell tinker migrate fresh clean backup-now test-backup
+.PHONY: setup up dev up-d down build ensure-env npm-install composer-install test test-coverage test-js test-js-coverage lint type-check storybook storybook-d storybook-stop storybook-build test-stories logs-storybook logs-reverb reverb-keys knip knip-fix unused unused-fix unused-fix-dangerous cleanup logs shell tinker migrate fresh clean backup-now test-backup
 
 # Use Doppler to inject environment variables when this directory is linked
 # to a Doppler project/config (`doppler setup`). Third parties without
@@ -41,6 +41,7 @@ setup: ensure-env
 	@echo ""
 	@echo "    App (Laravel):   http://localhost:8000"
 	@echo "    Vite (assets):   http://localhost:5173"
+	@echo "    Reverb (WebSocket): ws://localhost:8080 (live updates, see documentation/en/live-updates/)"
 	@echo ""
 
 
@@ -52,6 +53,7 @@ up dev: ensure-env
 	@echo ""
 	@echo "    App (Laravel):   http://localhost:8000"
 	@echo "    Vite (assets):   http://localhost:5173"
+	@echo "    Reverb (WebSocket): ws://localhost:8080 (live updates, see documentation/en/live-updates/)"
 	@echo ""
 	$(COMPOSE) up
 
@@ -65,6 +67,7 @@ up-d: ensure-env
 	@echo ""
 	@echo "    App (Laravel):   http://localhost:8000"
 	@echo "    Vite (assets):   http://localhost:5173"
+	@echo "    Reverb (WebSocket): ws://localhost:8080 (live updates, see documentation/en/live-updates/)"
 	@echo ""
 
 
@@ -224,6 +227,21 @@ unused-fix-dangerous: ensure-env
 
 cleanup: ensure-env
 	$(COMPOSE) run --rm vite npm run cleanup
+
+
+# Tail Reverb's (WebSocket server) logs.
+
+logs-reverb:
+	$(COMPOSE) logs -f reverb
+
+
+# Print a fresh REVERB_APP_ID / REVERB_APP_KEY / REVERB_APP_SECRET trio to paste
+# into Doppler (or .env). Nothing is written anywhere.
+
+reverb-keys:
+	@echo "REVERB_APP_ID=$$(shuf -i 100000-999999 -n 1)"
+	@echo "REVERB_APP_KEY=$$(openssl rand -hex 16)"
+	@echo "REVERB_APP_SECRET=$$(openssl rand -hex 16)"
 
 
 # Tail logs from all services.
