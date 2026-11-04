@@ -2,9 +2,8 @@ import { usePage } from '@inertiajs/react';
 import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { useMemo } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
-import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
-import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
+import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import PercentBarsCard from '@/Components/Molecules/PercentBarsCard/PercentBarsCard';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useCollapsedSections } from '@/hooks/useCollapsedSections';
@@ -43,6 +42,13 @@ export const SECTION_DEFAULTS = {
     users: true,
     projects: true,
 };
+
+/** The same colours StatusDot gives the three status categories. */
+const STATUS_COLORS = {
+    todo: 'var(--info-color)',
+    in_progress: 'var(--accent-color)',
+    done: 'var(--pending-color)',
+} as const;
 
 const SECTIONS_STORAGE_KEY = 'developer-portal-sections';
 
@@ -190,23 +196,16 @@ export default function DeveloperPortalTab({
                             tooltip: `${count} ${label.toLowerCase()} · ${percent(count, totals.issues)}% of all issues`,
                         }))}
                         summary={statuses.map(({ key, label, count }) => (
-                            <Badge
+                            <WorkflowStatusBadge
                                 key={key}
-                                color={key}
-                                tabIndex={0}
-                                tooltip
-                                tooltipText={`${percent(count, totals.issues)}% of all issues`}
-                                className={cn(
-                                    'gap-1.5 px-2.5 py-1 text-xs',
-                                    FOCUS_RING,
-                                )}
-                            >
-                                <StatusDot status={key} size="xs" />
-                                {label}
-                                <strong>
-                                    <AnimatedNumber value={count} />
-                                </strong>
-                            </Badge>
+                                status={{
+                                    name: label,
+                                    color: STATUS_COLORS[key],
+                                }}
+                                suffix={<AnimatedNumber value={count} />}
+                                tooltip={`${percent(count, totals.issues)}% of all issues`}
+                                className="px-2.5 py-1"
+                            />
                         ))}
                         footnote={
                             totals.issues > 0

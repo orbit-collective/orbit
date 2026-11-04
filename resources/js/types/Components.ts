@@ -219,6 +219,10 @@ export interface WorkflowStatusBadgeProps {
     status: Pick<WorkflowStatus, 'name' | 'color'>;
     className?: string;
     onClick?: (e: React.MouseEvent) => void;
+    /** Emphasised after the name, e.g. how many issues are in this status. */
+    suffix?: React.ReactNode;
+    /** Shown in the shared Badge tooltip, on hover and on keyboard focus. */
+    tooltip?: React.ReactNode;
 }
 export interface EditableSelectOption {
     value: string;

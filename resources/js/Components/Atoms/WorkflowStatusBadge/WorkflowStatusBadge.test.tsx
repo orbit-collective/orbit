@@ -37,4 +37,41 @@ describe('WorkflowStatusBadge Component', () => {
             'my-custom-class',
         );
     });
+
+    test('shows an emphasised suffix after the name', () => {
+        render(
+            <WorkflowStatusBadge
+                status={{ name: 'Done', color: '#0f0' }}
+                suffix={536}
+            />,
+        );
+
+        expect(screen.getByText('536').tagName).toBe('STRONG');
+    });
+
+    test('with a tooltip it uses the shared Badge tooltip, reachable with TAB', () => {
+        render(
+            <WorkflowStatusBadge
+                status={{ name: 'Done', color: '#0f0' }}
+                tooltip="74% of all issues"
+            />,
+        );
+
+        expect(screen.getByText('74% of all issues')).toHaveAttribute(
+            'aria-hidden',
+            'true',
+        );
+        expect(screen.getByText('Done').closest('[tabindex]')).toHaveAttribute(
+            'tabindex',
+            '0',
+        );
+    });
+
+    test('without a tooltip it is not focusable', () => {
+        render(
+            <WorkflowStatusBadge status={{ name: 'Done', color: '#0f0' }} />,
+        );
+
+        expect(screen.getByText('Done').closest('[tabindex]')).toBeNull();
+    });
 });
