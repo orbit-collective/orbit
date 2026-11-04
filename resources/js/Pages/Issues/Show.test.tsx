@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { priorities, priorityFields } from '@/stories/fixtures';
@@ -40,6 +40,29 @@ vi.mock('@inertiajs/react', async () => {
     };
 });
 
+const live = vi.hoisted(() => ({
+    useIssueLive: vi.fn(),
+    usePresence: vi.fn(),
+    whisper: vi.fn(),
+    viewers: [] as { id: number; name: string; avatar: string | null }[],
+    onWhisper: undefined as
+        | ((event: string, data: Record<string, unknown>) => void)
+        | undefined,
+}));
+
+vi.mock('@/live/useIssueLive', () => ({ useIssueLive: live.useIssueLive }));
+vi.mock('@/live/usePresence', () => ({
+    usePresence: (
+        channel: string,
+        userId: number,
+        onWhisper: typeof live.onWhisper,
+    ) => {
+        live.usePresence(channel, userId);
+        live.onWhisper = onWhisper;
+        return { others: live.viewers, whisper: live.whisper };
+    },
+}));
+
 const mockUseCommands = vi.hoisted(() => vi.fn());
 vi.mock('@/hooks/useCommands', () => ({ useCommands: mockUseCommands }));
 
@@ -52,13 +75,21 @@ vi.mock('@/Components/Molecules/EditableMarkdown/EditableMarkdown', () => ({
         value,
         onSave,
         placeholder,
+        onEditingChange,
     }: {
         value: string;
         onSave: (value: string) => void;
         placeholder?: string;
+        onEditingChange?: (editing: boolean) => void;
     }) => (
         <div>
             <div>{value || placeholder}</div>
+            <button onClick={() => onEditingChange?.(true)}>
+                Start editing
+            </button>
+            <button onClick={() => onEditingChange?.(false)}>
+                Stop editing
+            </button>
             <button onClick={() => onSave('Updated steps')}>
                 Save description
             </button>
@@ -1191,6 +1222,120 @@ describe('Issues/Show custom fields', () => {
             expect(screen.getByRole('tabpanel')).toHaveAccessibleName(
                 'Activity',
             );
+        });
+    });
+
+    describe('live updates', () => {
+        beforeEach(() => {
+            live.useIssueLive.mockClear();
+            live.usePresence.mockClear();
+            live.whisper.mockClear();
+            live.viewers = [];
+        });
+
+        const renderShow = (issue = buildIssue()) =>
+            render(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={issue}
+                    users={users}
+                    ancestors={[buildIssue({ id: '7' })]}
+                />,
+            );
+
+        test('follows the issue, its ancestors and children', () => {
+            renderShow(buildIssue({ children: [buildIssue({ id: '43' })] }));
+
+            expect(live.useIssueLive).toHaveBeenCalledWith({
+                projectId: 1,
+                issueId: 42,
+                related: [7, 43],
+                activityVisible: false,
+            });
+        });
+
+        test('tells the hook when the activity feed is on screen', async () => {
+            renderShow();
+
+            await userEvent.click(
+                screen.getByRole('tab', { name: 'Activity' }),
+            );
+
+            expect(live.useIssueLive).toHaveBeenLastCalledWith(
+                expect.objectContaining({ activityVisible: true }),
+            );
+        });
+
+        test('joins the issue presence channel as the current user', () => {
+            renderShow();
+
+            expect(live.usePresence).toHaveBeenCalledWith('issue.42', 1);
+        });
+
+        test('shows who else is viewing the issue', () => {
+            live.viewers = [{ id: 2, name: 'Marcus Lee', avatar: null }];
+            renderShow();
+
+            expect(
+                screen.getByRole('group', { name: 'Also viewing: Marcus Lee' }),
+            ).toBeInTheDocument();
+        });
+
+        test('warns while another viewer edits the description', () => {
+            live.viewers = [{ id: 2, name: 'Marcus Lee', avatar: null }];
+            renderShow();
+
+            expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+            act(() => live.onWhisper?.('editing', { userId: 2 }));
+            expect(screen.getByRole('status')).toHaveTextContent(
+                'Marcus Lee is editing this description too.',
+            );
+
+            act(() => live.onWhisper?.('stopped-editing', { userId: 2 }));
+            expect(screen.queryByRole('status')).not.toBeInTheDocument();
+        });
+
+        test('does not warn about someone who already left', () => {
+            renderShow();
+
+            act(() => live.onWhisper?.('editing', { userId: 9 }));
+
+            expect(screen.queryByRole('status')).not.toBeInTheDocument();
+        });
+
+        test('tells the others when this person starts and stops editing', async () => {
+            renderShow();
+
+            await userEvent.click(screen.getByText('Start editing'));
+            expect(live.whisper).toHaveBeenLastCalledWith('editing', {
+                userId: 1,
+            });
+
+            await userEvent.click(screen.getByText('Stop editing'));
+            expect(live.whisper).toHaveBeenLastCalledWith('stopped-editing', {
+                userId: 1,
+            });
+        });
+
+        test('repeats the hint for someone who joins mid-edit', async () => {
+            const { rerender } = renderShow();
+            await userEvent.click(screen.getByText('Start editing'));
+            live.whisper.mockClear();
+
+            live.viewers = [{ id: 2, name: 'Marcus Lee', avatar: null }];
+            rerender(
+                <Show
+                    project={project}
+                    projects={[project]}
+                    issue={buildIssue()}
+                    users={users}
+                    ancestors={[buildIssue({ id: '7' })]}
+                />,
+            );
+
+            expect(live.whisper).toHaveBeenCalledWith('editing', { userId: 1 });
         });
     });
 });

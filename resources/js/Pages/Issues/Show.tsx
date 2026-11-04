@@ -1,6 +1,6 @@
 import type { FormDataConvertible } from '@inertiajs/core';
-import { Link, router } from '@inertiajs/react';
-import { useCallback, useEffect, useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
@@ -9,11 +9,13 @@ import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/Workflow
 import Calendar from '@/Components/Molecules/Calendar/Calendar';
 import CommentForm from '@/Components/Molecules/CommentForm/CommentForm';
 import CommentList from '@/Components/Molecules/CommentList/CommentList';
+import ConcurrentEditNotice from '@/Components/Molecules/ConcurrentEditNotice/ConcurrentEditNotice';
 import EditableLabelList from '@/Components/Molecules/EditableLabelList/EditableLabelList';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
 import EditableSelect from '@/Components/Molecules/EditableSelect/EditableSelect';
 import IssueCustomField from '@/Components/Molecules/IssueCustomField/IssueCustomField';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
+import PresenceStack from '@/Components/Molecules/PresenceStack/PresenceStack';
 import SidebarField from '@/Components/Molecules/SidebarField/SidebarField';
 import TabSelection, {
     tabIds,
@@ -29,6 +31,8 @@ import { ProjectLabelsProvider } from '@/context/ProjectLabelsContext';
 import { ProjectPrioritiesProvider } from '@/context/ProjectPrioritiesContext';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { useIssueCommands } from '@/hooks/useIssueCommands';
+import { useIssueLive } from '@/live/useIssueLive';
+import { usePresence } from '@/live/usePresence';
 import { IssuePageProps } from '@/types/Components';
 import { Comment, Issue, IssueLabel } from '@/types/Issues';
 import { ProjectLabel } from '@/types/Labels';
@@ -281,6 +285,59 @@ export default function Show({
         }
     }, [selectedTab, activityMissing]);
 
+    // Other people's changes arrive live: only the props this page shows are
+    // re-read, and the activity feed only while it is open.
+    const relatedIds = useMemo(
+        () => [
+            ...ancestors.map((ancestor) => Number(ancestor.id)),
+            ...(issue.children ?? []).map((child) => Number(child.id)),
+        ],
+        [ancestors, issue.children],
+    );
+    useIssueLive({
+        projectId: project.id,
+        issueId: Number(issue.id),
+        related: relatedIds,
+        activityVisible: selectedTab === 'Activity',
+    });
+
+    // Who else has the issue open, and who is editing the description. The
+    // "editing" hints are whispers between browsers, never stored.
+    const currentUserId = usePage().props.auth.user.id;
+    const [descriptionEditors, setDescriptionEditors] = useState<Set<number>>(
+        new Set(),
+    );
+    const editingDescription = useRef(false);
+    const { others: viewers, whisper } = usePresence(
+        `issue.${issue.id}`,
+        currentUserId,
+        (event, data) => {
+            const userId = Number(data.userId);
+            setDescriptionEditors((current) => {
+                const next = new Set(current);
+                if (event === 'editing') next.add(userId);
+                else next.delete(userId);
+                return next;
+            });
+        },
+    );
+    const announceEditing = useCallback(
+        (editing: boolean) => {
+            editingDescription.current = editing;
+            whisper(editing ? 'editing' : 'stopped-editing', {
+                userId: currentUserId,
+            });
+        },
+        [whisper, currentUserId],
+    );
+    // Someone who joins while this person is editing missed the hint.
+    useEffect(() => {
+        if (editingDescription.current) announceEditing(true);
+    }, [viewers.length, announceEditing]);
+    const editorNames = viewers
+        .filter((viewer) => descriptionEditors.has(viewer.id))
+        .map((viewer) => viewer.name);
+
     return (
         <ProjectLabelsProvider labels={labels}>
             <ProjectPrioritiesProvider priorities={priorities}>
@@ -291,6 +348,7 @@ export default function Show({
                             project={project}
                             issue={issue}
                             ancestors={ancestors}
+                            presence={<PresenceStack users={viewers} />}
                         />
                         <main className="flex flex-1 flex-col overflow-y-auto">
                             <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-6 px-6 py-6 md:grid-cols-[1fr_260px]">
@@ -306,7 +364,12 @@ export default function Show({
                                         inputClassName="text-2xl font-semibold"
                                     />
 
+                                    <ConcurrentEditNotice
+                                        names={editorNames}
+                                        subject="description"
+                                    />
                                     <EditableMarkdown
+                                        onEditingChange={announceEditing}
                                         value={issue.description || ''}
                                         onSave={(value) =>
                                             updateIssue({ description: value })

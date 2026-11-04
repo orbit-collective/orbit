@@ -13,6 +13,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
     project,
     issue,
     ancestors = [],
+    presence,
 }) => {
     return (
         <header className="flex items-center justify-between gap-3 border-b border-solid border-[var(--border-color)] px-6 py-3">
@@ -76,7 +77,8 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                     </span>
                 </span>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-3">
+                {presence}
                 <IconButton
                     iconName="Link"
                     ariaLabel="Copy issue link"
