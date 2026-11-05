@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { priorityFields } from '@/stories/fixtures';
@@ -389,7 +389,70 @@ describe('CalendarView Component', () => {
         const monthButton = screen.getByRole('button', { name: 'month' });
         const weekButton = screen.getByRole('button', { name: 'week' });
 
-        expect(monthButton).toHaveClass('bg-[var(--accent-color)]');
-        expect(weekButton).not.toHaveClass('bg-[var(--accent-color)]');
+        expect(monthButton).toHaveAttribute('aria-pressed', 'true');
+        expect(weekButton).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    test('paging slides the title to the new month and the days wave in again', async () => {
+        const user = userEvent.setup();
+        render(<CalendarView issues={[]} />);
+        expect(screen.getByTestId('calendar-title')).toHaveTextContent('July');
+        const days = () => screen.getAllByTestId('calendar-day');
+        const firstJuly = days()[0];
+
+        await user.click(
+            screen
+                .getAllByRole('button')
+                .find((b) => b.querySelector('.lucide-chevron-right'))!,
+        );
+
+        await waitFor(() =>
+            expect(screen.getByTestId('calendar-title')).toHaveTextContent(
+                'August',
+            ),
+        );
+        expect(days()[0]).not.toBe(firstJuly);
+        await waitFor(() => expect(days()[0]).toBeVisible());
+    });
+
+    test('the month and week pills report which one is on, and week replaces the grid', async () => {
+        const user = userEvent.setup();
+        render(<CalendarView issues={[]} />);
+        const monthDays = screen.getAllByTestId('calendar-day').length;
+
+        await user.click(screen.getByRole('button', { name: 'week' }));
+
+        expect(screen.getByRole('button', { name: 'week' })).toHaveAttribute(
+            'aria-pressed',
+            'true',
+        );
+        expect(screen.getByRole('button', { name: 'month' })).toHaveAttribute(
+            'aria-pressed',
+            'false',
+        );
+        await waitFor(() =>
+            expect(screen.getAllByTestId('calendar-day')).toHaveLength(7),
+        );
+        expect(monthDays).toBeGreaterThan(7);
+    });
+
+    test('every day cell ends up visible after the wave', async () => {
+        render(
+            <CalendarView
+                issues={[
+                    makeIssue({
+                        start_date: '2026-07-25',
+                        end_date: '2026-07-25',
+                    }),
+                ]}
+            />,
+        );
+
+        await waitFor(() =>
+            screen
+                .getAllByTestId('calendar-day')
+                .forEach((day) => expect(day).toBeVisible()),
+        );
+        expect(screen.getByText('Fix login bug')).toBeInTheDocument();
     });
 });
