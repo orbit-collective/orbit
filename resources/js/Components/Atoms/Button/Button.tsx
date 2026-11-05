@@ -1,9 +1,11 @@
 import { cva } from 'class-variance-authority';
 import { ButtonProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { FOCUS_RING } from '@/utils/focusRing';
 
 export const buttonVariants = cva(
-    'font-medium text-sm cursor-pointer transition-all ease-in-out duration-150 disabled:cursor-not-allowed flex items-center justify-center gap-2',
+    'font-medium text-sm cursor-pointer transition-all ease-in-out duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2 ' +
+        FOCUS_RING,
     {
         variants: {
             isBox: {

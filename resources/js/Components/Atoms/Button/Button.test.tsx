@@ -88,4 +88,12 @@ describe('Button Component', () => {
             'bg-[var(--error-color)]',
         );
     });
+
+    test('presses in while held and shows the keyboard focus ring', () => {
+        render(<Button type="button">Go</Button>);
+
+        const button = screen.getByRole('button', { name: 'Go' });
+        expect(button.className).toContain('active:scale-[0.97]');
+        expect(button.className).toContain('focus-visible:ring-2');
+    });
 });
