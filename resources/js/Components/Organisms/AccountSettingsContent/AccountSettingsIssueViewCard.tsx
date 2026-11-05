@@ -1,6 +1,14 @@
 import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import {
+    PreviewBar,
+    PreviewBlock,
+    PreviewDot,
+    PreviewStage,
+    usePlayOnSelect,
+} from '@/Components/Molecules/PreviewMotion/PreviewMotion';
 import { IssuePageLooks } from '@/types/Issues';
 import { liftProps } from '@/utils/motion';
 
@@ -34,33 +42,36 @@ const listPreviewRows: Array<{
     },
 ];
 
-function ListPreview() {
+function ListPreview({ playKey }: { playKey: number }) {
     return (
-        <div className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--overlay-color)]">
+        <PreviewStage
+            playKey={playKey}
+            className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--overlay-color)]"
+        >
             <div className="flex items-center gap-2 border-b border-[var(--border-color)] bg-[var(--surface-color)] px-2 py-1.5">
-                <div className="h-1 w-3 rounded-full bg-[var(--border-color-strong)]" />
-                <div className="h-1 w-9 rounded-full bg-[var(--border-color-strong)]" />
-                <div className="ml-auto h-1 w-5 rounded-full bg-[var(--border-color-strong)]" />
+                <PreviewBar className="h-1 w-3 rounded-full bg-[var(--border-color-strong)]" />
+                <PreviewBar className="h-1 w-9 rounded-full bg-[var(--border-color-strong)]" />
+                <PreviewBar className="ml-auto h-1 w-5 rounded-full bg-[var(--border-color-strong)]" />
             </div>
             <div className="divide-y divide-[var(--border-color)]">
                 {listPreviewRows.map((row, index) => (
-                    <div
+                    <PreviewBlock
                         key={index}
                         className="flex items-center gap-2 px-2 py-1.5"
                     >
-                        <span
+                        <PreviewDot
                             className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.statusClass}`}
                         />
-                        <div
+                        <PreviewBar
                             className={`h-1.5 rounded-full bg-[var(--border-color-strong)] ${row.widthClass}`}
                         />
-                        <span
+                        <PreviewDot
                             className={`ml-auto h-1.5 w-4 shrink-0 rounded-full ${row.priorityClass}`}
                         />
-                    </div>
+                    </PreviewBlock>
                 ))}
             </div>
-        </div>
+        </PreviewStage>
     );
 }
 
@@ -70,36 +81,36 @@ const boardPreviewColumns: Array<{ accentClass: string; cardCount: number }> = [
     { accentClass: 'bg-[var(--pending-color)]', cardCount: 2 },
 ];
 
-function BoardPreview() {
+function BoardPreview({ playKey }: { playKey: number }) {
     return (
-        <div className="flex gap-1.5">
+        <PreviewStage playKey={playKey} className="flex gap-1.5">
             {boardPreviewColumns.map((column, index) => (
-                <div
+                <PreviewBlock
                     key={index}
                     className="flex-1 space-y-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--overlay-color)] p-1.5"
                 >
                     <div className="flex items-center gap-1">
-                        <span
+                        <PreviewDot
                             className={`h-1.5 w-1.5 shrink-0 rounded-full ${column.accentClass}`}
                         />
-                        <div className="h-1 w-5 rounded-full bg-[var(--border-color-strong)]" />
+                        <PreviewBar className="h-1 w-5 rounded-full bg-[var(--border-color-strong)]" />
                         <span className="ml-auto text-[8px] font-semibold leading-none text-[var(--text-muted-color)]">
-                            {column.cardCount}
+                            <AnimatedNumber value={column.cardCount} />
                         </span>
                     </div>
                     <div className="space-y-1">
                         {Array.from({ length: column.cardCount }).map(
                             (_, cardIndex) => (
-                                <div
+                                <PreviewBlock
                                     key={cardIndex}
                                     className="h-3 rounded-md border border-[var(--border-color)] bg-[var(--bg-light-color)]"
                                 />
                             ),
                         )}
                     </div>
-                </div>
+                </PreviewBlock>
             ))}
-        </div>
+        </PreviewStage>
     );
 }
 
@@ -107,12 +118,15 @@ const calendarPreviewCells = Array.from({ length: 14 });
 const calendarAccentCellIndexes = new Set([2, 9]);
 const calendarTodayIndex = 5;
 
-function CalendarPreview() {
+function CalendarPreview({ playKey }: { playKey: number }) {
     return (
-        <div className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--overlay-color)]">
+        <PreviewStage
+            playKey={playKey}
+            className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--overlay-color)]"
+        >
             <div className="grid grid-cols-7 gap-1 border-b border-[var(--border-color)] bg-[var(--surface-color)] p-1.5">
                 {Array.from({ length: 7 }).map((_, index) => (
-                    <div
+                    <PreviewBar
                         key={index}
                         className="h-1 rounded-full bg-[var(--border-color-strong)]"
                     />
@@ -125,16 +139,16 @@ function CalendarPreview() {
                         className="flex h-3 items-center justify-center"
                     >
                         {index === calendarTodayIndex ? (
-                            <span className="h-2.5 w-2.5 rounded-full bg-[var(--accent-color)]" />
+                            <PreviewDot className="h-2.5 w-2.5 rounded-full bg-[var(--accent-color)]" />
                         ) : calendarAccentCellIndexes.has(index) ? (
-                            <span className="h-1 w-1 rounded-full bg-[var(--info-color)]" />
+                            <PreviewDot className="h-1 w-1 rounded-full bg-[var(--info-color)]" />
                         ) : (
-                            <span className="h-1 w-1 rounded-full bg-[var(--bg-light-color-hover)]" />
+                            <PreviewDot className="h-1 w-1 rounded-full bg-[var(--bg-light-color-hover)]" />
                         )}
                     </div>
                 ))}
             </div>
-        </div>
+        </PreviewStage>
     );
 }
 
@@ -145,45 +159,54 @@ const activityPreviewEntries: Array<{ dotClass: string; widthClass: string }> =
         { dotClass: 'bg-[var(--warning-color)]', widthClass: 'w-2/3' },
     ];
 
-function ActivityPreview() {
+function ActivityPreview({ playKey }: { playKey: number }) {
     return (
-        <div className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--overlay-color)] p-2">
+        <PreviewStage
+            playKey={playKey}
+            className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--overlay-color)] p-2"
+        >
             <div className="space-y-2.5">
                 {activityPreviewEntries.map((entry, index) => (
-                    <div
+                    <PreviewBlock
                         key={index}
                         className="relative flex items-start gap-1.5"
                     >
                         {index !== activityPreviewEntries.length - 1 && (
                             <span className="absolute left-[3px] top-2.5 h-[calc(100%+2px)] w-px bg-[var(--border-color-strong)]" />
                         )}
-                        <span
+                        <PreviewDot
                             className={`z-10 mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full ${entry.dotClass}`}
                         />
-                        <div
+                        <PreviewBar
                             className={`h-1 rounded-full bg-[var(--border-color-strong)] ${entry.widthClass}`}
                         />
-                    </div>
+                    </PreviewBlock>
                 ))}
             </div>
-        </div>
+        </PreviewStage>
     );
 }
 
-function IssueViewPreview({ view }: { view: IssuePageLooks }) {
+function IssueViewPreview({
+    view,
+    playKey,
+}: {
+    view: IssuePageLooks;
+    playKey: number;
+}) {
     if (view === 'Board') {
-        return <BoardPreview />;
+        return <BoardPreview playKey={playKey} />;
     }
 
     if (view === 'Calendar') {
-        return <CalendarPreview />;
+        return <CalendarPreview playKey={playKey} />;
     }
 
     if (view === 'Activity') {
-        return <ActivityPreview />;
+        return <ActivityPreview playKey={playKey} />;
     }
 
-    return <ListPreview />;
+    return <ListPreview playKey={playKey} />;
 }
 
 export default function AccountSettingsIssueViewCard({
@@ -193,6 +216,9 @@ export default function AccountSettingsIssueViewCard({
     selected,
     onSelect,
 }: AccountSettingsIssueViewCardProps) {
+    // The mock-up draws once on load and again each time this card is picked.
+    const playKey = usePlayOnSelect(selected);
+
     return (
         <motion.button
             type="button"
@@ -221,7 +247,7 @@ export default function AccountSettingsIssueViewCard({
             <p className="mb-3 text-xs leading-5 text-[var(--text-muted-color)]">
                 {description}
             </p>
-            <IssueViewPreview view={view} />
+            <IssueViewPreview view={view} playKey={playKey} />
         </motion.button>
     );
 }
