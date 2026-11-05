@@ -1,7 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
+import { ComponentProps, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 import CardHeader from './CardHeader';
+
+function CollapsibleDemo(props: ComponentProps<typeof CardHeader>) {
+    const [collapsed, setCollapsed] = useState(false);
+
+    return (
+        <CardHeader
+            {...props}
+            collapsed={collapsed}
+            collapsedSummary="12 errors today"
+            onToggleCollapse={() => setCollapsed((v) => !v)}
+        />
+    );
+}
 
 const meta = {
     title: 'Molecules/CardHeader',
@@ -27,18 +40,7 @@ type Story = StoryObj<typeof meta>;
 export const Plain: Story = {};
 
 export const Collapsible: Story = {
-    render: (args) => {
-        const [collapsed, setCollapsed] = useState(false);
-
-        return (
-            <CardHeader
-                {...args}
-                collapsed={collapsed}
-                collapsedSummary="12 errors today"
-                onToggleCollapse={() => setCollapsed((v) => !v)}
-            />
-        );
-    },
+    render: (args) => <CollapsibleDemo {...args} />,
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
         await userEvent.click(canvas.getByRole('button'));
