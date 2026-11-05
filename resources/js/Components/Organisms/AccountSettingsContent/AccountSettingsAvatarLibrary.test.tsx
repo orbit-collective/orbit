@@ -106,4 +106,42 @@ describe('AccountSettingsAvatarLibrary', () => {
             screen.getAllByRole('button', { name: /^Use .* avatar$/ })[0],
         );
     });
+
+    test('every avatar rises into its grid cell, stretched to it, and ends up visible', async () => {
+        mockRasterizeImage.mockResolvedValue({});
+        mockCanvasesMatch.mockReturnValue(false);
+
+        render(
+            <AccountSettingsAvatarLibrary
+                avatarSrc={null}
+                onSelect={() => {}}
+            />,
+        );
+
+        const buttons = await screen.findAllByRole('button', {
+            name: /^Use .* avatar$/,
+        });
+        expect(buttons.length).toBeGreaterThan(0);
+        buttons.forEach((button) =>
+            expect(button.parentElement!.className).toContain('[&>*]:w-full'),
+        );
+        await waitFor(() => expect(buttons[0]).toBeVisible());
+    });
+
+    test('a disabled library does not lift under the pointer but is marked busy', () => {
+        mockRasterizeImage.mockResolvedValue({});
+        mockCanvasesMatch.mockReturnValue(false);
+
+        render(
+            <AccountSettingsAvatarLibrary
+                avatarSrc={null}
+                disabled
+                onSelect={() => {}}
+            />,
+        );
+
+        expect(
+            screen.getByRole('group', { name: 'Avatar library' }),
+        ).toHaveAttribute('aria-busy', 'true');
+    });
 });

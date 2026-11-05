@@ -1,7 +1,10 @@
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import { cn } from '@/utils/cn';
 import { canvasesMatch, rasterizeImage } from '@/utils/faces';
+import { SPRING, liftProps } from '@/utils/motion';
 
 const faceModules = import.meta.glob<string>('../../../assets/faces/*.svg', {
     eager: true,
@@ -84,36 +87,43 @@ export default function AccountSettingsAvatarLibrary({
             aria-busy={disabled}
             className="grid grid-cols-[repeat(auto-fill,minmax(3rem,3rem))] gap-2"
         >
-            {faces.map((face) => {
+            {faces.map((face, index) => {
                 const selected = selectedSrc === face.src;
 
                 return (
-                    <button
-                        key={face.id}
-                        type="button"
-                        aria-pressed={selected}
-                        aria-label={`Use ${face.id} avatar`}
-                        title={face.id}
-                        disabled={disabled}
-                        onClick={() => onSelect(face.src)}
-                        className={cn(
-                            'relative aspect-square rounded-full border p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-40',
-                            selected
-                                ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
-                                : 'border-[var(--border-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color)]',
-                        )}
-                    >
-                        <img
-                            src={face.src}
-                            alt=""
-                            className="h-full w-full rounded-full object-cover"
-                        />
-                        {selected && (
-                            <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent-color)] text-white">
-                                <Icon name="Check" size={10} />
-                            </span>
-                        )}
-                    </button>
+                    <RowReveal key={face.id} index={index} fill>
+                        <motion.button
+                            type="button"
+                            aria-pressed={selected}
+                            aria-label={`Use ${face.id} avatar`}
+                            title={face.id}
+                            disabled={disabled}
+                            onClick={() => onSelect(face.src)}
+                            {...(disabled ? {} : liftProps)}
+                            className={cn(
+                                'relative aspect-square rounded-full border p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-40',
+                                selected
+                                    ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
+                                    : 'border-[var(--border-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color)]',
+                            )}
+                        >
+                            <img
+                                src={face.src}
+                                alt=""
+                                className="h-full w-full rounded-full object-cover"
+                            />
+                            {selected && (
+                                <motion.span
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={SPRING}
+                                    className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent-color)] text-white"
+                                >
+                                    <Icon name="Check" size={10} />
+                                </motion.span>
+                            )}
+                        </motion.button>
+                    </RowReveal>
                 );
             })}
         </div>
