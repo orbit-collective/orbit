@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import AccountSettingsProfileTab from './AccountSettingsProfileTab';
 
 interface RouterPostOptions {
@@ -54,7 +55,10 @@ const openLibraryAndPickFace = async () => {
     await user.click(
         screen.getByRole('button', { name: /choose from library/i }),
     );
-    const [face] = screen.getAllByRole('button', { name: /^Use .* avatar$/ });
+    // The library unfolds with an animation: wait for it to be reachable.
+    const [face] = await screen.findAllByRole('button', {
+        name: /^Use .* avatar$/,
+    });
     await user.click(face);
 
     await waitFor(() => expect(mockRouterPost).toHaveBeenCalled());
@@ -92,5 +96,57 @@ describe('AccountSettingsProfileTab avatar library', () => {
         expect(
             screen.queryByRole('button', { name: /upload new photo/i }),
         ).not.toBeInTheDocument();
+    });
+
+    test('the library unfolds on request and folds away again', async () => {
+        const user = userEvent.setup();
+        render(
+            <AlertProvider>
+                <AccountSettingsProfileTab
+                    userName="John Doe"
+                    userAvatar="/storage/avatars/old.png"
+                />
+            </AlertProvider>,
+        );
+        expect(screen.queryByText('Avatar library')).not.toBeInTheDocument();
+
+        const toggle = screen.getByRole('button', {
+            name: /choose from library/i,
+        });
+        await user.click(toggle);
+        expect(await screen.findByText('Avatar library')).toBeInTheDocument();
+
+        await user.click(
+            screen.getByRole('button', {
+                name: /choose from library|hide library|close/i,
+            }),
+        );
+        await waitFor(() =>
+            expect(
+                screen.queryByText('Avatar library'),
+            ).not.toBeInTheDocument(),
+        );
+    });
+});
+
+describe('AccountSettingsProfileTab panels', () => {
+    test('the profile and preview panels fold, the profile one summarising the name', () => {
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <AccountSettingsProfileTab
+                        userName="John Doe"
+                        userAvatar={null}
+                    />
+                </AlertProvider>,
+                'profile',
+            ),
+        );
+
+        expectPanelsToFold([/^Profile/, /Live preview/]);
+        fireEvent.click(screen.getByRole('button', { name: /^Profile/ }));
+        expect(screen.getAllByTestId('collapsed-summary')[0]).toHaveTextContent(
+            'John Doe',
+        );
     });
 });

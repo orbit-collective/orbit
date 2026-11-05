@@ -2,6 +2,7 @@ import { router, useForm } from '@inertiajs/react';
 import { SyntheticEvent, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import AccountSettingsAvatarLibrary from '@/Components/Organisms/AccountSettingsContent/AccountSettingsAvatarLibrary';
@@ -102,6 +103,8 @@ export default function AccountSettingsProfileTab({
     return (
         <div className="space-y-5">
             <SettingsPanel
+                id="profile"
+                collapsedSummary={data.name}
                 title="Profile"
                 description="Manage your personal details and how you appear to teammates."
                 icon="User"
@@ -180,7 +183,7 @@ export default function AccountSettingsProfileTab({
                         />
                     }
                 />
-                {isLibraryOpen && (
+                <Collapse open={isLibraryOpen} unmountWhenClosed>
                     <SettingsPanelRow
                         title="Avatar library"
                         description="Pick one of the ready-made avatars instead of uploading a photo."
@@ -191,10 +194,11 @@ export default function AccountSettingsProfileTab({
                             onSelect={handleSelectFace}
                         />
                     </SettingsPanelRow>
-                )}
+                </Collapse>
             </SettingsPanel>
 
             <SettingsPanel
+                id="preview"
                 title="Live preview"
                 description="Updates instantly as you edit your photo and name."
                 icon="Eye"
