@@ -1,7 +1,10 @@
+import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import { ReactNode } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
+import { SPRING } from '@/utils/motion';
 
 interface AccountSettingsProfilePreviewProps {
     name: string;
@@ -28,11 +31,40 @@ function PreviewCardLabel({
     );
 }
 
-function PreviewFrame({ children }: { children: ReactNode }) {
+function PreviewFrame({
+    index,
+    children,
+}: {
+    index: number;
+    children: ReactNode;
+}) {
     return (
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-3.5 transition-colors hover:border-[var(--border-color-strong)]">
-            {children}
-        </div>
+        <RowReveal index={index} fill>
+            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-3.5 transition-colors duration-200 hover:border-[var(--border-color-strong)]">
+                {children}
+            </div>
+        </RowReveal>
+    );
+}
+
+/** The avatar pops in whenever the photo changes, so edits feel live. */
+function LiveAvatar({
+    src,
+    initials,
+}: {
+    src: string | undefined;
+    initials: string;
+}) {
+    return (
+        <motion.span
+            key={src ?? 'initials'}
+            className="flex shrink-0"
+            initial={{ opacity: 0, scale: 0.6 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={SPRING}
+        >
+            <Avatar src={src} initials={initials} size="sm" />
+        </motion.span>
     );
 }
 
@@ -46,7 +78,7 @@ export default function AccountSettingsProfilePreview({
 
     return (
         <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
-            <PreviewFrame>
+            <PreviewFrame index={0}>
                 <PreviewCardLabel icon="LayoutPanelLeft" label="Sidebar" />
                 <div className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)] p-1.5">
                     <div className="space-y-1">
@@ -61,7 +93,7 @@ export default function AccountSettingsProfilePreview({
                     </div>
                     <div className="my-1.5 border-t border-[var(--border-color)]" />
                     <div className="flex items-center gap-2 rounded-full px-1.5 py-1">
-                        <Avatar {...avatarProps} size="sm" />
+                        <LiveAvatar {...avatarProps} />
                         <p className="truncate text-[11px] font-medium text-[var(--text-color)]">
                             {displayName}
                         </p>
@@ -69,11 +101,11 @@ export default function AccountSettingsProfilePreview({
                 </div>
             </PreviewFrame>
 
-            <PreviewFrame>
+            <PreviewFrame index={1}>
                 <PreviewCardLabel icon="MessageSquare" label="Comment" />
                 <div className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)] p-2.5">
                     <div className="flex items-start gap-2">
-                        <Avatar {...avatarProps} size="sm" />
+                        <LiveAvatar {...avatarProps} />
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
                                 <p className="truncate text-[11px] font-medium text-[var(--text-color)]">
@@ -96,7 +128,7 @@ export default function AccountSettingsProfilePreview({
                 </div>
             </PreviewFrame>
 
-            <PreviewFrame>
+            <PreviewFrame index={2}>
                 <PreviewCardLabel icon="UserCheck" label="Issue row" />
                 <div className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)]">
                     <div className="flex items-center gap-2 border-b border-[var(--border-color)] bg-[var(--bg-light-color)] px-2 py-1.5">
@@ -106,7 +138,7 @@ export default function AccountSettingsProfilePreview({
                     <div className="flex items-center gap-2 px-2 py-2.5">
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--info-color)]" />
                         <div className="h-1.5 flex-1 rounded-full bg-[var(--bg-light-color)]" />
-                        <Avatar {...avatarProps} size="sm" />
+                        <LiveAvatar {...avatarProps} />
                     </div>
                 </div>
             </PreviewFrame>
