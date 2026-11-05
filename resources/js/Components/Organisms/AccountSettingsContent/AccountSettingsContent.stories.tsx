@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 import { Session } from '@/types/Users';
 import AccountSettingsAvatarLibrary from './AccountSettingsAvatarLibrary';
 import AccountSettingsDeleteAccountModal from './AccountSettingsDeleteAccountModal';
@@ -70,9 +70,10 @@ export const Profile: Story = {
         <AccountSettingsProfileTab userName="Jane Cooper" userAvatar={null} />
     ),
     play: async ({ canvasElement }) => {
-        await expect(
-            await within(canvasElement).findByDisplayValue('Jane Cooper'),
-        ).toBeVisible();
+        const name =
+            await within(canvasElement).findByDisplayValue('Jane Cooper');
+        // The rows rise in with the panel: wait until it is settled.
+        await waitFor(() => expect(name).toBeVisible());
     },
 };
 

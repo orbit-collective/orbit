@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { PendingProjectInvitation } from '@/types/ProjectMembers';
 import { WorkspaceRole } from '@/types/Roles';
 import PendingInvitationsPanel from './PendingInvitationsPanel';
@@ -69,8 +69,10 @@ export const Default: Story = {
 export const Empty: Story = {
     args: { invitations: [] },
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByText('No pending invitations'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByText('No pending invitations'),
+            ).toBeVisible(),
+        );
     },
 };
