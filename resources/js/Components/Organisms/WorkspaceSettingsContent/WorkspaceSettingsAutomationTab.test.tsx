@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { priorities } from '@/stories/fixtures';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import { AutomationRule } from '@/types/Automation';
 import { IssueType } from '@/types/IssueTypes';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
@@ -113,6 +114,75 @@ describe('WorkspaceSettingsAutomationTab', () => {
                 'Select a rule, or create a new one, to see its flow.',
             ),
         ).toBeInTheDocument();
+    });
+
+    test('the rule rows rise in and end up visible', async () => {
+        renderTab({
+            memberProjects: [project],
+            selectedProjectId: 1,
+            automationRules: [rule],
+            triggerTypes,
+            actionTypes,
+            hasAutomationAccess: true,
+            canUpdateAutomation: true,
+        });
+
+        await waitFor(() =>
+            expect(screen.getByText('Merge to done')).toBeVisible(),
+        );
+    });
+
+    test("the opened rule's flow rises in and ends up visible", async () => {
+        renderTab({
+            memberProjects: [project],
+            selectedProjectId: 1,
+            automationRules: [rule],
+            triggerTypes,
+            actionTypes,
+            hasAutomationAccess: true,
+            canUpdateAutomation: true,
+        });
+
+        fireEvent.click(screen.getByText('Merge to done'));
+
+        await waitFor(() =>
+            expect(screen.getByText('Change priority')).toBeVisible(),
+        );
+    });
+
+    test('the no-access and read-only panels fold', () => {
+        const { unmount } = render(
+            inSettingsPage(
+                <AlertProvider>
+                    <WorkspaceSettingsAutomationTab
+                        memberProjects={[project]}
+                        selectedProjectId={1}
+                        hasAutomationAccess={false}
+                    />
+                </AlertProvider>,
+                'automation',
+            ),
+        );
+        expectPanelsToFold([/No access/]);
+        unmount();
+
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <WorkspaceSettingsAutomationTab
+                        memberProjects={[project]}
+                        selectedProjectId={1}
+                        automationRules={[rule]}
+                        triggerTypes={triggerTypes}
+                        actionTypes={actionTypes}
+                        hasAutomationAccess
+                        canUpdateAutomation={false}
+                    />
+                </AlertProvider>,
+                'automation',
+            ),
+        );
+        expectPanelsToFold([/Read-only access/]);
     });
 
     test('selecting a rule opens its flow with trigger and action nodes', async () => {
