@@ -23,9 +23,11 @@ const CardHeader: React.FC<CardHeaderProps> = ({
 }) => {
     const content = (
         <>
-            <span className={iconBox}>
-                <Icon name={icon} size={15} />
-            </span>
+            {icon && (
+                <span className={iconBox}>
+                    <Icon name={icon} size={15} />
+                </span>
+            )}
             <span className="min-w-0 flex-1 text-left text-sm font-semibold text-[var(--text-color)]">
                 {title}
             </span>
@@ -74,7 +76,12 @@ const CardHeader: React.FC<CardHeaderProps> = ({
         <div>
             {heading}
             {description && !collapsed && (
-                <p className="mt-1 pl-11 text-sm text-[var(--text-gray-color)]">
+                <p
+                    className={cn(
+                        'mt-1 text-sm text-[var(--text-gray-color)]',
+                        icon && 'pl-11',
+                    )}
+                >
                     {description}
                 </p>
             )}
