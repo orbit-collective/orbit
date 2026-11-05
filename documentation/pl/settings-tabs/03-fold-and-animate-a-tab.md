@@ -11,6 +11,13 @@ Plik: `resources/js/Components/Organisms/SettingsLayout/SettingsLayout.tsx`
 - Dostarcza `SettingsSectionsProvider` (`context/SettingsSectionsContext.tsx`) z kluczem `settings-sections:<tabId>`, który pamięta, które panele są zwinięte, i liczy te, które się dołączyły.
 - Pokazuje `CollapseAllButton` obok nagłówka, gdy dwa lub więcej paneli da się zwinąć (nigdy dla zakładki full-bleed).
 
+## Co animuje się bez pracy w zakładce
+
+- **Zwykłe wiersze.** `SettingsPanelRow` wjeżdża razem z rodzeństwem, gdy treść panelu już jest (treść to stagger `rowsParent`), a wiersz zamontowany później dołącza do wjazdu. Większość wierszy większości zakładek nie wymaga niczego.
+- **Karty do wyboru** (widok, motyw, wygasanie sesji, projekt, rola): `liftProps` z `utils/motion.ts` na `motion.button` unosi je pod wskaźnikiem i wciska po kliknięciu. Nie dokładaj do nich CSS `transition-all`/`hover:-translate-*`: przejście CSS walczy z inline'owym transformem.
+- **`ToggleSwitch`** sprężynuje gałkę; **`Button`** wciska się; oba pokazują wspólny pierścień fokusu. Plus w **`AddRowButton`** obraca się po najechaniu.
+- **Paski postępu i liczby** rosną przez `motion` (zob. `PermissionGroupCard`) i liczą przez `AnimatedNumber`.
+
 ## Krok 1 — Nadaj każdemu panelowi id
 
 ```tsx
@@ -42,7 +49,7 @@ Wiersze wewnątrz zwijalnego panelu nie mogą odziedziczyć wjazdu strony (treś
 ))}
 ```
 
-Stagger jest ograniczony (dziesięć wierszy), więc długa lista się nie wlecze. Zachowaj stabilne klucze: zmiana kolejności przesuwa wtedy wiersze bez powtarzania wjazdu. Użyj `<Reveal key={selectedId}>`, gdy widok szczegółów ma wjechać ponownie przy zmianie wyboru (szczegóły roli, przepływ automatyzacji), `Collapse` z `unmountWhenClosed` dla czegoś, co otwiera się w wierszu (biblioteka awatarów), i `AnimatedNumber` dla liczb w `StatCard`.
+W siatce wrapper staje się komórką, więc podaj `fill`, a karta nadal rozciągnie się do niej (`<RowReveal fill>`). Stagger jest ograniczony (dziesięć wierszy), więc długa lista się nie wlecze. Zachowaj stabilne klucze: zmiana kolejności przesuwa wtedy wiersze bez powtarzania wjazdu. Użyj `<Reveal key={selectedId}>`, gdy widok szczegółów ma wjechać ponownie przy zmianie wyboru (szczegóły roli, przepływ automatyzacji), `Collapse` z `unmountWhenClosed` dla czegoś, co otwiera się w wierszu (biblioteka awatarów), i `AnimatedNumber` dla liczb w `StatCard`.
 
 ## Krok 3 — Testy
 
