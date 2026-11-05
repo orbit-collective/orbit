@@ -1,9 +1,9 @@
 import { usePage } from '@inertiajs/react';
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { MotionConfig, motion } from 'framer-motion';
 import { useMemo } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
-import Icon from '@/Components/Atoms/Icon/Icon';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
+import CollapseAllButton from '@/Components/Molecules/CollapseAllButton/CollapseAllButton';
 import PercentBarsCard from '@/Components/Molecules/PercentBarsCard/PercentBarsCard';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useCollapsedSections } from '@/hooks/useCollapsedSections';
@@ -16,9 +16,7 @@ import {
     PortalTotals,
     PortalUser,
 } from '@/types/DeveloperPortal';
-import { cn } from '@/utils/cn';
-import { FOCUS_RING } from '@/utils/focusRing';
-import { DURATION, EASE, riseIn, staggerParent } from '@/utils/motion';
+import { riseIn, staggerParent } from '@/utils/motion';
 import PortalContainersSection from './PortalContainersSection';
 import PortalErrorsSection from './PortalErrorsSection';
 import PortalProjectsPanel from './PortalProjectsPanel';
@@ -122,38 +120,10 @@ export default function DeveloperPortalTab({
                 className="space-y-6"
             >
                 <motion.div variants={riseIn} className="flex justify-end">
-                    <button
-                        type="button"
-                        onClick={() => setAll(!allCollapsed)}
-                        className={cn(
-                            'flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-transparent px-2 py-1 text-xs font-medium text-[var(--text-gray-color)] transition-colors duration-200 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
-                            FOCUS_RING,
-                        )}
-                    >
-                        <AnimatePresence mode="wait" initial={false}>
-                            <motion.span
-                                key={allCollapsed ? 'expand' : 'collapse'}
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -6 }}
-                                transition={{
-                                    duration: DURATION.fast,
-                                    ease: EASE,
-                                }}
-                                className="flex items-center gap-1.5"
-                            >
-                                <Icon
-                                    name={
-                                        allCollapsed
-                                            ? 'ChevronsUpDown'
-                                            : 'ChevronsDownUp'
-                                    }
-                                    size={14}
-                                />
-                                {allCollapsed ? 'Expand all' : 'Collapse all'}
-                            </motion.span>
-                        </AnimatePresence>
-                    </button>
+                    <CollapseAllButton
+                        allCollapsed={allCollapsed}
+                        onToggle={() => setAll(!allCollapsed)}
+                    />
                 </motion.div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

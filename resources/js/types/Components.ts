@@ -964,3 +964,9 @@ export interface AnimatedNumberProps {
     format?: (value: number) => string;
     className?: string;
 }
+
+export interface CollapseAllButtonProps {
+    /** Every collapsible panel is folded: the button then offers to expand them. */
+    allCollapsed: boolean;
+    onToggle: () => void;
+}
