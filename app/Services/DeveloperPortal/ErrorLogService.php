@@ -16,6 +16,8 @@ class ErrorLogService
 {
     private const int CACHE_TTL = 5;
 
+    private const string CACHE_KEY = 'developer-portal:errors';
+
     private const string HEADER = '/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] [\w.-]+\.(DEBUG|INFO|NOTICE|WARNING|ERROR|CRITICAL|ALERT|EMERGENCY): (.*)$/';
 
     /** Levels listed as errors; the daily breakdown also counts warnings. */
@@ -32,12 +34,22 @@ class ErrorLogService
      */
     public function recent(): array
     {
-        return Cache::remember('developer-portal:errors', self::CACHE_TTL, fn () => $this->read());
+        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, fn () => $this->read());
     }
 
     public const string PAGE = 'errors_page';
 
     public const string PER_PAGE = 'errors_perPage';
+
+    /**
+     * Drop the cached read. Called before an `errors` change is announced, so
+     * the reload that announcement triggers reads the log again instead of the
+     * result cached a moment ago (connected clients do not poll it).
+     */
+    public function forget(): void
+    {
+        Cache::forget(self::CACHE_KEY);
+    }
 
     /**
      * The same data with the error list paginated for the page (`errors_page`

@@ -5,6 +5,7 @@ namespace App\Support\Live;
 use App\Events\Live\AccessChanged;
 use App\Events\Live\DeveloperPortalChanged;
 use App\Events\Live\ProjectChanged;
+use App\Services\DeveloperPortal\ErrorLogService;
 
 /**
  * The one place the application says "this changed" for live updates.
@@ -61,7 +62,8 @@ final class LiveUpdates
         $this->projects[$projectId]["$type:$id:$action"] = ['type' => $type, 'id' => $id, 'action' => $action];
 
         $this->portal(match ($type) {
-            'issue', 'comment' => 'issues',
+            // A workflow status changing category moves issues between the portal's buckets.
+            'issue', 'comment', 'issue-types' => 'issues',
             'project', 'members' => 'projects',
             default => null,
         });
@@ -128,6 +130,11 @@ final class LiveUpdates
         }
 
         if ($portal !== []) {
+            // The log was just written to: the reload this triggers must not get a cached read.
+            if (in_array('errors', $portal, true)) {
+                app(ErrorLogService::class)->forget();
+            }
+
             DeveloperPortalChanged::dispatch($portal);
         }
     }
