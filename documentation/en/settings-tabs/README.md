@@ -22,6 +22,10 @@ placeholder live, and adding a genuinely new one from scratch.
    — worked example adding a `billing` tab that doesn't exist at all
    yet: the type, the registry entry, the route, the controller
    action, the page and the tab component.
+3. **[Fold and animate a tab](./03-fold-and-animate-a-tab.md)**
+   — what every tab gets from `SettingsLayout` (staggered entrance, remembered
+   folding, Collapse all) and how a tab opts in: panel ids and summaries,
+   `RowReveal` for rows, the test helper.
 
 ## The architecture in one paragraph
 

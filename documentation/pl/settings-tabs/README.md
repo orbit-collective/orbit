@@ -6,6 +6,7 @@
 
 1. **[Włącz placeholder zakładkę na żywo](./01-flip-a-placeholder-tab-live.md)** — przećwiczony przykład włączenia już zbudowanej zakładki Export, ten sam kształt "UI już istnieje, po prostu spraw, żeby był osiągalny i prawdziwy", co przykład Slacka w [`../integrations/01-add-a-new-integration.md`](../integrations/01-add-a-new-integration.md).
 2. **[Dodaj zupełnie nową zakładkę ustawień](./02-add-a-brand-new-settings-tab.md)** — przećwiczony przykład dodania zakładki `billing`, która jeszcze w ogóle nie istnieje: typ, wpis w rejestrze, trasa, akcja kontrolera, strona i komponent zakładki.
+3. **[Zwijanie i animacje zakładki](./03-fold-and-animate-a-tab.md)** — co każda zakładka dostaje z `SettingsLayout` (kaskadowy wjazd, zapamiętane zwijanie, Collapse all) i jak się dołączyć: id i podsumowania paneli, `RowReveal` dla wierszy, helper testowy.
 
 ## Architektura w jednym akapicie
 
