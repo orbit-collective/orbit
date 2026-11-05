@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import AddRowButton from '@/Components/Molecules/AddRowButton/AddRowButton';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import RowAction from '@/Components/Molecules/RowAction/RowAction';
@@ -56,6 +57,7 @@ export default function WorkspaceSettingsLabelsTab({
     if (!selectedProject || !hasLabelsAccess) {
         return (
             <SettingsPanel
+                id="taxonomy"
                 title="Label taxonomy"
                 description="Define label taxonomy used across issues and projects."
                 icon="Tag"
@@ -185,6 +187,8 @@ export default function WorkspaceSettingsLabelsTab({
             />
 
             <SettingsPanel
+                id="taxonomy"
+                collapsedSummary={`${labels.length} ${labels.length === 1 ? 'label' : 'labels'}`}
                 title="Label taxonomy"
                 description={`Labels available for issues in ${selectedProject.name}.`}
                 icon="Tag"
@@ -205,7 +209,7 @@ export default function WorkspaceSettingsLabelsTab({
                         </div>
                     )}
 
-                {labels.map((label) =>
+                {labels.map((label, index) =>
                     editorTarget === String(label.id) ? (
                         <WorkspaceSettingsLabelInlineEditor
                             key={label.id}
@@ -214,8 +218,9 @@ export default function WorkspaceSettingsLabelsTab({
                             onCancel={() => setEditorTarget(null)}
                         />
                     ) : (
-                        <div
+                        <RowReveal
                             key={label.id}
+                            index={index}
                             className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
                         >
                             <span
@@ -265,7 +270,7 @@ export default function WorkspaceSettingsLabelsTab({
                                     )}
                                 </div>
                             )}
-                        </div>
+                        </RowReveal>
                     ),
                 )}
 

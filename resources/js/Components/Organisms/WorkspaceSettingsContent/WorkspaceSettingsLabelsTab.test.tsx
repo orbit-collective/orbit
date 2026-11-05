@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
 
@@ -99,5 +100,46 @@ describe('WorkspaceSettingsLabelsTab permission gating', () => {
         expect(screen.getByText('Add label')).toBeInTheDocument();
         expect(screen.getByTitle('Edit label')).toBeInTheDocument();
         expect(screen.getByTitle('Delete label')).toBeInTheDocument();
+    });
+});
+
+describe('WorkspaceSettingsLabelsTab panels', () => {
+    const inPage = (props = {}) =>
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <WorkspaceSettingsLabelsTab
+                        memberProjects={[project]}
+                        selectedProjectId={1}
+                        labels={labels}
+                        hasLabelsAccess
+                        {...props}
+                    />
+                </AlertProvider>,
+                'labels',
+            ),
+        );
+
+    test('the taxonomy panel folds and, folded, counts its labels', () => {
+        inPage();
+
+        expectPanelsToFold([/Label taxonomy/]);
+
+        fireEvent.click(screen.getByRole('button', { name: /Label taxonomy/ }));
+        expect(screen.getByTestId('collapsed-summary')).toHaveTextContent(
+            '1 label',
+        );
+    });
+
+    test('the no-access panel folds as well', () => {
+        inPage({ hasLabelsAccess: false });
+
+        expectPanelsToFold([/Label taxonomy/]);
+    });
+
+    test('the label rows rise in and end up visible', async () => {
+        inPage();
+
+        expect(await screen.findByText('bug')).toBeVisible();
     });
 });
