@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -24,6 +24,7 @@ vi.mock('@/utils/browserNotifications', () => ({
     disableBrowserNotifications: mocks.disable,
 }));
 
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import AccountSettingsBrowserNotifications from './AccountSettingsBrowserNotifications';
 
 const toggle = () =>
@@ -96,5 +97,23 @@ describe('AccountSettingsBrowserNotifications', () => {
 
         expect(toggle()).toBeDisabled();
         expect(screen.getByText(/does not support/)).toBeInTheDocument();
+    });
+
+    test('folds from its header and a folded panel says whether notifications are on', () => {
+        render(
+            inSettingsPage(
+                <AccountSettingsBrowserNotifications />,
+                'notifications',
+            ),
+        );
+
+        expectPanelsToFold([/Browser notifications/]);
+
+        fireEvent.click(
+            screen.getByRole('button', { name: /Browser notifications/ }),
+        );
+        expect(screen.getByTestId('collapsed-summary')).toHaveTextContent(
+            'Off',
+        );
     });
 });

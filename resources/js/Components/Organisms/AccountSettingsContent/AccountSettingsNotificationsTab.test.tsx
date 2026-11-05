@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import AccountSettingsNotificationsTab from './AccountSettingsNotificationsTab';
 
 vi.stubGlobal(
@@ -151,5 +152,24 @@ describe('AccountSettingsNotificationsTab clean-up', () => {
 
         expect(screen.getByText('Automatic clean-up')).toBeInTheDocument();
         expect(screen.getByText('Clean up now')).toBeInTheDocument();
+    });
+});
+
+describe('AccountSettingsNotificationsTab panels', () => {
+    test('the types panel and both clean-up panels fold (the browser one only exists with live updates)', () => {
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <AccountSettingsNotificationsTab />
+                </AlertProvider>,
+                'notifications',
+            ),
+        );
+
+        expectPanelsToFold([
+            /Notification types/,
+            /Automatic clean-up/,
+            /Clean up now/,
+        ]);
     });
 });

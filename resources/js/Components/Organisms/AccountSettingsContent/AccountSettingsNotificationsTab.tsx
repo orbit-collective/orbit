@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import AccountSettingsBrowserNotifications from '@/Components/Organisms/AccountSettingsContent/AccountSettingsBrowserNotifications';
 import AccountSettingsNotificationCleanup from '@/Components/Organisms/AccountSettingsContent/AccountSettingsNotificationCleanup';
@@ -197,6 +198,8 @@ export default function AccountSettingsNotificationsTab({
     return (
         <div className="space-y-5">
             <SettingsPanel
+                id="types"
+                collapsedSummary={`${notificationTypes.length} types`}
                 title="Notification types"
                 description="Choose which activity notifies you, and where."
                 icon="Bell"
@@ -214,23 +217,32 @@ export default function AccountSettingsNotificationsTab({
                         </span>
                     </div>
                 </div>
-                {notificationTypes.map((type) => (
-                    <AccountSettingsNotificationTypeRow
-                        key={type.id}
-                        icon={type.icon}
-                        title={type.title}
-                        description={type.description}
-                        inAppChecked={type.inApp}
-                        onInAppChange={(checked) =>
-                            updateNotificationType(type.id, 'inApp', checked)
-                        }
-                        inAppDisabled={pendingKey === `${type.id}:inApp`}
-                        emailChecked={type.email}
-                        onEmailChange={(checked) =>
-                            updateNotificationType(type.id, 'email', checked)
-                        }
-                        emailDisabled={pendingKey === `${type.id}:email`}
-                    />
+                {notificationTypes.map((type, index) => (
+                    <RowReveal key={type.id} index={index}>
+                        <AccountSettingsNotificationTypeRow
+                            icon={type.icon}
+                            title={type.title}
+                            description={type.description}
+                            inAppChecked={type.inApp}
+                            onInAppChange={(checked) =>
+                                updateNotificationType(
+                                    type.id,
+                                    'inApp',
+                                    checked,
+                                )
+                            }
+                            inAppDisabled={pendingKey === `${type.id}:inApp`}
+                            emailChecked={type.email}
+                            onEmailChange={(checked) =>
+                                updateNotificationType(
+                                    type.id,
+                                    'email',
+                                    checked,
+                                )
+                            }
+                            emailDisabled={pendingKey === `${type.id}:email`}
+                        />
+                    </RowReveal>
                 ))}
             </SettingsPanel>
 

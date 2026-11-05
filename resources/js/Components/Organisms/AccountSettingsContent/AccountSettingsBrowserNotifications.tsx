@@ -48,6 +48,8 @@ export default function AccountSettingsBrowserNotifications() {
 
     return (
         <SettingsPanel
+            id="browser"
+            collapsedSummary={enabled ? 'On' : 'Off'}
             title="Browser notifications"
             description="Get a system notification when something new arrives while Orbit is in a background tab."
             icon="BellRing"
