@@ -283,9 +283,9 @@ export const Priorities: Story = {
         />
     ),
     play: async ({ canvasElement }) => {
-        await expect(
-            await within(canvasElement).findByText('9 issues'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(within(canvasElement).getByText('9 issues')).toBeVisible(),
+        );
     },
 };
 

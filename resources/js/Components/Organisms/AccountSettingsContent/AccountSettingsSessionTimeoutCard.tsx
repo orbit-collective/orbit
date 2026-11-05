@@ -1,5 +1,7 @@
+import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import { liftProps } from '@/utils/motion';
 
 interface AccountSettingsSessionTimeoutCardProps {
     label: string;
@@ -19,10 +21,11 @@ export default function AccountSettingsSessionTimeoutCard({
     onSelect,
 }: AccountSettingsSessionTimeoutCardProps) {
     return (
-        <button
+        <motion.button
             type="button"
             onClick={onSelect}
             disabled={isDisabled}
+            {...(isDisabled ? {} : liftProps)}
             className={`rounded-xl border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                 selected
                     ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
@@ -46,6 +49,6 @@ export default function AccountSettingsSessionTimeoutCard({
             <p className="text-xs leading-5 text-[var(--text-muted-color)]">
                 {description}
             </p>
-        </button>
+        </motion.button>
     );
 }

@@ -109,9 +109,11 @@ export const NotificationsWithCleanupSchedule: Story = {
         />
     ),
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByText('Last ran 3h ago.'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByText('Last ran 3h ago.'),
+            ).toBeVisible(),
+        );
     },
 };
 

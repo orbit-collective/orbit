@@ -1,8 +1,10 @@
+import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProgressRing from '@/Components/Atoms/ProgressRing/ProgressRing';
 import { WorkspaceRole } from '@/types/Roles';
 import { cn } from '@/utils/cn';
+import { liftProps } from '@/utils/motion';
 
 interface RoleListItemTheme {
     label: string;
@@ -33,11 +35,12 @@ export default function RoleListItem({
             : Math.round((role.permissionIds.length / totalPermissions) * 100);
 
     return (
-        <button
+        <motion.button
             type="button"
             onClick={onClick}
+            {...liftProps}
             className={cn(
-                'group relative w-full overflow-hidden rounded-xl border p-3 text-left transition-all duration-200',
+                'group relative w-full overflow-hidden rounded-xl border p-3 text-left transition-[border-color,background-color,box-shadow] duration-200',
                 selected
                     ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)] shadow-[0_0_0_1px_var(--accent-color)]'
                     : 'border-[var(--border-color)] bg-[var(--bg-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
@@ -97,6 +100,6 @@ export default function RoleListItem({
                     </span>
                 </div>
             </div>
-        </button>
+        </motion.button>
     );
 }

@@ -1,6 +1,8 @@
+import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { IssuePageLooks } from '@/types/Issues';
+import { liftProps } from '@/utils/motion';
 
 interface AccountSettingsIssueViewCardProps {
     view: IssuePageLooks;
@@ -192,9 +194,10 @@ export default function AccountSettingsIssueViewCard({
     onSelect,
 }: AccountSettingsIssueViewCardProps) {
     return (
-        <button
+        <motion.button
             type="button"
             onClick={onSelect}
+            {...liftProps}
             className={`rounded-xl border p-3 text-left transition-colors ${
                 selected
                     ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
@@ -219,6 +222,6 @@ export default function AccountSettingsIssueViewCard({
                 {description}
             </p>
             <IssueViewPreview view={view} />
-        </button>
+        </motion.button>
     );
 }

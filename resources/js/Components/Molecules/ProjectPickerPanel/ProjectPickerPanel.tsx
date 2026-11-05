@@ -1,9 +1,11 @@
+import { motion } from 'framer-motion';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
+import { liftProps } from '@/utils/motion';
 
 interface ProjectPickerPanelProps {
     projects: MemberProjectSummary[];
@@ -40,16 +42,17 @@ export default function ProjectPickerPanel({
 
                     return (
                         <RowReveal key={project.id} index={index} fill>
-                            <button
+                            <motion.button
                                 type="button"
                                 onClick={() => onSelect(project.id)}
+                                {...liftProps}
                                 className={cn(
-                                    'group relative flex items-center gap-3 overflow-hidden rounded-xl border bg-gradient-to-br p-3 text-left transition-all duration-300',
+                                    'group relative flex items-center gap-3 overflow-hidden rounded-xl border bg-gradient-to-br p-3 text-left transition-[border-color,box-shadow,background-color] duration-300',
                                     theme.gradient,
                                     theme.border,
                                     selected
                                         ? 'border-[var(--accent-color)] shadow-lg'
-                                        : 'border-[var(--border-color)] bg-[var(--bg-color)] hover:-translate-y-0.5 hover:shadow-lg',
+                                        : 'border-[var(--border-color)] bg-[var(--bg-color)] hover:shadow-lg',
                                 )}
                             >
                                 <span
@@ -86,7 +89,7 @@ export default function ProjectPickerPanel({
                                         <Icon name="Check" size={11} />
                                     </span>
                                 )}
-                            </button>
+                            </motion.button>
                         </RowReveal>
                     );
                 })}
