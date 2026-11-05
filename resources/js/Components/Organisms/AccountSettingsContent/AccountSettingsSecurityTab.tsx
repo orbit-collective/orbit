@@ -207,7 +207,7 @@ export default function AccountSettingsSecurityTab({
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
                     {sessionTimeoutOptions.map((option, index) => (
-                        <RowReveal key={option.id} index={index}>
+                        <RowReveal key={option.id} index={index} fill>
                             <AccountSettingsSessionTimeoutCard
                                 label={option.label}
                                 icon={option.icon}

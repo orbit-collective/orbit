@@ -39,7 +39,7 @@ export default function ProjectPickerPanel({
                     const selected = project.id === selectedProjectId;
 
                     return (
-                        <RowReveal key={project.id} index={index}>
+                        <RowReveal key={project.id} index={index} fill>
                             <button
                                 type="button"
                                 onClick={() => onSelect(project.id)}

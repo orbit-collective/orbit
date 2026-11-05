@@ -80,7 +80,7 @@ export default function AccountSettingsPreferencesTab() {
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
                     {issueViewOptions.map((option, index) => (
-                        <RowReveal key={option.id} index={index}>
+                        <RowReveal key={option.id} index={index} fill>
                             <AccountSettingsIssueViewCard
                                 view={option.id}
                                 icon={option.icon}
@@ -112,7 +112,7 @@ export default function AccountSettingsPreferencesTab() {
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
                     {themeOptions.map((option, index) => (
-                        <RowReveal key={option.id} index={index}>
+                        <RowReveal key={option.id} index={index} fill>
                             <AccountSettingsThemeCard
                                 id={option.id}
                                 label={option.label}

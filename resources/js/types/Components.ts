@@ -974,6 +974,8 @@ export interface CollapseAllButtonProps {
 export interface RowRevealProps {
     /** Position in its list; later rows start a little later (capped). */
     index?: number;
+    /** The wrapper is a grid cell: make its child fill it (width and height). */
+    fill?: boolean;
     className?: string;
     children: React.ReactNode;
 }

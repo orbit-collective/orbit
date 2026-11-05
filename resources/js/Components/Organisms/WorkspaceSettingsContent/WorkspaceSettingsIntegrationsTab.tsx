@@ -721,7 +721,7 @@ export default function WorkspaceSettingsIntegrationsTab({
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {filteredIntegrations.map((integration, index) => (
-                    <RowReveal key={integration.id} index={index}>
+                    <RowReveal key={integration.id} index={index} fill>
                         <WorkspaceSettingsIntegrationCard
                             integration={integration}
                             enabled={

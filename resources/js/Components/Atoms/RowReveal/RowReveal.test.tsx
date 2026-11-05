@@ -27,4 +27,29 @@ describe('RowReveal', () => {
 
         await waitFor(() => expect(screen.getByText('row 29')).toBeVisible());
     });
+
+    test('in a grid, fill makes the child stretch to the cell (width and height)', () => {
+        render(
+            <RowReveal fill>
+                <button>card</button>
+            </RowReveal>,
+        );
+
+        const wrapper = screen.getByRole('button').parentElement!;
+        expect(wrapper.className).toContain('h-full');
+        expect(wrapper.className).toContain('[&>*]:w-full');
+        expect(wrapper.className).toContain('[&>*]:h-full');
+    });
+
+    test('without fill the wrapper adds no sizing of its own', () => {
+        render(
+            <RowReveal className="row">
+                <button>card</button>
+            </RowReveal>,
+        );
+
+        expect(
+            screen.getByRole('button').parentElement!.className,
+        ).not.toContain('h-full');
+    });
 });
