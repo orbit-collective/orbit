@@ -152,6 +152,7 @@ export const Interactive: Story = {
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
         await userEvent.click(canvas.getByRole('button', { name: 'None' }));
-        await expect(canvas.getByText('0/5')).toBeVisible();
+        // The counter counts down to the new value.
+        await waitFor(() => expect(canvas.getByText('0/5')).toBeVisible());
     },
 };
