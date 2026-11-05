@@ -90,7 +90,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
                             To Do
                         </span>
                         <span className="font-semibold text-[var(--text-color)]">
-                            {todo}
+                            <AnimatedNumber value={todo} />
                         </span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
@@ -99,7 +99,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
                             In Progress
                         </span>
                         <span className="font-semibold text-[var(--text-color)]">
-                            {in_progress}
+                            <AnimatedNumber value={in_progress} />
                         </span>
                     </div>
                     <div className="flex items-center justify-between gap-2">
@@ -108,13 +108,18 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
                             Done
                         </span>
                         <span className="font-semibold text-[var(--text-color)]">
-                            {done}
+                            <AnimatedNumber value={done} />
                         </span>
                     </div>
                     <div className="flex items-center justify-between gap-2 text-[var(--text-muted-color)]">
                         <span>Total</span>
                         <span className="font-semibold text-[var(--text-color)]">
-                            {done}/{totalIssuesCount} Issues
+                            <AnimatedNumber
+                                value={done}
+                                format={(n) =>
+                                    `${Math.round(n)}/${totalIssuesCount} Issues`
+                                }
+                            />
                         </span>
                     </div>
                 </div>
@@ -137,7 +142,7 @@ export function ProjectNewCard() {
                 <Icon
                     name="Plus"
                     size={18}
-                    className="text-[var(--text-muted-color)] transition-colors duration-200 group-hover:text-[var(--accent-color)]"
+                    className="text-[var(--text-muted-color)] transition-[color,transform] duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:rotate-90 group-hover:text-[var(--accent-color)]"
                 />
             </div>
             <span className="text-xs font-semibold text-[var(--text-muted-color)] transition-colors duration-200 group-hover:text-[var(--accent-color)]">
