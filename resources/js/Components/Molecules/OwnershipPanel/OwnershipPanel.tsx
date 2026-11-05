@@ -10,6 +10,7 @@ export default function OwnershipPanel({
 }: OwnershipPanelProps) {
     return (
         <SettingsPanel
+            id="ownership"
             title="Ownership"
             description="Transfer full, unconditional control of this project to another member."
             icon="Crown"
