@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import AccountSettingsSecurityTab from './AccountSettingsSecurityTab';
 
 vi.stubGlobal(
@@ -135,5 +136,50 @@ describe('AccountSettingsSecurityTab', () => {
         renderTab();
 
         expect(screen.getByText('Unlink').closest('button')).toBeDisabled();
+    });
+});
+
+describe('AccountSettingsSecurityTab panels', () => {
+    const renderInPage = () =>
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <AccountSettingsSecurityTab sessions={[]} />
+                </AlertProvider>,
+                'security-access',
+            ),
+        );
+
+    test('the accounts, password, sessions and expiry panels fold', () => {
+        renderInPage();
+
+        expectPanelsToFold([
+            /Connected accounts/,
+            /^Password/,
+            /Active sessions/,
+            /Session expiry/,
+        ]);
+    });
+
+    test('the delete-account panel starts folded so the dangerous action is out of the way', () => {
+        renderInPage();
+
+        const header = screen.getByRole('button', { name: /Delete account/ });
+        expect(header).toHaveAttribute('aria-expanded', 'false');
+
+        fireEvent.click(header);
+        expect(header).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    test('a folded panel summarises itself', () => {
+        mockUser.github_username = 'octocat';
+        renderInPage();
+
+        fireEvent.click(
+            screen.getByRole('button', { name: /Connected accounts/ }),
+        );
+        expect(screen.getAllByTestId('collapsed-summary')[0]).toHaveTextContent(
+            'GitHub @octocat',
+        );
     });
 });
