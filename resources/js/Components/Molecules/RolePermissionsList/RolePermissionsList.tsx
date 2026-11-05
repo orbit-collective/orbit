@@ -1,5 +1,6 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import PermissionGroupCard from '@/Components/Molecules/PermissionGroupCard/PermissionGroupCard';
 import { PermissionGroup } from '@/utils/permissionGroups';
 
@@ -48,21 +49,22 @@ export default function RolePermissionsList({
                     </p>
                 )}
 
-                {groups.map((group) => (
-                    <PermissionGroupCard
-                        key={group.group}
-                        label={group.label}
-                        icon={group.icon}
-                        sections={group.sections}
-                        permissionIds={group.permissions.map((p) => p.id)}
-                        enabledIds={enabledIds}
-                        canEdit={canEdit}
-                        forceExpanded={search.trim() !== ''}
-                        onToggle={onToggle}
-                        onSetAll={(_, enable) =>
-                            onSetAll(group.permissions, enable)
-                        }
-                    />
+                {groups.map((group, index) => (
+                    <RowReveal key={group.group} index={index}>
+                        <PermissionGroupCard
+                            label={group.label}
+                            icon={group.icon}
+                            sections={group.sections}
+                            permissionIds={group.permissions.map((p) => p.id)}
+                            enabledIds={enabledIds}
+                            canEdit={canEdit}
+                            forceExpanded={search.trim() !== ''}
+                            onToggle={onToggle}
+                            onSetAll={(_, enable) =>
+                                onSetAll(group.permissions, enable)
+                            }
+                        />
+                    </RowReveal>
                 ))}
             </div>
         </>

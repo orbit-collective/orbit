@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { ComponentProps, ReactNode, useEffect, useRef, useState } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { PermissionDefinition } from '@/types/Roles';
 import PermissionGroupCard from './PermissionGroupCard';
 
@@ -121,7 +121,10 @@ export const Collapsible: Story = {
         const canvas = within(canvasElement);
         await expect(canvas.getByText('View project')).toBeVisible();
         await userEvent.click(canvas.getByText('Projects'));
-        await expect(canvas.queryByText('View project')).toBeNull();
+        // Folded, not removed: the body animates shut and leaves the TAB order.
+        await waitFor(() =>
+            expect(canvas.getByText('View project')).not.toBeVisible(),
+        );
     },
 };
 
