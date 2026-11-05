@@ -2,6 +2,28 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import Collapse from './Collapse';
 
+function ToggleDemo() {
+    const [open, setOpen] = useState(true);
+
+    return (
+        <div className="w-80 rounded-2xl bg-[var(--surface-color)] p-4">
+            <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => setOpen((value) => !value)}
+                className="text-sm text-[var(--text-color)]"
+            >
+                {open ? 'Fold' : 'Unfold'}
+            </button>
+            <Collapse open={open}>
+                <p className="pt-3 text-sm text-[var(--text-gray-color)]">
+                    The body slides and fades with the shared easing.
+                </p>
+            </Collapse>
+        </div>
+    );
+}
+
 const meta = {
     title: 'Molecules/Collapse',
     component: Collapse,
@@ -13,27 +35,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Toggle: Story = {
-    render: () => {
-        const [open, setOpen] = useState(true);
-
-        return (
-            <div className="w-80 rounded-2xl bg-[var(--surface-color)] p-4">
-                <button
-                    type="button"
-                    aria-expanded={open}
-                    onClick={() => setOpen((value) => !value)}
-                    className="text-sm text-[var(--text-color)]"
-                >
-                    {open ? 'Fold' : 'Unfold'}
-                </button>
-                <Collapse open={open}>
-                    <p className="pt-3 text-sm text-[var(--text-gray-color)]">
-                        The body slides and fades with the shared easing.
-                    </p>
-                </Collapse>
-            </div>
-        );
-    },
+    render: () => <ToggleDemo />,
 };
 
 export const StartsClosed: Story = {

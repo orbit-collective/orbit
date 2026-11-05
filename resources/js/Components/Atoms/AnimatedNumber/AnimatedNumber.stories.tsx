@@ -2,6 +2,23 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import AnimatedNumber from './AnimatedNumber';
 
+function UpdatingDemo({ className }: { className?: string }) {
+    const [value, setValue] = useState(725);
+
+    return (
+        <div className="flex flex-col items-center gap-4">
+            <AnimatedNumber value={value} className={className} />
+            <button
+                type="button"
+                className="rounded-md border border-[var(--border-color)] px-3 py-1 text-sm text-[var(--text-color)]"
+                onClick={() => setValue((v) => v + 137)}
+            >
+                Add 137
+            </button>
+        </div>
+    );
+}
+
 const meta = {
     title: 'Atoms/AnimatedNumber',
     component: AnimatedNumber,
@@ -19,20 +36,5 @@ export const Default: Story = {};
 
 /** Press the button: the number glides to its new value. */
 export const Updating: Story = {
-    render: (args) => {
-        const [value, setValue] = useState(725);
-
-        return (
-            <div className="flex flex-col items-center gap-4">
-                <AnimatedNumber {...args} value={value} />
-                <button
-                    type="button"
-                    className="rounded-md border border-[var(--border-color)] px-3 py-1 text-sm text-[var(--text-color)]"
-                    onClick={() => setValue((v) => v + 137)}
-                >
-                    Add 137
-                </button>
-            </div>
-        );
-    },
+    render: (args) => <UpdatingDemo className={args.className} />,
 };
