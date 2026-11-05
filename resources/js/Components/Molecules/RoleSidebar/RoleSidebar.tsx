@@ -1,4 +1,5 @@
 import Icon from '@/Components/Atoms/Icon/Icon';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import RoleListItem from '@/Components/Molecules/RoleListItem/RoleListItem';
 import { WorkspaceRole } from '@/types/Roles';
 import { ROLE_TYPE_THEME } from '@/utils/roleTheme';
@@ -22,15 +23,16 @@ export default function RoleSidebar({
 }: RoleSidebarProps) {
     return (
         <div className="space-y-2 border-b border-[var(--border-color)] p-4 lg:border-b-0 lg:border-r">
-            {roles.map((role) => (
-                <RoleListItem
-                    key={role.id}
-                    role={role}
-                    theme={ROLE_TYPE_THEME[role.type]}
-                    totalPermissions={totalPermissions}
-                    selected={role.id === selectedRoleId}
-                    onClick={() => onSelect(role.id)}
-                />
+            {roles.map((role, index) => (
+                <RowReveal key={role.id} index={index}>
+                    <RoleListItem
+                        role={role}
+                        theme={ROLE_TYPE_THEME[role.type]}
+                        totalPermissions={totalPermissions}
+                        selected={role.id === selectedRoleId}
+                        onClick={() => onSelect(role.id)}
+                    />
+                </RowReveal>
             ))}
 
             {canCreateRoles && (
