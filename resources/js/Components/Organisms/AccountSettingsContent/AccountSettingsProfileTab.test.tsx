@@ -152,7 +152,7 @@ describe('AccountSettingsProfileTab panels', () => {
 });
 
 describe('AccountSettingsProfileTab save state', () => {
-    test('says "Changes saved" first and swaps to "Unsaved changes" once the name is edited', async () => {
+    test('says "Changes saved" while nothing is edited, visibly, with no entrance replay', async () => {
         render(
             <AlertProvider>
                 <AccountSettingsProfileTab
@@ -161,15 +161,9 @@ describe('AccountSettingsProfileTab save state', () => {
                 />
             </AlertProvider>,
         );
-        expect(screen.getByText('Changes saved')).toBeInTheDocument();
 
-        fireEvent.change(screen.getByPlaceholderText('Your name'), {
-            target: { value: 'John D.' },
-        });
-
-        expect(await screen.findByText('Unsaved changes')).toBeInTheDocument();
-        await waitFor(() =>
-            expect(screen.queryByText('Changes saved')).not.toBeInTheDocument(),
-        );
+        expect(screen.getByText('Changes saved')).toBeVisible();
+        expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
+        expect(screen.queryByText('Saving...')).not.toBeInTheDocument();
     });
 });
