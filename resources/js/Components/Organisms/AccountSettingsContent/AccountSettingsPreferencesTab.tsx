@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import ColorPicker from '@/Components/Molecules/ColorPicker/ColorPicker';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import AccountSettingsIssueViewCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsIssueViewCard';
@@ -71,52 +72,61 @@ export default function AccountSettingsPreferencesTab() {
     return (
         <div className="space-y-5">
             <SettingsPanel
+                id="issue-view"
+                collapsedSummary={`${selectedLook} view`}
                 title="Default issue view"
                 description="Choose how issues open by default across your projects."
                 icon="LayoutGrid"
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
-                    {issueViewOptions.map((option) => (
-                        <AccountSettingsIssueViewCard
-                            key={option.id}
-                            view={option.id}
-                            icon={option.icon}
-                            description={option.description}
-                            selected={selectedLook === option.id}
-                            onSelect={() => {
-                                setSelectedLook(option.id);
-                                if (typeof window !== 'undefined') {
-                                    localStorage.setItem(
-                                        'selectedLook',
-                                        option.id,
-                                    );
-                                }
-                            }}
-                        />
+                    {issueViewOptions.map((option, index) => (
+                        <RowReveal key={option.id} index={index}>
+                            <AccountSettingsIssueViewCard
+                                view={option.id}
+                                icon={option.icon}
+                                description={option.description}
+                                selected={selectedLook === option.id}
+                                onSelect={() => {
+                                    setSelectedLook(option.id);
+                                    if (typeof window !== 'undefined') {
+                                        localStorage.setItem(
+                                            'selectedLook',
+                                            option.id,
+                                        );
+                                    }
+                                }}
+                            />
+                        </RowReveal>
                     ))}
                 </div>
             </SettingsPanel>
 
             <SettingsPanel
+                id="theme"
+                collapsedSummary={
+                    themeOptions.find((option) => option.id === theme)?.label
+                }
                 title="Interface theme"
                 description="Choose how Orbit should render colors in your account."
                 icon="Palette"
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
-                    {themeOptions.map((option) => (
-                        <AccountSettingsThemeCard
-                            key={option.id}
-                            id={option.id}
-                            label={option.label}
-                            subtitle={option.subtitle}
-                            selected={theme === option.id}
-                            onSelect={() => setTheme(option.id)}
-                        />
+                    {themeOptions.map((option, index) => (
+                        <RowReveal key={option.id} index={index}>
+                            <AccountSettingsThemeCard
+                                id={option.id}
+                                label={option.label}
+                                subtitle={option.subtitle}
+                                selected={theme === option.id}
+                                onSelect={() => setTheme(option.id)}
+                            />
+                        </RowReveal>
                     ))}
                 </div>
             </SettingsPanel>
 
             <SettingsPanel
+                id="accent"
                 title="Accent color"
                 description="Pick the accent used for buttons, links, and highlights - one of the project colors, or any color of your own."
                 icon="Paintbrush"
