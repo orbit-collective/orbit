@@ -97,3 +97,27 @@ export const liftProps = {
     whileTap: { scale: 0.985 },
     transition: { duration: DURATION.fast, ease: EASE },
 } as const;
+
+/**
+ * The little mock-ups in settings cards (view, theme, profile previews) draw
+ * themselves: bars grow, dots pop, blocks rise, one after another.
+ */
+export const previewStage: Variants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.045, delayChildren: 0.12 } },
+};
+
+export const previewGrow: Variants = {
+    hidden: { scaleX: 0, opacity: 0 },
+    show: { scaleX: 1, opacity: 1, transition: TWEEN },
+};
+
+export const previewPop: Variants = {
+    hidden: { scale: 0, opacity: 0 },
+    show: { scale: 1, opacity: 1, transition: SPRING },
+};
+
+export const previewRise: Variants = {
+    hidden: { opacity: 0, y: 6 },
+    show: { opacity: 1, y: 0, transition: TWEEN },
+};
