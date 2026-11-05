@@ -89,9 +89,8 @@ describe('WorkspaceSettingsRolesTab', () => {
     test('the stat cards show the counts', () => {
         render(tab());
 
-        expect(
-            screen.getByText('Custom roles', { selector: 'span' }),
-        ).toBeInTheDocument();
+        // The stat card title and the panel header both say "Custom roles".
+        expect(screen.getAllByText('Custom roles').length).toBeGreaterThan(1);
         expect(
             screen.getByText('Permissions', { selector: 'span' }),
         ).toBeInTheDocument();
