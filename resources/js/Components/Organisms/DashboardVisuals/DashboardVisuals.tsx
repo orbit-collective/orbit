@@ -1,4 +1,5 @@
 import React from 'react';
+import { PageSection } from '@/Components/Atoms/PageStage/PageStage';
 import { DashboardVisualsProps } from '@/types/Components';
 import { CompletionRatioCard } from '../../Molecules/CompletionRatioCard/CompletionRatioCard';
 import { PriorityBreakdownCard } from '../../Molecules/PriorityBreakdownCard/PriorityBreakdownCard';
@@ -20,12 +21,14 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
 
     return (
         <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-3">
-            <ProductivityTrendCard
-                trendData={productivity_trend}
-                className="lg:col-span-2"
-            />
+            <PageSection className="lg:col-span-2">
+                <ProductivityTrendCard
+                    trendData={productivity_trend}
+                    className="h-full"
+                />
+            </PageSection>
 
-            <div className="flex flex-col gap-5">
+            <PageSection className="flex flex-col gap-5">
                 <CompletionRatioCard
                     todo={stats.todo}
                     inProgress={stats.inProgress}
@@ -39,7 +42,7 @@ const DashboardVisuals: React.FC<DashboardVisualsProps> = ({
                     noPriority={noPriority}
                     total={total}
                 />
-            </div>
+            </PageSection>
         </div>
     );
 };

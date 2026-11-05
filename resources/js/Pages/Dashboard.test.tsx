@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { makeIssueStats } from '@/tests/issueStats';
@@ -309,5 +309,77 @@ describe('Dashboard Page', () => {
         expect(
             screen.getByText('Create your first project'),
         ).toBeInTheDocument();
+    });
+
+    test('the four stat cards rise in with the page and end up visible with their numbers', async () => {
+        const issueStats = makeIssueStats({
+            high: 2,
+            medium: 1,
+            low: 1,
+            todo: 2,
+            done: 2,
+        });
+        const { container } = render(
+            <Dashboard
+                issueStats={issueStats}
+                projects={[makeProject(), makeProject({ id: 2 })]}
+                productivity_trend={[]}
+                activityLogs={makePaginated([])}
+            />,
+        );
+
+        await waitFor(() =>
+            expect(screen.getByText('Active Projects')).toBeVisible(),
+        );
+        const cards = Array.from(
+            container.querySelector('section.grid')!.children,
+        );
+        expect(cards).toHaveLength(4);
+        cards.forEach((card) => expect(card).toHaveClass('h-full'));
+        expect(
+            screen
+                .getByText('Active Projects')
+                .closest('div[class*="rounded-"]'),
+        ).toHaveTextContent('2');
+    });
+
+    test('the page content is a staggering main with the panels as sections', () => {
+        const { container } = render(
+            <Dashboard
+                issueStats={makeIssueStats({})}
+                projects={[makeProject()]}
+                productivity_trend={[]}
+                activityLogs={makePaginated([])}
+            />,
+        );
+
+        const main = container.querySelector('main');
+        expect(main).toBeInTheDocument();
+        expect(main!.className).toContain('overflow-y-auto');
+        expect(main!.children.length).toBeGreaterThanOrEqual(3);
+    });
+
+    test('the project directory cards and the empty state both end up visible', async () => {
+        const { rerender } = render(
+            <Dashboard
+                issueStats={makeIssueStats({})}
+                projects={[makeProject({ name: 'Alpha' })]}
+                productivity_trend={[]}
+                activityLogs={makePaginated([])}
+            />,
+        );
+        await waitFor(() => expect(screen.getByText('Alpha')).toBeVisible());
+
+        rerender(
+            <Dashboard
+                issueStats={makeIssueStats({})}
+                projects={[]}
+                productivity_trend={[]}
+                activityLogs={makePaginated([])}
+            />,
+        );
+        await waitFor(() =>
+            expect(screen.getByText('Create your first project')).toBeVisible(),
+        );
     });
 });
