@@ -16,6 +16,7 @@ import { CommandProvider } from '@/context/CommandContext';
 import { ModalProvider } from '@/context/ModalContext';
 import { ShortcutProvider } from '@/context/ShortcutContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import '@/utils/motionPreference';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

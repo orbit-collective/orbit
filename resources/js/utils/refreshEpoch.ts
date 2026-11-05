@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { isReducedMotion } from '@/utils/motionPreference';
 
 /**
  * A counter that goes up each time the user presses a page's Refresh button.
@@ -10,6 +11,9 @@ let epoch = 0;
 const listeners = new Set<() => void>();
 
 export function bumpRefreshEpoch(): void {
+    // Nothing animates with reduced motion, so there is nothing to replay.
+    if (isReducedMotion()) return;
+
     epoch += 1;
     listeners.forEach((listener) => listener());
 }
