@@ -1,6 +1,7 @@
 import React from 'react';
 import { TrendBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
+import { ERROR_TINT, SUCCESS_TINT } from '@/utils/tints';
 import Icon from '../Icon/Icon';
 
 /** A small "↗ 2.5%" chip. Green when the change is good, red when it is bad. */
@@ -18,8 +19,8 @@ const TrendBadge: React.FC<TrendBadgeProps> = ({
             className={cn(
                 'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-semibold',
                 good
-                    ? 'bg-[#4caf50]/10 text-[var(--success-color)]'
-                    : 'bg-[#f44336]/10 text-[var(--error-color)]',
+                    ? [SUCCESS_TINT, 'text-[var(--success-color)]']
+                    : [ERROR_TINT, 'text-[var(--error-color)]'],
                 className,
             )}
         >

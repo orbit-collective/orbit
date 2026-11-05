@@ -36,4 +36,16 @@ describe('TrendBadge', () => {
             'good',
         );
     });
+
+    test('colours follow the theme variables, not hardcoded hex', () => {
+        const { rerender } = render(<TrendBadge value={1} />);
+        const good = screen.getByText('1%').closest('span')!.className;
+        expect(good).toContain('var(--success-color)');
+        expect(good).not.toMatch(/#[0-9a-fA-F]{6}/);
+
+        rerender(<TrendBadge value={-1} />);
+        const bad = screen.getByText('1%').closest('span')!.className;
+        expect(bad).toContain('var(--error-color)');
+        expect(bad).not.toMatch(/#[0-9a-fA-F]{6}/);
+    });
 });

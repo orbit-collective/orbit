@@ -26,7 +26,8 @@ interface PortalErrorsSectionProps {
 const COLORS = {
     warning: 'var(--warning-color)',
     error: 'var(--error-color)',
-    critical: '#9c27b0',
+    // The theme's accent is the portal's purple: no hardcoded hex.
+    critical: 'var(--accent-color)',
 };
 
 /** Percent change from the previous day, undefined when there was nothing to compare with. */
@@ -95,7 +96,7 @@ function ErrorEntry({
                         'mt-0.5 shrink-0 uppercase',
                         entry.level === 'error'
                             ? 'text-[var(--error-color)]'
-                            : 'text-[#9c27b0]',
+                            : 'text-[var(--accent-color)]',
                     )}
                 >
                     {entry.level}
