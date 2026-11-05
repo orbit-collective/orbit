@@ -12,6 +12,7 @@ import { PortalErrorEntry, PortalErrorLog } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
 import { rowDelay, rowIn } from '@/utils/motion';
+import { linksForCurrentQuery } from '@/utils/portalLinks';
 import { formatDate } from '@/utils/time';
 
 interface PortalErrorsSectionProps {
@@ -197,7 +198,11 @@ export default function PortalErrorsSection({
                     ))
                 )}
                 <Pagination
-                    links={errorLog.entries.links}
+                    links={linksForCurrentQuery(
+                        errorLog.entries.links,
+                        'errors_page',
+                        queryParams,
+                    )}
                     from={errorLog.entries.from ?? 0}
                     to={errorLog.entries.to ?? 0}
                     total={errorLog.entries.total}

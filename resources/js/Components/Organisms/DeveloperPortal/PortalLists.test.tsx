@@ -251,4 +251,62 @@ describe('PortalProjectsPanel', () => {
         expect(link.parentElement).toHaveClass('min-w-0');
         expect(screen.getByText('orbit · 3 members')).toHaveClass('truncate');
     });
+
+    test('a pager link built before another list was searched still carries that search', () => {
+        const stale = {
+            ...paginated(portalUsers, 25),
+            links: [
+                { url: null, label: '&laquo; Previous', active: false },
+                { url: '/p?users_page=1', label: '1', active: true },
+                { url: '/p?users_page=2', label: '2', active: false },
+                {
+                    url: '/p?users_page=2',
+                    label: 'Next &raquo;',
+                    active: false,
+                },
+            ],
+        };
+        render(
+            <PortalUsersPanel
+                users={stale}
+                queryParams={{ projects_search: 'orbit' }}
+            />,
+        );
+
+        const href = screen
+            .getByRole('link', { name: 'Page 2' })
+            .getAttribute('href')!;
+        const params = new URLSearchParams(href.split('?')[1]);
+        expect(params.get('users_page')).toBe('2');
+        expect(params.get('projects_search')).toBe('orbit');
+    });
+
+    test('the projects pager does the same for the users search', () => {
+        const stale = {
+            ...paginated(portalProjects, 25),
+            links: [
+                { url: null, label: '&laquo; Previous', active: false },
+                { url: '/p?projects_page=1', label: '1', active: true },
+                { url: '/p?projects_page=2', label: '2', active: false },
+                {
+                    url: '/p?projects_page=2',
+                    label: 'Next &raquo;',
+                    active: false,
+                },
+            ],
+        };
+        render(
+            <PortalProjectsPanel
+                projects={stale}
+                queryParams={{ users_search: 'ada' }}
+            />,
+        );
+
+        const href = screen
+            .getByRole('link', { name: 'Page 2' })
+            .getAttribute('href')!;
+        expect(
+            new URLSearchParams(href.split('?')[1]).get('users_search'),
+        ).toBe('ada');
+    });
 });

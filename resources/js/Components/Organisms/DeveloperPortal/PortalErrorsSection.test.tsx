@@ -173,4 +173,48 @@ describe('PortalErrorsSection', () => {
         expect(next).toHaveAttribute('data-only', 'errorLog');
         expect(screen.getByText(/of/)).toBeInTheDocument();
     });
+
+    test("the error pager keeps the other lists' current query", () => {
+        render(
+            <PortalErrorsSection
+                queryParams={{ users_search: 'ada', projects_page: '3' }}
+                errorLog={{
+                    daily: portalErrorLog.daily,
+                    entries: {
+                        ...paginated(portalErrorLog.entries.data, 25),
+                        links: [
+                            {
+                                url: null,
+                                label: '&laquo; Previous',
+                                active: false,
+                            },
+                            {
+                                url: '/p?errors_page=1',
+                                label: '1',
+                                active: true,
+                            },
+                            {
+                                url: '/p?errors_page=2',
+                                label: '2',
+                                active: false,
+                            },
+                            {
+                                url: '/p?errors_page=2',
+                                label: 'Next &raquo;',
+                                active: false,
+                            },
+                        ],
+                    },
+                }}
+            />,
+        );
+
+        const href = screen
+            .getByRole('link', { name: 'Page 2' })
+            .getAttribute('href')!;
+        const params = new URLSearchParams(href.split('?')[1]);
+        expect(params.get('errors_page')).toBe('2');
+        expect(params.get('users_search')).toBe('ada');
+        expect(params.get('projects_page')).toBe('3');
+    });
 });
