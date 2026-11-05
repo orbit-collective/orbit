@@ -9,6 +9,7 @@ import { Paginated, PortalProject } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
 import { rowDelay, rowIn } from '@/utils/motion';
+import { linksForCurrentQuery } from '@/utils/portalLinks';
 import { usePortalSearch } from './usePortalSearch';
 
 interface PortalProjectsPanelProps {
@@ -120,7 +121,11 @@ export default function PortalProjectsPanel({
                 ))
             )}
             <Pagination
-                links={projects.links}
+                links={linksForCurrentQuery(
+                    projects.links,
+                    'projects_page',
+                    queryParams,
+                )}
                 from={projects.from ?? 0}
                 to={projects.to ?? 0}
                 total={projects.total}

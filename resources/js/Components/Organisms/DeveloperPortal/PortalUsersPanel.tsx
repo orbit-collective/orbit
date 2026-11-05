@@ -6,6 +6,7 @@ import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
 import { CollapseProps } from '@/hooks/useCollapsedSections';
 import { Paginated, PortalUser } from '@/types/DeveloperPortal';
 import { rowDelay, rowIn } from '@/utils/motion';
+import { linksForCurrentQuery } from '@/utils/portalLinks';
 import { formatShortDate } from '@/utils/time';
 import { usePortalSearch } from './usePortalSearch';
 
@@ -77,7 +78,11 @@ export default function PortalUsersPanel({
                 ))
             )}
             <Pagination
-                links={users.links}
+                links={linksForCurrentQuery(
+                    users.links,
+                    'users_page',
+                    queryParams,
+                )}
                 from={users.from ?? 0}
                 to={users.to ?? 0}
                 total={users.total}
