@@ -438,3 +438,15 @@ describe('WorkspaceSettingsPrioritiesTab panels', () => {
         ).toBeVisible();
     });
 });
+
+describe('WorkspaceSettingsPrioritiesTab editors', () => {
+    test('the new-priority editor rises in and ends up visible', async () => {
+        renderTab({ canCreatePriorities: true });
+
+        fireEvent.click(screen.getByText('Add priority'));
+
+        expect(
+            await screen.findByPlaceholderText('Priority name'),
+        ).toBeVisible();
+    });
+});
