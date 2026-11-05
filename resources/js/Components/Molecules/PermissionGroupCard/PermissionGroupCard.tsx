@@ -1,12 +1,16 @@
+import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import { PermissionDefinition } from '@/types/Roles';
+import { DURATION, EASE } from '@/utils/motion';
 import {
     getPermissionDescription,
     getPermissionLabel,
 } from '@/utils/permissions';
+import { SUCCESS_TINT } from '@/utils/tints';
 
 interface PermissionGroupCardSection {
     section: string;
@@ -60,7 +64,7 @@ export default function PermissionGroupCard({
                     <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
                             isComplete
-                                ? 'bg-[var(--success-color)]/10 text-[var(--success-color)]'
+                                ? `${SUCCESS_TINT} text-[var(--success-color)]`
                                 : 'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]'
                         }`}
                     >
@@ -75,9 +79,16 @@ export default function PermissionGroupCard({
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--bg-light-color)]">
-                        <div
-                            className="h-full rounded-full bg-[var(--accent-color)] transition-all duration-300"
-                            style={{ width: `${ratio}%` }}
+                        <motion.div
+                            data-testid="ratio-bar"
+                            data-ratio={ratio}
+                            className="h-full rounded-full bg-[var(--accent-color)]"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${ratio}%` }}
+                            transition={{
+                                duration: DURATION.slow,
+                                ease: EASE,
+                            }}
                         />
                     </div>
                     {canEdit && (
@@ -108,7 +119,7 @@ export default function PermissionGroupCard({
                         <Icon
                             name="ChevronDown"
                             size={14}
-                            className={`text-[var(--text-gray-color)] transition-transform duration-200 ${
+                            className={`text-[var(--text-gray-color)] transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
                                 isExpanded ? 'rotate-180' : ''
                             }`}
                         />
@@ -116,7 +127,7 @@ export default function PermissionGroupCard({
                 </div>
             </button>
 
-            {isExpanded && (
+            <Collapse open={isExpanded}>
                 <div className="divide-y divide-[var(--border-color)] border-t border-[var(--border-color)]">
                     {sections.map((section) => (
                         <div key={section.section} className="px-4 py-3">
@@ -156,7 +167,7 @@ export default function PermissionGroupCard({
                         </div>
                     ))}
                 </div>
-            )}
+            </Collapse>
         </div>
     );
 }
