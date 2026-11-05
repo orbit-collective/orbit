@@ -1,9 +1,10 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { priorityFields } from '@/stories/fixtures';
 import { todoStatus, inProgressStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import { BoardCard, BoardCardOverlay } from './BoardCard';
 
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
@@ -243,5 +244,38 @@ describe('BoardCardOverlay Component', () => {
         );
 
         expect(screen.getByText('Dragging this card')).toBeInTheDocument();
+    });
+
+    test('the card rises in (later cards a little later) and ends up visible', async () => {
+        render(
+            <BoardCard
+                issue={makeIssue()}
+                isClosed={false}
+                onClick={() => {}}
+                index={4}
+            />,
+        );
+
+        await waitFor(() =>
+            expect(screen.getByText('Fix the login page')).toBeVisible(),
+        );
+    });
+
+    test('a refresh remounts the card so it rises in again', async () => {
+        render(
+            <BoardCard
+                issue={makeIssue()}
+                isClosed={false}
+                onClick={() => {}}
+            />,
+        );
+        const before = screen.getByText('Fix the login page');
+
+        act(() => bumpRefreshEpoch());
+
+        expect(screen.getByText('Fix the login page')).not.toBe(before);
+        await waitFor(() =>
+            expect(screen.getByText('Fix the login page')).toBeVisible(),
+        );
     });
 });

@@ -463,12 +463,15 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                             )}
                             {hasIssues ? (
                                 hierarchyRows.map(
-                                    ({
-                                        issue,
-                                        depth,
-                                        hasChildren,
-                                        isCollapsed,
-                                    }) => (
+                                    (
+                                        {
+                                            issue,
+                                            depth,
+                                            hasChildren,
+                                            isCollapsed,
+                                        },
+                                        index,
+                                    ) => (
                                         <React.Fragment key={issue.id}>
                                             <IssueElement
                                                 issue={{
@@ -492,6 +495,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                                         String(issue.id),
                                                     )
                                                 }
+                                                index={index}
                                             />
                                             {project &&
                                                 issue.issueType

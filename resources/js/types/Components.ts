@@ -293,6 +293,8 @@ export interface BoardColumnProps {
     issues: Issue[];
     meta: BoardColumnMeta;
     count: number;
+    /** Position on the board: later columns rise in a little later. */
+    index?: number;
 }
 export interface FilterButtonProps {
     icon?: keyof typeof icons;
@@ -371,6 +373,8 @@ export interface IssueElementProps {
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
     editing?: IssueRowEditing;
+    /** Position in the list or column, so entrances stagger. */
+    index?: number;
 }
 export interface IssuePropertyProps {
     label: string;
@@ -758,6 +762,8 @@ export interface BoardCardProps {
     issue: Issue;
     onClick: () => void;
     isClosed: boolean;
+    /** Position in its column: later cards rise in a little later (capped). */
+    index?: number;
 }
 export interface ListRowProps {
     issue: Issue;
@@ -773,6 +779,8 @@ export interface ListRowProps {
     onToggleCollapse?: () => void;
     /** Omit it and the property cells are read-only. */
     editing?: IssueRowEditing;
+    /** Position in the table: later rows rise in a little later (capped). */
+    index?: number;
 }
 
 export interface AuthShowcaseProps {

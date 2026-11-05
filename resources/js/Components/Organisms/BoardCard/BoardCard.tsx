@@ -8,6 +8,8 @@ import LabelList from '@/Components/Molecules/LabelList/LabelList';
 import { BoardCardProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
+import { rowDelay } from '@/utils/motion';
+import { useRefreshEpoch } from '@/utils/refreshEpoch';
 import { boardCardVariants } from '@/utils/variants';
 
 const BoardCardContent = ({
@@ -68,7 +70,14 @@ const BoardCardContent = ({
     </>
 );
 
-export const BoardCard = ({ issue, onClick, isClosed }: BoardCardProps) => {
+export const BoardCard = ({
+    issue,
+    onClick,
+    isClosed,
+    index = 0,
+}: BoardCardProps) => {
+    // A refresh remounts the card so it rises in again.
+    const epoch = useRefreshEpoch();
     const { attributes, listeners, setNodeRef, transform, isDragging } =
         useDraggable({ id: issue.id });
 
@@ -86,6 +95,7 @@ export const BoardCard = ({ issue, onClick, isClosed }: BoardCardProps) => {
                 is disabled for the duration of an active drag.
             */}
             <motion.div
+                key={epoch}
                 layout={!isDragging}
                 initial={{ opacity: 0, y: 6, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -95,6 +105,7 @@ export const BoardCard = ({ issue, onClick, isClosed }: BoardCardProps) => {
                     stiffness: 500,
                     damping: 40,
                     mass: 0.5,
+                    delay: rowDelay(index, 12),
                 }}
                 onClick={onClick}
                 className={cn(

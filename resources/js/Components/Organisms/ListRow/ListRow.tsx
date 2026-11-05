@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion';
 import React, { useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
@@ -20,6 +21,8 @@ import { ListRowProps } from '@/types/Components';
 import { DropdownOptionItem } from '@/types/Dropdown';
 import { cn } from '@/utils/cn';
 import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
+import { DURATION, EASE, rowDelay } from '@/utils/motion';
+import { useRefreshEpoch } from '@/utils/refreshEpoch';
 import { formatTimeAgo } from '@/utils/time';
 import { getReachableStatuses } from '@/utils/workflow';
 
@@ -70,7 +73,10 @@ export const ListRow = ({
     isCollapsed = false,
     onToggleCollapse,
     editing,
+    index = 0,
 }: ListRowProps) => {
+    // A refresh remounts the row so it rises in again.
+    const epoch = useRefreshEpoch();
     const { priorities } = useProjectPriorities();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     // Set while the menu was opened by right-click, so it opens at the cursor.
@@ -142,7 +148,15 @@ export const ListRow = ({
 
     return (
         <>
-            <tr
+            <motion.tr
+                key={epoch}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                    duration: DURATION.base,
+                    ease: EASE,
+                    delay: rowDelay(index, 14),
+                }}
                 onClick={handleRowClick}
                 onContextMenu={handleContextMenu}
                 tabIndex={0}
@@ -485,7 +499,7 @@ export const ListRow = ({
                         }
                     />
                 </td>
-            </tr>
+            </motion.tr>
         </>
     );
 };

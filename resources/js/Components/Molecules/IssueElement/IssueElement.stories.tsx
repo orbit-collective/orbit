@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, within, waitFor } from 'storybook/test';
 import { issues, makeIssue } from '@/stories/fixtures';
 import IssueElement from './IssueElement';
 
@@ -34,9 +34,11 @@ type Story = StoryObj<typeof meta>;
 /** `type="list"` renders the table row. */
 export const List: Story = {
     play: async ({ canvasElement }) => {
-        await expect(
-            await within(canvasElement).findByText(issues[0].title),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByText(issues[0].title),
+            ).toBeVisible(),
+        );
     },
 };
 
