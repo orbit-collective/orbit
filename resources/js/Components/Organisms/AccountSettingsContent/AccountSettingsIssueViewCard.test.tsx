@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import AccountSettingsIssueViewCard from './AccountSettingsIssueViewCard';
@@ -75,5 +75,70 @@ describe('AccountSettingsIssueViewCard Component', () => {
             '.rounded-full.h-1\\.5.w-1\\.5',
         );
         expect(dots.length).toBe(3);
+    });
+});
+
+describe('AccountSettingsIssueViewCard previews', () => {
+    const renderView = (
+        view: 'List' | 'Board' | 'Calendar' | 'Activity',
+        selected = false,
+    ) =>
+        render(
+            <AccountSettingsIssueViewCard
+                view={view}
+                icon="Rows3"
+                description="d"
+                selected={selected}
+                onSelect={() => {}}
+            />,
+        );
+
+    test.each(['List', 'Board', 'Calendar', 'Activity'] as const)(
+        'the %s mock-up draws itself and ends up visible',
+        async (view) => {
+            const { container } = renderView(view);
+
+            const stage = container.querySelector(
+                'button > div:last-child',
+            ) as HTMLElement;
+            await waitFor(() => expect(stage).toBeVisible());
+            expect(stage.children.length).toBeGreaterThan(0);
+        },
+    );
+
+    test('the board mock-up counts its cards per column', async () => {
+        renderView('Board');
+
+        expect(await screen.findAllByText('2')).toHaveLength(2);
+        expect(screen.getByText('1')).toBeInTheDocument();
+    });
+
+    test('the mock-up draws again when the card becomes selected, not when it is deselected', () => {
+        const { container, rerender } = renderView('List');
+        const stage = () => container.querySelector('button > div:last-child');
+        const first = stage();
+
+        rerender(
+            <AccountSettingsIssueViewCard
+                view="List"
+                icon="Rows3"
+                description="d"
+                selected
+                onSelect={() => {}}
+            />,
+        );
+        const second = stage();
+        expect(second).not.toBe(first);
+
+        rerender(
+            <AccountSettingsIssueViewCard
+                view="List"
+                icon="Rows3"
+                description="d"
+                selected={false}
+                onSelect={() => {}}
+            />,
+        );
+        expect(stage()).toBe(second);
     });
 });
