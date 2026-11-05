@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import ActivityLogItem from '@/Components/Molecules/ActivityLogItem/ActivityLogItem';
 import { ActivityLogsProps } from '@/types/Components';
 import { groupActivityLogs } from '@/utils/activityLog';
@@ -29,14 +30,15 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({
 
     return (
         <div className="flex flex-col">
-            {groups.map((group) => (
-                <ActivityLogItem
-                    key={group.key}
-                    group={group}
-                    users={users}
-                    roles={roles}
-                    issueTypes={issueTypes}
-                />
+            {groups.map((group, index) => (
+                <RowReveal key={group.key} index={index}>
+                    <ActivityLogItem
+                        group={group}
+                        users={users}
+                        roles={roles}
+                        issueTypes={issueTypes}
+                    />
+                </RowReveal>
             ))}
         </div>
     );
