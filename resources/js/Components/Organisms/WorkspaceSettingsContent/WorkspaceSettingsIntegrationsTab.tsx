@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
@@ -23,6 +25,8 @@ import {
 } from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
+import { FOCUS_RING } from '@/utils/focusRing';
+import { SPRING, riseIn } from '@/utils/motion';
 import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
 import WorkspaceSettingsIntegrationDetailModal from './WorkspaceSettingsIntegrationDetailModal';
 
@@ -612,6 +616,7 @@ export default function WorkspaceSettingsIntegrationsTab({
     if (!selectedProject || !hasIntegrationsAccess) {
         return (
             <SettingsPanel
+                id="integrations"
                 title="Integrations"
                 description="Connect third-party tools to bring activity from Orbit into the apps your team already uses."
                 icon="Plug"
@@ -634,7 +639,7 @@ export default function WorkspaceSettingsIntegrationsTab({
 
     return (
         <div className="space-y-5">
-            <div>
+            <motion.div variants={riseIn}>
                 <h2 className="text-xl font-semibold text-[var(--text-color)]">
                     Your integrations
                 </h2>
@@ -642,7 +647,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                     Connect third-party tools to bring activity from Orbit into
                     the apps your team already uses.
                 </p>
-            </div>
+            </motion.div>
 
             <ProjectPickerPanel
                 projects={memberProjects}
@@ -653,6 +658,7 @@ export default function WorkspaceSettingsIntegrationsTab({
 
             {!canUpdateIntegrations && (
                 <SettingsPanel
+                    id="read-only"
                     title="Read-only access"
                     description="You can see how integrations are configured, but you don't have permission to change them."
                     icon="Eye"
@@ -664,7 +670,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                 </SettingsPanel>
             )}
 
-            <div className="flex flex-wrap gap-2">
+            <motion.div variants={riseIn} className="flex flex-wrap gap-2">
                 {CATEGORY_FILTERS.map((category) => {
                     const isActive = category === activeCategory;
                     const count =
@@ -680,17 +686,27 @@ export default function WorkspaceSettingsIntegrationsTab({
                             key={category}
                             type="button"
                             onClick={() => setActiveCategory(category)}
+                            aria-pressed={isActive}
                             className={cn(
-                                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
+                                'relative inline-flex items-center gap-1.5 rounded-full border-0 px-3.5 py-1.5 text-sm font-medium transition-colors duration-200',
+                                FOCUS_RING,
                                 isActive
-                                    ? 'bg-[var(--accent-color)] text-white'
+                                    ? 'text-white'
                                     : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
                             )}
                         >
-                            {category}
+                            {isActive && (
+                                <motion.span
+                                    layoutId="integration-category"
+                                    transition={SPRING}
+                                    aria-hidden="true"
+                                    className="absolute inset-0 rounded-full bg-[var(--accent-color)]"
+                                />
+                            )}
+                            <span className="relative">{category}</span>
                             <span
                                 className={cn(
-                                    'text-xs',
+                                    'relative text-xs',
                                     isActive
                                         ? 'text-white/70'
                                         : 'text-[var(--text-muted-color)]',
@@ -701,28 +717,31 @@ export default function WorkspaceSettingsIntegrationsTab({
                         </button>
                     );
                 })}
-            </div>
+            </motion.div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                {filteredIntegrations.map((integration) => (
-                    <WorkspaceSettingsIntegrationCard
-                        key={integration.id}
-                        integration={integration}
-                        enabled={
-                            integration.id === 'github'
-                                ? githubConnectStatus?.status === 'connected'
-                                : (integrationStatuses[integration.id] ?? false)
-                        }
-                        canUpdate={canUpdateIntegrations}
-                        onToggle={(checked) =>
-                            integration.id === 'github'
-                                ? checked
-                                    ? connectGithub()
-                                    : disconnectGithub()
-                                : toggleIntegration(integration.id, checked)
-                        }
-                        onOpen={() => setOpenIntegrationId(integration.id)}
-                    />
+                {filteredIntegrations.map((integration, index) => (
+                    <RowReveal key={integration.id} index={index}>
+                        <WorkspaceSettingsIntegrationCard
+                            integration={integration}
+                            enabled={
+                                integration.id === 'github'
+                                    ? githubConnectStatus?.status ===
+                                      'connected'
+                                    : (integrationStatuses[integration.id] ??
+                                      false)
+                            }
+                            canUpdate={canUpdateIntegrations}
+                            onToggle={(checked) =>
+                                integration.id === 'github'
+                                    ? checked
+                                        ? connectGithub()
+                                        : disconnectGithub()
+                                    : toggleIntegration(integration.id, checked)
+                            }
+                            onOpen={() => setOpenIntegrationId(integration.id)}
+                        />
+                    </RowReveal>
                 ))}
             </div>
 
