@@ -318,6 +318,18 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         ).toBeVisible();
     });
 
+    test('the category pills count their integrations', async () => {
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+        });
+
+        const all = screen.getByRole('button', { name: /^All/ });
+        await waitFor(() => expect(all).toHaveTextContent(/All\s*[1-9]/));
+    });
+
     test('the category pills show the keyboard focus ring', () => {
         renderTab({
             memberProjects: [projectA],

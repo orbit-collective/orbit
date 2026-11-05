@@ -1,6 +1,8 @@
 import { router } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -17,6 +19,7 @@ import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
 import { ProjectPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
+import { riseIn } from '@/utils/motion';
 import WorkspaceSettingsDeleteIssueTypeModal from './WorkspaceSettingsDeleteIssueTypeModal';
 import WorkspaceSettingsFieldsModal from './WorkspaceSettingsFieldsModal';
 import WorkspaceSettingsHierarchyModal from './WorkspaceSettingsHierarchyModal';
@@ -189,27 +192,33 @@ export default function WorkspaceSettingsIssueTypesTab({
     return (
         <div className="space-y-5">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <StatCard
-                    variant="vivid"
-                    title="Total issue types"
-                    value={issueTypes.length}
-                    icon="Shapes"
-                    color="accent"
-                />
-                <StatCard
-                    variant="vivid"
-                    title="Custom issue types"
-                    value={customCount}
-                    icon="Sparkles"
-                    color="info"
-                />
-                <StatCard
-                    variant="vivid"
-                    title="System issue types"
-                    value={systemCount}
-                    icon="ShieldCheck"
-                    color="warning"
-                />
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="Total issue types"
+                        value={<AnimatedNumber value={issueTypes.length} />}
+                        icon="Shapes"
+                        color="accent"
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="Custom issue types"
+                        value={<AnimatedNumber value={customCount} />}
+                        icon="Sparkles"
+                        color="info"
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="System issue types"
+                        value={<AnimatedNumber value={systemCount} />}
+                        icon="ShieldCheck"
+                        color="warning"
+                    />
+                </motion.div>
             </div>
 
             <ProjectPickerPanel

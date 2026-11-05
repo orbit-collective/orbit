@@ -1,3 +1,4 @@
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import ProgressRing from '@/Components/Atoms/ProgressRing/ProgressRing';
@@ -125,7 +126,7 @@ export default function RoleDetailHeader({
                                 {theme.label}
                             </span>
                             <span>
-                                {role.memberCount}{' '}
+                                <AnimatedNumber value={role.memberCount} />{' '}
                                 {role.memberCount === 1 ? 'member' : 'members'}
                             </span>
                             <span>&middot; /{role.slug}</span>

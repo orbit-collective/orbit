@@ -170,3 +170,28 @@ describe('WorkspaceSettingsLabelsTab editors', () => {
         );
     });
 });
+
+describe('WorkspaceSettingsLabelsTab stat cards', () => {
+    test('rise in and count to the label totals', async () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsLabelsTab
+                    memberProjects={[project]}
+                    selectedProjectId={1}
+                    labels={labels}
+                    hasLabelsAccess
+                />
+            </AlertProvider>,
+        );
+
+        const card = (title: string) =>
+            screen
+                .getByText(title)
+                .closest('div[class*="rounded-"]') as HTMLElement;
+        await waitFor(() =>
+            expect(card('Total labels')).toHaveTextContent('1'),
+        );
+        expect(card('Custom labels')).toHaveTextContent('0');
+        expect(card('System labels')).toHaveTextContent('1');
+    });
+});

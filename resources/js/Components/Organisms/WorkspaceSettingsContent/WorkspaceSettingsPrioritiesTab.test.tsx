@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
@@ -448,5 +448,27 @@ describe('WorkspaceSettingsPrioritiesTab editors', () => {
         expect(
             await screen.findByPlaceholderText('Priority name'),
         ).toBeVisible();
+    });
+});
+
+describe('WorkspaceSettingsPrioritiesTab stat cards', () => {
+    test('rise in and count the levels and the prioritised issues', async () => {
+        renderTab();
+
+        const levels = screen
+            .getByText('Priority levels')
+            .closest('div[class*="rounded-"]') as HTMLElement;
+        await waitFor(() =>
+            expect(levels).toHaveTextContent(String(settingsPriorities.length)),
+        );
+        const issues = settingsPriorities.reduce(
+            (sum, priority) => sum + priority.issueCount,
+            0,
+        );
+        expect(
+            screen
+                .getByText('Issues prioritised')
+                .closest('div[class*="rounded-"]'),
+        ).toHaveTextContent(String(issues));
     });
 });

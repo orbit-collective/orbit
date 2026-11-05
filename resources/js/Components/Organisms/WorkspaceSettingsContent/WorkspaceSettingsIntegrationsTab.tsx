@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
@@ -712,7 +713,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                                         : 'text-[var(--text-muted-color)]',
                                 )}
                             >
-                                {count}
+                                <AnimatedNumber value={count} />
                             </span>
                         </button>
                     );

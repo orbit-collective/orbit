@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import Collapse from '@/Components/Molecules/Collapse/Collapse';
@@ -74,7 +75,12 @@ export default function PermissionGroupCard({
                         {label}
                     </span>
                     <span className="text-xs text-[var(--text-gray-color)]">
-                        {enabledCount}/{permissionIds.length}
+                        <AnimatedNumber
+                            value={enabledCount}
+                            format={(n) =>
+                                `${Math.round(n)}/${permissionIds.length}`
+                            }
+                        />
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
