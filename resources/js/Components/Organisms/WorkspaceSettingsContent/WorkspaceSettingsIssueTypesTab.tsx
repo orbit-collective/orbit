@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import AddRowButton from '@/Components/Molecules/AddRowButton/AddRowButton';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
@@ -81,6 +82,7 @@ export default function WorkspaceSettingsIssueTypesTab({
     if (!selectedProject || !hasIssueTypesAccess) {
         return (
             <SettingsPanel
+                id="catalog"
                 title="Issue types"
                 description="Customize the catalog of issue types used across your issues."
                 icon="Shapes"
@@ -217,11 +219,13 @@ export default function WorkspaceSettingsIssueTypesTab({
             />
 
             <SettingsPanel
+                id="catalog"
+                collapsedSummary={`${issueTypes.length} ${issueTypes.length === 1 ? 'type' : 'types'}`}
                 title="Issue type catalog"
                 description={`Issue types available for issues in ${selectedProject.name}.`}
                 icon="Shapes"
             >
-                {issueTypes.map((issueType) => {
+                {issueTypes.map((issueType, index) => {
                     if (editorTarget === String(issueType.id)) {
                         return (
                             <WorkspaceSettingsIssueTypeInlineEditor
@@ -267,8 +271,9 @@ export default function WorkspaceSettingsIssueTypesTab({
                         issueType.allowedChildTypeIds?.length ?? 0;
 
                     return (
-                        <div
+                        <RowReveal
                             key={issueType.id}
+                            index={index}
                             className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
                         >
                             <span
@@ -356,7 +361,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                                         )}
                                 </div>
                             )}
-                        </div>
+                        </RowReveal>
                     );
                 })}
 
