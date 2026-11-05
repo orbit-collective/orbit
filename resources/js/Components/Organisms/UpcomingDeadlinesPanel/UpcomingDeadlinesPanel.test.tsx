@@ -200,4 +200,14 @@ describe('UpcomingDeadlinesPanel Component', () => {
         await waitFor(() => expect(screen.getByText('Second')).toBeVisible());
         expect(screen.getByText('2', { selector: 'span' })).toBeInTheDocument();
     });
+
+    test('a row button fills its reveal wrapper so long titles truncate instead of overflowing', () => {
+        render(
+            <UpcomingDeadlinesPanel
+                issues={[makeIssue({ title: 'Long', end_date: '2026-07-26' })]}
+            />,
+        );
+
+        expect(screen.getByRole('button')).toHaveClass('w-full');
+    });
 });
