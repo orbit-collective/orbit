@@ -82,6 +82,7 @@ export default function AccountSettingsPreferencesTab() {
                     {issueViewOptions.map((option, index) => (
                         <RowReveal key={option.id} index={index} fill>
                             <AccountSettingsIssueViewCard
+                                groupId="issue-view"
                                 view={option.id}
                                 icon={option.icon}
                                 description={option.description}
@@ -114,6 +115,7 @@ export default function AccountSettingsPreferencesTab() {
                     {themeOptions.map((option, index) => (
                         <RowReveal key={option.id} index={index} fill>
                             <AccountSettingsThemeCard
+                                groupId="theme"
                                 id={option.id}
                                 label={option.label}
                                 subtitle={option.subtitle}

@@ -56,7 +56,7 @@ describe('AccountSettingsIssueViewCard Component', () => {
         );
 
         expect(
-            container.querySelector('button > div:last-child'),
+            container.querySelector('button > div.relative > div:last-child'),
         ).not.toBeNull();
     });
 
@@ -99,7 +99,7 @@ describe('AccountSettingsIssueViewCard previews', () => {
             const { container } = renderView(view);
 
             const stage = container.querySelector(
-                'button > div:last-child',
+                'button > div.relative > div:last-child',
             ) as HTMLElement;
             await waitFor(() => expect(stage).toBeVisible());
             expect(stage.children.length).toBeGreaterThan(0);
@@ -115,7 +115,8 @@ describe('AccountSettingsIssueViewCard previews', () => {
 
     test('the mock-up draws again when the card becomes selected, not when it is deselected', () => {
         const { container, rerender } = renderView('List');
-        const stage = () => container.querySelector('button > div:last-child');
+        const stage = () =>
+            container.querySelector('button > div.relative > div:last-child');
         const first = stage();
 
         rerender(

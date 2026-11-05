@@ -209,6 +209,7 @@ export default function AccountSettingsSecurityTab({
                     {sessionTimeoutOptions.map((option, index) => (
                         <RowReveal key={option.id} index={index} fill>
                             <AccountSettingsSessionTimeoutCard
+                                groupId="session-expiry"
                                 label={option.label}
                                 icon={option.icon}
                                 description={option.description}
