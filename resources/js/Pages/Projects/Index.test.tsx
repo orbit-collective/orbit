@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -129,5 +129,46 @@ describe('Projects Index Page', () => {
 
         expect(screen.getByText('Your dashboard is empty')).toBeInTheDocument();
         expect(screen.queryByText('New Project')).not.toBeInTheDocument();
+    });
+
+    test('the cards rise in one after another and stay stretched to their grid cell', async () => {
+        render(
+            <Index
+                projects={[
+                    makeProject({ id: 1, name: 'Project One' }),
+                    makeProject({ id: 2, name: 'Project Two' }),
+                ]}
+            />,
+        );
+
+        await waitFor(() =>
+            expect(screen.getByText('Project Two')).toBeVisible(),
+        );
+        const cell = screen
+            .getByText('Project One')
+            .closest('a')!.parentElement!;
+        expect(cell.className).toContain('[&>*]:w-full');
+        expect(cell.className).toContain('h-full');
+        // The New Project card is a cell of the grid too.
+        expect(
+            screen.getByText('New Project').closest('a')!.parentElement!
+                .className,
+        ).toContain('h-full');
+    });
+
+    test('the empty state rises in as a page section', async () => {
+        render(<Index projects={[]} />);
+
+        await waitFor(() =>
+            expect(screen.getByText('Your dashboard is empty')).toBeVisible(),
+        );
+    });
+
+    test('the grid is a plain section: only the cards animate, so nothing rises twice', () => {
+        const { container } = render(<Index projects={[makeProject()]} />);
+
+        expect(
+            container.querySelector('main > section.grid'),
+        ).toBeInTheDocument();
     });
 });
