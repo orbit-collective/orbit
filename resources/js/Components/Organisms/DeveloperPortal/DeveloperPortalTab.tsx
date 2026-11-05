@@ -5,6 +5,7 @@ import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import CollapseAllButton from '@/Components/Molecules/CollapseAllButton/CollapseAllButton';
 import PercentBarsCard from '@/Components/Molecules/PercentBarsCard/PercentBarsCard';
+import { PanelRiseContext } from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useCollapsedSections } from '@/hooks/useCollapsedSections';
 import { useDeveloperPortalLive } from '@/live/useDeveloperPortalLive';
@@ -113,107 +114,114 @@ export default function DeveloperPortalTab({
 
     return (
         <MotionConfig reducedMotion="user">
-            <motion.div
-                variants={staggerParent}
-                initial="hidden"
-                animate="show"
-                className="space-y-6"
-            >
-                <motion.div variants={riseIn} className="flex justify-end">
-                    <CollapseAllButton
-                        allCollapsed={allCollapsed}
-                        onToggle={() => setAll(!allCollapsed)}
-                    />
-                </motion.div>
+            <PanelRiseContext.Provider value={false}>
+                <motion.div
+                    variants={staggerParent}
+                    initial="hidden"
+                    animate="show"
+                    className="space-y-6"
+                >
+                    <motion.div variants={riseIn} className="flex justify-end">
+                        <CollapseAllButton
+                            allCollapsed={allCollapsed}
+                            onToggle={() => setAll(!allCollapsed)}
+                        />
+                    </motion.div>
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {stat(
-                        'Users',
-                        totals.users,
-                        'Users',
-                        'info',
-                        totals.newUsers,
-                    )}
-                    {stat('Projects', totals.projects, 'FolderGit2', 'accent')}
-                    {stat(
-                        'Issues',
-                        totals.issues,
-                        'CircleDot',
-                        'success',
-                        totals.newIssues,
-                    )}
-                    {stat(
-                        'Comments',
-                        totals.comments,
-                        'MessageSquare',
-                        'warning',
-                    )}
-                </div>
-
-                <motion.div variants={riseIn}>
-                    <PercentBarsCard
-                        {...collapse(
-                            'status',
-                            `${totals.issues} issues · ${percent(done, totals.issues)}% done`,
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {stat(
+                            'Users',
+                            totals.users,
+                            'Users',
+                            'info',
+                            totals.newUsers,
                         )}
-                        title="Issues by status"
-                        icon="ChartColumn"
-                        totalLabel="Total issues"
-                        total={<AnimatedNumber value={totals.issues} />}
-                        bars={statuses.map(({ key, label, count }) => ({
-                            key,
-                            label,
-                            percent: percent(count, totals.issues),
-                            tooltip: `${count} ${label.toLowerCase()} · ${percent(count, totals.issues)}% of all issues`,
-                        }))}
-                        summary={statuses.map(({ key, label, count }) => (
-                            <WorkflowStatusBadge
-                                key={key}
-                                status={{
-                                    name: label,
-                                    color: STATUS_COLORS[key],
-                                }}
-                                suffix={<AnimatedNumber value={count} />}
-                                tooltip={`${percent(count, totals.issues)}% of all issues`}
-                                className="px-2.5 py-1"
-                            />
-                        ))}
-                        footnote={
-                            totals.issues > 0
-                                ? `${percent(done, totals.issues)}% of all issues are done.`
-                                : undefined
-                        }
-                    />
-                </motion.div>
+                        {stat(
+                            'Projects',
+                            totals.projects,
+                            'FolderGit2',
+                            'accent',
+                        )}
+                        {stat(
+                            'Issues',
+                            totals.issues,
+                            'CircleDot',
+                            'success',
+                            totals.newIssues,
+                        )}
+                        {stat(
+                            'Comments',
+                            totals.comments,
+                            'MessageSquare',
+                            'warning',
+                        )}
+                    </div>
 
-                <motion.div variants={riseIn}>
-                    <PortalContainersSection
-                        containers={containers}
-                        collapse={collapse}
-                    />
+                    <motion.div variants={riseIn}>
+                        <PercentBarsCard
+                            {...collapse(
+                                'status',
+                                `${totals.issues} issues · ${percent(done, totals.issues)}% done`,
+                            )}
+                            title="Issues by status"
+                            icon="ChartColumn"
+                            totalLabel="Total issues"
+                            total={<AnimatedNumber value={totals.issues} />}
+                            bars={statuses.map(({ key, label, count }) => ({
+                                key,
+                                label,
+                                percent: percent(count, totals.issues),
+                                tooltip: `${count} ${label.toLowerCase()} · ${percent(count, totals.issues)}% of all issues`,
+                            }))}
+                            summary={statuses.map(({ key, label, count }) => (
+                                <WorkflowStatusBadge
+                                    key={key}
+                                    status={{
+                                        name: label,
+                                        color: STATUS_COLORS[key],
+                                    }}
+                                    suffix={<AnimatedNumber value={count} />}
+                                    tooltip={`${percent(count, totals.issues)}% of all issues`}
+                                    className="px-2.5 py-1"
+                                />
+                            ))}
+                            footnote={
+                                totals.issues > 0
+                                    ? `${percent(done, totals.issues)}% of all issues are done.`
+                                    : undefined
+                            }
+                        />
+                    </motion.div>
+
+                    <motion.div variants={riseIn}>
+                        <PortalContainersSection
+                            containers={containers}
+                            collapse={collapse}
+                        />
+                    </motion.div>
+                    <motion.div variants={riseIn}>
+                        <PortalErrorsSection
+                            errorLog={errorLog}
+                            queryParams={queryParams}
+                            collapse={collapse}
+                        />
+                    </motion.div>
+                    <motion.div variants={riseIn}>
+                        <PortalUsersPanel
+                            users={portalUsers}
+                            queryParams={queryParams}
+                            collapse={collapse}
+                        />
+                    </motion.div>
+                    <motion.div variants={riseIn}>
+                        <PortalProjectsPanel
+                            projects={portalProjects}
+                            queryParams={queryParams}
+                            collapse={collapse}
+                        />
+                    </motion.div>
                 </motion.div>
-                <motion.div variants={riseIn}>
-                    <PortalErrorsSection
-                        errorLog={errorLog}
-                        queryParams={queryParams}
-                        collapse={collapse}
-                    />
-                </motion.div>
-                <motion.div variants={riseIn}>
-                    <PortalUsersPanel
-                        users={portalUsers}
-                        queryParams={queryParams}
-                        collapse={collapse}
-                    />
-                </motion.div>
-                <motion.div variants={riseIn}>
-                    <PortalProjectsPanel
-                        projects={portalProjects}
-                        queryParams={queryParams}
-                        collapse={collapse}
-                    />
-                </motion.div>
-            </motion.div>
+            </PanelRiseContext.Provider>
         </MotionConfig>
     );
 }

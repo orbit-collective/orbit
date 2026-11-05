@@ -1,12 +1,19 @@
 import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
-import React, { useId } from 'react';
+import React, { createContext, useContext, useId } from 'react';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
 import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import { useSettingsPanelState } from '@/context/SettingsSectionsContext';
 import { CollapsibleProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { riseIn } from '@/utils/motion';
+
+/**
+ * Panels rise into place with their siblings. A screen that already animates
+ * its own sections (the Developer Portal) turns that off for the panels inside,
+ * so they do not rise twice.
+ */
+export const PanelRiseContext = createContext(true);
 
 interface SettingsPanelProps extends CollapsibleProps {
     title: string;
@@ -41,6 +48,7 @@ export default function SettingsPanel({
     collapsedSummary,
 }: SettingsPanelProps) {
     const bodyId = useId();
+    const rise = useContext(PanelRiseContext);
     const remembered = useSettingsPanelState(
         onToggleCollapse ? undefined : id,
         defaultCollapsed,
@@ -51,7 +59,7 @@ export default function SettingsPanel({
 
     return (
         <motion.section
-            variants={riseIn}
+            variants={rise ? riseIn : undefined}
             className="overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] backdrop-blur-sm"
         >
             <header

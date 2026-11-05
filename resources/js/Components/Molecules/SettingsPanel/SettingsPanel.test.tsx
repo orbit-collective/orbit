@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SettingsSectionsProvider } from '@/context/SettingsSectionsContext';
-import SettingsPanel from './SettingsPanel';
+import SettingsPanel, { PanelRiseContext } from './SettingsPanel';
 
 describe('SettingsPanel', () => {
     test('renders its title, description and content', () => {
@@ -180,5 +180,24 @@ describe('SettingsPanel', () => {
         );
 
         expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+
+    test('rises in by default, but not where a screen already animates its sections', () => {
+        const { container, rerender } = render(
+            <SettingsPanel title="A">
+                <p>row</p>
+            </SettingsPanel>,
+        );
+        expect(container.querySelector('section')).toBeInTheDocument();
+
+        rerender(
+            <PanelRiseContext.Provider value={false}>
+                <SettingsPanel title="A">
+                    <p>row</p>
+                </SettingsPanel>
+            </PanelRiseContext.Provider>,
+        );
+
+        expect(screen.getByRole('heading', { name: 'A' })).toBeVisible();
     });
 });
