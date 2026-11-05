@@ -150,3 +150,26 @@ describe('AccountSettingsProfileTab panels', () => {
         );
     });
 });
+
+describe('AccountSettingsProfileTab save state', () => {
+    test('says "Changes saved" first and swaps to "Unsaved changes" once the name is edited', async () => {
+        render(
+            <AlertProvider>
+                <AccountSettingsProfileTab
+                    userName="John Doe"
+                    userAvatar={null}
+                />
+            </AlertProvider>,
+        );
+        expect(screen.getByText('Changes saved')).toBeInTheDocument();
+
+        fireEvent.change(screen.getByPlaceholderText('Your name'), {
+            target: { value: 'John D.' },
+        });
+
+        expect(await screen.findByText('Unsaved changes')).toBeInTheDocument();
+        await waitFor(() =>
+            expect(screen.queryByText('Changes saved')).not.toBeInTheDocument(),
+        );
+    });
+});

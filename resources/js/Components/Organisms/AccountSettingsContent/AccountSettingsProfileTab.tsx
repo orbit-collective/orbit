@@ -1,4 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { SyntheticEvent, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -11,6 +12,7 @@ import AccountSettingsProfilePreview from '@/Components/Organisms/AccountSetting
 import { useAlert } from '@/context/AlertContext';
 import { cn } from '@/utils/cn';
 import { canvasToBlob, rasterizeImage } from '@/utils/faces';
+import { DURATION, EASE } from '@/utils/motion';
 
 const getInitials = (name: string) => {
     const trimmed = name.trim();
@@ -138,31 +140,55 @@ export default function AccountSettingsProfileTab({
                                     {errors.name}
                                 </span>
                             )}
-                            <span className="flex items-center gap-1.5 text-xs text-[var(--text-gray-color)]">
-                                {processing ? (
-                                    <>
-                                        <Icon
-                                            name="LoaderCircle"
-                                            size={14}
-                                            className="animate-spin"
-                                        />
-                                        Saving...
-                                    </>
-                                ) : hasUnsavedChanges ? (
-                                    <>
-                                        <Icon name="CircleAlert" size={14} />
-                                        Unsaved changes
-                                    </>
-                                ) : (
-                                    <>
-                                        <Icon
-                                            name="CircleCheck"
-                                            size={14}
-                                            className="text-[var(--success-color)]"
-                                        />
-                                        Changes saved
-                                    </>
-                                )}
+                            <span className="relative flex h-4 items-center overflow-hidden text-xs text-[var(--text-gray-color)]">
+                                {/* The save state swaps with the shared motion, so a change reads as an event. */}
+                                <AnimatePresence mode="wait" initial={false}>
+                                    <motion.span
+                                        key={
+                                            processing
+                                                ? 'saving'
+                                                : hasUnsavedChanges
+                                                  ? 'unsaved'
+                                                  : 'saved'
+                                        }
+                                        className="flex items-center gap-1.5"
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -8 }}
+                                        transition={{
+                                            duration: DURATION.fast,
+                                            ease: EASE,
+                                        }}
+                                    >
+                                        {processing ? (
+                                            <>
+                                                <Icon
+                                                    name="LoaderCircle"
+                                                    size={14}
+                                                    className="animate-spin"
+                                                />
+                                                Saving...
+                                            </>
+                                        ) : hasUnsavedChanges ? (
+                                            <>
+                                                <Icon
+                                                    name="CircleAlert"
+                                                    size={14}
+                                                />
+                                                Unsaved changes
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Icon
+                                                    name="CircleCheck"
+                                                    size={14}
+                                                    className="text-[var(--success-color)]"
+                                                />
+                                                Changes saved
+                                            </>
+                                        )}
+                                    </motion.span>
+                                </AnimatePresence>
                             </span>
                         </form>
                     }
