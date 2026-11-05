@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import AddRowButton from '@/Components/Molecules/AddRowButton/AddRowButton';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import RowAction from '@/Components/Molecules/RowAction/RowAction';
@@ -76,6 +77,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                     />
                 )}
                 <SettingsPanel
+                    id="scale"
                     title="Priority scale"
                     description="Name, color and order the priorities issues can have."
                     icon="Flag"
@@ -225,6 +227,8 @@ export default function WorkspaceSettingsPrioritiesTab({
             />
 
             <SettingsPanel
+                id="scale"
+                collapsedSummary={`${priorities.length} ${priorities.length === 1 ? 'priority' : 'priorities'}`}
                 title="Priority scale"
                 description={`Priorities available for issues in ${selectedProject.name}, most important first.`}
                 icon="Flag"
@@ -240,8 +244,9 @@ export default function WorkspaceSettingsPrioritiesTab({
                             onCancel={closeEditor}
                         />
                     ) : (
-                        <div
+                        <RowReveal
                             key={priority.id}
+                            index={index}
                             className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
                         >
                             <span
@@ -327,7 +332,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                                         )}
                                 </div>
                             )}
-                        </div>
+                        </RowReveal>
                     ),
                 )}
 

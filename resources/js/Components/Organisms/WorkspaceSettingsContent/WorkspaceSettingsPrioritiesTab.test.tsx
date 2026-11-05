@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { priorities } from '@/stories/fixtures';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import { SettingsPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsPrioritiesTab from './WorkspaceSettingsPrioritiesTab';
@@ -388,5 +389,52 @@ describe('WorkspaceSettingsPrioritiesTab', () => {
 
             expect(mockRouter.delete).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe('WorkspaceSettingsPrioritiesTab panels', () => {
+    const inPage = (
+        props: Partial<
+            Parameters<typeof WorkspaceSettingsPrioritiesTab>[0]
+        > = {},
+    ) =>
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <WorkspaceSettingsPrioritiesTab
+                        memberProjects={[project]}
+                        selectedProjectId={1}
+                        priorities={settingsPriorities}
+                        hasPrioritiesAccess
+                        {...props}
+                    />
+                </AlertProvider>,
+                'priorities',
+            ),
+        );
+
+    test('the scale folds and, folded, counts the priorities', () => {
+        inPage();
+
+        expectPanelsToFold([/Priority scale/]);
+
+        fireEvent.click(screen.getByRole('button', { name: /Priority scale/ }));
+        expect(screen.getByTestId('collapsed-summary')).toHaveTextContent(
+            `${settingsPriorities.length} ${settingsPriorities.length === 1 ? 'priority' : 'priorities'}`,
+        );
+    });
+
+    test('the no-access panel folds as well', () => {
+        inPage({ hasPrioritiesAccess: false });
+
+        expectPanelsToFold([/Priority scale/]);
+    });
+
+    test('the rows rise in and end up visible', async () => {
+        inPage();
+
+        expect(
+            await screen.findByText(settingsPriorities[0].name),
+        ).toBeVisible();
     });
 });
