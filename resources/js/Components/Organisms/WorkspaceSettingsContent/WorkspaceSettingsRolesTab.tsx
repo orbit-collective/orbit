@@ -1,5 +1,8 @@
 import { router } from '@inertiajs/react';
+import { motion } from 'framer-motion';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import RoleDetailHeader from '@/Components/Molecules/RoleDetailHeader/RoleDetailHeader';
 import RolePermissionsList from '@/Components/Molecules/RolePermissionsList/RolePermissionsList';
@@ -10,6 +13,7 @@ import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useRolesManagement } from '@/hooks/useRolesManagement';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
+import { riseIn } from '@/utils/motion';
 import WorkspaceSettingsCreateRoleModal from './WorkspaceSettingsCreateRoleModal';
 import WorkspaceSettingsDeleteRoleModal from './WorkspaceSettingsDeleteRoleModal';
 
@@ -78,6 +82,7 @@ export default function WorkspaceSettingsRolesTab({
     if (!selectedProject || !hasSettingsAccess) {
         return (
             <SettingsPanel
+                id="roles"
                 title="Roles and permissions"
                 description="Define granular roles and control exactly what each one can do."
                 icon="Shield"
@@ -101,30 +106,36 @@ export default function WorkspaceSettingsRolesTab({
     return (
         <div className="space-y-5">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <StatCard
-                    title="Custom roles"
-                    value={localRoles.length}
-                    icon="Shield"
-                    color="accent"
-                    variant="vivid"
-                    description={`Defined for "${selectedProject.name}"`}
-                />
-                <StatCard
-                    title="Permissions"
-                    value={permissions.length}
-                    icon="KeyRound"
-                    color="info"
-                    variant="vivid"
-                    description="Granular capabilities available"
-                />
-                <StatCard
-                    title="Members governed"
-                    value={totalMembersGoverned}
-                    icon="Users"
-                    color={totalMembersGoverned > 0 ? 'success' : 'warning'}
-                    variant="vivid"
-                    description="Assignments across all custom roles"
-                />
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        title="Custom roles"
+                        value={<AnimatedNumber value={localRoles.length} />}
+                        icon="Shield"
+                        color="accent"
+                        variant="vivid"
+                        description={`Defined for "${selectedProject.name}"`}
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        title="Permissions"
+                        value={<AnimatedNumber value={permissions.length} />}
+                        icon="KeyRound"
+                        color="info"
+                        variant="vivid"
+                        description="Granular capabilities available"
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        title="Members governed"
+                        value={<AnimatedNumber value={totalMembersGoverned} />}
+                        icon="Users"
+                        color={totalMembersGoverned > 0 ? 'success' : 'warning'}
+                        variant="vivid"
+                        description="Assignments across all custom roles"
+                    />
+                </motion.div>
             </div>
 
             <ProjectPickerPanel
@@ -135,6 +146,8 @@ export default function WorkspaceSettingsRolesTab({
             />
 
             <SettingsPanel
+                id="roles"
+                collapsedSummary={`${localRoles.length} ${localRoles.length === 1 ? 'role' : 'roles'}`}
                 title="Custom roles"
                 description="Define roles beyond the base Admin/Member access and grant them exactly the permissions they need."
                 icon="Shield"
@@ -176,7 +189,7 @@ export default function WorkspaceSettingsRolesTab({
 
                         <div className="min-w-0">
                             {selectedRole && (
-                                <>
+                                <Reveal key={selectedRole.id}>
                                     <RoleDetailHeader
                                         role={selectedRole}
                                         ratio={selectedRoleRatio}
@@ -220,7 +233,7 @@ export default function WorkspaceSettingsRolesTab({
                                             )
                                         }
                                     />
-                                </>
+                                </Reveal>
                             )}
                         </div>
                     </div>
@@ -229,6 +242,7 @@ export default function WorkspaceSettingsRolesTab({
 
             {!canCreateRoles && !canUpdateRoles && !canDeleteRoles && (
                 <SettingsPanel
+                    id="read-only"
                     title="Read-only access"
                     description="You can see how roles are configured, but you don't have permission to change them."
                     icon="Eye"
