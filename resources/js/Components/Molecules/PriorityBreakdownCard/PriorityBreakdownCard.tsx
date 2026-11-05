@@ -1,5 +1,9 @@
+import { motion } from 'framer-motion';
 import { FC } from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import { PriorityBreakdownCardProps } from '@/types/Components';
+import { DURATION, EASE, rowDelay } from '@/utils/motion';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 
@@ -40,14 +44,20 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
             />
             <div className="flex flex-1 flex-col justify-center py-4">
                 <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
-                    {items.map((item) => (
-                        <div
+                    {items.map((item, index) => (
+                        <motion.div
                             key={item.key}
-                            style={{
-                                width: `${item.pct}%`,
-                                backgroundColor: item.color,
+                            data-testid="priority-segment"
+                            data-width-percent={item.pct}
+                            style={{ backgroundColor: item.color }}
+                            className="h-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${item.pct}%` }}
+                            transition={{
+                                duration: DURATION.slow,
+                                ease: EASE,
+                                delay: 0.15 + rowDelay(index),
                             }}
-                            className="h-full transition-all"
                             title={`${item.label}: ${item.pct}%`}
                         />
                     ))}
@@ -58,9 +68,10 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                             No issues yet
                         </span>
                     )}
-                    {items.map((item) => (
-                        <div
+                    {items.map((item, index) => (
+                        <RowReveal
                             key={item.key}
+                            index={index}
                             className="flex items-center justify-between text-xs"
                         >
                             <div className="flex min-w-0 items-center gap-2">
@@ -73,12 +84,15 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                                 </span>
                             </div>
                             <span className="shrink-0 pl-2 font-semibold text-[var(--text-color)]">
-                                {item.count}{' '}
+                                <AnimatedNumber value={item.count} />{' '}
                                 <span className="font-medium text-[var(--text-muted-color)]">
-                                    ({item.pct}%)
+                                    <AnimatedNumber
+                                        value={item.pct}
+                                        format={(n) => `(${Math.round(n)}%)`}
+                                    />
                                 </span>
                             </span>
-                        </div>
+                        </RowReveal>
                     ))}
                 </div>
             </div>

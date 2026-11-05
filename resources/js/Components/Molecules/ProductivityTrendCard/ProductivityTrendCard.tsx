@@ -1,6 +1,8 @@
+import { motion } from 'framer-motion';
 import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { ProductivityTrendCardProps } from '@/types/Components';
+import { DURATION, EASE, rowDelay } from '@/utils/motion';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 
@@ -85,12 +87,26 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                             className="group flex h-full flex-1 flex-col items-center justify-end"
                                         >
                                             <div className="flex h-full w-full flex-col items-center justify-end">
-                                                <div
-                                                    className="relative flex w-full justify-center transition-all duration-500"
-                                                    style={{
+                                                <motion.div
+                                                    data-testid="trend-column"
+                                                    data-height={
+                                                        isZero
+                                                            ? '10px'
+                                                            : `${heightPct}%`
+                                                    }
+                                                    className="relative flex w-full justify-center"
+                                                    initial={{ height: 0 }}
+                                                    animate={{
                                                         height: isZero
                                                             ? '10px'
                                                             : `${heightPct}%`,
+                                                    }}
+                                                    transition={{
+                                                        duration: DURATION.slow,
+                                                        ease: EASE,
+                                                        delay:
+                                                            0.15 +
+                                                            rowDelay(idx),
                                                     }}
                                                 >
                                                     <span className="absolute -top-7 z-20 scale-0 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-color)] transition-all group-hover:scale-100">
@@ -107,7 +123,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                             }`}
                                                         />
                                                     )}
-                                                </div>
+                                                </motion.div>
                                             </div>
                                         </div>
                                     );

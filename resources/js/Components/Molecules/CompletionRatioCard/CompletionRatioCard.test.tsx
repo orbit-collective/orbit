@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { CompletionRatioCard } from './CompletionRatioCard';
 
@@ -126,5 +126,81 @@ describe('CompletionRatioCard Component', () => {
 
         expect(screen.getByText('0%')).toBeInTheDocument();
         expect(screen.getByText('0 of 0 issues')).toBeInTheDocument();
+    });
+});
+
+describe('CompletionRatioCard motion', () => {
+    test('the bars grow to their share of the largest one and every figure ends up visible', async () => {
+        render(
+            <CompletionRatioCard
+                todo={2}
+                inProgress={4}
+                done={8}
+                total={14}
+                donePct={57}
+            />,
+        );
+
+        const bars = screen.getAllByTestId('completion-bar');
+        expect(
+            bars.map((bar) => bar.getAttribute('data-height-percent')),
+        ).toEqual(['25', '50', '100']);
+        await waitFor(() => bars.forEach((bar) => expect(bar).toBeVisible()));
+        expect(screen.getByText('57%')).toBeVisible();
+    });
+
+    test('the hero percentage follows a new value', async () => {
+        const { rerender } = render(
+            <CompletionRatioCard
+                todo={5}
+                inProgress={0}
+                done={5}
+                total={10}
+                donePct={50}
+            />,
+        );
+
+        rerender(
+            <CompletionRatioCard
+                todo={2}
+                inProgress={0}
+                done={8}
+                total={10}
+                donePct={80}
+            />,
+        );
+
+        expect(await screen.findByText('80%')).toBeInTheDocument();
+        expect(await screen.findByText('8 of 10 issues')).toBeInTheDocument();
+    });
+
+    test('a different tier pops its dot in again (new element)', () => {
+        const { rerender } = render(
+            <CompletionRatioCard
+                todo={9}
+                inProgress={0}
+                done={1}
+                total={10}
+                donePct={10}
+            />,
+        );
+        const dot = () =>
+            screen.getByText('Needs attention').previousElementSibling;
+        const first = dot();
+
+        rerender(
+            <CompletionRatioCard
+                todo={1}
+                inProgress={0}
+                done={9}
+                total={10}
+                donePct={90}
+            />,
+        );
+
+        expect(screen.getByText('Excellent')).toBeInTheDocument();
+        expect(screen.getByText('Excellent').previousElementSibling).not.toBe(
+            first,
+        );
     });
 });
