@@ -125,6 +125,8 @@ export default function AccountSettingsNotificationCleanup({
     return (
         <>
             <SettingsPanel
+                id="cleanup"
+                collapsedSummary={draft.enabled ? 'On' : 'Off'}
                 title="Automatic clean-up"
                 description="Keep your inbox and history tidy by deleting old items on a schedule."
                 icon="CalendarClock"
@@ -236,6 +238,7 @@ export default function AccountSettingsNotificationCleanup({
             </SettingsPanel>
 
             <SettingsPanel
+                id="cleanup-now"
                 title="Clean up now"
                 description="Delete old items right away, independent of the schedule."
                 icon="Trash"
