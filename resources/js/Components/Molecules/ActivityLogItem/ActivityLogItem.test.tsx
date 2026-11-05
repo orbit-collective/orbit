@@ -130,4 +130,26 @@ describe('ActivityLogItem Component', () => {
             container.querySelector('img[src="/storage/avatars/kacper.jpg"]'),
         ).not.toBeNull();
     });
+
+    test('the divider grows from the left and the avatar and entries are on the page', () => {
+        render(<ActivityLogItem group={makeGroup()} />);
+
+        const divider = screen.getByTestId('activity-divider');
+        expect(divider.style.transformOrigin).toContain('left');
+        expect(screen.getByText('Jane Doe')).toBeInTheDocument();
+        expect(screen.getByText(/Created project/)).toBeInTheDocument();
+    });
+
+    test('every entry of a group gets its own staggered rise', () => {
+        const group = makeGroup({
+            entries: [
+                makeEntry({ id: 1 }),
+                makeEntry({ id: 2, body: 'Renamed project' }),
+            ],
+        });
+        render(<ActivityLogItem group={group} />);
+
+        expect(screen.getByText(/Created project/)).toBeInTheDocument();
+        expect(screen.getByText(/Renamed project/)).toBeInTheDocument();
+    });
 });
