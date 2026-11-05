@@ -951,7 +951,7 @@ export interface CollapsibleProps {
 }
 
 export interface CardHeaderProps extends CollapsibleProps {
-    icon: keyof typeof icons;
+    icon?: keyof typeof icons;
     title: string;
     description?: string;
     /** Id of the region the toggle controls. */

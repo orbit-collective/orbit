@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
+import { SettingsSectionsProvider } from '@/context/SettingsSectionsContext';
 import SettingsPanel from './SettingsPanel';
 
 const meta = {
@@ -60,4 +61,34 @@ export const CustomContent: Story = {
             </p>
         ),
     },
+};
+
+/** Inside a settings page a panel with an `id` folds from its header; the choice is remembered. */
+export const Collapsible: Story = {
+    args: { id: 'notifications' },
+    decorators: [
+        (Story) => (
+            <SettingsSectionsProvider storageKey="storybook:settings-panel">
+                <Story />
+            </SettingsSectionsProvider>
+        ),
+    ],
+    play: async ({ canvasElement }) => {
+        const header = within(canvasElement).getByRole('button', {
+            name: /Notifications/,
+        });
+        await userEvent.click(header);
+        await expect(header).toHaveAttribute('aria-expanded', 'false');
+        await userEvent.click(header);
+    },
+};
+
+/** First visit folded, with a summary in the header. */
+export const StartsFolded: Story = {
+    args: {
+        id: 'danger',
+        defaultCollapsed: true,
+        collapsedSummary: '3 settings',
+    },
+    decorators: Collapsible.decorators,
 };

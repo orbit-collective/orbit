@@ -78,4 +78,13 @@ describe('CardHeader', () => {
 
         expect(screen.getByTestId('collapsed-summary')).toBeInTheDocument();
     });
+
+    test('works without an icon: no icon box and the description is not indented', () => {
+        render(<CardHeader title="Plain" description="No icon here" />);
+
+        expect(
+            screen.getByRole('heading', { name: 'Plain' }).querySelector('svg'),
+        ).toBeNull();
+        expect(screen.getByText('No icon here')).not.toHaveClass('pl-11');
+    });
 });
