@@ -4,6 +4,10 @@ import { ReactNode } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
+import {
+    PreviewBar,
+    PreviewStage,
+} from '@/Components/Molecules/PreviewMotion/PreviewMotion';
 import { SPRING } from '@/utils/motion';
 
 interface AccountSettingsProfilePreviewProps {
@@ -41,7 +45,7 @@ function PreviewFrame({
     return (
         <RowReveal index={index} fill>
             <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-3.5 transition-colors duration-200 hover:border-[var(--border-color-strong)]">
-                {children}
+                <PreviewStage>{children}</PreviewStage>
             </div>
         </RowReveal>
     );
@@ -83,12 +87,12 @@ export default function AccountSettingsProfilePreview({
                 <div className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)] p-1.5">
                     <div className="space-y-1">
                         <div className="flex items-center gap-1.5 rounded-md bg-[var(--bg-light-color)] px-1.5 py-1">
-                            <div className="h-2 w-2 rounded-sm bg-[var(--accent-color)]" />
-                            <div className="h-1 w-10 rounded-full bg-[var(--text-gray-color)]" />
+                            <PreviewBar className="h-2 w-2 rounded-sm bg-[var(--accent-color)]" />
+                            <PreviewBar className="h-1 w-10 rounded-full bg-[var(--text-gray-color)]" />
                         </div>
                         <div className="flex items-center gap-1.5 rounded-md px-1.5 py-1">
-                            <div className="h-2 w-2 rounded-sm bg-[var(--border-color-strong)]" />
-                            <div className="h-1 w-7 rounded-full bg-[var(--border-color-strong)]" />
+                            <PreviewBar className="h-2 w-2 rounded-sm bg-[var(--border-color-strong)]" />
+                            <PreviewBar className="h-1 w-7 rounded-full bg-[var(--border-color-strong)]" />
                         </div>
                     </div>
                     <div className="my-1.5 border-t border-[var(--border-color)]" />
@@ -116,8 +120,8 @@ export default function AccountSettingsProfilePreview({
                                 </span>
                             </div>
                             <div className="mt-1.5 space-y-1">
-                                <div className="h-1.5 w-full rounded-full bg-[var(--bg-light-color)]" />
-                                <div className="h-1.5 w-3/5 rounded-full bg-[var(--bg-light-color)]" />
+                                <PreviewBar className="h-1.5 w-full rounded-full bg-[var(--bg-light-color)]" />
+                                <PreviewBar className="h-1.5 w-3/5 rounded-full bg-[var(--bg-light-color)]" />
                             </div>
                         </div>
                     </div>
@@ -132,12 +136,12 @@ export default function AccountSettingsProfilePreview({
                 <PreviewCardLabel icon="UserCheck" label="Issue row" />
                 <div className="overflow-hidden rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)]">
                     <div className="flex items-center gap-2 border-b border-[var(--border-color)] bg-[var(--bg-light-color)] px-2 py-1.5">
-                        <div className="h-1 w-6 rounded-full bg-[var(--text-muted-color)]" />
+                        <PreviewBar className="h-1 w-6 rounded-full bg-[var(--text-muted-color)]" />
                         <div className="ml-auto h-1 w-8 rounded-full bg-[var(--text-muted-color)]" />
                     </div>
                     <div className="flex items-center gap-2 px-2 py-2.5">
                         <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--info-color)]" />
-                        <div className="h-1.5 flex-1 rounded-full bg-[var(--bg-light-color)]" />
+                        <PreviewBar className="h-1.5 flex-1 rounded-full bg-[var(--bg-light-color)]" />
                         <LiveAvatar {...avatarProps} />
                     </div>
                 </div>

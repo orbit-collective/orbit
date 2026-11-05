@@ -66,4 +66,22 @@ describe('AccountSettingsProfilePreview', () => {
                 .forEach((img) => expect(img).toHaveAttribute('src', '/b.png')),
         );
     });
+
+    test('the skeleton lines of each preview draw in and end up visible', async () => {
+        const { container } = render(
+            <AccountSettingsProfilePreview
+                name="Jane"
+                avatarSrc={null}
+                initials="J"
+            />,
+        );
+
+        const bars = Array.from(
+            container.querySelectorAll<HTMLElement>(
+                'div[class*="h-1"][class*="rounded-"]',
+            ),
+        );
+        expect(bars.length).toBeGreaterThan(6);
+        await waitFor(() => bars.forEach((bar) => expect(bar).toBeVisible()));
+    });
 });

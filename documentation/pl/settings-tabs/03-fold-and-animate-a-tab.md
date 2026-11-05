@@ -16,6 +16,8 @@ Plik: `resources/js/Components/Organisms/SettingsLayout/SettingsLayout.tsx`
 - **Zwykłe wiersze.** `SettingsPanelRow` wjeżdża razem z rodzeństwem, gdy treść panelu już jest (treść to stagger `rowsParent`), a wiersz zamontowany później dołącza do wjazdu. Większość wierszy większości zakładek nie wymaga niczego.
 - **Karty do wyboru** (widok, motyw, wygasanie sesji, projekt, rola): `liftProps` z `utils/motion.ts` na `motion.button` unosi je pod wskaźnikiem i wciska po kliknięciu. Nie dokładaj do nich CSS `transition-all`/`hover:-translate-*`: przejście CSS walczy z inline'owym transformem.
 - **`ToggleSwitch`** sprężynuje gałkę; **`Button`** wciska się; oba pokazują wspólny pierścień fokusu. Plus w **`AddRowButton`** obraca się po najechaniu.
+- **Makiety** (podglądy widoku, motywu i profilu) rysują się same przez `PreviewMotion` (`PreviewStage` + `PreviewBar` / `PreviewDot` / `PreviewBlock`: paski rosną, kropki wyskakują, bloki wjeżdżają), a `usePlayOnSelect(selected)` jako `playKey` sceny rysuje makietę karty ponownie po jej wybraniu.
+- **Wybrana karta w grupie wyboru** dostaje `SelectionHighlight` ze wspólnym `layoutId`, więc akcentowa ramka płynie od starego wyboru do nowego (karta musi być `relative`, podnosić swoją treść przez `relative` i nie przycinać overflow).
 - **Paski postępu i liczby** rosną przez `motion` (zob. `PermissionGroupCard`) i liczą przez `AnimatedNumber`.
 
 ## Krok 1 — Nadaj każdemu panelowi id
@@ -49,7 +51,7 @@ Wiersze wewnątrz zwijalnego panelu nie mogą odziedziczyć wjazdu strony (treś
 ))}
 ```
 
-W siatce wrapper staje się komórką, więc podaj `fill`, a karta nadal rozciągnie się do niej (`<RowReveal fill>`). Stagger jest ograniczony (dziesięć wierszy), więc długa lista się nie wlecze. Zachowaj stabilne klucze: zmiana kolejności przesuwa wtedy wiersze bez powtarzania wjazdu. Użyj `<Reveal key={selectedId}>`, gdy widok szczegółów ma wjechać ponownie przy zmianie wyboru (szczegóły roli, przepływ automatyzacji), `Collapse` z `unmountWhenClosed` dla czegoś, co otwiera się w wierszu (biblioteka awatarów), i `AnimatedNumber` dla liczb w `StatCard`.
+W siatce wrapper staje się komórką, więc podaj `fill`, a karta nadal rozciągnie się do niej (`<RowReveal fill>`). Stagger jest ograniczony (dziesięć wierszy), więc długa lista się nie wlecze. Zachowaj stabilne klucze: zmiana kolejności przesuwa wtedy wiersze bez powtarzania wjazdu. Użyj `<Reveal key={selectedId}>`, gdy widok szczegółów ma wjechać ponownie przy zmianie wyboru (szczegóły roli, przepływ automatyzacji), `Collapse` z `unmountWhenClosed` dla czegoś, co otwiera się w wierszu (biblioteka awatarów), i `AnimatedNumber` dla każdej liczby (wartość `StatCard`, licznik w pigułce, wskaźnik obok `ProgressRing`, który też sam się rysuje); podaj `format`, gdy liczba niesie tekst, żeby tekst został jednym elementem (`format={(n) => `${n}%`}`).
 
 ## Krok 3 — Testy
 

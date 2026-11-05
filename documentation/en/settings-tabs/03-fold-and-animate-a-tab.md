@@ -31,6 +31,14 @@ File: `resources/js/Components/Organisms/SettingsLayout/SettingsLayout.tsx`
   them: the CSS transition fights the inline transform.
 - **`ToggleSwitch`** springs its knob; **`Button`** presses in; both show the
   shared focus ring. **`AddRowButton`**'s plus turns on hover.
+- **Mock-ups** (view, theme and profile previews) draw themselves with
+  `PreviewMotion` (`PreviewStage` + `PreviewBar` / `PreviewDot` / `PreviewBlock`:
+  bars grow, dots pop, blocks rise), and `usePlayOnSelect(selected)` as the
+  stage's `playKey` draws a card's mock-up again when it is picked.
+- **A choice group's selected card** gets `SelectionHighlight` with a shared
+  `layoutId`, so the accent frame glides from the old choice to the new one
+  (the card must be `relative`, lift its content with `relative`, and not clip
+  overflow).
 - **Progress bars and counts** grow with `motion` (see `PermissionGroupCard`) and
   count with `AnimatedNumber`.
 
@@ -83,7 +91,9 @@ keys: a reorder then moves rows without replaying the entrance. Use
 `<Reveal key={selectedId}>` when a detail view should rise again as the
 selection changes (the role detail, the automation flow), `Collapse` with
 `unmountWhenClosed` for something that opens inside a row (the avatar library),
-and `AnimatedNumber` for counts in a `StatCard`.
+and `AnimatedNumber` for any number (a `StatCard` value, a count in a pill, a ratio
+next to a `ProgressRing`, which also draws itself); give it a `format` when the
+number carries text, so the text stays one element (`format={(n) => `${n}%`}`).
 
 ## Step 3 — Tests
 
