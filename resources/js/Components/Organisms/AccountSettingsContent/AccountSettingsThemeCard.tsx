@@ -1,5 +1,7 @@
+import { motion } from 'framer-motion';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { ThemeMode } from '@/types/Theme';
+import { SPRING, liftProps } from '@/utils/motion';
 
 interface AccountSettingsThemeCardProps {
     id: ThemeMode;
@@ -64,9 +66,10 @@ export default function AccountSettingsThemeCard({
     const palette = themePreviewStyles[id];
 
     return (
-        <button
+        <motion.button
             type="button"
             onClick={onSelect}
+            {...liftProps}
             className={`rounded-xl border p-3 text-left transition-colors ${
                 selected
                     ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
@@ -83,13 +86,23 @@ export default function AccountSettingsThemeCard({
                     </p>
                 </div>
                 <span
-                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-200 ${
                         selected
                             ? 'border-[var(--accent-color)] text-[var(--accent-color)]'
                             : 'border-[var(--border-color-strong)] text-transparent'
                     }`}
                 >
-                    <Icon name="Check" size={11} />
+                    <motion.span
+                        className="flex"
+                        initial={false}
+                        animate={{
+                            scale: selected ? 1 : 0.4,
+                            opacity: selected ? 1 : 0,
+                        }}
+                        transition={SPRING}
+                    >
+                        <Icon name="Check" size={11} />
+                    </motion.span>
                 </span>
             </div>
             <div
@@ -117,6 +130,6 @@ export default function AccountSettingsThemeCard({
                     </div>
                 </div>
             </div>
-        </button>
+        </motion.button>
     );
 }

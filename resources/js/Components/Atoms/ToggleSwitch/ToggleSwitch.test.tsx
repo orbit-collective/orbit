@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import ToggleSwitch from './ToggleSwitch';
@@ -18,7 +18,10 @@ describe('ToggleSwitch Component', () => {
         expect(screen.getByRole('button')).toHaveClass(
             'bg-[var(--accent-color)]',
         );
-        expect(container.querySelector('span')).toHaveClass('translate-x-4');
+        expect(container.querySelector('span')).toHaveAttribute(
+            'data-checked',
+            'true',
+        );
     });
 
     test('applies the muted background and resting thumb when unchecked', () => {
@@ -29,7 +32,10 @@ describe('ToggleSwitch Component', () => {
         expect(screen.getByRole('button')).toHaveClass(
             'bg-[var(--bg-light-color)]',
         );
-        expect(container.querySelector('span')).toHaveClass('translate-x-0');
+        expect(container.querySelector('span')).toHaveAttribute(
+            'data-checked',
+            'false',
+        );
     });
 
     test('calls onChange with the opposite value when clicked (unchecked -> true)', async () => {
@@ -94,5 +100,26 @@ describe('ToggleSwitch Component', () => {
 
         expect(screen.getByRole('button')).not.toHaveAttribute('aria-checked');
         expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    });
+
+    test('the knob springs to the right end when switched on', async () => {
+        const { container } = render(
+            <ToggleSwitch checked onChange={() => {}} />,
+        );
+
+        await waitFor(() =>
+            expect(
+                (container.querySelector('span') as HTMLElement).style
+                    .transform,
+            ).toContain('16px'),
+        );
+    });
+
+    test('shows the keyboard focus ring', () => {
+        render(<ToggleSwitch checked={false} onChange={() => {}} />);
+
+        expect(screen.getByRole('button').className).toContain(
+            'focus-visible:ring-2',
+        );
     });
 });

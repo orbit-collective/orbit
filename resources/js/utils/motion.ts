@@ -87,3 +87,13 @@ export const collapseVariants: Variants = {
         transitionEnd: { visibility: 'hidden' },
     },
 };
+
+/**
+ * The feel of a card you can pick: it lifts a little under the pointer and
+ * presses in when clicked. Spread onto a `motion.button` / `motion.div`.
+ */
+export const liftProps = {
+    whileHover: { y: -2 },
+    whileTap: { scale: 0.985 },
+    transition: { duration: DURATION.fast, ease: EASE },
+} as const;

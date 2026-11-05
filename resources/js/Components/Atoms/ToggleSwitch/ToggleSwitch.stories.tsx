@@ -41,6 +41,9 @@ export const Interactive: Story = {
     play: async ({ canvasElement }) => {
         const toggle = within(canvasElement).getByRole('button');
         await userEvent.click(toggle);
-        await expect(toggle.querySelector('span')).toHaveClass('translate-x-4');
+        await expect(toggle.querySelector('span')).toHaveAttribute(
+            'data-checked',
+            'true',
+        );
     },
 };
