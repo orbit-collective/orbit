@@ -1,5 +1,70 @@
 # Changelog
 
+## [0.13.0](https://github.com/orbit-collective/orbit/compare/v0.12.0...v0.13.0) (2026-11-05)
+
+
+### Features
+
+* **developer:** add Developer Portal and sidebar entry ([0d6129a](https://github.com/orbit-collective/orbit/commit/0d6129aa2898cb4227240153b7ca20f6f16d91b8))
+* **developer:** add Developer Portal frontend types ([7f9ad9e](https://github.com/orbit-collective/orbit/commit/7f9ad9e74dc308ee9077a42b16e3a9263756638d))
+* **developer:** add portal totals and paginated lists ([e2a404e](https://github.com/orbit-collective/orbit/commit/e2a404e0e443d43157b0e789453c3791f58128ec))
+* **developer:** add uptime helpers for containers ([1f886a5](https://github.com/orbit-collective/orbit/commit/1f886a5c5060683491147f4a8d6dbab8a9323ff8))
+* **developer:** animate and focus-ring the portal sections ([d7fc40d](https://github.com/orbit-collective/orbit/commit/d7fc40de53d4fc65c839e1b28b69ec6c737baa16))
+* **developer:** assemble the Developer Portal tab ([7b69b32](https://github.com/orbit-collective/orbit/commit/7b69b32525c2db369b0580b8183a7741b491e660))
+* **developer:** fold portal sections and remember the choice ([98c91ba](https://github.com/orbit-collective/orbit/commit/98c91ba1053a57eef5e5ba14d2d5a48d4ad842f3))
+* **developer:** gate Developer Portal on APP_ENV=local ([aab7e45](https://github.com/orbit-collective/orbit/commit/aab7e45fd1ae90a457ac4bb13a0b2c917a0a2976))
+* **developer:** give the portal a choreographed entrance and Badge statuses ([a5b59eb](https://github.com/orbit-collective/orbit/commit/a5b59eb4ac0db3eff92a1d168d8e5c62bfcfc632))
+* **developer:** hide portal tab unless available ([f2e8b34](https://github.com/orbit-collective/orbit/commit/f2e8b34e99da8b4f69b07d4c5e7a3f81b5e9ca63))
+* **developer:** list users and projects in the portal ([644a6e4](https://github.com/orbit-collective/orbit/commit/644a6e4140ae37fa56179a02a6a6c8e1b5df3dd2))
+* **developer:** mount the Docker socket into the app container ([4bfc794](https://github.com/orbit-collective/orbit/commit/4bfc794df3bc20cf6e9e321c09cb2c21fc05efaa))
+* **developer:** open a container for its details and live logs ([650491a](https://github.com/orbit-collective/orbit/commit/650491a3d09007ebf23b02ae04511a55a82de197))
+* **developer:** page through recent errors in the portal ([6c07cc9](https://github.com/orbit-collective/orbit/commit/6c07cc9b0eafbe4a652fb57ca8d0fa2036165ccb))
+* **developer:** paginate the recent errors list ([be0c79b](https://github.com/orbit-collective/orbit/commit/be0c79b96e9da1034eff2bce9e2dda734c13925e))
+* **developer:** read container uptime from Docker ([fa5b1ae](https://github.com/orbit-collective/orbit/commit/fa5b1ae3e9e64138f26932aea56c3d6575ea81e8))
+* **developer:** read recent errors from the app log ([fe5f1c0](https://github.com/orbit-collective/orbit/commit/fe5f1c0513c9903594dc00b938eedd1c01a95a09))
+* **developer:** serve container logs to the portal ([c51dc59](https://github.com/orbit-collective/orbit/commit/c51dc59f1fccc0633cbc2765bd96e4d6a2f0a69c))
+* **developer:** serve portal data from the settings tab ([effa8b9](https://github.com/orbit-collective/orbit/commit/effa8b9baaad9fcb531cb569c114bf661e44d68d))
+* **developer:** show container uptime in the portal ([3345266](https://github.com/orbit-collective/orbit/commit/3345266e5cf3e4d3e4407502ad4c448649227b8e))
+* **developer:** show recent errors in the portal ([e7bc658](https://github.com/orbit-collective/orbit/commit/e7bc65833c9f50a204dffd3fc72d7dd698da3b6d))
+* **live:** announce Developer Portal changes over Reverb ([3e4f880](https://github.com/orbit-collective/orbit/commit/3e4f880c224deca6b796c98c7d081537b98b605b))
+* **live:** refresh the Developer Portal live ([2070d32](https://github.com/orbit-collective/orbit/commit/2070d321d8a9e03d6c5349a729dd39f6659b5b9c))
+* **permissions:** add developer.portal.view permission ([ea5ba20](https://github.com/orbit-collective/orbit/commit/ea5ba20d917d8d028202ad89b0eee0bd32a68b6f))
+* **settings:** add developer portal settings tab ([75e38d1](https://github.com/orbit-collective/orbit/commit/75e38d12df159ba8774961d48f584ffcb4b82342))
+* **ui:** add AnimatedNumber that counts up and glides ([ba87550](https://github.com/orbit-collective/orbit/commit/ba87550cbb2d9f63e4fde874675d4d6d888691b0))
+* **ui:** add BarChartCard molecule ([2aa5ef2](https://github.com/orbit-collective/orbit/commit/2aa5ef2b6af66ce4f3af6ca2e76146a08bb58280))
+* **ui:** add DayBreakdownCard molecule ([e5f8181](https://github.com/orbit-collective/orbit/commit/e5f81819d2f4be14de084b60f54d2a4e49e90936))
+* **ui:** add PercentBarsCard molecule ([6e89bbb](https://github.com/orbit-collective/orbit/commit/6e89bbba51d5316b4b6d9b0ccde0c15341887610))
+* **ui:** add Reveal and let Collapse unmount while closed ([6243efe](https://github.com/orbit-collective/orbit/commit/6243efe4e4d217c341a9a4a781b27f921d3cb553))
+* **ui:** add shared motion tokens and a keyboard focus ring ([291dcfe](https://github.com/orbit-collective/orbit/commit/291dcfe22f4deb612bf33d07f911b3d666f6699f))
+* **ui:** add TrendBadge atom ([e2d3cf7](https://github.com/orbit-collective/orbit/commit/e2d3cf7831e727c1cc05067d2ed66ad19ae7cbb9))
+* **ui:** animate and make BarPlot keyboard friendly ([ffdc2fc](https://github.com/orbit-collective/orbit/commit/ffdc2fc5413a29934f3aef353362caa2b22288c7))
+* **ui:** animate folding with a shared Collapse ([364b912](https://github.com/orbit-collective/orbit/commit/364b9126fb70fcc0c9fa6a58655fc27d2a997b53))
+* **ui:** bring the day picker to life and make it keyboard friendly ([0198ba2](https://github.com/orbit-collective/orbit/commit/0198ba25120cb6e1ae1b96e9f2bc76aa23a3fa10))
+* **ui:** let Badge tooltips open upwards and show on focus ([f22ce4e](https://github.com/orbit-collective/orbit/commit/f22ce4e9f412c7dbe70b4a1484c7363c8352f091))
+* **ui:** let cards and panels collapse from their header ([d1b386a](https://github.com/orbit-collective/orbit/commit/d1b386a1bbd88135933dab82b7e528a42093840f))
+* **ui:** scroll and snap bars instead of squeezing them ([3dcc169](https://github.com/orbit-collective/orbit/commit/3dcc169c65d5907d3745298d5854c67a5db3bf6a))
+* **ui:** scroll and snap the day pills in a narrow card ([0d0ed0f](https://github.com/orbit-collective/orbit/commit/0d0ed0fc442c7f70c0c1e8852f92e4ca2c6512bc))
+* **ui:** show issue statuses with WorkflowStatusBadge ([6f4814d](https://github.com/orbit-collective/orbit/commit/6f4814d3fffd02880adccd073dff4116d3c6c472))
+
+
+### Bug Fixes
+
+* **developer:** bring the bars back and even out the stat cards ([4ea71e4](https://github.com/orbit-collective/orbit/commit/4ea71e477a06082699fcdbbd0c1abba2fdb55993))
+* **developer:** build page links from the current query string ([d04ceb6](https://github.com/orbit-collective/orbit/commit/d04ceb6c9418db6b062a03dc1166aaf507a62a96))
+* **developer:** decode whole docker log frames before trimming ([313969e](https://github.com/orbit-collective/orbit/commit/313969e690d83e8e6c389069d2aff08f11f1ae4e))
+* **developer:** keep both pagers in each other's links ([07ac78b](https://github.com/orbit-collective/orbit/commit/07ac78bba5ea3289dc89810f4340981c2c5812dd))
+* **developer:** make the portal lists responsive ([6c4c90a](https://github.com/orbit-collective/orbit/commit/6c4c90a74b8752c3407fd2d26d6502985efb65f9))
+* **developer:** make the projects list responsive ([b5e6ebf](https://github.com/orbit-collective/orbit/commit/b5e6ebf7a3a683153191b94804978c696e0d9628))
+* **live:** keep the Developer Portal in step with every change it shows ([62693ed](https://github.com/orbit-collective/orbit/commit/62693ed436874cef13a0ba993b731d6ebd09a84a))
+* **permissions:** retire cached access when the portal permission is rolled back ([52d42df](https://github.com/orbit-collective/orbit/commit/52d42dfa825e8d25b12745a5e8db6cc927177597))
+* **ui:** build translucent colours from theme variables ([dd823a0](https://github.com/orbit-collective/orbit/commit/dd823a0799bdceffad5868d4b499a057651e8224))
+* **ui:** flat-bottomed bars and a dot clear of the bar in BarPlot ([7c56cef](https://github.com/orbit-collective/orbit/commit/7c56cefa3dcc20c2cb9c33e324fa7706c06eddce))
+* **ui:** follow the newest day until one is picked ([d167b19](https://github.com/orbit-collective/orbit/commit/d167b19730034e5d37074a616ef215f18ea7c48e))
+* **ui:** keep hooks out of anonymous story render functions ([88fc4da](https://github.com/orbit-collective/orbit/commit/88fc4da4f0c555f903288375730962d800ff9526))
+* **ui:** keep the day pills together on wide cards ([eee1535](https://github.com/orbit-collective/orbit/commit/eee15352f4e06bb693130d4f34b1d4fab6214e99))
+* **ui:** repair chip colours, the marker animation and tiny bars ([f14b152](https://github.com/orbit-collective/orbit/commit/f14b152163f138f014b84e5ef15cedfe4b76c1bf))
+* **ui:** stop the day picker from scrolling the page ([131823f](https://github.com/orbit-collective/orbit/commit/131823fffb64fd62803b2471af4bae2e82b48666))
+
 ## [0.12.0](https://github.com/orbit-collective/orbit/compare/v0.11.5...v0.12.0) (2026-11-04)
 
 
