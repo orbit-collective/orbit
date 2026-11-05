@@ -6,6 +6,7 @@ use App\Models\ProjectUser;
 use App\Models\User;
 use App\Services\DeveloperPortal\DeveloperPortalAccessService;
 use App\Services\RoleService;
+use App\Support\Cache\CacheVersion;
 use Illuminate\Support\Facades\Process;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -116,4 +117,21 @@ test('the migration grants the permission to existing owner and admin roles only
     $migration->down();
 
     expect(Permission::where('key', 'developer.portal.view')->exists())->toBeFalse();
+});
+
+test('rolling the migration back retires cached access at once', function () {
+    config(['developer-portal.enabled' => true]);
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'admin');
+
+    // The admin's membership (and its permission list) is now cached.
+    expect(app(DeveloperPortalAccessService::class)->canAccess($user))->toBeTrue();
+    $before = CacheVersion::current(CacheVersion::MEMBERSHIP);
+
+    $migration = require database_path('migrations/2026_11_04_120000_add_developer_portal_permission.php');
+    $migration->down();
+
+    expect(CacheVersion::current(CacheVersion::MEMBERSHIP))->toBeGreaterThan($before)
+        ->and(app(DeveloperPortalAccessService::class)->canAccess($user))->toBeFalse();
 });

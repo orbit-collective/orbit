@@ -30,11 +30,7 @@ return new class extends Migration
                 'permission_id' => $permission->id,
             ]));
 
-        try {
-            CacheVersion::bump(CacheVersion::MEMBERSHIP);
-        } catch (Throwable) {
-            // The cache may be unreachable while migrating; entries age out via their TTL.
-        }
+        $this->retireCachedAccess();
     }
 
     public function down(): void
@@ -44,6 +40,19 @@ return new class extends Migration
         if ($id !== null) {
             DB::table('permission_role')->where('permission_id', $id)->delete();
             Permission::query()->whereKey($id)->delete();
+        }
+
+        // Cached memberships list the permissions each role grants: retire them
+        // so a rolled-back grant stops working at once, not after the TTL.
+        $this->retireCachedAccess();
+    }
+
+    private function retireCachedAccess(): void
+    {
+        try {
+            CacheVersion::bump(CacheVersion::MEMBERSHIP);
+        } catch (Throwable) {
+            // The cache may be unreachable while migrating; entries age out via their TTL.
         }
     }
 };
