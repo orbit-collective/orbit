@@ -162,7 +162,9 @@ describe('AccountSettingsProfileTab save state', () => {
             </AlertProvider>,
         );
 
-        expect(screen.getByText('Changes saved')).toBeVisible();
+        await waitFor(() =>
+            expect(screen.getByText('Changes saved')).toBeVisible(),
+        );
         expect(screen.queryByText('Unsaved changes')).not.toBeInTheDocument();
         expect(screen.queryByText('Saving...')).not.toBeInTheDocument();
     });
