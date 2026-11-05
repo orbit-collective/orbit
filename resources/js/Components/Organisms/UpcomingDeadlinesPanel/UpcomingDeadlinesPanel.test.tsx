@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { todoStatus, doneStatus } from '@/tests/statuses';
@@ -177,5 +177,27 @@ describe('UpcomingDeadlinesPanel Component', () => {
         await user.click(screen.getByRole('button'));
 
         expect(mockRouterVisit).toHaveBeenCalledWith('/issues.show/3/42');
+    });
+
+    test('the panel and its rows rise in and end up visible, the count included', async () => {
+        render(
+            <UpcomingDeadlinesPanel
+                issues={[
+                    makeIssue({
+                        id: '1',
+                        title: 'First',
+                        end_date: '2026-07-26',
+                    }),
+                    makeIssue({
+                        id: '2',
+                        title: 'Second',
+                        end_date: '2026-07-28',
+                    }),
+                ]}
+            />,
+        );
+
+        await waitFor(() => expect(screen.getByText('Second')).toBeVisible());
+        expect(screen.getByText('2', { selector: 'span' })).toBeInTheDocument();
     });
 });

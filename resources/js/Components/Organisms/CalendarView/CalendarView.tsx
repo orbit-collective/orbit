@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -7,6 +7,7 @@ import IssuePreviewCard from '@/Components/Molecules/IssuePreviewCard/IssuePrevi
 import { CalendarViewProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
+import { DURATION, EASE, SPRING } from '@/utils/motion';
 import { parseDateKey } from '@/utils/time';
 
 type ViewMode = 'month' | 'week';
@@ -184,7 +185,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
     const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+    // Which way the user is paging, so the title and the grid slide that way.
+    const [direction, setDirection] = useState<1 | -1>(1);
+
     const goNext = () => {
+        setDirection(1);
         if (viewMode === 'month') {
             setCurrentDate(new Date(year, month + 1, 1));
         } else {
@@ -197,6 +202,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     };
 
     const goPrev = () => {
+        setDirection(-1);
         if (viewMode === 'month') {
             setCurrentDate(new Date(year, month - 1, 1));
         } else {
@@ -244,9 +250,22 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         <div className="flex min-h-[600px] min-w-0 flex-1 flex-col p-6 xl:h-full xl:min-h-0">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
-                    <h2 className="text-2xl font-bold text-[var(--text-color)]">
-                        {headerLabel}
-                    </h2>
+                    <AnimatePresence mode="wait" initial={false}>
+                        <motion.h2
+                            key={`${viewMode}:${visibleDays[0]?.dateKey}`}
+                            data-testid="calendar-title"
+                            initial={{ opacity: 0, x: direction * 16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: direction * -16 }}
+                            transition={{
+                                duration: DURATION.fast,
+                                ease: EASE,
+                            }}
+                            className="text-2xl font-bold text-[var(--text-color)]"
+                        >
+                            {headerLabel}
+                        </motion.h2>
+                    </AnimatePresence>
                     <div className="flex items-center gap-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-light-color)] p-1">
                         <button
                             type="button"
@@ -294,14 +313,23 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                 key={mode}
                                 type="button"
                                 onClick={() => setViewMode(mode)}
+                                aria-pressed={viewMode === mode}
                                 className={cn(
-                                    'rounded-lg px-3 py-1 text-xs font-semibold capitalize transition-all',
+                                    'relative rounded-lg px-3 py-1 text-xs font-semibold capitalize transition-colors',
                                     viewMode === mode
-                                        ? 'bg-[var(--accent-color)] text-white'
+                                        ? 'text-white'
                                         : 'text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
                                 )}
                             >
-                                {mode}
+                                {viewMode === mode && (
+                                    <motion.span
+                                        layoutId="calendar-mode"
+                                        transition={SPRING}
+                                        aria-hidden="true"
+                                        className="absolute inset-0 rounded-lg bg-[var(--accent-color)]"
+                                    />
+                                )}
+                                <span className="relative">{mode}</span>
                             </button>
                         ))}
                     </div>
@@ -339,8 +367,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                             ).toDateString();
 
                         return (
-                            <div
-                                key={i}
+                            <motion.div
+                                key={dayObj.dateKey}
+                                data-testid="calendar-day"
+                                // A wave runs across the grid from the top left.
+                                initial={{ opacity: 0, scale: 0.96 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{
+                                    duration: DURATION.base,
+                                    ease: EASE,
+                                    delay: ((i % 7) + Math.floor(i / 7)) * 0.02,
+                                }}
                                 className={cn(
                                     'relative flex flex-col gap-1.5 border-b border-[var(--border-color)] p-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:border-r',
                                     viewMode === 'month'
@@ -420,7 +457,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                         </span>
                                     )}
                                 </div>
-                            </div>
+                            </motion.div>
                         );
                     })}
                 </div>
