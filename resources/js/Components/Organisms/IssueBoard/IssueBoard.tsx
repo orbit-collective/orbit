@@ -302,7 +302,7 @@ function IssueBoard({ issues }: IssueBoardProps) {
                     </div>
                 </div>
                 <div className="no-scrollbar flex flex-1 snap-x snap-mandatory gap-4 overflow-x-auto p-4 md:gap-5 md:p-6">
-                    {columns.map((column) => {
+                    {columns.map((column, columnIndex) => {
                         const columnIssues = grouped[column.id];
                         return (
                             <BoardColumn
@@ -310,6 +310,7 @@ function IssueBoard({ issues }: IssueBoardProps) {
                                 issues={columnIssues}
                                 meta={column}
                                 count={countFor(columnIssues)}
+                                index={columnIndex}
                             />
                         );
                     })}

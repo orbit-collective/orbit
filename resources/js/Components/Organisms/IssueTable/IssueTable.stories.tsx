@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, within, waitFor } from 'storybook/test';
 import { issueTypes, issues, project } from '@/stories/fixtures';
 import { IssueTable } from './IssueTable';
 
@@ -28,9 +28,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByText(issues[0].title),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByText(issues[0].title),
+            ).toBeVisible(),
+        );
     },
 };
 

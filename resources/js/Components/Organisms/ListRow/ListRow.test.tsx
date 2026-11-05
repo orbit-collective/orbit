@@ -1,4 +1,10 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import {
+    act,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -6,6 +12,7 @@ import { priorityFields } from '@/stories/fixtures';
 import { todoStatus } from '@/tests/statuses';
 import { Issue } from '@/types/Issues';
 import { DEFAULT_ENABLED_COLUMNS } from '@/utils/issueTableColumns';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import { ListRow } from './ListRow';
 
 const makeIssue = (overrides: Partial<Issue> = {}): Issue => ({
@@ -665,5 +672,25 @@ describe('ListRow inline editing', () => {
         fireEvent.click(screen.getByText(/3 Nov 2026/));
 
         expect(onClick).toHaveBeenCalledTimes(2);
+    });
+
+    test('the row rises in and ends up visible, later rows a little later', async () => {
+        renderRow({ index: 3 });
+
+        const row = screen
+            .getByText('Fix the login page')
+            .closest('tr') as HTMLElement;
+        await waitFor(() => expect(row).toBeVisible());
+    });
+
+    test('a refresh remounts the row so it rises in again', async () => {
+        renderRow({});
+        const before = screen.getByText('Fix the login page').closest('tr');
+
+        act(() => bumpRefreshEpoch());
+
+        const after = screen.getByText('Fix the login page').closest('tr');
+        expect(after).not.toBe(before);
+        await waitFor(() => expect(after).toBeVisible());
     });
 });

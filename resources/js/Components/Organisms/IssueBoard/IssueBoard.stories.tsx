@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, within, waitFor } from 'storybook/test';
 import { issues, priorityFields } from '@/stories/fixtures';
 import IssueBoard from './IssueBoard';
 
@@ -30,9 +30,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByRole('heading', { name: 'High' }),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByRole('heading', { name: 'High' }),
+            ).toBeVisible(),
+        );
     },
 };
 
@@ -40,7 +42,9 @@ export const GroupedByStatus: Story = {
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
         await userEvent.click(canvas.getByRole('button', { name: 'Status' }));
-        await expect(canvas.getByText('In Progress')).toBeVisible();
+        await waitFor(() =>
+            expect(canvas.getByText('In Progress')).toBeVisible(),
+        );
     },
 };
 

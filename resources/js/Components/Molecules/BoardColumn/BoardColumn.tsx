@@ -1,21 +1,34 @@
 import { useDroppable } from '@dnd-kit/core';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueElement from '@/Components/Molecules/IssueElement/IssueElement';
 import { BoardColumnProps } from '@/types/Components';
 import { WorkflowStatusCategory } from '@/types/Workflow';
+import { DURATION, EASE, SPRING, STAGGER } from '@/utils/motion';
+import { useRefreshEpoch } from '@/utils/refreshEpoch';
 
 /** A priority column carries its own color; a status column maps onto a badge variant by its id. */
 const isPriorityColumn = (id: string) => id.startsWith('priority-');
 
-function BoardColumn({ issues, meta, count }: BoardColumnProps) {
+function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
     const { setNodeRef, isOver } = useDroppable({ id: meta.id });
+    // A refresh remounts the column so it rises in again with its cards.
+    const epoch = useRefreshEpoch();
     const priorityColumn = isPriorityColumn(meta.id);
 
     return (
-        <div
+        <motion.div
+            key={epoch}
             ref={setNodeRef}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+                duration: DURATION.base,
+                ease: EASE,
+                delay: index * STAGGER,
+            }}
             className="flex h-full w-[calc(100vw-3.5rem)] flex-shrink-0 snap-center flex-col overflow-hidden rounded-2xl border transition-colors duration-150 sm:w-[336px]"
             style={{
                 borderColor: isOver
@@ -35,15 +48,21 @@ function BoardColumn({ issues, meta, count }: BoardColumnProps) {
             >
                 <div className={'flex w-full items-center justify-between'}>
                     <div className={'flex items-center gap-3'}>
-                        <div
+                        <motion.div
                             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
                             style={{
                                 color: meta.accent,
                                 backgroundColor: `${meta.accent}1f`,
                             }}
+                            initial={{ scale: 0.5, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{
+                                ...SPRING,
+                                delay: 0.15 + index * STAGGER,
+                            }}
                         >
                             <Icon name={meta.icon} size={17} />
-                        </div>
+                        </motion.div>
                         <div className="min-w-0">
                             <h3 className="truncate text-[13px] font-semibold leading-tight text-[var(--text-color)]">
                                 {meta.label}
@@ -71,7 +90,7 @@ function BoardColumn({ issues, meta, count }: BoardColumnProps) {
                         variant="default"
                         className="ml-auto shrink-0 rounded-full font-semibold tabular-nums"
                     >
-                        {count}
+                        <AnimatedNumber value={count} />
                     </Badge>
                 </div>
             </div>
@@ -87,17 +106,18 @@ function BoardColumn({ issues, meta, count }: BoardColumnProps) {
             ) : (
                 <div className="no-scrollbar flex flex-1 select-none flex-col gap-2.5 overflow-y-auto p-3">
                     <AnimatePresence initial={false}>
-                        {issues.map((issue) => (
+                        {issues.map((issue, cardIndex) => (
                             <IssueElement
                                 key={issue.id}
                                 issue={issue}
                                 type="board"
+                                index={cardIndex + index}
                             />
                         ))}
                     </AnimatePresence>
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 }
 

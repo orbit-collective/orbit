@@ -16,6 +16,7 @@ export const IssueElement = ({
     isCollapsed,
     onToggleCollapse,
     editing,
+    index,
 }: IssueElementProps) => {
     const removeIssue = (issue: Issue) => {
         router.delete(route('issues.destroy', issue.id));
@@ -30,7 +31,7 @@ export const IssueElement = ({
     };
 
     return type === 'board' ? (
-        <BoardCard {...props} />
+        <BoardCard {...props} index={index} />
     ) : (
         <ListRow
             {...props}
@@ -42,6 +43,7 @@ export const IssueElement = ({
             isCollapsed={isCollapsed}
             onToggleCollapse={onToggleCollapse}
             editing={editing}
+            index={index}
         />
     );
 };
