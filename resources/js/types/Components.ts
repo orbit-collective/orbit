@@ -970,3 +970,10 @@ export interface CollapseAllButtonProps {
     allCollapsed: boolean;
     onToggle: () => void;
 }
+
+export interface RowRevealProps {
+    /** Position in its list; later rows start a little later (capped). */
+    index?: number;
+    className?: string;
+    children: React.ReactNode;
+}
