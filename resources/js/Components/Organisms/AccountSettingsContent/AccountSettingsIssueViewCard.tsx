@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import SelectionHighlight from '@/Components/Atoms/SelectionHighlight/SelectionHighlight';
 import {
     PreviewBar,
     PreviewBlock,
@@ -17,6 +18,8 @@ interface AccountSettingsIssueViewCardProps {
     icon: keyof typeof icons;
     description: string;
     selected: boolean;
+    /** Cards of one choice share it, so the highlight glides between them. */
+    groupId?: string;
     onSelect: () => void;
 }
 
@@ -214,6 +217,7 @@ export default function AccountSettingsIssueViewCard({
     icon,
     description,
     selected,
+    groupId,
     onSelect,
 }: AccountSettingsIssueViewCardProps) {
     // The mock-up draws once on load and again each time this card is picked.
@@ -224,30 +228,29 @@ export default function AccountSettingsIssueViewCard({
             type="button"
             onClick={onSelect}
             {...liftProps}
-            className={`rounded-xl border p-3 text-left transition-colors ${
-                selected
-                    ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
-                    : 'border-[var(--border-color)] bg-[var(--surface-color)] hover:border-[var(--border-color-strong)]'
-            }`}
+            className="relative rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-3 text-left transition-colors hover:border-[var(--border-color-strong)]"
         >
-            <div className="mb-2.5 flex items-center gap-2">
-                <span
-                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
-                        selected
-                            ? 'bg-[var(--accent-color)]/20 text-[var(--accent-color)]'
-                            : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)]'
-                    }`}
-                >
-                    <Icon name={icon} size={14} />
-                </span>
-                <p className="text-sm font-medium text-[var(--text-color)]">
-                    {view}
+            {selected && <SelectionHighlight layoutId={groupId} />}
+            <div className="relative">
+                <div className="mb-2.5 flex items-center gap-2">
+                    <span
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
+                            selected
+                                ? 'bg-[var(--accent-color)]/20 text-[var(--accent-color)]'
+                                : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)]'
+                        }`}
+                    >
+                        <Icon name={icon} size={14} />
+                    </span>
+                    <p className="text-sm font-medium text-[var(--text-color)]">
+                        {view}
+                    </p>
+                </div>
+                <p className="mb-3 text-xs leading-5 text-[var(--text-muted-color)]">
+                    {description}
                 </p>
+                <IssueViewPreview view={view} playKey={playKey} />
             </div>
-            <p className="mb-3 text-xs leading-5 text-[var(--text-muted-color)]">
-                {description}
-            </p>
-            <IssueViewPreview view={view} playKey={playKey} />
         </motion.button>
     );
 }

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
@@ -76,8 +76,12 @@ describe('AccountSettingsSecurityTab', () => {
         mockUser.session_lifetime = 1440;
         renderTab();
 
-        const selected = screen.getByText('24 hours').closest('button');
-        expect(selected).toHaveClass('border-[var(--accent-color)]');
+        const selected = screen.getByText('24 hours').closest('button')!;
+        expect(
+            within(selected).getByTestId('selection-highlight'),
+        ).toBeInTheDocument();
+        // Only the chosen option carries the highlight.
+        expect(screen.getAllByTestId('selection-highlight')).toHaveLength(1);
     });
 
     test('selecting a different session expiry persists it and shows a success alert', async () => {
