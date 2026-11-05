@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { ProductivityTrendProps } from '@/types/Issues';
 import { ProductivityTrendCard } from './ProductivityTrendCard';
@@ -48,8 +48,8 @@ describe('ProductivityTrendCard Component', () => {
         // max count is 4, which rounds up to a nice axis max of 4 => Mon 100%, Tue 50%.
         // The height is set on each bar's wrapper (which also anchors its tooltip).
         expect(bars).toHaveLength(2);
-        expect(bars[0].parentElement).toHaveStyle({ height: '100%' });
-        expect(bars[1].parentElement).toHaveStyle({ height: '50%' });
+        expect(bars[0].parentElement).toHaveAttribute('data-height', '100%');
+        expect(bars[1].parentElement).toHaveAttribute('data-height', '50%');
     });
 
     test('renders a hollow dashed marker instead of an invisible bar for a zero-count day', () => {
@@ -77,10 +77,16 @@ describe('ProductivityTrendCard Component', () => {
         // short, fixed-height wrapper so its tooltip floats near the baseline.
         const tooltips = container.querySelectorAll('.scale-0');
         expect(tooltips[0]).toHaveTextContent('4');
-        expect(tooltips[0].parentElement).toHaveStyle({ height: '100%' });
+        expect(tooltips[0].parentElement).toHaveAttribute(
+            'data-height',
+            '100%',
+        );
 
         expect(tooltips[2]).toHaveTextContent('0');
-        expect(tooltips[2].parentElement).toHaveStyle({ height: '10px' });
+        expect(tooltips[2].parentElement).toHaveAttribute(
+            'data-height',
+            '10px',
+        );
     });
 
     test('highlights the bar for the current day of the week', () => {
@@ -122,5 +128,39 @@ describe('ProductivityTrendCard Component', () => {
             screen.getByText('No activity yet this week'),
         ).toBeInTheDocument();
         expect(container.querySelectorAll('.rounded-t-sm')).toHaveLength(0);
+    });
+
+    test('every day column grows in, the baseline marker included', () => {
+        const { container } = render(
+            <ProductivityTrendCard trendData={trendData} />,
+        );
+
+        const columns = container.querySelectorAll<HTMLElement>(
+            '[data-testid="trend-column"]',
+        );
+        expect(columns).toHaveLength(trendData.length);
+        expect(
+            Array.from(columns).map((column) => column.dataset.height),
+        ).toEqual(['100%', '50%', '10px']);
+    });
+
+    test('a column takes its new height when the data changes', () => {
+        const { container, rerender } = render(
+            <ProductivityTrendCard trendData={trendData} />,
+        );
+
+        rerender(
+            <ProductivityTrendCard
+                trendData={trendData.map((day) => ({
+                    ...day,
+                    count: day.count === 4 ? 4 : 1,
+                }))}
+            />,
+        );
+
+        const columns = container.querySelectorAll<HTMLElement>(
+            '[data-testid="trend-column"]',
+        );
+        expect(columns[1].dataset.height).toBe('25%');
     });
 });

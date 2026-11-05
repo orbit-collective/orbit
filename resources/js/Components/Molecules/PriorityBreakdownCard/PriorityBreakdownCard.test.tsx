@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import { PriorityBreakdownCard } from './PriorityBreakdownCard';
 
@@ -67,11 +67,10 @@ describe('PriorityBreakdownCard Component', () => {
         const high = container.querySelector('[title="High: 30%"]');
         const urgent = container.querySelector('[title="Urgent: 20%"]');
 
-        expect(high).toHaveStyle({ width: '30%', backgroundColor: '#f44336' });
-        expect(urgent).toHaveStyle({
-            width: '20%',
-            backgroundColor: '#9c27b0',
-        });
+        expect(high).toHaveAttribute('data-width-percent', '30');
+        expect(high).toHaveStyle({ backgroundColor: '#f44336' });
+        expect(urgent).toHaveAttribute('data-width-percent', '20');
+        expect(urgent).toHaveStyle({ backgroundColor: '#9c27b0' });
     });
 
     test('adds a "No priority" row only when some issues have none', () => {
@@ -98,5 +97,39 @@ describe('PriorityBreakdownCard Component', () => {
         );
 
         expect(screen.getByText('No issues yet')).toBeInTheDocument();
+    });
+
+    test('the segments grow in and the rows rise in until everything is visible', async () => {
+        const { container } = render(
+            <PriorityBreakdownCard {...defaultProps} />,
+        );
+
+        const segments = container.querySelectorAll(
+            '[data-testid="priority-segment"]',
+        );
+        expect(segments.length).toBeGreaterThan(0);
+        await waitFor(() => expect(screen.getByText('High')).toBeVisible());
+        segments.forEach((segment) =>
+            expect(segment).toHaveAttribute('data-width-percent'),
+        );
+    });
+
+    test('the counts follow new data', async () => {
+        const { rerender } = render(
+            <PriorityBreakdownCard {...defaultProps} />,
+        );
+
+        rerender(
+            <PriorityBreakdownCard
+                {...defaultProps}
+                noPriority={9}
+                total={defaultProps.total + 9}
+            />,
+        );
+
+        expect(await screen.findByText('No priority')).toBeInTheDocument();
+        await waitFor(() =>
+            expect(screen.getByText('(47%)')).toBeInTheDocument(),
+        );
     });
 });
