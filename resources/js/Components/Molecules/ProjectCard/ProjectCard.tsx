@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { FC } from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { useCommandPalette } from '@/context/CommandContext';
 import { ProjectCardProps } from '@/types/Components';
@@ -75,7 +76,10 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
                         bgColorClass="stroke-[var(--bg-light-color)]"
                     />
                     <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--text-color)]">
-                        {completionRate}%
+                        <AnimatedNumber
+                            value={completionRate}
+                            format={(n) => `${Math.round(n)}%`}
+                        />
                     </span>
                 </div>
 

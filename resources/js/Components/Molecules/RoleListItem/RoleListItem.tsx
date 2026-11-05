@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProgressRing from '@/Components/Atoms/ProgressRing/ProgressRing';
 import { WorkspaceRole } from '@/types/Roles';
@@ -74,7 +75,7 @@ export default function RoleListItem({
                         )}
                     </div>
                     <p className="truncate text-[11px] text-[var(--text-gray-color)]">
-                        {role.memberCount}{' '}
+                        <AnimatedNumber value={role.memberCount} />{' '}
                         {role.memberCount === 1 ? 'member' : 'members'}
                     </p>
                 </div>
@@ -92,7 +93,7 @@ export default function RoleListItem({
                             bgColorClass="stroke-[var(--bg-light-color)]"
                         />
                         <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--text-color)]">
-                            {ratio}
+                            <AnimatedNumber value={ratio} />
                         </span>
                     </div>
                     <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--text-gray-color)]">

@@ -1,6 +1,12 @@
+import { motion } from 'framer-motion';
 import React from 'react';
 import { ProgressRingProps } from '@/types/Components';
+import { DURATION, EASE } from '@/utils/motion';
 
+/**
+ * A ring that draws itself to its value when it appears and sweeps to every
+ * new value after, with the shared timing.
+ */
 const ProgressRing: React.FC<ProgressRingProps> = ({
     radius = 18,
     stroke = 3,
@@ -25,11 +31,15 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
                 cx={radius}
                 cy={radius}
             />
-            <circle
-                className={`${colorClass} fill-transparent transition-[stroke-dashoffset] duration-500 ease-out`}
+            <motion.circle
+                data-testid="progress-arc"
+                data-progress={progress}
+                className={`${colorClass} fill-transparent`}
                 strokeWidth={stroke}
                 strokeDasharray={circumference + ' ' + circumference}
-                style={{ strokeDashoffset }}
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset }}
+                transition={{ duration: DURATION.slow, ease: EASE }}
                 r={normalizedRadius}
                 cx={radius}
                 cy={radius}
