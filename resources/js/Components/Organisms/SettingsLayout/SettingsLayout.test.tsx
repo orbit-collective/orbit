@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsLayout from './SettingsLayout';
 
 vi.mock('@/Components/Organisms/Sidebar/Sidebar', () => ({
@@ -70,5 +71,122 @@ describe('SettingsLayout', () => {
         );
 
         expect(container.querySelector('.max-w-3xl')).not.toBeInTheDocument();
+    });
+
+    describe('foldable panels', () => {
+        beforeEach(() => localStorage.clear());
+
+        const twoPanels = (
+            <>
+                <SettingsPanel id="one" title="One" icon="Tag">
+                    <p>first body</p>
+                </SettingsPanel>
+                <SettingsPanel id="two" title="Two" icon="Tag">
+                    <p>second body</p>
+                </SettingsPanel>
+            </>
+        );
+
+        test('offers Collapse all once two panels can fold, and folds them all', async () => {
+            render(<SettingsLayout tabId="labels">{twoPanels}</SettingsLayout>);
+
+            fireEvent.click(
+                await screen.findByRole('button', { name: 'Collapse all' }),
+            );
+
+            expect(screen.getByRole('button', { name: /One/ })).toHaveAttribute(
+                'aria-expanded',
+                'false',
+            );
+            expect(screen.getByRole('button', { name: /Two/ })).toHaveAttribute(
+                'aria-expanded',
+                'false',
+            );
+
+            fireEvent.click(
+                await screen.findByRole('button', { name: 'Expand all' }),
+            );
+            expect(screen.getByRole('button', { name: /One/ })).toHaveAttribute(
+                'aria-expanded',
+                'true',
+            );
+        });
+
+        test('a single foldable panel does not need Collapse all', () => {
+            render(
+                <SettingsLayout tabId="labels">
+                    <SettingsPanel id="only" title="Only" icon="Tag">
+                        <p>body</p>
+                    </SettingsPanel>
+                </SettingsLayout>,
+            );
+
+            expect(
+                screen.queryByRole('button', { name: /all/i }),
+            ).not.toBeInTheDocument();
+        });
+
+        test('panels without an id never count', () => {
+            render(
+                <SettingsLayout tabId="labels">
+                    <SettingsPanel title="A">
+                        <p>a</p>
+                    </SettingsPanel>
+                    <SettingsPanel title="B">
+                        <p>b</p>
+                    </SettingsPanel>
+                </SettingsLayout>,
+            );
+
+            expect(
+                screen.queryByRole('button', { name: /all/i }),
+            ).not.toBeInTheDocument();
+        });
+
+        test('a full-bleed tab has no Collapse all', () => {
+            render(
+                <SettingsLayout tabId="labels" fullBleed>
+                    {twoPanels}
+                </SettingsLayout>,
+            );
+
+            expect(
+                screen.queryByRole('button', { name: /all/i }),
+            ).not.toBeInTheDocument();
+        });
+
+        test('each tab remembers its panels separately', () => {
+            const first = render(
+                <SettingsLayout tabId="labels">{twoPanels}</SettingsLayout>,
+            );
+            fireEvent.click(screen.getByRole('button', { name: /One/ }));
+            first.unmount();
+
+            render(
+                <SettingsLayout tabId="priorities">{twoPanels}</SettingsLayout>,
+            );
+            expect(screen.getByRole('button', { name: /One/ })).toHaveAttribute(
+                'aria-expanded',
+                'true',
+            );
+
+            render(<SettingsLayout tabId="labels">{twoPanels}</SettingsLayout>);
+            expect(
+                screen.getAllByRole('button', { name: /One/ })[1],
+            ).toHaveAttribute('aria-expanded', 'false');
+        });
+    });
+
+    test('the heading and the content end up visible after the entrance', async () => {
+        render(
+            <SettingsLayout tabId="labels">
+                <p>Tab body</p>
+            </SettingsLayout>,
+        );
+
+        expect(
+            await screen.findByRole('heading', { name: 'Labels', level: 1 }),
+        ).toBeVisible();
+        expect(screen.getByText('Tab body')).toBeVisible();
     });
 });
