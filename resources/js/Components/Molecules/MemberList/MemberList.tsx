@@ -37,7 +37,7 @@ export default function MemberList({
     return (
         <>
             <TeamAvatarStack members={members} />
-            {members.map((member) => {
+            {members.map((member, index) => {
                 const isOwner = member.role === 'owner';
                 const canChangeRole = canUpdateRoles && !isOwner;
                 const canRemove = canRemoveMembers && !isOwner;
@@ -45,7 +45,7 @@ export default function MemberList({
                     canChangeRole || assignableRoles.length > 0;
 
                 return (
-                    <MemberRow key={member.id} member={member}>
+                    <MemberRow key={member.id} member={member} index={index}>
                         {hasRoleControl ? (
                             <MemberRoleDropdown
                                 role={member.role}
