@@ -25,6 +25,8 @@ Settings → Developer Portal to strona diagnostyczna na lokalne środowisko dew
 - **W testach animacje przeskakują do stanu końcowego** (`MotionGlobalConfig.skipAnimations` w `resources/js/tests/setup.ts`), ale stan zmieniany przez animację (podmieniana etykieta, odmontowywana treść) ustala się dopiero w następnej klatce: asercje rób przez `findBy…`/`waitFor`.
 - **Klawiatura:** `FOCUS_RING` / `FOCUS_RING_INSET` (`utils/focusRing.ts`) dają każdej kontrolce to samo podświetlenie TAB (wariant inset dla pełnoszerokich wierszy w przyciętych panelach). Słupki wykresu są fokusowalnymi obrazami, a ich tooltip to wspólny tooltip `Badge` (`tooltipPlacement="top"`), otwierany po najechaniu i po fokusie. Wybór dnia zostawia każdą pigułkę w kolejności TAB i dodaje strzałki, Home i End; przewijalne obszary logów i stack trace są fokusowalne, żeby dało się je przewijać klawiaturą.
 
+- **Kolory motywu z przezroczystością:** Tailwind 3 nie potrafi nałożyć modyfikatora przezroczystości na kolor z `var()` (`bg-[var(--success-color)]/10` nic nie generuje), a wpisanie hex na sztywno psuje jasny motyw. Użyj odcieni `color-mix` z `resources/js/utils/tints.ts` albo `var(--accent-color)` dla fioletu.
+
 ## Dostęp do Dockera
 
 Uptime kontenerów jest czytany z Docker Engine API przez gniazdo Unix (`developer-portal.docker.socket`, domyślnie `/var/run/docker.sock`), a lista obejmuje wyłącznie kontenery z etykietą `com.docker.compose.project=<developer-portal.docker.project>` (domyślnie `orbit`). Usługa `app` potrzebuje więc gniazda zamontowanego tylko do odczytu:

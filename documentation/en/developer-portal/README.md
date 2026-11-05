@@ -75,6 +75,11 @@ stale; `useDeveloperPortalLive` re-reads only those.
   Home and End; scrollable log and trace areas are focusable so they can be
   scrolled with the keyboard.
 
+- **Theme colours with opacity:** Tailwind 3 cannot put an opacity modifier on a
+  `var()` colour (`bg-[var(--success-color)]/10` generates nothing), and
+  hardcoding the hex breaks the light theme. Use the `color-mix` tints in
+  `resources/js/utils/tints.ts`, or `var(--accent-color)` for the purple.
+
 ## Docker access
 
 Container uptime is read from the Docker Engine API through the Unix socket

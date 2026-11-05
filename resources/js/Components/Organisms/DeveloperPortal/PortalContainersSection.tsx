@@ -11,6 +11,12 @@ import { PortalContainer, PortalContainers } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
 import { rowIn, rowDelay } from '@/utils/motion';
+import {
+    ERROR_TINT,
+    ERROR_TINT_BORDER,
+    SUCCESS_TINT,
+    SUCCESS_TINT_BORDER,
+} from '@/utils/tints';
 import { containerUptimeSeconds, formatUptime } from '@/utils/uptime';
 import ContainerLogs from './ContainerLogs';
 
@@ -255,14 +261,26 @@ export default function PortalContainersSection({
                 })}
                 summary={
                     <>
-                        <Badge className="gap-1.5 border-[#4caf50]/20 bg-[#4caf50]/10 px-2.5 py-1 text-xs text-[var(--success-color)]">
+                        <Badge
+                            className={cn(
+                                'gap-1.5 px-2.5 py-1 text-xs text-[var(--success-color)]',
+                                SUCCESS_TINT,
+                                SUCCESS_TINT_BORDER,
+                            )}
+                        >
                             Running
                             <strong>
                                 {running.length}/{containers.containers.length}
                             </strong>
                         </Badge>
                         {containers.containers.length > running.length && (
-                            <Badge className="gap-1.5 border-[#f44336]/20 bg-[#f44336]/10 px-2.5 py-1 text-xs text-[var(--error-color)]">
+                            <Badge
+                                className={cn(
+                                    'gap-1.5 px-2.5 py-1 text-xs text-[var(--error-color)]',
+                                    ERROR_TINT,
+                                    ERROR_TINT_BORDER,
+                                )}
+                            >
                                 <Icon name="CircleAlert" size={12} />
                                 {containers.containers.length -
                                     running.length}{' '}
