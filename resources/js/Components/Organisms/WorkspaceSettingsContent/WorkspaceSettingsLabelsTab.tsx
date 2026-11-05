@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import { useState } from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -12,6 +14,7 @@ import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useAlert } from '@/context/AlertContext';
 import { ProjectLabel } from '@/types/Labels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
+import { riseIn } from '@/utils/motion';
 import WorkspaceSettingsDeleteLabelModal from './WorkspaceSettingsDeleteLabelModal';
 import WorkspaceSettingsLabelInlineEditor from './WorkspaceSettingsLabelInlineEditor';
 
@@ -157,27 +160,33 @@ export default function WorkspaceSettingsLabelsTab({
     return (
         <div className="space-y-5">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <StatCard
-                    variant="vivid"
-                    title="Total labels"
-                    value={labels.length}
-                    icon="Tag"
-                    color="accent"
-                />
-                <StatCard
-                    variant="vivid"
-                    title="Custom labels"
-                    value={customCount}
-                    icon="Sparkles"
-                    color="info"
-                />
-                <StatCard
-                    variant="vivid"
-                    title="System labels"
-                    value={systemCount}
-                    icon="ShieldCheck"
-                    color="warning"
-                />
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="Total labels"
+                        value={<AnimatedNumber value={labels.length} />}
+                        icon="Tag"
+                        color="accent"
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="Custom labels"
+                        value={<AnimatedNumber value={customCount} />}
+                        icon="Sparkles"
+                        color="info"
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="System labels"
+                        value={<AnimatedNumber value={systemCount} />}
+                        icon="ShieldCheck"
+                        color="warning"
+                    />
+                </motion.div>
             </div>
 
             <ProjectPickerPanel

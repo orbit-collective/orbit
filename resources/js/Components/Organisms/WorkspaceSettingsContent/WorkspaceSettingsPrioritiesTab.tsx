@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import { useState } from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -12,6 +14,7 @@ import StatCard from '@/Components/Molecules/StatCard/StatCard';
 import { useAlert } from '@/context/AlertContext';
 import { SettingsPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
+import { riseIn } from '@/utils/motion';
 import WorkspaceSettingsDeletePriorityModal from './WorkspaceSettingsDeletePriorityModal';
 import WorkspaceSettingsPriorityInlineEditor, {
     PriorityFormValues,
@@ -197,27 +200,33 @@ export default function WorkspaceSettingsPrioritiesTab({
     return (
         <div className="space-y-5">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <StatCard
-                    variant="vivid"
-                    title="Priority levels"
-                    value={priorities.length}
-                    icon="Flag"
-                    color="accent"
-                />
-                <StatCard
-                    variant="vivid"
-                    title="Issues prioritised"
-                    value={issueCount}
-                    icon="ListChecks"
-                    color="info"
-                />
-                <StatCard
-                    variant="vivid"
-                    title="Default for new issues"
-                    value={defaultPriority?.name ?? 'None'}
-                    icon="Star"
-                    color="warning"
-                />
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="Priority levels"
+                        value={<AnimatedNumber value={priorities.length} />}
+                        icon="Flag"
+                        color="accent"
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="Issues prioritised"
+                        value={<AnimatedNumber value={issueCount} />}
+                        icon="ListChecks"
+                        color="info"
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        variant="vivid"
+                        title="Default for new issues"
+                        value={defaultPriority?.name ?? 'None'}
+                        icon="Star"
+                        color="warning"
+                    />
+                </motion.div>
             </div>
 
             <ProjectPickerPanel

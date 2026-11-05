@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
@@ -425,5 +425,27 @@ describe('WorkspaceSettingsIssueTypesTab editors', () => {
         expect(
             await screen.findByPlaceholderText('Issue type name'),
         ).toBeVisible();
+    });
+});
+
+describe('WorkspaceSettingsIssueTypesTab stat cards', () => {
+    test('rise in and count to the type totals', async () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsIssueTypesTab
+                    memberProjects={[project]}
+                    selectedProjectId={1}
+                    issueTypes={issueTypes}
+                    hasIssueTypesAccess
+                />
+            </AlertProvider>,
+        );
+
+        const total = screen
+            .getByText('Total issue types')
+            .closest('div[class*="rounded-"]') as HTMLElement;
+        await waitFor(() =>
+            expect(total).toHaveTextContent(String(issueTypes.length)),
+        );
     });
 });
