@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
+import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import AddRowButton from '@/Components/Molecules/AddRowButton/AddRowButton';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
@@ -235,14 +236,15 @@ export default function WorkspaceSettingsPrioritiesTab({
             >
                 {priorities.map((priority, index) =>
                     editorTarget === String(priority.id) ? (
-                        <WorkspaceSettingsPriorityInlineEditor
-                            key={priority.id}
-                            priority={priority}
-                            errors={errors}
-                            saving={saving}
-                            onSave={handleSave}
-                            onCancel={closeEditor}
-                        />
+                        <Reveal key={priority.id}>
+                            <WorkspaceSettingsPriorityInlineEditor
+                                priority={priority}
+                                errors={errors}
+                                saving={saving}
+                                onSave={handleSave}
+                                onCancel={closeEditor}
+                            />
+                        </Reveal>
                     ) : (
                         <RowReveal
                             key={priority.id}
@@ -337,14 +339,15 @@ export default function WorkspaceSettingsPrioritiesTab({
                 )}
 
                 {editorTarget === NEW_PRIORITY_EDITOR_TARGET ? (
-                    <WorkspaceSettingsPriorityInlineEditor
-                        key={NEW_PRIORITY_EDITOR_TARGET}
-                        priority={null}
-                        errors={errors}
-                        saving={saving}
-                        onSave={handleSave}
-                        onCancel={closeEditor}
-                    />
+                    <Reveal key={NEW_PRIORITY_EDITOR_TARGET}>
+                        <WorkspaceSettingsPriorityInlineEditor
+                            priority={null}
+                            errors={errors}
+                            saving={saving}
+                            onSave={handleSave}
+                            onCancel={closeEditor}
+                        />
+                    </Reveal>
                 ) : (
                     canCreatePriorities && (
                         <AddRowButton

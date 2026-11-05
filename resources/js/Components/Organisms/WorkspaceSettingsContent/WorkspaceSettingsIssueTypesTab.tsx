@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { icons } from 'lucide-react';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import AddRowButton from '@/Components/Molecules/AddRowButton/AddRowButton';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
@@ -228,12 +229,13 @@ export default function WorkspaceSettingsIssueTypesTab({
                 {issueTypes.map((issueType, index) => {
                     if (editorTarget === String(issueType.id)) {
                         return (
-                            <WorkspaceSettingsIssueTypeInlineEditor
-                                key={issueType.id}
-                                issueType={issueType}
-                                onSave={handleSaveIssueType}
-                                onCancel={() => setEditorTarget(null)}
-                            />
+                            <Reveal key={issueType.id}>
+                                <WorkspaceSettingsIssueTypeInlineEditor
+                                    issueType={issueType}
+                                    onSave={handleSaveIssueType}
+                                    onCancel={() => setEditorTarget(null)}
+                                />
+                            </Reveal>
                         );
                     }
 
@@ -366,12 +368,13 @@ export default function WorkspaceSettingsIssueTypesTab({
                 })}
 
                 {editorTarget === NEW_ISSUE_TYPE_EDITOR_TARGET ? (
-                    <WorkspaceSettingsIssueTypeInlineEditor
-                        key={NEW_ISSUE_TYPE_EDITOR_TARGET}
-                        issueType={null}
-                        onSave={handleSaveIssueType}
-                        onCancel={() => setEditorTarget(null)}
-                    />
+                    <Reveal key={NEW_ISSUE_TYPE_EDITOR_TARGET}>
+                        <WorkspaceSettingsIssueTypeInlineEditor
+                            issueType={null}
+                            onSave={handleSaveIssueType}
+                            onCancel={() => setEditorTarget(null)}
+                        />
+                    </Reveal>
                 ) : (
                     canCreateIssueTypes && (
                         <AddRowButton

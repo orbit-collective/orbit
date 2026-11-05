@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
@@ -141,5 +141,32 @@ describe('WorkspaceSettingsLabelsTab panels', () => {
         inPage();
 
         expect(await screen.findByText('bug')).toBeVisible();
+    });
+});
+
+describe('WorkspaceSettingsLabelsTab editors', () => {
+    test('the new-label editor rises in and ends up visible', async () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsLabelsTab
+                    memberProjects={[project]}
+                    selectedProjectId={1}
+                    labels={labels}
+                    hasLabelsAccess
+                    canCreateLabels
+                    canUpdateLabels
+                />
+            </AlertProvider>,
+        );
+
+        fireEvent.click(screen.getByText('Add label'));
+        expect(await screen.findByPlaceholderText('Label name')).toBeVisible();
+
+        fireEvent.click(screen.getByTitle('Edit label'));
+        await waitFor(() =>
+            expect(
+                screen.getAllByPlaceholderText('Label name')[0],
+            ).toBeVisible(),
+        );
     });
 });

@@ -405,3 +405,25 @@ describe('WorkspaceSettingsIssueTypesTab panels', () => {
         expect(await screen.findByText(issueTypes[0].name)).toBeVisible();
     });
 });
+
+describe('WorkspaceSettingsIssueTypesTab editors', () => {
+    test('the new-type editor rises in and ends up visible', async () => {
+        render(
+            <AlertProvider>
+                <WorkspaceSettingsIssueTypesTab
+                    memberProjects={[project]}
+                    selectedProjectId={1}
+                    issueTypes={issueTypes}
+                    hasIssueTypesAccess
+                    canCreateIssueTypes
+                />
+            </AlertProvider>,
+        );
+
+        fireEvent.click(screen.getByText('Add issue type'));
+
+        expect(
+            await screen.findByPlaceholderText('Issue type name'),
+        ).toBeVisible();
+    });
+});

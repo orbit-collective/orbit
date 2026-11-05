@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import AddRowButton from '@/Components/Molecules/AddRowButton/AddRowButton';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
@@ -211,12 +212,13 @@ export default function WorkspaceSettingsLabelsTab({
 
                 {labels.map((label, index) =>
                     editorTarget === String(label.id) ? (
-                        <WorkspaceSettingsLabelInlineEditor
-                            key={label.id}
-                            label={label}
-                            onSave={handleSaveLabel}
-                            onCancel={() => setEditorTarget(null)}
-                        />
+                        <Reveal key={label.id}>
+                            <WorkspaceSettingsLabelInlineEditor
+                                label={label}
+                                onSave={handleSaveLabel}
+                                onCancel={() => setEditorTarget(null)}
+                            />
+                        </Reveal>
                     ) : (
                         <RowReveal
                             key={label.id}
@@ -275,12 +277,13 @@ export default function WorkspaceSettingsLabelsTab({
                 )}
 
                 {editorTarget === NEW_LABEL_EDITOR_TARGET ? (
-                    <WorkspaceSettingsLabelInlineEditor
-                        key={NEW_LABEL_EDITOR_TARGET}
-                        label={null}
-                        onSave={handleSaveLabel}
-                        onCancel={() => setEditorTarget(null)}
-                    />
+                    <Reveal key={NEW_LABEL_EDITOR_TARGET}>
+                        <WorkspaceSettingsLabelInlineEditor
+                            label={null}
+                            onSave={handleSaveLabel}
+                            onCancel={() => setEditorTarget(null)}
+                        />
+                    </Reveal>
                 ) : (
                     canCreateLabels && (
                         <AddRowButton
