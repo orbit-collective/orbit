@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import { AccentProvider } from '@/context/AccentContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import AccountSettingsPreferencesTab from './AccountSettingsPreferencesTab';
 
 const renderTab = () =>
@@ -90,5 +91,49 @@ describe('AccountSettingsPreferencesTab accent color', () => {
         expect(
             screen.getByRole('button', { name: 'Use color #ec4899' }),
         ).toHaveAttribute('aria-pressed', 'true');
+    });
+});
+
+describe('AccountSettingsPreferencesTab panels', () => {
+    beforeEach(() => localStorage.clear());
+
+    test('every panel folds from its header inside a settings page', () => {
+        render(
+            inSettingsPage(
+                <ThemeProvider>
+                    <AccentProvider>
+                        <AccountSettingsPreferencesTab />
+                    </AccentProvider>
+                </ThemeProvider>,
+                'preferences',
+            ),
+        );
+
+        expectPanelsToFold([
+            /Default issue view/,
+            /Interface theme/,
+            /Accent color/,
+        ]);
+    });
+
+    test('a folded panel still says what is chosen', () => {
+        render(
+            inSettingsPage(
+                <ThemeProvider>
+                    <AccentProvider>
+                        <AccountSettingsPreferencesTab />
+                    </AccentProvider>
+                </ThemeProvider>,
+                'preferences',
+            ),
+        );
+
+        fireEvent.click(
+            screen.getByRole('button', { name: /Default issue view/ }),
+        );
+
+        expect(screen.getAllByTestId('collapsed-summary')[0]).toHaveTextContent(
+            'List view',
+        );
     });
 });
