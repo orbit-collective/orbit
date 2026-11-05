@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within, waitFor } from 'storybook/test';
 import ProjectPickerPanel from './ProjectPickerPanel';
 
 const meta = {
@@ -33,7 +33,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     play: async ({ args, canvasElement }) => {
         const canvas = within(canvasElement);
-        await expect(canvas.getByText('Currently viewing')).toBeVisible();
+        await waitFor(() =>
+            expect(canvas.getByText('Currently viewing')).toBeVisible(),
+        );
         await userEvent.click(
             canvas.getByRole('button', { name: /Mobile App/ }),
         );
