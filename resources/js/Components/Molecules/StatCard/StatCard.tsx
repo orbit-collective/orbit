@@ -1,5 +1,6 @@
 import { cva } from 'class-variance-authority';
 import React from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import { StatCardProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import Badge from '../../Atoms/Badge/Badge';
@@ -160,7 +161,10 @@ const StatCard: React.FC<StatCardProps> = ({
                             bgColorClass="stroke-[var(--bg-light-color)]"
                         />
                         <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-[var(--text-color)]">
-                            {progress}%
+                            <AnimatedNumber
+                                value={progress}
+                                format={(n) => `${Math.round(n)}%`}
+                            />
                         </span>
                     </div>
                 )}
@@ -234,7 +238,10 @@ const StatCard: React.FC<StatCardProps> = ({
                                 COLOR_TEXT_CLASSES[color],
                             )}
                         >
-                            {progress}%
+                            <AnimatedNumber
+                                value={progress}
+                                format={(n) => `${Math.round(n)}%`}
+                            />
                         </span>
                     )}
                 </div>
