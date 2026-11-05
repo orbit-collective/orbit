@@ -21,6 +21,7 @@ export default function JoinWithCodePanel({
 }: JoinWithCodePanelProps) {
     return (
         <SettingsPanel
+            id="join"
             title="Join with an invite code"
             description="Already have an invitation? Paste its code to join instantly."
             icon="Link"

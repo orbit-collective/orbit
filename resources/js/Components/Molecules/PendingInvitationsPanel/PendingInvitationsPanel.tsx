@@ -20,6 +20,8 @@ export default function PendingInvitationsPanel({
 }: PendingInvitationsPanelProps) {
     return (
         <SettingsPanel
+            id="pending-invitations"
+            collapsedSummary={`${invitations.length} pending`}
             title="Pending invitations"
             description="Invitations that haven't been accepted yet."
             icon="Clock"

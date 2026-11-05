@@ -12,6 +12,8 @@ export default function DangerZonePanel({
 }: DangerZonePanelProps) {
     return (
         <SettingsPanel
+            id="danger-zone"
+            defaultCollapsed
             title="Danger zone"
             description="Deleting a project permanently removes it and everything in it."
             icon="TriangleAlert"

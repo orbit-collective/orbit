@@ -40,6 +40,7 @@ export default function InviteByEmailPanel({
 }: InviteByEmailPanelProps) {
     return (
         <SettingsPanel
+            id="invite"
             title="Invite by email"
             description={
                 emailEnabled
