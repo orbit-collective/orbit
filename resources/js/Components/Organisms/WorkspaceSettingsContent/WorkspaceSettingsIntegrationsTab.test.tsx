@@ -2,6 +2,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsIntegrationsTab from './WorkspaceSettingsIntegrationsTab';
 
@@ -288,6 +289,90 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         expect(
             screen.queryByRole('heading', { name: 'Discord' }),
         ).not.toBeInTheDocument();
+    });
+
+    test('the category pills report which one is on, and the grid follows', async () => {
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+        });
+
+        expect(screen.getByRole('button', { name: /^All/ })).toHaveAttribute(
+            'aria-pressed',
+            'true',
+        );
+
+        await userEvent.click(screen.getByRole('button', { name: /^Storage/ }));
+
+        expect(
+            screen.getByRole('button', { name: /^Storage/ }),
+        ).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByRole('button', { name: /^All/ })).toHaveAttribute(
+            'aria-pressed',
+            'false',
+        );
+        expect(
+            await screen.findByRole('heading', { name: 'Google Drive' }),
+        ).toBeVisible();
+    });
+
+    test('the category pills show the keyboard focus ring', () => {
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+        });
+
+        expect(
+            screen.getByRole('button', { name: /^All/ }).className,
+        ).toContain('focus-visible:ring-2');
+    });
+
+    test('the integration cards rise in and end up visible', async () => {
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+        });
+
+        expect(
+            await screen.findByRole('heading', { name: 'Discord' }),
+        ).toBeVisible();
+    });
+
+    test('the read-only and no-access panels fold', () => {
+        const { unmount } = render(
+            inSettingsPage(
+                <AlertProvider>
+                    <WorkspaceSettingsIntegrationsTab
+                        memberProjects={[projectA]}
+                        selectedProjectId={projectA.id}
+                        hasIntegrationsAccess
+                        canUpdateIntegrations={false}
+                    />
+                </AlertProvider>,
+                'integrations',
+            ),
+        );
+        expectPanelsToFold([/Read-only access/]);
+        unmount();
+
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <WorkspaceSettingsIntegrationsTab
+                        memberProjects={[]}
+                        selectedProjectId={null}
+                    />
+                </AlertProvider>,
+                'integrations',
+            ),
+        );
+        expectPanelsToFold([/^Integrations/]);
     });
 
     describe('GitHub connect flow', () => {
