@@ -44,6 +44,12 @@ export const riseIn: Variants = {
     show: { opacity: 1, y: 0, transition: TWEEN },
 };
 
+/** A panel's rows: they rise one after another once the panel body is there. */
+export const rowsParent: Variants = {
+    hidden: {},
+    show: { transition: { staggerChildren: STAGGER / 2, delayChildren: 0.1 } },
+};
+
 /** A row of a list: a smaller rise, so long lists do not feel heavy. */
 export const rowIn: Variants = {
     hidden: { opacity: 0, y: 8 },

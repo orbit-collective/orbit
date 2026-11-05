@@ -6,7 +6,7 @@ import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import { useSettingsPanelState } from '@/context/SettingsSectionsContext';
 import { CollapsibleProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import { riseIn } from '@/utils/motion';
+import { riseIn, rowsParent } from '@/utils/motion';
 
 /**
  * Panels rise into place with their siblings. A screen that already animates
@@ -79,9 +79,14 @@ export default function SettingsPanel({
                 />
             </header>
             <Collapse id={bodyId} open={!collapsed}>
-                <div className="divide-y divide-[var(--border-color)]">
+                <motion.div
+                    variants={rowsParent}
+                    initial="hidden"
+                    animate="show"
+                    className="divide-y divide-[var(--border-color)]"
+                >
                     {children}
-                </div>
+                </motion.div>
             </Collapse>
         </motion.section>
     );
