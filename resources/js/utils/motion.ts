@@ -40,7 +40,8 @@ export const staggerParent: Variants = {
 };
 
 export const riseIn: Variants = {
-    hidden: { opacity: 0, y: 16 },
+    // Leaving is quick (a page being refreshed fades out before it rises in again).
+    hidden: { opacity: 0, y: 16, transition: { duration: DURATION.fast } },
     show: { opacity: 1, y: 0, transition: TWEEN },
 };
 

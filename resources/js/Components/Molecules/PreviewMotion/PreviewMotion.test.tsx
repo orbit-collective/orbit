@@ -6,6 +6,7 @@ import {
     waitFor,
 } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import {
     PreviewBar,
     PreviewBlock,
@@ -85,5 +86,20 @@ describe('usePlayOnSelect', () => {
         const { result } = renderHook(() => usePlayOnSelect(true));
 
         expect(result.current).toBe(1);
+    });
+
+    test('a refresh draws the mock-up again', async () => {
+        render(
+            <PreviewStage>
+                <PreviewBar>bar</PreviewBar>
+            </PreviewStage>,
+        );
+        await waitFor(() => expect(screen.getByText('bar')).toBeVisible());
+        const before = screen.getByText('bar');
+
+        act(() => bumpRefreshEpoch());
+
+        expect(screen.getByText('bar')).not.toBe(before);
+        await waitFor(() => expect(screen.getByText('bar')).toBeVisible());
     });
 });

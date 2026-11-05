@@ -3,6 +3,7 @@ import React from 'react';
 import { RowRevealProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { rowIn, rowDelay } from '@/utils/motion';
+import { useRefreshEpoch } from '@/utils/refreshEpoch';
 
 /**
  * A list row, card or item that rises into place when it mounts, a little
@@ -16,20 +17,26 @@ const RowReveal: React.FC<RowRevealProps> = ({
     fill = false,
     className,
     children,
-}) => (
-    <motion.div
-        className={cn(
-            // In a grid the wrapper is the cell: its child must still fill it.
-            fill && 'h-full [&>*]:h-full [&>*]:w-full',
-            className,
-        )}
-        variants={rowIn}
-        initial="hidden"
-        animate="show"
-        transition={{ delay: rowDelay(index) }}
-    >
-        {children}
-    </motion.div>
-);
+}) => {
+    // A refresh remounts the row, so its entrance plays again.
+    const epoch = useRefreshEpoch();
+
+    return (
+        <motion.div
+            key={epoch}
+            className={cn(
+                // In a grid the wrapper is the cell: its child must still fill it.
+                fill && 'h-full [&>*]:h-full [&>*]:w-full',
+                className,
+            )}
+            variants={rowIn}
+            initial="hidden"
+            animate="show"
+            transition={{ delay: rowDelay(index) }}
+        >
+            {children}
+        </motion.div>
+    );
+};
 
 export default RowReveal;

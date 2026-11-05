@@ -6,6 +6,7 @@ import {
     previewRise,
     previewStage,
 } from '@/utils/motion';
+import { useRefreshEpoch } from '@/utils/refreshEpoch';
 
 interface PartProps {
     className?: string;
@@ -22,9 +23,12 @@ export function PreviewStage({
     className,
     children,
 }: PartProps & { playKey?: number | string }) {
+    // A refresh draws every mock-up again.
+    const epoch = useRefreshEpoch();
+
     return (
         <motion.div
-            key={playKey}
+            key={`${playKey}:${epoch}`}
             variants={previewStage}
             initial="hidden"
             animate="show"

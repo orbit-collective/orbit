@@ -6,9 +6,10 @@ import {
     useReducedMotion,
     useTransform,
 } from 'framer-motion';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AnimatedNumberProps } from '@/types/Components';
 import { DURATION, EASE } from '@/utils/motion';
+import { useRefreshEpoch } from '@/utils/refreshEpoch';
 
 const group = (value: number) => Math.round(value).toLocaleString();
 
@@ -24,9 +25,17 @@ const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
 }) => {
     const reduce = useReducedMotion() || MotionGlobalConfig.skipAnimations;
     const motionValue = useMotionValue(reduce ? value : 0);
+    const epoch = useRefreshEpoch();
+    const seenEpoch = useRef(epoch);
     const text = useTransform(motionValue, format);
 
     useEffect(() => {
+        // After a refresh the number counts up from zero again.
+        if (seenEpoch.current !== epoch) {
+            seenEpoch.current = epoch;
+            if (!reduce) motionValue.set(0);
+        }
+
         if (reduce) {
             motionValue.set(value);
 
@@ -39,7 +48,7 @@ const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
         });
 
         return () => controls.stop();
-    }, [value, reduce, motionValue]);
+    }, [value, reduce, motionValue, epoch]);
 
     return <motion.span className={className}>{text}</motion.span>;
 };

@@ -1,5 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import { PageSection, PageStage } from './PageStage';
 
 describe('PageStage', () => {
@@ -38,5 +39,28 @@ describe('PageStage', () => {
         render(<PageSection>alone</PageSection>);
 
         expect(screen.getByText('alone')).toBeVisible();
+    });
+
+    test('a refresh sends the sections back and they rise in again, without remounting', async () => {
+        render(
+            <PageStage>
+                <PageSection>first</PageSection>
+                <PageSection>
+                    <input defaultValue="typed" />
+                </PageSection>
+            </PageStage>,
+        );
+        await waitFor(() => expect(screen.getByText('first')).toBeVisible());
+        const input = screen.getByDisplayValue('typed');
+
+        act(() => bumpRefreshEpoch());
+
+        // The sections fade out (the entrance is about to replay)...
+        await waitFor(() =>
+            expect(screen.getByText('first').style.opacity).toBe('0'),
+        );
+        // ...and rise in again, with the same elements: state survived.
+        await waitFor(() => expect(screen.getByText('first')).toBeVisible());
+        expect(screen.getByDisplayValue('typed')).toBe(input);
     });
 });

@@ -1,8 +1,9 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { OPEN_COMMAND_PALETTE_EVENT } from '@/utils/commandPaletteEvent';
 import { requestOpenNotifications } from '@/utils/notificationsPopupEvent';
+import { useRefreshEpoch } from '@/utils/refreshEpoch';
 import { formattedDate } from '@/utils/time';
 import PageHeader from './PageHeader';
 
@@ -259,6 +260,24 @@ describe('PageHeader Component', () => {
         await user.click(screen.getByRole('button', { name: /refresh/i }));
 
         expect(reload).toHaveBeenCalled();
+    });
+
+    test('a finished refresh replays the page animations (the refresh epoch goes up)', async () => {
+        const user = userEvent.setup();
+        const { result } = renderHook(() => useRefreshEpoch());
+        const before = result.current;
+        render(<PageHeader title="Dashboard" />);
+
+        await user.click(screen.getByRole('button', { name: /refresh/i }));
+        // Nothing replays while the data is still on its way.
+        expect(result.current).toBe(before);
+
+        const options = reload.mock.calls.at(-1)![0] as {
+            onFinish: () => void;
+        };
+        act(() => options.onFinish());
+
+        expect(result.current).toBe(before + 1);
     });
 
     test('does not render a primary action button by default', () => {

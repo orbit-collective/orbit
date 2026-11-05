@@ -12,6 +12,7 @@ import {
     OPEN_NOTIFICATIONS_EVENT,
     OpenNotificationsOptions,
 } from '@/utils/notificationsPopupEvent';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import { formattedDate } from '@/utils/time';
 
 const tabVariants = cva(
@@ -47,7 +48,13 @@ function PageHeader({
 
     const handleRefresh = () => {
         setIsRefreshing(true);
-        router.reload({ onFinish: () => setIsRefreshing(false) });
+        router.reload({
+            onFinish: () => {
+                setIsRefreshing(false);
+                // The data is in: replay the page's entrance animations.
+                bumpRefreshEpoch();
+            },
+        });
     };
 
     useEffect(() => {
