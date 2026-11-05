@@ -9,14 +9,22 @@ import { useLiveFallback } from './useLiveFallback';
 
 /** The page props each kind of change makes stale. */
 const PROPS: Record<PortalChangeKind, string[]> = {
-    users: ['totals', 'portalUsers'],
-    projects: ['totals', 'portalProjects'],
+    // A user joining or leaving changes the projects' member counts...
+    users: ['totals', 'portalUsers', 'portalProjects'],
+    // ...and membership or project changes change the users' project counts.
+    projects: ['totals', 'portalProjects', 'portalUsers'],
     issues: ['totals', 'portalProjects'],
     errors: ['errorLog'],
 };
 
 /** Seconds between container status refreshes: Docker has no event we can hear. */
 export const CONTAINERS_REFRESH_SECONDS = 15;
+
+/**
+ * Seconds between log refreshes even with a healthy socket: the daily chart
+ * must move on at midnight, which no event announces.
+ */
+export const ERROR_LOG_REFRESH_SECONDS = 60;
 
 export function portalReloads(kinds: PortalChangeKind[]): LiveReload[] {
     const only = [...new Set(kinds.flatMap((kind) => PROPS[kind] ?? []))];
@@ -55,11 +63,18 @@ export function useDeveloperPortalLive(): void {
     });
 
     useEffect(() => {
-        const timer = setInterval(
+        const containers = setInterval(
             () => requestLiveReload({ only: ['containers'] }),
             CONTAINERS_REFRESH_SECONDS * 1000,
         );
+        const log = setInterval(
+            () => requestLiveReload({ only: ['errorLog'] }),
+            ERROR_LOG_REFRESH_SECONDS * 1000,
+        );
 
-        return () => clearInterval(timer);
+        return () => {
+            clearInterval(containers);
+            clearInterval(log);
+        };
     }, []);
 }

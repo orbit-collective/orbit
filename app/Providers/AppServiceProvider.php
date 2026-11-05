@@ -111,10 +111,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->terminating($flush);
         Event::listen([JobProcessed::class, JobFailed::class, JobExceptionOccurred::class], $flush);
 
-        // A logged error refreshes the Developer Portal's error list. The
-        // log file is read by the portal itself; this only says "look again".
+        // A logged warning or error refreshes the Developer Portal's log views
+        // (the daily chart counts warnings too). The log file is read by the
+        // portal itself; this only says "look again".
         Event::listen(MessageLogged::class, function (MessageLogged $event): void {
-            if (in_array($event->level, ['error', 'critical', 'alert', 'emergency'], true)) {
+            if (in_array($event->level, ['warning', 'error', 'critical', 'alert', 'emergency'], true)) {
                 $this->app->make(LiveUpdates::class)->portal('errors');
             }
         });

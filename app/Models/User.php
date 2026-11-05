@@ -24,6 +24,12 @@ class User extends Authenticatable
         // (a no-op unless it is on); the user's own channel has nothing to say.
         static::created(fn () => app(LiveUpdates::class)->portal('users'));
         static::deleted(fn () => app(LiveUpdates::class)->portal('users'));
+        // Only the fields the portal's user rows show.
+        static::updated(function (User $user) {
+            if ($user->wasChanged(['name', 'email', 'avatar'])) {
+                app(LiveUpdates::class)->portal('users');
+            }
+        });
     }
 
     protected $fillable = [

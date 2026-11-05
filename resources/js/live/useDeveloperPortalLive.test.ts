@@ -17,6 +17,7 @@ vi.mock('./reloadQueue', () => ({
 
 import {
     CONTAINERS_REFRESH_SECONDS,
+    ERROR_LOG_REFRESH_SECONDS,
     portalFallbackReloads,
     portalReloads,
     useDeveloperPortalLive,
@@ -34,15 +35,29 @@ afterEach(() => {
 describe('portalReloads', () => {
     test('maps each kind to the props it makes stale', () => {
         expect(portalReloads(['users'])).toEqual([
-            { only: ['totals', 'portalUsers'] },
+            { only: ['totals', 'portalUsers', 'portalProjects'] },
         ]);
         expect(portalReloads(['errors'])).toEqual([{ only: ['errorLog'] }]);
     });
 
     test('merges several kinds into one reload without duplicates', () => {
         expect(portalReloads(['projects', 'issues', 'errors'])).toEqual([
-            { only: ['totals', 'portalProjects', 'errorLog'] },
+            { only: ['totals', 'portalProjects', 'portalUsers', 'errorLog'] },
         ]);
+    });
+
+    test('people and projects refresh each other: both carry counts of the other', () => {
+        for (const kind of ['users', 'projects'] as const) {
+            const only = portalReloads([kind])[0].only!;
+            expect(only).toEqual(
+                expect.arrayContaining([
+                    'portalUsers',
+                    'portalProjects',
+                    'totals',
+                ]),
+            );
+        }
+        expect(portalReloads(['issues'])[0].only).not.toContain('portalUsers');
     });
 
     test('ignores unknown or empty kinds', () => {
@@ -61,7 +76,7 @@ describe('useDeveloperPortalLive', () => {
         handlers['developer-portal.changed']({ kinds: ['users'] });
 
         expect(mocks.requestLiveReload).toHaveBeenCalledWith({
-            only: ['totals', 'portalUsers'],
+            only: ['totals', 'portalUsers', 'portalProjects'],
         });
     });
 
@@ -88,5 +103,20 @@ describe('useDeveloperPortalLive', () => {
         unmount();
         vi.advanceTimersByTime(CONTAINERS_REFRESH_SECONDS * 3000);
         expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
+    });
+
+    test('re-reads the log on its own timer even with a healthy socket, so the day chart moves on at midnight', () => {
+        const { unmount } = renderHook(() => useDeveloperPortalLive());
+
+        vi.advanceTimersByTime(ERROR_LOG_REFRESH_SECONDS * 1000);
+
+        expect(mocks.requestLiveReload).toHaveBeenCalledWith({
+            only: ['errorLog'],
+        });
+        const calls = mocks.requestLiveReload.mock.calls.length;
+
+        unmount();
+        vi.advanceTimersByTime(ERROR_LOG_REFRESH_SECONDS * 3000);
+        expect(mocks.requestLiveReload).toHaveBeenCalledTimes(calls);
     });
 });

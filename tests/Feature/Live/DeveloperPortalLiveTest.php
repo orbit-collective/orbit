@@ -7,6 +7,7 @@ use App\Events\Live\ProjectChanged;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\DeveloperPortal\ErrorLogService;
 use App\Support\Live\LiveUpdates;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -115,13 +116,99 @@ test('creating a user, a project or an issue reaches the portal', function () {
     Event::assertDispatched(DeveloperPortalChanged::class, fn ($event) => $event->kinds === ['projects', 'issues'] || in_array('issues', $event->kinds, true));
 });
 
-test('a logged error tells the portal, a warning does not', function () {
+test('a logged error tells the portal, an info line does not', function () {
     $live = app(LiveUpdates::class);
 
-    Log::warning('just a warning');
+    Log::info('just info');
     expect($live->hasPending())->toBeFalse();
 
     Log::error('something broke');
+    expect($live->hasPending())->toBeTrue();
+    $live->flush();
+    Event::assertDispatched(DeveloperPortalChanged::class, fn ($event) => in_array('errors', $event->kinds, true));
+});
+
+test('announcing an error drops the cached log read so the reload sees it', function () {
+    $dir = sys_get_temp_dir().'/orbit-live-log-'.uniqid();
+    mkdir($dir);
+    config(['developer-portal.errors.directory' => $dir]);
+    $today = now()->format('Y-m-d');
+    file_put_contents($dir.'/laravel.log', "[$today 10:00:00] local.ERROR: first\n");
+
+    $service = app(ErrorLogService::class);
+    expect($service->recent()['entries'])->toHaveCount(1);
+
+    // A second error lands within the cache window.
+    file_put_contents($dir.'/laravel.log', "[$today 10:00:01] local.ERROR: second\n", FILE_APPEND);
+    expect($service->recent()['entries'])->toHaveCount(1);
+
+    $live = app(LiveUpdates::class);
+    $live->portal('errors');
+    $live->flush();
+
+    expect($service->recent()['entries'])->toHaveCount(2);
+
+    array_map('unlink', glob($dir.'/*'));
+    rmdir($dir);
+});
+
+test('announcing something other than errors leaves the cached log read alone', function () {
+    $dir = sys_get_temp_dir().'/orbit-live-log-'.uniqid();
+    mkdir($dir);
+    config(['developer-portal.errors.directory' => $dir]);
+    $today = now()->format('Y-m-d');
+    file_put_contents($dir.'/laravel.log', "[$today 10:00:00] local.ERROR: first\n");
+    $service = app(ErrorLogService::class);
+    $service->recent();
+    file_put_contents($dir.'/laravel.log', "[$today 10:00:01] local.ERROR: second\n", FILE_APPEND);
+
+    $live = app(LiveUpdates::class);
+    $live->portal('users');
+    $live->flush();
+
+    expect($service->recent()['entries'])->toHaveCount(1);
+
+    array_map('unlink', glob($dir.'/*'));
+    rmdir($dir);
+});
+
+test('a workflow status changing tells the portal its issue buckets moved', function () {
+    $live = app(LiveUpdates::class);
+
+    $live->project(1, 'issue-types', 7);
+    $live->flush();
+
+    Event::assertDispatched(DeveloperPortalChanged::class, fn ($event) => $event->kinds === ['issues']);
+});
+
+test('editing a displayed user field tells the portal, other edits do not', function () {
+    $user = User::factory()->create();
+    app(LiveUpdates::class)->flush();
+    Event::fake([DeveloperPortalChanged::class, ProjectChanged::class, AccessChanged::class]);
+
+    $user->update(['session_lifetime' => 120]);
+    expect(app(LiveUpdates::class)->hasPending())->toBeFalse();
+
+    $user->update(['name' => 'Renamed Person']);
+    expect(app(LiveUpdates::class)->hasPending())->toBeTrue();
+    app(LiveUpdates::class)->flush();
+    Event::assertDispatched(DeveloperPortalChanged::class, fn ($event) => $event->kinds === ['users']);
+
+    $user->update(['email' => 'new@example.test']);
+    expect(app(LiveUpdates::class)->hasPending())->toBeTrue();
+    app(LiveUpdates::class)->flush();
+
+    $user->update(['avatar' => 'https://example.test/a.png']);
+    expect(app(LiveUpdates::class)->hasPending())->toBeTrue();
+});
+
+test('a logged warning tells the portal too, since the daily chart counts warnings', function () {
+    $live = app(LiveUpdates::class);
+
+    Log::info('noise');
+    expect($live->hasPending())->toBeFalse();
+
+    Log::warning('slow thing');
     expect($live->hasPending())->toBeTrue();
     $live->flush();
     Event::assertDispatched(DeveloperPortalChanged::class, fn ($event) => in_array('errors', $event->kinds, true));
