@@ -145,3 +145,34 @@ test('a docker error while reading logs is reported, not thrown', function () {
 
     expect($result['found'])->toBeTrue()->and($result['error'])->toContain('Could not read the logs');
 });
+
+test('a log tail over the size cap is decoded whole before being trimmed, so frames never garble', function () {
+    fakeDocker();
+    $big = str_repeat('x', 500 * 1024);
+    $raw = frame(1, "2026-11-04T10:00:00Z first $big\n")
+        .frame(2, "2026-11-04T10:00:01Z second $big\n")
+        .frame(1, "2026-11-04T10:00:02Z third $big\n");
+    Http::fake(['localhost/containers/bbbbbbbbbbbb/logs*' => Http::response($raw)]);
+
+    $lines = app(DockerContainerService::class)->logs('bbbbbbbbbbbb')['lines'];
+
+    // Over 1 MB in total: the oldest line goes, the rest keep their stream and text intact.
+    expect($lines)->toHaveCount(2)
+        ->and($lines[0]['stream'])->toBe('stderr')
+        ->and($lines[0]['text'])->toStartWith('second x')
+        ->and($lines[1]['stream'])->toBe('stdout')
+        ->and($lines[1]['text'])->toStartWith('third x')
+        ->and($lines[1]['time'])->toBe('2026-11-04T10:00:02Z');
+    foreach ($lines as $line) {
+        expect($line['text'])->not->toContain("\0");
+    }
+});
+
+test('a single line larger than the cap is still returned rather than dropping everything', function () {
+    fakeDocker();
+    Http::fake(['localhost/containers/bbbbbbbbbbbb/logs*' => Http::response(frame(1, '2026-11-04T10:00:00Z '.str_repeat('y', 1100 * 1024)."\n"))]);
+
+    $lines = app(DockerContainerService::class)->logs('bbbbbbbbbbbb')['lines'];
+
+    expect($lines)->toHaveCount(1)->and($lines[0]['stream'])->toBe('stdout');
+});

@@ -56,10 +56,36 @@ class DockerContainerService
                 ])
                 ->throw();
 
-            return ['found' => true, 'error' => null, 'lines' => $this->parseLogs(substr($response->body(), -self::MAX_LOG_BYTES))];
+            // Decode whole frames first and trim afterwards: cutting the raw stream could
+            // slice through a frame header and turn the rest into garbage.
+            return ['found' => true, 'error' => null, 'lines' => $this->newest($this->parseLogs($response->body()))];
         } catch (Throwable $e) {
             return ['found' => true, 'error' => 'Could not read the logs: '.$e->getMessage(), 'lines' => []];
         }
+    }
+
+    /**
+     * The newest lines that fit in MAX_LOG_BYTES, in their original order.
+     *
+     * @param  list<array{time: string|null, stream: string, text: string}>  $lines
+     * @return list<array{time: string|null, stream: string, text: string}>
+     */
+    private function newest(array $lines): array
+    {
+        $kept = [];
+        $bytes = 0;
+
+        foreach (array_reverse($lines) as $line) {
+            $bytes += strlen($line['text']);
+
+            if ($bytes > self::MAX_LOG_BYTES && $kept !== []) {
+                break;
+            }
+
+            $kept[] = $line;
+        }
+
+        return array_reverse($kept);
     }
 
     /**
