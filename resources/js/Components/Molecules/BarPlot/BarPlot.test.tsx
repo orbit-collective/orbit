@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import BarPlot from './BarPlot';
 
 const bars = [
@@ -245,5 +246,19 @@ describe('BarPlot', () => {
                 .getByTestId('plot-scroller')
                 .contains(screen.getByTestId('marker-line')),
         ).toBe(true);
+    });
+
+    test('a refresh redraws the bars (new elements) but keeps the scroller itself', async () => {
+        renderPlot();
+        const scroller = screen.getByTestId('plot-scroller');
+        const firstBar = screen.getAllByTestId('bar')[0];
+
+        act(() => bumpRefreshEpoch());
+
+        expect(screen.getByTestId('plot-scroller')).toBe(scroller);
+        expect(screen.getAllByTestId('bar')[0]).not.toBe(firstBar);
+        await waitFor(() =>
+            expect(screen.getAllByTestId('bar')[0]).toBeVisible(),
+        );
     });
 });

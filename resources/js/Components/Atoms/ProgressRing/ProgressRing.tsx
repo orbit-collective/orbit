@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import React from 'react';
 import { ProgressRingProps } from '@/types/Components';
 import { DURATION, EASE } from '@/utils/motion';
+import { useRefreshEpoch } from '@/utils/refreshEpoch';
 
 /**
  * A ring that draws itself to its value when it appears and sweeps to every
@@ -14,6 +15,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
     colorClass = 'stroke-[var(--accent-color)]',
     bgColorClass = 'stroke-[var(--bg-light-color)]',
 }) => {
+    const epoch = useRefreshEpoch();
     const normalizedRadius = radius - stroke * 2;
     const circumference = normalizedRadius * 2 * Math.PI;
     const strokeDashoffset = circumference - (progress / 100) * circumference;
@@ -32,6 +34,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
                 cy={radius}
             />
             <motion.circle
+                key={epoch}
                 data-testid="progress-arc"
                 data-progress={progress}
                 className={`${colorClass} fill-transparent`}

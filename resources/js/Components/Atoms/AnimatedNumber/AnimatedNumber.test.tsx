@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import AnimatedNumber from './AnimatedNumber';
 
 describe('AnimatedNumber', () => {
@@ -27,5 +28,13 @@ describe('AnimatedNumber', () => {
         );
 
         expect(screen.getByText('7.6%')).toHaveClass('big');
+    });
+
+    test('a refresh does not change what the number shows (animations are off under test)', async () => {
+        render(<AnimatedNumber value={42} />);
+
+        act(() => bumpRefreshEpoch());
+
+        expect(await screen.findByText('42')).toBeInTheDocument();
     });
 });

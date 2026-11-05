@@ -1,5 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import RowReveal from './RowReveal';
 
 describe('RowReveal', () => {
@@ -51,5 +52,20 @@ describe('RowReveal', () => {
         expect(
             screen.getByRole('button').parentElement!.className,
         ).not.toContain('h-full');
+    });
+
+    test('a refresh plays the entrance again by remounting the row', async () => {
+        render(
+            <RowReveal>
+                <p>row</p>
+            </RowReveal>,
+        );
+        await waitFor(() => expect(screen.getByText('row')).toBeVisible());
+        const before = screen.getByText('row');
+
+        act(() => bumpRefreshEpoch());
+
+        expect(screen.getByText('row')).not.toBe(before);
+        await waitFor(() => expect(screen.getByText('row')).toBeVisible());
     });
 });

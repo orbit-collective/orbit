@@ -1,5 +1,6 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import Reveal from './Reveal';
 
 describe('Reveal', () => {
@@ -29,5 +30,20 @@ describe('Reveal', () => {
 
         await waitFor(() => expect(screen.getByText('data')).toBeVisible());
         expect(screen.queryByText('loading')).not.toBeInTheDocument();
+    });
+
+    test('a refresh reveals the content again', async () => {
+        render(
+            <Reveal>
+                <p>content</p>
+            </Reveal>,
+        );
+        await waitFor(() => expect(screen.getByText('content')).toBeVisible());
+        const before = screen.getByText('content');
+
+        act(() => bumpRefreshEpoch());
+
+        expect(screen.getByText('content')).not.toBe(before);
+        await waitFor(() => expect(screen.getByText('content')).toBeVisible());
     });
 });

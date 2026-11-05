@@ -1,5 +1,6 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
+import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import ProgressRing from './ProgressRing';
 
 describe('ProgressRing Component', () => {
@@ -90,5 +91,26 @@ describe('ProgressRing Component', () => {
             expect(arc().getAttribute('stroke-dashoffset')).toBe('0'),
         );
         expect(arc()).toHaveAttribute('data-progress', '100');
+    });
+
+    test('a refresh redraws the arc (a new element), ending on the same value', async () => {
+        const { container } = render(
+            <ProgressRing radius={18} stroke={3} progress={100} />,
+        );
+        const arc = () =>
+            container.querySelector(
+                '[data-testid="progress-arc"]',
+            ) as SVGElement;
+        await waitFor(() =>
+            expect(arc().getAttribute('stroke-dashoffset')).toBe('0'),
+        );
+        const before = arc();
+
+        act(() => bumpRefreshEpoch());
+
+        expect(arc()).not.toBe(before);
+        await waitFor(() =>
+            expect(arc().getAttribute('stroke-dashoffset')).toBe('0'),
+        );
     });
 });
