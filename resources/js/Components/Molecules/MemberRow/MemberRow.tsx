@@ -1,16 +1,26 @@
 import { ReactNode } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import { ProjectMember } from '@/types/ProjectMembers';
 import { formatDate } from '@/utils/time';
 
 interface MemberRowProps {
     member: ProjectMember;
+    /** Position in the list, so rows rise in one after another. */
+    index?: number;
     children: ReactNode;
 }
 
-export default function MemberRow({ member, children }: MemberRowProps) {
+export default function MemberRow({
+    member,
+    index = 0,
+    children,
+}: MemberRowProps) {
     return (
-        <div className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:items-center md:justify-between">
+        <RowReveal
+            index={index}
+            className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:items-center md:justify-between"
+        >
             <div className="flex min-w-0 items-center gap-3">
                 <Avatar
                     src={member.avatar ?? undefined}
@@ -33,6 +43,6 @@ export default function MemberRow({ member, children }: MemberRowProps) {
             <div className="flex flex-wrap items-center gap-2 md:shrink-0">
                 {children}
             </div>
-        </div>
+        </RowReveal>
     );
 }

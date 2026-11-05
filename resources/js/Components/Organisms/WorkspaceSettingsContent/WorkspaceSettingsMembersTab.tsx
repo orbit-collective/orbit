@@ -1,4 +1,6 @@
 import { usePage } from '@inertiajs/react';
+import { motion } from 'framer-motion';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import DangerZonePanel from '@/Components/Molecules/DangerZonePanel/DangerZonePanel';
 import InviteByEmailPanel from '@/Components/Molecules/InviteByEmailPanel/InviteByEmailPanel';
 import JoinWithCodePanel from '@/Components/Molecules/JoinWithCodePanel/JoinWithCodePanel';
@@ -19,6 +21,7 @@ import {
     ProjectMember,
 } from '@/types/ProjectMembers';
 import { WorkspaceRole } from '@/types/Roles';
+import { riseIn } from '@/utils/motion';
 import WorkspaceSettingsDeleteProjectModal from './WorkspaceSettingsDeleteProjectModal';
 import WorkspaceSettingsTransferOwnershipModal from './WorkspaceSettingsTransferOwnershipModal';
 
@@ -97,6 +100,7 @@ export default function WorkspaceSettingsMembersTab({
     if (!selectedProject) {
         return (
             <SettingsPanel
+                id="members"
                 title="Members"
                 description="View and manage the people who have access to your projects."
                 icon="Users"
@@ -112,34 +116,42 @@ export default function WorkspaceSettingsMembersTab({
     return (
         <div className="space-y-5">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <StatCard
-                    title="Team members"
-                    value={members.length}
-                    icon="Users"
-                    color="accent"
-                    variant="vivid"
-                    description={`Across "${selectedProject.name}"`}
-                />
-                <StatCard
-                    title="Managers"
-                    value={managerCount}
-                    icon="ShieldCheck"
-                    color="info"
-                    variant="vivid"
-                    description="Can manage members & invites"
-                />
-                <StatCard
-                    title="Pending invites"
-                    value={pendingInvitations.length}
-                    icon="Mail"
-                    color="warning"
-                    variant="vivid"
-                    description={
-                        emailEnabled
-                            ? 'Awaiting a response'
-                            : 'Invitations are disabled'
-                    }
-                />
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        title="Team members"
+                        value={<AnimatedNumber value={members.length} />}
+                        icon="Users"
+                        color="accent"
+                        variant="vivid"
+                        description={`Across "${selectedProject.name}"`}
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        title="Managers"
+                        value={<AnimatedNumber value={managerCount} />}
+                        icon="ShieldCheck"
+                        color="info"
+                        variant="vivid"
+                        description="Can manage members & invites"
+                    />
+                </motion.div>
+                <motion.div variants={riseIn}>
+                    <StatCard
+                        title="Pending invites"
+                        value={
+                            <AnimatedNumber value={pendingInvitations.length} />
+                        }
+                        icon="Mail"
+                        color="warning"
+                        variant="vivid"
+                        description={
+                            emailEnabled
+                                ? 'Awaiting a response'
+                                : 'Invitations are disabled'
+                        }
+                    />
+                </motion.div>
             </div>
 
             <ProjectPickerPanel
@@ -150,6 +162,8 @@ export default function WorkspaceSettingsMembersTab({
             />
 
             <SettingsPanel
+                id="members"
+                collapsedSummary={`${members.length} ${members.length === 1 ? 'member' : 'members'}`}
                 title="Members"
                 description={`People with access to "${selectedProject.name}".`}
                 icon="Users"
@@ -168,6 +182,8 @@ export default function WorkspaceSettingsMembersTab({
 
             {canUpdateProjectDetails && projectDetailsDraft && (
                 <SettingsPanel
+                    id="project-details"
+                    collapsedSummary={selectedProject.name}
                     title="Project details"
                     description="Rename the project, update its description, or change its color."
                     icon="FolderCog"

@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import {
     MemberProjectSummary,
     PendingProjectInvitation,
@@ -486,5 +487,66 @@ describe('WorkspaceSettingsMembersTab', () => {
         expect(
             screen.queryByText('invitee@example.com'),
         ).not.toBeInTheDocument();
+    });
+});
+
+describe('WorkspaceSettingsMembersTab panels', () => {
+    const inPage = (
+        props: Partial<Parameters<typeof WorkspaceSettingsMembersTab>[0]> = {},
+    ) =>
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <WorkspaceSettingsMembersTab
+                        memberProjects={[project]}
+                        selectedProjectId={project.id}
+                        canInviteMembers
+                        canUpdateMemberRoles
+                        canRemoveMembers
+                        canTransferOwnership
+                        canDeleteProject
+                        members={[admin, member]}
+                        pendingInvitations={[]}
+                        {...props}
+                    />
+                </AlertProvider>,
+                'members',
+            ),
+        );
+
+    test('members, invite, join and ownership panels fold', () => {
+        inPage();
+
+        expectPanelsToFold([
+            /^Members/,
+            /Invite by email/,
+            /Join with an invite code/,
+            /^Ownership/,
+        ]);
+    });
+
+    test('the members panel counts its members when folded', () => {
+        inPage();
+
+        fireEvent.click(screen.getByRole('button', { name: /^Members/ }));
+
+        expect(screen.getAllByTestId('collapsed-summary')[0]).toHaveTextContent(
+            '2 members',
+        );
+    });
+
+    test('the danger zone starts folded', () => {
+        inPage();
+
+        expect(
+            screen.getByRole('button', { name: /Danger zone/ }),
+        ).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    test('the stat cards count their numbers and the member rows end up visible', async () => {
+        inPage();
+
+        expect(await screen.findByText(admin.name)).toBeVisible();
+        expect(screen.getByText('Team members')).toBeInTheDocument();
     });
 });
