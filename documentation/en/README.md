@@ -68,6 +68,7 @@ documentation/
       README.md              <- index for this category
       01-flip-a-placeholder-tab-live.md
       02-add-a-brand-new-settings-tab.md
+      03-fold-and-animate-a-tab.md
     shortcuts/
       README.md              <- index for this category
       01-register-a-component-scoped-shortcut.md
