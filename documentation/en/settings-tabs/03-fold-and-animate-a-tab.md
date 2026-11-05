@@ -20,6 +20,20 @@ File: `resources/js/Components/Organisms/SettingsLayout/SettingsLayout.tsx`
 - Shows `CollapseAllButton` next to the heading once two or more panels can fold
   (never for a full-bleed tab).
 
+## What animates without any per-tab work
+
+- **Plain rows.** `SettingsPanelRow` rises in with its siblings once the panel
+  body is there (the body is a `rowsParent` stagger), and a row that mounts later
+  joins in. Most rows of most tabs need nothing.
+- **Pickable cards** (view, theme, session expiry, project, role): `liftProps`
+  from `utils/motion.ts` on a `motion.button` lifts them under the pointer and
+  presses them in. Do not also put a CSS `transition-all`/`hover:-translate-*` on
+  them: the CSS transition fights the inline transform.
+- **`ToggleSwitch`** springs its knob; **`Button`** presses in; both show the
+  shared focus ring. **`AddRowButton`**'s plus turns on hover.
+- **Progress bars and counts** grow with `motion` (see `PermissionGroupCard`) and
+  count with `AnimatedNumber`.
+
 ## Step 1 — Give each panel an id
 
 ```tsx
@@ -63,7 +77,8 @@ animates open and closed), so they start on their own with `RowReveal`:
 ))}
 ```
 
-The stagger is capped (ten rows), so a long list does not crawl. Keep stable
+In a grid the wrapper becomes the cell, so pass `fill` and the card still
+stretches to it (`<RowReveal fill>`). The stagger is capped (ten rows), so a long list does not crawl. Keep stable
 keys: a reorder then moves rows without replaying the entrance. Use
 `<Reveal key={selectedId}>` when a detail view should rise again as the
 selection changes (the role detail, the automation flow), `Collapse` with
