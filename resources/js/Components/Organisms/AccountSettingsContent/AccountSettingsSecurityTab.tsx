@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import AccountSettingsDeleteAccountModal from '@/Components/Organisms/AccountSettingsContent/AccountSettingsDeleteAccountModal';
@@ -116,6 +117,10 @@ export default function AccountSettingsSecurityTab({
     return (
         <div className="space-y-5">
             <SettingsPanel
+                id="accounts"
+                collapsedSummary={
+                    githubUsername ? `GitHub @${githubUsername}` : 'Not linked'
+                }
                 title="Connected accounts"
                 description="Sign in faster by linking an external account."
                 icon="Link2"
@@ -155,6 +160,7 @@ export default function AccountSettingsSecurityTab({
             </SettingsPanel>
 
             <SettingsPanel
+                id="password"
                 title="Password"
                 description={
                     hasPassword
@@ -184,6 +190,8 @@ export default function AccountSettingsSecurityTab({
             </SettingsPanel>
 
             <SettingsPanel
+                id="sessions"
+                collapsedSummary={`${sessions.length} ${sessions.length === 1 ? 'session' : 'sessions'}`}
                 title="Active sessions"
                 description="Review and revoke devices currently signed in to your account."
                 icon="ShieldCheck"
@@ -192,29 +200,35 @@ export default function AccountSettingsSecurityTab({
             </SettingsPanel>
 
             <SettingsPanel
+                id="expiry"
                 title="Session expiry"
                 description="Choose how long you stay signed in before re-authenticating."
                 icon="Clock3"
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
-                    {sessionTimeoutOptions.map((option) => (
-                        <AccountSettingsSessionTimeoutCard
-                            key={option.id}
-                            label={option.label}
-                            icon={option.icon}
-                            description={option.description}
-                            selected={
-                                (pendingLifetime ?? currentLifetime) ===
-                                option.value
-                            }
-                            isDisabled={pendingLifetime !== null}
-                            onSelect={() => selectSessionTimeout(option.value)}
-                        />
+                    {sessionTimeoutOptions.map((option, index) => (
+                        <RowReveal key={option.id} index={index}>
+                            <AccountSettingsSessionTimeoutCard
+                                label={option.label}
+                                icon={option.icon}
+                                description={option.description}
+                                selected={
+                                    (pendingLifetime ?? currentLifetime) ===
+                                    option.value
+                                }
+                                isDisabled={pendingLifetime !== null}
+                                onSelect={() =>
+                                    selectSessionTimeout(option.value)
+                                }
+                            />
+                        </RowReveal>
                     ))}
                 </div>
             </SettingsPanel>
 
             <SettingsPanel
+                id="delete-account"
+                defaultCollapsed
                 title="Delete account"
                 description="Permanently remove your Orbit account and associated data."
                 icon="Trash"

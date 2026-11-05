@@ -3,6 +3,7 @@ import { cva } from 'class-variance-authority';
 import { useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import { useAlert } from '@/context/AlertContext';
 import { Session } from '@/types/Users';
@@ -71,9 +72,10 @@ export default function AccountSettingsSessionsList({
 
     return (
         <div className="space-y-2 px-5 py-4">
-            {sessions.map((session) => (
-                <div
+            {sessions.map((session, index) => (
+                <RowReveal
                     key={session.id}
+                    index={index}
                     className="flex items-center gap-3 rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] px-3.5 py-3"
                 >
                     <span
@@ -113,7 +115,7 @@ export default function AccountSettingsSessionsList({
                             {revokingId === session.id ? 'Revoking…' : 'Revoke'}
                         </Button>
                     )}
-                </div>
+                </RowReveal>
             ))}
 
             {hasOtherSessions && (
