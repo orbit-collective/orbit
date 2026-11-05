@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
@@ -32,6 +33,7 @@ import {
     ACTIVITY_PER_PAGE_PARAM,
 } from '@/utils/activityLog';
 import { cn } from '@/utils/cn';
+import { DURATION, EASE } from '@/utils/motion';
 
 const ACTIVITY_DEFAULT_PER_PAGE = 20;
 
@@ -167,17 +169,48 @@ export default function Show({
                                     'flex flex-1 flex-col overflow-hidden px-4'
                                 }
                             >
-                                {selectedLook === 'List' ? (
-                                    <IssueTable
-                                        issues={issues.data}
-                                        queryParams={queryParams}
-                                        project={project}
-                                        issueTypes={issueTypes}
-                                        users={users}
-                                        issueAbilities={issueAbilities}
-                                        projectRole={projectRole}
-                                        nextIssueId={nextIssueId}
-                                        pagination={
+                                <motion.div
+                                    // Switching view fades the new one in.
+                                    key={selectedLook}
+                                    initial={{ opacity: 0, y: 8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{
+                                        duration: DURATION.base,
+                                        ease: EASE,
+                                    }}
+                                    className="flex min-h-0 flex-1 flex-col overflow-hidden"
+                                >
+                                    {selectedLook === 'List' ? (
+                                        <IssueTable
+                                            issues={issues.data}
+                                            queryParams={queryParams}
+                                            project={project}
+                                            issueTypes={issueTypes}
+                                            users={users}
+                                            issueAbilities={issueAbilities}
+                                            projectRole={projectRole}
+                                            nextIssueId={nextIssueId}
+                                            pagination={
+                                                <Pagination
+                                                    links={issues.links}
+                                                    from={issues.from}
+                                                    to={issues.to}
+                                                    total={issues.total}
+                                                    queryParams={queryParams}
+                                                />
+                                            }
+                                        />
+                                    ) : selectedLook === 'Board' ? (
+                                        <>
+                                            <div
+                                                className={
+                                                    'flex flex-1 flex-row overflow-hidden'
+                                                }
+                                            >
+                                                <IssueBoard
+                                                    issues={issues.data}
+                                                />
+                                            </div>
                                             <Pagination
                                                 links={issues.links}
                                                 from={issues.from}
@@ -185,71 +218,54 @@ export default function Show({
                                                 total={issues.total}
                                                 queryParams={queryParams}
                                             />
-                                        }
-                                    />
-                                ) : selectedLook === 'Board' ? (
-                                    <>
-                                        <div
-                                            className={
-                                                'flex flex-1 flex-row overflow-hidden'
-                                            }
-                                        >
-                                            <IssueBoard issues={issues.data} />
-                                        </div>
-                                        <Pagination
-                                            links={issues.links}
-                                            from={issues.from}
-                                            to={issues.to}
-                                            total={issues.total}
-                                            queryParams={queryParams}
-                                        />
-                                    </>
-                                ) : selectedLook === 'Calendar' ? (
-                                    <div className="flex flex-1 flex-col gap-4 overflow-y-auto xl:flex-row xl:overflow-hidden">
-                                        <CalendarView
-                                            issues={calendarIssues ?? []}
-                                            onRangeChange={loadCalendar}
-                                        />
-                                        <UpcomingDeadlinesPanel
-                                            issues={upcomingDeadlines ?? []}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
-                                        <div className="mb-2">
-                                            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
-                                                Recent Work Activity
-                                            </h3>
-                                        </div>
-                                        <div
-                                            key={activityLogs.current_page}
-                                            className="flex-1 overflow-y-auto"
-                                        >
-                                            <ActivityLogs
-                                                logs={activityLogs.data}
-                                                users={users}
-                                                roles={roles}
-                                                issueTypes={issueTypes}
+                                        </>
+                                    ) : selectedLook === 'Calendar' ? (
+                                        <div className="flex flex-1 flex-col gap-4 overflow-y-auto xl:flex-row xl:overflow-hidden">
+                                            <CalendarView
+                                                issues={calendarIssues ?? []}
+                                                onRangeChange={loadCalendar}
+                                            />
+                                            <UpcomingDeadlinesPanel
+                                                issues={upcomingDeadlines ?? []}
                                             />
                                         </div>
-                                        <Pagination
-                                            links={activityLogs.links}
-                                            from={activityLogs.from}
-                                            to={activityLogs.to}
-                                            total={activityLogs.total}
-                                            queryParams={queryParams}
-                                            pageParam={ACTIVITY_PAGE_PARAM}
-                                            perPageParam={
-                                                ACTIVITY_PER_PAGE_PARAM
-                                            }
-                                            defaultPerPage={
-                                                ACTIVITY_DEFAULT_PER_PAGE
-                                            }
-                                            preserveState
-                                            className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
-                                        />
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
+                                            <div className="mb-2">
+                                                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                                                    Recent Work Activity
+                                                </h3>
+                                            </div>
+                                            <div
+                                                key={activityLogs.current_page}
+                                                className="flex-1 overflow-y-auto"
+                                            >
+                                                <ActivityLogs
+                                                    logs={activityLogs.data}
+                                                    users={users}
+                                                    roles={roles}
+                                                    issueTypes={issueTypes}
+                                                />
+                                            </div>
+                                            <Pagination
+                                                links={activityLogs.links}
+                                                from={activityLogs.from}
+                                                to={activityLogs.to}
+                                                total={activityLogs.total}
+                                                queryParams={queryParams}
+                                                pageParam={ACTIVITY_PAGE_PARAM}
+                                                perPageParam={
+                                                    ACTIVITY_PER_PAGE_PARAM
+                                                }
+                                                defaultPerPage={
+                                                    ACTIVITY_DEFAULT_PER_PAGE
+                                                }
+                                                preserveState
+                                                className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
+                                            />
+                                        </div>
+                                    )}
+                                </motion.div>
                             </div>
                         </div>
                     </div>
