@@ -9,6 +9,7 @@ import {
 import React, { useEffect, useRef } from 'react';
 import { AnimatedNumberProps } from '@/types/Components';
 import { DURATION, EASE } from '@/utils/motion';
+import { useReducedMotionPreference } from '@/utils/motionPreference';
 import { useRefreshEpoch } from '@/utils/refreshEpoch';
 
 const group = (value: number) => Math.round(value).toLocaleString();
@@ -23,7 +24,9 @@ const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
     format = group,
     className,
 }) => {
-    const reduce = useReducedMotion() || MotionGlobalConfig.skipAnimations;
+    const preferred = useReducedMotionPreference();
+    const reduce =
+        useReducedMotion() || preferred || MotionGlobalConfig.skipAnimations;
     const motionValue = useMotionValue(reduce ? value : 0);
     const epoch = useRefreshEpoch();
     const seenEpoch = useRef(epoch);

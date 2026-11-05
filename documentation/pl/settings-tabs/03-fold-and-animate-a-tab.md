@@ -60,3 +60,25 @@ W siatce wrapper staje się komórką, więc podaj `fill`, a karta nadal rozcią
 - Podsumowanie sprawdzaj przez `screen.getByTestId('collapsed-summary')`.
 
 Poza zakresem: zakładki Export i Documents to wyłączone placeholdery; nadaj ich panelom id, gdy zostaną włączone.
+
+## Reduced Motion (jeden przełącznik dla wszystkich animacji)
+
+Ustawienia > Preferences > **Reduced Motion** (domyślnie wyłączone) wyłącza
+naraz wszystkie animacje, więc komponent nie musi nic o tym wiedzieć. Wybór
+jest w `localStorage` (`reducedMotion`), obsługuje go
+`resources/js/utils/motionPreference.ts`:
+
+```ts
+import { setReducedMotion, useReducedMotionPreference } from '@/utils/motionPreference';
+```
+
+- Ustawia globalne `MotionGlobalConfig.skipAnimations` z framer-motion, więc
+  każdy element `motion`, animacja layoutu i wywołanie `animate()` przeskakuje
+  od razu do stanu końcowego. Nowe animowane komponenty dostają to za darmo.
+- `app.tsx` importuje moduł, żeby zapisany wybór działał przed pierwszym
+  renderem. `bumpRefreshEpoch()` nic nie robi, gdy opcja jest włączona (nie ma
+  czego odtwarzać).
+- Kod animujący ręcznie, poza framer-motion (np. pętla `requestAnimationFrame`),
+  powinien czytać `useReducedMotionPreference()` i się pomijać, jak
+  `AnimatedNumber`.
+- Zwykłe przejścia CSS (`transition`, np. kolor na hover) celowo zostają.

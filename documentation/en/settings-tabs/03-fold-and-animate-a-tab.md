@@ -108,3 +108,24 @@ number carries text, so the text stays one element (`format={(n) => `${n}%`}`).
 
 Not covered: the Export and Documents tabs are disabled placeholders; give their
 panels ids when they are enabled.
+
+## Reduced Motion (one switch for every animation)
+
+Settings > Preferences > **Reduced Motion** (off by default) turns every
+animation off at once, so a component never has to know about it. The choice
+lives in `localStorage` (`reducedMotion`) and is managed by
+`resources/js/utils/motionPreference.ts`:
+
+```ts
+import { setReducedMotion, useReducedMotionPreference } from '@/utils/motionPreference';
+```
+
+- It sets framer-motion's global `MotionGlobalConfig.skipAnimations`, so every
+  `motion` element, layout animation and `animate()` call jumps to its final
+  state. New animated components get this for free.
+- `app.tsx` imports the module so the stored choice applies before the first
+  render. `bumpRefreshEpoch()` does nothing while it is on (nothing to replay).
+- Code that animates by hand, outside framer-motion (a `requestAnimationFrame`
+  loop, say), should read `useReducedMotionPreference()` and skip itself, like
+  `AnimatedNumber` does.
+- Plain CSS `transition`s (hover colours) are deliberately left alone.

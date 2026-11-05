@@ -137,3 +137,22 @@ describe('AccountSettingsPreferencesTab panels', () => {
         );
     });
 });
+
+describe('AccountSettingsPreferencesTab reduced motion', () => {
+    beforeEach(() => localStorage.clear());
+
+    test('is off by default and saves the choice to localStorage', async () => {
+        renderTab();
+
+        const toggle = screen.getByRole('switch', { name: 'Reduced Motion' });
+        expect(toggle).toHaveAttribute('aria-checked', 'false');
+
+        await userEvent.setup().click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-checked', 'true');
+        expect(localStorage.getItem('reducedMotion')).toBe('true');
+
+        await userEvent.setup().click(toggle);
+        expect(localStorage.getItem('reducedMotion')).toBe('false');
+    });
+});

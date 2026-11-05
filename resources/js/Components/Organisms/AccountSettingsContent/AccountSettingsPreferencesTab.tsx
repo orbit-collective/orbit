@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
+import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import ColorPicker from '@/Components/Molecules/ColorPicker/ColorPicker';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
+import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import AccountSettingsIssueViewCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsIssueViewCard';
 import AccountSettingsThemeCard from '@/Components/Organisms/AccountSettingsContent/AccountSettingsThemeCard';
 import { useAccent } from '@/context/AccentContext';
@@ -13,6 +15,10 @@ import {
     accentFromHex,
     getAccentSwatch,
 } from '@/utils/accentColors';
+import {
+    setReducedMotion,
+    useReducedMotionPreference,
+} from '@/utils/motionPreference';
 
 const issueViewOptions: Array<{
     id: IssuePageLooks;
@@ -55,6 +61,7 @@ const themeOptions: Array<{ id: ThemeMode; label: string; subtitle: string }> =
 export default function AccountSettingsPreferencesTab() {
     const { theme, setTheme } = useTheme();
     const { accentColor, setAccentColor } = useAccent();
+    const reducedMotion = useReducedMotionPreference();
 
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         const saved = localStorage.getItem('selectedLook');
@@ -140,6 +147,26 @@ export default function AccountSettingsPreferencesTab() {
                         palette={ACCENT_PALETTE}
                     />
                 </div>
+            </SettingsPanel>
+
+            <SettingsPanel
+                id="reduced-motion"
+                collapsedSummary={reducedMotion ? 'On' : 'Off'}
+                title="Reduced Motion"
+                description="Turn off the entrance, hover and transition animations across Orbit. Everything appears instantly."
+                icon="Zap"
+            >
+                <SettingsPanelRow
+                    title="Reduced Motion"
+                    description="Applies to this browser only."
+                    action={
+                        <ToggleSwitch
+                            checked={reducedMotion}
+                            onChange={setReducedMotion}
+                            label="Reduced Motion"
+                        />
+                    }
+                />
             </SettingsPanel>
         </div>
     );
