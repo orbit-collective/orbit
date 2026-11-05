@@ -3,6 +3,7 @@ import { icons } from 'lucide-react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ProgressRing from '@/Components/Atoms/ProgressRing/ProgressRing';
+import SelectionHighlight from '@/Components/Atoms/SelectionHighlight/SelectionHighlight';
 import { WorkspaceRole } from '@/types/Roles';
 import { cn } from '@/utils/cn';
 import { liftProps } from '@/utils/motion';
@@ -41,17 +42,18 @@ export default function RoleListItem({
             onClick={onClick}
             {...liftProps}
             className={cn(
-                'group relative w-full overflow-hidden rounded-xl border p-3 text-left transition-[border-color,background-color,box-shadow] duration-200',
-                selected
-                    ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)] shadow-[0_0_0_1px_var(--accent-color)]'
-                    : 'border-[var(--border-color)] bg-[var(--bg-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
+                // No overflow-hidden: the highlight glides in from the previous role.
+                'group relative w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] p-3 text-left transition-[border-color,background-color] duration-200 hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
             )}
         >
             {selected && (
-                <span className="absolute inset-y-0 left-0 w-0.5 bg-[var(--accent-color)]" />
+                <SelectionHighlight
+                    layoutId="role-list"
+                    className="shadow-[0_0_0_1px_var(--accent-color)]"
+                />
             )}
 
-            <div className="flex items-center gap-2.5">
+            <div className="relative flex items-center gap-2.5">
                 <span
                     className={cn(
                         'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
