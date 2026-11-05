@@ -979,3 +979,15 @@ export interface RowRevealProps {
     className?: string;
     children: React.ReactNode;
 }
+
+export interface PageStageProps {
+    /** The element to render: a page's `main` or a plain `div`. */
+    as?: 'div' | 'main' | 'section';
+    className?: string;
+    children: React.ReactNode;
+}
+
+export interface PageSectionProps {
+    className?: string;
+    children: React.ReactNode;
+}
