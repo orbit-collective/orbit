@@ -13,6 +13,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
+import Reveal from '@/Components/Atoms/Reveal/Reveal';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import AutomationFlowNode from '@/Components/Molecules/AutomationFlowNode/AutomationFlowNode';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
@@ -549,6 +551,7 @@ export default function WorkspaceSettingsAutomationTab({
 
             {!hasAutomationAccess ? (
                 <SettingsPanel
+                    id="no-access"
                     title="No access"
                     description="You don't have permission to view this project's automation rules."
                 >
@@ -581,38 +584,39 @@ export default function WorkspaceSettingsAutomationTab({
                             )}
 
                         <div className="flex flex-col gap-1 px-2 pb-2">
-                            {automationRules.map((rule) => {
+                            {automationRules.map((rule, index) => {
                                 const meta = triggerMeta(rule.triggerType);
                                 return (
-                                    <button
-                                        key={rule.id}
-                                        type="button"
-                                        onClick={() => selectRule(rule)}
-                                        className={cn(
-                                            'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors',
-                                            selectedRuleId === rule.id
-                                                ? 'bg-[var(--bg-light-color)]'
-                                                : 'hover:bg-[var(--bg-light-color)]',
-                                        )}
-                                    >
-                                        <Icon
-                                            name={meta.icon}
-                                            size={14}
-                                            color={meta.color}
-                                            className="shrink-0"
-                                        />
-                                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text-color)]">
-                                            {rule.name}
-                                        </span>
-                                        <span
+                                    <RowReveal key={rule.id} index={index}>
+                                        <button
+                                            type="button"
+                                            onClick={() => selectRule(rule)}
                                             className={cn(
-                                                'h-1.5 w-1.5 shrink-0 rounded-full',
-                                                rule.enabled
-                                                    ? 'bg-[var(--success-color)]'
-                                                    : 'bg-[var(--text-muted-color)]',
+                                                'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors',
+                                                selectedRuleId === rule.id
+                                                    ? 'bg-[var(--bg-light-color)]'
+                                                    : 'hover:bg-[var(--bg-light-color)]',
                                             )}
-                                        />
-                                    </button>
+                                        >
+                                            <Icon
+                                                name={meta.icon}
+                                                size={14}
+                                                color={meta.color}
+                                                className="shrink-0"
+                                            />
+                                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text-color)]">
+                                                {rule.name}
+                                            </span>
+                                            <span
+                                                className={cn(
+                                                    'h-1.5 w-1.5 shrink-0 rounded-full',
+                                                    rule.enabled
+                                                        ? 'bg-[var(--success-color)]'
+                                                        : 'bg-[var(--text-muted-color)]',
+                                                )}
+                                            />
+                                        </button>
+                                    </RowReveal>
                                 );
                             })}
                         </div>
@@ -632,7 +636,10 @@ export default function WorkspaceSettingsAutomationTab({
                                 </p>
                             </div>
                         ) : (
-                            <>
+                            <Reveal
+                                key={draft.id ?? 'new'}
+                                className="flex min-h-0 flex-1 flex-col"
+                            >
                                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-color)] px-4 py-3 sm:flex-nowrap sm:gap-3">
                                     <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                                         <span className="text-[var(--text-gray-color)]">
@@ -1100,7 +1107,7 @@ export default function WorkspaceSettingsAutomationTab({
                                         </div>
                                     )}
                                 </div>
-                            </>
+                            </Reveal>
                         )}
                     </div>
                 </div>
@@ -1108,6 +1115,7 @@ export default function WorkspaceSettingsAutomationTab({
 
             {!canUpdateAutomation && hasAutomationAccess && (
                 <SettingsPanel
+                    id="read-only"
                     title="Read-only access"
                     description="You can see this project's automation rules, but you don't have permission to change them."
                     icon="Eye"
