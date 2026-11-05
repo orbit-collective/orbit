@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
+import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import { IssueType } from '@/types/IssueTypes';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsIssueTypesTab from './WorkspaceSettingsIssueTypesTab';
@@ -359,5 +360,48 @@ describe('WorkspaceSettingsIssueTypesTab', () => {
                 expect.objectContaining({ preserveScroll: true }),
             );
         });
+    });
+});
+
+describe('WorkspaceSettingsIssueTypesTab panels', () => {
+    const inPage = (props = {}) =>
+        render(
+            inSettingsPage(
+                <AlertProvider>
+                    <WorkspaceSettingsIssueTypesTab
+                        memberProjects={[project]}
+                        selectedProjectId={1}
+                        issueTypes={issueTypes}
+                        hasIssueTypesAccess
+                        {...props}
+                    />
+                </AlertProvider>,
+                'issue-types',
+            ),
+        );
+
+    test('the catalog folds and, folded, counts the types', () => {
+        inPage();
+
+        expectPanelsToFold([/Issue type catalog/]);
+
+        fireEvent.click(
+            screen.getByRole('button', { name: /Issue type catalog/ }),
+        );
+        expect(screen.getByTestId('collapsed-summary')).toHaveTextContent(
+            `${issueTypes.length} ${issueTypes.length === 1 ? 'type' : 'types'}`,
+        );
+    });
+
+    test('the no-access panel folds as well', () => {
+        inPage({ hasIssueTypesAccess: false });
+
+        expectPanelsToFold([/^Issue types/]);
+    });
+
+    test('the rows rise in and end up visible', async () => {
+        inPage();
+
+        expect(await screen.findByText(issueTypes[0].name)).toBeVisible();
     });
 });
