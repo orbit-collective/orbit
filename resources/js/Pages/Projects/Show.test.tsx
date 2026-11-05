@@ -239,6 +239,31 @@ describe('Projects Show Page', () => {
         expect(filterBar).toHaveAttribute('data-users-count', '1');
     });
 
+    test('swaps the view for the chosen one instead of stacking both', async () => {
+        const user = userEvent.setup();
+        render(
+            <Show
+                project={makeProject()}
+                issues={makePaginated([makeIssue()], {
+                    from: 1,
+                    to: 1,
+                    total: 1,
+                })}
+                projects={[]}
+                savedFilters={[]}
+                users={[]}
+                activityLogs={makePaginated([])}
+            />,
+        );
+
+        await user.click(
+            screen.getByRole('button', { name: 'Switch to Board' }),
+        );
+
+        expect(screen.getAllByTestId('issue-board')).toHaveLength(1);
+        expect(screen.queryByTestId('issue-table')).not.toBeInTheDocument();
+    });
+
     test('defaults to the List view and renders IssueTable with its pagination', () => {
         const issues = [makeIssue()];
         render(
