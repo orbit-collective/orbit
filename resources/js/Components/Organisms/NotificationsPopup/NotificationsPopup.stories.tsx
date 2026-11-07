@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { notifications } from '@/stories/fixtures';
 import NotificationsPopup from './NotificationsPopup';
 
@@ -24,9 +24,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByText('GitHub sync is failing'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByText('GitHub sync is failing'),
+            ).toBeVisible(),
+        );
     },
 };
 
@@ -70,10 +72,14 @@ export const FilteredByType: Story = {
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
         await userEvent.click(canvas.getByRole('button', { name: /error/i }));
-        await expect(await canvas.findByText('Import failed')).toBeVisible();
-        await expect(
-            canvas.queryByText('GitHub sync is failing'),
-        ).not.toBeInTheDocument();
+        await waitFor(async () =>
+            expect(await canvas.findByText('Import failed')).toBeVisible(),
+        );
+        await waitFor(() =>
+            expect(
+                canvas.queryByText('GitHub sync is failing'),
+            ).not.toBeInTheDocument(),
+        );
     },
 };
 
@@ -83,9 +89,11 @@ export const SelectingSeveral: Story = {
         const canvas = within(canvasElement);
         await userEvent.click(canvas.getByLabelText('Select notifications'));
         await userEvent.click(canvas.getByText('Select all'));
-        await expect(
-            canvas.getByText(`${notifications.length} selected`),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                canvas.getByText(`${notifications.length} selected`),
+            ).toBeVisible(),
+        );
     },
 };
 
@@ -103,8 +111,8 @@ export const WithMorePages: Story = {
         },
     },
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByText('Load more'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(within(canvasElement).getByText('Load more')).toBeVisible(),
+        );
     },
 };

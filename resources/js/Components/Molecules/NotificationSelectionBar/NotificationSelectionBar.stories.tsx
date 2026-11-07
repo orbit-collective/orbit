@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import NotificationSelectionBar from './NotificationSelectionBar';
 
 const meta = {
@@ -47,8 +47,10 @@ export const NothingSelected: Story = {
 export const AllSelected: Story = {
     args: { selectedCount: 5 },
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByText('Clear selection'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByText('Clear selection'),
+            ).toBeVisible(),
+        );
     },
 };
