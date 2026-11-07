@@ -1,10 +1,14 @@
 import type { FormDataConvertible } from '@inertiajs/core';
 import { Link, router, usePage } from '@inertiajs/react';
+import type { Variants } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
+import { PageSection, PageStage } from '@/Components/Atoms/PageStage/PageStage';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
+import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import Calendar from '@/Components/Molecules/Calendar/Calendar';
 import CommentForm from '@/Components/Molecules/CommentForm/CommentForm';
@@ -43,6 +47,7 @@ import {
 } from '@/utils/activityLog';
 import { cn } from '@/utils/cn';
 import { retypeOptions } from '@/utils/issueTypes';
+import { DURATION, EASE, rowIn } from '@/utils/motion';
 import { formatDate } from '@/utils/time';
 import { getReachableStatuses } from '@/utils/workflow';
 
@@ -54,6 +59,36 @@ const NO_ANCESTORS: Issue[] = [];
 const NO_PRIORITIES: ProjectPriority[] = [];
 const ACTIVITY_DEFAULT_PER_PAGE = 20;
 const ACTIVITY_ONLY = ['activityLogs', 'queryParams'];
+
+const tabPanelVariants: Variants = {
+    hidden: { opacity: 0, y: 8 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: DURATION.base, ease: EASE },
+    },
+};
+
+/** Stands in for the activity feed while its deferred data is on the way. */
+function ActivitySkeleton() {
+    return (
+        <div
+            role="status"
+            aria-label="Loading activity"
+            className="flex flex-col gap-4"
+        >
+            {[0, 1, 2].map((index) => (
+                <div key={index} className="flex gap-3">
+                    <Skeleton index={index} className="h-7 w-7 rounded-full" />
+                    <div className="flex flex-1 flex-col gap-2 pt-1">
+                        <Skeleton index={index} className="h-3 w-1/3" />
+                        <Skeleton index={index} className="h-3 w-3/4" />
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
 
 export default function Show({
     project,
@@ -350,45 +385,54 @@ export default function Show({
                             ancestors={ancestors}
                             presence={<PresenceStack users={viewers} />}
                         />
-                        <main className="flex flex-1 flex-col overflow-y-auto">
+                        <PageStage
+                            as="main"
+                            className="flex flex-1 flex-col overflow-y-auto"
+                        >
                             <div className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 gap-6 px-6 py-6 md:grid-cols-[1fr_260px]">
                                 <div className="flex min-w-0 flex-col gap-4">
-                                    <EditableText
-                                        as="h1"
-                                        value={issue.title}
-                                        onSave={(value) =>
-                                            updateIssue({ title: value })
-                                        }
-                                        placeholder="Issue title"
-                                        displayClassName="text-2xl font-semibold text-[var(--text-color)]"
-                                        inputClassName="text-2xl font-semibold"
-                                    />
+                                    <PageSection className="flex flex-col gap-4">
+                                        <EditableText
+                                            as="h1"
+                                            value={issue.title}
+                                            onSave={(value) =>
+                                                updateIssue({ title: value })
+                                            }
+                                            placeholder="Issue title"
+                                            displayClassName="text-2xl font-semibold text-[var(--text-color)]"
+                                            inputClassName="text-2xl font-semibold"
+                                        />
 
-                                    <ConcurrentEditNotice
-                                        names={editorNames}
-                                        subject="description"
-                                    />
-                                    <EditableMarkdown
-                                        onEditingChange={announceEditing}
-                                        value={issue.description || ''}
-                                        onSave={(value) =>
-                                            updateIssue({ description: value })
-                                        }
-                                        onImageUpload={uploadImage}
-                                        users={users}
-                                        projectId={project.id}
-                                        placeholder="Add a description..."
-                                    />
+                                        <ConcurrentEditNotice
+                                            names={editorNames}
+                                            subject="description"
+                                        />
+                                        <EditableMarkdown
+                                            onEditingChange={announceEditing}
+                                            value={issue.description || ''}
+                                            onSave={(value) =>
+                                                updateIssue({
+                                                    description: value,
+                                                })
+                                            }
+                                            onImageUpload={uploadImage}
+                                            users={users}
+                                            projectId={project.id}
+                                            placeholder="Add a description..."
+                                        />
+                                    </PageSection>
 
                                     {issue.issueType?.allowsChildren && (
-                                        <IssueChildrenPanel
-                                            project={project}
-                                            issue={issue}
-                                            issueTypes={issueTypes}
-                                        />
+                                        <PageSection>
+                                            <IssueChildrenPanel
+                                                project={project}
+                                                issue={issue}
+                                                issueTypes={issueTypes}
+                                            />
+                                        </PageSection>
                                     )}
 
-                                    <div className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
+                                    <PageSection className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
                                         <TabSelection
                                             tabs={tabs}
                                             selectedTab={selectedTab}
@@ -396,11 +440,18 @@ export default function Show({
                                             onSelectTab={setSelectedTab}
                                         />
                                         {/* Stays mounted while Activity is open so a half-written comment survives the switch. */}
-                                        <div
+                                        <motion.div
                                             role="tabpanel"
                                             id={commentsIds.panel}
                                             aria-labelledby={commentsIds.tab}
                                             hidden={selectedTab !== 'Comments'}
+                                            variants={tabPanelVariants}
+                                            initial={false}
+                                            animate={
+                                                selectedTab === 'Comments'
+                                                    ? 'show'
+                                                    : 'hidden'
+                                            }
                                             className={cn(
                                                 'flex flex-col gap-3',
                                                 selectedTab !== 'Comments' &&
@@ -421,9 +472,12 @@ export default function Show({
                                                 projectId={project.id}
                                                 onImageUpload={uploadImage}
                                             />
-                                        </div>
+                                        </motion.div>
                                         {selectedTab === 'Activity' && (
-                                            <div
+                                            <motion.div
+                                                variants={tabPanelVariants}
+                                                initial="hidden"
+                                                animate="show"
                                                 role="tabpanel"
                                                 id={activityIds.panel}
                                                 aria-labelledby={
@@ -432,6 +486,9 @@ export default function Show({
                                                 aria-busy={!activityLogs}
                                                 className="flex flex-col gap-3"
                                             >
+                                                {!activityLogs && (
+                                                    <ActivitySkeleton />
+                                                )}
                                                 {activityLogs && (
                                                     <>
                                                         <ActivityLogs
@@ -473,9 +530,9 @@ export default function Show({
                                                         />
                                                     </>
                                                 )}
-                                            </div>
+                                            </motion.div>
                                         )}
-                                    </div>
+                                    </PageSection>
                                 </div>
 
                                 <div className="sticky top-6 flex flex-col gap-3 self-start">
@@ -745,7 +802,10 @@ export default function Show({
                                         </div>
                                     </SidebarField>
 
-                                    <div className="mt-auto flex flex-col gap-2 border-t border-[var(--border-color)] pt-4">
+                                    <motion.div
+                                        variants={rowIn}
+                                        className="mt-auto flex flex-col gap-2 border-t border-[var(--border-color)] pt-4"
+                                    >
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-gray-color)]">
                                                 Created
@@ -762,58 +822,88 @@ export default function Show({
                                                 {formatDate(issue.updated_at)}
                                             </span>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 </div>
                             </div>
-                        </main>
+                        </PageStage>
                     </div>
-                    {(showStartDate || showEndDate) && (
-                        <div
-                            className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
-                            onClick={() => {
-                                setShowStartDate(false);
-                                setShowEndDate(false);
-                            }}
-                        >
-                            <div onClick={(e) => e.stopPropagation()}>
-                                {showStartDate && (
-                                    <Calendar
-                                        selectedDate={parseDate(
-                                            issue.start_date,
-                                        )}
-                                        onSelect={(date) => {
-                                            const newStartDate =
-                                                toLocalDateString(date);
-                                            updateIssue({
-                                                start_date: newStartDate,
-                                                ...(issue.end_date &&
-                                                issue.end_date < newStartDate
-                                                    ? { end_date: newStartDate }
-                                                    : {}),
-                                            });
-                                            setShowStartDate(false);
-                                        }}
-                                        onClose={() => setShowStartDate(false)}
-                                    />
-                                )}
-                                {showEndDate && (
-                                    <Calendar
-                                        selectedDate={parseDate(issue.end_date)}
-                                        minDate={parseDate(issue.start_date)}
-                                        rangeStart={parseDate(issue.start_date)}
-                                        onSelect={(date) => {
-                                            updateIssue({
-                                                end_date:
-                                                    toLocalDateString(date),
-                                            });
-                                            setShowEndDate(false);
-                                        }}
-                                        onClose={() => setShowEndDate(false)}
-                                    />
-                                )}
-                            </div>
-                        </div>
-                    )}
+                    <AnimatePresence>
+                        {(showStartDate || showEndDate) && (
+                            <motion.div
+                                key="date-overlay"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: DURATION.fast }}
+                                className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
+                                onClick={() => {
+                                    setShowStartDate(false);
+                                    setShowEndDate(false);
+                                }}
+                            >
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.97 }}
+                                    transition={{
+                                        duration: DURATION.base,
+                                        ease: EASE,
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {showStartDate && (
+                                        <Calendar
+                                            selectedDate={parseDate(
+                                                issue.start_date,
+                                            )}
+                                            onSelect={(date) => {
+                                                const newStartDate =
+                                                    toLocalDateString(date);
+                                                updateIssue({
+                                                    start_date: newStartDate,
+                                                    ...(issue.end_date &&
+                                                    issue.end_date <
+                                                        newStartDate
+                                                        ? {
+                                                              end_date:
+                                                                  newStartDate,
+                                                          }
+                                                        : {}),
+                                                });
+                                                setShowStartDate(false);
+                                            }}
+                                            onClose={() =>
+                                                setShowStartDate(false)
+                                            }
+                                        />
+                                    )}
+                                    {showEndDate && (
+                                        <Calendar
+                                            selectedDate={parseDate(
+                                                issue.end_date,
+                                            )}
+                                            minDate={parseDate(
+                                                issue.start_date,
+                                            )}
+                                            rangeStart={parseDate(
+                                                issue.start_date,
+                                            )}
+                                            onSelect={(date) => {
+                                                updateIssue({
+                                                    end_date:
+                                                        toLocalDateString(date),
+                                                });
+                                                setShowEndDate(false);
+                                            }}
+                                            onClose={() =>
+                                                setShowEndDate(false)
+                                            }
+                                        />
+                                    )}
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </ProjectPrioritiesProvider>
         </ProjectLabelsProvider>

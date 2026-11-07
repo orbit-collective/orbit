@@ -1,5 +1,7 @@
-import { KeyboardEvent, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { KeyboardEvent, useId, useRef } from 'react';
 import { cn } from '@/utils/cn';
+import { SPRING } from '@/utils/motion';
 
 interface TabSelectionProps<T extends string> {
     tabs: { name: T; count?: number }[];
@@ -24,6 +26,7 @@ function TabSelection<T extends string>({
     idPrefix,
 }: TabSelectionProps<T>) {
     const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+    const underlineId = useId();
 
     const handleKeyDown = (event: KeyboardEvent, index: number) => {
         let next: number;
@@ -64,12 +67,20 @@ function TabSelection<T extends string>({
                         onClick={() => onSelectTab(tab.name)}
                         onKeyDown={(event) => handleKeyDown(event, index)}
                         className={cn(
-                            '-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+                            'relative -mb-px flex items-center gap-2 whitespace-nowrap px-3 py-2 text-sm font-medium transition-colors',
                             active
-                                ? 'border-[var(--accent-color)] text-[var(--text-color)]'
-                                : 'border-transparent text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
+                                ? 'text-[var(--text-color)]'
+                                : 'text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
                         )}
                     >
+                        {active && (
+                            <motion.span
+                                layoutId={`tab-underline-${underlineId}`}
+                                data-testid="tab-underline"
+                                className="absolute inset-x-0 bottom-0 h-0.5 bg-[var(--accent-color)]"
+                                transition={SPRING}
+                            />
+                        )}
                         {tab.name}
                         {tab.count !== undefined && (
                             <span className="rounded-full bg-[var(--bg-light-color)] px-1.5 text-xs text-[var(--text-gray-color)]">

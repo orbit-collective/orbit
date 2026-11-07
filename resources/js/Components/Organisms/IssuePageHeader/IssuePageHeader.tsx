@@ -1,9 +1,11 @@
 import { Link } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { IssuePageHeaderProps } from '@/types/Components';
+import { DURATION, EASE } from '@/utils/motion';
 
 const Separator = () => (
     <span className="shrink-0 text-[var(--text-gray-color)]">/</span>
@@ -17,7 +19,12 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
 }) => {
     return (
         <header className="flex items-center justify-between gap-3 border-b border-solid border-[var(--border-color)] px-6 py-3">
-            <div className="flex min-w-0 items-center gap-2 text-sm">
+            <motion.div
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: DURATION.base, ease: EASE }}
+                className="flex min-w-0 items-center gap-2 text-sm"
+            >
                 <IconButton
                     isLink
                     link={route('projects.show', project.id)}
@@ -76,7 +83,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                         #{issue.number ?? issue.id} {issue.title}
                     </span>
                 </span>
-            </div>
+            </motion.div>
             <div className="flex items-center gap-3">
                 {presence}
                 <IconButton
