@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
+import { useEffect, useRef } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -14,21 +15,32 @@ const isPriorityColumn = (id: string) => id.startsWith('priority-');
 
 function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
     const { setNodeRef, isOver } = useDroppable({ id: meta.id });
-    // A refresh remounts the column so it rises in again with its cards.
+    // A refresh plays the column's entrance again without remounting it, so
+    // the scroll position of its cards survives (only the cards re-enter).
     const epoch = useRefreshEpoch();
+    const rise = useAnimationControls();
+    const indexRef = useRef(index);
+    indexRef.current = index;
     const priorityColumn = isPriorityColumn(meta.id);
+
+    useEffect(() => {
+        rise.set({ opacity: 0, y: 18 });
+        void rise.start({
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: DURATION.base,
+                ease: EASE,
+                delay: indexRef.current * STAGGER,
+            },
+        });
+    }, [epoch, rise]);
 
     return (
         <motion.div
-            key={epoch}
             ref={setNodeRef}
             initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-                duration: DURATION.base,
-                ease: EASE,
-                delay: index * STAGGER,
-            }}
+            animate={rise}
             className="flex h-full w-[calc(100vw-3.5rem)] flex-shrink-0 snap-center flex-col overflow-hidden rounded-2xl border transition-colors duration-150 sm:w-[336px]"
             style={{
                 borderColor: isOver
@@ -49,6 +61,7 @@ function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
                 <div className={'flex w-full items-center justify-between'}>
                     <div className={'flex items-center gap-3'}>
                         <motion.div
+                            key={epoch}
                             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
                             style={{
                                 color: meta.accent,
