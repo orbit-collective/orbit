@@ -158,4 +158,29 @@ describe('TabSelection Component', () => {
             expect(onSelectTab).toHaveBeenLastCalledWith('Comments');
         });
     });
+
+    test('one underline marks the selected tab and moves with it', () => {
+        const { rerender } = render(
+            <TabSelection
+                tabs={tabs}
+                selectedTab="Comments"
+                idPrefix="t"
+                onSelectTab={() => {}}
+            />,
+        );
+        expect(screen.getAllByTestId('tab-underline')).toHaveLength(1);
+
+        rerender(
+            <TabSelection
+                tabs={tabs}
+                selectedTab="Activity"
+                idPrefix="t"
+                onSelectTab={() => {}}
+            />,
+        );
+
+        expect(screen.getByTestId('tab-underline').parentElement).toBe(
+            screen.getByRole('tab', { name: 'Activity' }),
+        );
+    });
 });

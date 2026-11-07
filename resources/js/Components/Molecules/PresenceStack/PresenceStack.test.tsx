@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 import PresenceStack from './PresenceStack';
 
@@ -47,5 +47,20 @@ describe('PresenceStack', () => {
 
         expect(screen.getByText('+2')).toBeInTheDocument();
         expect(screen.queryByText('C')).not.toBeInTheDocument();
+    });
+
+    test('a viewer who leaves is removed once their avatar has shrunk away', async () => {
+        const { rerender } = render(
+            <PresenceStack users={[user(1, 'Ada'), user(2, 'Grace')]} />,
+        );
+
+        rerender(<PresenceStack users={[user(1, 'Ada')]} />);
+
+        await waitFor(() =>
+            expect(screen.getByRole('group')).toHaveAttribute(
+                'aria-label',
+                'Also viewing: Ada',
+            ),
+        );
     });
 });

@@ -1339,3 +1339,23 @@ describe('Issues/Show custom fields', () => {
         });
     });
 });
+
+describe('Issues/Show loading', () => {
+    test('shows skeleton rows in the Activity tab until the deferred feed arrives', async () => {
+        render(
+            <Show
+                project={project}
+                projects={[project]}
+                issue={buildIssue()}
+                users={users}
+            />,
+        );
+
+        await userEvent.click(screen.getByRole('tab', { name: 'Activity' }));
+
+        expect(
+            screen.getByRole('status', { name: 'Loading activity' }),
+        ).toBeInTheDocument();
+        expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(2);
+    });
+});
