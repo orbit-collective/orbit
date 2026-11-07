@@ -1,5 +1,70 @@
 # Changelog
 
+## [0.13.1](https://github.com/orbit-collective/orbit/compare/v0.13.0...v0.13.1) (2026-11-07)
+
+
+### Features
+
+* **activity:** animate activity log items ([c9df25c](https://github.com/orbit-collective/orbit/commit/c9df25c645b851ecca31d96c5dee4ffab7f7bd62))
+* **dashboard:** animate the completion, priority and trend charts ([ea5b84e](https://github.com/orbit-collective/orbit/commit/ea5b84e9c5c551a0a11f78a52cd6567fd4634e58))
+* **dashboard:** animate the Dashboard page ([96dadd3](https://github.com/orbit-collective/orbit/commit/96dadd352bf6e52d4a03f261546e099d053d6f81))
+* **issues:** animate comments and sub-issues ([5de8e0a](https://github.com/orbit-collective/orbit/commit/5de8e0aba44b164c8b81368ee3dcb401441da67b))
+* **issues:** animate the calendar view and deadlines panel ([40bbbc5](https://github.com/orbit-collective/orbit/commit/40bbbc5aad101990e8d78aedd0225b1a13efc1f0))
+* **issues:** animate the issue page and its loading states ([992b1aa](https://github.com/orbit-collective/orbit/commit/992b1aa5733866d6eae0699a9eb3f58cc35efd6b))
+* **issues:** animate the list and board views ([ea66a7d](https://github.com/orbit-collective/orbit/commit/ea66a7d8ae485e38c0671f207cecd23d03036082))
+* **issues:** fade views in when switching ([f28b946](https://github.com/orbit-collective/orbit/commit/f28b9463ef159b6d229b39a6ad6be53e7f908868))
+* **notifications:** animate the notifications popup ([39e43f4](https://github.com/orbit-collective/orbit/commit/39e43f42e8f4daa6360898ee725052989e18a1dd))
+* **preferences:** add a Reduced Motion setting that turns all animations off ([eba3d7b](https://github.com/orbit-collective/orbit/commit/eba3d7bf492babb9c340ee558ba3c34bf4419f03))
+* **projects:** animate the Projects page and its cards ([76514cb](https://github.com/orbit-collective/orbit/commit/76514cbb0df7cf0d7c57fec8e0ce98aa0c6efbc8))
+* **settings:** animate the Automation workspace and fold its panels ([f6e252c](https://github.com/orbit-collective/orbit/commit/f6e252cc2de53c47f6ae81c7fc0e99b0863b3eef))
+* **settings:** animate the Integrations tab and fold its panels ([63fa042](https://github.com/orbit-collective/orbit/commit/63fa04297eeb519ee2197133a06e4e03c142fb66))
+* **settings:** animate the permission groups of a role ([7e34344](https://github.com/orbit-collective/orbit/commit/7e343447287dc3d6aa71b81ceb8b487d505339b1))
+* **settings:** bring the profile previews and avatar library to life ([0a11869](https://github.com/orbit-collective/orbit/commit/0a11869aee68138b2a57a522af35c76e69951f65))
+* **settings:** count every number in the settings tabs ([255c0fe](https://github.com/orbit-collective/orbit/commit/255c0fe13a5de27022152ac508846a01f69e8bb6))
+* **settings:** draw the profile preview lines and document the new motion ([95669f7](https://github.com/orbit-collective/orbit/commit/95669f74ef48822f68bc3f64e35e5309e42b70c7))
+* **settings:** fold and animate the Preferences panels ([b1cba1a](https://github.com/orbit-collective/orbit/commit/b1cba1a0f77d7558fb11e7983ad0bb6f92e40a7e))
+* **settings:** fold the Issue Types catalog and animate its rows ([2d4c1c7](https://github.com/orbit-collective/orbit/commit/2d4c1c7f59f0410db92fa87e871e289a0fc69d9d))
+* **settings:** fold the Labels panel and animate its rows ([7b8d254](https://github.com/orbit-collective/orbit/commit/7b8d254feec250a2fb82d6779a7e674338e975d1))
+* **settings:** fold the Members panels and animate people and numbers ([9a599ed](https://github.com/orbit-collective/orbit/commit/9a599ed3006cdb675c7874608864cd061a6c6fa1))
+* **settings:** fold the Notifications panels and animate the type rows ([c9e3c2e](https://github.com/orbit-collective/orbit/commit/c9e3c2eb83df26b29ed58651b90c97ebd248908d))
+* **settings:** fold the Priorities scale and animate its rows ([83b5bcd](https://github.com/orbit-collective/orbit/commit/83b5bcd298046525e197b2b011a1da6d9f383962))
+* **settings:** fold the Profile panels and unfold the avatar library ([de1ac57](https://github.com/orbit-collective/orbit/commit/de1ac5745ba6045be8d435270ab669340b87c3d2))
+* **settings:** fold the Roles panels and animate roles and numbers ([4e9da4d](https://github.com/orbit-collective/orbit/commit/4e9da4de310c2085b08f4c25ab24bfc3f4075643))
+* **settings:** fold the Security panels and animate sessions ([442a2a9](https://github.com/orbit-collective/orbit/commit/442a2a9b0ee7521decf9fc16545170e85883f40d))
+* **settings:** glide the role list highlight between roles ([2d6c4ac](https://github.com/orbit-collective/orbit/commit/2d6c4acd17ca327a46820983e3077571d7fdd0f7))
+* **settings:** glide the selection frame between option cards ([5ac0eee](https://github.com/orbit-collective/orbit/commit/5ac0eeea0a49ef475ee99d54be74b4336bea0519))
+* **settings:** let the inline editors rise into their rows ([b2756fd](https://github.com/orbit-collective/orbit/commit/b2756fd85edb66870ff382fc39c239ed5c1388f4))
+* **settings:** make the issue view mock-ups draw themselves ([e4006ef](https://github.com/orbit-collective/orbit/commit/e4006efec4572a6ca2d68989ad0419c1b2f8a710))
+* **settings:** make the shared project panels foldable ([b1eb9e5](https://github.com/orbit-collective/orbit/commit/b1eb9e5e988b01bf22f999001b645eae694aab3b))
+* **settings:** remember which panels of a settings page are folded ([d3e5b48](https://github.com/orbit-collective/orbit/commit/d3e5b485cbbf40080bf90bc31cef774c1bfaa5b0))
+* **settings:** stagger settings pages in and offer Collapse all ([5b0e072](https://github.com/orbit-collective/orbit/commit/5b0e0723c2601a8c3afcdc32707567846f0c9c99))
+* **settings:** swap the profile save state with motion ([392329d](https://github.com/orbit-collective/orbit/commit/392329d6bfc7e5e999bb98e0226729ea76c78c0d))
+* **ui:** add a Skeleton placeholder that breathes while content loads ([a11974d](https://github.com/orbit-collective/orbit/commit/a11974d2128dbf6091b1236da2e516ff2f88d044))
+* **ui:** add PageStage and PageSection for staggered page content ([88d8758](https://github.com/orbit-collective/orbit/commit/88d87585133427fc2c380078fed340f92839ee1f))
+* **ui:** add PreviewMotion for mock-ups that draw themselves ([de45a51](https://github.com/orbit-collective/orbit/commit/de45a51942050ff454de334107048428c00fe19b))
+* **ui:** add RowReveal for list rows and cards that rise in ([fbb5fef](https://github.com/orbit-collective/orbit/commit/fbb5fef42c045b14891ee0c7f4b5a3b4a34efa7d))
+* **ui:** draw progress rings and count their numbers ([a83b7ef](https://github.com/orbit-collective/orbit/commit/a83b7efbeb2b4889a10511058fb2e63ced58aa10))
+* **ui:** extract CollapseAllButton from the Developer Portal ([4867971](https://github.com/orbit-collective/orbit/commit/48679719c846f00b8e8cbc9a2defe2f7c208d025))
+* **ui:** give pickable cards and toggles a physical feel ([1e1f45e](https://github.com/orbit-collective/orbit/commit/1e1f45ee0dcf70b32725c859ca0464f6d6eeed6d))
+* **ui:** let a SettingsPanel fold by id and rise into the page ([efe812d](https://github.com/orbit-collective/orbit/commit/efe812d23c05094a4ab95917b3c98bfc62796550))
+* **ui:** make every settings panel row rise in ([69c3746](https://github.com/orbit-collective/orbit/commit/69c37469d19e6b856f432dd4534da78d19d418bc))
+* **ui:** press-in and focus ring on every Button ([8b42422](https://github.com/orbit-collective/orbit/commit/8b42422a3f95800096a6d5db89897fd66e03d33e))
+* **ui:** replay page animations when Refresh is pressed ([25c9a55](https://github.com/orbit-collective/orbit/commit/25c9a5515843034ec415e37b06b6fa369d20f096))
+
+
+### Bug Fixes
+
+* **issues:** keep deadline rows inside the panel width ([1a7fe5d](https://github.com/orbit-collective/orbit/commit/1a7fe5d6a002249a32f16c681231f2b9e223c196))
+* **issues:** keep the board scroll position when Refresh is pressed ([eddde38](https://github.com/orbit-collective/orbit/commit/eddde383685db03098fc01d6a69175872aedea57))
+* **ui:** keep a folded panel's nested controls out of the tab order ([0e2e9f2](https://github.com/orbit-collective/orbit/commit/0e2e9f2d5ea438cb6277d0ce4795586eb39c5601))
+* **ui:** keep cards stretched to their grid cell inside RowReveal ([afbd2cd](https://github.com/orbit-collective/orbit/commit/afbd2cd9d2d245e91c855f533a2aea42f355f21f))
+* **ui:** make Reduced Motion also stop CSS transform movement ([c126a90](https://github.com/orbit-collective/orbit/commit/c126a906e9d717572fead8caef589eaaf517a0a2))
+
+
+### Miscellaneous Chores
+
+* release 0.13.1 ([13ea6b7](https://github.com/orbit-collective/orbit/commit/13ea6b7977308045ca31c99a56a5cd68a82d2dad))
+
 ## [0.13.0](https://github.com/orbit-collective/orbit/compare/v0.12.0...v0.13.0) (2026-11-05)
 
 
