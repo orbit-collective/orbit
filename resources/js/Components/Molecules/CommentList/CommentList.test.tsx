@@ -98,4 +98,24 @@ describe('CommentList image uploads', () => {
             expect(textarea).toHaveValue('Editable![shot.png](/storage/a.png)'),
         );
     });
+
+    test('a deleted comment slides out and leaves the list', async () => {
+        const { rerender } = render(
+            <CommentList
+                comments={[
+                    makeComment({ id: 1, body: 'Stays' }),
+                    makeComment({ id: 2, body: 'Goes' }),
+                ]}
+            />,
+        );
+
+        rerender(
+            <CommentList comments={[makeComment({ id: 1, body: 'Stays' })]} />,
+        );
+
+        await waitFor(() =>
+            expect(screen.queryByText('Goes')).not.toBeInTheDocument(),
+        );
+        expect(screen.getByText('Stays')).toBeInTheDocument();
+    });
 });

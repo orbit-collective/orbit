@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
@@ -194,7 +194,7 @@ describe('IssueChildrenPanel', () => {
         expect(screen.queryByText('Task')).not.toBeInTheDocument();
     });
 
-    test('pressing Escape closes the inline add row', () => {
+    test('pressing Escape closes the inline add row', async () => {
         render(
             <AlertProvider>
                 <IssueChildrenPanel
@@ -211,8 +211,10 @@ describe('IssueChildrenPanel', () => {
             { key: 'Escape' },
         );
 
-        expect(
-            screen.queryByPlaceholderText('What needs to be done?'),
-        ).not.toBeInTheDocument();
+        await waitFor(() =>
+            expect(
+                screen.queryByPlaceholderText('What needs to be done?'),
+            ).not.toBeInTheDocument(),
+        );
     });
 });

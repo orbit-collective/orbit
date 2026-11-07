@@ -1,7 +1,10 @@
 import { Link, router } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useRef, useState, type KeyboardEvent } from 'react';
+import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
+import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import InlineSelectDropdown from '@/Components/Molecules/InlineSelectDropdown/InlineSelectDropdown';
 import UserBadge from '@/Components/Molecules/UserBadge/UserBadge';
@@ -100,7 +103,7 @@ export default function IssueChildrenPanel({
                     Sub-issues
                     {children.length > 0 && (
                         <span className="ml-1.5 text-xs font-normal text-[var(--text-gray-color)]">
-                            {children.length}
+                            <AnimatedNumber value={children.length} />
                         </span>
                     )}
                 </span>
@@ -124,79 +127,98 @@ export default function IssueChildrenPanel({
                     </p>
                 )}
 
-                {children.map((child) => (
-                    <Link
+                {children.map((child, index) => (
+                    <RowReveal
                         key={child.id}
-                        href={route('issues.show', [project.id, child.id])}
-                        className="flex items-center gap-3 border-b border-[var(--border-color)] px-3 py-2 text-xs text-[var(--text-color)] transition-colors last:border-b-0 hover:bg-[var(--bg-light-color)]"
+                        index={index}
+                        className="border-b border-[var(--border-color)] last:border-b-0"
                     >
-                        <span className="w-10 shrink-0 font-mono text-[11px] text-[var(--text-muted-color)]">
-                            #{child.number ?? child.id}
-                        </span>
-                        {child.issueType && (
-                            <IssueTypeBadge issueType={child.issueType} />
-                        )}
-                        <span className="min-w-0 flex-1 truncate">
-                            {child.title}
-                        </span>
-                        {child.workflowStatus && (
-                            <WorkflowStatusBadge
-                                status={child.workflowStatus}
-                            />
-                        )}
-                        {child.assignee && (
-                            <UserBadge
-                                avatarSrc={child.assignee.avatar}
-                                name={child.assignee.name}
-                                size="sm"
-                                showTooltip={false}
-                            />
-                        )}
-                    </Link>
+                        <Link
+                            href={route('issues.show', [project.id, child.id])}
+                            className="flex items-center gap-3 px-3 py-2 text-xs text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                        >
+                            <span className="w-10 shrink-0 font-mono text-[11px] text-[var(--text-muted-color)]">
+                                #{child.number ?? child.id}
+                            </span>
+                            {child.issueType && (
+                                <IssueTypeBadge issueType={child.issueType} />
+                            )}
+                            <span className="min-w-0 flex-1 truncate">
+                                {child.title}
+                            </span>
+                            {child.workflowStatus && (
+                                <WorkflowStatusBadge
+                                    status={child.workflowStatus}
+                                />
+                            )}
+                            {child.assignee && (
+                                <UserBadge
+                                    avatarSrc={child.assignee.avatar}
+                                    name={child.assignee.name}
+                                    size="sm"
+                                    showTooltip={false}
+                                />
+                            )}
+                        </Link>
+                    </RowReveal>
                 ))}
 
-                {isAdding && (
-                    <div className="flex items-center gap-2 border-t border-[var(--border-color)] px-3 py-2">
-                        <input
-                            ref={inputRef}
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            onKeyDown={handleKeyDown}
-                            disabled={isSubmitting}
-                            placeholder="What needs to be done?"
-                            className="min-w-0 flex-1 rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] disabled:opacity-60"
-                        />
-                        {selectableTypes.length > 0 && (
-                            <InlineSelectDropdown
-                                label="Issue type"
-                                placeholder="Type"
-                                subtle
-                                options={selectableTypes.map((type) => ({
-                                    value: String(type.id),
-                                    label: type.name,
-                                    icon: type.icon,
-                                    color: type.color,
-                                }))}
-                                value={
-                                    issueTypeId !== null
-                                        ? String(issueTypeId)
-                                        : null
-                                }
-                                onChange={(value) =>
-                                    setIssueTypeId(value ? Number(value) : null)
-                                }
-                            />
-                        )}
-                        <button
-                            type="button"
-                            title="Cancel"
-                            onClick={cancel}
-                            className="rounded p-1 text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
+                <AnimatePresence initial={false}>
+                    {isAdding && (
+                        <motion.div
+                            key="add-row"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{
+                                duration: 0.3,
+                                ease: [0.22, 1, 0.36, 1],
+                            }}
+                            className="flex items-center gap-2 overflow-hidden border-t border-[var(--border-color)] px-3 py-2"
                         >
-                            <Icon name="X" size={13} />
-                        </button>
-                    </div>
-                )}
+                            <input
+                                ref={inputRef}
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                disabled={isSubmitting}
+                                placeholder="What needs to be done?"
+                                className="min-w-0 flex-1 rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] disabled:opacity-60"
+                            />
+                            {selectableTypes.length > 0 && (
+                                <InlineSelectDropdown
+                                    label="Issue type"
+                                    placeholder="Type"
+                                    subtle
+                                    options={selectableTypes.map((type) => ({
+                                        value: String(type.id),
+                                        label: type.name,
+                                        icon: type.icon,
+                                        color: type.color,
+                                    }))}
+                                    value={
+                                        issueTypeId !== null
+                                            ? String(issueTypeId)
+                                            : null
+                                    }
+                                    onChange={(value) =>
+                                        setIssueTypeId(
+                                            value ? Number(value) : null,
+                                        )
+                                    }
+                                />
+                            )}
+                            <button
+                                type="button"
+                                title="Cancel"
+                                onClick={cancel}
+                                className="rounded p-1 text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
+                            >
+                                <Icon name="X" size={13} />
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </section>
     );
