@@ -28,6 +28,16 @@ describe('motionPreference', () => {
         expect(MotionGlobalConfig.skipAnimations).toBe(true);
     });
 
+    test('marks the page so CSS movement can switch off too', () => {
+        act(() => setReducedMotion(true));
+        expect(document.documentElement).toHaveAttribute('data-reduced-motion');
+
+        act(() => setReducedMotion(false));
+        expect(document.documentElement).not.toHaveAttribute(
+            'data-reduced-motion',
+        );
+    });
+
     test('turning it off is remembered too', () => {
         act(() => setReducedMotion(true));
         act(() => setReducedMotion(false));
