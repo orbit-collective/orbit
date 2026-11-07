@@ -83,13 +83,25 @@ describe('BoardColumn Component', () => {
         expect(await screen.findByText('7')).toBeInTheDocument();
     });
 
-    test('a refresh remounts the column so it rises in again', async () => {
-        render(<BoardColumn issues={[]} meta={highMeta} count={0} />);
-        const before = screen.getByText('High Priority');
+    test('a refresh replays the entrance without replacing the scroller, so scroll position survives', async () => {
+        render(
+            <BoardColumn
+                issues={[makeIssue({ title: 'Scrolled card' })]}
+                meta={highMeta}
+                count={1}
+            />,
+        );
+        const scroller = screen
+            .getByText('Scrolled card')
+            .closest('.overflow-y-auto');
+        const heading = screen.getByText('High Priority');
 
         act(() => bumpRefreshEpoch());
 
-        expect(screen.getByText('High Priority')).not.toBe(before);
+        expect(screen.getByText('High Priority')).toBe(heading);
+        expect(
+            screen.getByText('Scrolled card').closest('.overflow-y-auto'),
+        ).toBe(scroller);
         await waitFor(() =>
             expect(screen.getByText('High Priority')).toBeVisible(),
         );
