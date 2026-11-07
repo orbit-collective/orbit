@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import {
     epicType,
     issueTypes,
@@ -47,12 +47,16 @@ export const AddingSubIssue: Story = {
         await userEvent.click(
             canvas.getByRole('button', { name: /add sub-issue/i }),
         );
-        await expect(
-            canvas.getByPlaceholderText('What needs to be done?'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                canvas.getByPlaceholderText('What needs to be done?'),
+            ).toBeVisible(),
+        );
         await userEvent.click(canvas.getByTitle('Cancel'));
-        await expect(
-            canvas.queryByPlaceholderText('What needs to be done?'),
-        ).not.toBeInTheDocument();
+        await waitFor(() =>
+            expect(
+                canvas.queryByPlaceholderText('What needs to be done?'),
+            ).not.toBeInTheDocument(),
+        );
     },
 };

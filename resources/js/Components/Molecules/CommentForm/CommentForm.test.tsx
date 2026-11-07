@@ -794,4 +794,13 @@ describe('CommentForm image uploads', () => {
             ).toBeDisabled();
         });
     });
+
+    test('says it is posting, with a spinning icon, while submitting', () => {
+        const { container } = render(
+            <CommentForm onSubmit={() => {}} isSubmitting />,
+        );
+
+        expect(screen.getByText('Posting…')).toBeInTheDocument();
+        expect(container.querySelector('.animate-spin')).not.toBeNull();
+    });
 });

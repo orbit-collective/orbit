@@ -525,15 +525,23 @@ const CommentForm: React.FC<CommentFormProps> = ({
                     aria-label="Post comment"
                     disabled={!canSubmit}
                     className={cn(
-                        'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
+                        'group/send flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
                         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)]',
                         canSubmit
                             ? 'cursor-pointer bg-[var(--accent-color)] text-[var(--text-color)] hover:bg-[var(--accent-light-color)]'
                             : 'cursor-not-allowed bg-[var(--bg-light-color)] text-[var(--text-muted-color)]',
                     )}
                 >
-                    <Icon name="SendHorizontal" size={14} />
-                    <span>Comment</span>
+                    <Icon
+                        name={isSubmitting ? 'LoaderCircle' : 'SendHorizontal'}
+                        size={14}
+                        className={cn(
+                            isSubmitting
+                                ? 'animate-spin'
+                                : 'transition-transform duration-200 group-hover/send:translate-x-0.5',
+                        )}
+                    />
+                    <span>{isSubmitting ? 'Posting…' : 'Comment'}</span>
                 </button>
             </div>
             {mention && (
