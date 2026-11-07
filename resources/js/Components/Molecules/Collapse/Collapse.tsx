@@ -55,6 +55,9 @@ const Collapse: React.FC<CollapseProps> = ({
             variants={collapseVariants}
             initial={false}
             animate={open ? 'open' : 'closed'}
+            // A nested open Collapse sets its own `visibility: visible`, which
+            // beats this body's `hidden`; `inert` blocks focus for every child.
+            inert={!open}
         >
             {children}
         </motion.div>

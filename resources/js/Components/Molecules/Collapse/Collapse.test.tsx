@@ -90,4 +90,26 @@ describe('Collapse', () => {
             expect(screen.queryByText('lazy')).not.toBeInTheDocument(),
         );
     });
+
+    test('a folded body keeps an open nested Collapse out of the tab order', async () => {
+        const { rerender } = render(
+            <Collapse open>
+                <Collapse open>
+                    <button>deep</button>
+                </Collapse>
+            </Collapse>,
+        );
+
+        rerender(
+            <Collapse open={false}>
+                <Collapse open>
+                    <button>deep</button>
+                </Collapse>
+            </Collapse>,
+        );
+
+        await waitFor(() =>
+            expect(screen.getByText('deep').closest('[inert]')).not.toBeNull(),
+        );
+    });
 });
