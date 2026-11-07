@@ -1,16 +1,48 @@
 name: Notify docs change
 
+# orbit-web (the marketing site) shows the docs, the changelog and the latest
+# release, all read when it is built, so it has to be rebuilt when any of them
+# change:
+#   - documentation/**  changes with the docs themselves;
+#   - CHANGELOG.md      changes only when a release PR is merged, i.e. on a release.
+# release-please publishes with the default GITHUB_TOKEN, and events made with
+# that token never start other workflows, so a `release: published` trigger
+# would never fire. Merging the release PR is a normal push, which does.
 on:
   push:
     branches: [master]
     paths:
       - "documentation/**"
+      - "CHANGELOG.md"
+
+permissions:
+  contents: read
 
 jobs:
   trigger-netlify:
     name: Trigger orbit-web rebuild
     runs-on: ubuntu-latest
     steps:
+      # The release is created by release-please in a workflow that starts on
+      # this same push. The site reads the latest release while it builds, so
+      # give it a moment to exist before asking for the build; if it does not
+      # show up, build anyway rather than skip the docs rebuild.
+      - name: Wait for the release to be published
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(gh api -H "Accept: application/vnd.github.raw" \
+            "repos/$GITHUB_REPOSITORY/contents/.release-please-manifest.json?ref=$GITHUB_SHA" | jq -r '."."')
+          echo "Looking for release v$version"
+          for attempt in $(seq 1 30); do
+            if gh release view "v$version" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+              echo "Release v$version is published"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::warning::Release v$version was not published within 150 s; rebuilding the site anyway"
+
       - name: Call Netlify build hook
         run: curl --fail --silent --show-error -X POST -d {} "$NETLIFY_BUILD_HOOK"
         env:
