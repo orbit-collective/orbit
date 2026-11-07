@@ -12,7 +12,9 @@
     font-family: 'Poppins', sans-serif;
 }
 
-html, body, #app {
+html,
+body,
+#app {
     height: 100%;
     background-color: var(--bg-color);
     color: var(--text-color);
@@ -149,7 +151,6 @@ html, body, #app {
     background: var(--bg-light-color-hover);
 }
 
-
 /* The app-wide `* { list-style: none }` reset sets list-style
    directly on every <li>, which beats the *inherited* disc/decimal that
    @tailwindcss/typography's `.prose ul`/`.prose ol` rules apply to their
@@ -245,4 +246,22 @@ html, body, #app {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+/* Reduced Motion (Settings > Preferences). The switch for framer-motion lives
+   in utils/motionPreference.ts; this is its CSS half. Transform changes (the
+   button press, hover lifts, turning icons) snap instead of moving, while colour,
+   border and shadow fades stay. */
+html[data-reduced-motion] *,
+html[data-reduced-motion] *::before,
+html[data-reduced-motion] *::after {
+    transition-property:
+        color, background-color, border-color, fill, stroke, box-shadow,
+        opacity, filter !important;
+}
+
+/* Spinners keep turning (they are feedback, not decoration); the command
+   palette's entrance keyframes do not. */
+html[data-reduced-motion] [class*='animate-[palette-'] {
+    animation: none !important;
 }

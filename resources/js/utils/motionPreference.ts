@@ -29,6 +29,15 @@ let reduced = typeof window !== 'undefined' && readStored();
  */
 const apply = () => {
     MotionGlobalConfig.skipAnimations = hostSkipsAnimations || reduced;
+
+    // CSS-driven movement (press, hover lift, rotating icons) follows through
+    // `html[data-reduced-motion]` in global.css.
+    if (typeof document !== 'undefined') {
+        document.documentElement.toggleAttribute(
+            'data-reduced-motion',
+            reduced,
+        );
+    }
 };
 
 apply();
