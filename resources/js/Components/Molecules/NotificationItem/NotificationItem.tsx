@@ -1,8 +1,10 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { Notification, NotificationTypes } from '@/types/Notification';
 import { cn } from '@/utils/cn';
+import { SPRING } from '@/utils/motion';
 import { formatShortDate } from '@/utils/time';
 
 interface NotificationItemProps {
@@ -33,13 +35,16 @@ function NotificationItem({
     return (
         <div
             className={cn(
-                'group px-1 py-3',
+                'group px-1 py-3 transition-colors duration-200',
                 selected && 'bg-[var(--bg-light-color)]/40',
             )}
         >
             <div className="flex items-center justify-between gap-2">
                 <div className={'flex items-center gap-2'}>
-                    <span
+                    <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={SPRING}
                         className={`h-1.5 w-1.5 shrink-0 rounded-[3px] ${DOT_COLOR_CLASSES[notification.type]}`}
                     />
                     <h2 className="truncate text-sm text-[var(--text-gray-color)]">
@@ -79,22 +84,33 @@ function NotificationItem({
                     <Icon name="Calendar" size={12} />
                     <span>{formatShortDate(notification.created_at)}</span>
                     <span>&bull;</span>
-                    {notification.read ? (
-                        <span className="flex items-center gap-1 font-medium text-[var(--success-color)]">
-                            <Icon name="CircleCheck" size={12} />
-                            Read
-                        </span>
-                    ) : (
-                        <button
-                            type="button"
-                            onClick={() => onMarkAsRead(notification.id)}
-                            title="Mark as read"
-                            className="flex cursor-pointer items-center gap-1 font-medium text-[var(--info-color)] hover:underline"
-                        >
-                            <Icon name="Clock" size={12} />
-                            Unread
-                        </button>
-                    )}
+                    <AnimatePresence mode="wait" initial={false}>
+                        {notification.read ? (
+                            <motion.span
+                                key="read"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={SPRING}
+                                className="flex items-center gap-1 font-medium text-[var(--success-color)]"
+                            >
+                                <Icon name="CircleCheck" size={12} />
+                                Read
+                            </motion.span>
+                        ) : (
+                            <motion.button
+                                key="unread"
+                                type="button"
+                                onClick={() => onMarkAsRead(notification.id)}
+                                title="Mark as read"
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 0.12 }}
+                                className="flex cursor-pointer items-center gap-1 font-medium text-[var(--info-color)] hover:underline"
+                            >
+                                <Icon name="Clock" size={12} />
+                                Unread
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {notification.action_url && (

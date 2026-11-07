@@ -233,4 +233,13 @@ describe('NotificationsList paging and states', () => {
 
         expect(screen.getByRole('checkbox')).toBeChecked();
     });
+
+    test('shows skeleton rows with a status label while the first page loads', () => {
+        render(<NotificationsList {...base} notifications={[]} isLoading />);
+
+        expect(
+            screen.getByRole('status', { name: 'Loading notifications' }),
+        ).toBeInTheDocument();
+        expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(3);
+    });
 });

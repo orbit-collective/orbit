@@ -1,5 +1,7 @@
+import { motion } from 'framer-motion';
 import { NotificationFilter } from '@/types/Notification';
 import { cn } from '@/utils/cn';
+import { SPRING } from '@/utils/motion';
 
 const TABS: { id: NotificationFilter; label: string }[] = [
     { id: 'all', label: 'All' },
@@ -27,13 +29,21 @@ function NotificationFilterTabs({
                     onClick={() => onChange(tab.id)}
                     aria-pressed={activeFilter === tab.id}
                     className={cn(
-                        'w-full whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+                        'relative w-full whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
                         activeFilter === tab.id
-                            ? 'bg-[var(--text-color)] text-[var(--bg-dark-color)]'
+                            ? 'text-[var(--bg-dark-color)]'
                             : 'text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
                     )}
                 >
-                    {tab.label}
+                    {activeFilter === tab.id && (
+                        <motion.span
+                            layoutId="notification-filter"
+                            data-testid="notification-filter-pill"
+                            className="absolute inset-0 rounded-full bg-[var(--text-color)]"
+                            transition={SPRING}
+                        />
+                    )}
+                    <span className="relative">{tab.label}</span>
                 </button>
             ))}
         </div>

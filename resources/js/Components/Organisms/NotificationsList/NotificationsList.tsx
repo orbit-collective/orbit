@@ -1,7 +1,11 @@
-import { Fragment, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
 import NotificationEmptyState from '@/Components/Molecules/NotificationEmptyState/NotificationEmptyState';
 import NotificationItem from '@/Components/Molecules/NotificationItem/NotificationItem';
 import { Notification } from '@/types/Notification';
+import { DURATION, EASE, riseIn, rowDelay } from '@/utils/motion';
 
 interface NotificationsListProps {
     notifications: Notification[];
@@ -68,9 +72,32 @@ function NotificationsList({
 
     if (isLoading) {
         return (
-            <p className="py-14 text-center text-xs font-medium text-[var(--text-muted-color)]">
-                Loading notifications…
-            </p>
+            <div
+                role="status"
+                aria-label="Loading notifications"
+                className="mt-2 space-y-1"
+            >
+                {[0, 1, 2, 3].map((index) => (
+                    <motion.div
+                        key={index}
+                        variants={riseIn}
+                        initial="hidden"
+                        animate="show"
+                        transition={{ delay: rowDelay(index) }}
+                        className="space-y-2.5 px-1 py-3"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Skeleton index={index} className="h-1.5 w-1.5" />
+                            <Skeleton index={index} className="h-3 w-2/5" />
+                        </div>
+                        <div className="space-y-2 pl-3.5">
+                            <Skeleton index={index} className="h-3 w-full" />
+                            <Skeleton index={index} className="h-2.5 w-1/3" />
+                        </div>
+                    </motion.div>
+                ))}
+                <span className="sr-only">Loading notifications…</span>
+            </div>
         );
     }
 
@@ -88,21 +115,43 @@ function NotificationsList({
             ref={containerRef}
             className="no-scrollbar mt-2 max-h-[calc(85vh-260px)] overflow-y-auto sm:max-h-[400px]"
         >
-            {notifications.map((item, index) => (
-                <Fragment key={item.id}>
-                    {index > 0 && (
-                        <span className="block h-px w-full bg-[var(--bg-light-color)]" />
-                    )}
-                    <NotificationItem
-                        notification={item}
-                        onMarkAsRead={onMarkAsRead}
-                        onRemove={onRemove}
-                        selectable={selectable}
-                        selected={selectedIds?.has(item.id) ?? false}
-                        onToggleSelect={onToggleSelect}
-                    />
-                </Fragment>
-            ))}
+            <AnimatePresence initial>
+                {notifications.map((item, index) => (
+                    <motion.div
+                        key={item.id}
+                        layout="position"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{
+                            opacity: 1,
+                            y: 0,
+                            transition: {
+                                duration: DURATION.base,
+                                ease: EASE,
+                                delay: rowDelay(index),
+                            },
+                        }}
+                        exit={{
+                            opacity: 0,
+                            x: 28,
+                            height: 0,
+                            transition: { duration: DURATION.fast },
+                        }}
+                        className="overflow-hidden"
+                    >
+                        {index > 0 && (
+                            <span className="block h-px w-full bg-[var(--bg-light-color)]" />
+                        )}
+                        <NotificationItem
+                            notification={item}
+                            onMarkAsRead={onMarkAsRead}
+                            onRemove={onRemove}
+                            selectable={selectable}
+                            selected={selectedIds?.has(item.id) ?? false}
+                            onToggleSelect={onToggleSelect}
+                        />
+                    </motion.div>
+                ))}
+            </AnimatePresence>
 
             {hasError && <ErrorRow onRetry={onRetry} />}
 
@@ -112,7 +161,14 @@ function NotificationsList({
                     className="flex justify-center py-3 text-xs text-[var(--text-muted-color)]"
                 >
                     {isLoadingMore ? (
-                        'Loading more…'
+                        <span role="status" className="flex items-center gap-2">
+                            <Icon
+                                name="LoaderCircle"
+                                size={13}
+                                className="animate-spin"
+                            />
+                            Loading more…
+                        </span>
                     ) : (
                         <button
                             type="button"

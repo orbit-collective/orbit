@@ -24,11 +24,11 @@ describe('NotificationFilterTabs Component', () => {
             />,
         );
 
-        expect(screen.getByText('Warning')).toHaveAttribute(
+        expect(screen.getByRole('button', { name: 'Warning' })).toHaveAttribute(
             'aria-pressed',
             'true',
         );
-        expect(screen.getByText('All')).toHaveAttribute(
+        expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute(
             'aria-pressed',
             'false',
         );
@@ -44,5 +44,23 @@ describe('NotificationFilterTabs Component', () => {
         await user.click(screen.getByText('Error'));
 
         expect(onChange).toHaveBeenCalledWith('error');
+    });
+
+    test('one pill marks the active tab and moves with it', () => {
+        const { rerender } = render(
+            <NotificationFilterTabs activeFilter="all" onChange={() => {}} />,
+        );
+        expect(screen.getAllByTestId('notification-filter-pill')).toHaveLength(
+            1,
+        );
+
+        rerender(
+            <NotificationFilterTabs activeFilter="error" onChange={() => {}} />,
+        );
+
+        const pill = screen.getByTestId('notification-filter-pill');
+        expect(pill.parentElement).toBe(
+            screen.getByRole('button', { name: 'Error' }),
+        );
     });
 });

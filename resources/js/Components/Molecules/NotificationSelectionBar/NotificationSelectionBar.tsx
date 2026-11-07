@@ -1,5 +1,7 @@
+import { motion } from 'framer-motion';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import { DURATION, EASE } from '@/utils/motion';
 
 interface NotificationSelectionBarProps {
     selectedCount: number;
@@ -25,10 +27,19 @@ function NotificationSelectionBar({
     const hasSelection = selectedCount > 0;
 
     return (
-        <div
+        <motion.div
             role="toolbar"
             aria-label="Selection actions"
-            className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-[var(--bg-light-color)] px-3 py-2"
+            initial={{ opacity: 0, height: 0, marginTop: 0 }}
+            animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+            exit={{
+                opacity: 0,
+                height: 0,
+                marginTop: 0,
+                transition: { duration: DURATION.fast },
+            }}
+            transition={{ duration: DURATION.base, ease: EASE }}
+            className="flex flex-wrap items-center gap-2 overflow-hidden rounded-xl bg-[var(--bg-light-color)] px-3 py-2"
         >
             <button
                 type="button"
@@ -73,7 +84,7 @@ function NotificationSelectionBar({
                     <Icon name="X" size={14} />
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 }
 

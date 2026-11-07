@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import NotificationsPopup from '@/Components/Organisms/NotificationsPopup/NotificationsPopup';
@@ -8,6 +9,7 @@ import { PageHeaderProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
 import { requestOpenCommandPalette } from '@/utils/commandPaletteEvent';
+import { SPRING } from '@/utils/motion';
 import {
     OPEN_NOTIFICATIONS_EVENT,
     OpenNotificationsOptions,
@@ -199,25 +201,36 @@ function PageHeader({
                                 size={18}
                                 color="var(--text-gray-color)"
                             />
-                            {unreadNotificationsCount > 0 && (
-                                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--error-color)] px-1 text-[9px] font-bold leading-none text-white">
-                                    {unreadNotificationsCount > 9
-                                        ? '9+'
-                                        : unreadNotificationsCount}
-                                </span>
-                            )}
+                            <AnimatePresence>
+                                {unreadNotificationsCount > 0 && (
+                                    <motion.span
+                                        key="badge"
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        exit={{ scale: 0 }}
+                                        transition={SPRING}
+                                        className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--error-color)] px-1 text-[9px] font-bold leading-none text-white"
+                                    >
+                                        {unreadNotificationsCount > 9
+                                            ? '9+'
+                                            : unreadNotificationsCount}
+                                    </motion.span>
+                                )}
+                            </AnimatePresence>
                         </button>
-                        {showNotificationsPopup && (
-                            <NotificationsPopup
-                                key={notificationsOpenCount}
-                                initialOnlyUnread={
-                                    notificationsOptions.onlyUnread
-                                }
-                                initialSelecting={
-                                    notificationsOptions.selecting
-                                }
-                            />
-                        )}
+                        <AnimatePresence>
+                            {showNotificationsPopup && (
+                                <NotificationsPopup
+                                    key={notificationsOpenCount}
+                                    initialOnlyUnread={
+                                        notificationsOptions.onlyUnread
+                                    }
+                                    initialSelecting={
+                                        notificationsOptions.selecting
+                                    }
+                                />
+                            )}
+                        </AnimatePresence>
                     </div>
                     {showSettingsIcon && (
                         <button

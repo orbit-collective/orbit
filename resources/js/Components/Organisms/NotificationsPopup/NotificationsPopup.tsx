@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import NotificationClearRead from '@/Components/Molecules/NotificationClearRead/NotificationClearRead';
 import NotificationFilterTabs from '@/Components/Molecules/NotificationFilterTabs/NotificationFilterTabs';
@@ -11,6 +12,7 @@ import {
 } from '@/hooks/useNotificationsFeed';
 import { PageProps } from '@/types';
 import { NotificationFilter } from '@/types/Notification';
+import { DURATION, EASE } from '@/utils/motion';
 
 interface NotificationsPopupProps {
     /** Open on the unread view (the command palette's "Show unread"). */
@@ -87,7 +89,19 @@ function NotificationsPopup({
     const isFiltered = query.onlyUnread || query.type !== 'all';
 
     return (
-        <div className="fixed right-2 top-16 z-[9999] w-[calc(100vw-1rem)] max-w-[420px] rounded-2xl bg-[var(--bg-dark-color)] p-4 text-[var(--text-color)] shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:right-4 sm:top-24 sm:w-[420px] sm:p-5">
+        <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{
+                opacity: 0,
+                y: -6,
+                scale: 0.98,
+                transition: { duration: DURATION.fast },
+            }}
+            transition={{ duration: DURATION.base, ease: EASE }}
+            style={{ transformOrigin: 'top right' }}
+            className="fixed right-2 top-16 z-[9999] w-[calc(100vw-1rem)] max-w-[420px] rounded-2xl bg-[var(--bg-dark-color)] p-4 text-[var(--text-color)] shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:right-4 sm:top-24 sm:w-[420px] sm:p-5"
+        >
             <NotificationHeader
                 unreadCount={feed.unreadCount}
                 onlyUnread={query.onlyUnread}
@@ -108,17 +122,20 @@ function NotificationsPopup({
                 />
             </div>
 
-            {isSelecting && (
-                <NotificationSelectionBar
-                    selectedCount={selectedIds.size}
-                    totalCount={selectableCount}
-                    limit={NOTIFICATIONS_BULK_LIMIT}
-                    onToggleAll={toggleAll}
-                    onMarkAsRead={() => handleBulk(feed.markAsRead)}
-                    onDelete={() => handleBulk(feed.remove)}
-                    onCancel={stopSelecting}
-                />
-            )}
+            <AnimatePresence initial={false}>
+                {isSelecting && (
+                    <NotificationSelectionBar
+                        key="selection-bar"
+                        selectedCount={selectedIds.size}
+                        totalCount={selectableCount}
+                        limit={NOTIFICATIONS_BULK_LIMIT}
+                        onToggleAll={toggleAll}
+                        onMarkAsRead={() => handleBulk(feed.markAsRead)}
+                        onDelete={() => handleBulk(feed.remove)}
+                        onCancel={stopSelecting}
+                    />
+                )}
+            </AnimatePresence>
 
             <NotificationsList
                 notifications={items}
@@ -141,7 +158,7 @@ function NotificationsPopup({
                     <NotificationClearRead onConfirm={feed.deleteRead} />
                 </div>
             )}
-        </div>
+        </motion.div>
     );
 }
 

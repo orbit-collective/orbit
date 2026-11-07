@@ -178,7 +178,7 @@ describe('NotificationsPopup Component', () => {
             { ids: [9] },
             expect.any(Object),
         );
-        expect(screen.getByText('Read')).toBeInTheDocument();
+        expect(await screen.findByText('Read')).toBeInTheDocument();
     });
 
     test('deletes a single notification', async () => {
@@ -192,7 +192,9 @@ describe('NotificationsPopup Component', () => {
             '/notifications/5',
             expect.any(Object),
         );
-        expect(screen.queryByText('Bye')).not.toBeInTheDocument();
+        await waitFor(() =>
+            expect(screen.queryByText('Bye')).not.toBeInTheDocument(),
+        );
     });
 
     describe('selection mode', () => {
@@ -224,8 +226,12 @@ describe('NotificationsPopup Component', () => {
                 { ids: [1, 3] },
                 expect.any(Object),
             );
-            expect(screen.queryByText('One')).not.toBeInTheDocument();
-            expect(screen.queryByText('Three')).not.toBeInTheDocument();
+            await waitFor(() =>
+                expect(screen.queryByText('One')).not.toBeInTheDocument(),
+            );
+            await waitFor(() =>
+                expect(screen.queryByText('Three')).not.toBeInTheDocument(),
+            );
             expect(screen.getByText('Two')).toBeInTheDocument();
             expect(screen.getByText('0 selected')).toBeInTheDocument();
         });
@@ -310,7 +316,9 @@ describe('NotificationsPopup Component', () => {
             '/notifications/read',
             expect.any(Object),
         );
-        expect(screen.queryByText('Done')).not.toBeInTheDocument();
+        await waitFor(() =>
+            expect(screen.queryByText('Done')).not.toBeInTheDocument(),
+        );
         expect(screen.getByText('Fresh one')).toBeInTheDocument();
     });
 
@@ -356,5 +364,23 @@ describe('NotificationsPopup Component', () => {
         expect(
             screen.getByRole('toolbar', { name: 'Selection actions' }),
         ).toBeInTheDocument();
+    });
+
+    test('the popup unfolds the selection bar and folds it away again', async () => {
+        const user = userEvent.setup();
+        pageState.notifications = [makeNotification({ id: 1, title: 'One' })];
+        render(<NotificationsPopup />);
+
+        await user.click(screen.getByLabelText('Select notifications'));
+        expect(
+            await screen.findByRole('toolbar', { name: 'Selection actions' }),
+        ).toBeInTheDocument();
+
+        await user.click(screen.getByLabelText('Cancel selection'));
+        await waitFor(() =>
+            expect(
+                screen.queryByRole('toolbar', { name: 'Selection actions' }),
+            ).not.toBeInTheDocument(),
+        );
     });
 });
