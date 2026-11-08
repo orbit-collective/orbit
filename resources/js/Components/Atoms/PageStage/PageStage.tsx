@@ -60,9 +60,10 @@ export const PageStage: React.FC<PageStageProps> = ({
 /** One block of a page; rises in when its `PageStage` staggers it. */
 export const PageSection: React.FC<PageSectionProps> = ({
     className,
+    style,
     children,
 }) => (
-    <motion.div variants={riseIn} className={className}>
+    <motion.div variants={riseIn} className={className} style={style}>
         {children}
     </motion.div>
 );

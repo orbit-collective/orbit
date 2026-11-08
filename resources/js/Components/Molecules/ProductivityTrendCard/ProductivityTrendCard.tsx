@@ -55,8 +55,8 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
             />
 
             {hasActivity ? (
-                <div className="mt-6 flex flex-1 flex-col">
-                    <div className="flex flex-1 gap-3">
+                <div className="mt-6 flex min-h-0 flex-1 flex-col">
+                    <div className="flex min-h-0 flex-1 gap-3">
                         <div className="flex w-6 shrink-0 flex-col justify-between text-right text-[10px] font-medium tabular-nums text-[var(--text-muted-color)]">
                             {ticks.map((tick) => (
                                 <span key={tick}>{tick}</span>
