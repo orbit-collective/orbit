@@ -25,7 +25,7 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
     const shown = projects.slice(0, limit);
 
     return (
-        <div className="flex flex-1 flex-col gap-4 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
+        <div className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
             <div className="flex items-center justify-between">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
                     Projects Directory

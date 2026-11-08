@@ -995,5 +995,6 @@ export interface PageStageProps {
 
 export interface PageSectionProps {
     className?: string;
+    style?: React.CSSProperties;
     children: React.ReactNode;
 }
