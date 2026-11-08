@@ -44,7 +44,7 @@ const statVariant = (variant: string) =>
     STAT_VARIANTS.find((known) => known === variant) ?? 'default';
 
 /** Stands in for a widget whose data is still on its way. */
-export const WidgetPlaceholder: FC = () => (
+const WidgetPlaceholder: FC = () => (
     <div
         data-testid="widget-placeholder"
         className="h-full min-h-28 animate-pulse rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)]"
