@@ -381,4 +381,17 @@ describe('DashboardEditorPanel', () => {
             screen.getByRole('button', { name: 'Settings' }),
         ).toContainElement(pills[0]);
     });
+
+    test('the remove button is tinted red with mixed colors, not with an opacity Tailwind 3 drops', () => {
+        setup(makeWidget('trend'));
+
+        const button = screen.getByRole('button', { name: 'Remove widget' });
+
+        expect(button.className).toContain(
+            'color-mix(in_srgb,var(--error-color)',
+        );
+        expect(button.className).not.toMatch(/\]\/\d+/);
+        expect(button).toHaveClass('text-[var(--error-color)]');
+        expect(button.querySelector('svg')).not.toBeNull();
+    });
 });

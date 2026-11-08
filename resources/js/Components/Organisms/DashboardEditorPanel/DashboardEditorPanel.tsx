@@ -511,15 +511,20 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
 
                                 <motion.button
                                     variants={rowIn}
+                                    whileHover={{ y: -1 }}
                                     whileTap={{ scale: 0.97 }}
                                     type="button"
                                     onClick={() => onRemove(selected.id)}
+                                    // The tints are mixed, not set with an opacity: Tailwind 3
+                                    // cannot give a CSS variable an alpha, and drops the class.
                                     className={cn(
-                                        'flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-solid border-[var(--error-color)]/40 bg-transparent px-3 py-2 text-xs font-semibold text-[var(--error-color)] transition-colors hover:bg-[var(--error-color)]/10',
+                                        'group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-solid border-[color-mix(in_srgb,var(--error-color)_28%,transparent)] bg-[color-mix(in_srgb,var(--error-color)_8%,transparent)] px-3 py-2.5 text-xs font-semibold text-[var(--error-color)] transition-colors duration-150 hover:border-[var(--error-color)] hover:bg-[color-mix(in_srgb,var(--error-color)_16%,transparent)]',
                                         FOCUS_RING,
                                     )}
                                 >
-                                    <Icon name="Trash" size={13} />
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--error-color)_16%,transparent)] transition-transform duration-150 group-hover:-rotate-12 group-hover:scale-110">
+                                        <Icon name="Trash" size={12} />
+                                    </span>
                                     Remove widget
                                 </motion.button>
                             </motion.div>
