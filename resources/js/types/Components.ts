@@ -471,6 +471,8 @@ export interface CompletionRatioCardProps {
     done: number;
     total: number;
     donePct: number;
+    /** `bars` (default) or `ring`. */
+    variant?: string;
 }
 export interface PriorityBreakdownCardProps {
     /** Counted by priority name across the user's projects, most important first. */

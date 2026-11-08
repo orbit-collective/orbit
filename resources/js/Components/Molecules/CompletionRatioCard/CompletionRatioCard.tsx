@@ -3,21 +3,31 @@ import { FC } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import { CompletionRatioCardProps } from '@/types/Components';
 import { DURATION, EASE, SPRING, rowDelay } from '@/utils/motion';
+import ProgressRing from '../../Atoms/ProgressRing/ProgressRing';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 
 const tierFor = (donePct: number) => {
     if (donePct >= 75) {
-        return { label: 'Excellent', colorClass: 'bg-[var(--success-color)]' };
+        return {
+            label: 'Excellent',
+            colorClass: 'bg-[var(--success-color)]',
+            ringClass: 'stroke-[var(--success-color)]',
+        };
     }
 
     if (donePct >= 40) {
-        return { label: 'On track', colorClass: 'bg-[var(--accent-color)]' };
+        return {
+            label: 'On track',
+            colorClass: 'bg-[var(--accent-color)]',
+            ringClass: 'stroke-[var(--accent-color)]',
+        };
     }
 
     return {
         label: 'Needs attention',
         colorClass: 'bg-[var(--warning-color)]',
+        ringClass: 'stroke-[var(--warning-color)]',
     };
 };
 
@@ -27,6 +37,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
     done,
     total,
     donePct,
+    variant = 'bars',
 }) => {
     const bars = [
         { label: 'To Do', value: todo, colorClass: 'bg-[var(--info-color)]' },
@@ -69,62 +80,97 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                     )}
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-5">
-                    <div className="flex flex-col">
-                        <span className="text-6xl font-bold tabular-nums leading-none tracking-tight text-[var(--text-color)]">
-                            <AnimatedNumber
-                                value={donePct}
-                                format={(n) => `${Math.round(n)}%`}
+                {variant === 'ring' ? (
+                    <div className="mt-6 flex flex-wrap items-center gap-6">
+                        <div className="relative flex shrink-0 items-center justify-center">
+                            <ProgressRing
+                                radius={56}
+                                stroke={5}
+                                progress={donePct}
+                                colorClass={tier.ringClass}
                             />
-                        </span>
-                        <span className="mt-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted-color)]">
-                            Resolved
-                        </span>
-                        <span className="mt-1 text-xs text-[var(--text-gray-color)]">
-                            <AnimatedNumber
-                                value={done}
-                                format={(n) =>
-                                    `${Math.round(n)} of ${total} issues`
-                                }
-                            />
-                        </span>
-                    </div>
-
-                    <div className="flex h-32 items-end gap-4 border-l border-solid border-[var(--border-color-strong)] pl-6">
-                        {bars.map((bar, index) => (
-                            <div
-                                key={bar.label}
-                                className="flex flex-col items-center gap-2"
-                            >
-                                <span className="text-xs font-semibold tabular-nums text-[var(--text-color)]">
-                                    <AnimatedNumber value={bar.value} />
-                                </span>
-                                <div className="flex h-20 w-6 items-end overflow-hidden rounded-md bg-[var(--bg-light-color)]">
-                                    <motion.div
-                                        data-testid="completion-bar"
-                                        data-height-percent={
-                                            (bar.value / maxValue) * 100
-                                        }
-                                        className={`w-full rounded-md ${bar.colorClass}`}
-                                        initial={{ height: 0 }}
-                                        animate={{
-                                            height: `${(bar.value / maxValue) * 100}%`,
-                                        }}
-                                        transition={{
-                                            duration: DURATION.slow,
-                                            ease: EASE,
-                                            delay: 0.2 + rowDelay(index),
-                                        }}
-                                        title={`${bar.label}: ${bar.value}`}
+                            <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold tabular-nums text-[var(--text-color)]">
+                                <AnimatedNumber
+                                    value={donePct}
+                                    format={(n) => `${Math.round(n)}%`}
+                                />
+                            </span>
+                        </div>
+                        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                            {bars.map((bar) => (
+                                <li
+                                    key={bar.label}
+                                    className="flex items-center gap-2 text-xs text-[var(--text-gray-color)]"
+                                >
+                                    <span
+                                        className={`h-2 w-2 rounded-sm ${bar.colorClass}`}
                                     />
-                                </div>
-                                <span className="whitespace-nowrap text-[10px] font-medium text-[var(--text-muted-color)]">
-                                    {bar.label}
-                                </span>
-                            </div>
-                        ))}
+                                    <span>{bar.label}</span>
+                                    <span className="font-semibold tabular-nums text-[var(--text-color)]">
+                                        <AnimatedNumber value={bar.value} />
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                </div>
+                ) : (
+                    <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-5">
+                        <div className="flex flex-col">
+                            <span className="text-6xl font-bold tabular-nums leading-none tracking-tight text-[var(--text-color)]">
+                                <AnimatedNumber
+                                    value={donePct}
+                                    format={(n) => `${Math.round(n)}%`}
+                                />
+                            </span>
+                            <span className="mt-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted-color)]">
+                                Resolved
+                            </span>
+                            <span className="mt-1 text-xs text-[var(--text-gray-color)]">
+                                <AnimatedNumber
+                                    value={done}
+                                    format={(n) =>
+                                        `${Math.round(n)} of ${total} issues`
+                                    }
+                                />
+                            </span>
+                        </div>
+
+                        <div className="flex h-32 items-end gap-4 border-l border-solid border-[var(--border-color-strong)] pl-6">
+                            {bars.map((bar, index) => (
+                                <div
+                                    key={bar.label}
+                                    className="flex flex-col items-center gap-2"
+                                >
+                                    <span className="text-xs font-semibold tabular-nums text-[var(--text-color)]">
+                                        <AnimatedNumber value={bar.value} />
+                                    </span>
+                                    <div className="flex h-20 w-6 items-end overflow-hidden rounded-md bg-[var(--bg-light-color)]">
+                                        <motion.div
+                                            data-testid="completion-bar"
+                                            data-height-percent={
+                                                (bar.value / maxValue) * 100
+                                            }
+                                            className={`w-full rounded-md ${bar.colorClass}`}
+                                            initial={{ height: 0 }}
+                                            animate={{
+                                                height: `${(bar.value / maxValue) * 100}%`,
+                                            }}
+                                            transition={{
+                                                duration: DURATION.slow,
+                                                ease: EASE,
+                                                delay: 0.2 + rowDelay(index),
+                                            }}
+                                            title={`${bar.label}: ${bar.value}`}
+                                        />
+                                    </div>
+                                    <span className="whitespace-nowrap text-[10px] font-medium text-[var(--text-muted-color)]">
+                                        {bar.label}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </VisualCard>
     );
