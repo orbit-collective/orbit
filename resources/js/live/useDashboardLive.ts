@@ -7,10 +7,17 @@ import { useLiveFallback } from './useLiveFallback';
 /** Most project channels one dashboard listens to, a guard for very large workspaces. */
 export const DASHBOARD_MAX_CHANNELS = 25;
 
-/** Refresh the dashboard's counters, trend and feed when a project of the user changes. */
-export function useDashboardLive(projectIds: number[]): void {
+/**
+ * Refresh the dashboard's counters, trend and feed when a project of the user
+ * changes. `loadedProps` are the data props the page has, so a widget that is
+ * not on the dashboard costs no refresh.
+ */
+export function useDashboardLive(
+    projectIds: number[],
+    loadedProps?: string[],
+): void {
     // No socket: refresh the counters and feed on a timer instead.
-    useLiveFallback(() => dashboardFallbackReloads());
+    useLiveFallback(() => dashboardFallbackReloads(loadedProps));
 
     useLiveChannel<{ 'project.changed': ProjectChangedPayload }>(
         projectIds
@@ -18,7 +25,7 @@ export function useDashboardLive(projectIds: number[]): void {
             .map((id) => `project.${id}`),
         {
             'project.changed': ({ changes }) =>
-                dashboardReloads(changes).forEach((reload) =>
+                dashboardReloads(changes, loadedProps).forEach((reload) =>
                     requestLiveReload(reload),
                 ),
         },
