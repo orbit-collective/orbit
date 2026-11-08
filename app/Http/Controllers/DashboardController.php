@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Dashboard\DashboardWidgetType;
 use App\Services\ActivityLogService;
 use App\Services\DashboardLayoutService;
+use App\Services\DashboardSavedLayoutService;
 use App\Services\IssueService;
 use App\Services\IssueTypeService;
 use App\Services\ProjectService;
@@ -28,7 +29,9 @@ class DashboardController extends Controller
 
     protected DashboardLayoutService $dashboardLayoutService;
 
-    public function __construct(IssueService $issueService, ProjectService $projectService, UserService $userService, ActivityLogService $activityLogService, IssueTypeService $issueTypeService, DashboardLayoutService $dashboardLayoutService)
+    protected DashboardSavedLayoutService $dashboardSavedLayoutService;
+
+    public function __construct(IssueService $issueService, ProjectService $projectService, UserService $userService, ActivityLogService $activityLogService, IssueTypeService $issueTypeService, DashboardLayoutService $dashboardLayoutService, DashboardSavedLayoutService $dashboardSavedLayoutService)
     {
         $this->issueService = $issueService;
         $this->projectService = $projectService;
@@ -36,6 +39,7 @@ class DashboardController extends Controller
         $this->activityLogService = $activityLogService;
         $this->issueTypeService = $issueTypeService;
         $this->dashboardLayoutService = $dashboardLayoutService;
+        $this->dashboardSavedLayoutService = $dashboardSavedLayoutService;
     }
 
     /**
@@ -59,6 +63,7 @@ class DashboardController extends Controller
                 'widgets' => $widgets,
                 'catalog' => DashboardWidgetType::catalog(),
             ],
+            'savedLayouts' => fn () => $this->dashboardSavedLayoutService->listFor($userId),
             // Closures, so a live update that re-reads only some of these
             // (see useDashboardLive) does not pay for the rest.
             'issueStats' => $prop('issueStats', fn () => $this->issueService->getStatsForUser($userId)),
