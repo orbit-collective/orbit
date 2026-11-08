@@ -158,4 +158,37 @@ describe('StatCard Component', () => {
 
         expect(container.firstElementChild).toHaveClass('bg-transparent');
     });
+
+    test('the glass variant has something behind it, in the color of the card', () => {
+        const { rerender } = render(
+            <StatCard
+                title="Open"
+                value={3}
+                icon="Layers"
+                variant="glass"
+                color="error"
+            />,
+        );
+
+        expect(screen.getByTestId('stat-glass-glow')).toHaveClass(
+            'bg-[#f44336]',
+        );
+
+        rerender(<StatCard title="Open" value={3} icon="Layers" />);
+        expect(screen.queryByTestId('stat-glass-glow')).not.toBeInTheDocument();
+    });
+
+    test('the glass variant is not the default card', () => {
+        const { container } = render(
+            <StatCard title="Open" value={3} icon="Layers" variant="glass" />,
+        );
+
+        expect(container.firstElementChild).toHaveClass(
+            'backdrop-blur-xl',
+            'isolate',
+        );
+        expect(container.firstElementChild).not.toHaveClass(
+            'bg-[var(--surface-color)]',
+        );
+    });
 });

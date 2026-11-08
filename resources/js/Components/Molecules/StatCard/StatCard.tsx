@@ -15,7 +15,7 @@ export const statCardVariants = cva(
                 default:
                     'bg-[var(--surface-color)] border-[var(--border-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
                 accent: 'bg-gradient-to-br from-[var(--bg-dark-color)] to-[var(--accent-color-opacity)] border-[var(--accent-color)] shadow-[0_0_15px_rgba(136,68,218,0.15)]',
-                glass: 'bg-[var(--surface-color)] backdrop-blur-md border-[var(--bg-light-color)] hover:bg-[var(--bg-light-color-hover)]',
+                glass: 'isolate border-[color-mix(in_srgb,var(--text-color)_14%,transparent)] bg-[color-mix(in_srgb,var(--text-color)_5%,transparent)] shadow-[inset_0_1px_0_color-mix(in_srgb,var(--text-color)_14%,transparent)] backdrop-blur-xl hover:bg-[color-mix(in_srgb,var(--text-color)_8%,transparent)]',
                 outline:
                     'bg-transparent border-[var(--border-color-strong)] hover:border-[var(--text-muted-color)]',
                 vivid: 'flex-row items-center gap-3 rounded-2xl border-[var(--border-color)] bg-[var(--surface-color)] p-3.5 hover:border-[var(--border-color-strong)] hover:-translate-y-0',
@@ -179,6 +179,17 @@ const StatCard: React.FC<StatCardProps> = ({
 
     return (
         <div className={cn(statCardVariants({ variant }), className)}>
+            {variant === 'glass' && (
+                // Glass needs something behind it to show.
+                <span
+                    aria-hidden="true"
+                    data-testid="stat-glass-glow"
+                    className={cn(
+                        'pointer-events-none absolute -right-6 -top-8 -z-10 h-28 w-28 rounded-full opacity-40 blur-2xl',
+                        COLOR_BLOB_CLASSES[color],
+                    )}
+                />
+            )}
             <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-1.5">
                     {showIcon && (
