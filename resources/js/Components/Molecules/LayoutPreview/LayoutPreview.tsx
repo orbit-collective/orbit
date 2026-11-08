@@ -3,7 +3,7 @@ import { FC } from 'react';
 import WidgetGlyph from '@/Components/Atoms/WidgetGlyph/WidgetGlyph';
 import { DashboardWidget } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
-import { DURATION, EASE, rowDelay } from '@/utils/motion';
+import { DURATION, EASE, SPRING, rowDelay } from '@/utils/motion';
 
 interface LayoutPreviewProps {
     widgets: DashboardWidget[];
@@ -19,9 +19,12 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
     const visible = widgets.filter((widget) => widget.visible);
 
     return (
-        <div
+        <motion.div
             aria-hidden="true"
             data-testid="layout-preview"
+            // The picture leans towards the pointer.
+            whileHover={{ scale: 1.015 }}
+            transition={SPRING}
             className={cn(
                 '@container relative max-h-44 overflow-hidden rounded-lg border border-solid border-[var(--border-color)] bg-[var(--bg-color)] p-1.5',
                 className,
@@ -56,7 +59,7 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
                 </div>
             )}
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[var(--bg-color)] to-transparent" />
-        </div>
+        </motion.div>
     );
 };
 

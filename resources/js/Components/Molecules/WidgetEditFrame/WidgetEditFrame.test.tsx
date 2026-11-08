@@ -185,4 +185,62 @@ describe('WidgetEditFrame', () => {
         expect(onResize).not.toHaveBeenCalled();
         expect(onSelect).not.toHaveBeenCalled();
     });
+
+    test('a ring spreads from a widget that is picked, and only from that one', () => {
+        const { unmount } = render(
+            <Sensors>
+                <WidgetEditFrame
+                    widget={makeWidget('trend')}
+                    label="Trend"
+                    icon="ChartLine"
+                    minWidth={30}
+                    minHeight={56}
+                    snap
+                    selected
+                    onSelect={vi.fn()}
+                    onToggleVisible={vi.fn()}
+                    onResize={vi.fn()}
+                >
+                    <p>content</p>
+                </WidgetEditFrame>
+            </Sensors>,
+        );
+        expect(screen.getByTestId('selection-ping')).toBeInTheDocument();
+        unmount();
+
+        setup({ selected: false });
+        expect(screen.queryByTestId('selection-ping')).not.toBeInTheDocument();
+    });
+
+    test('a new style draws the widget again', () => {
+        const props = {
+            label: 'Trend',
+            icon: 'ChartLine' as const,
+            minWidth: 30,
+            minHeight: 56,
+            snap: true,
+            selected: false,
+            onSelect: vi.fn(),
+            onToggleVisible: vi.fn(),
+            onResize: vi.fn(),
+        };
+        const view = (variant: string) => (
+            <Sensors>
+                <WidgetEditFrame
+                    {...props}
+                    widget={makeWidget('trend', { variant })}
+                >
+                    <p>content</p>
+                </WidgetEditFrame>
+            </Sensors>
+        );
+        const { rerender } = render(view('bars'));
+        const before = screen.getByText('content');
+
+        rerender(view('bars'));
+        expect(screen.getByText('content')).toBe(before);
+
+        rerender(view('line'));
+        expect(screen.getByText('content')).not.toBe(before);
+    });
 });

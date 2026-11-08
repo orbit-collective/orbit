@@ -196,20 +196,35 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                 ref={setDragRef}
                 style={{ transform: CSS.Translate.toString(transform) }}
                 className={cn(
-                    'relative h-full',
-                    isDragging && 'opacity-90 drop-shadow-2xl',
+                    // `scale` is its own property, so it adds to the drag transform.
+                    'relative h-full transition-[scale,opacity,filter] duration-150',
+                    isDragging && 'scale-[1.02] opacity-90 drop-shadow-2xl',
                 )}
             >
                 {/* The widget as it is on the dashboard, nothing added to it. */}
+                {/* A new style or showing a hidden widget is a change you see:
+                    the widget is drawn again and settles in. */}
                 {hidden ? (
-                    <div className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--border-color-strong)] px-3 text-center text-xs text-[var(--text-muted-color)]">
+                    <motion.div
+                        key="hidden"
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: DURATION.base, ease: EASE }}
+                        className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--border-color-strong)] px-3 text-center text-xs text-[var(--text-muted-color)]"
+                    >
                         <Icon name="EyeOff" size={18} />
                         <span>Hidden, it will not appear on the dashboard</span>
-                    </div>
+                    </motion.div>
                 ) : (
-                    <div className="h-full min-h-0 overflow-hidden [&>*]:h-full">
+                    <motion.div
+                        key={`shown-${widget.variant}`}
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: DURATION.base, ease: EASE }}
+                        className="h-full min-h-0 overflow-hidden [&>*]:h-full"
+                    >
                         {children}
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* Everything for editing sits on top: the widget is dragged
@@ -230,6 +245,17 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                     )}
                     {...listeners}
                 >
+                    {selected && (
+                        // A ring spreads from the widget that was just picked.
+                        <motion.span
+                            aria-hidden="true"
+                            data-testid="selection-ping"
+                            initial={{ opacity: 0.6, scale: 1 }}
+                            animate={{ opacity: 0, scale: 1.035 }}
+                            transition={{ duration: 0.6, ease: EASE }}
+                            className="pointer-events-none absolute inset-0 rounded-xl border-2 border-solid border-[var(--accent-color)]"
+                        />
+                    )}
                     <motion.div
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}

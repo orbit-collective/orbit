@@ -4,7 +4,7 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
-import { DURATION, EASE } from '@/utils/motion';
+import { DURATION, EASE, SPRING } from '@/utils/motion';
 
 interface DashboardEditorBarProps {
     dirty: boolean;
@@ -53,9 +53,14 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
             className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-1.5 overflow-hidden border-b border-solid border-[var(--bg-light-color)] bg-[var(--accent-color-opacity)] px-3 py-2 md:px-6"
         >
             <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color)] text-white">
+                <motion.span
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ ...SPRING, delay: 0.1 }}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color)] text-white"
+                >
                     <Icon name="PenLine" size={14} />
-                </span>
+                </motion.span>
                 <div className="min-w-0">
                     <p className="m-0 text-sm font-semibold text-[var(--text-color)]">
                         <span className="sm:hidden">Editing</span>
@@ -96,13 +101,14 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                         >
                             Yes, reset
                         </button>
-                        <button
+                        <motion.button
+                            whileTap={{ scale: 0.95 }}
                             type="button"
                             onClick={() => setConfirmingReset(false)}
                             className={GHOST_BUTTON}
                         >
                             Keep
-                        </button>
+                        </motion.button>
                     </>
                 ) : (
                     <>
@@ -138,7 +144,8 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                             <span className="hidden sm:inline">Panel</span>
                         </button>
                         <div className="mx-1 hidden h-6 w-px bg-[var(--border-color-strong)] sm:block" />
-                        <button
+                        <motion.button
+                            whileTap={{ scale: 0.95 }}
                             type="button"
                             aria-label="Reset"
                             disabled={saving}
@@ -147,15 +154,16 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                         >
                             <Icon name="RotateCcw" size={13} />
                             <span className="hidden sm:inline">Reset</span>
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                            whileTap={{ scale: 0.95 }}
                             type="button"
                             disabled={saving}
                             onClick={onCancel}
                             className={GHOST_BUTTON}
                         >
                             Cancel
-                        </button>
+                        </motion.button>
                         <motion.button
                             type="button"
                             // A nudge when there is something to save.
