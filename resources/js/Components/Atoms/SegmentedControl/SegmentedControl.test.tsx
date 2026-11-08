@@ -67,4 +67,55 @@ describe('SegmentedControl', () => {
             'flex-1',
         );
     });
+
+    test('raises the picked choice on a pill that moves to the next pick', async () => {
+        const { rerender } = render(
+            <SegmentedControl
+                label="Style"
+                value="a"
+                options={options}
+                onChange={vi.fn()}
+            />,
+        );
+
+        expect(screen.getAllByTestId('segment-pill')).toHaveLength(1);
+        expect(screen.getByRole('button', { name: 'Alpha' })).toContainElement(
+            screen.getByTestId('segment-pill'),
+        );
+
+        rerender(
+            <SegmentedControl
+                label="Style"
+                value="b"
+                options={options}
+                onChange={vi.fn()}
+            />,
+        );
+
+        expect(screen.getAllByTestId('segment-pill')).toHaveLength(1);
+        expect(screen.getByRole('button', { name: 'Beta' })).toContainElement(
+            screen.getByTestId('segment-pill'),
+        );
+    });
+
+    test('two controls each have their own pill', () => {
+        render(
+            <>
+                <SegmentedControl
+                    label="One"
+                    value="a"
+                    options={options}
+                    onChange={vi.fn()}
+                />
+                <SegmentedControl
+                    label="Two"
+                    value="b"
+                    options={options}
+                    onChange={vi.fn()}
+                />
+            </>,
+        );
+
+        expect(screen.getAllByTestId('segment-pill')).toHaveLength(2);
+    });
 });

@@ -1,5 +1,8 @@
+import { motion } from 'framer-motion';
+import { useId } from 'react';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
+import { SPRING } from '@/utils/motion';
 
 interface SegmentedControlProps<T extends string | number> {
     /** Names the group for assistive technology. */
@@ -12,7 +15,11 @@ interface SegmentedControlProps<T extends string | number> {
     className?: string;
 }
 
-/** A row of mutually exclusive choices, the active one raised. */
+/**
+ * A row of mutually exclusive choices. The active one is raised on a pill that
+ * slides from the choice that was active to the one that is now, like the
+ * indicators elsewhere in the app.
+ */
 function SegmentedControl<T extends string | number>({
     label,
     value,
@@ -21,6 +28,8 @@ function SegmentedControl<T extends string | number>({
     fullWidth = false,
     className,
 }: SegmentedControlProps<T>) {
+    const pillId = useId();
+
     return (
         <div
             role="group"
@@ -41,15 +50,24 @@ function SegmentedControl<T extends string | number>({
                         aria-pressed={active}
                         onClick={() => onChange(option.value)}
                         className={cn(
-                            'cursor-pointer rounded-md border-none px-2.5 py-1 text-xs font-medium transition-colors duration-150',
+                            'relative cursor-pointer rounded-md border-none bg-transparent px-2.5 py-1 text-xs font-medium transition-colors duration-150',
                             FOCUS_RING,
                             fullWidth && 'flex-1',
                             active
-                                ? 'bg-[var(--surface-color)] text-[var(--text-color)] shadow-sm'
-                                : 'bg-transparent text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
+                                ? 'text-[var(--text-color)]'
+                                : 'text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
                         )}
                     >
-                        {option.label}
+                        {active && (
+                            <motion.span
+                                layoutId={pillId}
+                                data-testid="segment-pill"
+                                aria-hidden="true"
+                                transition={SPRING}
+                                className="absolute inset-0 rounded-md bg-[var(--surface-color)] shadow-sm"
+                            />
+                        )}
+                        <span className="relative">{option.label}</span>
                     </button>
                 );
             })}
