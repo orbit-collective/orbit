@@ -104,12 +104,10 @@ describe('DashboardGrid', () => {
             />,
         );
 
-        const frames = screen.getAllByTestId('widget-edit-frame');
-        expect(frames[2].firstElementChild).toHaveClass(
-            'border-[var(--accent-color)]',
-        );
+        const surfaces = screen.getAllByTestId('widget-drag-surface');
+        expect(surfaces[2]).toHaveClass('outline-[var(--accent-color)]');
 
-        (frames[0].firstElementChild as HTMLElement).click();
+        surfaces[0].click();
         expect(onSelect).toHaveBeenCalledWith('stat_projects');
     });
 

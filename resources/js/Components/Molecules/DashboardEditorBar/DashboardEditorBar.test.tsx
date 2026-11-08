@@ -11,12 +11,14 @@ const setup = (
         onCancel: vi.fn(),
         onReset: vi.fn(),
         onSnapChange: vi.fn(),
+        onTogglePanel: vi.fn(),
     };
     render(
         <DashboardEditorBar
             dirty
             saving={false}
             snap
+            panelOpen
             {...handlers}
             {...props}
         />,
@@ -68,6 +70,26 @@ describe('DashboardEditorBar', () => {
         await userEvent.click(toggle);
 
         expect(onSnapChange).toHaveBeenCalledWith(false);
+    });
+
+    test('puts the panel away and brings it back', async () => {
+        const { onTogglePanel } = setup({ panelOpen: true });
+
+        const toggle = screen.getByRole('button', { name: 'Panel' });
+        expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+        await userEvent.click(toggle);
+
+        expect(onTogglePanel).toHaveBeenCalledOnce();
+    });
+
+    test('shows the panel button as off while the panel is away', () => {
+        setup({ panelOpen: false });
+
+        expect(screen.getByRole('button', { name: 'Panel' })).toHaveAttribute(
+            'aria-pressed',
+            'false',
+        );
     });
 
     test('reset asks for a confirmation before it runs', async () => {

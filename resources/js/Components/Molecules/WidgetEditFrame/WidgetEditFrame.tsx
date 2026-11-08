@@ -51,28 +51,30 @@ const HANDLES: {
         name: 'width',
         axes: { x: true, y: false },
         className:
-            'right-0.5 top-10 bottom-4 w-3 cursor-ew-resize max-lg:hidden',
-        line: 'right-1 top-1/2 h-8 w-1 -translate-y-1/2',
+            '-right-1.5 top-6 bottom-6 w-3 cursor-ew-resize max-lg:hidden',
+        line: 'right-1 top-1/2 h-10 w-1 -translate-y-1/2',
     },
     {
         name: 'height',
         axes: { x: false, y: true },
-        className: 'bottom-0.5 left-4 right-4 h-3 cursor-ns-resize',
-        line: 'bottom-1 left-1/2 h-1 w-8 -translate-x-1/2',
+        className: '-bottom-1.5 left-6 right-6 h-3 cursor-ns-resize',
+        line: 'bottom-1 left-1/2 h-1 w-10 -translate-x-1/2',
     },
     {
         name: 'size',
         axes: { x: true, y: true },
         className:
-            'bottom-0 right-0 h-5 w-5 cursor-nwse-resize max-lg:cursor-ns-resize',
+            '-bottom-1.5 -right-1.5 h-5 w-5 cursor-nwse-resize max-lg:cursor-ns-resize',
         line: '',
     },
 ];
 
 /**
- * Wraps a widget while the dashboard is being edited. The whole header is the
- * handle to drag it by (mouse and touch) and a drop target for another
- * widget; the right edge, the bottom edge and the corner resize it, live.
+ * Wraps a widget while the dashboard is being edited. The widget is drawn
+ * exactly as on the dashboard, so what you arrange is what you get; a layer
+ * on top is the handle to drag it by (mouse and touch), a drop target for
+ * another widget and carries a tag with its name and size. The right edge,
+ * the bottom edge and the corner resize it, live.
  */
 const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
     widget,
@@ -178,115 +180,125 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
             )}
         >
             <div
-                onClick={onSelect}
                 className={cn(
-                    'relative flex h-full flex-col rounded-xl border border-solid bg-[var(--surface-color)] transition-[border-color,box-shadow] duration-150',
-                    selected
-                        ? 'border-[var(--accent-color)] shadow-[0_0_0_1px_var(--accent-color)]'
-                        : 'border-[var(--border-color)] hover:border-[var(--border-color-strong)]',
-                    isOver &&
-                        !isDragging &&
-                        'border-[var(--accent-color)] shadow-[0_0_0_3px_var(--accent-color-opacity)]',
-                    isDragging && 'opacity-90 shadow-2xl',
+                    'relative h-full',
+                    isDragging && 'opacity-90 drop-shadow-2xl',
                 )}
             >
+                {/* The widget as it is on the dashboard, nothing added to it. */}
+                {hidden ? (
+                    <div className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--border-color-strong)] px-3 text-center text-xs text-[var(--text-muted-color)]">
+                        <Icon name="EyeOff" size={18} />
+                        <span>Hidden, it will not appear on the dashboard</span>
+                    </div>
+                ) : (
+                    <div className="h-full min-h-0 overflow-hidden [&>*]:h-full">
+                        {children}
+                    </div>
+                )}
+
+                {/* Everything for editing sits on top: the widget is dragged
+                    by its whole surface and picked with a click. */}
                 <div
                     ref={setActivatorNodeRef}
-                    data-testid="widget-drag-header"
+                    data-testid="widget-drag-surface"
                     title="Drag to move"
-                    className="bg-[var(--bg-light-color)]/50 flex h-9 shrink-0 cursor-grab touch-none select-none items-center gap-2 rounded-t-xl border-b border-solid border-[var(--border-color)] px-3 active:cursor-grabbing"
+                    onClick={onSelect}
+                    className={cn(
+                        'absolute inset-0 cursor-grab touch-none select-none rounded-xl outline-2 outline-offset-0 transition-[outline-color,background-color] duration-150 active:cursor-grabbing',
+                        selected
+                            ? 'outline outline-[var(--accent-color)]'
+                            : 'outline outline-transparent hover:bg-[var(--accent-color-opacity)] hover:outline-[var(--border-color-strong)]',
+                        isOver &&
+                            !isDragging &&
+                            'bg-[var(--accent-color-opacity)] outline-dashed outline-[var(--accent-color)]',
+                    )}
                     {...listeners}
                 >
-                    <Icon
-                        name="GripVertical"
-                        size={14}
-                        color="var(--text-muted-color)"
-                    />
-                    <Icon
-                        name={icon}
-                        size={14}
-                        color="var(--text-gray-color)"
-                    />
-                    <span className="min-w-0 flex-1 truncate text-xs font-semibold text-[var(--text-gray-color)]">
-                        {label}
-                    </span>
-                    <span
-                        data-testid="widget-size"
-                        className="hidden shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-muted-color)] sm:inline"
-                    >
-                        {Math.round((widget.width / GRID_COLUMNS) * 100)}% ·{' '}
-                        {widget.height * ROW_HEIGHT}px
-                    </span>
-                    <button
-                        type="button"
-                        aria-label={hidden ? `Show ${label}` : `Hide ${label}`}
-                        title={hidden ? 'Show' : 'Hide'}
-                        onClick={onToggleVisible}
-                        className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
-                        {...keepOutOfDrag}
-                    >
-                        <Icon name={hidden ? 'EyeOff' : 'Eye'} size={14} />
-                    </button>
-                </div>
-
-                <div className="min-h-0 flex-1 overflow-hidden rounded-b-xl">
-                    {hidden ? (
-                        <div className="flex h-full flex-col items-center justify-center gap-1.5 px-3 text-center text-xs text-[var(--text-muted-color)]">
-                            <Icon name="EyeOff" size={18} />
-                            <span>
-                                Hidden, it will not appear on the dashboard
-                            </span>
-                        </div>
-                    ) : (
-                        <div className="[&>*]:rounded-none! [&>*]:border-0! [&>*]:shadow-none! pointer-events-none h-full select-none overflow-hidden [&>*]:h-full">
-                            {children}
-                        </div>
-                    )}
-                </div>
-
-                {HANDLES.map((handle) => (
-                    <div
-                        key={handle.name}
-                        role="separator"
-                        aria-orientation={
-                            handle.name === 'height' ? 'horizontal' : 'vertical'
-                        }
-                        aria-label={`Resize ${label}, ${handle.name}`}
-                        data-testid={`resize-${handle.name}`}
-                        onPointerDown={(event) =>
-                            startResize(event, handle.axes)
-                        }
-                        onClick={(event) => event.stopPropagation()}
-                        className={cn(
-                            'group/handle absolute z-10 touch-none',
-                            handle.className,
-                        )}
-                    >
-                        {handle.line ? (
-                            <span
-                                aria-hidden="true"
-                                className={cn(
-                                    'absolute rounded-full bg-[var(--border-color-strong)] opacity-0 transition-opacity group-hover/handle:opacity-100',
-                                    handle.line,
-                                )}
-                            />
-                        ) : (
-                            <svg
-                                aria-hidden="true"
-                                viewBox="0 0 12 12"
-                                className="absolute bottom-1 right-1 h-3 w-3 text-[var(--text-muted-color)] transition-colors group-hover/handle:text-[var(--accent-color)]"
-                            >
-                                <path
-                                    d="M11 5 5 11M11 8l-3 3"
-                                    stroke="currentColor"
-                                    strokeWidth="1.4"
-                                    strokeLinecap="round"
-                                    fill="none"
-                                />
-                            </svg>
-                        )}
+                    <div className="absolute -top-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] py-0.5 pl-1.5 pr-0.5 shadow-md">
+                        <Icon
+                            name="GripVertical"
+                            size={12}
+                            color="var(--text-muted-color)"
+                        />
+                        <Icon
+                            name={icon}
+                            size={12}
+                            color="var(--text-gray-color)"
+                        />
+                        <span className="min-w-0 truncate text-[11px] font-semibold text-[var(--text-color)]">
+                            {label}
+                        </span>
+                        <span
+                            data-testid="widget-size"
+                            className="hidden shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-muted-color)] sm:inline"
+                        >
+                            {Math.round((widget.width / GRID_COLUMNS) * 100)}% ·{' '}
+                            {widget.height * ROW_HEIGHT}px
+                        </span>
+                        <button
+                            type="button"
+                            aria-label={
+                                hidden ? `Show ${label}` : `Hide ${label}`
+                            }
+                            title={hidden ? 'Show' : 'Hide'}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                onToggleVisible();
+                            }}
+                            className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                            {...keepOutOfDrag}
+                        >
+                            <Icon name={hidden ? 'EyeOff' : 'Eye'} size={12} />
+                        </button>
                     </div>
-                ))}
+
+                    {HANDLES.map((handle) => (
+                        <div
+                            key={handle.name}
+                            role="separator"
+                            aria-orientation={
+                                handle.name === 'height'
+                                    ? 'horizontal'
+                                    : 'vertical'
+                            }
+                            aria-label={`Resize ${label}, ${handle.name}`}
+                            data-testid={`resize-${handle.name}`}
+                            onPointerDown={(event) =>
+                                startResize(event, handle.axes)
+                            }
+                            onClick={(event) => event.stopPropagation()}
+                            className={cn(
+                                'group/handle absolute z-10 touch-none',
+                                handle.className,
+                            )}
+                        >
+                            {handle.line ? (
+                                <span
+                                    aria-hidden="true"
+                                    className={cn(
+                                        'absolute rounded-full bg-[var(--accent-color)] opacity-0 transition-opacity group-hover/handle:opacity-100',
+                                        handle.line,
+                                    )}
+                                />
+                            ) : (
+                                <svg
+                                    aria-hidden="true"
+                                    viewBox="0 0 12 12"
+                                    className="absolute bottom-1 right-1 h-3 w-3 text-[var(--text-gray-color)] transition-colors group-hover/handle:text-[var(--accent-color)]"
+                                >
+                                    <path
+                                        d="M11 5 5 11M11 8l-3 3"
+                                        stroke="currentColor"
+                                        strokeWidth="1.4"
+                                        strokeLinecap="round"
+                                        fill="none"
+                                    />
+                                </svg>
+                            )}
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

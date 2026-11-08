@@ -67,7 +67,7 @@ export const Editing: Story = {
     args: { editing: true, selectedId: 'trend' },
     play: async ({ canvasElement }) => {
         await expect(
-            within(canvasElement).getAllByTestId('widget-drag-header'),
+            within(canvasElement).getAllByTestId('widget-drag-surface'),
         ).toHaveLength(9);
     },
 };

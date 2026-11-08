@@ -45,7 +45,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     play: async ({ canvasElement }) => {
         await expect(
-            within(canvasElement).getByTestId('widget-drag-header'),
+            within(canvasElement).getByTestId('widget-drag-surface'),
         ).toBeVisible();
     },
 };

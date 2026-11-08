@@ -9,6 +9,9 @@ interface DashboardEditorBarProps {
     saving: boolean;
     snap: boolean;
     onSnapChange: (snap: boolean) => void;
+    /** The side panel can be put away to see the dashboard at full width. */
+    panelOpen: boolean;
+    onTogglePanel: () => void;
     onSave: () => void;
     onCancel: () => void;
     onReset: () => void;
@@ -28,6 +31,8 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
     saving,
     snap,
     onSnapChange,
+    panelOpen,
+    onTogglePanel,
     onSave,
     onCancel,
     onReset,
@@ -93,6 +98,25 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                                 onChange={onSnapChange}
                             />
                         </label>
+                        <button
+                            type="button"
+                            aria-pressed={panelOpen}
+                            onClick={onTogglePanel}
+                            title={
+                                panelOpen ? 'Hide the panel' : 'Show the panel'
+                            }
+                            className={GHOST_BUTTON}
+                        >
+                            <Icon
+                                name={
+                                    panelOpen
+                                        ? 'PanelRightClose'
+                                        : 'PanelRightOpen'
+                                }
+                                size={13}
+                            />
+                            Panel
+                        </button>
                         <div className="mx-1 hidden h-6 w-px bg-[var(--border-color-strong)] sm:block" />
                         <button
                             type="button"

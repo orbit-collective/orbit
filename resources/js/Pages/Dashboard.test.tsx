@@ -239,6 +239,23 @@ describe('Dashboard editing', () => {
         expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     });
 
+    test('the panel can be put away and brought back', async () => {
+        renderDashboard();
+        startEditing();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Panel' }));
+        expect(
+            screen.queryByRole('complementary', { name: 'Dashboard widgets' }),
+        ).not.toBeInTheDocument();
+        // The widgets are still there to arrange.
+        expect(screen.getAllByTestId('widget-edit-frame')).not.toHaveLength(0);
+
+        await userEvent.click(screen.getByRole('button', { name: 'Panel' }));
+        expect(
+            screen.getByRole('complementary', { name: 'Dashboard widgets' }),
+        ).toBeInTheDocument();
+    });
+
     test('cancel leaves the editor and drops the draft', async () => {
         renderDashboard();
         startEditing();
@@ -297,7 +314,7 @@ describe('Dashboard editing', () => {
         });
         startEditing();
 
-        await userEvent.click(screen.getAllByTestId('widget-drag-header')[0]);
+        await userEvent.click(screen.getAllByTestId('widget-drag-surface')[0]);
         await userEvent.click(screen.getByRole('button', { name: 'Later' }));
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -312,7 +329,7 @@ describe('Dashboard editing', () => {
         renderDashboard({ dashboardLayout: layoutOf('projects') });
         startEditing();
 
-        await userEvent.click(screen.getByTestId('widget-drag-header'));
+        await userEvent.click(screen.getByTestId('widget-drag-surface'));
 
         const panel = screen.getByRole('complementary');
         await userEvent.click(
@@ -387,7 +404,7 @@ describe('Dashboard editing', () => {
         });
         startEditing();
 
-        await userEvent.click(screen.getAllByTestId('widget-drag-header')[0]);
+        await userEvent.click(screen.getAllByTestId('widget-drag-surface')[0]);
         await userEvent.click(
             screen.getByRole('button', { name: 'Remove widget' }),
         );

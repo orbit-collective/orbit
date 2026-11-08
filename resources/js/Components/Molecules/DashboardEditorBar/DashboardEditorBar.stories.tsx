@@ -11,6 +11,8 @@ const meta = {
         saving: false,
         snap: true,
         onSnapChange: fn(),
+        panelOpen: true,
+        onTogglePanel: fn(),
         onSave: fn(),
         onCancel: fn(),
         onReset: fn(),
@@ -34,6 +36,8 @@ export const Unchanged: Story = { args: { dirty: false } };
 export const Saving: Story = { args: { saving: true } };
 
 export const FreeResize: Story = { args: { snap: false } };
+
+export const PanelAway: Story = { args: { panelOpen: false } };
 
 /** Reset asks once more before it runs. */
 export const ConfirmingReset: Story = {
