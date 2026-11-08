@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { FC } from 'react';
+import WidgetGlyph from '@/Components/Atoms/WidgetGlyph/WidgetGlyph';
 import { DashboardWidget } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
 import { DURATION, EASE, rowDelay } from '@/utils/motion';
@@ -22,7 +23,7 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
             aria-hidden="true"
             data-testid="layout-preview"
             className={cn(
-                '@container relative max-h-32 overflow-hidden rounded-lg border border-solid border-[var(--border-color)] bg-[var(--bg-color)] p-1.5',
+                '@container relative max-h-44 overflow-hidden rounded-lg border border-solid border-[var(--border-color)] bg-[var(--bg-color)] p-1.5',
                 className,
             )}
         >
@@ -49,7 +50,7 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
                                 gridRow: `span ${widget.height}`,
                             }}
                         >
-                            <div className="h-full w-full rounded-[3px] border border-solid border-[var(--border-color-strong)] bg-[var(--bg-light-color)]" />
+                            <WidgetGlyph widget={widget} />
                         </motion.div>
                     ))}
                 </div>

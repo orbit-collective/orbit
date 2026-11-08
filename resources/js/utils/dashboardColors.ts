@@ -24,3 +24,11 @@ export const toDashboardColor = (
     fallback: DashboardColor = 'accent',
 ): DashboardColor =>
     DASHBOARD_COLORS.find((color) => color === value) ?? fallback;
+
+/** The color each statistic has until its widget picks another. */
+export const STAT_DEFAULT_COLORS: Record<string, DashboardColor> = {
+    stat_projects: 'accent',
+    stat_open_issues: 'info',
+    stat_critical: 'error',
+    stat_resolution: 'success',
+};

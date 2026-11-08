@@ -45,4 +45,41 @@ describe('LayoutPreview', () => {
             'true',
         );
     });
+
+    test('each block is drawn as the widget it stands for', () => {
+        render(
+            <LayoutPreview
+                widgets={[
+                    makeWidget('trend', { variant: 'line' }),
+                    makeWidget('priority_breakdown', { variant: 'donut' }),
+                ]}
+            />,
+        );
+
+        const glyphs = screen.getAllByTestId('widget-glyph');
+        expect(glyphs.map((glyph) => glyph.getAttribute('data-type'))).toEqual([
+            'trend',
+            'priority_breakdown',
+        ]);
+        expect(
+            glyphs.map((glyph) => glyph.getAttribute('data-variant')),
+        ).toEqual(['line', 'donut']);
+    });
+
+    test('two layouts with different styles are not drawn alike', () => {
+        const a = render(
+            <LayoutPreview
+                widgets={[makeWidget('trend', { variant: 'bars' })]}
+            />,
+        );
+        const first = a.container.innerHTML;
+        a.unmount();
+        const b = render(
+            <LayoutPreview
+                widgets={[makeWidget('trend', { variant: 'area' })]}
+            />,
+        );
+
+        expect(b.container.innerHTML).not.toBe(first);
+    });
 });
