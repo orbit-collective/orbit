@@ -1,6 +1,7 @@
 import {
     DashboardCatalogEntry,
     DashboardLayoutProp,
+    DashboardSavedLayout,
     DashboardWidget,
     DashboardWidgetType,
 } from '@/types/Dashboard';
@@ -215,3 +216,9 @@ export const makeDashboardLayout = (
         ).map((type) => makeWidget(type)),
     catalog: DASHBOARD_CATALOG,
 });
+
+export const makeSavedLayout = (
+    id: number,
+    name: string,
+    widgets: DashboardWidget[] = makeDashboardLayout().widgets,
+): DashboardSavedLayout => ({ id, name, widgets });

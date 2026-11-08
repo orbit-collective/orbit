@@ -55,3 +55,10 @@ export interface DashboardLayoutProp {
     widgets: DashboardWidget[];
     catalog: DashboardCatalogEntry[];
 }
+
+/** A layout the user kept under a name. */
+export interface DashboardSavedLayout {
+    id: number;
+    name: string;
+    widgets: DashboardWidget[];
+}

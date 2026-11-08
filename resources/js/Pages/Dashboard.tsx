@@ -12,7 +12,7 @@ import { useCommands } from '@/hooks/useCommands';
 import { useDashboardEditor } from '@/hooks/useDashboardEditor';
 import { useDashboardLive } from '@/live/useDashboardLive';
 import { Command } from '@/types/Commands';
-import { DashboardLayoutProp } from '@/types/Dashboard';
+import { DashboardLayoutProp, DashboardSavedLayout } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
 
 /** The props widgets read; each one is missing until a widget needs it. */
@@ -26,10 +26,12 @@ const DATA_PROPS = [
 
 export default function Dashboard({
     dashboardLayout,
+    savedLayouts = [],
     projects,
     ...rest
 }: Omit<DashboardData, 'projects'> & {
     dashboardLayout: DashboardLayoutProp;
+    savedLayouts?: DashboardSavedLayout[];
     projects: DashboardData['projects'];
 }) {
     const data: DashboardData = { projects, ...rest };
@@ -162,6 +164,11 @@ export default function Dashboard({
                             onToggleVisible={editor.toggleVisible}
                             onMove={editor.shift}
                             onRemove={editor.remove}
+                            savedLayouts={savedLayouts}
+                            saveLayoutError={editor.saveLayoutError}
+                            onSaveLayout={editor.saveLayoutAs}
+                            onApplyLayout={editor.applyLayout}
+                            onDeleteLayout={editor.deleteSavedLayout}
                         />
                     )}
                 </div>

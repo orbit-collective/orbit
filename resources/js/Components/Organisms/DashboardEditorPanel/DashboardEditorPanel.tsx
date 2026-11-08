@@ -2,8 +2,10 @@ import { FC, ReactNode, useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import SegmentedControl from '@/Components/Atoms/SegmentedControl/SegmentedControl';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
+import DashboardSavedLayouts from '@/Components/Organisms/DashboardSavedLayouts/DashboardSavedLayouts';
 import {
     DashboardCatalogEntry,
+    DashboardSavedLayout,
     DashboardWidget,
     DashboardWidgetType,
 } from '@/types/Dashboard';
@@ -29,6 +31,12 @@ interface DashboardEditorPanelProps {
     onToggleVisible: (id: string) => void;
     onMove: (id: string, delta: -1 | 1) => void;
     onRemove: (id: string) => void;
+    savedLayouts: DashboardSavedLayout[];
+    /** Why the last save of a layout failed. */
+    saveLayoutError?: string | null;
+    onSaveLayout: (name: string) => void;
+    onApplyLayout: (layout: DashboardSavedLayout) => void;
+    onDeleteLayout: (id: number) => void;
 }
 
 const capitalize = (value: string) =>
@@ -74,8 +82,13 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
     onToggleVisible,
     onMove,
     onRemove,
+    savedLayouts,
+    saveLayoutError = null,
+    onSaveLayout,
+    onApplyLayout,
+    onDeleteLayout,
 }) => {
-    const [tab, setTab] = useState<'widgets' | 'settings'>('widgets');
+    const [tab, setTab] = useState<'widgets' | 'settings' | 'saved'>('widgets');
     const selectedId = selected?.id;
     const entry = catalog.find((item) => item.type === selected?.type);
     const index = widgets.findIndex((widget) => widget.id === selectedId);
@@ -98,13 +111,22 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                     options={[
                         { value: 'widgets', label: 'Widgets' },
                         { value: 'settings', label: 'Settings' },
+                        { value: 'saved', label: 'Saved' },
                     ]}
                     onChange={setTab}
                 />
             </div>
 
             <div className="flex-1 overflow-y-auto p-3">
-                {tab === 'widgets' ? (
+                {tab === 'saved' ? (
+                    <DashboardSavedLayouts
+                        layouts={savedLayouts}
+                        error={saveLayoutError}
+                        onSave={onSaveLayout}
+                        onApply={onApplyLayout}
+                        onDelete={onDeleteLayout}
+                    />
+                ) : tab === 'widgets' ? (
                     <Section title="Add to dashboard">
                         <ul className="m-0 flex list-none flex-col gap-2 p-0">
                             {catalog.map((item) => {

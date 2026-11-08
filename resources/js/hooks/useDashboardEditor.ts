@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     DashboardCatalogEntry,
+    DashboardSavedLayout,
     DashboardWidget,
     DashboardWidgetType,
 } from '@/types/Dashboard';
@@ -16,6 +17,7 @@ import {
 } from '@/utils/dashboardLayout';
 
 const LAYOUT_URL = '/dashboard/layout';
+const SAVED_LAYOUTS_URL = '/dashboard/saved-layouts';
 
 /**
  * The state of the dashboard editor: a draft of the layout that is only sent
@@ -34,6 +36,8 @@ export function useDashboardEditor(
     const [saving, setSaving] = useState(false);
     // Resizing lands on the coarse grid; off, every column and row counts.
     const [snap, setSnap] = useState(true);
+    // Why keeping the layout under a name failed, if it did.
+    const [saveLayoutError, setSaveLayoutError] = useState<string | null>(null);
 
     const missing = useMemo(
         () =>
@@ -101,6 +105,7 @@ export function useDashboardEditor(
         saving,
         snap,
         setSnap,
+        saveLayoutError,
         dirty: !sameLayout(draft, saved),
         canAdd: draft.length < MAX_DASHBOARD_WIDGETS,
         start,
@@ -108,6 +113,35 @@ export function useDashboardEditor(
         save: () => send('put'),
         reset: () => send('delete'),
         select: setSelectedId,
+        /** Keep the draft under a name; a name that exists is replaced. */
+        saveLayoutAs: (name: string) =>
+            router.post(
+                SAVED_LAYOUTS_URL,
+                { name, widgets: draft },
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    only: ['savedLayouts'],
+                    onStart: () => setSaveLayoutError(null),
+                    onError: (errors) =>
+                        setSaveLayoutError(
+                            errors.name ??
+                                Object.values(errors)[0] ??
+                                'The layout could not be saved.',
+                        ),
+                },
+            ),
+        deleteSavedLayout: (id: number) =>
+            router.delete(`${SAVED_LAYOUTS_URL}/${id}`, {
+                preserveScroll: true,
+                preserveState: true,
+                only: ['savedLayouts'],
+            }),
+        /** Put a saved layout on the draft; nothing is stored until Save. */
+        applyLayout: (layout: DashboardSavedLayout) => {
+            setDraft(layout.widgets);
+            setSelectedId(null);
+        },
         reorder: (fromId: string, toId: string) =>
             setDraft((widgets) => moveWidget(widgets, fromId, toId)),
         shift: (id: string, delta: -1 | 1) =>

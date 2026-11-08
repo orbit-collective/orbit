@@ -9,7 +9,11 @@ import {
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { makeDashboardLayout, makeWidget } from '@/tests/dashboardLayout';
+import {
+    makeDashboardLayout,
+    makeSavedLayout,
+    makeWidget,
+} from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
 import { Command } from '@/types/Commands';
@@ -20,7 +24,7 @@ import Dashboard from './Dashboard';
 const mocks = vi.hoisted(() => ({
     useDashboardLive: vi.fn(),
     runCommand: vi.fn(),
-    router: { put: vi.fn(), delete: vi.fn(), reload: vi.fn() },
+    router: { put: vi.fn(), post: vi.fn(), delete: vi.fn(), reload: vi.fn() },
     commands: new Map<string, { perform?: () => void }>(),
 }));
 
@@ -491,6 +495,145 @@ describe('Dashboard editing', () => {
             }),
         );
         expect(screen.getByTestId('widget-placeholder')).toBeInTheDocument();
+    });
+
+    describe('saved layouts', () => {
+        const saved = [
+            makeSavedLayout(5, 'Focus', [makeWidget('stat_critical')]),
+        ];
+
+        const openSaved = async () => {
+            startEditing();
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Saved' }),
+            );
+        };
+
+        test('applying one puts it on the draft without storing anything', async () => {
+            renderDashboard({
+                dashboardLayout: layoutOf('stat_projects'),
+                savedLayouts: saved,
+            });
+            await openSaved();
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Apply Focus' }),
+            );
+
+            expect(
+                screen.getAllByText('Critical Tasks').length,
+            ).toBeGreaterThan(0);
+            expect(
+                screen.queryByText('Active Projects'),
+            ).not.toBeInTheDocument();
+            expect(mocks.router.put).not.toHaveBeenCalled();
+            // The layout differs from the saved one, so it can be saved.
+            expect(
+                within(screen.getByRole('toolbar')).getByRole('button', {
+                    name: 'Save',
+                }),
+            ).toBeEnabled();
+        });
+
+        test('keeping the draft under a name posts it', async () => {
+            renderDashboard({ dashboardLayout: layoutOf('stat_projects') });
+            await openSaved();
+
+            await userEvent.type(
+                screen.getByLabelText('Save this layout as'),
+                'Wide',
+            );
+            await userEvent.click(
+                within(screen.getByRole('complementary')).getByRole('button', {
+                    name: 'Save',
+                }),
+            );
+
+            expect(mocks.router.post).toHaveBeenCalledWith(
+                '/dashboard/saved-layouts',
+                { name: 'Wide', widgets: [makeWidget('stat_projects')] },
+                expect.objectContaining({
+                    only: ['savedLayouts'],
+                    preserveState: true,
+                }),
+            );
+        });
+
+        test('shows why keeping a layout failed', async () => {
+            mocks.router.post.mockImplementation((_url, _data, options) =>
+                options.onError({
+                    name: 'You can keep at most 20 saved layouts.',
+                }),
+            );
+            renderDashboard({ dashboardLayout: layoutOf('stat_projects') });
+            await openSaved();
+
+            await userEvent.type(
+                screen.getByLabelText('Save this layout as'),
+                'Wide',
+            );
+            await userEvent.click(
+                within(screen.getByRole('complementary')).getByRole('button', {
+                    name: 'Save',
+                }),
+            );
+
+            expect(await screen.findByRole('alert')).toHaveTextContent(
+                'at most 20',
+            );
+        });
+
+        test('clears an earlier failure when saving again starts', async () => {
+            let attempt = 0;
+            mocks.router.post.mockImplementation((_url, _data, options) => {
+                options.onStart();
+                if (attempt++ === 0) options.onError({ other: 'It failed.' });
+            });
+            renderDashboard({ dashboardLayout: layoutOf('stat_projects') });
+            await openSaved();
+
+            await userEvent.type(
+                screen.getByLabelText('Save this layout as'),
+                'Wide',
+            );
+            await userEvent.click(
+                within(screen.getByRole('complementary')).getByRole('button', {
+                    name: 'Save',
+                }),
+            );
+            expect(await screen.findByRole('alert')).toHaveTextContent(
+                'It failed.',
+            );
+
+            await userEvent.click(
+                within(screen.getByRole('complementary')).getByRole('button', {
+                    name: 'Save',
+                }),
+            );
+            await waitFor(() =>
+                expect(screen.queryByRole('alert')).not.toBeInTheDocument(),
+            );
+        });
+
+        test('deleting one asks the server to', async () => {
+            renderDashboard({
+                dashboardLayout: layoutOf('stat_projects'),
+                savedLayouts: saved,
+            });
+            await openSaved();
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Delete Focus' }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Confirm deleting Focus' }),
+            );
+
+            expect(mocks.router.delete).toHaveBeenCalledWith(
+                '/dashboard/saved-layouts/5',
+                expect.objectContaining({ only: ['savedLayouts'] }),
+            );
+        });
     });
 
     test('reset asks the server for the default layout', async () => {
