@@ -129,15 +129,38 @@ class DashboardLayoutService
                 'variant' => in_array($widget['variant'] ?? null, $type->variants(), true)
                     ? $widget['variant']
                     : $type->variants()[0],
-                'span' => in_array($widget['span'] ?? null, $type->spans(), true)
-                    ? $widget['span']
-                    : $type->defaultSpan(),
+                'width' => $this->clamp(
+                    $widget['width'] ?? $this->legacyWidth($widget),
+                    $type->minWidth(),
+                    DashboardWidgetType::GRID_COLUMNS,
+                    $type->defaultWidth(),
+                ),
+                'height' => $this->clamp(
+                    $widget['height'] ?? null,
+                    $type->minHeight(),
+                    DashboardWidgetType::MAX_HEIGHT,
+                    $type->defaultHeight(),
+                ),
                 'visible' => (bool) ($widget['visible'] ?? true),
                 'config' => $this->normalizeConfig($type, $widget['config'] ?? []),
             ];
         }
 
         return $normalized;
+    }
+
+    /** Layouts saved while widths were twelfths (`span`) keep their width. */
+    private function legacyWidth(array $widget): ?int
+    {
+        return is_int($widget['span'] ?? null)
+            ? $widget['span'] * DashboardWidgetType::COLUMN_SNAP
+            : null;
+    }
+
+    /** An integer inside the bounds, or the default when it is not one. */
+    private function clamp(mixed $value, int $min, int $max, int $default): int
+    {
+        return is_int($value) ? max($min, min($max, $value)) : $default;
     }
 
     private function normalizeConfig(DashboardWidgetType $type, mixed $config): array

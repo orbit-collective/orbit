@@ -108,45 +108,50 @@ export default function Dashboard({
                         />
                     </button>
                 </PageHeader>
-                <div className="relative flex flex-1 overflow-hidden">
+                {editor.editing && (
+                    <DashboardEditorBar
+                        dirty={editor.dirty}
+                        saving={editor.saving}
+                        snap={editor.snap}
+                        onSnapChange={editor.setSnap}
+                        onSave={editor.save}
+                        onCancel={editor.cancel}
+                        onReset={editor.reset}
+                    />
+                )}
+                <div className="relative flex min-h-0 flex-1 overflow-hidden">
                     <PageStage
                         as="main"
                         className={cn(
-                            'flex flex-1 flex-col gap-6 overflow-y-auto p-6',
-                            editor.editing && 'max-lg:pb-[55vh]',
+                            'min-w-0 flex-1 overflow-y-auto p-6',
+                            editor.editing && 'max-lg:pb-[52vh]',
                         )}
                     >
-                        {editor.editing && (
-                            <DashboardEditorBar
-                                dirty={editor.dirty}
-                                saving={editor.saving}
-                                onSave={editor.save}
-                                onCancel={editor.cancel}
-                                onReset={editor.reset}
-                            />
-                        )}
                         <DashboardGrid
                             widgets={widgets}
                             catalog={dashboardLayout.catalog}
                             data={data}
                             editing={editor.editing}
+                            snap={editor.snap}
                             selectedId={editor.selectedId}
                             onSelect={editor.select}
                             onReorder={editor.reorder}
-                            onMove={editor.shift}
+                            onResize={editor.resize}
                             onToggleVisible={editor.toggleVisible}
                         />
                     </PageStage>
                     {editor.editing && (
                         <DashboardEditorPanel
                             catalog={dashboardLayout.catalog}
+                            widgets={editor.draft}
                             selected={selected}
                             canAdd={editor.canAdd}
                             onAdd={editor.add}
                             onVariantChange={editor.setVariant}
-                            onSpanChange={editor.setSpan}
+                            onWidthChange={editor.setWidth}
                             onOptionChange={editor.setOption}
                             onToggleVisible={editor.toggleVisible}
+                            onMove={editor.shift}
                             onRemove={editor.remove}
                         />
                     )}

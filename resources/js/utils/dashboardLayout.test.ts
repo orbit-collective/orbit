@@ -7,7 +7,8 @@ import {
     requiredProps,
     sameLayout,
     shiftWidget,
-    spanClass,
+    sizeAfterResize,
+    gridItemStyle,
     updateWidget,
 } from './dashboardLayout';
 
@@ -18,7 +19,8 @@ const widget = (
     id,
     type: 'trend',
     variant: 'default',
-    span: 8,
+    width: 80,
+    height: 85,
     visible: true,
     config: {},
     ...overrides,
@@ -34,8 +36,10 @@ const entry = (
     description: '',
     icon: 'Activity',
     variants: ['cards', 'compact'],
-    spans: [4, 6],
-    defaultSpan: 4,
+    minWidth: 30,
+    defaultWidth: 40,
+    minHeight: 40,
+    defaultHeight: 85,
     options: [],
     props,
     ...overrides,
@@ -94,11 +98,11 @@ describe('updateWidget', () => {
     test('patches only the widget with that id', () => {
         const next = updateWidget([widget('a'), widget('b')], 'b', {
             visible: false,
-            span: 12,
+            width: 120,
         });
 
         expect(next[0]).toEqual(widget('a'));
-        expect(next[1]).toMatchObject({ visible: false, span: 12 });
+        expect(next[1]).toMatchObject({ visible: false, width: 120 });
     });
 });
 
@@ -120,7 +124,8 @@ describe('createWidget', () => {
         expect(created).toMatchObject({
             type: 'projects',
             variant: 'cards',
-            span: 4,
+            width: 40,
+            height: 85,
             visible: true,
             config: { limit: 3 },
         });
@@ -166,12 +171,49 @@ describe('requiredProps', () => {
     });
 });
 
-test('spanClass maps a width to its classes and falls back to full width', () => {
-    expect(spanClass(8)).toBe('col-span-12 lg:col-span-8');
-    expect(spanClass(7)).toBe('col-span-12');
+test('gridItemStyle passes the size to the cell as CSS variables', () => {
+    expect(gridItemStyle(widget('a', { width: 33, height: 91 }))).toEqual({
+        '--widget-width': 33,
+        '--widget-height': 91,
+    });
+});
+
+describe('sizeAfterResize', () => {
+    const entry = { minWidth: 30, minHeight: 40 };
+    const start = { width: 60, height: 80 };
+
+    test('without snap every column and row counts', () => {
+        expect(
+            sizeAfterResize(start, { columns: 3.4, rows: -7.6 }, entry, false),
+        ).toEqual({ width: 63, height: 72 });
+    });
+
+    test('with snap it lands on a twelfth of the width and on 40 pixels', () => {
+        expect(
+            sizeAfterResize(start, { columns: 4, rows: 4 }, entry, true),
+        ).toEqual({ width: 60, height: 80 });
+        expect(
+            sizeAfterResize(start, { columns: 6, rows: 6 }, entry, true),
+        ).toEqual({ width: 70, height: 90 });
+    });
+
+    test('never gets smaller than the type allows', () => {
+        expect(
+            sizeAfterResize(start, { columns: -500, rows: -500 }, entry, false),
+        ).toEqual({ width: 30, height: 40 });
+        expect(
+            sizeAfterResize(start, { columns: -500, rows: -500 }, entry, true),
+        ).toEqual({ width: 30, height: 40 });
+    });
+
+    test('never gets wider than the dashboard or taller than the maximum', () => {
+        expect(
+            sizeAfterResize(start, { columns: 500, rows: 5000 }, entry, false),
+        ).toEqual({ width: 120, height: 400 });
+    });
 });
 
 test('sameLayout compares widgets by value', () => {
     expect(sameLayout([widget('a')], [widget('a')])).toBe(true);
-    expect(sameLayout([widget('a')], [widget('a', { span: 6 })])).toBe(false);
+    expect(sameLayout([widget('a')], [widget('a', { width: 60 })])).toBe(false);
 });

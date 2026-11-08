@@ -22,14 +22,15 @@ class UpdateDashboardLayoutRequest extends FormRequest
             'widgets.*.id' => ['required', 'string', 'regex:/^[A-Za-z0-9_-]{1,64}$/', 'distinct'],
             'widgets.*.type' => ['required', Rule::enum(DashboardWidgetType::class)],
             'widgets.*.variant' => 'required|string',
-            'widgets.*.span' => ['required', 'integer', Rule::in(DashboardWidgetType::SPANS)],
+            'widgets.*.width' => ['required', 'integer', 'max:'.DashboardWidgetType::GRID_COLUMNS],
+            'widgets.*.height' => ['required', 'integer', 'max:'.DashboardWidgetType::MAX_HEIGHT],
             'widgets.*.visible' => 'required|boolean',
             'widgets.*.config' => 'nullable|array',
         ];
     }
 
     /**
-     * What depends on a widget's type: its variant, its width and its options.
+     * What depends on a widget's type: its variant, its minimum size and its options.
      */
     public function after(): array
     {
@@ -45,8 +46,12 @@ class UpdateDashboardLayoutRequest extends FormRequest
                     $validator->errors()->add("widgets.$index.variant", 'This variant is not available for the widget.');
                 }
 
-                if (! in_array($widget['span'] ?? null, $type->spans(), true)) {
-                    $validator->errors()->add("widgets.$index.span", 'This width is not available for the widget.');
+                if (is_int($widget['width'] ?? null) && $widget['width'] < $type->minWidth()) {
+                    $validator->errors()->add("widgets.$index.width", 'The widget cannot be this narrow.');
+                }
+
+                if (is_int($widget['height'] ?? null) && $widget['height'] < $type->minHeight()) {
+                    $validator->errors()->add("widgets.$index.height", 'The widget cannot be this short.');
                 }
 
                 foreach ((array) ($widget['config'] ?? []) as $key => $value) {

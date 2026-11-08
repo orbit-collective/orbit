@@ -17,34 +17,42 @@ import {
     DashboardCatalogEntry,
     DashboardWidget as Widget,
 } from '@/types/Dashboard';
-import { spanClass } from '@/utils/dashboardLayout';
+import {
+    GRID_CLASS,
+    GRID_ITEM_CLASS,
+    gridItemStyle,
+} from '@/utils/dashboardLayout';
 
 interface DashboardGridProps {
     widgets: Widget[];
     catalog: DashboardCatalogEntry[];
     data: DashboardData;
     editing?: boolean;
+    /** Resizing lands on the coarse grid instead of every column and row. */
+    snap?: boolean;
     selectedId?: string | null;
     onSelect?: (id: string) => void;
     onReorder?: (fromId: string, toId: string) => void;
-    onMove?: (id: string, delta: -1 | 1) => void;
+    onResize?: (id: string, size: { width: number; height: number }) => void;
     onToggleVisible?: (id: string) => void;
 }
 
 /**
- * The widgets of the dashboard on a twelve column grid. While editing, every
- * widget (hidden ones too) is a drag handle and a drop target; dropping one on
- * another puts it in that place.
+ * The widgets of the dashboard on a fine grid: 120 columns wide, rows of a few
+ * pixels, so a widget can take any size. While editing, every widget (hidden
+ * ones too) is dragged by its header onto another to take its place, and
+ * resized by its edges.
  */
 const DashboardGrid: FC<DashboardGridProps> = ({
     widgets,
     catalog,
     data,
     editing = false,
+    snap = true,
     selectedId = null,
     onSelect,
     onReorder,
-    onMove,
+    onResize,
     onToggleVisible,
 }) => {
     // A small drag distance keeps a plain tap a tap, on touch as on mouse.
@@ -57,15 +65,18 @@ const DashboardGrid: FC<DashboardGridProps> = ({
 
     if (!editing) {
         return (
-            <div className="grid grid-cols-12 gap-5">
+            <div className={GRID_CLASS}>
                 {widgets
                     .filter((widget) => widget.visible)
                     .map((widget) => (
                         <PageSection
                             key={widget.id}
-                            className={`flex min-w-0 flex-col [&>*]:flex-1 ${spanClass(widget.span)}`}
+                            className={`${GRID_ITEM_CLASS} p-2.5`}
+                            style={gridItemStyle(widget)}
                         >
-                            <DashboardWidget widget={widget} data={data} />
+                            <div className="h-full min-h-0 overflow-hidden [&>*]:h-full">
+                                <DashboardWidget widget={widget} data={data} />
+                            </div>
                         </PageSection>
                     ))}
             </div>
@@ -84,27 +95,30 @@ const DashboardGrid: FC<DashboardGridProps> = ({
             collisionDetection={pointerWithin}
             onDragEnd={handleDragEnd}
         >
-            <div className="grid grid-cols-12 gap-5">
-                {widgets.map((widget, index) => (
-                    <WidgetEditFrame
-                        key={widget.id}
-                        id={widget.id}
-                        label={
-                            catalog.find((entry) => entry.type === widget.type)
-                                ?.label ?? widget.type
-                        }
-                        hidden={!widget.visible}
-                        selected={widget.id === selectedId}
-                        canMoveUp={index > 0}
-                        canMoveDown={index < widgets.length - 1}
-                        onSelect={() => onSelect?.(widget.id)}
-                        onMove={(delta) => onMove?.(widget.id, delta)}
-                        onToggleVisible={() => onToggleVisible?.(widget.id)}
-                        className={spanClass(widget.span)}
-                    >
-                        <DashboardWidget widget={widget} data={data} />
-                    </WidgetEditFrame>
-                ))}
+            <div className={GRID_CLASS}>
+                {widgets.map((widget) => {
+                    const entry = catalog.find(
+                        (item) => item.type === widget.type,
+                    );
+
+                    return (
+                        <WidgetEditFrame
+                            key={widget.id}
+                            widget={widget}
+                            label={entry?.label ?? widget.type}
+                            icon={entry?.icon ?? 'LayoutDashboard'}
+                            minWidth={entry?.minWidth ?? 20}
+                            minHeight={entry?.minHeight ?? 20}
+                            snap={snap}
+                            selected={widget.id === selectedId}
+                            onSelect={() => onSelect?.(widget.id)}
+                            onToggleVisible={() => onToggleVisible?.(widget.id)}
+                            onResize={(size) => onResize?.(widget.id, size)}
+                        >
+                            <DashboardWidget widget={widget} data={data} />
+                        </WidgetEditFrame>
+                    );
+                })}
             </div>
         </DndContext>
     );

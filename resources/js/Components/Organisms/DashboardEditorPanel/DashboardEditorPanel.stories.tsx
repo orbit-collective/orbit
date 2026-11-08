@@ -16,10 +16,12 @@ const meta = {
     ],
     args: {
         catalog: DASHBOARD_CATALOG,
+        widgets: [makeWidget('trend'), makeWidget('projects')],
         canAdd: true,
         onAdd: fn(),
         onVariantChange: fn(),
-        onSpanChange: fn(),
+        onWidthChange: fn(),
+        onMove: fn(),
         onOptionChange: fn(),
         onToggleVisible: fn(),
         onRemove: fn(),
@@ -55,7 +57,7 @@ export const WidgetSettings: Story = {
 export const NothingPicked: Story = {
     play: async ({ canvasElement }) => {
         await userEvent.click(
-            within(canvasElement).getByRole('tab', { name: 'Settings' }),
+            within(canvasElement).getByRole('button', { name: 'Settings' }),
         );
     },
 };
