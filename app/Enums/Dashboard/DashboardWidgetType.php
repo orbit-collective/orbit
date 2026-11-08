@@ -134,9 +134,10 @@ enum DashboardWidgetType: string
 
     /**
      * Options of the widget, keyed by name: label, the allowed values, the
-     * default one and optionally how each value is called in the editor.
+     * default one, optionally how each value is called in the editor and
+     * `kind` => `color` for a choice of colors.
      *
-     * @return array<string, array{label: string, options: list<int|string>, default: int|string, labels?: array<string, string>}>
+     * @return array<string, array{label: string, options: list<int|string>, default: int|string, labels?: array<string, string>, kind?: string}>
      */
     public function options(): array
     {
@@ -169,6 +170,7 @@ enum DashboardWidgetType: string
                     'labels' => ['hover' => 'On hover', 'always' => 'Always'],
                 ],
                 'today' => self::toggle('Highlight today'),
+                'color' => self::colorOption('accent'),
             ],
             self::Completion => [
                 'header' => self::toggle('Title'),
@@ -214,15 +216,22 @@ enum DashboardWidgetType: string
         ];
     }
 
+    /** A color to pick from the palette of the app; the editor shows swatches. */
+    private static function colorOption(string $default): array
+    {
+        return [
+            'label' => 'Color',
+            'kind' => 'color',
+            'options' => ['accent', 'success', 'warning', 'error', 'info'],
+            'default' => $default,
+        ];
+    }
+
     /** What every statistic has: its color, its icon and its description. */
     private static function statOptions(string $color): array
     {
         return [
-            'color' => [
-                'label' => 'Color',
-                'options' => ['accent', 'success', 'warning', 'error', 'info'],
-                'default' => $color,
-            ],
+            'color' => self::colorOption($color),
             'icon' => self::toggle('Icon'),
             'description' => self::toggle('Description'),
         ];

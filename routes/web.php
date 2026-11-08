@@ -34,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/dashboard/layout', [DashboardLayoutController::class, 'update'])->name('dashboard.layout.update');
     Route::delete('/dashboard/layout', [DashboardLayoutController::class, 'destroy'])->name('dashboard.layout.destroy');
     Route::post('/dashboard/saved-layouts', [DashboardSavedLayoutController::class, 'store'])->name('dashboard.saved-layouts.store');
+    Route::patch('/dashboard/saved-layouts/{savedLayout}', [DashboardSavedLayoutController::class, 'update'])->name('dashboard.saved-layouts.update');
     Route::delete('/dashboard/saved-layouts/{savedLayout}', [DashboardSavedLayoutController::class, 'destroy'])->name('dashboard.saved-layouts.destroy');
     Route::get('/command-palette/search', [CommandPaletteController::class, 'search'])->middleware('throttle:command-palette')->name('command-palette.search');
     Route::get('/projects/{project}/issue-search', [IssueController::class, 'search'])->name('projects.issues.search');

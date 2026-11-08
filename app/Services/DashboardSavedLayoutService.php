@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\DashboardLayout;
 use App\Repositories\DashboardSavedLayoutRepository;
 use Illuminate\Validation\ValidationException;
 
@@ -54,6 +55,40 @@ class DashboardSavedLayoutService
         }
 
         $this->layouts->updateOrCreateForUser($userId, $name, $this->dashboardLayouts->normalize($widgets));
+    }
+
+    /**
+     * Rename a layout and/or replace its widgets with new ones.
+     *
+     * @param  list<array>|null  $widgets
+     *
+     * @throws ValidationException when another layout already has the name
+     */
+    public function update(int $userId, int $id, ?string $name, ?array $widgets): void
+    {
+        $layout = $this->layouts->findForUserOrFail($userId, $id);
+        $changes = [];
+
+        if ($name !== null) {
+            $name = trim($name);
+
+            if ($this->layouts->nameTakenForUser($userId, $name, $layout->id)) {
+                throw ValidationException::withMessages([
+                    'name' => 'You already have a layout with this name.',
+                ]);
+            }
+
+            $changes['name'] = $name;
+        }
+
+        if ($widgets !== null) {
+            $changes['widgets'] = $this->dashboardLayouts->normalize($widgets);
+            $changes['version'] = DashboardLayout::VERSION;
+        }
+
+        if ($changes !== []) {
+            $this->layouts->update($layout, $changes);
+        }
     }
 
     public function delete(int $userId, int $id): void
