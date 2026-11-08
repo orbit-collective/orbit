@@ -52,8 +52,22 @@ rules as the layout itself (`StoreDashboardSavedLayoutRequest` extends
 `UpdateDashboardLayoutRequest`) and run through `normalize()` both on the way
 in and out, so a layout saved before a type or variant was removed still
 applies. The page gets them as the `savedLayouts` prop. **Apply** only puts a
-saved layout on the draft (nothing is stored until **Save**); the pictures are
-`LayoutPreview`, which draws the layout on the real grid.
+saved layout on the draft (nothing is stored until **Save**). `PATCH
+/dashboard/saved-layouts/{id}` renames a layout and/or replaces its widgets with
+the ones being edited (`UpdateDashboardSavedLayoutRequest`; a name another
+layout of the user has is refused). The pictures are `LayoutPreview`, which
+draws the layout on the real grid; each block is a `WidgetGlyph`, a tiny drawing
+of the widget as it is configured (kind, style, show/hide options, color), so
+when a widget gets a new style or option, teach its glyph too.
+
+## Options of a widget
+
+An option is a choice from a list (`DashboardWidgetType::options()`): its label,
+its values, its default and optionally `labels` (how a value is called in the
+editor). A show/hide option is `toggle()` (`on`/`off`). A choice of colors is
+`colorOption()`, marked `kind => 'color'`: the editor shows swatches
+(`ColorSwatches`) instead of text, from the colors of `utils/dashboardColors.ts`
+(`accent`, `success`, `warning`, `error`, `info`), which follow the theme.
 
 ## Motion
 
@@ -67,7 +81,10 @@ element so the two never fight). Widgets already there when editing starts
 do not animate in (`AnimatePresence initial={false}`), and the whole page is
 inside `MotionConfig reducedMotion="user"`. Anything a test must see right
 away should not depend on an exit animation: tabs and the reset question
-only animate in.
+only animate in. The choices of the panel (`SegmentedControl`) sit on a pill
+that slides from the old pick to the new one, the content of a tab comes in from
+the side of the pick, and the settings of a widget lay out one after another
+when another widget is picked.
 
 ## Data is loaded for visible widgets only
 
