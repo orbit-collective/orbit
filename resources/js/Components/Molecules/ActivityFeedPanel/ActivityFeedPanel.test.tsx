@@ -4,8 +4,12 @@ import { makePaginated } from '@/tests/paginated';
 import ActivityFeedPanel from './ActivityFeedPanel';
 
 vi.mock('@/Components/Organisms/ActivityLogs/ActivityLogs', () => ({
-    default: ({ logs }: { logs: unknown[] }) => (
-        <div data-testid="activity-logs" data-count={logs.length} />
+    default: ({ logs, compact }: { logs: unknown[]; compact?: boolean }) => (
+        <div
+            data-testid="activity-logs"
+            data-count={logs.length}
+            data-compact={String(Boolean(compact))}
+        />
     ),
 }));
 
@@ -48,5 +52,40 @@ describe('ActivityFeedPanel', () => {
             'data-per-page',
             '10',
         );
+    });
+
+    test('compact is passed on to the list of activity', () => {
+        render(
+            <ActivityFeedPanel
+                activityLogs={makePaginated([])}
+                users={[]}
+                issueTypes={[]}
+                queryParams={{}}
+                compact
+            />,
+        );
+
+        expect(screen.getByTestId('activity-logs')).toHaveAttribute(
+            'data-compact',
+            'true',
+        );
+    });
+
+    test('the title and the pagination can be hidden', () => {
+        render(
+            <ActivityFeedPanel
+                activityLogs={makePaginated([])}
+                users={[]}
+                issueTypes={[]}
+                queryParams={{}}
+                showHeader={false}
+                showPagination={false}
+            />,
+        );
+
+        expect(
+            screen.queryByText('Recent Work Activity'),
+        ).not.toBeInTheDocument();
+        expect(screen.queryByTestId('pagination')).not.toBeInTheDocument();
     });
 });

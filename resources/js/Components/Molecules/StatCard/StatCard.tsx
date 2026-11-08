@@ -16,6 +16,8 @@ export const statCardVariants = cva(
                     'bg-[var(--surface-color)] border-[var(--border-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
                 accent: 'bg-gradient-to-br from-[var(--bg-dark-color)] to-[var(--accent-color-opacity)] border-[var(--accent-color)] shadow-[0_0_15px_rgba(136,68,218,0.15)]',
                 glass: 'bg-[var(--surface-color)] backdrop-blur-md border-[var(--bg-light-color)] hover:bg-[var(--bg-light-color-hover)]',
+                outline:
+                    'bg-transparent border-[var(--border-color-strong)] hover:border-[var(--text-muted-color)]',
                 vivid: 'flex-row items-center gap-3 rounded-2xl border-[var(--border-color)] bg-[var(--surface-color)] p-3.5 hover:border-[var(--border-color-strong)] hover:-translate-y-0',
             },
         },
@@ -81,6 +83,7 @@ const StatCard: React.FC<StatCardProps> = ({
     progress,
     variant = 'default',
     color = 'accent',
+    showIcon = true,
     className,
 }) => {
     const isVivid = variant === 'vivid';
@@ -96,18 +99,20 @@ const StatCard: React.FC<StatCardProps> = ({
                     )}
                 />
 
-                <span
-                    className={cn(
-                        'relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-                        COLOR_BG_CLASSES[color],
-                    )}
-                >
-                    <Icon
-                        name={icon}
-                        size={16}
-                        className={COLOR_TEXT_CLASSES[color]}
-                    />
-                </span>
+                {showIcon && (
+                    <span
+                        className={cn(
+                            'relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
+                            COLOR_BG_CLASSES[color],
+                        )}
+                    >
+                        <Icon
+                            name={icon}
+                            size={16}
+                            className={COLOR_TEXT_CLASSES[color]}
+                        />
+                    </span>
+                )}
 
                 <div className="relative z-10 min-w-0 flex-1">
                     <span className="block truncate text-[11px] font-semibold uppercase tracking-wide text-[var(--text-gray-color)]">
@@ -176,11 +181,16 @@ const StatCard: React.FC<StatCardProps> = ({
         <div className={cn(statCardVariants({ variant }), className)}>
             <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-1.5">
-                    <Icon
-                        name={icon}
-                        size={14}
-                        className={cn('shrink-0', COLOR_TEXT_CLASSES[color])}
-                    />
+                    {showIcon && (
+                        <Icon
+                            name={icon}
+                            size={14}
+                            className={cn(
+                                'shrink-0',
+                                COLOR_TEXT_CLASSES[color],
+                            )}
+                        />
+                    )}
                     <span className="truncate text-xs font-medium text-[var(--text-gray-color)]">
                         {title}
                     </span>

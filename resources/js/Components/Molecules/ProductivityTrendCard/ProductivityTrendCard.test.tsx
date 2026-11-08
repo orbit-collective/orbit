@@ -163,4 +163,86 @@ describe('ProductivityTrendCard Component', () => {
         );
         expect(columns[1].dataset.height).toBe('25%');
     });
+
+    describe('variants and options', () => {
+        test('the line variant draws a line with a point for every day', () => {
+            const { container } = render(
+                <ProductivityTrendCard trendData={trendData} variant="line" />,
+            );
+
+            expect(screen.getByTestId('trend-line')).toBeInTheDocument();
+            expect(screen.getAllByTestId('trend-point')).toHaveLength(3);
+            expect(screen.queryAllByTestId('trend-column')).toHaveLength(0);
+            // A line has no filled area under it.
+            expect(
+                container.querySelectorAll('path[fill="url(#trend-area)"]'),
+            ).toHaveLength(0);
+        });
+
+        test('the area variant also fills under the line', () => {
+            const { container } = render(
+                <ProductivityTrendCard trendData={trendData} variant="area" />,
+            );
+
+            expect(
+                container.querySelectorAll('path[fill="url(#trend-area)"]'),
+            ).toHaveLength(1);
+        });
+
+        test('values can be shown all the time', () => {
+            render(
+                <ProductivityTrendCard trendData={trendData} values="always" />,
+            );
+
+            const label = screen
+                .getAllByText('4')
+                .find((el) => el.className.includes('scale-'));
+            expect(label).toHaveClass('scale-100');
+        });
+
+        test('values are on hover by default', () => {
+            render(<ProductivityTrendCard trendData={trendData} />);
+
+            const label = screen
+                .getAllByText('4')
+                .find((el) => el.className.includes('scale-'));
+            expect(label).toHaveClass('scale-0');
+        });
+
+        test('the title and the grid can be hidden', () => {
+            const { container } = render(
+                <ProductivityTrendCard
+                    trendData={trendData}
+                    showHeader={false}
+                    showGrid={false}
+                />,
+            );
+
+            expect(
+                screen.queryByText('Productivity Trend'),
+            ).not.toBeInTheDocument();
+            expect(
+                container.querySelectorAll('.border-dashed.border-t'),
+            ).toHaveLength(0);
+        });
+
+        test('today is only highlighted when asked to', () => {
+            const { container, rerender } = render(
+                <ProductivityTrendCard trendData={trendData} />,
+            );
+            expect(
+                container.querySelectorAll('.bg-\\[var\\(--accent-color\\)\\]'),
+            ).toHaveLength(1);
+
+            rerender(
+                <ProductivityTrendCard
+                    trendData={trendData}
+                    highlightToday={false}
+                />,
+            );
+            expect(
+                container.querySelectorAll('.bg-\\[var\\(--accent-color\\)\\]'),
+            ).toHaveLength(0);
+        });
+    });
 });

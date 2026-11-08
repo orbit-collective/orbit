@@ -85,4 +85,113 @@ describe('ProjectsDirectoryPanel', () => {
             screen.getByText('Create your first project'),
         ).toBeInTheDocument();
     });
+
+    describe('variants and options', () => {
+        const many = [
+            {
+                ...project(1),
+                name: 'Charlie',
+                issue_counts: { todo: 1, in_progress: 0, done: 1 },
+            },
+            {
+                ...project(2),
+                name: 'Alpha',
+                issue_counts: { todo: 4, in_progress: 0, done: 0 },
+            },
+            {
+                ...project(3),
+                name: 'Bravo',
+                issue_counts: { todo: 0, in_progress: 0, done: 3 },
+            },
+        ];
+        const names = () =>
+            screen
+                .getAllByText(/^(Charlie|Alpha|Bravo)$/)
+                .map((el) => el.textContent);
+
+        test('the grid variant shows a tile with progress per project', () => {
+            render(
+                <ProjectsDirectoryPanel
+                    projects={many}
+                    variant="grid"
+                    limit={5}
+                />,
+            );
+
+            expect(screen.getAllByTestId('project-tile-progress')).toHaveLength(
+                3,
+            );
+            expect(screen.getByText('100%')).toBeInTheDocument();
+            expect(screen.getByText('0%')).toBeInTheDocument();
+        });
+
+        test('a project without issues has no progress in its tile', () => {
+            render(
+                <ProjectsDirectoryPanel
+                    projects={[{ ...project(1), issue_counts: undefined }]}
+                    variant="grid"
+                />,
+            );
+
+            expect(screen.getByText('0 issues')).toBeInTheDocument();
+        });
+
+        test.each([
+            ['latest', ['Charlie', 'Alpha', 'Bravo']],
+            ['name', ['Alpha', 'Bravo', 'Charlie']],
+            ['progress', ['Bravo', 'Charlie', 'Alpha']],
+            ['issues', ['Alpha', 'Bravo', 'Charlie']],
+        ] as const)('orders by %s', (sort, expected) => {
+            render(
+                <ProjectsDirectoryPanel
+                    projects={many}
+                    variant="compact"
+                    sort={sort}
+                    limit={5}
+                />,
+            );
+
+            expect(names()).toEqual(expected);
+        });
+
+        test('only says "latest" while the order is the latest', () => {
+            const { rerender } = render(
+                <ProjectsDirectoryPanel projects={many} />,
+            );
+            expect(
+                screen.getByText('Showing 3 latest projects'),
+            ).toBeInTheDocument();
+
+            rerender(<ProjectsDirectoryPanel projects={many} sort="name" />);
+            expect(screen.getByText('Showing 3 projects')).toBeInTheDocument();
+        });
+
+        test('the title and the link to all projects can be hidden', () => {
+            render(
+                <ProjectsDirectoryPanel
+                    projects={many}
+                    limit={3}
+                    showHeader={false}
+                    showViewAll={false}
+                />,
+            );
+            expect(
+                screen.queryByText('Projects Directory'),
+            ).not.toBeInTheDocument();
+
+            expect(screen.queryByText(/View all/)).not.toBeInTheDocument();
+        });
+
+        test('the link to all projects is hidden when asked even with more projects', () => {
+            render(
+                <ProjectsDirectoryPanel
+                    projects={many}
+                    limit={3}
+                    showViewAll={false}
+                />,
+            );
+
+            expect(screen.queryByText(/View all/)).not.toBeInTheDocument();
+        });
+    });
 });

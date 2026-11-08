@@ -132,4 +132,108 @@ describe('PriorityBreakdownCard Component', () => {
             expect(screen.getByText('(47%)')).toBeInTheDocument(),
         );
     });
+
+    describe('variants and options', () => {
+        const priorities = [
+            {
+                name: 'High',
+                color: '#f44336',
+                icon: 'SignalHigh',
+                position: 0,
+                count: 2,
+            },
+            {
+                name: 'Low',
+                color: '#4caf50',
+                icon: 'SignalLow',
+                position: 1,
+                count: 6,
+            },
+        ];
+        const base = { priorities, noPriority: 2, total: 10 };
+
+        test('the list variant gives each priority its own bar', () => {
+            render(<PriorityBreakdownCard {...base} variant="list" />);
+
+            const bars = screen.getAllByTestId('priority-row-bar');
+            expect(
+                bars.map((bar) => bar.getAttribute('data-width-percent')),
+            ).toEqual(['20', '60', '20']);
+            expect(
+                screen.queryByTestId('priority-segment'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('the donut variant draws an arc per group and the total', () => {
+            render(<PriorityBreakdownCard {...base} variant="donut" />);
+
+            expect(screen.getAllByTestId('priority-arc')).toHaveLength(3);
+            expect(screen.getByText('issues')).toBeInTheDocument();
+            expect(screen.getByText('High')).toBeInTheDocument();
+        });
+
+        test('the donut skips a group without issues', () => {
+            render(
+                <PriorityBreakdownCard
+                    {...base}
+                    priorities={[{ ...priorities[0], count: 0 }, priorities[1]]}
+                    noPriority={0}
+                    variant="donut"
+                />,
+            );
+
+            expect(screen.getAllByTestId('priority-arc')).toHaveLength(1);
+        });
+
+        test('groups can be ordered by size', () => {
+            render(<PriorityBreakdownCard {...base} sort="count" />);
+
+            const labels = screen
+                .getAllByText(/^(High|Low|No priority)$/)
+                .map((el) => el.textContent);
+            expect(labels).toEqual(['Low', 'High', 'No priority']);
+        });
+
+        test('the group without a priority can be left out', () => {
+            render(<PriorityBreakdownCard {...base} showNoPriority={false} />);
+
+            expect(screen.queryByText('No priority')).not.toBeInTheDocument();
+        });
+
+        test('percentages and the title can be hidden', () => {
+            render(
+                <PriorityBreakdownCard
+                    {...base}
+                    showPercent={false}
+                    showHeader={false}
+                />,
+            );
+
+            expect(screen.queryByText('(60%)')).not.toBeInTheDocument();
+            expect(
+                screen.queryByText('Priority Breakdown'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('the list variant hides percentages too and says when there is nothing', () => {
+            const { rerender } = render(
+                <PriorityBreakdownCard
+                    {...base}
+                    variant="list"
+                    showPercent={false}
+                />,
+            );
+            expect(screen.queryByText('(60%)')).not.toBeInTheDocument();
+
+            rerender(
+                <PriorityBreakdownCard
+                    priorities={[]}
+                    noPriority={0}
+                    total={0}
+                    variant="list"
+                />,
+            );
+            expect(screen.getByText('No issues yet')).toBeInTheDocument();
+        });
+    });
 });

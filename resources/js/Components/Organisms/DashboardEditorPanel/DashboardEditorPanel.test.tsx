@@ -142,7 +142,11 @@ describe('DashboardEditorPanel', () => {
     });
 
     test('has no style choice for a widget with a single style', () => {
-        setup(makeWidget('trend'));
+        setup(makeWidget('trend'), {
+            catalog: DASHBOARD_CATALOG.map((item) =>
+                item.type === 'trend' ? { ...item, variants: ['bars'] } : item,
+            ),
+        });
 
         expect(
             screen.queryByRole('group', { name: 'Style' }),
@@ -150,6 +154,38 @@ describe('DashboardEditorPanel', () => {
         expect(
             screen.getByRole('group', { name: 'Width' }),
         ).toBeInTheDocument();
+    });
+
+    test('names option values with their labels, or capitalises them', () => {
+        setup(makeWidget('stat_open_issues'));
+
+        const count = screen.getByRole('group', { name: 'Count' });
+        expect(
+            within(count).getByRole('button', { name: 'In progress' }),
+        ).toBeInTheDocument();
+
+        const color = screen.getByRole('group', { name: 'Color' });
+        expect(
+            within(color).getByRole('button', { name: 'Success' }),
+        ).toBeInTheDocument();
+
+        const icon = screen.getByRole('group', { name: 'Icon' });
+        expect(
+            within(icon).getByRole('button', { name: 'Hide' }),
+        ).toBeInTheDocument();
+    });
+
+    test('changes an option that shows or hides a part of the widget', async () => {
+        const { onOptionChange } = setup(makeWidget('trend'));
+
+        await userEvent.click(
+            within(screen.getByRole('group', { name: 'Grid lines' })).getByRole(
+                'button',
+                { name: 'Hide' },
+            ),
+        );
+
+        expect(onOptionChange).toHaveBeenCalledWith('trend', 'grid', 'off');
     });
 
     test('moves the selected widget earlier and later', async () => {

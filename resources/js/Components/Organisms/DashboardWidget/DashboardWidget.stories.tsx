@@ -92,3 +92,134 @@ export const WaitingForData: Story = {
         ).toBeVisible();
     },
 };
+
+export const GlassStat: Story = {
+    args: { widget: makeWidget('stat_projects', { variant: 'glass' }) },
+};
+
+export const OutlineStat: Story = {
+    args: { widget: makeWidget('stat_critical', { variant: 'outline' }) },
+};
+
+/** Which issues the statistic counts is an option of the widget. */
+export const InProgressCount: Story = {
+    args: {
+        widget: makeWidget('stat_open_issues', {
+            config: {
+                count: 'in_progress',
+                color: 'warning',
+                icon: 'on',
+                description: 'off',
+            },
+        }),
+    },
+};
+
+export const ResolutionAsCount: Story = {
+    args: {
+        widget: makeWidget('stat_resolution', {
+            config: { show: 'count', color: 'accent' },
+        }),
+    },
+};
+
+export const TrendBars: Story = {
+    args: { widget: makeWidget('trend') },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[320px] w-[480px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const TrendLine: Story = {
+    args: {
+        widget: makeWidget('trend', {
+            variant: 'line',
+            config: { values: 'always' },
+        }),
+    },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[320px] w-[480px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const TrendArea: Story = {
+    args: {
+        widget: makeWidget('trend', {
+            variant: 'area',
+            config: { grid: 'off' },
+        }),
+    },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[320px] w-[480px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const CompletionStacked: Story = {
+    args: { widget: makeWidget('completion', { variant: 'stacked' }) },
+};
+
+export const PriorityList: Story = {
+    args: { widget: makeWidget('priority_breakdown', { variant: 'list' }) },
+};
+
+export const PriorityDonut: Story = {
+    args: {
+        widget: makeWidget('priority_breakdown', {
+            variant: 'donut',
+            config: { sort: 'count' },
+        }),
+    },
+};
+
+export const ProjectsGrid: Story = {
+    args: {
+        widget: makeWidget('projects', {
+            variant: 'grid',
+            config: { limit: 5, sort: 'progress' },
+        }),
+    },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[360px] w-[640px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const ProjectsCompact: Story = {
+    args: {
+        widget: makeWidget('projects', {
+            variant: 'compact',
+            config: { limit: 10, sort: 'name' },
+        }),
+    },
+};
+
+export const ActivityCompact: Story = {
+    args: {
+        widget: makeWidget('activity', {
+            variant: 'compact',
+            config: { pagination: 'off' },
+        }),
+    },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[360px] w-[480px]">
+                <Story />
+            </div>
+        ),
+    ],
+};

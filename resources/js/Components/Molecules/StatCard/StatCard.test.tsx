@@ -124,4 +124,38 @@ describe('StatCard Component', () => {
             'border-[var(--accent-color)]',
         );
     });
+
+    test('the icon can be left out of both layouts', () => {
+        const { container, rerender } = render(
+            <StatCard title="Open" value={3} icon="Layers" showIcon={false} />,
+        );
+        expect(container.querySelector('svg')).toBeNull();
+
+        rerender(
+            <StatCard
+                title="Open"
+                value={3}
+                icon="Layers"
+                variant="vivid"
+                showIcon={false}
+            />,
+        );
+        expect(container.querySelector('svg')).toBeNull();
+    });
+
+    test('the icon is drawn by default', () => {
+        const { container } = render(
+            <StatCard title="Open" value={3} icon="Layers" />,
+        );
+
+        expect(container.querySelector('svg')).not.toBeNull();
+    });
+
+    test('has an outline variant without a background', () => {
+        const { container } = render(
+            <StatCard title="Open" value={3} icon="Layers" variant="outline" />,
+        );
+
+        expect(container.firstElementChild).toHaveClass('bg-transparent');
+    });
 });

@@ -203,4 +203,70 @@ describe('CompletionRatioCard motion', () => {
             first,
         );
     });
+
+    describe('variants and options', () => {
+        const props = {
+            todo: 2,
+            inProgress: 1,
+            done: 3,
+            total: 6,
+            donePct: 50,
+        };
+
+        test('the stacked variant is one bar split by status with its counts', () => {
+            render(<CompletionRatioCard {...props} variant="stacked" />);
+
+            expect(screen.getAllByTestId('completion-segment')).toHaveLength(3);
+            expect(
+                screen.queryByTestId('completion-bar'),
+            ).not.toBeInTheDocument();
+            expect(screen.getByText('3 of 6 resolved')).toBeInTheDocument();
+        });
+
+        test('the stacked variant copes with no issues', () => {
+            render(
+                <CompletionRatioCard
+                    todo={0}
+                    inProgress={0}
+                    done={0}
+                    total={0}
+                    donePct={0}
+                    variant="stacked"
+                />,
+            );
+
+            expect(screen.getAllByTestId('completion-segment')).toHaveLength(3);
+        });
+
+        test('the title can be hidden and the status label kept', () => {
+            render(<CompletionRatioCard {...props} showHeader={false} />);
+
+            expect(
+                screen.queryByText('Completion Ratio'),
+            ).not.toBeInTheDocument();
+            expect(screen.getByText('On track')).toBeInTheDocument();
+        });
+
+        test('the status label can be hidden and the title kept', () => {
+            render(<CompletionRatioCard {...props} showTier={false} />);
+
+            expect(screen.getByText('Completion Ratio')).toBeInTheDocument();
+            expect(screen.queryByText('On track')).not.toBeInTheDocument();
+        });
+
+        test('hiding both leaves nothing above the chart', () => {
+            render(
+                <CompletionRatioCard
+                    {...props}
+                    showHeader={false}
+                    showTier={false}
+                />,
+            );
+
+            expect(
+                screen.queryByText('Completion Ratio'),
+            ).not.toBeInTheDocument();
+            expect(screen.queryByText('On track')).not.toBeInTheDocument();
+        });
+    });
 });

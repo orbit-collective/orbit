@@ -163,3 +163,16 @@ export const sameLayout = (
     a: DashboardWidget[],
     b: DashboardWidget[],
 ): boolean => JSON.stringify(a) === JSON.stringify(b);
+
+/** The value of one option of a widget, as text. */
+export const optionOf = (
+    widget: Pick<DashboardWidget, 'config'>,
+    key: string,
+    fallback: string,
+): string => String(widget.config[key] ?? fallback);
+
+/** Whether a show/hide option (`on`/`off`) is on; a missing one counts as on. */
+export const isOn = (
+    widget: Pick<DashboardWidget, 'config'>,
+    key: string,
+): boolean => optionOf(widget, key, 'on') !== 'off';
