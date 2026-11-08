@@ -3,9 +3,11 @@
 The dashboard (`/`) is **a list of widgets** that every user can rearrange.
 Its editor opens from the pen button in the page header or from the
 `Edit dashboard` command (`dashboard.edit`) in the command palette: drag a
-widget by its handle (mouse and touch) or use the up/down buttons, hide or
-show it, change its style, width and options, add widgets from the library
-and remove them. Nothing is stored until **Save**; **Cancel** drops the
+widget by its header (mouse and touch), resize it by its right edge, bottom
+edge or corner (to any size, or snapped to the grid: see the `Snap to grid`
+switch), hide or show it, change its style and options, add widgets from
+the library and remove them. The panel has _Earlier_ / _Later_ buttons for
+moving without dragging. Nothing is stored until **Save**; **Cancel** drops the
 draft and **Reset** brings the default layout back.
 
 ## Guides
@@ -19,11 +21,13 @@ draft and **Reset** brings the default layout back.
 A layout is one row of `dashboard_layouts` per user (`user_id` unique,
 `widgets` JSON, `version`); **no row means the default layout**, so nobody
 sees a change until they save one. Each widget is `{id, type, variant,
-span, visible, config}`: `span` is its width in twelfths of a 12 column
-grid, `variant` a style of the type, `config` the values of the type's
+width, height, visible, config}`: `width` counts 120ths of the dashboard's
+width and `height` rows of 4 px, so a widget can be any size; `variant` is
+a style of the type, `config` the values of the type's
 options. `App\Enums\Dashboard\DashboardWidgetType` is the **single source
-of what a widget can do**: label, description, icon, variants, allowed
-widths (`spans()`, default `defaultSpan()`), options and the Inertia props
+of what a widget can do**: label, description, icon, variants, minimum
+and default size (`minWidth()`, `defaultWidth()`, `minHeight()`,
+`defaultHeight()`), options and the Inertia props
 it reads (`props()`). `DashboardController` sends `dashboardLayout`
 (`widgets` and the `catalog` made from that enum), so the frontend only
 maps a type to a component (`Components/Organisms/DashboardWidget`).
@@ -56,6 +60,11 @@ only re-read the props that are loaded.
 | Library and widget settings | `Components/Organisms/DashboardEditorPanel/` |
 | Save / cancel / reset bar | `Components/Molecules/DashboardEditorBar/` |
 
-The widths are written out in `spanClass()` because Tailwind needs the full
-class names. On a phone the grid is one column and the editor panel is a
-sheet at the bottom of the screen.
+The dashboard is a CSS grid of 120 columns and 4 px rows packed densely
+(`GRID_CLASS`); a cell gets its size from the `--widget-width` and
+`--widget-height` variables (`gridItemStyle()`). Snap only changes the step
+of a resize (`sizeAfterResize()`): a twelfth of the width and 40 px, or one
+column and one row. Layouts saved with the old twelfths (`span`) are read
+as `span × 10` columns by `normalize()`. On a phone every widget is full
+width (only the height resizes) and the editor panel is a sheet at the
+bottom of the screen.
