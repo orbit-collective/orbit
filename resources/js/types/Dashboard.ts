@@ -31,6 +31,8 @@ interface DashboardWidgetOption {
     label: string;
     options: (string | number)[];
     default: string | number;
+    /** How a value is called in the editor, when it is not the value itself. */
+    labels?: Record<string, string>;
 }
 
 /** What the server says a widget type can do (`DashboardWidgetType::catalog()`). */

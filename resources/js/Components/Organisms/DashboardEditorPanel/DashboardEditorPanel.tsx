@@ -223,7 +223,11 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     }
                                     options={option.options.map((value) => ({
                                         value,
-                                        label: String(value),
+                                        label:
+                                            option.labels?.[String(value)] ??
+                                            (typeof value === 'string'
+                                                ? capitalize(value)
+                                                : String(value)),
                                     }))}
                                     onChange={(value) =>
                                         onOptionChange(

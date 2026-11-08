@@ -18,6 +18,7 @@ import {
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
+import { isOn, optionOf } from '@/utils/dashboardLayout';
 
 /** What the dashboard page received; a prop is missing until a widget needs it. */
 export interface DashboardData {
@@ -38,10 +39,30 @@ interface DashboardWidgetProps {
 const percent = (part: number, total: number) =>
     total === 0 ? 0 : Math.round((part / total) * 100);
 
-const STAT_VARIANTS = ['default', 'vivid', 'accent'] as const;
+const STAT_VARIANTS = [
+    'default',
+    'vivid',
+    'accent',
+    'glass',
+    'outline',
+] as const;
+const STAT_COLORS = ['accent', 'success', 'warning', 'error', 'info'] as const;
 
-const statVariant = (variant: string) =>
-    STAT_VARIANTS.find((known) => known === variant) ?? 'default';
+/** `known` when it is one of `options`, else the first of them. */
+const pick = <T extends string>(
+    options: readonly T[],
+    value: string,
+    fallback: T = options[0],
+): T => options.find((option) => option === value) ?? fallback;
+
+/** What the open issues statistic can count, with its title and hint. */
+const OPEN_ISSUES_COUNTS = {
+    open: { title: 'Open Issues', hint: 'Active tasks assigned/open' },
+    todo: { title: 'To Do', hint: 'Issues waiting to be started' },
+    in_progress: { title: 'In Progress', hint: 'Issues being worked on' },
+    done: { title: 'Done Issues', hint: 'Issues that are finished' },
+    all: { title: 'All Issues', hint: 'Every issue in your projects' },
+} as const;
 
 /** Stands in for a widget whose data is still on its way. */
 const WidgetPlaceholder: FC = () => (
@@ -54,49 +75,68 @@ const WidgetPlaceholder: FC = () => (
 /** Draws one widget of the dashboard from the page data. */
 const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
     const { issueStats, projects } = data;
-    const variant = statVariant(widget.variant);
+    const statProps = (
+        defaultColor: (typeof STAT_COLORS)[number],
+        hint: string,
+    ) => ({
+        className: 'h-full',
+        variant: pick(STAT_VARIANTS, widget.variant, 'default'),
+        color: pick(
+            STAT_COLORS,
+            optionOf(widget, 'color', defaultColor),
+            defaultColor,
+        ),
+        showIcon: isOn(widget, 'icon'),
+        description: isOn(widget, 'description') ? hint : undefined,
+    });
 
     switch (widget.type) {
         case 'stat_projects':
             return (
                 <StatCard
-                    className="h-full"
-                    variant={variant}
+                    {...statProps('accent', 'Tracked projects in workspace')}
                     title="Active Projects"
                     value={<AnimatedNumber value={projects.length} />}
                     icon="FolderGit2"
-                    description="Tracked projects in workspace"
-                    color="accent"
                 />
             );
-        case 'stat_open_issues':
-            return issueStats ? (
+        case 'stat_open_issues': {
+            if (!issueStats) return <WidgetPlaceholder />;
+
+            const count = pick(
+                Object.keys(
+                    OPEN_ISSUES_COUNTS,
+                ) as (keyof typeof OPEN_ISSUES_COUNTS)[],
+                optionOf(widget, 'count', 'open'),
+            );
+            const { category, total } = issueStats;
+            const value = {
+                open: total - category.done,
+                todo: category.todo,
+                in_progress: category.in_progress,
+                done: category.done,
+                all: total,
+            }[count];
+
+            return (
                 <StatCard
-                    className="h-full"
-                    variant={variant}
-                    title="Open Issues"
-                    value={
-                        <AnimatedNumber
-                            value={issueStats.total - issueStats.category.done}
-                        />
-                    }
+                    {...statProps('info', OPEN_ISSUES_COUNTS[count].hint)}
+                    title={OPEN_ISSUES_COUNTS[count].title}
+                    value={<AnimatedNumber value={value} />}
                     icon="Layers"
-                    description="Active tasks assigned/open"
-                    color="info"
                 />
-            ) : (
-                <WidgetPlaceholder />
             );
+        }
         case 'stat_critical':
             return issueStats ? (
                 <StatCard
-                    className="h-full"
-                    variant={variant}
+                    {...statProps(
+                        'error',
+                        'Issues at the top of their priority scale',
+                    )}
                     title="Critical Tasks"
                     value={<AnimatedNumber value={issueStats.topPriority} />}
                     icon="TriangleAlert"
-                    description="Issues at the top of their priority scale"
-                    color="error"
                 />
             ) : (
                 <WidgetPlaceholder />
@@ -108,18 +148,28 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
 
             return (
                 <StatCard
-                    className="h-full"
-                    variant={variant}
+                    {...statProps('success', 'Share of issues that are done')}
                     title="Resolution Rate"
                     value={
-                        <AnimatedNumber
-                            value={rate}
-                            format={(n) => `${Math.round(n)}%`}
-                        />
+                        optionOf(widget, 'show', 'percent') === 'count' ? (
+                            <>
+                                <AnimatedNumber
+                                    value={issueStats.category.done}
+                                />
+                                <span className="text-base font-semibold text-[var(--text-muted-color)]">
+                                    {' '}
+                                    / {issueStats.total}
+                                </span>
+                            </>
+                        ) : (
+                            <AnimatedNumber
+                                value={rate}
+                                format={(n) => `${Math.round(n)}%`}
+                            />
+                        )
                     }
                     icon="CircleCheck"
                     progress={rate}
-                    color="success"
                 />
             );
         }
@@ -128,6 +178,15 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                 <ProductivityTrendCard
                     trendData={data.productivity_trend}
                     className="h-full"
+                    variant={widget.variant}
+                    showHeader={isOn(widget, 'header')}
+                    showGrid={isOn(widget, 'grid')}
+                    values={
+                        optionOf(widget, 'values', 'hover') === 'always'
+                            ? 'always'
+                            : 'hover'
+                    }
+                    highlightToday={isOn(widget, 'today')}
                 />
             ) : (
                 <WidgetPlaceholder />
@@ -144,6 +203,8 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                         issueStats.total,
                     )}
                     variant={widget.variant}
+                    showHeader={isOn(widget, 'header')}
+                    showTier={isOn(widget, 'tier')}
                 />
             ) : (
                 <WidgetPlaceholder />
@@ -154,6 +215,15 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                     priorities={issueStats.priority}
                     noPriority={issueStats.noPriority}
                     total={issueStats.total}
+                    variant={widget.variant}
+                    showHeader={isOn(widget, 'header')}
+                    showNoPriority={isOn(widget, 'noPriority')}
+                    showPercent={isOn(widget, 'percent')}
+                    sort={
+                        optionOf(widget, 'sort', 'priority') === 'count'
+                            ? 'count'
+                            : 'priority'
+                    }
                 />
             ) : (
                 <WidgetPlaceholder />
@@ -165,6 +235,9 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                     users={data.users ?? []}
                     issueTypes={data.issueTypes ?? []}
                     queryParams={data.queryParams ?? {}}
+                    compact={widget.variant === 'compact'}
+                    showHeader={isOn(widget, 'header')}
+                    showPagination={isOn(widget, 'pagination')}
                 />
             ) : (
                 <WidgetPlaceholder />
@@ -177,6 +250,12 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                     limit={Number(
                         widget.config.limit ?? DEFAULT_PROJECTS_SHOWN,
                     )}
+                    sort={pick(
+                        ['latest', 'name', 'progress', 'issues'] as const,
+                        optionOf(widget, 'sort', 'latest'),
+                    )}
+                    showHeader={isOn(widget, 'header')}
+                    showViewAll={isOn(widget, 'viewAll')}
                 />
             );
         default:

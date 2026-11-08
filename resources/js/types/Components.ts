@@ -449,6 +449,8 @@ export interface StatCardProps extends VariantProps<typeof statCardVariants> {
     };
     progress?: number;
     color?: 'accent' | 'success' | 'warning' | 'error' | 'info';
+    /** Draw the icon next to the title; on by default. */
+    showIcon?: boolean;
     className?: string;
 }
 export interface UserBadgeProps {
@@ -471,8 +473,11 @@ export interface CompletionRatioCardProps {
     done: number;
     total: number;
     donePct: number;
-    /** `bars` (default) or `ring`. */
+    /** `bars` (default), `ring` or `stacked`. */
     variant?: string;
+    showHeader?: boolean;
+    /** The status label ("Excellent", "On track"...) next to the title. */
+    showTier?: boolean;
 }
 export interface PriorityBreakdownCardProps {
     /** Counted by priority name across the user's projects, most important first. */
@@ -481,10 +486,26 @@ export interface PriorityBreakdownCardProps {
     noPriority: number;
     /** Every issue, the denominator of the percentages. */
     total: number;
+    /** `bar` (default), `list` or `donut`. */
+    variant?: string;
+    showHeader?: boolean;
+    /** Count the issues without a priority as a group of their own; on by default. */
+    showNoPriority?: boolean;
+    showPercent?: boolean;
+    /** Most important first (default) or the biggest group first. */
+    sort?: 'priority' | 'count';
 }
 export interface ProductivityTrendCardProps {
     trendData: ProductivityTrendProps[];
     className?: string;
+    /** `bars` (default), `line` or `area`. */
+    variant?: string;
+    showHeader?: boolean;
+    showGrid?: boolean;
+    /** Counts on hover (default) or always. */
+    values?: 'hover' | 'always';
+    /** Draw today's day in the accent color; on by default. */
+    highlightToday?: boolean;
 }
 export interface DashboardEmptyStateProps {
     iconName: keyof typeof icons;
@@ -595,6 +616,8 @@ export interface ActivityLogItemProps {
     users?: AssignableUser[];
     roles?: RoleNameSummary[];
     issueTypes?: IssueType[];
+    /** No avatar and tighter spacing, to fit more of the feed. */
+    compact?: boolean;
 }
 // ORGANISMS COMPONENTS
 export interface ActivityLogsProps {
@@ -602,6 +625,7 @@ export interface ActivityLogsProps {
     users?: AssignableUser[];
     roles?: RoleNameSummary[];
     issueTypes?: IssueType[];
+    compact?: boolean;
 }
 export interface CalendarViewProps {
     issues: Issue[];

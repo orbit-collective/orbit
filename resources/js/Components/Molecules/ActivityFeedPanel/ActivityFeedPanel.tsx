@@ -17,6 +17,10 @@ interface ActivityFeedPanelProps {
     users: AssignableUser[];
     issueTypes: IssueType[];
     queryParams: Record<string, any>;
+    /** Denser rows without avatars. */
+    compact?: boolean;
+    showHeader?: boolean;
+    showPagination?: boolean;
 }
 
 /** The "Recent Work Activity" feed of the dashboard, paged. */
@@ -25,32 +29,40 @@ const ActivityFeedPanel: FC<ActivityFeedPanelProps> = ({
     users,
     issueTypes,
     queryParams,
+    compact = false,
+    showHeader = true,
+    showPagination = true,
 }) => (
     <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
-        <div className="mb-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
-                Recent Work Activity
-            </h3>
-        </div>
+        {showHeader && (
+            <div className="mb-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                    Recent Work Activity
+                </h3>
+            </div>
+        )}
         <div key={activityLogs.current_page} className="flex-1 overflow-y-auto">
             <ActivityLogs
                 logs={activityLogs.data}
                 users={users}
                 issueTypes={issueTypes}
+                compact={compact}
             />
         </div>
-        <Pagination
-            links={activityLogs.links}
-            from={activityLogs.from}
-            to={activityLogs.to}
-            total={activityLogs.total}
-            queryParams={queryParams}
-            pageParam={ACTIVITY_PAGE_PARAM}
-            perPageParam={ACTIVITY_PER_PAGE_PARAM}
-            defaultPerPage={ACTIVITY_DEFAULT_PER_PAGE}
-            preserveState
-            className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
-        />
+        {showPagination && (
+            <Pagination
+                links={activityLogs.links}
+                from={activityLogs.from}
+                to={activityLogs.to}
+                total={activityLogs.total}
+                queryParams={queryParams}
+                pageParam={ACTIVITY_PAGE_PARAM}
+                perPageParam={ACTIVITY_PER_PAGE_PARAM}
+                defaultPerPage={ACTIVITY_DEFAULT_PER_PAGE}
+                preserveState
+                className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
+            />
+        )}
     </div>
 );
 

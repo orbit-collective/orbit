@@ -38,6 +38,8 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
     total,
     donePct,
     variant = 'bars',
+    showHeader = true,
+    showTier = true,
 }) => {
     const bars = [
         { label: 'To Do', value: todo, colorClass: 'bg-[var(--info-color)]' },
@@ -58,29 +60,91 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
     return (
         <VisualCard>
             <div>
-                <div className="flex items-start justify-between gap-2">
-                    <VisualCardHeader
-                        title="Completion Ratio"
-                        description="Resolution status of all logged tasks"
-                    />
-                    {total > 0 && (
-                        <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-                            <motion.span
-                                // A new tier pops its dot in again.
-                                key={tier.label}
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={SPRING}
-                                className={`h-1.5 w-1.5 rounded-full ${tier.colorClass}`}
+                {(showHeader || (showTier && total > 0)) && (
+                    <div className="flex items-start justify-between gap-2">
+                        {showHeader ? (
+                            <VisualCardHeader
+                                title="Completion Ratio"
+                                description="Resolution status of all logged tasks"
                             />
-                            <span className="text-xs font-medium text-[var(--text-gray-color)]">
-                                {tier.label}
+                        ) : (
+                            <span />
+                        )}
+                        {showTier && total > 0 && (
+                            <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+                                <motion.span
+                                    // A new tier pops its dot in again.
+                                    key={tier.label}
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={SPRING}
+                                    className={`h-1.5 w-1.5 rounded-full ${tier.colorClass}`}
+                                />
+                                <span className="text-xs font-medium text-[var(--text-gray-color)]">
+                                    {tier.label}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {variant === 'stacked' ? (
+                    <div className="mt-6 flex flex-col gap-5">
+                        <div className="flex items-end justify-between gap-3">
+                            <span className="text-5xl font-bold tabular-nums leading-none tracking-tight text-[var(--text-color)]">
+                                <AnimatedNumber
+                                    value={donePct}
+                                    format={(n) => `${Math.round(n)}%`}
+                                />
+                            </span>
+                            <span className="pb-1 text-xs text-[var(--text-gray-color)]">
+                                <AnimatedNumber
+                                    value={done}
+                                    format={(n) =>
+                                        `${Math.round(n)} of ${total} resolved`
+                                    }
+                                />
                             </span>
                         </div>
-                    )}
-                </div>
-
-                {variant === 'ring' ? (
+                        <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                            {bars.map((bar, index) => (
+                                <motion.div
+                                    key={bar.label}
+                                    data-testid="completion-segment"
+                                    className={`h-full ${bar.colorClass}`}
+                                    initial={{ width: 0 }}
+                                    animate={{
+                                        width: `${total === 0 ? 0 : (bar.value / total) * 100}%`,
+                                    }}
+                                    transition={{
+                                        duration: DURATION.slow,
+                                        ease: EASE,
+                                        delay: 0.15 + rowDelay(index),
+                                    }}
+                                    title={`${bar.label}: ${bar.value}`}
+                                />
+                            ))}
+                        </div>
+                        <ul className="m-0 grid list-none grid-cols-3 gap-3 p-0">
+                            {bars.map((bar) => (
+                                <li
+                                    key={bar.label}
+                                    className="flex flex-col gap-0.5"
+                                >
+                                    <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-gray-color)]">
+                                        <span
+                                            className={`h-2 w-2 rounded-sm ${bar.colorClass}`}
+                                        />
+                                        {bar.label}
+                                    </span>
+                                    <span className="text-sm font-semibold tabular-nums text-[var(--text-color)]">
+                                        <AnimatedNumber value={bar.value} />
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ) : variant === 'ring' ? (
                     <div className="mt-6 flex flex-wrap items-center gap-6">
                         <div className="relative flex shrink-0 items-center justify-center">
                             <ProgressRing

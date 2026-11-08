@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { makeWidget } from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
 import { DashboardWidget as Widget } from '@/types/Dashboard';
@@ -22,8 +23,18 @@ vi.mock('@inertiajs/react', () => ({
 }));
 
 vi.mock('@/Components/Molecules/ActivityFeedPanel/ActivityFeedPanel', () => ({
-    default: ({ activityLogs }: { activityLogs: { total: number } }) => (
-        <div data-testid="activity-feed" data-total={activityLogs.total} />
+    default: ({
+        activityLogs,
+        compact,
+    }: {
+        activityLogs: { total: number };
+        compact?: boolean;
+    }) => (
+        <div
+            data-testid="activity-feed"
+            data-total={activityLogs.total}
+            data-compact={String(Boolean(compact))}
+        />
     ),
 }));
 
@@ -187,5 +198,187 @@ describe('DashboardWidget', () => {
         expect(
             screen.getByText('Showing 3 latest projects'),
         ).toBeInTheDocument();
+    });
+
+    describe('options of the widgets', () => {
+        const data = { issueStats: stats, projects: [project(1)] };
+        const statWidget = (
+            config: Widget['config'],
+            type: Widget['type'] = 'stat_open_issues',
+        ) => makeWidget(type, { config });
+
+        test.each([
+            ['open', 'Open Issues', '2'],
+            ['todo', 'To Do', '2'],
+            ['in_progress', 'In Progress', '0'],
+            ['done', 'Done Issues', '2'],
+            ['all', 'All Issues', '4'],
+        ])('the open issues statistic can count %s', (count, title, value) => {
+            render(
+                <DashboardWidget widget={statWidget({ count })} data={data} />,
+            );
+
+            expect(screen.getByText(title)).toBeInTheDocument();
+            expect(screen.getByText(value)).toBeInTheDocument();
+        });
+
+        test('an unknown count falls back to the open issues', () => {
+            render(
+                <DashboardWidget
+                    widget={statWidget({ count: 'bogus' })}
+                    data={data}
+                />,
+            );
+
+            expect(screen.getByText('Open Issues')).toBeInTheDocument();
+        });
+
+        test('the resolution rate can be shown as done out of all', () => {
+            render(
+                <DashboardWidget
+                    widget={statWidget({ show: 'count' }, 'stat_resolution')}
+                    data={data}
+                />,
+            );
+
+            expect(screen.getByText('/ 4')).toBeInTheDocument();
+        });
+
+        test('a statistic can hide its icon and description', () => {
+            const { container } = render(
+                <DashboardWidget
+                    widget={statWidget(
+                        { icon: 'off', description: 'off' },
+                        'stat_critical',
+                    )}
+                    data={data}
+                />,
+            );
+
+            expect(container.querySelector('svg')).toBeNull();
+        });
+
+        test('a statistic takes its variant and color from the widget', () => {
+            const { container } = render(
+                <DashboardWidget
+                    widget={makeWidget('stat_critical', {
+                        variant: 'outline',
+                        config: { color: 'warning' },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(container.firstElementChild).toHaveClass('bg-transparent');
+        });
+
+        test('an unknown variant or color falls back to the defaults', () => {
+            const { container } = render(
+                <DashboardWidget
+                    widget={makeWidget('stat_critical', {
+                        variant: 'nope',
+                        config: { color: 'pink' },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(container.firstElementChild).not.toHaveClass(
+                'bg-transparent',
+            );
+        });
+
+        test('the trend, completion and priority widgets pass their options on', () => {
+            const trend = [{ day: 'Mon', count: 3 }];
+            const full = { ...data, productivity_trend: trend };
+
+            const { container, rerender } = render(
+                <DashboardWidget
+                    widget={makeWidget('completion', {
+                        variant: 'stacked',
+                        config: { header: 'off', tier: 'off' },
+                    })}
+                    data={full}
+                />,
+            );
+            expect(
+                screen.queryByText('Completion Ratio'),
+            ).not.toBeInTheDocument();
+            expect(screen.getAllByTestId('completion-segment')).toHaveLength(3);
+
+            rerender(
+                <DashboardWidget
+                    widget={makeWidget('priority_breakdown', {
+                        variant: 'list',
+                        config: {
+                            header: 'off',
+                            noPriority: 'off',
+                            percent: 'off',
+                            sort: 'count',
+                        },
+                    })}
+                    data={full}
+                />,
+            );
+            expect(
+                screen.getAllByTestId('priority-row-bar').length,
+            ).toBeGreaterThan(0);
+            expect(
+                screen.queryByText('Priority Breakdown'),
+            ).not.toBeInTheDocument();
+
+            rerender(
+                <DashboardWidget
+                    widget={makeWidget('priority_breakdown', {
+                        config: { sort: 'priority' },
+                    })}
+                    data={full}
+                />,
+            );
+            expect(screen.getByText('Priority Breakdown')).toBeInTheDocument();
+            expect(container).toBeTruthy();
+        });
+
+        test('the projects widget orders and trims its list from its options', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('projects', {
+                        variant: 'compact',
+                        config: {
+                            limit: 3,
+                            sort: 'name',
+                            header: 'off',
+                            viewAll: 'off',
+                        },
+                    })}
+                    data={{ projects: [3, 1, 2, 4].map(project) }}
+                />,
+            );
+
+            expect(
+                screen.queryByText('Projects Directory'),
+            ).not.toBeInTheDocument();
+            expect(screen.queryByText(/View all/)).not.toBeInTheDocument();
+            expect(
+                screen.getAllByText(/^Project \d$/).map((el) => el.textContent),
+            ).toEqual(['Project 1', 'Project 2', 'Project 3']);
+        });
+
+        test('the activity widget passes its variant and options on', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('activity', {
+                        variant: 'compact',
+                        config: { header: 'off', pagination: 'off' },
+                    })}
+                    data={{ projects: [], activityLogs: makePaginated([]) }}
+                />,
+            );
+
+            expect(screen.getByTestId('activity-feed')).toHaveAttribute(
+                'data-compact',
+                'true',
+            );
+        });
     });
 });

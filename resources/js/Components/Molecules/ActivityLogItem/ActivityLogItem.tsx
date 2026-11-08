@@ -22,10 +22,16 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
     users = [],
     roles = [],
     issueTypes = [],
+    compact = false,
 }) => {
     return (
         <div>
-            <div className="mb-3 mt-4 flex items-center gap-2 first:mt-0">
+            <div
+                className={cn(
+                    'flex items-center gap-2 first:mt-0',
+                    compact ? 'mb-1.5 mt-2.5' : 'mb-3 mt-4',
+                )}
+            >
                 <span
                     title={new Date(group.createdAt).toLocaleString()}
                     className="shrink-0 cursor-default whitespace-nowrap text-[10px] font-medium text-[var(--text-muted-color)]"
@@ -43,27 +49,39 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                 />
             </div>
 
-            <div className="flex gap-3 pb-2">
-                <motion.div
-                    className="shrink-0"
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={SPRING}
-                >
-                    <Avatar
-                        src={group.userAvatar ?? undefined}
-                        alt={group.userName ?? undefined}
-                        initials={group.userName?.charAt(0) ?? '?'}
-                        size="lg"
-                    />
-                </motion.div>
+            <div className={cn('flex gap-3', compact ? 'pb-1' : 'pb-2')}>
+                {!compact && (
+                    <motion.div
+                        className="shrink-0"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={SPRING}
+                    >
+                        <Avatar
+                            src={group.userAvatar ?? undefined}
+                            alt={group.userName ?? undefined}
+                            initials={group.userName?.charAt(0) ?? '?'}
+                            size="lg"
+                        />
+                    </motion.div>
+                )}
 
                 <div className="min-w-0 flex-1 pt-0.5">
-                    <span className="truncate text-sm font-semibold text-[var(--text-color)]">
+                    <span
+                        className={cn(
+                            'truncate font-semibold text-[var(--text-color)]',
+                            compact ? 'text-xs' : 'text-sm',
+                        )}
+                    >
                         {group.userName ?? 'Someone'}
                     </span>
 
-                    <div className="mt-1.5 flex flex-col gap-1.5">
+                    <div
+                        className={cn(
+                            'flex flex-col',
+                            compact ? 'mt-0.5 gap-0.5' : 'mt-1.5 gap-1.5',
+                        )}
+                    >
                         {group.entries.map((entry, entryIndex) => {
                             const { icon, color } = getActivityLogVisual(
                                 entry.body,
