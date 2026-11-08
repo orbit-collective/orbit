@@ -1,0 +1,94 @@
+import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
+import {
+    activityEntries,
+    issueTypes,
+    projects,
+    users,
+} from '@/stories/fixtures';
+import { makeWidget } from '@/tests/dashboardLayout';
+import { makeIssueStats } from '@/tests/issueStats';
+import { makePaginated } from '@/tests/paginated';
+import DashboardWidget from './DashboardWidget';
+
+const meta = {
+    title: 'Organisms/DashboardWidget',
+    component: DashboardWidget,
+    parameters: { layout: 'centered' },
+    decorators: [
+        (Story) => (
+            <div className="flex w-[420px]">
+                <Story />
+            </div>
+        ),
+    ],
+    args: {
+        widget: makeWidget('stat_open_issues'),
+        data: {
+            projects: projects.map((project) => ({
+                ...project,
+                issue_counts: { todo: 4, in_progress: 3, done: 5 },
+            })),
+            issueStats: makeIssueStats({
+                high: 3,
+                medium: 4,
+                low: 2,
+                todo: 4,
+                inProgress: 3,
+                done: 5,
+            }),
+            productivity_trend: [
+                { day: 'Mon', count: 3 },
+                { day: 'Tue', count: 5 },
+                { day: 'Wed', count: 2 },
+            ],
+            activityLogs: makePaginated(activityEntries),
+            users,
+            issueTypes,
+        },
+    },
+} satisfies Meta<typeof DashboardWidget>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Stat: Story = {
+    play: async ({ canvasElement }) => {
+        await expect(
+            within(canvasElement).getByText('Open Issues'),
+        ).toBeVisible();
+    },
+};
+
+export const VividStat: Story = {
+    args: { widget: makeWidget('stat_resolution', { variant: 'vivid' }) },
+};
+
+export const CompletionBars: Story = {
+    args: { widget: makeWidget('completion') },
+};
+
+export const CompletionRing: Story = {
+    args: { widget: makeWidget('completion', { variant: 'ring' }) },
+};
+
+export const PriorityBreakdown: Story = {
+    args: { widget: makeWidget('priority_breakdown') },
+};
+
+export const Projects: Story = {
+    args: { widget: makeWidget('projects') },
+};
+
+/** Until the data of a widget arrives it is a placeholder. */
+export const WaitingForData: Story = {
+    args: {
+        widget: makeWidget('stat_critical'),
+        data: { projects: [] },
+    },
+    play: async ({ canvasElement }) => {
+        await expect(
+            within(canvasElement).getByTestId('widget-placeholder'),
+        ).toBeVisible();
+    },
+};
