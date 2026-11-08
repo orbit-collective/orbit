@@ -72,6 +72,16 @@ editor). A show/hide option is `toggle()` (`on`/`off`). A choice of colors is
 (`ColorSwatches`) instead of text, from the colors of `utils/dashboardColors.ts`
 (`accent`, `success`, `warning`, `error`, `info`), which follow the theme.
 
+## Styling notes
+
+The project builds with Tailwind 3 (`tailwind.config.js`), which has no container
+queries (`@container`, `@md:`, `cqw`) and no trailing `!`. Where a widget has to
+adapt to the width of its own box (the grid style of the projects, the preview of
+a layout) it reads that width with `useElementWidth` and passes it on as a style
+or a CSS variable. A Tailwind translate class on an element that `framer-motion`
+animates is replaced by the animation's inline `transform`, so such an element is
+positioned with plain offsets and a nested element is the one that scales.
+
 ## Motion
 
 The editor moves with `framer-motion` and the shared `EASE`/`DURATION` of

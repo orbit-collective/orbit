@@ -74,6 +74,16 @@ edytorze). Opcja pokaż/ukryj to `toggle()` (`on`/`off`). Wybór koloru to
 (`ColorSwatches`) zamiast tekstu, z kolorów `utils/dashboardColors.ts`
 (`accent`, `success`, `warning`, `error`, `info`), które podążają za motywem.
 
+## Uwagi o stylach
+
+Projekt buduje się z Tailwindem 3 (`tailwind.config.js`), który nie ma
+zapytań kontenerowych (`@container`, `@md:`, `cqw`) ani końcowego `!`. Tam, gdzie
+widget ma dopasować się do szerokości własnego pudełka (styl kafelkowy projektów,
+miniatura układu), odczytuje ją przez `useElementWidth` i przekazuje dalej jako
+styl lub zmienną CSS. Klasa translate z Tailwinda na elemencie animowanym przez
+`framer-motion` jest podmieniana przez inline `transform` animacji, więc taki
+element pozycjonuje się zwykłymi offsetami, a skaluje zagnieżdżony.
+
 ## Animacje
 
 Edytor porusza się dzięki `framer-motion` i wspólnym `EASE`/`DURATION` z
