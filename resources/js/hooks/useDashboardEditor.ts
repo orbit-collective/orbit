@@ -92,6 +92,23 @@ export function useDashboardEditor(
         [draft, finish],
     );
 
+    const updateSavedLayout = useCallback(
+        (id: number, data: { name?: string; widgets?: DashboardWidget[] }) =>
+            router.patch(`${SAVED_LAYOUTS_URL}/${id}`, data, {
+                preserveScroll: true,
+                preserveState: true,
+                only: ['savedLayouts'],
+                onStart: () => setSaveLayoutError(null),
+                onError: (errors) =>
+                    setSaveLayoutError(
+                        errors.name ??
+                            Object.values(errors)[0] ??
+                            'The layout could not be changed.',
+                    ),
+            }),
+        [],
+    );
+
     const patch = useCallback(
         (id: string, change: Partial<Omit<DashboardWidget, 'id' | 'type'>>) =>
             setDraft((widgets) => updateWidget(widgets, id, change)),
@@ -131,6 +148,12 @@ export function useDashboardEditor(
                         ),
                 },
             ),
+        /** Rename a saved layout. */
+        renameSavedLayout: (id: number, name: string) =>
+            updateSavedLayout(id, { name }),
+        /** Replace a saved layout with the draft. */
+        overwriteSavedLayout: (id: number) =>
+            updateSavedLayout(id, { widgets: draft }),
         deleteSavedLayout: (id: number) =>
             router.delete(`${SAVED_LAYOUTS_URL}/${id}`, {
                 preserveScroll: true,
