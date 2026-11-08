@@ -87,6 +87,7 @@ test('invalid layouts are rejected', function (array $payload, string $errorKey)
     'taller than allowed' => [layoutPayload(['height' => 401]), 'widgets.0.height'],
     'unknown option' => [layoutPayload(['config' => ['color' => 'red']]), 'widgets.0.config.color'],
     'option value not allowed' => [layoutPayload(['config' => ['limit' => 7]]), 'widgets.0.config.limit'],
+    'option value of another option' => [layoutPayload(['config' => ['limit' => 'latest']]), 'widgets.0.config.limit'],
     'bad id' => [layoutPayload(['id' => 'a b']), 'widgets.0.id'],
     'missing visibility' => [layoutPayload(['visible' => null]), 'widgets.0.visible'],
 ]);
