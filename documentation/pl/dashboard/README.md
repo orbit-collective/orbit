@@ -40,6 +40,23 @@ zapisanego układu. `PUT /dashboard/layout` (`UpdateDashboardLayoutRequest`
 waliduje kształt i to, co zależy od typu) oraz `DELETE /dashboard/layout`
 (reset) przekierowują z powrotem.
 
+## Zapisane układy
+
+Zakładka **Saved** w panelu przechowuje układy pod nazwą
+(`dashboard_saved_layouts`: `user_id`, `name` do 40 znaków, `widgets`,
+unikalne dla użytkownika i nazwy, maksymalnie
+`DashboardSavedLayoutService::MAX_PER_USER` = 20). `POST
+/dashboard/saved-layouts` zapisuje edytowany szkic i zastępuje układ o tej
+samej nazwie; `DELETE /dashboard/saved-layouts/{id}` usuwa jeden z własnych
+układów użytkownika (cudzy to 404). Widgety są sprawdzane tymi samymi
+regułami co sam układ (`StoreDashboardSavedLayoutRequest` rozszerza
+`UpdateDashboardLayoutRequest`) i przechodzą przez `normalize()` zarówno
+przy zapisie, jak i odczycie, więc układ zapisany przed usunięciem typu lub
+wariantu nadal da się zastosować. Strona dostaje je jako prop
+`savedLayouts`. **Apply** tylko wkłada zapisany układ do szkicu (nic nie jest
+zapisywane do czasu **Save**); miniatury to `LayoutPreview`, który rysuje
+układ na prawdziwej siatce.
+
 ## Dane ładowane tylko dla widocznych widgetów
 
 `DashboardController` owija każdy prop, którego użyłby **ukryty** widget,
@@ -60,6 +77,7 @@ pollingiem (`dashboardReloads(changes, loaded)` /
 | Siatka, drag and drop (`@dnd-kit/core`) | `Components/Organisms/DashboardGrid/` + `Molecules/WidgetEditFrame/` |
 | Biblioteka i ustawienia widgetu | `Components/Organisms/DashboardEditorPanel/` |
 | Pasek zapisz / anuluj / resetuj | `Components/Molecules/DashboardEditorBar/` |
+| Zakładka zapisanych układów i ich miniatury | `Components/Organisms/DashboardSavedLayouts/` + `Molecules/LayoutPreview/` |
 
 Dashboard to siatka CSS ze 120 kolumnami i wierszami po 4 px, ułożona
 gęsto (`GRID_CLASS`); komórka dostaje rozmiar ze zmiennych

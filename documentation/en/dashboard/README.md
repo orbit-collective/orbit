@@ -40,6 +40,21 @@ saved layout. `PUT /dashboard/layout` (`UpdateDashboardLayoutRequest`
 validates the shape and what depends on the type) and `DELETE
 /dashboard/layout` (reset) both redirect back.
 
+## Saved layouts
+
+The panel's **Saved** tab keeps layouts under a name (`dashboard_saved_layouts`:
+`user_id`, `name` up to 40 characters, `widgets`, unique per user and name, at
+most `DashboardSavedLayoutService::MAX_PER_USER` = 20). `POST
+/dashboard/saved-layouts` saves the draft being edited and replaces a layout
+that has the same name; `DELETE /dashboard/saved-layouts/{id}` removes one of
+the user's own (someone else's is a 404). The widgets are checked by the same
+rules as the layout itself (`StoreDashboardSavedLayoutRequest` extends
+`UpdateDashboardLayoutRequest`) and run through `normalize()` both on the way
+in and out, so a layout saved before a type or variant was removed still
+applies. The page gets them as the `savedLayouts` prop. **Apply** only puts a
+saved layout on the draft (nothing is stored until **Save**); the pictures are
+`LayoutPreview`, which draws the layout on the real grid.
+
 ## Data is loaded for visible widgets only
 
 `DashboardController` wraps every prop a **hidden** widget would have used
@@ -60,6 +75,7 @@ only re-read the props that are loaded.
 | Grid, drag and drop (`@dnd-kit/core`) | `Components/Organisms/DashboardGrid/` + `Molecules/WidgetEditFrame/` |
 | Library and widget settings | `Components/Organisms/DashboardEditorPanel/` |
 | Save / cancel / reset bar | `Components/Molecules/DashboardEditorBar/` |
+| Saved layouts tab and its pictures | `Components/Organisms/DashboardSavedLayouts/` + `Molecules/LayoutPreview/` |
 
 The dashboard is a CSS grid of 120 columns and 4 px rows packed densely
 (`GRID_CLASS`); a cell gets its size from the `--widget-width` and
