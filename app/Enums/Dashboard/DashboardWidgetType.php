@@ -83,10 +83,12 @@ enum DashboardWidgetType: string
     public function variants(): array
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => ['default', 'vivid', 'accent'],
-            self::Completion => ['bars', 'ring'],
-            self::Projects => ['cards', 'compact'],
-            default => ['default'],
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => ['default', 'vivid', 'accent', 'glass', 'outline'],
+            self::Trend => ['bars', 'line', 'area'],
+            self::Completion => ['bars', 'ring', 'stacked'],
+            self::PriorityBreakdown => ['bar', 'list', 'donut'],
+            self::Activity => ['feed', 'compact'],
+            self::Projects => ['cards', 'grid', 'compact'],
         };
     }
 
@@ -131,19 +133,99 @@ enum DashboardWidgetType: string
     }
 
     /**
-     * Options of the widget, keyed by name: label, the allowed values and the
-     * default one.
+     * Options of the widget, keyed by name: label, the allowed values, the
+     * default one and optionally how each value is called in the editor.
      *
-     * @return array<string, array{label: string, options: list<int|string>, default: int|string}>
+     * @return array<string, array{label: string, options: list<int|string>, default: int|string, labels?: array<string, string>}>
      */
     public function options(): array
     {
         return match ($this) {
-            self::Projects => [
-                'limit' => ['label' => 'Projects shown', 'options' => [3, 5, 10], 'default' => 3],
+            self::StatProjects => self::statOptions('accent'),
+            self::StatOpenIssues => [
+                'count' => [
+                    'label' => 'Count',
+                    'options' => ['open', 'todo', 'in_progress', 'done', 'all'],
+                    'default' => 'open',
+                    'labels' => ['open' => 'Open', 'todo' => 'To do', 'in_progress' => 'In progress', 'done' => 'Done', 'all' => 'All'],
+                ],
+            ] + self::statOptions('info'),
+            self::StatCritical => self::statOptions('error'),
+            self::StatResolution => [
+                'show' => [
+                    'label' => 'Show',
+                    'options' => ['percent', 'count'],
+                    'default' => 'percent',
+                    'labels' => ['percent' => 'Percent', 'count' => 'Done / all'],
+                ],
+            ] + self::statOptions('success'),
+            self::Trend => [
+                'header' => self::toggle('Title'),
+                'grid' => self::toggle('Grid lines'),
+                'values' => [
+                    'label' => 'Values',
+                    'options' => ['hover', 'always'],
+                    'default' => 'hover',
+                    'labels' => ['hover' => 'On hover', 'always' => 'Always'],
+                ],
+                'today' => self::toggle('Highlight today'),
             ],
-            default => [],
+            self::Completion => [
+                'header' => self::toggle('Title'),
+                'tier' => self::toggle('Status label'),
+            ],
+            self::PriorityBreakdown => [
+                'header' => self::toggle('Title'),
+                'noPriority' => self::toggle('No priority'),
+                'percent' => self::toggle('Percentages'),
+                'sort' => [
+                    'label' => 'Order',
+                    'options' => ['priority', 'count'],
+                    'default' => 'priority',
+                    'labels' => ['priority' => 'By priority', 'count' => 'By count'],
+                ],
+            ],
+            self::Activity => [
+                'header' => self::toggle('Title'),
+                'pagination' => self::toggle('Pagination'),
+            ],
+            self::Projects => [
+                'limit' => ['label' => 'Projects shown', 'options' => [3, 5, 10, 15], 'default' => 3],
+                'sort' => [
+                    'label' => 'Order',
+                    'options' => ['latest', 'name', 'progress', 'issues'],
+                    'default' => 'latest',
+                    'labels' => ['latest' => 'Latest', 'name' => 'Name', 'progress' => 'Progress', 'issues' => 'Issues'],
+                ],
+                'header' => self::toggle('Title'),
+                'viewAll' => self::toggle('View all link'),
+            ],
         };
+    }
+
+    /** An option that shows or hides a part of the widget. */
+    private static function toggle(string $label, string $default = 'on'): array
+    {
+        return [
+            'label' => $label,
+            'options' => ['on', 'off'],
+            'default' => $default,
+            'labels' => ['on' => 'Show', 'off' => 'Hide'],
+        ];
+    }
+
+    /** What every statistic has: its color, its icon and its description. */
+    private static function statOptions(string $color): array
+    {
+        return [
+            'color' => [
+                'label' => 'Color',
+                'options' => ['accent', 'success', 'warning', 'error', 'info'],
+                'default' => $color,
+            ],
+            'icon' => self::toggle('Icon'),
+            'description' => self::toggle('Description'),
+        ];
     }
 
     /**

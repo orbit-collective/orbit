@@ -33,8 +33,8 @@ test('saving stores the layout and widgetsFor reads it back', function () {
 
     expect(DashboardLayout::query()->where('user_id', $user->id)->count())->toBe(1)
         ->and($this->service->widgetsFor($user->id))->toEqual([
-            ['id' => 'a', 'type' => 'trend', 'variant' => 'default', 'width' => 120, 'height' => 90, 'visible' => true, 'config' => []],
-            ['id' => 'b', 'type' => 'projects', 'variant' => 'compact', 'width' => 61, 'height' => 133, 'visible' => false, 'config' => ['limit' => 5]],
+            ['id' => 'a', 'type' => 'trend', 'variant' => 'bars', 'width' => 120, 'height' => 90, 'visible' => true, 'config' => ['header' => 'on', 'grid' => 'on', 'values' => 'hover', 'today' => 'on']],
+            ['id' => 'b', 'type' => 'projects', 'variant' => 'compact', 'width' => 61, 'height' => 133, 'visible' => false, 'config' => ['limit' => 5, 'sort' => 'latest', 'header' => 'on', 'viewAll' => 'on']],
         ]);
 });
 
@@ -67,8 +67,30 @@ test('normalize drops unknown types and falls back to the defaults of the type',
     ]);
 
     expect($widgets)->toHaveCount(2)
-        ->and($widgets[0])->toEqual(['id' => 'ok', 'type' => 'completion', 'variant' => 'bars', 'width' => 40, 'height' => 85, 'visible' => false, 'config' => []])
-        ->and($widgets[1]['config'])->toBe(['limit' => 3]);
+        ->and($widgets[0])->toEqual(['id' => 'ok', 'type' => 'completion', 'variant' => 'bars', 'width' => 40, 'height' => 85, 'visible' => false, 'config' => ['header' => 'on', 'tier' => 'on']])
+        ->and($widgets[1]['config']['limit'])->toBe(3);
+});
+
+test('normalize fills in the options of a type and drops what it does not know', function () {
+    $widgets = $this->service->normalize([
+        ['id' => 'a', 'type' => 'trend', 'variant' => 'line', 'config' => ['grid' => 'off', 'values' => 'sometimes', 'nope' => 'x']],
+        ['id' => 'b', 'type' => 'stat_open_issues', 'config' => ['count' => 'done', 'color' => 'info']],
+    ]);
+
+    expect($widgets[0]['variant'])->toBe('line')
+        ->and($widgets[0]['config'])->toMatchArray(['grid' => 'off', 'values' => 'hover', 'header' => 'on', 'today' => 'on'])
+        ->and($widgets[0]['config'])->not->toHaveKey('nope')
+        ->and($widgets[1]['config'])->toMatchArray(['count' => 'done', 'color' => 'info', 'icon' => 'on', 'description' => 'on']);
+});
+
+test('every variant of every type is accepted by normalize', function () {
+    foreach (DashboardWidgetType::cases() as $type) {
+        foreach ($type->variants() as $variant) {
+            $widget = $this->service->normalize([['id' => 'w', 'type' => $type->value, 'variant' => $variant]])[0];
+
+            expect($widget['variant'])->toBe($variant);
+        }
+    }
 });
 
 test('normalize keeps sizes inside what the type allows', function () {
@@ -137,6 +159,10 @@ test('every widget type describes itself consistently for the editor', function 
 
         foreach ($type->options() as $option) {
             expect($option['options'])->toContain($option['default']);
+
+            foreach (array_keys($option['labels'] ?? []) as $value) {
+                expect($option['options'])->toContain($value);
+            }
         }
     }
 });
