@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
-import { DASHBOARD_CATALOG, makeWidget } from '@/tests/dashboardLayout';
+import {
+    DASHBOARD_CATALOG,
+    makeSavedLayout,
+    makeWidget,
+} from '@/tests/dashboardLayout';
 import DashboardEditorPanel from './DashboardEditorPanel';
 
 const meta = {
@@ -25,6 +29,13 @@ const meta = {
         onOptionChange: fn(),
         onToggleVisible: fn(),
         onRemove: fn(),
+        savedLayouts: [
+            makeSavedLayout(1, 'Focus'),
+            makeSavedLayout(2, 'Overview'),
+        ],
+        onSaveLayout: fn(),
+        onApplyLayout: fn(),
+        onDeleteLayout: fn(),
     },
 } satisfies Meta<typeof DashboardEditorPanel>;
 
@@ -59,5 +70,17 @@ export const NothingPicked: Story = {
         await userEvent.click(
             within(canvasElement).getByRole('button', { name: 'Settings' }),
         );
+    },
+};
+
+/** Layouts kept under a name, to put on the dashboard again. */
+export const SavedLayouts: Story = {
+    play: async ({ canvasElement }) => {
+        await userEvent.click(
+            within(canvasElement).getByRole('button', { name: 'Saved' }),
+        );
+        await expect(
+            within(canvasElement).getByRole('button', { name: 'Apply Focus' }),
+        ).toBeVisible();
     },
 };

@@ -1,8 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { DASHBOARD_CATALOG, makeWidget } from '@/tests/dashboardLayout';
-import { DashboardWidget } from '@/types/Dashboard';
+import {
+    DASHBOARD_CATALOG,
+    makeSavedLayout,
+    makeWidget,
+} from '@/tests/dashboardLayout';
+import { DashboardSavedLayout, DashboardWidget } from '@/types/Dashboard';
 import DashboardEditorPanel from './DashboardEditorPanel';
 
 const handlers = () => ({
@@ -13,6 +17,10 @@ const handlers = () => ({
     onToggleVisible: vi.fn(),
     onMove: vi.fn(),
     onRemove: vi.fn(),
+    savedLayouts: [] as DashboardSavedLayout[],
+    onSaveLayout: vi.fn(),
+    onApplyLayout: vi.fn(),
+    onDeleteLayout: vi.fn(),
 });
 
 const setup = (
@@ -236,5 +244,47 @@ describe('DashboardEditorPanel', () => {
         expect(
             screen.getByRole('switch', { name: 'Show on dashboard' }),
         ).not.toBeChecked();
+    });
+
+    test('has a Saved tab with the saved layouts', async () => {
+        const { onApplyLayout } = setup(undefined, {
+            savedLayouts: [makeSavedLayout(7, 'Focus')],
+        });
+
+        await userEvent.click(screen.getByRole('button', { name: 'Saved' }));
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Apply Focus' }),
+        );
+
+        expect(onApplyLayout).toHaveBeenCalledWith(
+            expect.objectContaining({ id: 7, name: 'Focus' }),
+        );
+    });
+
+    test('passes saving and deleting of layouts on', async () => {
+        const { onSaveLayout, onDeleteLayout } = setup(undefined, {
+            savedLayouts: [makeSavedLayout(7, 'Focus')],
+            saveLayoutError: 'Too many layouts.',
+        });
+
+        await userEvent.click(screen.getByRole('button', { name: 'Saved' }));
+        expect(screen.getByRole('alert')).toHaveTextContent(
+            'Too many layouts.',
+        );
+
+        await userEvent.type(
+            screen.getByLabelText('Save this layout as'),
+            'Wide',
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+        expect(onSaveLayout).toHaveBeenCalledWith('Wide');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Delete Focus' }),
+        );
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Confirm deleting Focus' }),
+        );
+        expect(onDeleteLayout).toHaveBeenCalledWith(7);
     });
 });
