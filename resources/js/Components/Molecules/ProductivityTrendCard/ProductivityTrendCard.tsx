@@ -188,43 +188,58 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                     aria-hidden="true"
                                                     className="absolute inset-y-0 left-1/2 w-px bg-[var(--border-color-strong)] opacity-0 transition-opacity group-hover:opacity-100"
                                                 />
-                                                <motion.div
-                                                    className="absolute left-1/2 flex -translate-x-1/2 translate-y-1/2 flex-col items-center"
+                                                {/* The anchor is the exact point of the day on the line; the dot and the
+                                                    count are placed around it with plain offsets, which a transform
+                                                    animation cannot disturb. */}
+                                                <div
+                                                    data-testid="trend-anchor"
+                                                    className="absolute left-1/2"
                                                     style={{
                                                         bottom: `${points[idx].y}%`,
                                                     }}
-                                                    initial={{
-                                                        opacity: 0,
-                                                        scale: 0,
-                                                    }}
-                                                    animate={{
-                                                        opacity: 1,
-                                                        scale: 1,
-                                                    }}
-                                                    transition={{
-                                                        duration: DURATION.base,
-                                                        ease: EASE,
-                                                        delay:
-                                                            0.3 + rowDelay(idx),
-                                                    }}
                                                 >
-                                                    <span
-                                                        className={`absolute -top-7 z-20 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-color)] transition-all ${alwaysShown ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}
-                                                    >
-                                                        {day.count}
-                                                    </span>
-                                                    <span
-                                                        data-active={isActive}
-                                                        className="block h-2.5 w-2.5 rounded-full border-2 border-solid transition-transform duration-150 group-hover:scale-150"
-                                                        style={{
-                                                            borderColor: tint,
-                                                            backgroundColor:
-                                                                isActive
-                                                                    ? tint
-                                                                    : 'var(--surface-color)',
+                                                    <div className="absolute bottom-3 left-0 flex w-0 justify-center">
+                                                        <span
+                                                            className={`z-20 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-color)] transition-all ${alwaysShown ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}
+                                                        >
+                                                            {day.count}
+                                                        </span>
+                                                    </div>
+                                                    <motion.span
+                                                        className="absolute -bottom-[5px] -left-[5px] block h-2.5 w-2.5"
+                                                        initial={{
+                                                            opacity: 0,
+                                                            scale: 0,
                                                         }}
-                                                    />
-                                                </motion.div>
+                                                        animate={{
+                                                            opacity: 1,
+                                                            scale: 1,
+                                                        }}
+                                                        transition={{
+                                                            duration:
+                                                                DURATION.base,
+                                                            ease: EASE,
+                                                            delay:
+                                                                0.3 +
+                                                                rowDelay(idx),
+                                                        }}
+                                                    >
+                                                        <span
+                                                            data-active={
+                                                                isActive
+                                                            }
+                                                            className="block h-full w-full rounded-full border-2 border-solid transition-transform duration-150 group-hover:scale-150"
+                                                            style={{
+                                                                borderColor:
+                                                                    tint,
+                                                                backgroundColor:
+                                                                    isActive
+                                                                        ? tint
+                                                                        : 'var(--surface-color)',
+                                                            }}
+                                                        />
+                                                    </motion.span>
+                                                </div>
                                             </div>
                                         );
                                     })}

@@ -286,5 +286,31 @@ describe('ProductivityTrendCard Component', () => {
             );
             expect(new Set(ids).size).toBe(2);
         });
+
+        test('each point sits exactly where the line has its value', () => {
+            render(
+                <ProductivityTrendCard trendData={trendData} variant="line" />,
+            );
+
+            // The most is 4 and the axis ends at 4: Mon is at the top, Tue
+            // halfway and Wed on the axis, like the line through them.
+            const anchors = screen.getAllByTestId('trend-anchor');
+            expect(anchors.map((anchor) => anchor.style.bottom)).toEqual([
+                '100%',
+                '50%',
+                '0%',
+            ]);
+        });
+
+        test('points are placed with plain offsets, not with transforms an animation could replace', () => {
+            render(
+                <ProductivityTrendCard trendData={trendData} variant="line" />,
+            );
+
+            for (const anchor of screen.getAllByTestId('trend-anchor')) {
+                expect(anchor.className).not.toMatch(/translate/);
+                expect(anchor.innerHTML).not.toMatch(/translate/);
+            }
+        });
     });
 });
