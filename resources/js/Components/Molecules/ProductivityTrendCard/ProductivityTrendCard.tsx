@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
-import { FC } from 'react';
+import { FC, useId } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { ProductivityTrendCardProps } from '@/types/Components';
+import { smoothLinePath } from '@/utils/chart';
+import { DASHBOARD_COLOR_VALUES } from '@/utils/dashboardColors';
 import { DURATION, EASE, rowDelay } from '@/utils/motion';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
@@ -35,17 +37,6 @@ const getNiceTicks = (maxValue: number, tickCount = 4): number[] => {
     return ticks;
 };
 
-/** Where the point of a day sits on a line or area chart, in percent. */
-const pointOf = (
-    index: number,
-    count: number,
-    total: number,
-    axisMax: number,
-) => ({
-    x: ((index + 0.5) / total) * 100,
-    y: axisMax === 0 ? 0 : (count / axisMax) * 100,
-});
-
 export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
     trendData,
     className = '',
@@ -54,7 +45,10 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
     showGrid = true,
     values = 'hover',
     highlightToday = true,
+    color = 'accent',
 }) => {
+    const gradientId = useId();
+    const tint = DASHBOARD_COLOR_VALUES[color];
     const currentDay = new Date().toLocaleDateString('en-US', {
         weekday: 'short',
     });
@@ -64,16 +58,15 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
     const axisMax = ticks[0];
     const alwaysShown = values === 'always';
     const isLine = variant === 'line' || variant === 'area';
-    const points = trendData.map((day, index) =>
-        pointOf(index, day.count, trendData.length, axisMax),
-    );
-    // SVG y grows downward, a point's height grows upward.
-    const linePath = points
-        .map(
-            (point, index) =>
-                `${index === 0 ? 'M' : 'L'}${point.x},${100 - point.y}`,
-        )
-        .join(' ');
+    const total = trendData.length;
+    // Percent of the plot: a day sits in the middle of its column.
+    const points = trendData.map((day, index) => ({
+        x: ((index + 0.5) / total) * 100,
+        y: axisMax === 0 ? 0 : (day.count / axisMax) * 100,
+    }));
+    // SVG y grows downward, the height of a point grows upward.
+    const svgPoints = points.map((point) => ({ x: point.x, y: 100 - point.y }));
+    const linePath = smoothLinePath(svgPoints);
     const areaPath = `${linePath} L${points.at(-1)?.x ?? 0},100 L${points[0]?.x ?? 0},100 Z`;
 
     return (
@@ -111,9 +104,25 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                             {isLine ? (
                                 <div
                                     data-testid="trend-line"
-                                    className="absolute inset-0 px-1 sm:px-2"
+                                    className="absolute inset-0"
                                 >
-                                    <div className="relative h-full w-full">
+                                    <motion.div
+                                        // The line is drawn from left to right.
+                                        className="absolute inset-0"
+                                        initial={{
+                                            clipPath:
+                                                'inset(-10% 100% -10% -2%)',
+                                        }}
+                                        animate={{
+                                            clipPath:
+                                                'inset(-10% -2% -10% -2%)',
+                                        }}
+                                        transition={{
+                                            duration: DURATION.slow,
+                                            ease: EASE,
+                                            delay: 0.1,
+                                        }}
+                                    >
                                         <svg
                                             viewBox="0 0 100 100"
                                             preserveAspectRatio="none"
@@ -122,7 +131,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                         >
                                             <defs>
                                                 <linearGradient
-                                                    id="trend-area"
+                                                    id={gradientId}
                                                     x1="0"
                                                     y1="0"
                                                     x2="0"
@@ -130,58 +139,58 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                 >
                                                     <stop
                                                         offset="0%"
-                                                        stopColor="var(--accent-color)"
+                                                        stopColor={tint}
                                                         stopOpacity="0.35"
                                                     />
                                                     <stop
                                                         offset="100%"
-                                                        stopColor="var(--accent-color)"
+                                                        stopColor={tint}
                                                         stopOpacity="0"
                                                     />
                                                 </linearGradient>
                                             </defs>
                                             {variant === 'area' && (
-                                                <motion.path
+                                                <path
+                                                    data-testid="trend-area"
                                                     d={areaPath}
-                                                    fill="url(#trend-area)"
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    transition={{
-                                                        duration: DURATION.slow,
-                                                        ease: EASE,
-                                                        delay: 0.3,
-                                                    }}
+                                                    fill={`url(#${gradientId})`}
                                                 />
                                             )}
-                                            <motion.path
+                                            <path
                                                 d={linePath}
                                                 fill="none"
-                                                stroke="var(--accent-color)"
-                                                strokeWidth="2"
+                                                stroke={tint}
+                                                strokeWidth="2.5"
                                                 strokeLinejoin="round"
                                                 strokeLinecap="round"
                                                 vectorEffect="non-scaling-stroke"
-                                                initial={{ pathLength: 0 }}
-                                                animate={{ pathLength: 1 }}
-                                                transition={{
-                                                    duration: DURATION.slow,
-                                                    ease: EASE,
-                                                    delay: 0.15,
-                                                }}
                                             />
                                         </svg>
-                                        {trendData.map((day, idx) => {
-                                            const isActive =
-                                                highlightToday &&
-                                                day.day === currentDay;
+                                    </motion.div>
 
-                                            return (
+                                    {trendData.map((day, idx) => {
+                                        const isActive =
+                                            highlightToday &&
+                                            day.day === currentDay;
+
+                                        return (
+                                            <div
+                                                key={idx}
+                                                data-testid="trend-point"
+                                                className="group absolute inset-y-0"
+                                                style={{
+                                                    left: `${(idx / total) * 100}%`,
+                                                    width: `${100 / total}%`,
+                                                }}
+                                            >
+                                                {/* A guide through the day under the pointer. */}
+                                                <span
+                                                    aria-hidden="true"
+                                                    className="absolute inset-y-0 left-1/2 w-px bg-[var(--border-color-strong)] opacity-0 transition-opacity group-hover:opacity-100"
+                                                />
                                                 <motion.div
-                                                    key={idx}
-                                                    data-testid="trend-point"
-                                                    className="group absolute flex -translate-x-1/2 translate-y-1/2 flex-col items-center"
+                                                    className="absolute left-1/2 flex -translate-x-1/2 translate-y-1/2 flex-col items-center"
                                                     style={{
-                                                        left: `${points[idx].x}%`,
                                                         bottom: `${points[idx].y}%`,
                                                     }}
                                                     initial={{
@@ -200,17 +209,25 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                     }}
                                                 >
                                                     <span
-                                                        className={`absolute -top-6 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-color)] transition-all ${alwaysShown ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}
+                                                        className={`absolute -top-7 z-20 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-color)] transition-all ${alwaysShown ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}
                                                     >
                                                         {day.count}
                                                     </span>
                                                     <span
-                                                        className={`block h-2.5 w-2.5 rounded-full border-2 border-solid border-[var(--surface-color)] ${isActive ? 'bg-[var(--accent-color)]' : 'bg-[var(--text-gray-color)]'}`}
+                                                        data-active={isActive}
+                                                        className="block h-2.5 w-2.5 rounded-full border-2 border-solid transition-transform duration-150 group-hover:scale-150"
+                                                        style={{
+                                                            borderColor: tint,
+                                                            backgroundColor:
+                                                                isActive
+                                                                    ? tint
+                                                                    : 'var(--surface-color)',
+                                                        }}
                                                     />
                                                 </motion.div>
-                                            );
-                                        })}
-                                    </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             ) : (
                                 <div className="relative flex h-full items-end justify-between gap-1.5 px-1 sm:gap-2 sm:px-2">
@@ -261,11 +278,22 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                             <div className="h-full w-full max-w-[16px] rounded-t-sm border border-dashed border-[var(--border-color-strong)] bg-[var(--bg-light-color)] transition-colors group-hover:border-[var(--text-muted-color)]" />
                                                         ) : (
                                                             <div
+                                                                data-active={
+                                                                    isActive
+                                                                }
                                                                 className={`h-full w-full max-w-[16px] rounded-t-sm transition-colors ${
                                                                     isActive
-                                                                        ? 'bg-[var(--accent-color)]'
+                                                                        ? ''
                                                                         : 'bg-[var(--bg-light-color)] group-hover:bg-[var(--bg-light-color-hover)]'
                                                                 }`}
+                                                                style={
+                                                                    isActive
+                                                                        ? {
+                                                                              backgroundColor:
+                                                                                  tint,
+                                                                          }
+                                                                        : undefined
+                                                                }
                                                             />
                                                         )}
                                                     </motion.div>
@@ -280,7 +308,9 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
 
                     <div className="mt-2 flex gap-3">
                         <div className="w-6 shrink-0" />
-                        <div className="flex flex-1 justify-between gap-1.5 px-1 sm:gap-2 sm:px-2">
+                        <div
+                            className={`flex flex-1 justify-between ${isLine ? '' : 'gap-1.5 px-1 sm:gap-2 sm:px-2'}`}
+                        >
                             {trendData.map((day, idx) => (
                                 <span
                                     key={idx}

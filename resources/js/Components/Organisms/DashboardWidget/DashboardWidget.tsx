@@ -18,6 +18,7 @@ import {
 import { IssueType } from '@/types/IssueTypes';
 import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
+import { toDashboardColor } from '@/utils/dashboardColors';
 import { isOn, optionOf } from '@/utils/dashboardLayout';
 
 /** What the dashboard page received; a prop is missing until a widget needs it. */
@@ -187,6 +188,9 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                             : 'hover'
                     }
                     highlightToday={isOn(widget, 'today')}
+                    color={toDashboardColor(
+                        optionOf(widget, 'color', 'accent'),
+                    )}
                 />
             ) : (
                 <WidgetPlaceholder />

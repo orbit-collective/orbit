@@ -41,8 +41,18 @@ vi.mock('@/Components/Molecules/ActivityFeedPanel/ActivityFeedPanel', () => ({
 vi.mock(
     '@/Components/Molecules/ProductivityTrendCard/ProductivityTrendCard',
     () => ({
-        ProductivityTrendCard: ({ trendData }: { trendData: unknown[] }) => (
-            <div data-testid="trend" data-points={trendData.length} />
+        ProductivityTrendCard: ({
+            trendData,
+            color,
+        }: {
+            trendData: unknown[];
+            color?: string;
+        }) => (
+            <div
+                data-testid="trend"
+                data-points={trendData.length}
+                data-color={color}
+            />
         ),
     }),
 );
@@ -285,6 +295,46 @@ describe('DashboardWidget', () => {
 
             expect(container.firstElementChild).not.toHaveClass(
                 'bg-transparent',
+            );
+        });
+
+        test('the trend takes its color from the widget', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('trend', {
+                        variant: 'line',
+                        config: { color: 'info' },
+                    })}
+                    data={{
+                        ...data,
+                        productivity_trend: [{ day: 'Mon', count: 3 }],
+                    }}
+                />,
+            );
+
+            expect(screen.getByTestId('trend')).toHaveAttribute(
+                'data-color',
+                'info',
+            );
+        });
+
+        test('the trend of an unknown color is drawn in the accent', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('trend', {
+                        variant: 'line',
+                        config: { color: 'pink' },
+                    })}
+                    data={{
+                        ...data,
+                        productivity_trend: [{ day: 'Mon', count: 3 }],
+                    }}
+                />,
+            );
+
+            expect(screen.getByTestId('trend')).toHaveAttribute(
+                'data-color',
+                'accent',
             );
         });
 
