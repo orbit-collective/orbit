@@ -4,6 +4,7 @@ import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
 import ProjectCard from '@/Components/Molecules/ProjectCard/ProjectCard';
+import { useElementWidth } from '@/hooks/useElementWidth';
 import { Project } from '@/types/Projects';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
@@ -35,6 +36,10 @@ const progressOf = (project: Project) => {
     return total === 0 ? 0 : (project.issue_counts?.done ?? 0) / total;
 };
 
+/** How many tiles of the grid style fit next to each other in a width. */
+const tileColumns = (width: number) =>
+    width >= 560 ? 3 : width >= 360 ? 2 : 1;
+
 const SORTERS: Record<ProjectsSort, (a: Project, b: Project) => number> = {
     latest: () => 0,
     name: (a, b) => a.name.localeCompare(b.name),
@@ -53,6 +58,7 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
 }) => {
     const ordered = [...projects].sort(SORTERS[sort] ?? SORTERS.latest);
     const shown = ordered.slice(0, limit);
+    const [listRef, listWidth] = useElementWidth<HTMLDivElement>();
 
     return (
         <div className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
@@ -68,13 +74,16 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
                 </div>
             )}
             <div
+                ref={listRef}
                 className={cn(
-                    '@container grid grid-cols-1',
+                    'grid',
                     variant === 'cards' && 'gap-4',
-                    variant === 'grid' &&
-                        'gap-3 @md:grid-cols-2 @3xl:grid-cols-3',
+                    variant === 'grid' && 'gap-3',
                     variant === 'compact' && 'gap-1',
                 )}
+                style={{
+                    gridTemplateColumns: `repeat(${variant === 'grid' ? tileColumns(listWidth) : 1}, minmax(0, 1fr))`,
+                }}
             >
                 {shown.length > 0 ? (
                     <>
@@ -92,7 +101,7 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
                         {showViewAll && projects.length > limit && (
                             <Link
                                 href="/projects"
-                                className="@md:col-span-full cursor-pointer rounded-lg border border-dashed border-[var(--bg-light-color)] py-2.5 text-center text-xs font-semibold text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
+                                className="col-span-full cursor-pointer rounded-lg border border-dashed border-[var(--bg-light-color)] py-2.5 text-center text-xs font-semibold text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
                             >
                                 View all {projects.length} projects
                             </Link>

@@ -8,10 +8,10 @@ interface WidgetGlyphProps {
 }
 
 /**
- * Sizes are in `cqw`, a hundredth of the width of the picture the glyph is
- * in, so the same drawing fits a preview of any size.
+ * Sizes are in `--u`, a hundredth of the width of the picture the glyph is in
+ * (the preview sets it), so the same drawing fits a preview of any size.
  */
-const cqw = (value: number) => `${value}cqw`;
+const cqw = (value: number) => `calc(var(--u, 2.4px) * ${value})`;
 
 /**
  * A preview is drawn in grays only: it shows the shape of a layout, not the
@@ -416,8 +416,8 @@ const Activity: FC<{ widget: DashboardWidget }> = ({ widget }) => {
             </div>
             {isOn(widget, 'pagination') && (
                 <div
-                    className="flex justify-between border-t border-solid pt-[0.8cqw]"
-                    style={{ borderColor: TRACK }}
+                    className="flex justify-between border-t border-solid"
+                    style={{ borderColor: TRACK, paddingTop: cqw(0.8) }}
                 >
                     <Line width={20} />
                     <Line width={16} />
@@ -432,8 +432,13 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
     const tile = (color: string, key: number) => (
         <div
             key={key}
-            className="flex min-w-0 flex-col rounded-[0.6cqw] border border-solid p-[0.8cqw]"
-            style={{ gap: cqw(0.6), borderColor: TRACK }}
+            className="flex min-w-0 flex-col border border-solid"
+            style={{
+                gap: cqw(0.6),
+                borderColor: TRACK,
+                borderRadius: cqw(0.6),
+                padding: cqw(0.8),
+            }}
         >
             <div className="flex items-center" style={{ gap: cqw(0.7) }}>
                 <Dot color={color} size={0.9} />
@@ -485,7 +490,7 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                             >
                                 <Dot color={color} size={0.9} />
                                 <Line
-                                    width="9cqw"
+                                    width={cqw(9)}
                                     color="var(--text-gray-color)"
                                     opacity={0.6}
                                 />
@@ -502,16 +507,22 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                     {swatches.slice(0, 3).map((color, colorIndex) => (
                         <div
                             key={colorIndex}
-                            className="flex flex-1 items-center rounded-[0.6cqw] border border-solid p-[0.8cqw]"
-                            style={{ gap: cqw(1), borderColor: TRACK }}
+                            className="flex flex-1 items-center border border-solid"
+                            style={{
+                                gap: cqw(1),
+                                borderColor: TRACK,
+                                borderRadius: cqw(0.6),
+                                padding: cqw(0.8),
+                            }}
                         >
                             <span
-                                className="block shrink-0 rounded-[0.5cqw]"
+                                className="block shrink-0"
                                 style={{
                                     width: cqw(2.4),
                                     height: cqw(2.4),
                                     backgroundColor: color,
                                     opacity: 0.55,
+                                    borderRadius: cqw(0.5),
                                 }}
                             />
                             <div
@@ -542,12 +553,13 @@ const Stat: FC<{ widget: DashboardWidget }> = ({ widget }) => {
             <div className="flex h-full items-center" style={{ gap: cqw(1.4) }}>
                 {showIcon && (
                     <span
-                        className="block shrink-0 rounded-[0.6cqw]"
+                        className="block shrink-0"
                         style={{
                             width: cqw(3),
                             height: cqw(3),
                             backgroundColor: tint,
                             opacity: 0.5,
+                            borderRadius: cqw(0.6),
                         }}
                     />
                 )}

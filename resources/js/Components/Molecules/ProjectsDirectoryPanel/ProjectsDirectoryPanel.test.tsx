@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { Project } from '@/types/Projects';
 import ProjectsDirectoryPanel from './ProjectsDirectoryPanel';
 
@@ -30,6 +30,10 @@ const project = (id: number): Project => ({
 });
 
 describe('ProjectsDirectoryPanel', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     test('shows the latest projects up to the limit and links to all of them', () => {
         render(
             <ProjectsDirectoryPanel
@@ -192,6 +196,59 @@ describe('ProjectsDirectoryPanel', () => {
             );
 
             expect(screen.queryByText(/View all/)).not.toBeInTheDocument();
+        });
+
+        test.each([
+            [300, 1],
+            [400, 2],
+            [700, 3],
+        ])(
+            'the grid fits as many tiles as the width allows (%ipx: %i)',
+            (width, columns) => {
+                vi.spyOn(
+                    HTMLElement.prototype,
+                    'clientWidth',
+                    'get',
+                ).mockReturnValue(width);
+
+                render(
+                    <ProjectsDirectoryPanel
+                        projects={many}
+                        variant="grid"
+                        limit={5}
+                    />,
+                );
+
+                const grid = screen
+                    .getAllByTestId('project-tile-progress')[0]
+                    .closest('.grid')!;
+                expect((grid as HTMLElement).style.gridTemplateColumns).toBe(
+                    `repeat(${columns}, minmax(0, 1fr))`,
+                );
+            },
+        );
+
+        test('the other styles stay in one column', () => {
+            vi.spyOn(
+                HTMLElement.prototype,
+                'clientWidth',
+                'get',
+            ).mockReturnValue(900);
+
+            render(
+                <ProjectsDirectoryPanel
+                    projects={many}
+                    variant="compact"
+                    limit={5}
+                />,
+            );
+
+            const grid = screen
+                .getByText('Alpha')
+                .closest('.grid') as HTMLElement;
+            expect(grid.style.gridTemplateColumns).toBe(
+                'repeat(1, minmax(0, 1fr))',
+            );
         });
     });
 });
