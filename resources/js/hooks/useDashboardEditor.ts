@@ -32,6 +32,8 @@ export function useDashboardEditor(
     const [draft, setDraft] = useState<DashboardWidget[]>(saved);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    // Resizing lands on the coarse grid; off, every column and row counts.
+    const [snap, setSnap] = useState(true);
 
     const missing = useMemo(
         () =>
@@ -97,6 +99,8 @@ export function useDashboardEditor(
         draft,
         selectedId,
         saving,
+        snap,
+        setSnap,
         dirty: !sameLayout(draft, saved),
         canAdd: draft.length < MAX_DASHBOARD_WIDGETS,
         start,
@@ -109,7 +113,9 @@ export function useDashboardEditor(
         shift: (id: string, delta: -1 | 1) =>
             setDraft((widgets) => shiftWidget(widgets, id, delta)),
         setVariant: (id: string, variant: string) => patch(id, { variant }),
-        setSpan: (id: string, span: number) => patch(id, { span }),
+        setWidth: (id: string, width: number) => patch(id, { width }),
+        resize: (id: string, size: { width: number; height: number }) =>
+            patch(id, size),
         setOption: (id: string, key: string, value: string | number) =>
             setDraft((widgets) =>
                 widgets.map((widget) =>

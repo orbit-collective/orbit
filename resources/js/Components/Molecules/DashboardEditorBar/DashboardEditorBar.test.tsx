@@ -6,15 +6,35 @@ import DashboardEditorBar from './DashboardEditorBar';
 const setup = (
     props: Partial<React.ComponentProps<typeof DashboardEditorBar>> = {},
 ) => {
-    const handlers = { onSave: vi.fn(), onCancel: vi.fn(), onReset: vi.fn() };
+    const handlers = {
+        onSave: vi.fn(),
+        onCancel: vi.fn(),
+        onReset: vi.fn(),
+        onSnapChange: vi.fn(),
+    };
     render(
-        <DashboardEditorBar dirty saving={false} {...handlers} {...props} />,
+        <DashboardEditorBar
+            dirty
+            saving={false}
+            snap
+            {...handlers}
+            {...props}
+        />,
     );
 
     return handlers;
 };
 
 describe('DashboardEditorBar', () => {
+    test('says the dashboard is being edited', () => {
+        setup();
+
+        expect(screen.getByText('Editing dashboard')).toBeInTheDocument();
+        expect(
+            screen.getByRole('toolbar', { name: 'Dashboard editor' }),
+        ).toBeInTheDocument();
+    });
+
     test('saves and cancels', async () => {
         const { onSave, onCancel } = setup();
 
@@ -37,6 +57,17 @@ describe('DashboardEditorBar', () => {
         expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled();
         expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
         expect(screen.getByRole('button', { name: 'Reset' })).toBeDisabled();
+    });
+
+    test('the snap switch shows and changes the mode', async () => {
+        const { onSnapChange } = setup({ snap: true });
+
+        const toggle = screen.getByRole('switch', { name: 'Snap to grid' });
+        expect(toggle).toBeChecked();
+
+        await userEvent.click(toggle);
+
+        expect(onSnapChange).toHaveBeenCalledWith(false);
     });
 
     test('reset asks for a confirmation before it runs', async () => {

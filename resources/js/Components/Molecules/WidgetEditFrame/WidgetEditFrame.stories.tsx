@@ -1,34 +1,38 @@
 import { DndContext } from '@dnd-kit/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
-import { expect, within } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
+import { makeWidget } from '@/tests/dashboardLayout';
+import { GRID_CLASS } from '@/utils/dashboardLayout';
 import WidgetEditFrame from './WidgetEditFrame';
 
 const meta = {
     title: 'Molecules/WidgetEditFrame',
     component: WidgetEditFrame,
-    parameters: { layout: 'centered' },
+    parameters: { layout: 'padded' },
     decorators: [
         (Story) => (
             <DndContext>
-                <div className="w-[360px]">
-                    <Story />
+                <div className="w-[640px]">
+                    <div className={GRID_CLASS}>
+                        <Story />
+                    </div>
                 </div>
             </DndContext>
         ),
     ],
     args: {
-        id: 'trend',
+        widget: makeWidget('trend', { width: 120, height: 70 }),
         label: 'Productivity Trend',
-        hidden: false,
+        icon: 'ChartLine',
+        minWidth: 30,
+        minHeight: 56,
+        snap: true,
         selected: false,
-        canMoveUp: true,
-        canMoveDown: true,
         onSelect: fn(),
-        onMove: fn(),
         onToggleVisible: fn(),
+        onResize: fn(),
         children: (
-            <div className="h-32 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 text-sm text-[var(--text-color)]">
+            <div className="p-4 text-sm text-[var(--text-color)]">
                 Widget content
             </div>
         ),
@@ -41,15 +45,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
     play: async ({ canvasElement }) => {
         await expect(
-            within(canvasElement).getByRole('button', {
-                name: 'Drag Productivity Trend',
-            }),
+            within(canvasElement).getByTestId('widget-drag-header'),
         ).toBeVisible();
     },
 };
 
 export const Selected: Story = { args: { selected: true } };
 
-export const Hidden: Story = { args: { hidden: true } };
-
-export const FirstWidget: Story = { args: { canMoveUp: false } };
+export const Hidden: Story = {
+    args: { widget: makeWidget('trend', { visible: false, height: 70 }) },
+};

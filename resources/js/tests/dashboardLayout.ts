@@ -16,8 +16,10 @@ const entry = (
     description: `${label} description`,
     icon: 'Activity',
     variants: ['default'],
-    spans: [4, 6, 12],
-    defaultSpan: 4,
+    minWidth: 30,
+    defaultWidth: 40,
+    minHeight: 40,
+    defaultHeight: 85,
     options: [],
     props,
     ...overrides,
@@ -25,8 +27,10 @@ const entry = (
 
 const STAT = {
     variants: ['default', 'vivid', 'accent'],
-    spans: [3, 4, 6, 12],
-    defaultSpan: 3,
+    minWidth: 20,
+    defaultWidth: 30,
+    minHeight: 20,
+    defaultHeight: 32,
 };
 
 /** The server's widget catalog, as a test fixture. */
@@ -36,26 +40,29 @@ export const DASHBOARD_CATALOG: DashboardCatalogEntry[] = [
     entry('stat_critical', 'Critical Tasks', ['issueStats'], STAT),
     entry('stat_resolution', 'Resolution Rate', ['issueStats'], STAT),
     entry('trend', 'Productivity Trend', ['productivity_trend'], {
-        spans: [6, 8, 12],
-        defaultSpan: 8,
+        defaultWidth: 80,
+        minHeight: 56,
     }),
     entry('completion', 'Completion Ratio', ['issueStats'], {
         variants: ['bars', 'ring'],
+        minHeight: 60,
     }),
     entry('priority_breakdown', 'Priority Breakdown', ['issueStats'], {
-        defaultSpan: 12,
+        defaultWidth: 120,
+        defaultHeight: 60,
     }),
     entry(
         'activity',
         'Recent Work Activity',
         ['activityLogs', 'users', 'issueTypes'],
         {
-            spans: [6, 8, 12],
-            defaultSpan: 8,
+            defaultWidth: 80,
+            defaultHeight: 170,
         },
     ),
     entry('projects', 'Projects Directory', ['projects'], {
         variants: ['cards', 'compact'],
+        defaultHeight: 170,
         options: [
             {
                 key: 'limit',
@@ -77,7 +84,8 @@ export const makeWidget = (
         id: type,
         type,
         variant: catalogEntry.variants[0],
-        span: catalogEntry.defaultSpan,
+        width: catalogEntry.defaultWidth,
+        height: catalogEntry.defaultHeight,
         visible: true,
         config: Object.fromEntries(
             catalogEntry.options.map((option) => [option.key, option.default]),

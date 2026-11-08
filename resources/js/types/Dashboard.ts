@@ -18,8 +18,10 @@ export type DashboardWidget = {
     id: string;
     type: DashboardWidgetType;
     variant: string;
-    /** Width in twelfths of the dashboard. */
-    span: number;
+    /** Width, in 120ths of the dashboard's width. */
+    width: number;
+    /** Height, in rows of `ROW_HEIGHT` pixels. */
+    height: number;
     visible: boolean;
     config: DashboardWidgetConfig;
 };
@@ -38,8 +40,10 @@ export interface DashboardCatalogEntry {
     description: string;
     icon: keyof typeof icons;
     variants: string[];
-    spans: number[];
-    defaultSpan: number;
+    minWidth: number;
+    defaultWidth: number;
+    minHeight: number;
+    defaultHeight: number;
     options: DashboardWidgetOption[];
     /** Inertia props the widget draws from. */
     props: string[];

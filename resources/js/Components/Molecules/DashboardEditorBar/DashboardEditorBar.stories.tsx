@@ -9,6 +9,8 @@ const meta = {
     args: {
         dirty: true,
         saving: false,
+        snap: true,
+        onSnapChange: fn(),
         onSave: fn(),
         onCancel: fn(),
         onReset: fn(),
@@ -30,6 +32,8 @@ export const Default: Story = {
 export const Unchanged: Story = { args: { dirty: false } };
 
 export const Saving: Story = { args: { saving: true } };
+
+export const FreeResize: Story = { args: { snap: false } };
 
 /** Reset asks once more before it runs. */
 export const ConfirmingReset: Story = {

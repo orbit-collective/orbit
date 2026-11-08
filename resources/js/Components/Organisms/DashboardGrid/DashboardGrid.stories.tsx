@@ -46,8 +46,8 @@ const meta = {
         },
         onSelect: fn(),
         onReorder: fn(),
-        onMove: fn(),
         onToggleVisible: fn(),
+        onResize: fn(),
     },
 } satisfies Meta<typeof DashboardGrid>;
 
@@ -67,9 +67,7 @@ export const Editing: Story = {
     args: { editing: true, selectedId: 'trend' },
     play: async ({ canvasElement }) => {
         await expect(
-            within(canvasElement).getByRole('button', {
-                name: 'Drag Productivity Trend',
-            }),
-        ).toBeVisible();
+            within(canvasElement).getAllByTestId('widget-drag-header'),
+        ).toHaveLength(9);
     },
 };

@@ -31,7 +31,7 @@ vi.mock('@/Components/Organisms/DashboardWidget/DashboardWidget', () => ({
 const widgets = [
     makeWidget('stat_projects'),
     makeWidget('stat_critical', { visible: false }),
-    makeWidget('trend'),
+    makeWidget('trend', { width: 80, height: 90 }),
 ];
 
 const data = { projects: [] };
@@ -41,7 +41,7 @@ beforeEach(() => {
 });
 
 describe('DashboardGrid', () => {
-    test('draws the visible widgets on the grid when not editing', () => {
+    test('draws the visible widgets when not editing', () => {
         render(
             <DashboardGrid
                 widgets={widgets}
@@ -58,16 +58,20 @@ describe('DashboardGrid', () => {
         ).not.toBeInTheDocument();
     });
 
-    test('gives each widget the columns of its width', () => {
-        const { container } = render(
+    test('gives each widget its size as CSS variables', () => {
+        render(
             <DashboardGrid
-                widgets={[makeWidget('trend', { span: 12 })]}
+                widgets={[widgets[2]]}
                 catalog={DASHBOARD_CATALOG}
                 data={data}
             />,
         );
 
-        expect(container.querySelector('.col-span-12')).toBeInTheDocument();
+        const cell = screen.getByTestId('widget').closest('[style]')!;
+        expect(cell).toHaveStyle({
+            '--widget-width': '80',
+            '--widget-height': '90',
+        });
     });
 
     test('while editing every widget is framed, hidden ones too', () => {
@@ -101,9 +105,11 @@ describe('DashboardGrid', () => {
         );
 
         const frames = screen.getAllByTestId('widget-edit-frame');
-        expect(frames[2]).toHaveClass('outline-[var(--accent-color)]');
+        expect(frames[2].firstElementChild).toHaveClass(
+            'border-[var(--accent-color)]',
+        );
 
-        frames[0].click();
+        (frames[0].firstElementChild as HTMLElement).click();
         expect(onSelect).toHaveBeenCalledWith('stat_projects');
     });
 
@@ -151,8 +157,7 @@ describe('DashboardGrid', () => {
         expect(onReorder).not.toHaveBeenCalled();
     });
 
-    test('the buttons of a frame move and hide through the handlers', () => {
-        const onMove = vi.fn();
+    test('the eye of a frame hides through the handler', () => {
         const onToggleVisible = vi.fn();
         render(
             <DashboardGrid
@@ -160,17 +165,47 @@ describe('DashboardGrid', () => {
                 catalog={DASHBOARD_CATALOG}
                 data={data}
                 editing
-                onMove={onMove}
                 onToggleVisible={onToggleVisible}
             />,
         );
 
-        screen
-            .getByRole('button', { name: 'Move Productivity Trend up' })
-            .click();
         screen.getByRole('button', { name: 'Hide Active Projects' }).click();
 
-        expect(onMove).toHaveBeenCalledWith('trend', -1);
         expect(onToggleVisible).toHaveBeenCalledWith('stat_projects');
+    });
+
+    test('resizing a frame reports the widget and its new size', () => {
+        const onResize = vi.fn();
+        render(
+            <DashboardGrid
+                widgets={[widgets[2]]}
+                catalog={DASHBOARD_CATALOG}
+                data={data}
+                editing
+                onResize={onResize}
+            />,
+        );
+
+        // Without layout in jsdom a column is a pixel; snap lands on 90.
+        const handle = screen.getByTestId('resize-width');
+        handle.dispatchEvent(
+            new PointerEvent('pointerdown', {
+                bubbles: true,
+                clientX: 0,
+                clientY: 0,
+            }),
+        );
+        handle.dispatchEvent(
+            new PointerEvent('pointermove', {
+                bubbles: true,
+                clientX: 11,
+                clientY: 0,
+            }),
+        );
+
+        expect(onResize).toHaveBeenCalledWith('trend', {
+            width: 90,
+            height: 90,
+        });
     });
 });

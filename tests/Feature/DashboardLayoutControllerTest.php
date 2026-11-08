@@ -14,7 +14,8 @@ function layoutPayload(array $overrides = []): array
         'id' => 'w1',
         'type' => 'projects',
         'variant' => 'compact',
-        'span' => 6,
+        'width' => 60,
+        'height' => 100,
         'visible' => true,
         'config' => ['limit' => 5],
     ], $overrides)]];
@@ -79,8 +80,11 @@ test('invalid layouts are rejected', function (array $payload, string $errorKey)
     'no widgets key' => [[], 'widgets'],
     'unknown type' => [layoutPayload(['type' => 'nope']), 'widgets.0.type'],
     'variant of another type' => [layoutPayload(['variant' => 'ring']), 'widgets.0.variant'],
-    'width the type does not allow' => [layoutPayload(['span' => 3]), 'widgets.0.span'],
-    'width outside the grid' => [layoutPayload(['span' => 5]), 'widgets.0.span'],
+    'narrower than the type allows' => [layoutPayload(['width' => 29]), 'widgets.0.width'],
+    'wider than the grid' => [layoutPayload(['width' => 121]), 'widgets.0.width'],
+    'width that is not a number' => [layoutPayload(['width' => 'wide']), 'widgets.0.width'],
+    'shorter than the type allows' => [layoutPayload(['height' => 39]), 'widgets.0.height'],
+    'taller than allowed' => [layoutPayload(['height' => 401]), 'widgets.0.height'],
     'unknown option' => [layoutPayload(['config' => ['color' => 'red']]), 'widgets.0.config.color'],
     'option value not allowed' => [layoutPayload(['config' => ['limit' => 7]]), 'widgets.0.config.limit'],
     'bad id' => [layoutPayload(['id' => 'a b']), 'widgets.0.id'],
@@ -103,7 +107,7 @@ test('too many widgets are rejected', function () {
 
 test('the dashboard sends only the data the visible widgets read, the rest on request', function () {
     $user = User::factory()->create();
-    $this->actingAs($user)->put('/dashboard/layout', layoutPayload(['type' => 'stat_open_issues', 'variant' => 'default', 'span' => 3, 'config' => []]));
+    $this->actingAs($user)->put('/dashboard/layout', layoutPayload(['type' => 'stat_open_issues', 'variant' => 'default', 'width' => 30, 'height' => 32, 'config' => []]));
 
     $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
         ->has('issueStats')

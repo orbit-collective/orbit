@@ -1,4 +1,11 @@
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import {
+    act,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
@@ -227,7 +234,7 @@ describe('Dashboard editing', () => {
 
         expect(screen.getByText('Editing dashboard')).toBeInTheDocument();
         expect(
-            screen.getByRole('complementary', { name: 'Dashboard editor' }),
+            screen.getByRole('complementary', { name: 'Dashboard widgets' }),
         ).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
     });
@@ -290,9 +297,8 @@ describe('Dashboard editing', () => {
         });
         startEditing();
 
-        await userEvent.click(
-            screen.getByRole('button', { name: 'Move Active Projects down' }),
-        );
+        await userEvent.click(screen.getAllByTestId('widget-drag-header')[0]);
+        await userEvent.click(screen.getByRole('button', { name: 'Later' }));
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
         const sent = mocks.router.put.mock.calls[0][1].widgets;
@@ -306,7 +312,7 @@ describe('Dashboard editing', () => {
         renderDashboard({ dashboardLayout: layoutOf('projects') });
         startEditing();
 
-        await userEvent.click(screen.getByTestId('widget-edit-frame'));
+        await userEvent.click(screen.getByTestId('widget-drag-header'));
 
         const panel = screen.getByRole('complementary');
         await userEvent.click(
@@ -322,8 +328,56 @@ describe('Dashboard editing', () => {
 
         expect(mocks.router.put.mock.calls[0][1].widgets[0]).toMatchObject({
             variant: 'compact',
-            span: 12,
+            width: 120,
             config: { limit: 10 },
+        });
+    });
+
+    test('dragging the edge of a widget resizes it and saving sends the size', async () => {
+        renderDashboard({ dashboardLayout: layoutOf('trend') });
+        startEditing();
+
+        // jsdom has no layout, so a column and a row are one pixel here.
+        const handle = screen.getByTestId('resize-size');
+        fireEvent.pointerDown(handle, { clientX: 0, clientY: 0, pointerId: 1 });
+        fireEvent.pointerMove(handle, {
+            clientX: -21,
+            clientY: 21,
+            pointerId: 1,
+        });
+        fireEvent.pointerUp(handle, { pointerId: 1 });
+
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        // 80 - 21 = 59 snaps to 60 columns; 85 + 5 (21px) = 90 rows.
+        expect(mocks.router.put.mock.calls[0][1].widgets[0]).toMatchObject({
+            width: 60,
+            height: 90,
+        });
+    });
+
+    test('with snap off a resize moves by single columns', async () => {
+        renderDashboard({ dashboardLayout: layoutOf('trend') });
+        startEditing();
+
+        await userEvent.click(
+            screen.getByRole('switch', { name: 'Snap to grid' }),
+        );
+
+        const handle = screen.getByTestId('resize-width');
+        fireEvent.pointerDown(handle, { clientX: 0, clientY: 0, pointerId: 1 });
+        fireEvent.pointerMove(handle, {
+            clientX: -7,
+            clientY: 0,
+            pointerId: 1,
+        });
+        fireEvent.pointerUp(handle, { pointerId: 1 });
+
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(mocks.router.put.mock.calls[0][1].widgets[0]).toMatchObject({
+            width: 73,
+            height: 85,
         });
     });
 
@@ -333,8 +387,10 @@ describe('Dashboard editing', () => {
         });
         startEditing();
 
-        await userEvent.click(screen.getAllByTestId('widget-edit-frame')[0]);
-        await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
+        await userEvent.click(screen.getAllByTestId('widget-drag-header')[0]);
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Remove widget' }),
+        );
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
         expect(

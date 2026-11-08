@@ -4,7 +4,7 @@ namespace App\Enums\Dashboard;
 
 /**
  * Every widget the dashboard can show, with what the layout editor needs to
- * know about it: its variants, the widths it may take, the options it has and
+ * know about it: its variants, how small it may get, the options it has and
  * the page props it reads. The frontend gets this as the `catalog` and only
  * maps a type to a component, so a new widget is one case here plus that map
  * (documentation/en/dashboard/).
@@ -21,8 +21,17 @@ enum DashboardWidgetType: string
     case Activity = 'activity';
     case Projects = 'projects';
 
-    /** Widths, in twelfths of the dashboard, the widgets may take. */
-    public const SPANS = [3, 4, 6, 8, 12];
+    /** A widget's width is counted in these parts of the dashboard's width. */
+    public const GRID_COLUMNS = 120;
+
+    /** The coarse step the editor snaps to: a twelfth of the width. */
+    public const COLUMN_SNAP = 10;
+
+    /** A widget's height is counted in rows of this many pixels. */
+    public const ROW_HEIGHT = 4;
+
+    /** The tallest a widget may be, in rows. */
+    public const MAX_HEIGHT = 400;
 
     public function label(): string
     {
@@ -81,23 +90,43 @@ enum DashboardWidgetType: string
         };
     }
 
-    /** @return list<int> allowed widths */
-    public function spans(): array
+    /** The narrowest the widget may be, in grid columns. */
+    public function minWidth(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => [3, 4, 6, 12],
-            self::Trend, self::Activity => [6, 8, 12],
-            default => [4, 6, 12],
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 20,
+            default => 30,
         };
     }
 
-    public function defaultSpan(): int
+    public function defaultWidth(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 3,
-            self::Trend, self::Activity => 8,
-            self::PriorityBreakdown => 12,
-            default => 4,
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 30,
+            self::Trend, self::Activity => 80,
+            self::PriorityBreakdown => 120,
+            default => 40,
+        };
+    }
+
+    /** The shortest the widget may be, in rows. */
+    public function minHeight(): int
+    {
+        return match ($this) {
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 20,
+            self::Trend => 56,
+            self::Completion => 60,
+            default => 40,
+        };
+    }
+
+    public function defaultHeight(): int
+    {
+        return match ($this) {
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 32,
+            self::Trend, self::Completion => 85,
+            self::Activity, self::Projects => 170,
+            self::PriorityBreakdown => 60,
         };
     }
 
@@ -142,8 +171,10 @@ enum DashboardWidgetType: string
             'description' => $this->description(),
             'icon' => $this->icon(),
             'variants' => $this->variants(),
-            'spans' => $this->spans(),
-            'defaultSpan' => $this->defaultSpan(),
+            'minWidth' => $this->minWidth(),
+            'defaultWidth' => $this->defaultWidth(),
+            'minHeight' => $this->minHeight(),
+            'defaultHeight' => $this->defaultHeight(),
             'options' => collect($this->options())
                 ->map(fn (array $option, string $key) => ['key' => $key] + $option)
                 ->values()
