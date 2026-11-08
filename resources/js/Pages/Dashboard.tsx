@@ -46,8 +46,13 @@ export default function Dashboard({
         DATA_PROPS.map((prop) => data[prop] !== undefined),
     );
 
-    // The panel can be put away to see the dashboard at its full width.
-    const [panelOpen, setPanelOpen] = useState(true);
+    // The panel can be put away to see the dashboard at its full width; on a
+    // phone it starts away, as it would take half of the screen.
+    const [panelOpen, setPanelOpen] = useState(
+        () =>
+            typeof window.matchMedia !== 'function' ||
+            window.matchMedia('(min-width: 1024px)').matches,
+    );
 
     const editor = useDashboardEditor(
         dashboardLayout.widgets,
@@ -124,12 +129,11 @@ export default function Dashboard({
                         onReset={editor.reset}
                     />
                 )}
-                <div className="relative flex min-h-0 flex-1 overflow-hidden">
+                <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
                     <PageStage
                         as="main"
                         className={cn(
-                            'min-w-0 flex-1 overflow-y-auto p-6',
-                            editor.editing && panelOpen && 'max-lg:pb-[52vh]',
+                            'min-h-0 min-w-0 flex-1 overflow-y-auto p-4 sm:p-6',
                         )}
                     >
                         <DashboardGrid

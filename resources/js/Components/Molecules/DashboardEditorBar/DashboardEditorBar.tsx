@@ -18,7 +18,7 @@ interface DashboardEditorBarProps {
 }
 
 const GHOST_BUTTON = cn(
-    'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-solid border-[var(--bg-light-color)] bg-transparent px-3 py-1.5 text-xs font-semibold text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-50',
+    'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-solid border-[var(--bg-light-color)] bg-transparent px-2 py-1.5 text-xs font-semibold text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] sm:px-3 hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-50',
     FOCUS_RING,
 );
 
@@ -43,7 +43,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
         <div
             role="toolbar"
             aria-label="Dashboard editor"
-            className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-solid border-[var(--bg-light-color)] bg-[var(--accent-color-opacity)] px-4 py-2 md:px-6"
+            className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-1.5 border-b border-solid border-[var(--bg-light-color)] bg-[var(--accent-color-opacity)] px-3 py-2 md:px-6"
         >
             <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color)] text-white">
@@ -51,7 +51,10 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                 </span>
                 <div className="min-w-0">
                     <p className="m-0 text-sm font-semibold text-[var(--text-color)]">
-                        Editing dashboard
+                        <span className="sm:hidden">Editing</span>
+                        <span className="hidden sm:inline">
+                            Editing dashboard
+                        </span>
                     </p>
                     <p className="m-0 hidden text-[11px] text-[var(--text-gray-color)] sm:block">
                         Drag a header to move a widget, drag its edge or corner
@@ -60,7 +63,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 {confirmingReset ? (
                     <>
                         <span className="text-xs text-[var(--text-gray-color)]">
@@ -91,7 +94,10 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                 ) : (
                     <>
                         <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--text-gray-color)]">
-                            Snap to grid
+                            <span className="hidden sm:inline">
+                                Snap to grid
+                            </span>
+                            <span className="sm:hidden">Snap</span>
                             <ToggleSwitch
                                 label="Snap to grid"
                                 checked={snap}
@@ -100,6 +106,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                         </label>
                         <button
                             type="button"
+                            aria-label="Panel"
                             aria-pressed={panelOpen}
                             onClick={onTogglePanel}
                             title={
@@ -115,17 +122,18 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                                 }
                                 size={13}
                             />
-                            Panel
+                            <span className="hidden sm:inline">Panel</span>
                         </button>
                         <div className="mx-1 hidden h-6 w-px bg-[var(--border-color-strong)] sm:block" />
                         <button
                             type="button"
+                            aria-label="Reset"
                             disabled={saving}
                             onClick={() => setConfirmingReset(true)}
                             className={GHOST_BUTTON}
                         >
                             <Icon name="RotateCcw" size={13} />
-                            Reset
+                            <span className="hidden sm:inline">Reset</span>
                         </button>
                         <button
                             type="button"

@@ -8,7 +8,7 @@ import {
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { makeDashboardLayout, makeWidget } from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
@@ -254,6 +254,58 @@ describe('Dashboard editing', () => {
         expect(
             screen.getByRole('complementary', { name: 'Dashboard widgets' }),
         ).toBeInTheDocument();
+    });
+
+    describe('on a phone', () => {
+        const withScreen = (matches: boolean) =>
+            vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches }));
+
+        afterEach(() => {
+            vi.unstubAllGlobals();
+        });
+
+        test('the panel starts away, so the dashboard keeps the screen', () => {
+            withScreen(false);
+            renderDashboard();
+            startEditing();
+
+            expect(
+                screen.queryByRole('complementary', {
+                    name: 'Dashboard widgets',
+                }),
+            ).not.toBeInTheDocument();
+            expect(screen.getAllByTestId('widget-edit-frame')).not.toHaveLength(
+                0,
+            );
+        });
+
+        test('the panel can be opened from the editor bar', async () => {
+            withScreen(false);
+            renderDashboard();
+            startEditing();
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Panel' }),
+            );
+
+            expect(
+                screen.getByRole('complementary', {
+                    name: 'Dashboard widgets',
+                }),
+            ).toBeInTheDocument();
+        });
+
+        test('on a wide screen the panel starts open', () => {
+            withScreen(true);
+            renderDashboard();
+            startEditing();
+
+            expect(
+                screen.getByRole('complementary', {
+                    name: 'Dashboard widgets',
+                }),
+            ).toBeInTheDocument();
+        });
     });
 
     test('cancel leaves the editor and drops the draft', async () => {

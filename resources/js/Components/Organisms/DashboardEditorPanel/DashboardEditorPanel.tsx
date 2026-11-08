@@ -59,8 +59,8 @@ const ACTION_BUTTON = cn(
 
 /**
  * The panel next to the dashboard while it is edited: a library to add
- * widgets from and the settings of the picked one. On a phone it is a sheet
- * at the bottom of the screen.
+ * widgets from and the settings of the picked one. On a phone it is the
+ * lower part of a split view, so the dashboard above it stays usable.
  */
 const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
     catalog,
@@ -88,12 +88,8 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
     return (
         <aside
             aria-label="Dashboard widgets"
-            className="fixed inset-x-0 bottom-0 z-40 flex max-h-[48vh] flex-col overflow-hidden rounded-t-2xl border-t border-solid border-[var(--border-color-strong)] bg-[var(--bg-color-hover)] shadow-[0_-12px_32px_rgba(0,0,0,0.35)] lg:static lg:max-h-none lg:w-80 lg:shrink-0 lg:rounded-none lg:border-l lg:border-t-0 lg:border-[var(--bg-light-color)] lg:shadow-none"
+            className="flex shrink-0 flex-col overflow-hidden border-t border-solid border-[var(--border-color-strong)] bg-[var(--bg-color-hover)] max-lg:h-[42vh] lg:w-80 lg:border-l lg:border-t-0 lg:border-[var(--bg-light-color)]"
         >
-            <div
-                aria-hidden="true"
-                className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[var(--border-color-strong)] lg:hidden"
-            />
             <div className="shrink-0 border-b border-solid border-[var(--bg-light-color)] p-3">
                 <SegmentedControl
                     label="Panel"

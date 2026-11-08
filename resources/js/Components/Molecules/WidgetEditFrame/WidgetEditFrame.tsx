@@ -57,14 +57,15 @@ const HANDLES: {
     {
         name: 'height',
         axes: { x: false, y: true },
-        className: '-bottom-1.5 left-6 right-6 h-3 cursor-ns-resize',
+        className:
+            '-bottom-1.5 left-6 right-6 h-3 cursor-ns-resize max-lg:-bottom-3 max-lg:h-6',
         line: 'bottom-1 left-1/2 h-1 w-10 -translate-x-1/2',
     },
     {
         name: 'size',
         axes: { x: true, y: true },
         className:
-            '-bottom-1.5 -right-1.5 h-5 w-5 cursor-nwse-resize max-lg:cursor-ns-resize',
+            '-bottom-1.5 -right-1.5 h-5 w-5 cursor-nwse-resize max-lg:-bottom-3 max-lg:-right-3 max-lg:h-8 max-lg:w-8 max-lg:cursor-ns-resize',
         line: '',
     },
 ];
