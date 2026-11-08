@@ -41,6 +41,22 @@ class DashboardSavedLayoutRepository
         );
     }
 
+    /** Whether the user has another layout (not `$exceptId`) with the name. */
+    public function nameTakenForUser(int $userId, string $name, int $exceptId): bool
+    {
+        return DashboardSavedLayout::query()
+            ->where('user_id', $userId)
+            ->where('name', $name)
+            ->where('id', '!=', $exceptId)
+            ->exists();
+    }
+
+    /** @param  array<string, mixed>  $attributes */
+    public function update(DashboardSavedLayout $layout, array $attributes): void
+    {
+        $layout->update($attributes);
+    }
+
     /** Only the user's own layout is found, so someone else's is a 404. */
     public function findForUserOrFail(int $userId, int $id): DashboardSavedLayout
     {

@@ -164,3 +164,90 @@ test('deleting a user deletes their saved layouts', function () {
 
     expect(DashboardSavedLayout::query()->count())->toBe(0);
 });
+
+test('a user renames a saved layout', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $id = DashboardSavedLayout::query()->value('id');
+
+    $this->actingAs($user)->patch("/dashboard/saved-layouts/$id", ['name' => '  Deep work  '])->assertSessionHasNoErrors();
+
+    $layout = DashboardSavedLayout::query()->find($id);
+    expect($layout->name)->toBe('Deep work')
+        // The widgets are left alone.
+        ->and($layout->widgets[0]['variant'])->toBe('line');
+});
+
+test('a layout can keep its own name when it is updated', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $id = DashboardSavedLayout::query()->value('id');
+
+    $this->actingAs($user)->patch("/dashboard/saved-layouts/$id", ['name' => 'Focus'])->assertSessionHasNoErrors();
+});
+
+test('a layout cannot take the name of another one', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Overview'));
+    $id = DashboardSavedLayout::query()->where('name', 'Focus')->value('id');
+
+    $this->actingAs($user)->patch("/dashboard/saved-layouts/$id", ['name' => 'Overview'])->assertSessionHasErrors('name');
+
+    expect(DashboardSavedLayout::query()->find($id)->name)->toBe('Focus');
+});
+
+test('the widgets of a saved layout can be replaced', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $id = DashboardSavedLayout::query()->value('id');
+
+    $this->actingAs($user)->patch("/dashboard/saved-layouts/$id", [
+        'widgets' => savedLayoutPayload('x', ['type' => 'projects', 'variant' => 'grid', 'width' => 60, 'height' => 100, 'config' => ['limit' => 5]])['widgets'],
+    ])->assertSessionHasNoErrors();
+
+    $layout = DashboardSavedLayout::query()->find($id);
+    expect($layout->name)->toBe('Focus')
+        ->and($layout->widgets[0])->toMatchArray(['type' => 'projects', 'variant' => 'grid'])
+        ->and($layout->widgets[0]['config']['limit'])->toBe(5);
+});
+
+test('renaming and replacing can happen together', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $id = DashboardSavedLayout::query()->value('id');
+
+    $this->actingAs($user)->patch("/dashboard/saved-layouts/$id", savedLayoutPayload('Wide', ['variant' => 'area']))
+        ->assertSessionHasNoErrors();
+
+    $layout = DashboardSavedLayout::query()->find($id);
+    expect($layout->name)->toBe('Wide')->and($layout->widgets[0]['variant'])->toBe('area');
+});
+
+test('an update needs a name or widgets and valid ones', function (array $payload, string $errorKey) {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $id = DashboardSavedLayout::query()->value('id');
+
+    $this->actingAs($user)->patch("/dashboard/saved-layouts/$id", $payload)->assertSessionHasErrors($errorKey);
+})->with([
+    'nothing' => [[], 'name'],
+    'blank name' => [['name' => '   '], 'name'],
+    'name too long' => [['name' => str_repeat('a', 41)], 'name'],
+    'invalid widget' => [['widgets' => savedLayoutPayload('x', ['type' => 'nope'])['widgets']], 'widgets.0.type'],
+]);
+
+test('the layout of another user cannot be updated', function () {
+    $owner = User::factory()->create();
+    $other = User::factory()->create();
+    $this->actingAs($owner)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $id = DashboardSavedLayout::query()->value('id');
+
+    $this->actingAs($other)->patch("/dashboard/saved-layouts/$id", ['name' => 'Mine'])->assertNotFound();
+
+    expect(DashboardSavedLayout::query()->find($id)->name)->toBe('Focus');
+});
+
+test('guests cannot update a layout', function () {
+    $this->patch('/dashboard/saved-layouts/1', ['name' => 'x'])->assertRedirect(route('login'));
+});

@@ -33,7 +33,7 @@ test('saving stores the layout and widgetsFor reads it back', function () {
 
     expect(DashboardLayout::query()->where('user_id', $user->id)->count())->toBe(1)
         ->and($this->service->widgetsFor($user->id))->toEqual([
-            ['id' => 'a', 'type' => 'trend', 'variant' => 'bars', 'width' => 120, 'height' => 90, 'visible' => true, 'config' => ['header' => 'on', 'grid' => 'on', 'values' => 'hover', 'today' => 'on']],
+            ['id' => 'a', 'type' => 'trend', 'variant' => 'bars', 'width' => 120, 'height' => 90, 'visible' => true, 'config' => ['header' => 'on', 'grid' => 'on', 'values' => 'hover', 'today' => 'on', 'color' => 'accent']],
             ['id' => 'b', 'type' => 'projects', 'variant' => 'compact', 'width' => 61, 'height' => 133, 'visible' => false, 'config' => ['limit' => 5, 'sort' => 'latest', 'header' => 'on', 'viewAll' => 'on']],
         ]);
 });
@@ -78,7 +78,7 @@ test('normalize fills in the options of a type and drops what it does not know',
     ]);
 
     expect($widgets[0]['variant'])->toBe('line')
-        ->and($widgets[0]['config'])->toMatchArray(['grid' => 'off', 'values' => 'hover', 'header' => 'on', 'today' => 'on'])
+        ->and($widgets[0]['config'])->toMatchArray(['grid' => 'off', 'values' => 'hover', 'header' => 'on', 'today' => 'on', 'color' => 'accent'])
         ->and($widgets[0]['config'])->not->toHaveKey('nope')
         ->and($widgets[1]['config'])->toMatchArray(['count' => 'done', 'color' => 'info', 'icon' => 'on', 'description' => 'on']);
 });
@@ -159,6 +159,10 @@ test('every widget type describes itself consistently for the editor', function 
 
         foreach ($type->options() as $option) {
             expect($option['options'])->toContain($option['default']);
+
+            if (($option['kind'] ?? null) === 'color') {
+                expect($option['options'])->toContain('accent', 'success', 'warning', 'error', 'info');
+            }
 
             foreach (array_keys($option['labels'] ?? []) as $value) {
                 expect($option['options'])->toContain($value);
