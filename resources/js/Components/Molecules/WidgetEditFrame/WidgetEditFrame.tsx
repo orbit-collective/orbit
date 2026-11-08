@@ -196,158 +196,173 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                 ref={setDragRef}
                 style={{ transform: CSS.Translate.toString(transform) }}
                 className={cn(
-                    // `scale` is its own property, so it adds to the drag transform.
-                    'relative h-full transition-[scale,opacity,filter] duration-150',
-                    isDragging && 'scale-[1.02] opacity-90 drop-shadow-2xl',
+                    'relative h-full transition-[opacity,filter] duration-150',
+                    isDragging && 'opacity-90 drop-shadow-2xl',
                 )}
             >
-                {/* The widget as it is on the dashboard, nothing added to it. */}
-                {/* A new style or showing a hidden widget is a change you see:
-                    the widget is drawn again and settles in. */}
-                {hidden ? (
-                    <motion.div
-                        key="hidden"
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: DURATION.base, ease: EASE }}
-                        className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--border-color-strong)] px-3 text-center text-xs text-[var(--text-muted-color)]"
-                    >
-                        <Icon name="EyeOff" size={18} />
-                        <span>Hidden, it will not appear on the dashboard</span>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key={`shown-${widget.variant}`}
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: DURATION.base, ease: EASE }}
-                        className="h-full min-h-0 overflow-hidden [&>*]:h-full"
-                    >
-                        {children}
-                    </motion.div>
-                )}
-
-                {/* Everything for editing sits on top: the widget is dragged
-                    by its whole surface and picked with a click. */}
+                {/* The drag moves the element above with an inline transform, so
+                    the lift is a scale of this one inside it. */}
                 <div
-                    ref={setActivatorNodeRef}
-                    data-testid="widget-drag-surface"
-                    title="Drag to move"
-                    onClick={onSelect}
                     className={cn(
-                        'absolute inset-0 cursor-grab touch-none select-none rounded-xl outline-2 outline-offset-0 transition-[outline-color,background-color] duration-150 active:cursor-grabbing',
-                        selected
-                            ? 'outline outline-[var(--accent-color)]'
-                            : 'outline outline-transparent hover:bg-[var(--accent-color-opacity)] hover:outline-[var(--border-color-strong)]',
-                        isOver &&
-                            !isDragging &&
-                            'bg-[var(--accent-color-opacity)] outline-dashed outline-[var(--accent-color)]',
+                        'relative h-full transition-transform duration-150',
+                        isDragging && 'scale-[1.02]',
                     )}
-                    {...listeners}
                 >
-                    {selected && (
-                        // A ring spreads from the widget that was just picked.
-                        <motion.span
-                            aria-hidden="true"
-                            data-testid="selection-ping"
-                            initial={{ opacity: 0.6, scale: 1 }}
-                            animate={{ opacity: 0, scale: 1.035 }}
-                            transition={{ duration: 0.6, ease: EASE }}
-                            className="pointer-events-none absolute inset-0 rounded-xl border-2 border-solid border-[var(--accent-color)]"
-                        />
+                    {/* The widget as it is on the dashboard, nothing added to it. */}
+                    {/* A new style or showing a hidden widget is a change you see:
+                    the widget is drawn again and settles in. */}
+                    {hidden ? (
+                        <motion.div
+                            key="hidden"
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: DURATION.base, ease: EASE }}
+                            className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--border-color-strong)] px-3 text-center text-xs text-[var(--text-muted-color)]"
+                        >
+                            <Icon name="EyeOff" size={18} />
+                            <span>
+                                Hidden, it will not appear on the dashboard
+                            </span>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key={`shown-${widget.variant}`}
+                            initial={{ opacity: 0, scale: 0.97 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: DURATION.base, ease: EASE }}
+                            className="h-full min-h-0 overflow-hidden [&>*]:h-full"
+                        >
+                            {children}
+                        </motion.div>
                     )}
-                    <motion.div
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                            duration: DURATION.base,
-                            ease: EASE,
-                            delay: 0.15 + rowDelay(index),
-                        }}
-                        className="absolute -top-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] py-0.5 pl-1.5 pr-0.5 shadow-md"
-                    >
-                        <Icon
-                            name="GripVertical"
-                            size={12}
-                            color="var(--text-muted-color)"
-                        />
-                        <Icon
-                            name={icon}
-                            size={12}
-                            color="var(--text-gray-color)"
-                        />
-                        <span className="min-w-0 truncate text-[11px] font-semibold text-[var(--text-color)]">
-                            {label}
-                        </span>
-                        <span
-                            data-testid="widget-size"
-                            className="hidden shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-muted-color)] sm:inline"
-                        >
-                            {Math.round((widget.width / GRID_COLUMNS) * 100)}% ·{' '}
-                            {widget.height * ROW_HEIGHT}px
-                        </span>
-                        <button
-                            type="button"
-                            aria-label={
-                                hidden ? `Show ${label}` : `Hide ${label}`
-                            }
-                            title={hidden ? 'Show' : 'Hide'}
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                onToggleVisible();
-                            }}
-                            className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
-                            {...keepOutOfDrag}
-                        >
-                            <Icon name={hidden ? 'EyeOff' : 'Eye'} size={12} />
-                        </button>
-                    </motion.div>
 
-                    {HANDLES.map((handle) => (
-                        <div
-                            key={handle.name}
-                            role="separator"
-                            aria-orientation={
-                                handle.name === 'height'
-                                    ? 'horizontal'
-                                    : 'vertical'
-                            }
-                            aria-label={`Resize ${label}, ${handle.name}`}
-                            data-testid={`resize-${handle.name}`}
-                            onPointerDown={(event) =>
-                                startResize(event, handle.axes)
-                            }
-                            onClick={(event) => event.stopPropagation()}
-                            className={cn(
-                                'group/handle absolute z-10 touch-none',
-                                handle.className,
-                            )}
+                    {/* Everything for editing sits on top: the widget is dragged
+                    by its whole surface and picked with a click. */}
+                    <div
+                        ref={setActivatorNodeRef}
+                        data-testid="widget-drag-surface"
+                        title="Drag to move"
+                        onClick={onSelect}
+                        className={cn(
+                            'absolute inset-0 cursor-grab touch-none select-none rounded-xl outline-2 outline-offset-0 transition-[outline-color,background-color] duration-150 active:cursor-grabbing',
+                            selected
+                                ? 'outline outline-[var(--accent-color)]'
+                                : 'outline outline-transparent hover:bg-[var(--accent-color-opacity)] hover:outline-[var(--border-color-strong)]',
+                            isOver &&
+                                !isDragging &&
+                                'bg-[var(--accent-color-opacity)] outline-dashed outline-[var(--accent-color)]',
+                        )}
+                        {...listeners}
+                    >
+                        {selected && (
+                            // A ring spreads from the widget that was just picked.
+                            <motion.span
+                                aria-hidden="true"
+                                data-testid="selection-ping"
+                                initial={{ opacity: 0.6, scale: 1 }}
+                                animate={{ opacity: 0, scale: 1.035 }}
+                                transition={{ duration: 0.6, ease: EASE }}
+                                className="pointer-events-none absolute inset-0 rounded-xl border-2 border-solid border-[var(--accent-color)]"
+                            />
+                        )}
+                        <motion.div
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                                duration: DURATION.base,
+                                ease: EASE,
+                                delay: 0.15 + rowDelay(index),
+                            }}
+                            className="absolute -top-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] py-0.5 pl-1.5 pr-0.5 shadow-md"
                         >
-                            {handle.line ? (
-                                <span
-                                    aria-hidden="true"
-                                    className={cn(
-                                        'absolute rounded-full bg-[var(--accent-color)] opacity-0 transition-opacity group-hover/handle:opacity-100',
-                                        handle.line,
-                                    )}
+                            <Icon
+                                name="GripVertical"
+                                size={12}
+                                color="var(--text-muted-color)"
+                            />
+                            <Icon
+                                name={icon}
+                                size={12}
+                                color="var(--text-gray-color)"
+                            />
+                            <span className="min-w-0 truncate text-[11px] font-semibold text-[var(--text-color)]">
+                                {label}
+                            </span>
+                            <span
+                                data-testid="widget-size"
+                                className="hidden shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-muted-color)] sm:inline"
+                            >
+                                {Math.round(
+                                    (widget.width / GRID_COLUMNS) * 100,
+                                )}
+                                % · {widget.height * ROW_HEIGHT}px
+                            </span>
+                            <button
+                                type="button"
+                                aria-label={
+                                    hidden ? `Show ${label}` : `Hide ${label}`
+                                }
+                                title={hidden ? 'Show' : 'Hide'}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onToggleVisible();
+                                }}
+                                className="flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                {...keepOutOfDrag}
+                            >
+                                <Icon
+                                    name={hidden ? 'EyeOff' : 'Eye'}
+                                    size={12}
                                 />
-                            ) : (
-                                <svg
-                                    aria-hidden="true"
-                                    viewBox="0 0 12 12"
-                                    className="absolute bottom-1 right-1 h-3 w-3 text-[var(--text-gray-color)] transition-colors group-hover/handle:text-[var(--accent-color)]"
-                                >
-                                    <path
-                                        d="M11 5 5 11M11 8l-3 3"
-                                        stroke="currentColor"
-                                        strokeWidth="1.4"
-                                        strokeLinecap="round"
-                                        fill="none"
+                            </button>
+                        </motion.div>
+
+                        {HANDLES.map((handle) => (
+                            <div
+                                key={handle.name}
+                                role="separator"
+                                aria-orientation={
+                                    handle.name === 'height'
+                                        ? 'horizontal'
+                                        : 'vertical'
+                                }
+                                aria-label={`Resize ${label}, ${handle.name}`}
+                                data-testid={`resize-${handle.name}`}
+                                onPointerDown={(event) =>
+                                    startResize(event, handle.axes)
+                                }
+                                onClick={(event) => event.stopPropagation()}
+                                className={cn(
+                                    'group/handle absolute z-10 touch-none',
+                                    handle.className,
+                                )}
+                            >
+                                {handle.line ? (
+                                    <span
+                                        aria-hidden="true"
+                                        className={cn(
+                                            'absolute rounded-full bg-[var(--accent-color)] opacity-0 transition-opacity group-hover/handle:opacity-100',
+                                            handle.line,
+                                        )}
                                     />
-                                </svg>
-                            )}
-                        </div>
-                    ))}
+                                ) : (
+                                    <svg
+                                        aria-hidden="true"
+                                        viewBox="0 0 12 12"
+                                        className="absolute bottom-1 right-1 h-3 w-3 text-[var(--text-gray-color)] transition-colors group-hover/handle:text-[var(--accent-color)]"
+                                    >
+                                        <path
+                                            d="M11 5 5 11M11 8l-3 3"
+                                            stroke="currentColor"
+                                            strokeWidth="1.4"
+                                            strokeLinecap="round"
+                                            fill="none"
+                                        />
+                                    </svg>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </motion.div>

@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { makeWidget } from '@/tests/dashboardLayout';
 import LayoutPreview from './LayoutPreview';
 
@@ -90,5 +90,42 @@ describe('LayoutPreview', () => {
             'min-h-0',
             'overflow-hidden',
         );
+    });
+
+    describe('sizing by the measured width', () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        const gridOf = () => screen.getByTestId('layout-preview-grid');
+
+        test('hands a hundredth of the width to the drawings and sizes a row by it', () => {
+            // 264px wide with 14px of frame: 250px of picture.
+            vi.spyOn(
+                HTMLElement.prototype,
+                'clientWidth',
+                'get',
+            ).mockReturnValue(264);
+
+            render(<LayoutPreview widgets={[makeWidget('trend')]} />);
+
+            expect(gridOf().style.getPropertyValue('--u')).toBe('2.5px');
+            expect(gridOf().style.gridAutoRows).toBe(`${2.5 / 3}px`);
+        });
+
+        test('uses a width of its own until it is measured', () => {
+            render(<LayoutPreview widgets={[makeWidget('trend')]} />);
+
+            // 240px less the frame.
+            expect(gridOf().style.getPropertyValue('--u')).toBe('2.26px');
+        });
+
+        test('does not rely on container queries, which the stylesheet does not have', () => {
+            const { container } = render(
+                <LayoutPreview widgets={[makeWidget('trend')]} />,
+            );
+
+            expect(container.innerHTML).not.toMatch(/cqw|@container/);
+        });
     });
 });

@@ -9,7 +9,10 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="@container h-[130px] w-[260px]">
+            <div
+                className="h-[130px] w-[260px]"
+                style={{ ['--u' as string]: '2.6px' }}
+            >
                 <Story />
             </div>
         ),
@@ -48,7 +51,10 @@ export const Stat: Story = {
     args: { widget: makeWidget('stat_critical', { variant: 'glass' }) },
     decorators: [
         (Story) => (
-            <div className="@container h-[60px] w-[200px]">
+            <div
+                className="h-[60px] w-[200px]"
+                style={{ ['--u' as string]: '2px' }}
+            >
                 <Story />
             </div>
         ),
