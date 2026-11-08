@@ -26,6 +26,8 @@ import {
     ACTIVITY_PAGE_PARAM,
     ACTIVITY_PER_PAGE_PARAM,
 } from '@/utils/activityLog';
+import { requestOpenCommandPalette } from '@/utils/commandPaletteEvent';
+import Icon from '@/Components/Atoms/Icon/Icon';
 
 const ACTIVITY_DEFAULT_PER_PAGE = 10;
 
@@ -74,6 +76,20 @@ export default function Dashboard({
                         icon: 'Plus',
                         onClick: () => runCommand('project.create'),
                     }}
+                    children={
+                        <button
+                            type="button"
+                            aria-label="Open dashboard editor"
+                            title="Open dashboard editor"
+                            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                        >
+                            <Icon
+                                name="PenLine"
+                                size={18}
+                                color="var(--text-gray-color)"
+                            />
+                        </button>
+                    }
                 />
                 <div className="relative flex flex-1 overflow-hidden">
                     <PageStage
