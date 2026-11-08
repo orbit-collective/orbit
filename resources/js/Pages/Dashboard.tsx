@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { PageStage } from '@/Components/Atoms/PageStage/PageStage';
 import DashboardEditorBar from '@/Components/Molecules/DashboardEditorBar/DashboardEditorBar';
@@ -45,6 +45,9 @@ export default function Dashboard({
         // eslint-disable-next-line react-hooks/exhaustive-deps
         DATA_PROPS.map((prop) => data[prop] !== undefined),
     );
+
+    // The panel can be put away to see the dashboard at its full width.
+    const [panelOpen, setPanelOpen] = useState(true);
 
     const editor = useDashboardEditor(
         dashboardLayout.widgets,
@@ -114,6 +117,8 @@ export default function Dashboard({
                         saving={editor.saving}
                         snap={editor.snap}
                         onSnapChange={editor.setSnap}
+                        panelOpen={panelOpen}
+                        onTogglePanel={() => setPanelOpen((open) => !open)}
                         onSave={editor.save}
                         onCancel={editor.cancel}
                         onReset={editor.reset}
@@ -124,7 +129,7 @@ export default function Dashboard({
                         as="main"
                         className={cn(
                             'min-w-0 flex-1 overflow-y-auto p-6',
-                            editor.editing && 'max-lg:pb-[52vh]',
+                            editor.editing && panelOpen && 'max-lg:pb-[52vh]',
                         )}
                     >
                         <DashboardGrid
@@ -140,7 +145,7 @@ export default function Dashboard({
                             onToggleVisible={editor.toggleVisible}
                         />
                     </PageStage>
-                    {editor.editing && (
+                    {editor.editing && panelOpen && (
                         <DashboardEditorPanel
                             catalog={dashboardLayout.catalog}
                             widgets={editor.draft}

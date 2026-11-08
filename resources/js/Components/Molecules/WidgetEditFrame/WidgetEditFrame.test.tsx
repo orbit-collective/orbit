@@ -1,9 +1,18 @@
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { makeWidget } from '@/tests/dashboardLayout';
 import WidgetEditFrame from './WidgetEditFrame';
+
+/** The sensors the dashboard grid uses, so a plain click stays a click. */
+const Sensors = ({ children }: { children: React.ReactNode }) => {
+    const sensors = useSensors(
+        useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    );
+
+    return <DndContext sensors={sensors}>{children}</DndContext>;
+};
 
 const setup = (
     props: Partial<React.ComponentProps<typeof WidgetEditFrame>> = {},
@@ -14,7 +23,7 @@ const setup = (
         onResize: vi.fn(),
     };
     render(
-        <DndContext>
+        <Sensors>
             <div>
                 <WidgetEditFrame
                     widget={makeWidget('trend', { width: 60, height: 80 })}
@@ -30,7 +39,7 @@ const setup = (
                     <p>content</p>
                 </WidgetEditFrame>
             </div>
-        </DndContext>,
+        </Sensors>,
     );
 
     return handlers;
@@ -57,7 +66,7 @@ const dragHandle = (
 };
 
 describe('WidgetEditFrame', () => {
-    test('shows the widget under a header with its name and size', () => {
+    test('shows the widget with a tag with its name and size', () => {
         setup();
 
         expect(screen.getByText('content')).toBeInTheDocument();
@@ -67,26 +76,30 @@ describe('WidgetEditFrame', () => {
         );
     });
 
-    test('the whole header is what a drag starts from', () => {
+    test('the whole widget is what a drag starts from', () => {
         setup();
 
-        const header = screen.getByTestId('widget-drag-header');
-        expect(header).toHaveClass('cursor-grab');
-        expect(header).toContainElement(screen.getByText('Trend'));
+        const surface = screen.getByTestId('widget-drag-surface');
+        expect(surface).toHaveClass('cursor-grab', 'absolute', 'inset-0');
+        expect(surface).toContainElement(screen.getByText('Trend'));
     });
 
-    test('the widget itself cannot be used while editing', () => {
+    test('draws the widget itself untouched, under the editing layer', () => {
         setup();
 
-        expect(screen.getByText('content').parentElement).toHaveClass(
-            'pointer-events-none',
-        );
+        const content = screen.getByText('content');
+        expect(content.parentElement).not.toHaveClass('pointer-events-none');
+        expect(
+            content.parentElement!.compareDocumentPosition(
+                screen.getByTestId('widget-drag-surface'),
+            ) & Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
     });
 
     test('selects on a click', async () => {
         const { onSelect } = setup();
 
-        await userEvent.click(screen.getByText('content'));
+        await userEvent.click(screen.getByTestId('widget-drag-surface'));
 
         expect(onSelect).toHaveBeenCalledOnce();
     });
@@ -99,7 +112,7 @@ describe('WidgetEditFrame', () => {
         );
 
         expect(onToggleVisible).toHaveBeenCalledOnce();
-        expect(onSelect).toHaveBeenCalledOnce();
+        expect(onSelect).not.toHaveBeenCalled();
     });
 
     test('a hidden widget shows a stand-in instead of its content', () => {
@@ -117,12 +130,9 @@ describe('WidgetEditFrame', () => {
     test('outlines the selected widget', () => {
         setup({ selected: true });
 
-        expect(
-            screen.getByText('Trend').closest('[class*="border-"]'),
-        ).toBeTruthy();
-        expect(
-            screen.getByTestId('widget-edit-frame').firstElementChild,
-        ).toHaveClass('border-[var(--accent-color)]');
+        expect(screen.getByTestId('widget-drag-surface')).toHaveClass(
+            'outline-[var(--accent-color)]',
+        );
     });
 
     test('dragging the right edge resizes the width, snapped to a twelfth', () => {
