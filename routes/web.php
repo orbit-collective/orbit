@@ -6,6 +6,7 @@ use App\Http\Controllers\CommandPaletteController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardLayoutController;
+use App\Http\Controllers\DashboardSavedLayoutController;
 use App\Http\Controllers\DeveloperPortalController;
 use App\Http\Controllers\GithubIntegrationController;
 use App\Http\Controllers\IssueController;
@@ -32,6 +33,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::put('/dashboard/layout', [DashboardLayoutController::class, 'update'])->name('dashboard.layout.update');
     Route::delete('/dashboard/layout', [DashboardLayoutController::class, 'destroy'])->name('dashboard.layout.destroy');
+    Route::post('/dashboard/saved-layouts', [DashboardSavedLayoutController::class, 'store'])->name('dashboard.saved-layouts.store');
+    Route::delete('/dashboard/saved-layouts/{savedLayout}', [DashboardSavedLayoutController::class, 'destroy'])->name('dashboard.saved-layouts.destroy');
     Route::get('/command-palette/search', [CommandPaletteController::class, 'search'])->middleware('throttle:command-palette')->name('command-palette.search');
     Route::get('/projects/{project}/issue-search', [IssueController::class, 'search'])->name('projects.issues.search');
     Route::get('/projects/{project}/issues/{issue}/preview', [IssueController::class, 'preview'])->name('projects.issues.preview');
