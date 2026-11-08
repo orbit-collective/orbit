@@ -96,8 +96,19 @@ export function issuePageReloads(
     return only.length > 0 ? [{ only: unique(only) }] : [];
 }
 
+/**
+ * Keep only the props the dashboard has loaded: a widget that is hidden never
+ * asked for its data, so a refresh must not fetch it either.
+ */
+function onlyLoaded(props: string[], loaded?: string[]): string[] {
+    return loaded ? props.filter((prop) => loaded.includes(prop)) : props;
+}
+
 /** The dashboard counters and feed depend on any issue or project change. */
-export function dashboardReloads(changes: ProjectChange[]): LiveReload[] {
+export function dashboardReloads(
+    changes: ProjectChange[],
+    loaded?: string[],
+): LiveReload[] {
     const relevant = changes.some(
         (change) =>
             ISSUE_LIKE.has(change.type) ||
@@ -106,20 +117,19 @@ export function dashboardReloads(changes: ProjectChange[]): LiveReload[] {
             ACCESS_TYPES.has(change.type),
     );
 
-    return relevant
-        ? [
-              {
-                  only: [
-                      'issueStats',
-                      'productivity_trend',
-                      'projects',
-                      'activityLogs',
-                      // The feed draws type icons and status colours from it.
-                      'issueTypes',
-                  ],
-              },
-          ]
-        : [];
+    const only = onlyLoaded(
+        [
+            'issueStats',
+            'productivity_trend',
+            'projects',
+            'activityLogs',
+            // The feed draws type icons and status colours from it.
+            'issueTypes',
+        ],
+        loaded,
+    );
+
+    return relevant && only.length > 0 ? [{ only }] : [];
 }
 
 /** Was the issue itself deleted by this batch? */
@@ -197,17 +207,18 @@ export function issuePageFallbackReloads(
 }
 
 /** What the dashboard re-reads on a timer. */
-export function dashboardFallbackReloads(): LiveReload[] {
-    return [
-        {
-            only: [
-                'issueStats',
-                'productivity_trend',
-                'projects',
-                'activityLogs',
-                'users',
-                'issueTypes',
-            ],
-        },
-    ];
+export function dashboardFallbackReloads(loaded?: string[]): LiveReload[] {
+    const only = onlyLoaded(
+        [
+            'issueStats',
+            'productivity_trend',
+            'projects',
+            'activityLogs',
+            'users',
+            'issueTypes',
+        ],
+        loaded,
+    );
+
+    return only.length > 0 ? [{ only }] : [];
 }

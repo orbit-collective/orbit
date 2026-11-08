@@ -184,6 +184,16 @@ describe('dashboardReloads', () => {
     test('ignores changes that do not show on the dashboard', () => {
         expect(dashboardReloads([change('other')])).toEqual([]);
     });
+
+    test('re-reads only the props the dashboard has loaded', () => {
+        expect(
+            dashboardReloads([change('issue')], ['projects', 'issueStats']),
+        ).toEqual([{ only: ['issueStats', 'projects'] }]);
+    });
+
+    test('re-reads nothing when no data prop is loaded', () => {
+        expect(dashboardReloads([change('issue')], [])).toEqual([]);
+    });
 });
 
 describe('deletesIssue', () => {
@@ -268,5 +278,12 @@ describe('fallback reloads', () => {
             'users',
             'issueTypes',
         ]);
+    });
+
+    test('the dashboard timer skips what a hidden widget would have loaded', () => {
+        expect(dashboardFallbackReloads(['projects', 'users'])).toEqual([
+            { only: ['projects', 'users'] },
+        ]);
+        expect(dashboardFallbackReloads([])).toEqual([]);
     });
 });
