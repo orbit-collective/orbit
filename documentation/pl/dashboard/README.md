@@ -54,8 +54,22 @@ regułami co sam układ (`StoreDashboardSavedLayoutRequest` rozszerza
 przy zapisie, jak i odczycie, więc układ zapisany przed usunięciem typu lub
 wariantu nadal da się zastosować. Strona dostaje je jako prop
 `savedLayouts`. **Apply** tylko wkłada zapisany układ do szkicu (nic nie jest
-zapisywane do czasu **Save**); miniatury to `LayoutPreview`, który rysuje
-układ na prawdziwej siatce.
+zapisywane do czasu **Save**). `PATCH /dashboard/saved-layouts/{id}` zmienia
+nazwę układu i/lub zastępuje jego widgety edytowanymi
+(`UpdateDashboardSavedLayoutRequest`; nazwa, którą ma inny układ
+użytkownika, jest odrzucana). Miniatury to `LayoutPreview`, który rysuje układ
+na prawdziwej siatce; każdy blok to `WidgetGlyph`, malutki rysunek widgetu
+z jego konfiguracją (rodzaj, styl, opcje pokaż/ukryj, kolor), więc gdy widget
+dostaje nowy styl lub opcję, naucz też jego glif.
+
+## Opcje widgetu
+
+Opcja to wybór z listy (`DashboardWidgetType::options()`): etykieta,
+wartości, wartość domyślna i opcjonalnie `labels` (jak wartość nazywa się w
+edytorze). Opcja pokaż/ukryj to `toggle()` (`on`/`off`). Wybór koloru to
+`colorOption()`, oznaczony `kind => 'color'`: edytor pokazuje próbki
+(`ColorSwatches`) zamiast tekstu, z kolorów `utils/dashboardColors.ts`
+(`accent`, `success`, `warning`, `error`, `info`), które podążają za motywem.
 
 ## Animacje
 
@@ -69,7 +83,10 @@ wewnętrznym elemencie, żeby się nie gryzły). Widgety obecne przy starcie
 edycji nie animują wejścia (`AnimatePresence initial={false}`), a cała
 strona jest w `MotionConfig reducedMotion="user"`. To, co test ma zobaczyć
 od razu, nie powinno zależeć od animacji wyjścia: zakładki i pytanie o reset
-animują się tylko przy wejściu.
+animują się tylko przy wejściu. Wybory w panelu (`SegmentedControl`) leżą na
+pigułce, która przesuwa się ze starego wyboru na nowy, zawartość zakładki wjeżdża
+z tej strony, w którą przesunął się wybór, a ustawienia widgetu układają się
+jedno po drugim po wybraniu innego widgetu.
 
 ## Dane ładowane tylko dla widocznych widgetów
 
