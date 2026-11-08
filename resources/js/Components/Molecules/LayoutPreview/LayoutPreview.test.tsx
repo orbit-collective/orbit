@@ -82,4 +82,13 @@ describe('LayoutPreview', () => {
 
         expect(b.container.innerHTML).not.toBe(first);
     });
+
+    test('a block cannot make the grid grow with its content', () => {
+        render(<LayoutPreview widgets={[makeWidget('stat_projects')]} />);
+
+        expect(screen.getByTestId('layout-preview-block')).toHaveClass(
+            'min-h-0',
+            'overflow-hidden',
+        );
+    });
 });
