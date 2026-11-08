@@ -57,8 +57,11 @@ saved layout on the draft (nothing is stored until **Save**). `PATCH
 the ones being edited (`UpdateDashboardSavedLayoutRequest`; a name another
 layout of the user has is refused). The pictures are `LayoutPreview`, which
 draws the layout on the real grid; each block is a `WidgetGlyph`, a tiny drawing
-of the widget as it is configured (kind, style, show/hide options, color), so
-when a widget gets a new style or option, teach its glyph too.
+of the widget as it is configured (kind, style, show/hide options), drawn in
+grays only so a preview shows the shape of a layout and not the colors of its
+widgets; when a widget gets a new style or option, teach its glyph too. Blocks
+of the preview must not grow with their content (`min-h-0 overflow-hidden`),
+or the grid stretches and the proportions are lost.
 
 ## Options of a widget
 

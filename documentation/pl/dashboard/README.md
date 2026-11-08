@@ -59,8 +59,11 @@ nazwę układu i/lub zastępuje jego widgety edytowanymi
 (`UpdateDashboardSavedLayoutRequest`; nazwa, którą ma inny układ
 użytkownika, jest odrzucana). Miniatury to `LayoutPreview`, który rysuje układ
 na prawdziwej siatce; każdy blok to `WidgetGlyph`, malutki rysunek widgetu
-z jego konfiguracją (rodzaj, styl, opcje pokaż/ukryj, kolor), więc gdy widget
-dostaje nowy styl lub opcję, naucz też jego glif.
+z jego konfiguracją (rodzaj, styl, opcje pokaż/ukryj), rysowany wyłącznie w
+szarościach, żeby miniatura pokazywała kształt układu, a nie kolory widgetów;
+gdy widget dostaje nowy styl lub opcję, naucz też jego glif. Bloki miniatury nie
+mogą rosnąć wraz z zawartością (`min-h-0 overflow-hidden`), bo siatka się
+rozciąga i proporcje przepadają.
 
 ## Opcje widgetu
 
