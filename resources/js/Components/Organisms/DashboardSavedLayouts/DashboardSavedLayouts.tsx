@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import { FC, FormEvent, useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -5,6 +6,7 @@ import LayoutPreview from '@/Components/Molecules/LayoutPreview/LayoutPreview';
 import { DashboardSavedLayout } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
+import { DURATION, EASE } from '@/utils/motion';
 
 /** The longest a name may be, as on the server. */
 const SAVED_LAYOUT_NAME_MAX = 40;
@@ -129,94 +131,109 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                     </div>
                 ) : (
                     <ul className="m-0 flex list-none flex-col gap-2 p-0">
-                        {layouts.map((layout) => (
-                            <li
-                                key={layout.id}
-                                className="flex flex-col gap-2.5 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-2.5"
-                            >
-                                <LayoutPreview widgets={layout.widgets} />
-                                <div className="flex items-center justify-between gap-2">
-                                    <span className="min-w-0">
-                                        <span className="block truncate text-sm font-medium text-[var(--text-color)]">
-                                            {layout.name}
+                        <AnimatePresence initial={false} mode="popLayout">
+                            {layouts.map((layout) => (
+                                <motion.li
+                                    key={layout.id}
+                                    layout
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{
+                                        duration: DURATION.base,
+                                        ease: EASE,
+                                    }}
+                                    className="flex flex-col gap-2.5 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-2.5"
+                                >
+                                    <LayoutPreview widgets={layout.widgets} />
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="min-w-0">
+                                            <span className="block truncate text-sm font-medium text-[var(--text-color)]">
+                                                {layout.name}
+                                            </span>
+                                            <span className="block text-[11px] text-[var(--text-muted-color)]">
+                                                {
+                                                    layout.widgets.filter(
+                                                        (widget) =>
+                                                            widget.visible,
+                                                    ).length
+                                                }{' '}
+                                                widgets
+                                            </span>
                                         </span>
-                                        <span className="block text-[11px] text-[var(--text-muted-color)]">
-                                            {
-                                                layout.widgets.filter(
-                                                    (widget) => widget.visible,
-                                                ).length
-                                            }{' '}
-                                            widgets
+                                        <span className="flex shrink-0 items-center gap-1.5">
+                                            {confirmingId === layout.id ? (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        aria-label={`Confirm deleting ${layout.name}`}
+                                                        onClick={() => {
+                                                            setConfirmingId(
+                                                                null,
+                                                            );
+                                                            onDelete(layout.id);
+                                                        }}
+                                                        className={cn(
+                                                            'cursor-pointer rounded-lg border-none bg-[var(--error-color)] px-2.5 py-1.5 text-xs font-semibold text-white hover:brightness-110',
+                                                            FOCUS_RING,
+                                                        )}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setConfirmingId(
+                                                                null,
+                                                            )
+                                                        }
+                                                        className={SMALL_BUTTON}
+                                                    >
+                                                        Keep
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        aria-label={`Delete ${layout.name}`}
+                                                        title="Delete"
+                                                        onClick={() =>
+                                                            setConfirmingId(
+                                                                layout.id,
+                                                            )
+                                                        }
+                                                        className={cn(
+                                                            SMALL_BUTTON,
+                                                            'px-2',
+                                                        )}
+                                                    >
+                                                        <Icon
+                                                            name="Trash"
+                                                            size={13}
+                                                        />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        aria-label={`Apply ${layout.name}`}
+                                                        onClick={() =>
+                                                            onApply(layout)
+                                                        }
+                                                        className={SMALL_BUTTON}
+                                                    >
+                                                        <Icon
+                                                            name="LayoutTemplate"
+                                                            size={13}
+                                                        />
+                                                        Apply
+                                                    </button>
+                                                </>
+                                            )}
                                         </span>
-                                    </span>
-                                    <span className="flex shrink-0 items-center gap-1.5">
-                                        {confirmingId === layout.id ? (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    aria-label={`Confirm deleting ${layout.name}`}
-                                                    onClick={() => {
-                                                        setConfirmingId(null);
-                                                        onDelete(layout.id);
-                                                    }}
-                                                    className={cn(
-                                                        'cursor-pointer rounded-lg border-none bg-[var(--error-color)] px-2.5 py-1.5 text-xs font-semibold text-white hover:brightness-110',
-                                                        FOCUS_RING,
-                                                    )}
-                                                >
-                                                    Delete
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setConfirmingId(null)
-                                                    }
-                                                    className={SMALL_BUTTON}
-                                                >
-                                                    Keep
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    aria-label={`Delete ${layout.name}`}
-                                                    title="Delete"
-                                                    onClick={() =>
-                                                        setConfirmingId(
-                                                            layout.id,
-                                                        )
-                                                    }
-                                                    className={cn(
-                                                        SMALL_BUTTON,
-                                                        'px-2',
-                                                    )}
-                                                >
-                                                    <Icon
-                                                        name="Trash"
-                                                        size={13}
-                                                    />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    aria-label={`Apply ${layout.name}`}
-                                                    onClick={() =>
-                                                        onApply(layout)
-                                                    }
-                                                    className={SMALL_BUTTON}
-                                                >
-                                                    <Icon
-                                                        name="LayoutTemplate"
-                                                        size={13}
-                                                    />
-                                                    Apply
-                                                </button>
-                                            </>
-                                        )}
-                                    </span>
-                                </div>
-                            </li>
-                        ))}
+                                    </div>
+                                </motion.li>
+                            ))}
+                        </AnimatePresence>
                     </ul>
                 )}
             </section>

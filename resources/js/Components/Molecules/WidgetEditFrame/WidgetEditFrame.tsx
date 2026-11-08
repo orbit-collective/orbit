@@ -1,5 +1,6 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { motion } from 'framer-motion';
 import { icons } from 'lucide-react';
 import {
     FC,
@@ -17,6 +18,7 @@ import {
     gridItemStyle,
     sizeAfterResize,
 } from '@/utils/dashboardLayout';
+import { DURATION, EASE, rowDelay } from '@/utils/motion';
 
 interface WidgetSize {
     width: number;
@@ -35,6 +37,8 @@ interface WidgetEditFrameProps {
     onSelect: () => void;
     onToggleVisible: () => void;
     onResize: (size: WidgetSize) => void;
+    /** Place in the grid, so the tags appear one after another. */
+    index?: number;
     children?: ReactNode;
 }
 
@@ -88,6 +92,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
     onSelect,
     onToggleVisible,
     onResize,
+    index = 0,
     children,
 }) => {
     const cellRef = useRef<HTMLDivElement | null>(null);
@@ -162,16 +167,23 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
     };
 
     return (
-        <div
+        <motion.div
             ref={(node) => {
                 cellRef.current = node;
-                setDragRef(node);
                 setDropRef(node);
             }}
-            style={{
-                ...gridItemStyle(widget),
-                transform: CSS.Translate.toString(transform),
+            // A widget that is added grows in, one that is removed shrinks
+            // away and the others slide into the room it leaves.
+            layout="position"
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{
+                duration: DURATION.base,
+                ease: EASE,
+                layout: { duration: DURATION.fast, ease: EASE },
             }}
+            style={gridItemStyle(widget)}
             data-testid="widget-edit-frame"
             data-widget-id={widget.id}
             className={cn(
@@ -181,6 +193,8 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
             )}
         >
             <div
+                ref={setDragRef}
+                style={{ transform: CSS.Translate.toString(transform) }}
                 className={cn(
                     'relative h-full',
                     isDragging && 'opacity-90 drop-shadow-2xl',
@@ -216,7 +230,16 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                     )}
                     {...listeners}
                 >
-                    <div className="absolute -top-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] py-0.5 pl-1.5 pr-0.5 shadow-md">
+                    <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                            duration: DURATION.base,
+                            ease: EASE,
+                            delay: 0.15 + rowDelay(index),
+                        }}
+                        className="absolute -top-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] py-0.5 pl-1.5 pr-0.5 shadow-md"
+                    >
                         <Icon
                             name="GripVertical"
                             size={12}
@@ -252,7 +275,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                         >
                             <Icon name={hidden ? 'EyeOff' : 'Eye'} size={12} />
                         </button>
-                    </div>
+                    </motion.div>
 
                     {HANDLES.map((handle) => (
                         <div
@@ -301,7 +324,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                     ))}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

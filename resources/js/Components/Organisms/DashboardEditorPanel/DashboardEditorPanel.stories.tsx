@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within, waitFor } from 'storybook/test';
 import {
     DASHBOARD_CATALOG,
     makeSavedLayout,
@@ -45,11 +45,13 @@ type Story = StoryObj<typeof meta>;
 /** The library of widgets to add. */
 export const Library: Story = {
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByRole('button', {
-                name: 'Add Completion Ratio',
-            }),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByRole('button', {
+                    name: 'Add Completion Ratio',
+                }),
+            ).toBeVisible(),
+        );
     },
 };
 
@@ -59,9 +61,11 @@ export const Full: Story = { args: { canAdd: false } };
 export const WidgetSettings: Story = {
     args: { selected: makeWidget('projects') },
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByRole('group', { name: 'Width' }),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByRole('group', { name: 'Width' }),
+            ).toBeVisible(),
+        );
     },
 };
 
@@ -79,8 +83,12 @@ export const SavedLayouts: Story = {
         await userEvent.click(
             within(canvasElement).getByRole('button', { name: 'Saved' }),
         );
-        await expect(
-            within(canvasElement).getByRole('button', { name: 'Apply Focus' }),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByRole('button', {
+                    name: 'Apply Focus',
+                }),
+            ).toBeVisible(),
+        );
     },
 };

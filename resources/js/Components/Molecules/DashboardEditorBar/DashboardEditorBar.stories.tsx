@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within, waitFor } from 'storybook/test';
 import DashboardEditorBar from './DashboardEditorBar';
 
 const meta = {
@@ -45,8 +45,10 @@ export const ConfirmingReset: Story = {
         await userEvent.click(
             within(canvasElement).getByRole('button', { name: 'Reset' }),
         );
-        await expect(
-            within(canvasElement).getByText('Back to the default layout?'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByText('Back to the default layout?'),
+            ).toBeVisible(),
+        );
     },
 };

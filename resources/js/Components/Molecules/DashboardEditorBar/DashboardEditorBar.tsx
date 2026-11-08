@@ -1,8 +1,10 @@
+import { motion } from 'framer-motion';
 import { FC, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
+import { DURATION, EASE } from '@/utils/motion';
 
 interface DashboardEditorBarProps {
     dirty: boolean;
@@ -40,10 +42,15 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
     const [confirmingReset, setConfirmingReset] = useState(false);
 
     return (
-        <div
+        <motion.div
             role="toolbar"
             aria-label="Dashboard editor"
-            className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-1.5 border-b border-solid border-[var(--bg-light-color)] bg-[var(--accent-color-opacity)] px-3 py-2 md:px-6"
+            // The bar unfolds under the header and folds away again.
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: DURATION.base, ease: EASE }}
+            className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-1.5 overflow-hidden border-b border-solid border-[var(--bg-light-color)] bg-[var(--accent-color-opacity)] px-3 py-2 md:px-6"
         >
             <div className="flex min-w-0 items-center gap-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color)] text-white">
@@ -63,7 +70,13 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                 </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <motion.div
+                key={confirmingReset ? 'confirm' : 'actions'}
+                initial={{ opacity: 0, x: 8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: DURATION.fast, ease: EASE }}
+                className="flex flex-wrap items-center gap-1.5 sm:gap-2"
+            >
                 {confirmingReset ? (
                     <>
                         <span className="text-xs text-[var(--text-gray-color)]">
@@ -143,8 +156,14 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                         >
                             Cancel
                         </button>
-                        <button
+                        <motion.button
                             type="button"
+                            // A nudge when there is something to save.
+                            animate={{ scale: dirty ? [1, 1.08, 1] : 1 }}
+                            transition={{
+                                duration: DURATION.base,
+                                ease: EASE,
+                            }}
                             disabled={!dirty || saving}
                             onClick={onSave}
                             className={cn(
@@ -154,11 +173,11 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                         >
                             <Icon name="Check" size={13} />
                             {saving ? 'Saving…' : 'Save'}
-                        </button>
+                        </motion.button>
                     </>
                 )}
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 };
 
