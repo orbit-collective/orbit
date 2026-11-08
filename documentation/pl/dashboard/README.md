@@ -3,7 +3,8 @@
 Dashboard (`/`) to **lista widgetów**, które każdy użytkownik może
 poukładać po swojemu. Edytor otwiera się przyciskiem z piórkiem w
 nagłówku strony albo komendą `Edit dashboard` (`dashboard.edit`) w palecie
-komend: przeciągnij widget za nagłówek (mysz i dotyk), zmień jego rozmiar za
+komend: przeciągnij widget (w dowolnym miejscu, mysz i dotyk; jest rysowany
+dokładnie tak jak na dashboardzie, z samym znacznikiem na obramowaniu), zmień jego rozmiar za
 prawą krawędź, dolną krawędź lub róg (do dowolnego rozmiaru albo ze
 snapem do siatki: patrz przełącznik `Snap to grid`), ukryj lub pokaż go,
 zmień jego styl i opcje, dodawaj widgety z biblioteki i usuwaj je. Panel

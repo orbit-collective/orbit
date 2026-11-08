@@ -3,7 +3,8 @@
 The dashboard (`/`) is **a list of widgets** that every user can rearrange.
 Its editor opens from the pen button in the page header or from the
 `Edit dashboard` command (`dashboard.edit`) in the command palette: drag a
-widget by its header (mouse and touch), resize it by its right edge, bottom
+widget (anywhere on it, mouse and touch; it is drawn exactly as on the
+dashboard, with only a tag on its border), resize it by its right edge, bottom
 edge or corner (to any size, or snapped to the grid: see the `Snap to grid`
 switch), hide or show it, change its style and options, add widgets from
 the library and remove them. The panel has _Earlier_ / _Later_ buttons for
