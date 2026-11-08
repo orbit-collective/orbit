@@ -3,9 +3,11 @@
 Dashboard (`/`) to **lista widgetów**, które każdy użytkownik może
 poukładać po swojemu. Edytor otwiera się przyciskiem z piórkiem w
 nagłówku strony albo komendą `Edit dashboard` (`dashboard.edit`) w palecie
-komend: przeciągnij widget za uchwyt (mysz i dotyk) albo użyj przycisków
-w górę/w dół, ukryj lub pokaż go, zmień jego styl, szerokość i opcje,
-dodawaj widgety z biblioteki i usuwaj je. Nic nie jest zapisywane do czasu
+komend: przeciągnij widget za nagłówek (mysz i dotyk), zmień jego rozmiar za
+prawą krawędź, dolną krawędź lub róg (do dowolnego rozmiaru albo ze
+snapem do siatki: patrz przełącznik `Snap to grid`), ukryj lub pokaż go,
+zmień jego styl i opcje, dodawaj widgety z biblioteki i usuwaj je. Panel
+ma przyciski _Earlier_ / _Later_ do przesuwania bez przeciągania. Nic nie jest zapisywane do czasu
 **Save**; **Cancel** porzuca szkic, a **Reset** przywraca układ domyślny.
 
 ## Przewodniki
@@ -19,12 +21,13 @@ dodawaj widgety z biblioteki i usuwaj je. Nic nie jest zapisywane do czasu
 Układ to jeden wiersz `dashboard_layouts` na użytkownika (`user_id`
 unikalne, `widgets` jako JSON, `version`); **brak wiersza oznacza układ
 domyślny**, więc nikt nie zobaczy zmiany, dopóki sam jej nie zapisze.
-Każdy widget to `{id, type, variant, span, visible, config}`: `span` to
-szerokość w dwunastych częściach siatki 12-kolumnowej, `variant` to styl
-danego typu, a `config` to wartości opcji typu.
+Każdy widget to `{id, type, variant, width, height, visible, config}`: `width` to
+liczba 120. części szerokości dashboardu, a `height` to liczba wierszy po
+4 px, więc widget może mieć dowolny rozmiar; `variant` to styl danego typu, a `config` to wartości opcji typu.
 `App\Enums\Dashboard\DashboardWidgetType` jest **jedynym źródłem tego, co
-widget potrafi**: etykieta, opis, ikona, warianty, dozwolone szerokości
-(`spans()`, domyślna `defaultSpan()`), opcje i propsy Inertii, które czyta
+widget potrafi**: etykieta, opis, ikona, warianty, minimalny i
+domyślny rozmiar (`minWidth()`, `defaultWidth()`, `minHeight()`,
+`defaultHeight()`), opcje i propsy Inertii, które czyta
 (`props()`). `DashboardController` wysyła `dashboardLayout` (`widgets` oraz
 `catalog` zbudowany z tego enuma), więc frontend tylko mapuje typ na
 komponent (`Components/Organisms/DashboardWidget`).
@@ -57,6 +60,11 @@ pollingiem (`dashboardReloads(changes, loaded)` /
 | Biblioteka i ustawienia widgetu | `Components/Organisms/DashboardEditorPanel/` |
 | Pasek zapisz / anuluj / resetuj | `Components/Molecules/DashboardEditorBar/` |
 
-Szerokości są wypisane w `spanClass()`, bo Tailwind potrzebuje pełnych
-nazw klas. Na telefonie siatka ma jedną kolumnę, a panel edytora jest
-arkuszem u dołu ekranu.
+Dashboard to siatka CSS ze 120 kolumnami i wierszami po 4 px, ułożona
+gęsto (`GRID_CLASS`); komórka dostaje rozmiar ze zmiennych
+`--widget-width` i `--widget-height` (`gridItemStyle()`). Snap zmienia tylko
+krok zmiany rozmiaru (`sizeAfterResize()`): dwunasta część szerokości i
+40 px albo jedna kolumna i jeden wiersz. Układy zapisane ze starymi
+dwunastymi (`span`) `normalize()` czyta jako `span × 10` kolumn. Na
+telefonie każdy widget ma pełną szerokość (zmienia się tylko wysokość), a
+panel edytora jest arkuszem u dołu ekranu.

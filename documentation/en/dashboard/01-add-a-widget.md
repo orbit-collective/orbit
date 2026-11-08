@@ -17,8 +17,8 @@ case StatOverdue = 'stat_overdue';
 // description(): self::StatOverdue => 'Issues past their due date',
 // icon():        self::StatOverdue => 'CalendarClock',   // a lucide icon
 // variants():    add it to the stat group: ['default', 'vivid', 'accent']
-// spans():       add it to the stat group: [3, 4, 6, 12]
-// defaultSpan(): add it to the stat group: 3
+// minWidth(), defaultWidth(), minHeight(), defaultHeight(): add it to the
+//                stat group (20 / 30 / 20 / 32)
 // props():       self::StatOverdue => ['issueStats'],
 ```
 
