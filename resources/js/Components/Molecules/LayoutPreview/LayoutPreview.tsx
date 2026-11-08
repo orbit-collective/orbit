@@ -40,7 +40,7 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
                         <motion.div
                             key={widget.id}
                             data-testid="layout-preview-block"
-                            className="p-px"
+                            className="min-h-0 min-w-0 overflow-hidden p-px"
                             initial={{ opacity: 0, scale: 0.7 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{

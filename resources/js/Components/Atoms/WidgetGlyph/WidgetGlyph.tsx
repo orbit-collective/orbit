@@ -1,12 +1,7 @@
 import { CSSProperties, FC, ReactNode } from 'react';
 import { DashboardWidget } from '@/types/Dashboard';
 import { smoothLinePath } from '@/utils/chart';
-import {
-    DASHBOARD_COLOR_VALUES,
-    STAT_DEFAULT_COLORS,
-    toDashboardColor,
-} from '@/utils/dashboardColors';
-import { isOn, optionOf } from '@/utils/dashboardLayout';
+import { isOn } from '@/utils/dashboardLayout';
 
 interface WidgetGlyphProps {
     widget: DashboardWidget;
@@ -18,8 +13,18 @@ interface WidgetGlyphProps {
  */
 const cqw = (value: number) => `${value}cqw`;
 
+/**
+ * A preview is drawn in grays only: it shows the shape of a layout, not the
+ * colors of its widgets, so it stays calm next to the other cards.
+ */
 const MUTED = 'var(--text-muted-color)';
-const TRACK = 'var(--bg-light-color)';
+const TRACK = 'var(--border-color-strong)';
+const SHADES = [
+    'var(--text-muted-color)',
+    'var(--text-gray-color)',
+    'var(--border-color-strong)',
+    'var(--text-muted-color)',
+];
 
 /** A line of text, as a bar. */
 const Line: FC<{
@@ -59,15 +64,6 @@ const Column: FC<{ children: ReactNode; style?: CSSProperties }> = ({
     </div>
 );
 
-/** The color of a statistic: its own pick, else the color of its kind. */
-const statTint = (widget: DashboardWidget): string => {
-    const fallback = STAT_DEFAULT_COLORS[widget.type] ?? 'accent';
-
-    return DASHBOARD_COLOR_VALUES[
-        toDashboardColor(optionOf(widget, 'color', fallback), fallback)
-    ];
-};
-
 /** What the chart of a trend looks like: a week with a busy Monday. */
 const TREND = [78, 22, 40, 30, 62, 18, 34];
 
@@ -76,10 +72,7 @@ const trendPoints = TREND.map((value, index) => ({
     y: 100 - value,
 }));
 
-const Trend: FC<{ widget: DashboardWidget; tint: string }> = ({
-    widget,
-    tint,
-}) => (
+const Trend: FC<{ widget: DashboardWidget }> = ({ widget }) => (
     <Column style={{ gap: cqw(1) }}>
         <Title widget={widget} />
         <div className="relative min-h-0 flex-1">
@@ -107,7 +100,7 @@ const Trend: FC<{ widget: DashboardWidget; tint: string }> = ({
                                 height: `${value}%`,
                                 backgroundColor:
                                     index === 4 && isOn(widget, 'today')
-                                        ? tint
+                                        ? MUTED
                                         : TRACK,
                             }}
                         />
@@ -123,14 +116,14 @@ const Trend: FC<{ widget: DashboardWidget; tint: string }> = ({
                     {widget.variant === 'area' && (
                         <path
                             d={`${smoothLinePath(trendPoints)} L${trendPoints.at(-1)!.x},100 L${trendPoints[0].x},100 Z`}
-                            fill={tint}
+                            fill={MUTED}
                             opacity="0.28"
                         />
                     )}
                     <path
                         d={smoothLinePath(trendPoints)}
                         fill="none"
-                        stroke={tint}
+                        stroke={MUTED}
                         strokeWidth="2"
                         vectorEffect="non-scaling-stroke"
                     />
@@ -142,16 +135,16 @@ const Trend: FC<{ widget: DashboardWidget; tint: string }> = ({
 
 const Completion: FC<{ widget: DashboardWidget }> = ({ widget }) => {
     const parts = [
-        { value: 28, color: 'var(--info-color)' },
-        { value: 12, color: 'var(--accent-color)' },
-        { value: 60, color: 'var(--success-color)' },
+        { value: 28, color: SHADES[2] },
+        { value: 12, color: SHADES[1] },
+        { value: 60, color: SHADES[0] },
     ];
 
     return (
         <Column style={{ gap: cqw(1.2) }}>
             <div className="flex items-center justify-between">
                 <Title widget={widget} />
-                {isOn(widget, 'tier') && <Dot color="var(--success-color)" />}
+                {isOn(widget, 'tier') && <Dot color={MUTED} />}
             </div>
             {widget.variant === 'ring' ? (
                 <div
@@ -176,7 +169,7 @@ const Completion: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                             cy="18"
                             r="14"
                             fill="none"
-                            stroke="var(--success-color)"
+                            stroke={MUTED}
                             strokeWidth="5"
                             strokeDasharray="53 88"
                             strokeLinecap="round"
@@ -186,9 +179,9 @@ const Completion: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                         className="flex flex-1 flex-col"
                         style={{ gap: cqw(0.9) }}
                     >
-                        {parts.map((part) => (
+                        {parts.map((part, partIndex) => (
                             <div
-                                key={part.color}
+                                key={partIndex}
                                 className="flex items-center"
                                 style={{ gap: cqw(0.8) }}
                             >
@@ -206,16 +199,16 @@ const Completion: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                     <Line
                         width={30}
                         height={2}
-                        color="var(--text-color)"
+                        color="var(--text-gray-color)"
                         opacity={0.8}
                     />
                     <div
                         className="flex w-full overflow-hidden rounded-full"
                         style={{ height: cqw(1.2), backgroundColor: TRACK }}
                     >
-                        {parts.map((part) => (
+                        {parts.map((part, partIndex) => (
                             <span
-                                key={part.color}
+                                key={partIndex}
                                 className="block h-full"
                                 style={{
                                     width: `${part.value}%`,
@@ -225,8 +218,8 @@ const Completion: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                         ))}
                     </div>
                     <div className="flex" style={{ gap: cqw(2) }}>
-                        {parts.map((part) => (
-                            <Line key={part.color} width={22} />
+                        {parts.map((part, partIndex) => (
+                            <Line key={partIndex} width={22} />
                         ))}
                     </div>
                 </div>
@@ -238,12 +231,12 @@ const Completion: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                     <Line
                         width={26}
                         height={3}
-                        color="var(--text-color)"
+                        color="var(--text-gray-color)"
                         opacity={0.8}
                     />
-                    {parts.map((part) => (
+                    {parts.map((part, partIndex) => (
                         <span
-                            key={part.color}
+                            key={partIndex}
                             className="block rounded-[1px]"
                             style={{
                                 width: cqw(2.2),
@@ -260,9 +253,9 @@ const Completion: FC<{ widget: DashboardWidget }> = ({ widget }) => {
 
 const Priority: FC<{ widget: DashboardWidget }> = ({ widget }) => {
     const parts = [
-        { value: 12, color: 'var(--error-color)' },
-        { value: 66, color: 'var(--warning-color)' },
-        { value: 16, color: 'var(--success-color)' },
+        { value: 12, color: SHADES[0] },
+        { value: 66, color: SHADES[1] },
+        { value: 16, color: SHADES[2] },
         ...(isOn(widget, 'noPriority') ? [{ value: 6, color: MUTED }] : []),
     ];
 
@@ -286,7 +279,7 @@ const Priority: FC<{ widget: DashboardWidget }> = ({ widget }) => {
 
                             return (
                                 <circle
-                                    key={part.color}
+                                    key={index}
                                     cx="18"
                                     cy="18"
                                     r="14"
@@ -303,9 +296,9 @@ const Priority: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                         className="flex flex-1 flex-col"
                         style={{ gap: cqw(0.9) }}
                     >
-                        {parts.map((part) => (
+                        {parts.map((part, partIndex) => (
                             <div
-                                key={part.color}
+                                key={partIndex}
                                 className="flex items-center"
                                 style={{ gap: cqw(0.8) }}
                             >
@@ -320,9 +313,9 @@ const Priority: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                     className="flex min-h-0 flex-1 flex-col justify-center"
                     style={{ gap: cqw(1.4) }}
                 >
-                    {parts.map((part) => (
+                    {parts.map((part, partIndex) => (
                         <div
-                            key={part.color}
+                            key={partIndex}
                             className="flex flex-col"
                             style={{ gap: cqw(0.5) }}
                         >
@@ -354,9 +347,9 @@ const Priority: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                         className="flex w-full overflow-hidden rounded-full"
                         style={{ height: cqw(1.2), backgroundColor: TRACK }}
                     >
-                        {parts.map((part) => (
+                        {parts.map((part, partIndex) => (
                             <span
-                                key={part.color}
+                                key={partIndex}
                                 className="block h-full"
                                 style={{
                                     width: `${part.value}%`,
@@ -365,9 +358,9 @@ const Priority: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                             />
                         ))}
                     </div>
-                    {parts.map((part) => (
+                    {parts.map((part, partIndex) => (
                         <div
-                            key={part.color}
+                            key={partIndex}
                             className="flex items-center"
                             style={{ gap: cqw(0.8) }}
                         >
@@ -413,7 +406,7 @@ const Activity: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                         >
                             <Line
                                 width={34}
-                                color="var(--text-color)"
+                                color="var(--text-gray-color)"
                                 opacity={0.6}
                             />
                             <Line width={compact ? 70 : 78} />
@@ -435,12 +428,7 @@ const Activity: FC<{ widget: DashboardWidget }> = ({ widget }) => {
 };
 
 const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
-    const swatches = [
-        'var(--accent-color)',
-        'var(--info-color)',
-        'var(--success-color)',
-        'var(--warning-color)',
-    ];
+    const swatches = SHADES;
     const tile = (color: string, key: number) => (
         <div
             key={key}
@@ -449,7 +437,7 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
         >
             <div className="flex items-center" style={{ gap: cqw(0.7) }}>
                 <Dot color={color} size={0.9} />
-                <Line width={55} color="var(--text-color)" opacity={0.6} />
+                <Line width={55} color="var(--text-gray-color)" opacity={0.6} />
             </div>
             <span
                 className="block w-full overflow-hidden rounded-full"
@@ -486,9 +474,9 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                     className="flex min-h-0 flex-1 flex-col"
                     style={{ gap: cqw(1.4) }}
                 >
-                    {swatches.map((color) => (
+                    {swatches.map((color, colorIndex) => (
                         <div
-                            key={color}
+                            key={colorIndex}
                             className="flex items-center justify-between"
                         >
                             <div
@@ -498,7 +486,7 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                                 <Dot color={color} size={0.9} />
                                 <Line
                                     width="9cqw"
-                                    color="var(--text-color)"
+                                    color="var(--text-gray-color)"
                                     opacity={0.6}
                                 />
                             </div>
@@ -511,9 +499,9 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                     className="flex min-h-0 flex-1 flex-col"
                     style={{ gap: cqw(1.2) }}
                 >
-                    {swatches.slice(0, 3).map((color, index) => (
+                    {swatches.slice(0, 3).map((color, colorIndex) => (
                         <div
-                            key={color}
+                            key={colorIndex}
                             className="flex flex-1 items-center rounded-[0.6cqw] border border-solid p-[0.8cqw]"
                             style={{ gap: cqw(1), borderColor: TRACK }}
                         >
@@ -532,10 +520,10 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                             >
                                 <Line
                                     width={48}
-                                    color="var(--text-color)"
+                                    color="var(--text-gray-color)"
                                     opacity={0.6}
                                 />
-                                <Line width={30 + index * 8} />
+                                <Line width={30 + colorIndex * 8} />
                             </div>
                         </div>
                     ))}
@@ -546,7 +534,7 @@ const Projects: FC<{ widget: DashboardWidget }> = ({ widget }) => {
 };
 
 const Stat: FC<{ widget: DashboardWidget }> = ({ widget }) => {
-    const tint = statTint(widget);
+    const tint = MUTED;
     const showIcon = isOn(widget, 'icon');
 
     if (widget.variant === 'vivid') {
@@ -568,7 +556,7 @@ const Stat: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                     <Line
                         width={32}
                         height={1.6}
-                        color="var(--text-color)"
+                        color="var(--text-gray-color)"
                         opacity={0.85}
                     />
                 </div>
@@ -586,7 +574,7 @@ const Stat: FC<{ widget: DashboardWidget }> = ({ widget }) => {
                 <Line
                     width={28}
                     height={2.2}
-                    color="var(--text-color)"
+                    color="var(--text-gray-color)"
                     opacity={0.85}
                 />
             </div>
@@ -594,42 +582,33 @@ const Stat: FC<{ widget: DashboardWidget }> = ({ widget }) => {
     );
 };
 
-/** The card a glyph is drawn on: it follows the style of the widget. */
+/** The card a glyph is drawn on: the style of a statistic changes its edge and fill. */
 const cardStyle = (widget: DashboardWidget): CSSProperties => {
     const base: CSSProperties = {
         padding: cqw(1.2),
         borderRadius: cqw(1.1),
     };
 
-    if (widget.type.startsWith('stat_')) {
-        const tint = statTint(widget);
-
-        switch (widget.variant) {
-            case 'accent':
-                return {
-                    ...base,
-                    borderColor: tint,
-                    backgroundColor: `color-mix(in srgb, ${tint} 16%, var(--surface-color))`,
-                };
-            case 'outline':
-                return {
-                    ...base,
-                    borderColor: 'var(--border-color-strong)',
-                    backgroundColor: 'transparent',
-                };
-            case 'glass':
-                return {
-                    ...base,
-                    borderColor:
-                        'color-mix(in srgb, var(--text-color) 18%, transparent)',
-                    backgroundColor: `color-mix(in srgb, ${tint} 14%, transparent)`,
-                };
-            default:
-                return base;
-        }
+    switch (widget.variant) {
+        case 'accent':
+            return widget.type.startsWith('stat_')
+                ? { ...base, borderColor: MUTED }
+                : base;
+        case 'outline':
+            return widget.type.startsWith('stat_')
+                ? { ...base, backgroundColor: 'transparent' }
+                : base;
+        case 'glass':
+            return widget.type.startsWith('stat_')
+                ? {
+                      ...base,
+                      backgroundColor:
+                          'color-mix(in srgb, var(--text-color) 7%, transparent)',
+                  }
+                : base;
+        default:
+            return base;
     }
-
-    return base;
 };
 
 /**
@@ -642,18 +621,7 @@ const WidgetGlyph: FC<WidgetGlyphProps> = ({ widget }) => {
 
     switch (widget.type) {
         case 'trend':
-            body = (
-                <Trend
-                    widget={widget}
-                    tint={
-                        DASHBOARD_COLOR_VALUES[
-                            toDashboardColor(
-                                optionOf(widget, 'color', 'accent'),
-                            )
-                        ]
-                    }
-                />
-            );
+            body = <Trend widget={widget} />;
             break;
         case 'completion':
             body = <Completion widget={widget} />;
@@ -676,7 +644,7 @@ const WidgetGlyph: FC<WidgetGlyphProps> = ({ widget }) => {
             data-testid="widget-glyph"
             data-type={widget.type}
             data-variant={widget.variant}
-            className="h-full w-full overflow-hidden border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)]"
+            className="h-full w-full overflow-hidden border border-solid border-[var(--border-color-strong)] bg-[var(--bg-light-color)]"
             style={cardStyle(widget)}
         >
             {body}

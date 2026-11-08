@@ -84,26 +84,56 @@ describe('WidgetGlyph', () => {
         expect(container.querySelectorAll('path')).toHaveLength(2);
     });
 
-    test('the trend takes its color from the widget', () => {
-        const { container } = render(
+    test('a preview is gray: no kind, style or option brings a color in', () => {
+        const colored = /(accent|success|warning|error|info)-color/;
+        const variants: Partial<Record<DashboardWidgetType, string[]>> = {
+            stat_projects: ['default', 'vivid', 'accent', 'glass', 'outline'],
+            stat_critical: ['accent'],
+            trend: ['bars', 'line', 'area'],
+            completion: ['bars', 'ring', 'stacked'],
+            priority_breakdown: ['bar', 'list', 'donut'],
+            activity: ['feed', 'compact'],
+            projects: ['cards', 'grid', 'compact'],
+        };
+
+        for (const [type, styles] of Object.entries(variants)) {
+            for (const variant of styles!) {
+                const { container, unmount } = render(
+                    <WidgetGlyph
+                        widget={makeWidget(type as DashboardWidgetType, {
+                            variant,
+                            config: { color: 'success' },
+                        })}
+                    />,
+                );
+
+                expect(container.innerHTML).not.toMatch(colored);
+                unmount();
+            }
+        }
+    });
+
+    test('the color a widget was given does not change how it is drawn', () => {
+        const a = render(
             <WidgetGlyph
                 widget={makeWidget('trend', {
                     variant: 'line',
-                    config: {
-                        color: 'success',
-                        grid: 'on',
-                        header: 'on',
-                        values: 'hover',
-                        today: 'on',
-                    },
+                    config: { color: 'success' },
+                })}
+            />,
+        );
+        const first = a.container.innerHTML;
+        a.unmount();
+        const b = render(
+            <WidgetGlyph
+                widget={makeWidget('trend', {
+                    variant: 'line',
+                    config: { color: 'error' },
                 })}
             />,
         );
 
-        expect(container.querySelector('path')).toHaveAttribute(
-            'stroke',
-            'var(--success-color)',
-        );
+        expect(b.container.innerHTML).toBe(first);
     });
 
     test('hiding the grid leaves no dashed lines', () => {
@@ -162,30 +192,6 @@ describe('WidgetGlyph', () => {
 
         expect(withPaging).toBe(1);
         expect(off.container.querySelectorAll('.border-t')).toHaveLength(0);
-    });
-
-    test('a statistic takes the color of its widget, or of its kind', () => {
-        const own = render(
-            <WidgetGlyph
-                widget={makeWidget('stat_critical', {
-                    variant: 'accent',
-                    config: { color: 'success' },
-                })}
-            />,
-        );
-        expect(
-            screen.getByTestId('widget-glyph').getAttribute('style'),
-        ).toContain('success-color');
-        own.unmount();
-
-        render(
-            <WidgetGlyph
-                widget={makeWidget('stat_critical', { variant: 'accent' })}
-            />,
-        );
-        expect(
-            screen.getByTestId('widget-glyph').getAttribute('style'),
-        ).toContain('error-color');
     });
 
     test('a statistic can leave its icon out', () => {
