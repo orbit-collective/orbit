@@ -98,8 +98,9 @@ describe('ProductivityTrendCard Component', () => {
             '.rounded-t-sm:not(.border-dashed)',
         );
         // Today is mocked to Monday, so only the "Mon" bar is highlighted.
-        expect(bars[0]).toHaveClass('bg-[var(--accent-color)]');
-        expect(bars[1]).not.toHaveClass('bg-[var(--accent-color)]');
+        expect(bars[0]).toHaveAttribute('data-active', 'true');
+        expect(bars[0]).toHaveStyle({ backgroundColor: 'var(--accent-color)' });
+        expect(bars[1]).toHaveAttribute('data-active', 'false');
     });
 
     test('renders a nice-rounded y-axis with gridlines', () => {
@@ -174,9 +175,7 @@ describe('ProductivityTrendCard Component', () => {
             expect(screen.getAllByTestId('trend-point')).toHaveLength(3);
             expect(screen.queryAllByTestId('trend-column')).toHaveLength(0);
             // A line has no filled area under it.
-            expect(
-                container.querySelectorAll('path[fill="url(#trend-area)"]'),
-            ).toHaveLength(0);
+            expect(screen.queryByTestId('trend-area')).not.toBeInTheDocument();
         });
 
         test('the area variant also fills under the line', () => {
@@ -184,9 +183,7 @@ describe('ProductivityTrendCard Component', () => {
                 <ProductivityTrendCard trendData={trendData} variant="area" />,
             );
 
-            expect(
-                container.querySelectorAll('path[fill="url(#trend-area)"]'),
-            ).toHaveLength(1);
+            expect(screen.getByTestId('trend-area')).toBeInTheDocument();
         });
 
         test('values can be shown all the time', () => {
@@ -231,7 +228,7 @@ describe('ProductivityTrendCard Component', () => {
                 <ProductivityTrendCard trendData={trendData} />,
             );
             expect(
-                container.querySelectorAll('.bg-\\[var\\(--accent-color\\)\\]'),
+                container.querySelectorAll('[data-active="true"]'),
             ).toHaveLength(1);
 
             rerender(
@@ -241,8 +238,53 @@ describe('ProductivityTrendCard Component', () => {
                 />,
             );
             expect(
-                container.querySelectorAll('.bg-\\[var\\(--accent-color\\)\\]'),
+                container.querySelectorAll('[data-active="true"]'),
             ).toHaveLength(0);
+        });
+
+        test('the chart takes its color from the widget', () => {
+            const { container } = render(
+                <ProductivityTrendCard
+                    trendData={trendData}
+                    variant="line"
+                    color="success"
+                />,
+            );
+
+            expect(container.querySelector('path[stroke]')).toHaveAttribute(
+                'stroke',
+                'var(--success-color)',
+            );
+        });
+
+        test('the bars of the current day take the color too', () => {
+            const { container } = render(
+                <ProductivityTrendCard trendData={trendData} color="warning" />,
+            );
+
+            expect(container.querySelector('[data-active="true"]')).toHaveStyle(
+                { backgroundColor: 'var(--warning-color)' },
+            );
+        });
+
+        test('two charts do not share the gradient of their area', () => {
+            const { container } = render(
+                <>
+                    <ProductivityTrendCard
+                        trendData={trendData}
+                        variant="area"
+                    />
+                    <ProductivityTrendCard
+                        trendData={trendData}
+                        variant="area"
+                    />
+                </>,
+            );
+
+            const ids = [...container.querySelectorAll('linearGradient')].map(
+                (gradient) => gradient.id,
+            );
+            expect(new Set(ids).size).toBe(2);
         });
     });
 });

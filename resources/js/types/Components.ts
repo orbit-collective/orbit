@@ -504,8 +504,10 @@ export interface ProductivityTrendCardProps {
     showGrid?: boolean;
     /** Counts on hover (default) or always. */
     values?: 'hover' | 'always';
-    /** Draw today's day in the accent color; on by default. */
+    /** Draw today's day in the color of the chart; on by default. */
     highlightToday?: boolean;
+    /** The color of the chart, one of the dashboard colors; the accent by default. */
+    color?: 'accent' | 'success' | 'warning' | 'error' | 'info';
 }
 export interface DashboardEmptyStateProps {
     iconName: keyof typeof icons;
