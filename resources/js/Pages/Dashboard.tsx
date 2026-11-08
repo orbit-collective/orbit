@@ -1,3 +1,4 @@
+import { AnimatePresence, MotionConfig } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { PageStage } from '@/Components/Atoms/PageStage/PageStage';
@@ -10,6 +11,7 @@ import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useCommandPalette } from '@/context/CommandContext';
 import { useCommands } from '@/hooks/useCommands';
 import { useDashboardEditor } from '@/hooks/useDashboardEditor';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useDashboardLive } from '@/live/useDashboardLive';
 import { Command } from '@/types/Commands';
 import { DashboardLayoutProp, DashboardSavedLayout } from '@/types/Dashboard';
@@ -48,13 +50,8 @@ export default function Dashboard({
         DATA_PROPS.map((prop) => data[prop] !== undefined),
     );
 
-    // The panel can be put away to see the dashboard at its full width; on a
-    // phone it starts away, as it would take half of the screen.
-    const [panelOpen, setPanelOpen] = useState(
-        () =>
-            typeof window.matchMedia !== 'function' ||
-            window.matchMedia('(min-width: 1024px)').matches,
-    );
+    const desktop = useMediaQuery('(min-width: 1024px)');
+    const [panelOpen, setPanelOpen] = useState(desktop);
 
     const editor = useDashboardEditor(
         dashboardLayout.widgets,
@@ -90,89 +87,98 @@ export default function Dashboard({
     );
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
-            <Sidebar projects={projects} />
-            <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
-                <PageHeader
-                    title="Dashboard"
-                    icon="LayoutDashboard"
-                    primaryAction={{
-                        label: 'New Project',
-                        icon: 'Plus',
-                        onClick: () => runCommand('project.create'),
-                    }}
-                >
-                    <button
-                        type="button"
-                        aria-label="Open dashboard editor"
-                        aria-pressed={editor.editing}
-                        title="Open dashboard editor"
-                        onClick={() => runCommand('dashboard.edit')}
-                        disabled={editor.editing}
-                        className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)] disabled:cursor-default disabled:bg-[var(--bg-light-color)]"
+        <MotionConfig reducedMotion="user">
+            <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
+                <Sidebar projects={projects} />
+                <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
+                    <PageHeader
+                        title="Dashboard"
+                        icon="LayoutDashboard"
+                        primaryAction={{
+                            label: 'New Project',
+                            icon: 'Plus',
+                            onClick: () => runCommand('project.create'),
+                        }}
                     >
-                        <Icon
-                            name="PenLine"
-                            size={18}
-                            color="var(--text-gray-color)"
-                        />
-                    </button>
-                </PageHeader>
-                {editor.editing && (
-                    <DashboardEditorBar
-                        dirty={editor.dirty}
-                        saving={editor.saving}
-                        snap={editor.snap}
-                        onSnapChange={editor.setSnap}
-                        panelOpen={panelOpen}
-                        onTogglePanel={() => setPanelOpen((open) => !open)}
-                        onSave={editor.save}
-                        onCancel={editor.cancel}
-                        onReset={editor.reset}
-                    />
-                )}
-                <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-                    <PageStage
-                        as="main"
-                        className={cn(
-                            'min-h-0 min-w-0 flex-1 overflow-y-auto p-4 sm:p-6',
+                        <button
+                            type="button"
+                            aria-label="Open dashboard editor"
+                            aria-pressed={editor.editing}
+                            title="Open dashboard editor"
+                            onClick={() => runCommand('dashboard.edit')}
+                            disabled={editor.editing}
+                            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)] disabled:cursor-default disabled:bg-[var(--bg-light-color)]"
+                        >
+                            <Icon
+                                name="PenLine"
+                                size={18}
+                                color="var(--text-gray-color)"
+                            />
+                        </button>
+                    </PageHeader>
+                    <AnimatePresence initial={false}>
+                        {editor.editing && (
+                            <DashboardEditorBar
+                                dirty={editor.dirty}
+                                saving={editor.saving}
+                                snap={editor.snap}
+                                onSnapChange={editor.setSnap}
+                                panelOpen={panelOpen}
+                                onTogglePanel={() =>
+                                    setPanelOpen((open) => !open)
+                                }
+                                onSave={editor.save}
+                                onCancel={editor.cancel}
+                                onReset={editor.reset}
+                            />
                         )}
-                    >
-                        <DashboardGrid
-                            widgets={widgets}
-                            catalog={dashboardLayout.catalog}
-                            data={data}
-                            editing={editor.editing}
-                            snap={editor.snap}
-                            selectedId={editor.selectedId}
-                            onSelect={editor.select}
-                            onReorder={editor.reorder}
-                            onResize={editor.resize}
-                            onToggleVisible={editor.toggleVisible}
-                        />
-                    </PageStage>
-                    {editor.editing && panelOpen && (
-                        <DashboardEditorPanel
-                            catalog={dashboardLayout.catalog}
-                            widgets={editor.draft}
-                            selected={selected}
-                            canAdd={editor.canAdd}
-                            onAdd={editor.add}
-                            onVariantChange={editor.setVariant}
-                            onWidthChange={editor.setWidth}
-                            onOptionChange={editor.setOption}
-                            onToggleVisible={editor.toggleVisible}
-                            onMove={editor.shift}
-                            onRemove={editor.remove}
-                            savedLayouts={savedLayouts}
-                            saveLayoutError={editor.saveLayoutError}
-                            onSaveLayout={editor.saveLayoutAs}
-                            onApplyLayout={editor.applyLayout}
-                            onDeleteLayout={editor.deleteSavedLayout}
-                        />
-                    )}
+                    </AnimatePresence>
+                    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+                        <PageStage
+                            as="main"
+                            className={cn(
+                                'min-h-0 min-w-0 flex-1 overflow-y-auto p-4 sm:p-6',
+                            )}
+                        >
+                            <DashboardGrid
+                                widgets={widgets}
+                                catalog={dashboardLayout.catalog}
+                                data={data}
+                                editing={editor.editing}
+                                snap={editor.snap}
+                                selectedId={editor.selectedId}
+                                onSelect={editor.select}
+                                onReorder={editor.reorder}
+                                onResize={editor.resize}
+                                onToggleVisible={editor.toggleVisible}
+                            />
+                        </PageStage>
+                        <AnimatePresence initial={false}>
+                            {editor.editing && panelOpen && (
+                                <DashboardEditorPanel
+                                    catalog={dashboardLayout.catalog}
+                                    widgets={editor.draft}
+                                    selected={selected}
+                                    canAdd={editor.canAdd}
+                                    onAdd={editor.add}
+                                    onVariantChange={editor.setVariant}
+                                    onWidthChange={editor.setWidth}
+                                    onOptionChange={editor.setOption}
+                                    onToggleVisible={editor.toggleVisible}
+                                    onMove={editor.shift}
+                                    onRemove={editor.remove}
+                                    savedLayouts={savedLayouts}
+                                    saveLayoutError={editor.saveLayoutError}
+                                    onSaveLayout={editor.saveLayoutAs}
+                                    onApplyLayout={editor.applyLayout}
+                                    onDeleteLayout={editor.deleteSavedLayout}
+                                    desktop={desktop}
+                                />
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
             </div>
-        </div>
+        </MotionConfig>
     );
 }

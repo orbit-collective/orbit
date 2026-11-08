@@ -1,6 +1,8 @@
+import { motion } from 'framer-motion';
 import { FC } from 'react';
 import { DashboardWidget } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
+import { DURATION, EASE, rowDelay } from '@/utils/motion';
 
 interface LayoutPreviewProps {
     widgets: DashboardWidget[];
@@ -30,18 +32,25 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
                 </div>
             ) : (
                 <div className="grid auto-rows-[calc(100cqw/300)] grid-cols-[repeat(120,minmax(0,1fr))] [grid-auto-flow:dense]">
-                    {visible.map((widget) => (
-                        <div
+                    {visible.map((widget, index) => (
+                        <motion.div
                             key={widget.id}
                             data-testid="layout-preview-block"
                             className="p-px"
+                            initial={{ opacity: 0, scale: 0.7 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{
+                                duration: DURATION.base,
+                                ease: EASE,
+                                delay: rowDelay(index),
+                            }}
                             style={{
                                 gridColumn: `span ${widget.width}`,
                                 gridRow: `span ${widget.height}`,
                             }}
                         >
                             <div className="h-full w-full rounded-[3px] border border-solid border-[var(--border-color-strong)] bg-[var(--bg-light-color)]" />
-                        </div>
+                        </motion.div>
                     ))}
                 </div>
             )}

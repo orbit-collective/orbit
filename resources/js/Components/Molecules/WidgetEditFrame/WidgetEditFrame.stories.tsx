@@ -1,6 +1,6 @@
 import { DndContext } from '@dnd-kit/core';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, within, waitFor } from 'storybook/test';
 import { makeWidget } from '@/tests/dashboardLayout';
 import { GRID_CLASS } from '@/utils/dashboardLayout';
 import WidgetEditFrame from './WidgetEditFrame';
@@ -44,9 +44,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
     play: async ({ canvasElement }) => {
-        await expect(
-            within(canvasElement).getByTestId('widget-drag-surface'),
-        ).toBeVisible();
+        await waitFor(() =>
+            expect(
+                within(canvasElement).getByTestId('widget-drag-surface'),
+            ).toBeVisible(),
+        );
     },
 };
 

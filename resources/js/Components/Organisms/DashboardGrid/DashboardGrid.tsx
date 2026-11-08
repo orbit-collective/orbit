@@ -7,6 +7,7 @@ import {
     useSensor,
     useSensors,
 } from '@dnd-kit/core';
+import { AnimatePresence } from 'framer-motion';
 import { FC } from 'react';
 import { PageSection } from '@/Components/Atoms/PageStage/PageStage';
 import WidgetEditFrame from '@/Components/Molecules/WidgetEditFrame/WidgetEditFrame';
@@ -96,29 +97,35 @@ const DashboardGrid: FC<DashboardGridProps> = ({
             onDragEnd={handleDragEnd}
         >
             <div className={GRID_CLASS}>
-                {widgets.map((widget) => {
-                    const entry = catalog.find(
-                        (item) => item.type === widget.type,
-                    );
+                {/* No entrance for what is already there when editing starts. */}
+                <AnimatePresence initial={false}>
+                    {widgets.map((widget, index) => {
+                        const entry = catalog.find(
+                            (item) => item.type === widget.type,
+                        );
 
-                    return (
-                        <WidgetEditFrame
-                            key={widget.id}
-                            widget={widget}
-                            label={entry?.label ?? widget.type}
-                            icon={entry?.icon ?? 'LayoutDashboard'}
-                            minWidth={entry?.minWidth ?? 20}
-                            minHeight={entry?.minHeight ?? 20}
-                            snap={snap}
-                            selected={widget.id === selectedId}
-                            onSelect={() => onSelect?.(widget.id)}
-                            onToggleVisible={() => onToggleVisible?.(widget.id)}
-                            onResize={(size) => onResize?.(widget.id, size)}
-                        >
-                            <DashboardWidget widget={widget} data={data} />
-                        </WidgetEditFrame>
-                    );
-                })}
+                        return (
+                            <WidgetEditFrame
+                                key={widget.id}
+                                widget={widget}
+                                label={entry?.label ?? widget.type}
+                                icon={entry?.icon ?? 'LayoutDashboard'}
+                                minWidth={entry?.minWidth ?? 20}
+                                minHeight={entry?.minHeight ?? 20}
+                                snap={snap}
+                                selected={widget.id === selectedId}
+                                onSelect={() => onSelect?.(widget.id)}
+                                onToggleVisible={() =>
+                                    onToggleVisible?.(widget.id)
+                                }
+                                onResize={(size) => onResize?.(widget.id, size)}
+                                index={index}
+                            >
+                                <DashboardWidget widget={widget} data={data} />
+                            </WidgetEditFrame>
+                        );
+                    })}
+                </AnimatePresence>
             </div>
         </DndContext>
     );
