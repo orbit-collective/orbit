@@ -35,6 +35,8 @@ const meta = {
         ],
         onSaveLayout: fn(),
         onApplyLayout: fn(),
+        onRenameLayout: fn(),
+        onOverwriteLayout: fn(),
         onDeleteLayout: fn(),
     },
 } satisfies Meta<typeof DashboardEditorPanel>;

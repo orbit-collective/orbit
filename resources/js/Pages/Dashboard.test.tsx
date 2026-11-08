@@ -24,7 +24,13 @@ import Dashboard from './Dashboard';
 const mocks = vi.hoisted(() => ({
     useDashboardLive: vi.fn(),
     runCommand: vi.fn(),
-    router: { put: vi.fn(), post: vi.fn(), delete: vi.fn(), reload: vi.fn() },
+    router: {
+        put: vi.fn(),
+        post: vi.fn(),
+        patch: vi.fn(),
+        delete: vi.fn(),
+        reload: vi.fn(),
+    },
     commands: new Map<string, { perform?: () => void }>(),
 }));
 
@@ -612,6 +618,70 @@ describe('Dashboard editing', () => {
             );
             await waitFor(() =>
                 expect(screen.queryByRole('alert')).not.toBeInTheDocument(),
+            );
+        });
+
+        test('renaming one asks the server to', async () => {
+            renderDashboard({
+                dashboardLayout: layoutOf('stat_projects'),
+                savedLayouts: saved,
+            });
+            await openSaved();
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Focus' }),
+            );
+            await userEvent.type(screen.getByDisplayValue('Focus'), '!{Enter}');
+
+            expect(mocks.router.patch).toHaveBeenCalledWith(
+                '/dashboard/saved-layouts/5',
+                { name: 'Focus!' },
+                expect.objectContaining({ only: ['savedLayouts'] }),
+            );
+        });
+
+        test('replacing one sends the layout being edited', async () => {
+            renderDashboard({
+                dashboardLayout: layoutOf('stat_projects'),
+                savedLayouts: saved,
+            });
+            await openSaved();
+
+            await userEvent.click(
+                screen.getByRole('button', {
+                    name: 'Replace Focus with the current layout',
+                }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Confirm replacing Focus' }),
+            );
+
+            expect(mocks.router.patch).toHaveBeenCalledWith(
+                '/dashboard/saved-layouts/5',
+                { widgets: [makeWidget('stat_projects')] },
+                expect.objectContaining({ preserveState: true }),
+            );
+        });
+
+        test('shows why a change to a saved layout was refused', async () => {
+            mocks.router.patch.mockImplementation((_url, _data, options) =>
+                options.onError({
+                    name: 'You already have a layout with this name.',
+                }),
+            );
+            renderDashboard({
+                dashboardLayout: layoutOf('stat_projects'),
+                savedLayouts: saved,
+            });
+            await openSaved();
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Focus' }),
+            );
+            await userEvent.type(screen.getByDisplayValue('Focus'), '!{Enter}');
+
+            expect(await screen.findByRole('alert')).toHaveTextContent(
+                'already have',
             );
         });
 

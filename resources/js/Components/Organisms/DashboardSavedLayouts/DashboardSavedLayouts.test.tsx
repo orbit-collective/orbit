@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { makeSavedLayout, makeWidget } from '@/tests/dashboardLayout';
@@ -8,12 +8,35 @@ import DashboardSavedLayouts from './DashboardSavedLayouts';
 const setup = (
     props: Partial<React.ComponentProps<typeof DashboardSavedLayouts>> = {},
 ) => {
-    const handlers = { onSave: vi.fn(), onApply: vi.fn(), onDelete: vi.fn() };
+    const handlers = {
+        onSave: vi.fn(),
+        onApply: vi.fn(),
+        onRename: vi.fn(),
+        onOverwrite: vi.fn(),
+        onDelete: vi.fn(),
+    };
     const view = render(
-        <DashboardSavedLayouts layouts={[]} {...handlers} {...props} />,
+        <DashboardSavedLayouts
+            layouts={[]}
+            currentWidgets={[]}
+            {...handlers}
+            {...props}
+        />,
     );
 
-    return { ...handlers, ...view };
+    const rerenderWith = (
+        next: Partial<React.ComponentProps<typeof DashboardSavedLayouts>>,
+    ) =>
+        view.rerender(
+            <DashboardSavedLayouts
+                layouts={[]}
+                currentWidgets={[]}
+                {...handlers}
+                {...next}
+            />,
+        );
+
+    return { ...handlers, ...view, rerenderWith };
 };
 
 const layouts: DashboardSavedLayout[] = [
@@ -104,7 +127,7 @@ describe('DashboardSavedLayouts', () => {
     });
 
     test('clears the name once the layouts arrive after saving', async () => {
-        const { rerender, onSave, onApply, onDelete } = setup({ layouts: [] });
+        const { rerenderWith, onSave } = setup({ layouts: [] });
 
         await userEvent.type(
             screen.getByLabelText('Save this layout as'),
@@ -113,20 +136,13 @@ describe('DashboardSavedLayouts', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
         expect(onSave).toHaveBeenCalled();
 
-        rerender(
-            <DashboardSavedLayouts
-                layouts={[makeSavedLayout(3, 'Wide')]}
-                onSave={onSave}
-                onApply={onApply}
-                onDelete={onDelete}
-            />,
-        );
+        rerenderWith({ layouts: [makeSavedLayout(3, 'Wide')] });
 
         expect(screen.getByLabelText('Save this layout as')).toHaveValue('');
     });
 
     test('keeps the name and shows the reason when saving failed', async () => {
-        const { rerender, onSave, onApply, onDelete } = setup({ layouts });
+        const { rerenderWith, onSave } = setup({ layouts });
 
         await userEvent.type(
             screen.getByLabelText('Save this layout as'),
@@ -134,15 +150,10 @@ describe('DashboardSavedLayouts', () => {
         );
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-        rerender(
-            <DashboardSavedLayouts
-                layouts={layouts}
-                error="You can keep at most 20 saved layouts."
-                onSave={onSave}
-                onApply={onApply}
-                onDelete={onDelete}
-            />,
-        );
+        rerenderWith({
+            layouts,
+            error: 'You can keep at most 20 saved layouts.',
+        });
 
         expect(screen.getByRole('alert')).toHaveTextContent('at most 20');
         expect(screen.getByLabelText('Save this layout as')).toHaveValue(
@@ -186,5 +197,174 @@ describe('DashboardSavedLayouts', () => {
         expect(
             screen.getByRole('button', { name: 'Apply Focus' }),
         ).toBeInTheDocument();
+    });
+
+    describe('editing a saved layout', () => {
+        test('marks the layout that is on the dashboard as the current one', () => {
+            setup({ layouts, currentWidgets: layouts[1].widgets });
+
+            expect(screen.getAllByText('Current')).toHaveLength(1);
+            expect(
+                screen.getByRole('button', {
+                    name: 'Replace Overview with the current layout',
+                }),
+            ).toBeDisabled();
+            expect(
+                screen.getByRole('button', {
+                    name: 'Replace Focus with the current layout',
+                }),
+            ).toBeEnabled();
+        });
+
+        test('replaces a layout with the current one after a confirmation', async () => {
+            const { onOverwrite } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', {
+                    name: 'Replace Focus with the current layout',
+                }),
+            );
+            expect(onOverwrite).not.toHaveBeenCalled();
+            expect(
+                screen.getByText('Replace it with the current layout?'),
+            ).toBeInTheDocument();
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Confirm replacing Focus' }),
+            );
+            expect(onOverwrite).toHaveBeenCalledWith(1);
+        });
+
+        test('keeping the layout backs out of replacing it', async () => {
+            const { onOverwrite } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', {
+                    name: 'Replace Focus with the current layout',
+                }),
+            );
+            await userEvent.click(screen.getByRole('button', { name: 'Keep' }));
+
+            expect(onOverwrite).not.toHaveBeenCalled();
+        });
+
+        test('renames a layout', async () => {
+            const { onRename } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Focus' }),
+            );
+            const input = screen.getByDisplayValue('Focus');
+            await userEvent.clear(input);
+            await userEvent.type(input, '  Deep work  ');
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Save the name of Focus' }),
+            );
+
+            expect(onRename).toHaveBeenCalledWith(1, 'Deep work');
+        });
+
+        test('renames with the Enter key and leaves with Escape', async () => {
+            const { onRename } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Focus' }),
+            );
+            await userEvent.type(screen.getByDisplayValue('Focus'), '!{Enter}');
+            expect(onRename).toHaveBeenCalledWith(1, 'Focus!');
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Overview' }),
+            );
+            await userEvent.type(
+                screen.getByDisplayValue('Overview'),
+                '{Escape}',
+            );
+            expect(
+                screen.queryByDisplayValue('Overview'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('an unchanged or empty name just leaves the rename', async () => {
+            const { onRename } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Focus' }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Save the name of Focus' }),
+            );
+
+            expect(onRename).not.toHaveBeenCalled();
+            expect(screen.queryByDisplayValue('Focus')).not.toBeInTheDocument();
+        });
+
+        test('cancelling a rename keeps the name', async () => {
+            const { onRename } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Focus' }),
+            );
+            await userEvent.type(screen.getByDisplayValue('Focus'), 'x');
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Cancel renaming' }),
+            );
+
+            expect(onRename).not.toHaveBeenCalled();
+            expect(screen.getByText('Focus')).toBeInTheDocument();
+        });
+
+        test('leaves the rename once the new name arrived', async () => {
+            const { rerenderWith } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Focus' }),
+            );
+            await userEvent.type(screen.getByDisplayValue('Focus'), '!{Enter}');
+
+            rerenderWith({
+                layouts: [{ ...layouts[0], name: 'Focus!' }, layouts[1]],
+            });
+
+            expect(screen.getByText('Focus!')).toBeInTheDocument();
+            expect(
+                screen.queryByDisplayValue('Focus!'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('stays in the rename and says why when the name was refused', async () => {
+            const { rerenderWith } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Rename Focus' }),
+            );
+            await userEvent.type(screen.getByDisplayValue('Focus'), '!{Enter}');
+
+            rerenderWith({
+                layouts,
+                error: 'You already have a layout with this name.',
+            });
+
+            expect(screen.getByRole('alert')).toHaveTextContent('already have');
+            expect(screen.getByDisplayValue('Focus!')).toBeInTheDocument();
+        });
+
+        test('shows that a layout was applied for a moment', async () => {
+            vi.useFakeTimers({ shouldAdvanceTime: true });
+            const { onApply } = setup({ layouts });
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Apply Focus' }),
+            );
+            expect(onApply).toHaveBeenCalledWith(layouts[0]);
+            expect(screen.getByText('Applied')).toBeInTheDocument();
+
+            await act(async () => {
+                vi.advanceTimersByTime(2000);
+            });
+            expect(screen.queryByText('Applied')).not.toBeInTheDocument();
+
+            vi.useRealTimers();
+        });
     });
 });

@@ -40,6 +40,7 @@ const statOptions = (color: string): DashboardWidgetOption[] => [
     {
         key: 'color',
         label: 'Color',
+        kind: 'color',
         options: ['accent', 'success', 'warning', 'error', 'info'],
         default: color,
     },
@@ -109,6 +110,13 @@ export const DASHBOARD_CATALOG: DashboardCatalogEntry[] = [
                 labels: { hover: 'On hover', always: 'Always' },
             },
             toggle('today', 'Highlight today'),
+            {
+                key: 'color',
+                label: 'Color',
+                kind: 'color',
+                options: ['accent', 'success', 'warning', 'error', 'info'],
+                default: 'accent',
+            },
         ],
     }),
     entry('completion', 'Completion Ratio', ['issueStats'], {

@@ -20,6 +20,8 @@ const handlers = () => ({
     savedLayouts: [] as DashboardSavedLayout[],
     onSaveLayout: vi.fn(),
     onApplyLayout: vi.fn(),
+    onRenameLayout: vi.fn(),
+    onOverwriteLayout: vi.fn(),
     onDeleteLayout: vi.fn(),
 });
 
@@ -286,5 +288,27 @@ describe('DashboardEditorPanel', () => {
             screen.getByRole('button', { name: 'Confirm deleting Focus' }),
         );
         expect(onDeleteLayout).toHaveBeenCalledWith(7);
+    });
+
+    test('a choice of colors is swatches, not text', async () => {
+        const { onOptionChange } = setup(
+            makeWidget('stat_critical', { config: { color: 'error' } }),
+        );
+
+        const group = screen.getByRole('group', { name: 'Color' });
+        const swatch = within(group).getByRole('button', { name: 'Success' });
+        expect(swatch).toHaveStyle({ backgroundColor: 'var(--success-color)' });
+        expect(swatch).toHaveTextContent('');
+        expect(
+            within(group).getByRole('button', { name: 'Error' }),
+        ).toHaveAttribute('aria-pressed', 'true');
+
+        await userEvent.click(swatch);
+
+        expect(onOptionChange).toHaveBeenCalledWith(
+            'stat_critical',
+            'color',
+            'success',
+        );
     });
 });

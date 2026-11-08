@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { FC, ReactNode, useEffect, useState } from 'react';
+import ColorSwatches from '@/Components/Atoms/ColorSwatches/ColorSwatches';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SegmentedControl from '@/Components/Atoms/SegmentedControl/SegmentedControl';
@@ -12,6 +13,10 @@ import {
     DashboardWidgetType,
 } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
+import {
+    DASHBOARD_COLOR_VALUES,
+    toDashboardColor,
+} from '@/utils/dashboardColors';
 import {
     GRID_COLUMNS,
     ROW_HEIGHT,
@@ -39,6 +44,8 @@ interface DashboardEditorPanelProps {
     saveLayoutError?: string | null;
     onSaveLayout: (name: string) => void;
     onApplyLayout: (layout: DashboardSavedLayout) => void;
+    onRenameLayout: (id: number, name: string) => void;
+    onOverwriteLayout: (id: number) => void;
     onDeleteLayout: (id: number) => void;
     /** A wide screen docks the panel at the side, a narrow one below. */
     desktop?: boolean;
@@ -91,6 +98,8 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
     saveLayoutError = null,
     onSaveLayout,
     onApplyLayout,
+    onRenameLayout,
+    onOverwriteLayout,
     onDeleteLayout,
     desktop = true,
 }) => {
@@ -148,9 +157,12 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                         {tab === 'saved' ? (
                             <DashboardSavedLayouts
                                 layouts={savedLayouts}
+                                currentWidgets={widgets}
                                 error={saveLayoutError}
                                 onSave={onSaveLayout}
                                 onApply={onApplyLayout}
+                                onRename={onRenameLayout}
+                                onOverwrite={onOverwriteLayout}
                                 onDelete={onDeleteLayout}
                             />
                         ) : tab === 'widgets' ? (
@@ -275,40 +287,74 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     </p>
                                 </Section>
 
-                                {entry.options.map((option) => (
-                                    <Section
-                                        key={option.key}
-                                        title={option.label}
-                                    >
-                                        <SegmentedControl
-                                            label={option.label}
-                                            value={
-                                                selected.config[option.key] ??
-                                                option.default
-                                            }
-                                            options={option.options.map(
-                                                (value) => ({
-                                                    value,
-                                                    label:
-                                                        option.labels?.[
-                                                            String(value)
-                                                        ] ??
-                                                        (typeof value ===
-                                                        'string'
-                                                            ? capitalize(value)
-                                                            : String(value)),
-                                                }),
+                                {entry.options.map((option) => {
+                                    const current =
+                                        selected.config[option.key] ??
+                                        option.default;
+                                    const labelOf = (value: string | number) =>
+                                        option.labels?.[String(value)] ??
+                                        (typeof value === 'string'
+                                            ? capitalize(value)
+                                            : String(value));
+
+                                    return (
+                                        <Section
+                                            key={option.key}
+                                            title={option.label}
+                                        >
+                                            {option.kind === 'color' ? (
+                                                <ColorSwatches
+                                                    label={option.label}
+                                                    value={String(current)}
+                                                    options={option.options.map(
+                                                        (value) => ({
+                                                            value: String(
+                                                                value,
+                                                            ),
+                                                            label: labelOf(
+                                                                value,
+                                                            ),
+                                                            color: DASHBOARD_COLOR_VALUES[
+                                                                toDashboardColor(
+                                                                    String(
+                                                                        value,
+                                                                    ),
+                                                                )
+                                                            ],
+                                                        }),
+                                                    )}
+                                                    onChange={(value) =>
+                                                        onOptionChange(
+                                                            selected.id,
+                                                            option.key,
+                                                            value,
+                                                        )
+                                                    }
+                                                />
+                                            ) : (
+                                                <SegmentedControl
+                                                    label={option.label}
+                                                    value={current}
+                                                    options={option.options.map(
+                                                        (value) => ({
+                                                            value,
+                                                            label: labelOf(
+                                                                value,
+                                                            ),
+                                                        }),
+                                                    )}
+                                                    onChange={(value) =>
+                                                        onOptionChange(
+                                                            selected.id,
+                                                            option.key,
+                                                            value,
+                                                        )
+                                                    }
+                                                />
                                             )}
-                                            onChange={(value) =>
-                                                onOptionChange(
-                                                    selected.id,
-                                                    option.key,
-                                                    value,
-                                                )
-                                            }
-                                        />
-                                    </Section>
-                                ))}
+                                        </Section>
+                                    );
+                                })}
 
                                 <Section title="Position">
                                     <div className="flex gap-2">

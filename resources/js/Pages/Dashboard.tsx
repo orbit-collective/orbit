@@ -171,6 +171,10 @@ export default function Dashboard({
                                     saveLayoutError={editor.saveLayoutError}
                                     onSaveLayout={editor.saveLayoutAs}
                                     onApplyLayout={editor.applyLayout}
+                                    onRenameLayout={editor.renameSavedLayout}
+                                    onOverwriteLayout={
+                                        editor.overwriteSavedLayout
+                                    }
                                     onDeleteLayout={editor.deleteSavedLayout}
                                     desktop={desktop}
                                 />

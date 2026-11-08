@@ -33,6 +33,8 @@ interface DashboardWidgetOption {
     default: string | number;
     /** How a value is called in the editor, when it is not the value itself. */
     labels?: Record<string, string>;
+    /** `color` when the choice is one of the dashboard colors, shown as swatches. */
+    kind?: 'color';
 }
 
 /** What the server says a widget type can do (`DashboardWidgetType::catalog()`). */
