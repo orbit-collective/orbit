@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import {
@@ -310,5 +310,75 @@ describe('DashboardEditorPanel', () => {
             'color',
             'success',
         );
+    });
+
+    test('adding a widget confirms with a check for a moment', async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true });
+        const { container, onAdd } = setup();
+        const button = screen.getByRole('button', {
+            name: 'Add Completion Ratio',
+        });
+
+        expect(button.querySelector('.lucide-check')).toBeNull();
+
+        await userEvent.click(button);
+        expect(onAdd).toHaveBeenCalledWith('completion');
+        expect(button.querySelector('.lucide-check')).not.toBeNull();
+        expect(container.querySelectorAll('.lucide-check')).toHaveLength(1);
+
+        await act(async () => {
+            vi.advanceTimersByTime(1500);
+        });
+        expect(button.querySelector('.lucide-check')).toBeNull();
+
+        vi.useRealTimers();
+    });
+
+    test('the count of a widget type is shown on its row and follows the dashboard', () => {
+        const { rerender } = setup(undefined, {
+            widgets: [makeWidget('trend', { id: 'a' })],
+        });
+        const row = () =>
+            screen.getByRole('button', { name: 'Add Productivity Trend' });
+        expect(row()).toHaveTextContent('×1');
+
+        rerender(
+            <DashboardEditorPanel
+                catalog={DASHBOARD_CATALOG}
+                widgets={[
+                    makeWidget('trend', { id: 'a' }),
+                    makeWidget('trend', { id: 'b' }),
+                ]}
+                canAdd
+                {...handlers()}
+            />,
+        );
+        expect(row()).toHaveTextContent('×2');
+    });
+
+    test('moving between tabs brings the content in from the side of the pick', async () => {
+        setup(undefined, { savedLayouts: [makeSavedLayout(1, 'Focus')] });
+
+        // Forward: the widgets tab to the saved one.
+        await userEvent.click(screen.getByRole('button', { name: 'Saved' }));
+        expect(screen.getByText('Save this layout as')).toBeInTheDocument();
+
+        // And back again.
+        await userEvent.click(screen.getByRole('button', { name: 'Widgets' }));
+        expect(screen.getByText('Add to dashboard')).toBeInTheDocument();
+    });
+
+    test('the tab that is picked sits on the sliding pill', async () => {
+        setup();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+
+        const pills = screen
+            .getAllByTestId('segment-pill')
+            .filter((pill) => pill.closest('[aria-label="Panel"]'));
+        expect(pills).toHaveLength(1);
+        expect(
+            screen.getByRole('button', { name: 'Settings' }),
+        ).toContainElement(pills[0]);
     });
 });

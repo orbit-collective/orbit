@@ -23,7 +23,7 @@ import {
     WIDTH_PRESETS,
 } from '@/utils/dashboardLayout';
 import { FOCUS_RING } from '@/utils/focusRing';
-import { DURATION, EASE } from '@/utils/motion';
+import { DURATION, EASE, SPRING, rowIn, rowsParent } from '@/utils/motion';
 
 interface DashboardEditorPanelProps {
     catalog: DashboardCatalogEntry[];
@@ -51,6 +51,11 @@ interface DashboardEditorPanelProps {
     desktop?: boolean;
 }
 
+type PanelTab = 'widgets' | 'settings' | 'saved';
+
+/** The tabs in the order they are shown, which gives a direction to a switch. */
+const PANEL_TABS: PanelTab[] = ['widgets', 'settings', 'saved'];
+
 const capitalize = (value: string) =>
     value.charAt(0).toUpperCase() + value.slice(1);
 
@@ -58,18 +63,23 @@ const Section: FC<{ title: string; children: ReactNode }> = ({
     title,
     children,
 }) => (
-    <section className="flex flex-col gap-2">
+    <motion.section variants={rowIn} className="flex flex-col gap-2">
         <h4 className="m-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
             {title}
         </h4>
         {children}
-    </section>
+    </motion.section>
 );
 
 const IconTile: FC<{ icon: DashboardCatalogEntry['icon'] }> = ({ icon }) => (
-    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
+    <motion.span
+        initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+        animate={{ scale: 1, rotate: 0, opacity: 1 }}
+        transition={SPRING}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]"
+    >
         <Icon name={icon} size={16} />
-    </span>
+    </motion.span>
 );
 
 const ACTION_BUTTON = cn(
@@ -103,15 +113,37 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
     onDeleteLayout,
     desktop = true,
 }) => {
-    const [tab, setTab] = useState<'widgets' | 'settings' | 'saved'>('widgets');
+    const [tab, setTab] = useState<PanelTab>('widgets');
+    // Which way the content of a tab comes from: the way the pick moved.
+    const [direction, setDirection] = useState<1 | -1>(1);
+    // The widget type that was just added, until the confirmation fades.
+    const [added, setAdded] = useState<DashboardWidgetType | null>(null);
     const selectedId = selected?.id;
     const entry = catalog.find((item) => item.type === selected?.type);
     const index = widgets.findIndex((widget) => widget.id === selectedId);
 
+    const changeTab = (next: PanelTab) => {
+        setDirection(
+            PANEL_TABS.indexOf(next) >= PANEL_TABS.indexOf(tab) ? 1 : -1,
+        );
+        setTab(next);
+    };
+
     // Picking a widget on the dashboard opens its settings.
     useEffect(() => {
-        if (selectedId) setTab('settings');
+        if (selectedId) {
+            setDirection(1);
+            setTab('settings');
+        }
     }, [selectedId]);
+
+    useEffect(() => {
+        if (!added) return;
+
+        const timer = setTimeout(() => setAdded(null), 1200);
+
+        return () => clearTimeout(timer);
+    }, [added]);
 
     return (
         <motion.aside
@@ -142,7 +174,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                             { value: 'settings', label: 'Settings' },
                             { value: 'saved', label: 'Saved' },
                         ]}
-                        onChange={setTab}
+                        onChange={changeTab}
                     />
                 </div>
 
@@ -150,9 +182,9 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                     {/* A tab's content rises in when the tab changes. */}
                     <motion.div
                         key={tab}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: DURATION.fast, ease: EASE }}
+                        initial={{ opacity: 0, x: direction * 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: DURATION.base, ease: EASE }}
                     >
                         {tab === 'saved' ? (
                             <DashboardSavedLayouts
@@ -177,8 +209,18 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                         return (
                                             <li key={item.type}>
                                                 <RowReveal index={itemIndex}>
-                                                    <button
+                                                    <motion.button
                                                         type="button"
+                                                        initial="rest"
+                                                        whileHover="hover"
+                                                        whileTap={{
+                                                            scale: 0.98,
+                                                        }}
+                                                        variants={{
+                                                            rest: { x: 0 },
+                                                            hover: { x: 3 },
+                                                        }}
+                                                        transition={SPRING}
                                                         aria-label={`Add ${item.label}`}
                                                         title={
                                                             canAdd
@@ -186,9 +228,10 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                                 : 'The dashboard is full'
                                                         }
                                                         disabled={!canAdd}
-                                                        onClick={() =>
-                                                            onAdd(item.type)
-                                                        }
+                                                        onClick={() => {
+                                                            onAdd(item.type);
+                                                            setAdded(item.type);
+                                                        }}
                                                         className={cn(
                                                             'group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-2.5 text-left transition-colors hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)] disabled:cursor-not-allowed disabled:opacity-50',
                                                             FOCUS_RING,
@@ -203,9 +246,24 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                                     {item.label}
                                                                 </span>
                                                                 {count > 0 && (
-                                                                    <span className="shrink-0 rounded-full bg-[var(--bg-light-color)] px-1.5 text-[10px] font-semibold text-[var(--text-gray-color)]">
+                                                                    <motion.span
+                                                                        // The count pops when it changes.
+                                                                        key={
+                                                                            count
+                                                                        }
+                                                                        initial={{
+                                                                            scale: 1.6,
+                                                                        }}
+                                                                        animate={{
+                                                                            scale: 1,
+                                                                        }}
+                                                                        transition={
+                                                                            SPRING
+                                                                        }
+                                                                        className="shrink-0 rounded-full bg-[var(--bg-light-color)] px-1.5 text-[10px] font-semibold text-[var(--text-gray-color)]"
+                                                                    >
                                                                         ×{count}
-                                                                    </span>
+                                                                    </motion.span>
                                                                 )}
                                                             </span>
                                                             <span className="block text-[11px] leading-snug text-[var(--text-muted-color)]">
@@ -214,12 +272,52 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                                 }
                                                             </span>
                                                         </span>
-                                                        <Icon
-                                                            name="Plus"
-                                                            size={16}
-                                                            className="shrink-0 text-[var(--text-muted-color)] transition-colors group-hover:text-[var(--accent-color)]"
-                                                        />
-                                                    </button>
+                                                        <motion.span
+                                                            key={
+                                                                added ===
+                                                                item.type
+                                                                    ? 'added'
+                                                                    : 'plus'
+                                                            }
+                                                            variants={{
+                                                                rest: {
+                                                                    rotate: 0,
+                                                                },
+                                                                hover: {
+                                                                    rotate: 90,
+                                                                },
+                                                            }}
+                                                            initial={
+                                                                added ===
+                                                                item.type
+                                                                    ? {
+                                                                          scale: 0,
+                                                                      }
+                                                                    : undefined
+                                                            }
+                                                            animate={{
+                                                                scale: 1,
+                                                            }}
+                                                            transition={SPRING}
+                                                            className={cn(
+                                                                'flex shrink-0 transition-colors',
+                                                                added ===
+                                                                    item.type
+                                                                    ? 'text-[var(--success-color)]'
+                                                                    : 'text-[var(--text-muted-color)] group-hover:text-[var(--accent-color)]',
+                                                            )}
+                                                        >
+                                                            <Icon
+                                                                name={
+                                                                    added ===
+                                                                    item.type
+                                                                        ? 'Check'
+                                                                        : 'Plus'
+                                                                }
+                                                                size={16}
+                                                            />
+                                                        </motion.span>
+                                                    </motion.button>
                                                 </RowReveal>
                                             </li>
                                         );
@@ -227,8 +325,18 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                 </ul>
                             </Section>
                         ) : selected && entry ? (
-                            <div className="flex flex-col gap-5">
-                                <div className="flex items-center gap-3">
+                            <motion.div
+                                // Picking another widget lays its settings out again.
+                                key={selected.id}
+                                variants={rowsParent}
+                                initial="hidden"
+                                animate="show"
+                                className="flex flex-col gap-5"
+                            >
+                                <motion.div
+                                    variants={rowIn}
+                                    className="flex items-center gap-3"
+                                >
                                     <IconTile icon={entry.icon} />
                                     <div className="min-w-0">
                                         <h3 className="m-0 truncate text-sm font-semibold text-[var(--text-color)]">
@@ -238,7 +346,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                             {entry.description}
                                         </p>
                                     </div>
-                                </div>
+                                </motion.div>
 
                                 {entry.variants.length > 1 && (
                                     <Section title="Style">
@@ -385,7 +493,10 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     </div>
                                 </Section>
 
-                                <div className="flex items-center justify-between gap-3 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] px-3 py-2.5">
+                                <motion.div
+                                    variants={rowIn}
+                                    className="flex items-center justify-between gap-3 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] px-3 py-2.5"
+                                >
                                     <span className="text-sm font-medium text-[var(--text-color)]">
                                         Show on dashboard
                                     </span>
@@ -396,9 +507,11 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                             onToggleVisible(selected.id)
                                         }
                                     />
-                                </div>
+                                </motion.div>
 
-                                <button
+                                <motion.button
+                                    variants={rowIn}
+                                    whileTap={{ scale: 0.97 }}
                                     type="button"
                                     onClick={() => onRemove(selected.id)}
                                     className={cn(
@@ -408,13 +521,21 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                 >
                                     <Icon name="Trash" size={13} />
                                     Remove widget
-                                </button>
-                            </div>
+                                </motion.button>
+                            </motion.div>
                         ) : (
                             <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
-                                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[var(--text-muted-color)]">
+                                <motion.span
+                                    animate={{ y: [0, -4, 0] }}
+                                    transition={{
+                                        duration: 3,
+                                        ease: 'easeInOut',
+                                        repeat: Infinity,
+                                    }}
+                                    className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[var(--text-muted-color)]"
+                                >
                                     <Icon name="MousePointerClick" size={20} />
-                                </span>
+                                </motion.span>
                                 <p className="m-0 text-sm font-semibold text-[var(--text-color)]">
                                     Pick a widget
                                 </p>
