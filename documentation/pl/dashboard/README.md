@@ -57,6 +57,20 @@ wariantu nadal da się zastosować. Strona dostaje je jako prop
 zapisywane do czasu **Save**); miniatury to `LayoutPreview`, który rysuje
 układ na prawdziwej siatce.
 
+## Animacje
+
+Edytor porusza się dzięki `framer-motion` i wspólnym `EASE`/`DURATION` z
+`utils/motion.ts`: pasek rozwija się pod nagłówkiem strony, panel rośnie z
+boku (na telefonie od dołu, zobacz `useMediaQuery`), znaczniki widgetów i
+miniatury zapisanych układów pojawiają się jedno po drugim, dodane widgety
+wyrastają, a usunięte zapadają się, podczas gdy pozostałe wsuwają się na
+miejsce (`layout="position"` na komórce, transformacja przeciągania na
+wewnętrznym elemencie, żeby się nie gryzły). Widgety obecne przy starcie
+edycji nie animują wejścia (`AnimatePresence initial={false}`), a cała
+strona jest w `MotionConfig reducedMotion="user"`. To, co test ma zobaczyć
+od razu, nie powinno zależeć od animacji wyjścia: zakładki i pytanie o reset
+animują się tylko przy wejściu.
+
 ## Dane ładowane tylko dla widocznych widgetów
 
 `DashboardController` owija każdy prop, którego użyłby **ukryty** widget,

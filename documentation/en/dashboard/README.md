@@ -55,6 +55,20 @@ applies. The page gets them as the `savedLayouts` prop. **Apply** only puts a
 saved layout on the draft (nothing is stored until **Save**); the pictures are
 `LayoutPreview`, which draws the layout on the real grid.
 
+## Motion
+
+The editor moves with `framer-motion` and the shared `EASE`/`DURATION` of
+`utils/motion.ts`: the bar unfolds under the page header, the panel grows
+at the side (below on a phone, see `useMediaQuery`), the tags of the widgets
+and the pictures of saved layouts appear one after another, widgets that
+are added grow in and removed ones shrink away while the others slide into
+place (`layout="position"` on the cell, the drag transform on an inner
+element so the two never fight). Widgets already there when editing starts
+do not animate in (`AnimatePresence initial={false}`), and the whole page is
+inside `MotionConfig reducedMotion="user"`. Anything a test must see right
+away should not depend on an exit animation: tabs and the reset question
+only animate in.
+
 ## Data is loaded for visible widgets only
 
 `DashboardController` wraps every prop a **hidden** widget would have used
