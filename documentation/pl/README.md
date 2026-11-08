@@ -35,6 +35,7 @@ documentation/
     dropdowns/               <- angielskie tłumaczenie każdego przewodnika poniżej
     labels/                  <- angielskie tłumaczenie każdego przewodnika poniżej
     priorities/              <- angielskie tłumaczenie każdego przewodnika poniżej
+    dashboard/               <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-types/             <- angielskie tłumaczenie każdego przewodnika poniżej
     issue-views/             <- angielskie tłumaczenie każdego przewodnika poniżej
     rich-text-editor/        <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -124,6 +125,9 @@ documentation/
       README.md              <- indeks tej kategorii
       01-change-the-starter-priorities.md
       02-show-priorities-on-a-new-page.md
+    dashboard/
+      README.md              <- indeks tej kategorii
+      01-add-a-widget.md
     issue-types/
       README.md              <- indeks tej kategorii
       01-add-a-new-default-issue-type.md
