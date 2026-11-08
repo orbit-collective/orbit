@@ -617,10 +617,6 @@ export interface IssuePreviewCardProps {
 export interface UpcomingDeadlinesPanelProps {
     issues: Issue[];
 }
-export interface DashboardVisualsProps {
-    stats: IssueStats;
-    productivity_trend: ProductivityTrendProps[];
-}
 export interface IssueBoardProps {
     issues: Issue[];
 }

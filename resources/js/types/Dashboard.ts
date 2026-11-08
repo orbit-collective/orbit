@@ -14,7 +14,7 @@ export type DashboardWidgetType =
 export type DashboardWidgetConfig = Record<string, string | number>;
 
 /** One widget of the dashboard as saved in the user's layout. */
-export interface DashboardWidget {
+export type DashboardWidget = {
     id: string;
     type: DashboardWidgetType;
     variant: string;
@@ -22,9 +22,9 @@ export interface DashboardWidget {
     span: number;
     visible: boolean;
     config: DashboardWidgetConfig;
-}
+};
 
-export interface DashboardWidgetOption {
+interface DashboardWidgetOption {
     key: string;
     label: string;
     options: (string | number)[];

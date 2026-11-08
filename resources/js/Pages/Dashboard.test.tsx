@@ -1,14 +1,21 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { makeDashboardLayout, makeWidget } from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
-import { ActivityLogEntry } from '@/types/ActivityLog';
-import { IssueStats, ProductivityTrendProps } from '@/types/Issues';
+import { Command } from '@/types/Commands';
+import { DashboardLayoutProp } from '@/types/Dashboard';
 import { Project } from '@/types/Projects';
 import Dashboard from './Dashboard';
 
-const mocks = vi.hoisted(() => ({ useDashboardLive: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+    useDashboardLive: vi.fn(),
+    runCommand: vi.fn(),
+    router: { put: vi.fn(), delete: vi.fn(), reload: vi.fn() },
+    commands: new Map<string, { perform?: () => void }>(),
+}));
 
 vi.mock('@/live/useDashboardLive', () => ({
     useDashboardLive: mocks.useDashboardLive,
@@ -16,11 +23,18 @@ vi.mock('@/live/useDashboardLive', () => ({
 
 vi.mock('@/context/CommandContext', () => ({
     useCommandPalette: () => ({
-        runCommand: vi.fn(),
+        runCommand: mocks.runCommand,
+        register: (commands: Command[]) => {
+            commands.forEach((command) =>
+                mocks.commands.set(command.id, command),
+            );
+            return () => commands.forEach((c) => mocks.commands.delete(c.id));
+        },
     }),
 }));
 
 vi.mock('@inertiajs/react', () => ({
+    router: mocks.router,
     Link: ({
         children,
         href,
@@ -56,55 +70,12 @@ vi.mock('@/Components/Organisms/PageHeader/PageHeader', () => ({
     ),
 }));
 
-vi.mock('@/Components/Organisms/DashboardVisuals/DashboardVisuals', () => ({
-    default: ({
-        stats,
-        productivity_trend,
-    }: {
-        stats: IssueStats;
-        productivity_trend: ProductivityTrendProps[];
-    }) => (
-        <div
-            data-testid="dashboard-visuals"
-            data-issues-count={stats.total}
-            data-trend-count={productivity_trend.length}
-        />
-    ),
-}));
-
 vi.mock('@/Components/Molecules/Pagination/Pagination', () => ({
-    default: ({
-        from,
-        to,
-        total,
-        pageParam,
-        perPageParam,
-        defaultPerPage,
-        preserveState,
-    }: {
-        from: number;
-        to: number;
-        total: number;
-        pageParam?: string;
-        perPageParam?: string;
-        defaultPerPage?: number;
-        preserveState?: boolean;
-    }) => (
-        <div
-            data-testid="pagination"
-            data-from={from}
-            data-to={to}
-            data-total={total}
-            data-page-param={pageParam}
-            data-per-page-param={perPageParam}
-            data-default-per-page={defaultPerPage}
-            data-preserve-state={String(preserveState)}
-        />
-    ),
+    default: () => <div data-testid="pagination" />,
 }));
 
 vi.mock('@/Components/Organisms/ActivityLogs/ActivityLogs', () => ({
-    default: ({ logs }: { logs: ActivityLogEntry[] }) => (
+    default: ({ logs }: { logs: unknown[] }) => (
         <div data-testid="activity-logs" data-logs-count={logs.length} />
     ),
 }));
@@ -120,30 +91,65 @@ const makeProject = (overrides: Partial<Project> = {}): Project => ({
     ...overrides,
 });
 
+const baseProps = () => ({
+    dashboardLayout: makeDashboardLayout(),
+    issueStats: makeIssueStats({ high: 2, todo: 2, done: 2 }),
+    projects: [makeProject()],
+    productivity_trend: [],
+    activityLogs: makePaginated([]),
+    users: [],
+    issueTypes: [],
+});
+
+const renderDashboard = (
+    overrides: Partial<React.ComponentProps<typeof Dashboard>> = {},
+) => render(<Dashboard {...baseProps()} {...overrides} />);
+
+/** Opens the editor the way the palette does. */
+const startEditing = () =>
+    act(() => {
+        mocks.commands.get('dashboard.edit')!.perform!();
+    });
+
+const layoutOf = (...types: Parameters<typeof makeWidget>[0][]) =>
+    makeDashboardLayout(types.map((type) => makeWidget(type)));
+
+beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.commands.clear();
+});
+
 describe('Dashboard Page', () => {
     test('follows live changes in every project of the user', () => {
-        render(
-            <Dashboard
-                issueStats={makeIssueStats()}
-                projects={[makeProject({ id: 4 }), makeProject({ id: 9 })]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
-        );
+        renderDashboard({
+            projects: [makeProject({ id: 4 }), makeProject({ id: 9 })],
+        });
 
-        expect(mocks.useDashboardLive).toHaveBeenCalledWith([4, 9]);
+        expect(mocks.useDashboardLive).toHaveBeenCalledWith(
+            [4, 9],
+            expect.arrayContaining(['projects', 'issueStats', 'activityLogs']),
+        );
+    });
+
+    test('only the data props that arrived are followed live', () => {
+        renderDashboard({
+            dashboardLayout: layoutOf('stat_projects'),
+            productivity_trend: undefined,
+            activityLogs: undefined,
+            users: undefined,
+            issueTypes: undefined,
+        });
+
+        expect(mocks.useDashboardLive).toHaveBeenCalledWith(
+            [1],
+            ['projects', 'issueStats'],
+        );
     });
 
     test('renders the Sidebar with the provided projects and a Dashboard page header', () => {
-        const projects = [makeProject({ id: 1 }), makeProject({ id: 2 })];
-        render(
-            <Dashboard
-                issueStats={makeIssueStats()}
-                projects={projects}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
-        );
+        renderDashboard({
+            projects: [makeProject({ id: 1 }), makeProject({ id: 2 })],
+        });
 
         expect(screen.getByTestId('sidebar')).toHaveAttribute(
             'data-projects-count',
@@ -155,231 +161,233 @@ describe('Dashboard Page', () => {
         );
     });
 
-    test('computes stat card values from the issue counts', () => {
-        const issueStats = makeIssueStats({
-            high: 2,
-            medium: 1,
-            low: 1,
-            todo: 2,
-            done: 2,
-        });
-        render(
-            <Dashboard
-                issueStats={issueStats}
-                projects={[makeProject()]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
-        );
+    test('draws the widgets of the layout with their numbers', () => {
+        renderDashboard();
 
-        // 4 total, 2 closed => 2 open.
-        expect(screen.getByText('Open Issues')).toBeInTheDocument();
-        expect(screen.getAllByText('2')).not.toHaveLength(0);
-        // 2 issues at the top of their priority scale => Critical Tasks value of 2.
-        expect(screen.getByText('Critical Tasks')).toBeInTheDocument();
-        expect(
-            screen.getByText('Issues at the top of their priority scale'),
-        ).toBeInTheDocument();
-        // 2/4 closed => 50% resolution rate (rendered as both the stat
-        // value and the progress bar percentage label).
-        expect(screen.getAllByText('50%').length).toBeGreaterThan(0);
-        // 1 project => Active Projects value of 1.
         expect(screen.getByText('Active Projects')).toBeInTheDocument();
+        expect(screen.getByText('Open Issues')).toBeInTheDocument();
+        expect(screen.getByText('Critical Tasks')).toBeInTheDocument();
+        expect(screen.getByText('Resolution Rate')).toBeInTheDocument();
+        // 2 of 4 issues are done.
+        expect(screen.getAllByText('50%').length).toBeGreaterThan(0);
+        expect(screen.getByTestId('activity-logs')).toBeInTheDocument();
+        expect(screen.getByText('Projects Directory')).toBeInTheDocument();
     });
 
     test('shows 0% resolution rate when there are no issues', () => {
-        render(
-            <Dashboard
-                issueStats={makeIssueStats()}
-                projects={[]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
-        );
+        renderDashboard({ issueStats: makeIssueStats(), projects: [] });
 
         expect(screen.getAllByText('0%').length).toBeGreaterThan(0);
     });
 
-    test('forwards the stats and productivity_trend to DashboardVisuals', () => {
-        const issueStats = makeIssueStats({ todo: 2 });
-        const trend = [{ day: 'Mon', count: 3 }];
-        render(
-            <Dashboard
-                issueStats={issueStats}
-                projects={[]}
-                productivity_trend={trend}
-                activityLogs={makePaginated([])}
-            />,
-        );
-
-        const visuals = screen.getByTestId('dashboard-visuals');
-        expect(visuals).toHaveAttribute('data-issues-count', '2');
-        expect(visuals).toHaveAttribute('data-trend-count', '1');
-    });
-
-    test('forwards activityLogs to ActivityLogs', () => {
-        const activityLogs: ActivityLogEntry[] = [
-            {
-                id: 1,
-                body: 'Created project: Orbit',
-                userId: 1,
-                userName: 'Jane Doe',
-                userAvatar: null,
-                createdAt: '2026-01-01T10:00:00Z',
-            },
-        ];
-        render(
-            <Dashboard
-                issueStats={makeIssueStats()}
-                projects={[]}
-                productivity_trend={[]}
-                activityLogs={makePaginated(activityLogs, {
-                    from: 11,
-                    to: 11,
-                    total: 11,
-                })}
-            />,
-        );
-
-        expect(screen.getByTestId('activity-logs')).toHaveAttribute(
-            'data-logs-count',
-            '1',
-        );
-        const pagination = screen.getByTestId('pagination');
-        expect(pagination).toHaveAttribute('data-from', '11');
-        expect(pagination).toHaveAttribute('data-to', '11');
-        expect(pagination).toHaveAttribute('data-total', '11');
-        expect(pagination).toHaveAttribute('data-page-param', 'activityPage');
-        expect(pagination).toHaveAttribute(
-            'data-per-page-param',
-            'activityPerPage',
-        );
-        expect(pagination).toHaveAttribute('data-default-per-page', '10');
-        expect(pagination).toHaveAttribute('data-preserve-state', 'true');
-    });
-
-    test('renders up to 3 projects and a "view all" link when there are more', () => {
-        const projects = [
-            makeProject({ id: 1, name: 'Project One' }),
-            makeProject({ id: 2, name: 'Project Two' }),
-            makeProject({ id: 3, name: 'Project Three' }),
-            makeProject({ id: 4, name: 'Project Four' }),
-        ];
-        render(
-            <Dashboard
-                issueStats={makeIssueStats()}
-                projects={projects}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
-        );
-
-        expect(screen.getByText('Project One')).toBeInTheDocument();
-        expect(screen.getByText('Project Two')).toBeInTheDocument();
-        expect(screen.getByText('Project Three')).toBeInTheDocument();
-        expect(screen.queryByText('Project Four')).not.toBeInTheDocument();
-
-        const viewAllLink = screen.getByText('View all 4 projects');
-        expect(viewAllLink.closest('a')).toHaveAttribute('href', '/projects');
-    });
-
-    test('does not render a "view all" link when there are 3 or fewer projects', () => {
-        render(
-            <Dashboard
-                issueStats={makeIssueStats()}
-                projects={[makeProject({ id: 1 })]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
-        );
-
-        expect(screen.queryByText(/View all/)).not.toBeInTheDocument();
-    });
-
-    test('renders an empty state when there are no projects', () => {
-        render(
-            <Dashboard
-                issueStats={makeIssueStats()}
-                projects={[]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
-        );
-
-        expect(
-            screen.getByText('Create your first project'),
-        ).toBeInTheDocument();
-    });
-
-    test('the four stat cards rise in with the page and end up visible with their numbers', async () => {
-        const issueStats = makeIssueStats({
-            high: 2,
-            medium: 1,
-            low: 1,
-            todo: 2,
-            done: 2,
+    test('draws only the visible widgets, in the order of the layout', () => {
+        renderDashboard({
+            dashboardLayout: makeDashboardLayout([
+                makeWidget('stat_critical'),
+                makeWidget('stat_projects'),
+                makeWidget('stat_open_issues', { visible: false }),
+            ]),
         });
-        const { container } = render(
-            <Dashboard
-                issueStats={issueStats}
-                projects={[makeProject(), makeProject({ id: 2 })]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
+
+        const titles = ['Critical Tasks', 'Active Projects'].map((title) =>
+            screen.getByText(title),
         );
 
-        await waitFor(() =>
-            expect(screen.getByText('Active Projects')).toBeVisible(),
-        );
-        const cards = Array.from(
-            container.querySelector('section.grid')!.children,
-        );
-        expect(cards).toHaveLength(4);
-        cards.forEach((card) => expect(card).toHaveClass('h-full'));
         expect(
-            screen
-                .getByText('Active Projects')
-                .closest('div[class*="rounded-"]'),
-        ).toHaveTextContent('2');
+            titles[0].compareDocumentPosition(titles[1]) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+        expect(screen.queryByText('Open Issues')).not.toBeInTheDocument();
     });
 
-    test('the page content is a staggering main with the panels as sections', () => {
-        const { container } = render(
-            <Dashboard
-                issueStats={makeIssueStats({})}
-                projects={[makeProject()]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
+    test('keeps the "Open dashboard editor" button, which runs the edit command', async () => {
+        renderDashboard();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Open dashboard editor' }),
         );
 
-        const main = container.querySelector('main');
-        expect(main).toBeInTheDocument();
-        expect(main!.className).toContain('overflow-y-auto');
-        expect(main!.children.length).toBeGreaterThanOrEqual(3);
+        expect(mocks.runCommand).toHaveBeenCalledWith('dashboard.edit');
     });
 
-    test('the project directory cards and the empty state both end up visible', async () => {
-        const { rerender } = render(
-            <Dashboard
-                issueStats={makeIssueStats({})}
-                projects={[makeProject({ name: 'Alpha' })]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
-        );
-        await waitFor(() => expect(screen.getByText('Alpha')).toBeVisible());
+    test('registers the edit command in the palette', () => {
+        renderDashboard();
 
-        rerender(
-            <Dashboard
-                issueStats={makeIssueStats({})}
-                projects={[]}
-                productivity_trend={[]}
-                activityLogs={makePaginated([])}
-            />,
+        expect(mocks.commands.has('dashboard.edit')).toBe(true);
+    });
+});
+
+describe('Dashboard editing', () => {
+    test('shows the editor bar and panel only while editing', () => {
+        renderDashboard();
+
+        expect(screen.queryByText('Editing dashboard')).not.toBeInTheDocument();
+
+        startEditing();
+
+        expect(screen.getByText('Editing dashboard')).toBeInTheDocument();
+        expect(
+            screen.getByRole('complementary', { name: 'Dashboard editor' }),
+        ).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+    });
+
+    test('cancel leaves the editor and drops the draft', async () => {
+        renderDashboard();
+        startEditing();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Hide Open Issues' }),
         );
+        await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+        expect(screen.queryByText('Editing dashboard')).not.toBeInTheDocument();
+        expect(screen.getByText('Open Issues')).toBeInTheDocument();
+        expect(mocks.router.put).not.toHaveBeenCalled();
+    });
+
+    test('hiding a widget and saving sends the whole layout', async () => {
+        renderDashboard({
+            dashboardLayout: layoutOf('stat_projects', 'stat_critical'),
+        });
+        startEditing();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Hide Critical Tasks' }),
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(mocks.router.put).toHaveBeenCalledWith(
+            '/dashboard/layout',
+            {
+                widgets: [
+                    makeWidget('stat_projects'),
+                    makeWidget('stat_critical', { visible: false }),
+                ],
+            },
+            expect.objectContaining({ preserveScroll: true }),
+        );
+    });
+
+    test('leaves the editor once the layout was saved', async () => {
+        mocks.router.put.mockImplementation((_url, _data, options) =>
+            options.onSuccess(),
+        );
+        renderDashboard({ dashboardLayout: layoutOf('stat_projects') });
+        startEditing();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Hide Active Projects' }),
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(screen.queryByText('Editing dashboard')).not.toBeInTheDocument();
+    });
+
+    test('moving a widget down reorders the draft', async () => {
+        renderDashboard({
+            dashboardLayout: layoutOf('stat_projects', 'stat_critical'),
+        });
+        startEditing();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Move Active Projects down' }),
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        const sent = mocks.router.put.mock.calls[0][1].widgets;
+        expect(sent.map((widget: { id: string }) => widget.id)).toEqual([
+            'stat_critical',
+            'stat_projects',
+        ]);
+    });
+
+    test('the settings of a picked widget change its style, width and options', async () => {
+        renderDashboard({ dashboardLayout: layoutOf('projects') });
+        startEditing();
+
+        await userEvent.click(screen.getByTestId('widget-edit-frame'));
+
+        const panel = screen.getByRole('complementary');
+        await userEvent.click(
+            within(panel).getByRole('button', { name: 'Compact' }),
+        );
+        await userEvent.click(
+            within(panel).getByRole('button', { name: 'Full' }),
+        );
+        await userEvent.click(
+            within(panel).getByRole('button', { name: '10' }),
+        );
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(mocks.router.put.mock.calls[0][1].widgets[0]).toMatchObject({
+            variant: 'compact',
+            span: 12,
+            config: { limit: 10 },
+        });
+    });
+
+    test('a widget can be removed from its settings', async () => {
+        renderDashboard({
+            dashboardLayout: layoutOf('stat_projects', 'stat_critical'),
+        });
+        startEditing();
+
+        await userEvent.click(screen.getAllByTestId('widget-edit-frame')[0]);
+        await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(
+            mocks.router.put.mock.calls[0][1].widgets.map(
+                (w: { id: string }) => w.id,
+            ),
+        ).toEqual(['stat_critical']);
+    });
+
+    test('adding a widget whose data did not arrive asks the server for it', async () => {
+        renderDashboard({
+            dashboardLayout: layoutOf('stat_projects'),
+            issueStats: undefined,
+            productivity_trend: undefined,
+            activityLogs: undefined,
+            users: undefined,
+            issueTypes: undefined,
+        });
+        startEditing();
+        expect(mocks.router.reload).not.toHaveBeenCalled();
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Add Productivity Trend' }),
+        );
+
         await waitFor(() =>
-            expect(screen.getByText('Create your first project')).toBeVisible(),
+            expect(mocks.router.reload).toHaveBeenCalledWith({
+                only: ['productivity_trend'],
+            }),
+        );
+        expect(screen.getByTestId('widget-placeholder')).toBeInTheDocument();
+    });
+
+    test('reset asks the server for the default layout', async () => {
+        renderDashboard();
+        startEditing();
+
+        await userEvent.click(screen.getByRole('button', { name: 'Reset' }));
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Yes, reset' }),
+        );
+
+        expect(mocks.router.delete).toHaveBeenCalledWith(
+            '/dashboard/layout',
+            expect.objectContaining({ preserveScroll: true }),
         );
     });
+});
+
+test('a layout prop of another shape still renders the page', () => {
+    const empty: DashboardLayoutProp = { widgets: [], catalog: [] };
+
+    renderDashboard({ dashboardLayout: empty });
+
+    expect(screen.getByTestId('page-header')).toBeInTheDocument();
 });

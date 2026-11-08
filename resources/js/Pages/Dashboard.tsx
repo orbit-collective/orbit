@@ -1,68 +1,83 @@
-import { Link } from '@inertiajs/react';
-import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
-import { PageSection, PageStage } from '@/Components/Atoms/PageStage/PageStage';
-import Reveal from '@/Components/Atoms/Reveal/Reveal';
-import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
-import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
-import Pagination from '@/Components/Molecules/Pagination/Pagination';
-import ProjectCard from '@/Components/Molecules/ProjectCard/ProjectCard';
-import StatCard from '@/Components/Molecules/StatCard/StatCard';
-import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
-import DashboardVisuals from '@/Components/Organisms/DashboardVisuals/DashboardVisuals';
+import { useMemo } from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import { PageStage } from '@/Components/Atoms/PageStage/PageStage';
+import DashboardEditorBar from '@/Components/Molecules/DashboardEditorBar/DashboardEditorBar';
+import DashboardEditorPanel from '@/Components/Organisms/DashboardEditorPanel/DashboardEditorPanel';
+import DashboardGrid from '@/Components/Organisms/DashboardGrid/DashboardGrid';
+import { DashboardData } from '@/Components/Organisms/DashboardWidget/DashboardWidget';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import { useCommandPalette } from '@/context/CommandContext';
+import { useCommands } from '@/hooks/useCommands';
+import { useDashboardEditor } from '@/hooks/useDashboardEditor';
 import { useDashboardLive } from '@/live/useDashboardLive';
-import { ActivityLogEntry } from '@/types/ActivityLog';
-import {
-    IssueStats,
-    PaginatedResponse,
-    ProductivityTrendProps,
-} from '@/types/Issues';
-import { IssueType } from '@/types/IssueTypes';
-import { Project } from '@/types/Projects';
-import { AssignableUser } from '@/types/Users';
-import {
-    ACTIVITY_PAGE_PARAM,
-    ACTIVITY_PER_PAGE_PARAM,
-} from '@/utils/activityLog';
-import { requestOpenCommandPalette } from '@/utils/commandPaletteEvent';
-import Icon from '@/Components/Atoms/Icon/Icon';
+import { Command } from '@/types/Commands';
+import { DashboardLayoutProp } from '@/types/Dashboard';
+import { cn } from '@/utils/cn';
 
-const ACTIVITY_DEFAULT_PER_PAGE = 10;
+/** The props widgets read; each one is missing until a widget needs it. */
+const DATA_PROPS = [
+    'issueStats',
+    'productivity_trend',
+    'activityLogs',
+    'users',
+    'issueTypes',
+] as const;
 
 export default function Dashboard({
-    issueStats,
+    dashboardLayout,
     projects,
-    productivity_trend,
-    activityLogs,
-    queryParams = {},
-    users = [],
-    issueTypes = [],
-}: {
-    issueStats: IssueStats;
-    projects: Project[];
-    productivity_trend: ProductivityTrendProps[];
-    activityLogs: PaginatedResponse<ActivityLogEntry>;
-    queryParams?: Record<string, any> | null;
-    users?: AssignableUser[];
-    issueTypes?: IssueType[];
+    ...rest
+}: Omit<DashboardData, 'projects'> & {
+    dashboardLayout: DashboardLayoutProp;
+    projects: DashboardData['projects'];
 }) {
-    const done = issueStats.category.done;
-    const stats = {
-        open: issueStats.total - done,
-        topPriority: issueStats.topPriority,
-        resolutionRate:
-            issueStats.total > 0
-                ? Math.round((done / issueStats.total) * 100)
-                : 0,
-    };
-
-    const hasProjects = projects && projects.length > 0;
+    const data: DashboardData = { projects, ...rest };
     const { runCommand } = useCommandPalette();
 
+    // `projects` always arrives (the sidebar needs it); the rest only when a
+    // visible widget does.
+    const loadedProps = useMemo(
+        () => [
+            'projects',
+            ...DATA_PROPS.filter((prop) => data[prop] !== undefined),
+        ],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        DATA_PROPS.map((prop) => data[prop] !== undefined),
+    );
+
+    const editor = useDashboardEditor(
+        dashboardLayout.widgets,
+        dashboardLayout.catalog,
+        loadedProps,
+    );
+
+    const commands = useMemo(
+        (): Command[] => [
+            {
+                id: 'dashboard.edit',
+                title: 'Edit dashboard',
+                subtitle: 'Rearrange, hide and add widgets',
+                group: 'preferences',
+                icon: 'PenLine',
+                keywords: ['layout', 'widgets', 'customize', 'arrange'],
+                perform: editor.start,
+            },
+        ],
+        [editor.start],
+    );
+    useCommands(commands);
+
     // Counters, trend and feed follow changes in any of the user's projects.
-    useDashboardLive((projects ?? []).map((project) => project.id));
+    useDashboardLive(
+        projects.map((project) => project.id),
+        loadedProps,
+    );
+
+    const widgets = editor.editing ? editor.draft : dashboardLayout.widgets;
+    const selected = editor.draft.find(
+        (widget) => widget.id === editor.selectedId,
+    );
 
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
@@ -76,188 +91,65 @@ export default function Dashboard({
                         icon: 'Plus',
                         onClick: () => runCommand('project.create'),
                     }}
-                    children={
-                        <button
-                            type="button"
-                            aria-label="Open dashboard editor"
-                            title="Open dashboard editor"
-                            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
-                        >
-                            <Icon
-                                name="PenLine"
-                                size={18}
-                                color="var(--text-gray-color)"
-                            />
-                        </button>
-                    }
-                />
+                >
+                    <button
+                        type="button"
+                        aria-label="Open dashboard editor"
+                        aria-pressed={editor.editing}
+                        title="Open dashboard editor"
+                        onClick={() => runCommand('dashboard.edit')}
+                        disabled={editor.editing}
+                        className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)] disabled:cursor-default disabled:bg-[var(--bg-light-color)]"
+                    >
+                        <Icon
+                            name="PenLine"
+                            size={18}
+                            color="var(--text-gray-color)"
+                        />
+                    </button>
+                </PageHeader>
                 <div className="relative flex flex-1 overflow-hidden">
                     <PageStage
                         as="main"
-                        className="flex flex-1 flex-col gap-6 overflow-y-auto p-6"
+                        className={cn(
+                            'flex flex-1 flex-col gap-6 overflow-y-auto p-6',
+                            editor.editing && 'max-lg:pb-[55vh]',
+                        )}
                     >
-                        <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                            <PageSection className="h-full">
-                                <StatCard
-                                    className="h-full"
-                                    title="Active Projects"
-                                    value={
-                                        <AnimatedNumber
-                                            value={projects.length}
-                                        />
-                                    }
-                                    icon="FolderGit2"
-                                    description="Tracked projects in workspace"
-                                    color="accent"
-                                />
-                            </PageSection>
-                            <PageSection className="h-full">
-                                <StatCard
-                                    className="h-full"
-                                    title="Open Issues"
-                                    value={
-                                        <AnimatedNumber value={stats.open} />
-                                    }
-                                    icon="Layers"
-                                    description="Active tasks assigned/open"
-                                    color="info"
-                                />
-                            </PageSection>
-                            <PageSection className="h-full">
-                                <StatCard
-                                    className="h-full"
-                                    title="Critical Tasks"
-                                    value={
-                                        <AnimatedNumber
-                                            value={stats.topPriority}
-                                        />
-                                    }
-                                    icon="TriangleAlert"
-                                    description="Issues at the top of their priority scale"
-                                    color="error"
-                                />
-                            </PageSection>
-                            <PageSection className="h-full">
-                                <StatCard
-                                    className="h-full"
-                                    title="Resolution Rate"
-                                    value={
-                                        <AnimatedNumber
-                                            value={stats.resolutionRate}
-                                            format={(n) => `${Math.round(n)}%`}
-                                        />
-                                    }
-                                    icon="CircleCheck"
-                                    progress={stats.resolutionRate}
-                                    color="success"
-                                />
-                            </PageSection>
-                        </section>
-
-                        <DashboardVisuals
-                            stats={issueStats}
-                            productivity_trend={productivity_trend}
+                        {editor.editing && (
+                            <DashboardEditorBar
+                                dirty={editor.dirty}
+                                saving={editor.saving}
+                                onSave={editor.save}
+                                onCancel={editor.cancel}
+                                onReset={editor.reset}
+                            />
+                        )}
+                        <DashboardGrid
+                            widgets={widgets}
+                            catalog={dashboardLayout.catalog}
+                            data={data}
+                            editing={editor.editing}
+                            selectedId={editor.selectedId}
+                            onSelect={editor.select}
+                            onReorder={editor.reorder}
+                            onMove={editor.shift}
+                            onToggleVisible={editor.toggleVisible}
                         />
-
-                        <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                            <PageSection className="flex lg:col-span-2">
-                                <div className="flex max-h-[min(720px,80vh)] min-h-[400px] min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
-                                    <div className="mb-2">
-                                        <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
-                                            Recent Work Activity
-                                        </h3>
-                                    </div>
-                                    <div
-                                        key={activityLogs.current_page}
-                                        className="flex-1 overflow-y-auto"
-                                    >
-                                        <ActivityLogs
-                                            logs={activityLogs.data}
-                                            users={users}
-                                            issueTypes={issueTypes}
-                                        />
-                                    </div>
-                                    <Pagination
-                                        links={activityLogs.links}
-                                        from={activityLogs.from}
-                                        to={activityLogs.to}
-                                        total={activityLogs.total}
-                                        queryParams={queryParams ?? {}}
-                                        pageParam={ACTIVITY_PAGE_PARAM}
-                                        perPageParam={ACTIVITY_PER_PAGE_PARAM}
-                                        defaultPerPage={
-                                            ACTIVITY_DEFAULT_PER_PAGE
-                                        }
-                                        preserveState
-                                        className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
-                                    />
-                                </div>
-                            </PageSection>
-
-                            <PageSection className="flex">
-                                <div className="flex flex-1 flex-col gap-4 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
-                                            Projects Directory
-                                        </h3>
-                                        <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
-                                            Showing{' '}
-                                            {projects.slice(0, 3).length} latest
-                                            projects
-                                        </span>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-4">
-                                        {hasProjects ? (
-                                            <>
-                                                {projects
-                                                    .slice(0, 3)
-                                                    .map((project, index) => (
-                                                        <RowReveal
-                                                            key={project.id}
-                                                            index={index}
-                                                        >
-                                                            <ProjectCard
-                                                                project={
-                                                                    project
-                                                                }
-                                                            />
-                                                        </RowReveal>
-                                                    ))}
-                                                {projects.length > 3 && (
-                                                    <Link
-                                                        href="/projects"
-                                                        className="cursor-pointer rounded-lg border border-dashed border-[var(--bg-light-color)] py-2.5 text-center text-xs font-semibold text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
-                                                    >
-                                                        View all{' '}
-                                                        {projects.length}{' '}
-                                                        projects
-                                                    </Link>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <Reveal>
-                                                <EmptyStateCard
-                                                    title={
-                                                        'Create your first project'
-                                                    }
-                                                    description={
-                                                        'Get started by setting up a workspace for your tasks and team activity.'
-                                                    }
-                                                    iconName={'FolderPlus'}
-                                                    actionLabel={
-                                                        'Create Project'
-                                                    }
-                                                    actionCommand={
-                                                        'project.create'
-                                                    }
-                                                />
-                                            </Reveal>
-                                        )}
-                                    </div>
-                                </div>
-                            </PageSection>
-                        </section>
                     </PageStage>
+                    {editor.editing && (
+                        <DashboardEditorPanel
+                            catalog={dashboardLayout.catalog}
+                            selected={selected}
+                            canAdd={editor.canAdd}
+                            onAdd={editor.add}
+                            onVariantChange={editor.setVariant}
+                            onSpanChange={editor.setSpan}
+                            onOptionChange={editor.setOption}
+                            onToggleVisible={editor.toggleVisible}
+                            onRemove={editor.remove}
+                        />
+                    )}
                 </div>
             </div>
         </div>
