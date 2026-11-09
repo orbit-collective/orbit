@@ -22,7 +22,7 @@ vi.mock('@inertiajs/react', () => ({
     }) => <a href={href}>{children}</a>,
 }));
 
-vi.mock('@/Components/Molecules/ActivityFeedPanel/ActivityFeedPanel', () => ({
+vi.mock('@/Components/Organisms/ActivityFeedPanel/ActivityFeedPanel', () => ({
     default: ({
         activityLogs,
         compact,

@@ -5,7 +5,7 @@ import { makePaginated } from '@/tests/paginated';
 import ActivityFeedPanel from './ActivityFeedPanel';
 
 const meta = {
-    title: 'Molecules/ActivityFeedPanel',
+    title: 'Organisms/ActivityFeedPanel',
     component: ActivityFeedPanel,
     parameters: { layout: 'centered' },
     decorators: [
