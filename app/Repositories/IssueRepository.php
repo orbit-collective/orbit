@@ -259,6 +259,137 @@ class IssueRepository
     }
 
     /**
+     * Counters of the user's open issues that depend on today and on who they
+     * are assigned to: overdue (their end date is before `$today`), due soon
+     * (from `$today` to `$until`) and assigned to the user.
+     *
+     * @return array{overdue: int, dueSoon: int, assigned: int}
+     */
+    public function openCountersForUser(int $userId, string $today, string $until): array
+    {
+        $row = $this->openIssuesOfMemberQuery($userId)
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN DATE(issues.end_date) < ? THEN 1 ELSE 0 END), 0) as overdue, '
+                .'COALESCE(SUM(CASE WHEN DATE(issues.end_date) >= ? AND DATE(issues.end_date) <= ? THEN 1 ELSE 0 END), 0) as due_soon, '
+                .'COALESCE(SUM(CASE WHEN issues.assignee_id = ? THEN 1 ELSE 0 END), 0) as assigned',
+                [$today, $today, $until, $userId],
+            )
+            ->toBase()
+            ->first();
+
+        return [
+            'overdue' => (int) ($row->overdue ?? 0),
+            'dueSoon' => (int) ($row->due_soon ?? 0),
+            'assigned' => (int) ($row->assigned ?? 0),
+        ];
+    }
+
+    /**
+     * How many of the user's issues there are of each issue type, the biggest
+     * group first. Types of different projects that share a name count as
+     * one, like priorities do.
+     *
+     * @return list<array{name: string, color: string, icon: string, count: int}>
+     */
+    public function typeCountsForUser(int $userId): array
+    {
+        return Issue::query()
+            ->join('issue_types', 'issues.issue_type_id', '=', 'issue_types.id')
+            ->whereIn('issues.project_id', fn ($members) => $members
+                ->select('project_id')
+                ->from('project_user')
+                ->where('user_id', $userId))
+            ->selectRaw('lower(issue_types.name) as type_key, MIN(issue_types.name) as name, MIN(issue_types.color) as color, MIN(issue_types.icon) as icon, COUNT(*) as total')
+            ->groupBy('type_key')
+            ->orderByDesc('total')
+            ->orderBy('name')
+            ->toBase()
+            ->get()
+            ->map(fn ($row) => [
+                'name' => $row->name,
+                'color' => $row->color,
+                'icon' => $row->icon,
+                'count' => (int) $row->total,
+            ])
+            ->all();
+    }
+
+    /**
+     * The open issues assigned to the user, the most important first: by the
+     * position of the priority (none last), then the nearest end date (none
+     * last), then the most recently updated.
+     *
+     * @return Collection<int, Issue>
+     */
+    public function openAssignedTo(int $userId, int $limit): Collection
+    {
+        return Issue::query()
+            ->select('issues.*')
+            ->leftJoin('priorities as sort_priorities', 'issues.priority_id', '=', 'sort_priorities.id')
+            ->whereIn('issues.project_id', fn ($members) => $members
+                ->select('project_id')
+                ->from('project_user')
+                ->where('user_id', $userId))
+            ->where('issues.assignee_id', $userId)
+            ->where($this->isOpen())
+            ->with(['project', 'issueType', 'workflowStatus'])
+            ->orderByRaw('sort_priorities.position IS NULL')
+            ->orderBy('sort_priorities.position')
+            ->orderByRaw('issues.end_date IS NULL')
+            ->orderBy('issues.end_date')
+            ->orderByDesc('issues.updated_at')
+            ->orderBy('issues.id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * The open issues of the user's projects that have an end date up to
+     * `$until`, the nearest first. Overdue ones are in, however old.
+     *
+     * @return Collection<int, Issue>
+     */
+    public function openWithDeadlineForUser(int $userId, string $until, int $limit): Collection
+    {
+        return Issue::query()
+            ->select('issues.*')
+            ->whereIn('issues.project_id', fn ($members) => $members
+                ->select('project_id')
+                ->from('project_user')
+                ->where('user_id', $userId))
+            ->whereNotNull('issues.end_date')
+            ->whereDate('issues.end_date', '<=', $until)
+            ->where($this->isOpen())
+            ->with(['project', 'issueType', 'workflowStatus'])
+            ->orderBy('issues.end_date')
+            ->orderBy('issues.id')
+            ->limit($limit)
+            ->get();
+    }
+
+    /** The open issues of the projects the user is a member of, joined for aggregates. */
+    private function openIssuesOfMemberQuery(int $userId)
+    {
+        return Issue::query()
+            ->leftJoin('workflow_statuses as open_statuses', 'issues.workflow_status_id', '=', 'open_statuses.id')
+            ->whereIn('issues.project_id', fn ($members) => $members
+                ->select('project_id')
+                ->from('project_user')
+                ->where('user_id', $userId))
+            ->where(fn ($open) => $open
+                ->whereNull('open_statuses.category')
+                ->orWhere('open_statuses.category', '!=', 'done'));
+    }
+
+    /** An issue is open while it has no status or its status is not a done one. */
+    private function isOpen(): \Closure
+    {
+        return fn ($open) => $open
+            ->whereNull('issues.workflow_status_id')
+            ->orWhereDoesntHave('workflowStatus', fn ($status) => $status->where('category', 'done'));
+    }
+
+    /**
      * The project's issues that overlap the date range (they start on or
      * before `$to` and end, or - with no end date - start, on or after
      * `$from`), for the calendar. Respects the same search box and filter
