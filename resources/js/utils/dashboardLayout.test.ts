@@ -206,6 +206,31 @@ describe('sizeAfterResize', () => {
         ).toEqual({ width: 30, height: 40 });
     });
 
+    test('a dimension that was not dragged is left exactly as it was', () => {
+        const odd = { width: 77, height: 83 };
+
+        expect(
+            sizeAfterResize(odd, { columns: 14, rows: 0 }, entry, true),
+        ).toEqual({ width: 90, height: 83 });
+        expect(
+            sizeAfterResize(odd, { columns: 0, rows: 14 }, entry, true),
+        ).toEqual({ width: 77, height: 100 });
+        expect(
+            sizeAfterResize(odd, { columns: 0, rows: 0 }, entry, true),
+        ).toEqual(odd);
+    });
+
+    test('a dimension that was not dragged is not pulled up to the minimum either (the dragged one is)', () => {
+        expect(
+            sizeAfterResize(
+                { width: 10, height: 10 },
+                { columns: 0, rows: 5 },
+                entry,
+                false,
+            ),
+        ).toEqual({ width: 10, height: 40 });
+    });
+
     test('never gets wider than the dashboard or taller than the maximum', () => {
         expect(
             sizeAfterResize(start, { columns: 500, rows: 5000 }, entry, false),

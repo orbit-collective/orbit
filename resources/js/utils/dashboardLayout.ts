@@ -55,7 +55,8 @@ const snapTo = (value: number, step: number) => Math.round(value / step) * step;
 /**
  * The size a widget has after one of its edges was dragged by a number of
  * columns and rows. With snap on it lands on the coarse grid (never below the
- * type's minimum); without it every column and row counts.
+ * type's minimum); without it every column and row counts. A dimension that
+ * was not dragged (a delta of 0) is left exactly as it was.
  */
 export function sizeAfterResize(
     start: { width: number; height: number },
@@ -67,16 +68,22 @@ export function sizeAfterResize(
     const height = start.height + delta.rows;
 
     return {
-        width: clamp(
-            snap ? snapTo(width, COLUMN_SNAP) : Math.round(width),
-            entry.minWidth,
-            GRID_COLUMNS,
-        ),
-        height: clamp(
-            snap ? snapTo(height, ROW_SNAP) : Math.round(height),
-            entry.minHeight,
-            MAX_HEIGHT,
-        ),
+        width:
+            delta.columns === 0
+                ? start.width
+                : clamp(
+                      snap ? snapTo(width, COLUMN_SNAP) : Math.round(width),
+                      entry.minWidth,
+                      GRID_COLUMNS,
+                  ),
+        height:
+            delta.rows === 0
+                ? start.height
+                : clamp(
+                      snap ? snapTo(height, ROW_SNAP) : Math.round(height),
+                      entry.minHeight,
+                      MAX_HEIGHT,
+                  ),
     };
 }
 
