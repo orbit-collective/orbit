@@ -20,11 +20,33 @@ test('a user without a saved layout gets the default one with every widget type'
     // The widgets that came later are in the library, not in the default layout.
     expect(collect($widgets)->pluck('type')->sort()->values()->all())
         ->toEqual(collect([
-            'stat_projects', 'stat_open_issues', 'stat_critical', 'stat_resolution', 'trend',
+            'stat', 'stat', 'stat', 'stat', 'trend',
             'completion', 'priority_breakdown', 'activity', 'projects',
         ])->sort()->values()->all())
         ->and(collect($widgets)->every(fn ($widget) => $widget['visible']))->toBeTrue()
-        ->and($widgets[0])->toMatchArray(['id' => 'stat_projects', 'variant' => 'default', 'width' => 30, 'height' => 32]);
+        ->and($widgets[0])->toMatchArray(['id' => 'stat_projects', 'variant' => 'default', 'width' => 30, 'height' => 32])
+        ->and(collect($widgets)->where('type', 'stat')->map(fn ($widget) => $widget['config']['metric'])->values()->all())
+        ->toBe(['projects', 'open_issues', 'critical', 'resolution'])
+        ->and($widgets[3]['config']['show'])->toBe('percent');
+});
+
+test('the statistics saved as one widget per number become a stat with its metric and keep their look', function () {
+    $widgets = $this->service->normalize([
+        ['id' => 'p', 'type' => 'stat_projects', 'variant' => 'glass', 'config' => ['color' => 'warning', 'icon' => 'off']],
+        ['id' => 'o', 'type' => 'stat_open_issues', 'config' => ['count' => 'done']],
+        ['id' => 'r1', 'type' => 'stat_resolution', 'config' => ['show' => 'count']],
+        ['id' => 'r2', 'type' => 'stat_resolution', 'config' => ['show' => 'percent']],
+        ['id' => 'd', 'type' => 'stat_due_soon'],
+    ]);
+
+    expect(collect($widgets)->pluck('type')->unique()->all())->toBe(['stat'])
+        ->and(collect($widgets)->pluck('id')->all())->toBe(['p', 'o', 'r1', 'r2', 'd'])
+        ->and($widgets[0])->toMatchArray(['variant' => 'glass'])
+        ->and($widgets[0]['config'])->toMatchArray(['metric' => 'projects', 'color' => 'warning', 'icon' => 'off'])
+        ->and($widgets[1]['config'])->toMatchArray(['metric' => 'open_issues', 'count' => 'done', 'show' => 'value', 'color' => 'auto'])
+        ->and($widgets[2]['config'])->toMatchArray(['metric' => 'resolution', 'show' => 'fraction'])
+        ->and($widgets[3]['config'])->toMatchArray(['metric' => 'resolution', 'show' => 'percent'])
+        ->and($widgets[4]['config']['metric'])->toBe('due_soon');
 });
 
 test('saving stores the layout and widgetsFor reads it back', function () {
@@ -78,7 +100,7 @@ test('normalize drops unknown types and falls back to the defaults of the type',
 test('normalize fills in the options of a type and drops what it does not know', function () {
     $widgets = $this->service->normalize([
         ['id' => 'a', 'type' => 'trend', 'variant' => 'line', 'config' => ['grid' => 'off', 'values' => 'sometimes', 'nope' => 'x']],
-        ['id' => 'b', 'type' => 'stat_open_issues', 'config' => ['count' => 'done', 'color' => 'info']],
+        ['id' => 'b', 'type' => 'stat', 'config' => ['metric' => 'open_issues', 'count' => 'done', 'color' => 'info']],
     ]);
 
     expect($widgets[0]['variant'])->toBe('line')
@@ -101,7 +123,7 @@ test('normalize keeps sizes inside what the type allows', function () {
     $widgets = $this->service->normalize([
         ['id' => 'a', 'type' => 'trend', 'width' => 5, 'height' => 1],
         ['id' => 'b', 'type' => 'trend', 'width' => 999, 'height' => 99999],
-        ['id' => 'c', 'type' => 'stat_projects', 'width' => 20, 'height' => 20],
+        ['id' => 'c', 'type' => 'stat', 'width' => 20, 'height' => 20],
     ]);
 
     expect($widgets[0])->toMatchArray(['width' => 30, 'height' => 56])
@@ -147,13 +169,13 @@ test('normalize keeps at most the maximum number of widgets', function () {
 
 test('requiredProps lists what the visible widgets read and ignores hidden ones', function () {
     $props = $this->service->requiredProps($this->service->normalize([
-        ['id' => 'a', 'type' => 'stat_open_issues'],
+        ['id' => 'a', 'type' => 'stat'],
         ['id' => 'b', 'type' => 'completion'],
         ['id' => 'c', 'type' => 'activity', 'visible' => false],
         ['id' => 'd', 'type' => 'trend', 'visible' => false],
     ]));
 
-    expect($props)->toBe(['issueStats']);
+    expect($props)->toBe(['projects', 'issueStats']);
 });
 
 test('every widget type describes itself consistently for the editor', function () {
