@@ -337,6 +337,8 @@ describe('useDashboardLive', () => {
                 'projects',
                 'activityLogs',
                 'issueTypes',
+                'myIssues',
+                'deadlines',
             ],
         });
     });

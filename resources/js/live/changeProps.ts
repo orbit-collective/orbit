@@ -125,6 +125,8 @@ export function dashboardReloads(
             'activityLogs',
             // The feed draws type icons and status colours from it.
             'issueTypes',
+            'myIssues',
+            'deadlines',
         ],
         loaded,
     );
@@ -216,6 +218,8 @@ export function dashboardFallbackReloads(loaded?: string[]): LiveReload[] {
             'activityLogs',
             'users',
             'issueTypes',
+            'myIssues',
+            'deadlines',
         ],
         loaded,
     );

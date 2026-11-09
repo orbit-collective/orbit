@@ -24,6 +24,8 @@ const DATA_PROPS = [
     'activityLogs',
     'users',
     'issueTypes',
+    'myIssues',
+    'deadlines',
 ] as const;
 
 export default function Dashboard({

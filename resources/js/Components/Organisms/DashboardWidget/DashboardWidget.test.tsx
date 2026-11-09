@@ -1,11 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { makeIssueRow } from '@/tests/dashboardIssues';
 import { makeWidget } from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
 import { DashboardWidget as Widget } from '@/types/Dashboard';
 import { Project } from '@/types/Projects';
+import { dateKeyOf } from '@/utils/dueDate';
 import DashboardWidget from './DashboardWidget';
 
 vi.mock('@/context/CommandContext', () => ({
@@ -429,6 +431,329 @@ describe('DashboardWidget', () => {
                 'data-compact',
                 'true',
             );
+        });
+    });
+
+    describe('the widgets of the second wave', () => {
+        const stats = makeIssueStats({
+            todo: 4,
+            done: 2,
+            overdue: 3,
+            dueSoon: 5,
+            assigned: 7,
+            types: [
+                {
+                    name: 'Task',
+                    color: '#3b82f6',
+                    icon: 'CheckSquare',
+                    count: 4,
+                },
+                { name: 'Bug', color: '#ef4444', icon: 'Bug', count: 2 },
+            ],
+        });
+        const rows = [
+            makeIssueRow(1, {
+                title: 'Mine',
+                assigneeId: 9,
+                endDate: dateKeyOf(2),
+            }),
+            makeIssueRow(2, {
+                title: 'Theirs',
+                assigneeId: 4,
+                endDate: dateKeyOf(3),
+            }),
+        ];
+        const data = {
+            issueStats: stats,
+            projects: [project(1)],
+            productivity_trend: [{ day: 'Mon', count: 3 }],
+            myIssues: rows,
+            deadlines: rows,
+            auth: { user: { id: 9, name: 'Jane Cooper' } },
+        };
+
+        test.each([
+            ['stat_overdue', 'Overdue Issues', '3'],
+            ['stat_assigned', 'Assigned to Me', '7'],
+            ['stat_due_soon', 'Due Soon', '5'],
+        ] as const)(
+            '%s is a stat card with its number',
+            (type, title, value) => {
+                render(
+                    <DashboardWidget widget={makeWidget(type)} data={data} />,
+                );
+
+                expect(screen.getByText(title)).toBeInTheDocument();
+                expect(screen.getByText(value)).toBeInTheDocument();
+            },
+        );
+
+        test('the new stats take the same style and color options as the others', () => {
+            const { container } = render(
+                <DashboardWidget
+                    widget={makeWidget('stat_overdue', {
+                        variant: 'outline',
+                        config: { icon: 'off', description: 'off' },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(container.firstElementChild).toHaveClass('bg-transparent');
+            expect(container.querySelector('svg')).toBeNull();
+        });
+
+        test.each([
+            'stat_overdue',
+            'stat_assigned',
+            'stat_due_soon',
+            'my_issues',
+            'deadlines',
+            'types_breakdown',
+            'week_summary',
+            'greeting',
+        ] as const)('%s waits for its data with a placeholder', (type) => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget(type)}
+                    data={{ projects: [] }}
+                />,
+            );
+
+            expect(
+                screen.getByTestId('widget-placeholder'),
+            ).toBeInTheDocument();
+        });
+
+        test('my issues lists the issues of the user, trimmed to its limit and ordered by its option', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('my_issues', {
+                        config: {
+                            limit: 1,
+                            sort: 'due',
+                            header: 'on',
+                            type: 'on',
+                            project: 'on',
+                            priority: 'on',
+                            due: 'on',
+                        },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(screen.getByText('My Issues')).toBeInTheDocument();
+            expect(screen.getAllByRole('link')).toHaveLength(1);
+            expect(screen.getByText('Mine')).toBeInTheDocument();
+        });
+
+        test('my issues hides what its options turn off', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('my_issues', {
+                        config: {
+                            limit: 5,
+                            sort: 'priority',
+                            header: 'off',
+                            type: 'off',
+                            project: 'off',
+                            priority: 'off',
+                            due: 'off',
+                        },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(screen.queryByText('My Issues')).not.toBeInTheDocument();
+            expect(screen.queryByTestId('due-chip')).not.toBeInTheDocument();
+        });
+
+        test('deadlines shows the issues of the user in the mine scope, and of everyone in the other', () => {
+            const { rerender } = render(
+                <DashboardWidget
+                    widget={makeWidget('deadlines', {
+                        config: {
+                            scope: 'mine',
+                            range: 30,
+                            overdue: 'on',
+                            limit: 10,
+                            header: 'on',
+                        },
+                    })}
+                    data={data}
+                />,
+            );
+            expect(screen.getByText('Mine')).toBeInTheDocument();
+            expect(screen.queryByText('Theirs')).not.toBeInTheDocument();
+
+            rerender(
+                <DashboardWidget
+                    widget={makeWidget('deadlines', {
+                        config: {
+                            scope: 'all',
+                            range: 30,
+                            overdue: 'on',
+                            limit: 10,
+                            header: 'on',
+                        },
+                    })}
+                    data={data}
+                />,
+            );
+            expect(screen.getByText('Theirs')).toBeInTheDocument();
+        });
+
+        test('deadlines takes its style from the widget', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('deadlines', {
+                        variant: 'timeline',
+                        config: {
+                            scope: 'all',
+                            range: 30,
+                            overdue: 'on',
+                            limit: 10,
+                            header: 'on',
+                        },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(
+                screen.getByRole('list', { name: 'Deadlines by day' }),
+            ).toBeInTheDocument();
+        });
+
+        test('the issue types are drawn like a breakdown with their own title', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('types_breakdown')}
+                    data={data}
+                />,
+            );
+
+            expect(screen.getByText('Issue Types')).toBeInTheDocument();
+            expect(screen.getByText('Task')).toBeInTheDocument();
+            expect(screen.getByText('Bug')).toBeInTheDocument();
+            expect(
+                screen.queryByText('Priority Breakdown'),
+            ).not.toBeInTheDocument();
+        });
+
+        test('the issue types can be ordered by name', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('types_breakdown', {
+                        variant: 'list',
+                        config: { header: 'on', percent: 'on', sort: 'name' },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(
+                screen.getAllByText(/^(Task|Bug)$/).map((el) => el.textContent),
+            ).toEqual(['Bug', 'Task']);
+        });
+
+        test('the week summary reads the trend and its options', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('week_summary', {
+                        config: {
+                            header: 'on',
+                            average: 'off',
+                            best: 'off',
+                            color: 'success',
+                        },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(screen.getByText('Week Summary')).toBeInTheDocument();
+            expect(screen.queryByText('Daily average')).not.toBeInTheDocument();
+        });
+
+        test('the quick actions need no data and show only the actions that are on', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('quick_actions', {
+                        config: {
+                            header: 'on',
+                            labels: 'on',
+                            color: 'accent',
+                            newProject: 'on',
+                            search: 'off',
+                            projects: 'off',
+                            notifications: 'off',
+                            editDashboard: 'off',
+                            shortcuts: 'on',
+                        },
+                    })}
+                    data={{ projects: [] }}
+                />,
+            );
+
+            expect(
+                screen
+                    .getAllByRole('button')
+                    .map((b) => b.getAttribute('title')),
+            ).toEqual(['New project', 'Shortcuts']);
+        });
+
+        test('the keyboard shortcuts action is off until its option says so', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('quick_actions')}
+                    data={{ projects: [] }}
+                />,
+            );
+
+            expect(
+                screen.queryByRole('button', { name: 'Shortcuts' }),
+            ).not.toBeInTheDocument();
+            expect(screen.getAllByRole('button')).toHaveLength(5);
+        });
+
+        test('the welcome greets the user by name with the day in numbers', () => {
+            render(
+                <DashboardWidget widget={makeWidget('greeting')} data={data} />,
+            );
+
+            expect(screen.getByRole('heading')).toHaveTextContent(
+                /Good (morning|afternoon|evening|night), Jane/,
+            );
+            expect(screen.getByText('7 assigned to you')).toBeInTheDocument();
+            expect(screen.getByText('3 overdue')).toBeInTheDocument();
+        });
+
+        test('the welcome follows its options', () => {
+            render(
+                <DashboardWidget
+                    widget={makeWidget('greeting', {
+                        variant: 'compact',
+                        config: {
+                            name: 'off',
+                            date: 'off',
+                            summary: 'off',
+                            icon: 'off',
+                            color: 'info',
+                        },
+                    })}
+                    data={data}
+                />,
+            );
+
+            expect(screen.getByRole('heading')).toHaveTextContent(
+                /^Good (morning|afternoon|evening|night)$/,
+            );
+            expect(
+                screen.queryByTestId('greeting-icon'),
+            ).not.toBeInTheDocument();
         });
     });
 });
