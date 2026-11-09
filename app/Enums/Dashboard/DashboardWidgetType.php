@@ -11,24 +11,34 @@ namespace App\Enums\Dashboard;
  */
 enum DashboardWidgetType: string
 {
-    case StatProjects = 'stat_projects';
-    case StatOpenIssues = 'stat_open_issues';
-    case StatCritical = 'stat_critical';
-    case StatResolution = 'stat_resolution';
+    case Stat = 'stat';
     case Trend = 'trend';
     case Completion = 'completion';
     case PriorityBreakdown = 'priority_breakdown';
     case Activity = 'activity';
     case Projects = 'projects';
-    case StatOverdue = 'stat_overdue';
-    case StatAssigned = 'stat_assigned';
-    case StatDueSoon = 'stat_due_soon';
     case MyIssues = 'my_issues';
     case Deadlines = 'deadlines';
     case TypesBreakdown = 'types_breakdown';
     case WeekSummary = 'week_summary';
     case QuickActions = 'quick_actions';
     case Greeting = 'greeting';
+
+    /**
+     * What a `stat` widget can show, by its `metric` option, with how the
+     * editor and the grid call it. The frontend draws the numbers
+     * (`DashboardWidget.tsx`); the old one-widget-per-number types are
+     * upgraded to a metric by `DashboardLayoutService`.
+     */
+    public const STAT_METRICS = [
+        'projects' => ['title' => 'Active Projects'],
+        'open_issues' => ['title' => 'Open Issues'],
+        'critical' => ['title' => 'Critical Tasks'],
+        'resolution' => ['title' => 'Resolution Rate'],
+        'overdue' => ['title' => 'Overdue Issues'],
+        'assigned' => ['title' => 'Assigned to Me'],
+        'due_soon' => ['title' => 'Due Soon'],
+    ];
 
     /** A widget's width is counted in these parts of the dashboard's width. */
     public const GRID_COLUMNS = 120;
@@ -45,18 +55,12 @@ enum DashboardWidgetType: string
     public function label(): string
     {
         return match ($this) {
-            self::StatProjects => 'Active Projects',
-            self::StatOpenIssues => 'Open Issues',
-            self::StatCritical => 'Critical Tasks',
-            self::StatResolution => 'Resolution Rate',
+            self::Stat => 'Statistic',
             self::Trend => 'Productivity Trend',
             self::Completion => 'Completion Ratio',
             self::PriorityBreakdown => 'Priority Breakdown',
             self::Activity => 'Recent Work Activity',
             self::Projects => 'Projects Directory',
-            self::StatOverdue => 'Overdue Issues',
-            self::StatAssigned => 'Assigned to Me',
-            self::StatDueSoon => 'Due Soon',
             self::MyIssues => 'My Issues',
             self::Deadlines => 'Upcoming Deadlines',
             self::TypesBreakdown => 'Issue Types',
@@ -69,18 +73,12 @@ enum DashboardWidgetType: string
     public function description(): string
     {
         return match ($this) {
-            self::StatProjects => 'How many projects you track',
-            self::StatOpenIssues => 'Issues that are not done yet',
-            self::StatCritical => 'Issues at the top of their priority scale',
-            self::StatResolution => 'Share of issues that are done',
+            self::Stat => 'One number: pick what it counts, how it is shown and its style',
             self::Trend => 'Issues created and resolved over time',
             self::Completion => 'To do, in progress and done at a glance',
             self::PriorityBreakdown => 'Your issues grouped by priority',
             self::Activity => 'Latest changes across your projects',
             self::Projects => 'Your projects with their progress',
-            self::StatOverdue => 'Open issues past their due date',
-            self::StatAssigned => 'Open issues assigned to you',
-            self::StatDueSoon => 'Open issues due within a week',
             self::MyIssues => 'The open issues assigned to you',
             self::Deadlines => 'What is due next, and what is late',
             self::TypesBreakdown => 'Your issues grouped by type',
@@ -94,18 +92,12 @@ enum DashboardWidgetType: string
     public function icon(): string
     {
         return match ($this) {
-            self::StatProjects => 'FolderGit2',
-            self::StatOpenIssues => 'Layers',
-            self::StatCritical => 'TriangleAlert',
-            self::StatResolution => 'CircleCheck',
+            self::Stat => 'Hash',
             self::Trend => 'ChartLine',
             self::Completion => 'ChartPie',
             self::PriorityBreakdown => 'ChartBarBig',
             self::Activity => 'Activity',
             self::Projects => 'FolderOpen',
-            self::StatOverdue => 'CalendarX',
-            self::StatAssigned => 'UserCheck',
-            self::StatDueSoon => 'CalendarClock',
             self::MyIssues => 'ListChecks',
             self::Deadlines => 'CalendarRange',
             self::TypesBreakdown => 'Shapes',
@@ -119,7 +111,7 @@ enum DashboardWidgetType: string
     public function variants(): array
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => ['default', 'vivid', 'accent', 'glass', 'outline'],
+            self::Stat => ['default', 'vivid', 'accent', 'glass', 'outline'],
             self::Trend => ['bars', 'line', 'area'],
             self::Completion => ['bars', 'ring', 'stacked'],
             self::PriorityBreakdown => ['bar', 'list', 'donut'],
@@ -138,7 +130,7 @@ enum DashboardWidgetType: string
     public function minWidth(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => 20,
+            self::Stat => 20,
             default => 30,
         };
     }
@@ -146,7 +138,7 @@ enum DashboardWidgetType: string
     public function defaultWidth(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => 30,
+            self::Stat => 30,
             self::Trend, self::Activity => 80,
             self::PriorityBreakdown, self::Greeting => 120,
             self::MyIssues, self::Deadlines, self::QuickActions => 60,
@@ -158,7 +150,7 @@ enum DashboardWidgetType: string
     public function minHeight(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => 20,
+            self::Stat => 20,
             self::Trend => 56,
             self::Completion => 70,
             self::MyIssues, self::Deadlines, self::TypesBreakdown => 60,
@@ -170,7 +162,7 @@ enum DashboardWidgetType: string
     public function defaultHeight(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => 32,
+            self::Stat => 32,
             self::Trend, self::Completion => 85,
             self::Activity, self::Projects => 170,
             self::PriorityBreakdown => 60,
@@ -183,35 +175,46 @@ enum DashboardWidgetType: string
 
     /**
      * Options of the widget, keyed by name: label, the allowed values, the
-     * default one, optionally how each value is called in the editor and
-     * `kind` => `color` for a choice of colors.
+     * default one, optionally how each value is called in the editor,
+     * `kind` => `color` for a choice of colors and `when` (another option's
+     * allowed values) so the editor shows it only then.
      *
-     * @return array<string, array{label: string, options: list<int|string>, default: int|string, labels?: array<string, string>, kind?: string}>
+     * @return array<string, array{label: string, options: list<int|string>, default: int|string, labels?: array<string, string>, kind?: string, when?: array<string, list<string>>}>
      */
     public function options(): array
     {
         return match ($this) {
-            self::StatProjects => self::statOptions('accent'),
-            self::StatOpenIssues => [
+            self::Stat => [
+                'metric' => [
+                    'label' => 'Shows',
+                    'options' => array_keys(self::STAT_METRICS),
+                    'default' => 'open_issues',
+                    'labels' => array_map(fn (array $metric) => $metric['title'], self::STAT_METRICS),
+                ],
                 'count' => [
                     'label' => 'Count',
                     'options' => ['open', 'todo', 'in_progress', 'done', 'all'],
                     'default' => 'open',
                     'labels' => ['open' => 'Open', 'todo' => 'To do', 'in_progress' => 'In progress', 'done' => 'Done', 'all' => 'All'],
+                    'when' => ['metric' => ['open_issues']],
                 ],
-            ] + self::statOptions('info'),
-            self::StatCritical => self::statOptions('error'),
-            self::StatOverdue => self::statOptions('error'),
-            self::StatAssigned => self::statOptions('accent'),
-            self::StatDueSoon => self::statOptions('warning'),
-            self::StatResolution => [
                 'show' => [
-                    'label' => 'Show',
-                    'options' => ['percent', 'count'],
-                    'default' => 'percent',
-                    'labels' => ['percent' => 'Percent', 'count' => 'Done / all'],
+                    'label' => 'As',
+                    'options' => ['value', 'fraction', 'percent'],
+                    'default' => 'value',
+                    'labels' => ['value' => 'Number', 'fraction' => 'Part / whole', 'percent' => 'Percent'],
+                    'when' => ['metric' => ['open_issues', 'critical', 'resolution', 'overdue', 'assigned', 'due_soon']],
                 ],
-            ] + self::statOptions('success'),
+                'color' => [
+                    'label' => 'Color',
+                    'kind' => 'color',
+                    'options' => ['auto', 'accent', 'success', 'warning', 'error', 'info'],
+                    'default' => 'auto',
+                    'labels' => ['auto' => 'Automatic'],
+                ],
+                'icon' => self::toggle('Icon'),
+                'description' => self::toggle('Description'),
+            ],
             self::Trend => [
                 'header' => self::toggle('Title'),
                 'grid' => self::toggle('Grid lines'),
@@ -344,16 +347,6 @@ enum DashboardWidgetType: string
         ];
     }
 
-    /** What every statistic has: its color, its icon and its description. */
-    private static function statOptions(string $color): array
-    {
-        return [
-            'color' => self::colorOption($color),
-            'icon' => self::toggle('Icon'),
-            'description' => self::toggle('Description'),
-        ];
-    }
-
     /**
      * The Inertia props the widget draws from, besides `projects` which every
      * dashboard has for the sidebar.
@@ -363,8 +356,9 @@ enum DashboardWidgetType: string
     public function props(): array
     {
         return match ($this) {
-            self::StatProjects, self::Projects => ['projects'],
-            self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon, self::Completion, self::PriorityBreakdown, self::TypesBreakdown, self::Greeting => ['issueStats'],
+            self::Stat => ['projects', 'issueStats'],
+            self::Projects => ['projects'],
+            self::Completion, self::PriorityBreakdown, self::TypesBreakdown, self::Greeting => ['issueStats'],
             self::Trend => ['productivity_trend'],
             self::Activity => ['activityLogs', 'users', 'issueTypes'],
             self::MyIssues => ['myIssues'],

@@ -14,6 +14,20 @@ class DashboardLayoutService
 {
     public const MAX_WIDGETS = 30;
 
+    /**
+     * The one-widget-per-number types of before the `stat` widget, with the
+     * metric each one became.
+     */
+    private const LEGACY_STATS = [
+        'stat_projects' => 'projects',
+        'stat_open_issues' => 'open_issues',
+        'stat_critical' => 'critical',
+        'stat_resolution' => 'resolution',
+        'stat_overdue' => 'overdue',
+        'stat_assigned' => 'assigned',
+        'stat_due_soon' => 'due_soon',
+    ];
+
     public function __construct(protected DashboardLayoutRepository $layouts) {}
 
     /**
@@ -37,20 +51,22 @@ class DashboardLayoutService
      */
     public function defaultWidgets(): array
     {
-        return $this->normalize(array_map(
+        $widgets = array_map(
             fn (DashboardWidgetType $type) => ['id' => $type->value, 'type' => $type->value],
             [
-                DashboardWidgetType::StatProjects,
-                DashboardWidgetType::StatOpenIssues,
-                DashboardWidgetType::StatCritical,
-                DashboardWidgetType::StatResolution,
                 DashboardWidgetType::Trend,
                 DashboardWidgetType::Completion,
                 DashboardWidgetType::Activity,
                 DashboardWidgetType::Projects,
                 DashboardWidgetType::PriorityBreakdown,
             ],
-        ));
+        );
+        $stats = array_map(
+            fn (string $legacy) => ['id' => $legacy, 'type' => $legacy],
+            ['stat_projects', 'stat_open_issues', 'stat_critical', 'stat_resolution'],
+        );
+
+        return $this->normalize([...$stats, ...$widgets]);
     }
 
     /**
@@ -109,6 +125,7 @@ class DashboardLayoutService
                 continue;
             }
 
+            $widget = $this->upgradeLegacy($widget);
             $type = DashboardWidgetType::tryFrom((string) ($widget['type'] ?? ''));
 
             if ($type === null) {
@@ -147,6 +164,28 @@ class DashboardLayoutService
         }
 
         return $normalized;
+    }
+
+    /**
+     * A saved statistic of the old kind becomes a `stat` widget with its
+     * metric, keeping its id, style and options, so nothing changes on screen.
+     */
+    private function upgradeLegacy(array $widget): array
+    {
+        $metric = self::LEGACY_STATS[(string) ($widget['type'] ?? '')] ?? null;
+
+        if ($metric === null) {
+            return $widget;
+        }
+
+        $config = is_array($widget['config'] ?? null) ? $widget['config'] : [];
+
+        if ($metric === 'resolution') {
+            // The old "Done / all" choice is the fraction now; the rest was a percent.
+            $config['show'] = ($config['show'] ?? null) === 'count' ? 'fraction' : 'percent';
+        }
+
+        return [...$widget, 'type' => DashboardWidgetType::Stat->value, 'config' => [...$config, 'metric' => $metric]];
     }
 
     /** Layouts saved while widths were twelfths (`span`) keep their width. */

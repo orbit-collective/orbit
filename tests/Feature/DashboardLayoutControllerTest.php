@@ -109,7 +109,7 @@ test('too many widgets are rejected', function () {
 
 test('the dashboard sends only the data the visible widgets read, the rest on request', function () {
     $user = User::factory()->create();
-    $this->actingAs($user)->put('/dashboard/layout', layoutPayload(['type' => 'stat_open_issues', 'variant' => 'default', 'width' => 30, 'height' => 32, 'config' => []]));
+    $this->actingAs($user)->put('/dashboard/layout', layoutPayload(['type' => 'stat', 'variant' => 'default', 'width' => 30, 'height' => 32, 'config' => []]));
 
     $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
         ->has('issueStats')
