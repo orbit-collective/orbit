@@ -192,4 +192,30 @@ describe('WeekSummaryCard', () => {
             ).not.toContain('background-color');
         });
     });
+
+    describe('hover labels', () => {
+        test('every bar names its day and count on hover', () => {
+            render(<WeekSummaryCard {...base} variant="bars" />);
+
+            expect(screen.getByText('Mon: 4 updates')).toBeInTheDocument();
+            expect(screen.getByText('Wed: 0 updates')).toBeInTheDocument();
+        });
+
+        test('the sparkline has one hover column per day, with a singular for one', () => {
+            render(
+                <WeekSummaryCard
+                    trend={[
+                        { day: 'Mon', count: 1 },
+                        { day: 'Tue', count: 3 },
+                    ]}
+                    todayName="Tue"
+                    variant="sparkline"
+                />,
+            );
+
+            expect(screen.getAllByTestId('week-hover')).toHaveLength(2);
+            expect(screen.getByText('Mon: 1 update')).toBeInTheDocument();
+            expect(screen.getByText('Tue: 3 updates')).toBeInTheDocument();
+        });
+    });
 });

@@ -103,76 +103,78 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
         const groups = groupDeadlines(shown, today);
 
         body = (
-            <ol
-                aria-label="Deadlines by day"
-                className="relative m-0 flex min-h-0 flex-1 list-none flex-col gap-4 overflow-y-auto p-0 pl-6"
-            >
-                <motion.span
-                    aria-hidden="true"
-                    initial={{ scaleY: 0 }}
-                    animate={{ scaleY: 1 }}
-                    transition={{ duration: DURATION.slow, ease: EASE }}
-                    style={{ originY: 0 }}
-                    className="absolute bottom-0 left-[7px] top-1 w-px bg-[var(--border-color-strong)]"
-                />
-                {groups.map((group, index) => (
-                    <motion.li
-                        key={group.key}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{
-                            duration: DURATION.base,
-                            ease: EASE,
-                            delay: 0.1 + rowDelay(index),
-                        }}
-                        className="relative"
-                    >
-                        <motion.span
-                            aria-hidden="true"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+                <ol
+                    aria-label="Deadlines by day"
+                    className="relative m-0 flex list-none flex-col gap-4 p-0 pl-6"
+                >
+                    <motion.span
+                        aria-hidden="true"
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        transition={{ duration: DURATION.slow, ease: EASE }}
+                        style={{ originY: 0 }}
+                        className="absolute bottom-0 left-[7px] top-1 w-px bg-[var(--border-color-strong)]"
+                    />
+                    {groups.map((group, index) => (
+                        <motion.li
+                            key={group.key}
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
                             transition={{
-                                ...SPRING,
-                                delay: 0.15 + rowDelay(index),
+                                duration: DURATION.base,
+                                ease: EASE,
+                                delay: 0.1 + rowDelay(index),
                             }}
-                            className={cn(
-                                'absolute -left-[22px] top-1 h-3 w-3 rounded-full border-2 border-solid border-[var(--surface-color)]',
-                                DOT_TONES[group.tone],
-                            )}
-                        />
-                        <h4 className="m-0 mb-1 flex items-center gap-2 text-xs font-semibold text-[var(--text-color)]">
-                            {group.label}
-                            <span className="rounded-full bg-[var(--bg-light-color)] px-1.5 text-[10px] font-medium text-[var(--text-gray-color)]">
-                                {group.rows.length}
-                                <span className="sr-only">
-                                    {group.rows.length === 1
-                                        ? ' issue'
-                                        : ' issues'}
-                                </span>
-                            </span>
-                        </h4>
-                        <ul
-                            role="list"
-                            className="m-0 flex list-none flex-col gap-0.5 p-0"
+                            className="relative"
                         >
-                            {group.rows.map((row) => (
-                                <li key={row.id} className="min-w-0">
-                                    <DashboardIssueRow
-                                        issue={row}
-                                        density="compact"
-                                        show={{
-                                            due: group.key === 'overdue',
-                                            priority: false,
-                                        }}
-                                        narrow={narrow}
-                                        now={today}
-                                    />
-                                </li>
-                            ))}
-                        </ul>
-                    </motion.li>
-                ))}
-            </ol>
+                            <motion.span
+                                aria-hidden="true"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{
+                                    ...SPRING,
+                                    delay: 0.15 + rowDelay(index),
+                                }}
+                                className={cn(
+                                    'absolute -left-[22px] top-1 h-3 w-3 rounded-full border-2 border-solid border-[var(--surface-color)]',
+                                    DOT_TONES[group.tone],
+                                )}
+                            />
+                            <h4 className="m-0 mb-1 flex items-center gap-2 text-xs font-semibold text-[var(--text-color)]">
+                                {group.label}
+                                <span className="rounded-full bg-[var(--bg-light-color)] px-1.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                    {group.rows.length}
+                                    <span className="sr-only">
+                                        {group.rows.length === 1
+                                            ? ' issue'
+                                            : ' issues'}
+                                    </span>
+                                </span>
+                            </h4>
+                            <ul
+                                role="list"
+                                className="m-0 flex list-none flex-col gap-0.5 p-0"
+                            >
+                                {group.rows.map((row) => (
+                                    <li key={row.id} className="min-w-0">
+                                        <DashboardIssueRow
+                                            issue={row}
+                                            density="compact"
+                                            show={{
+                                                due: group.key === 'overdue',
+                                                priority: false,
+                                            }}
+                                            narrow={narrow}
+                                            now={today}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.li>
+                    ))}
+                </ol>
+            </div>
         );
     } else if (variant === 'week') {
         const columns = Array.from({ length: WEEK_DAYS }, (_, offset) => ({

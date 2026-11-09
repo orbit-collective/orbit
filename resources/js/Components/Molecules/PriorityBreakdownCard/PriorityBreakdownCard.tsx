@@ -97,111 +97,139 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
     let cumulative = 0;
 
     return (
-        <VisualCard>
+        <VisualCard className="min-h-0 overflow-hidden">
             {showHeader && (
                 <VisualCardHeader title={title} description={description} />
             )}
-            <div className="flex min-h-0 flex-1 flex-col justify-center py-4">
-                {variant === 'donut' ? (
-                    <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-5">
-                        <div className="relative h-36 w-36 shrink-0">
-                            <svg
-                                viewBox="0 0 100 100"
-                                className="h-full w-full -rotate-90"
-                                aria-hidden="true"
-                            >
-                                <circle
-                                    cx="50"
-                                    cy="50"
-                                    r={DONUT_RADIUS}
-                                    fill="none"
-                                    stroke="var(--bg-light-color)"
-                                    strokeWidth="12"
-                                />
-                                {items
-                                    .filter((item) => item.count > 0)
-                                    .map((item, index) => {
-                                        const length =
-                                            (item.count / (total || 1)) *
-                                            DONUT_LENGTH;
-                                        const offset = -cumulative;
-                                        cumulative += length;
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-4 pr-1">
+                <div className="my-auto">
+                    {variant === 'donut' ? (
+                        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-5">
+                            <div className="relative h-36 w-36 shrink-0">
+                                <svg
+                                    viewBox="0 0 100 100"
+                                    className="h-full w-full -rotate-90"
+                                    aria-hidden="true"
+                                >
+                                    <circle
+                                        cx="50"
+                                        cy="50"
+                                        r={DONUT_RADIUS}
+                                        fill="none"
+                                        stroke="var(--bg-light-color)"
+                                        strokeWidth="12"
+                                    />
+                                    {items
+                                        .filter((item) => item.count > 0)
+                                        .map((item, index) => {
+                                            const length =
+                                                (item.count / (total || 1)) *
+                                                DONUT_LENGTH;
+                                            const offset = -cumulative;
+                                            cumulative += length;
 
-                                        return (
-                                            <motion.circle
-                                                key={item.key}
-                                                data-testid="priority-arc"
-                                                cx="50"
-                                                cy="50"
-                                                r={DONUT_RADIUS}
-                                                fill="none"
-                                                stroke={item.color}
-                                                strokeWidth="12"
-                                                strokeDashoffset={offset}
-                                                initial={{
-                                                    strokeDasharray: `0 ${DONUT_LENGTH}`,
-                                                }}
-                                                animate={{
-                                                    strokeDasharray: `${length} ${DONUT_LENGTH - length}`,
-                                                }}
-                                                transition={{
-                                                    duration: DURATION.slow,
-                                                    ease: EASE,
-                                                    delay:
-                                                        0.15 + rowDelay(index),
-                                                }}
-                                            />
-                                        );
-                                    })}
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-2xl font-bold tabular-nums text-[var(--text-color)]">
-                                    <AnimatedNumber value={total} />
-                                </span>
-                                <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
-                                    issues
-                                </span>
-                            </div>
-                        </div>
-                        <div className="min-w-[160px] flex-1">{legend}</div>
-                    </div>
-                ) : variant === 'list' ? (
-                    <div className="flex flex-col gap-4">
-                        {items.length === 0 && (
-                            <span className="text-xs text-[var(--text-muted-color)]">
-                                No issues yet
-                            </span>
-                        )}
-                        {items.map((item, index) => (
-                            <RowReveal
-                                key={item.key}
-                                index={index}
-                                className="flex flex-col gap-1.5"
-                            >
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="truncate font-medium text-[var(--text-color)]">
-                                        {item.label}
-                                    </span>
-                                    <span className="shrink-0 pl-2 font-semibold text-[var(--text-color)]">
-                                        <AnimatedNumber value={item.count} />
-                                        {showPercent && (
-                                            <span className="pl-1 font-medium text-[var(--text-muted-color)]">
-                                                <AnimatedNumber
-                                                    value={item.pct}
-                                                    format={(n) =>
-                                                        `(${Math.round(n)}%)`
-                                                    }
+                                            return (
+                                                <motion.circle
+                                                    key={item.key}
+                                                    data-testid="priority-arc"
+                                                    cx="50"
+                                                    cy="50"
+                                                    r={DONUT_RADIUS}
+                                                    fill="none"
+                                                    stroke={item.color}
+                                                    strokeWidth="12"
+                                                    strokeDashoffset={offset}
+                                                    initial={{
+                                                        strokeDasharray: `0 ${DONUT_LENGTH}`,
+                                                    }}
+                                                    animate={{
+                                                        strokeDasharray: `${length} ${DONUT_LENGTH - length}`,
+                                                    }}
+                                                    transition={{
+                                                        duration: DURATION.slow,
+                                                        ease: EASE,
+                                                        delay:
+                                                            0.15 +
+                                                            rowDelay(index),
+                                                    }}
                                                 />
-                                            </span>
-                                        )}
+                                            );
+                                        })}
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span className="text-2xl font-bold tabular-nums text-[var(--text-color)]">
+                                        <AnimatedNumber value={total} />
+                                    </span>
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+                                        issues
                                     </span>
                                 </div>
-                                <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                            </div>
+                            <div className="min-w-[160px] flex-1">{legend}</div>
+                        </div>
+                    ) : variant === 'list' ? (
+                        <div className="flex flex-col gap-4">
+                            {items.length === 0 && (
+                                <span className="text-xs text-[var(--text-muted-color)]">
+                                    No issues yet
+                                </span>
+                            )}
+                            {items.map((item, index) => (
+                                <RowReveal
+                                    key={item.key}
+                                    index={index}
+                                    className="flex flex-col gap-1.5"
+                                >
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="truncate font-medium text-[var(--text-color)]">
+                                            {item.label}
+                                        </span>
+                                        <span className="shrink-0 pl-2 font-semibold text-[var(--text-color)]">
+                                            <AnimatedNumber
+                                                value={item.count}
+                                            />
+                                            {showPercent && (
+                                                <span className="pl-1 font-medium text-[var(--text-muted-color)]">
+                                                    <AnimatedNumber
+                                                        value={item.pct}
+                                                        format={(n) =>
+                                                            `(${Math.round(n)}%)`
+                                                        }
+                                                    />
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                                        <motion.div
+                                            data-testid="priority-row-bar"
+                                            data-width-percent={item.pct}
+                                            className="h-full rounded-full"
+                                            style={{
+                                                backgroundColor: item.color,
+                                            }}
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${item.pct}%` }}
+                                            transition={{
+                                                duration: DURATION.slow,
+                                                ease: EASE,
+                                                delay: 0.15 + rowDelay(index),
+                                            }}
+                                        />
+                                    </div>
+                                </RowReveal>
+                            ))}
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                                {items.map((item, index) => (
                                     <motion.div
-                                        data-testid="priority-row-bar"
+                                        key={item.key}
+                                        data-testid="priority-segment"
                                         data-width-percent={item.pct}
-                                        className="h-full rounded-full"
                                         style={{ backgroundColor: item.color }}
+                                        className="h-full"
                                         initial={{ width: 0 }}
                                         animate={{ width: `${item.pct}%` }}
                                         transition={{
@@ -209,35 +237,14 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                                             ease: EASE,
                                             delay: 0.15 + rowDelay(index),
                                         }}
+                                        title={`${item.label}: ${item.pct}%`}
                                     />
-                                </div>
-                            </RowReveal>
-                        ))}
-                    </div>
-                ) : (
-                    <>
-                        <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
-                            {items.map((item, index) => (
-                                <motion.div
-                                    key={item.key}
-                                    data-testid="priority-segment"
-                                    data-width-percent={item.pct}
-                                    style={{ backgroundColor: item.color }}
-                                    className="h-full"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${item.pct}%` }}
-                                    transition={{
-                                        duration: DURATION.slow,
-                                        ease: EASE,
-                                        delay: 0.15 + rowDelay(index),
-                                    }}
-                                    title={`${item.label}: ${item.pct}%`}
-                                />
-                            ))}
-                        </div>
-                        <div className="mt-5">{legend}</div>
-                    </>
-                )}
+                                ))}
+                            </div>
+                            <div className="mt-5">{legend}</div>
+                        </>
+                    )}
+                </div>
             </div>
         </VisualCard>
     );
