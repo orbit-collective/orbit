@@ -121,6 +121,14 @@ export interface IssueStats {
     /** Issues at the top of their own project's priority scale, whatever it is called. */
     topPriority: number;
     category: { todo: number; in_progress: number; done: number };
+    /** Open issues past their end date. */
+    overdue: number;
+    /** Open issues due from today to a week from now. */
+    dueSoon: number;
+    /** Open issues assigned to the user. */
+    assigned: number;
+    /** Every issue by issue type, the biggest group first. */
+    types: { name: string; color: string; icon: string; count: number }[];
 }
 
 export type Sorting = 'AZ' | 'ZA';

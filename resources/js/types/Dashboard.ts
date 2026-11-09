@@ -9,7 +9,16 @@ export type DashboardWidgetType =
     | 'completion'
     | 'priority_breakdown'
     | 'activity'
-    | 'projects';
+    | 'projects'
+    | 'stat_overdue'
+    | 'stat_assigned'
+    | 'stat_due_soon'
+    | 'my_issues'
+    | 'deadlines'
+    | 'types_breakdown'
+    | 'week_summary'
+    | 'quick_actions'
+    | 'greeting';
 
 export type DashboardWidgetConfig = Record<string, string | number>;
 
@@ -63,4 +72,27 @@ export interface DashboardSavedLayout {
     id: number;
     name: string;
     widgets: DashboardWidget[];
+}
+
+/** One issue as the dashboard's lists show it (`IssueService::dashboardRow()`). */
+export interface DashboardIssueRow {
+    id: number;
+    number: number;
+    title: string;
+    projectId: number;
+    projectName: string | null;
+    projectColor: string | null;
+    type: { name: string; icon: string; color: string } | null;
+    priority: {
+        id: number;
+        name: string;
+        color: string;
+        icon: string;
+        position: number;
+    } | null;
+    status: { name: string; category: 'todo' | 'in_progress' | 'done' } | null;
+    assigneeId: number | null;
+    /** `YYYY-MM-DD`, or null. */
+    endDate: string | null;
+    updatedAt: string | null;
 }
