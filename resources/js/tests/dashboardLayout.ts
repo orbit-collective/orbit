@@ -121,7 +121,7 @@ export const DASHBOARD_CATALOG: DashboardCatalogEntry[] = [
     }),
     entry('completion', 'Completion Ratio', ['issueStats'], {
         variants: ['bars', 'ring', 'stacked'],
-        minHeight: 60,
+        minHeight: 70,
         options: [toggle('header', 'Title'), toggle('tier', 'Status label')],
     }),
     entry('priority_breakdown', 'Priority Breakdown', ['issueStats'], {

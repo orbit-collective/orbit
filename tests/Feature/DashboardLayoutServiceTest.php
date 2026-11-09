@@ -115,6 +115,12 @@ test('normalize turns the width of the old twelfths layouts into columns', funct
         ->and($widgets[1]['width'])->toBe(77);
 });
 
+test('the completion widget cannot be made smaller than its content', function () {
+    $widget = $this->service->normalize([['id' => 'c', 'type' => 'completion', 'height' => 1]])[0];
+
+    expect($widget['height'])->toBe(70);
+});
+
 test('normalize replaces invalid and repeated ids', function () {
     $widgets = $this->service->normalize([
         ['id' => 'same', 'type' => 'trend'],

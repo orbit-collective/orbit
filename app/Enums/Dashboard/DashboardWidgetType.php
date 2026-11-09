@@ -117,7 +117,7 @@ enum DashboardWidgetType: string
         return match ($this) {
             self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 20,
             self::Trend => 56,
-            self::Completion => 60,
+            self::Completion => 70,
             default => 40,
         };
     }
