@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.14.0](https://github.com/orbit-collective/orbit/compare/v0.13.1...v0.14.0) (2026-11-09)
+
+
+### Features
+
+* **dashboard:** add a Saved tab to the editor ([bb6da41](https://github.com/orbit-collective/orbit/commit/bb6da419de0056c9c73735b36d5886fbea79aa1a))
+* **dashboard:** add button to open dashboard editor ([0a7ba93](https://github.com/orbit-collective/orbit/commit/0a7ba9354cff3397e148ad163fca8c9a0811bd27))
+* **dashboard:** add layout service and repository ([e082a03](https://github.com/orbit-collective/orbit/commit/e082a03853eb558b5e0c93e7e93079319fbd0eb7))
+* **dashboard:** add layout types and helpers ([56066bb](https://github.com/orbit-collective/orbit/commit/56066bbf9dc204ac68cf2e0e7af8c0038bb48ef9))
+* **dashboard:** add per-user dashboard layout storage ([95d01f2](https://github.com/orbit-collective/orbit/commit/95d01f2422bc3219052dd3c428ce5b28fcac1c1d))
+* **dashboard:** add styles and options to every widget ([9383b8f](https://github.com/orbit-collective/orbit/commit/9383b8f805e2dfa55092005481a0adaec595c118))
+* **dashboard:** add widget catalog ([4bf5104](https://github.com/orbit-collective/orbit/commit/4bf510436ed0f2fa09f154666c22115d3700b069))
+* **dashboard:** add widget components ([85b9812](https://github.com/orbit-collective/orbit/commit/85b9812618bbcec1696d44ebb615cd3e3f3afc20))
+* **dashboard:** add widget drag frame and editor bar ([195d1a0](https://github.com/orbit-collective/orbit/commit/195d1a0c64999f084176f3aa503ae918e03b2e8b))
+* **dashboard:** add widget grid and editor panel ([7446225](https://github.com/orbit-collective/orbit/commit/74462252e24da1aa01cf7a5f86040fb03a953318))
+* **dashboard:** animate the editor ([a7babf7](https://github.com/orbit-collective/orbit/commit/a7babf794826f7902755d16cdd0d84a1e4fbbf1d))
+* **dashboard:** animate the editor panel and the widgets in it ([c9dc0a7](https://github.com/orbit-collective/orbit/commit/c9dc0a7e4227934eb1aa7162dbc3daacfce4caaa))
+* **dashboard:** draw layout previews as the layouts are ([d31fa5b](https://github.com/orbit-collective/orbit/commit/d31fa5b7313fb061e952afc56bc6efefc43f0c7e))
+* **dashboard:** draw the new widget styles and options ([6783744](https://github.com/orbit-collective/orbit/commit/6783744c6634c6c8fd04e281ee22cd3855a78997))
+* **dashboard:** edit saved layouts and pick colors ([57f0ea0](https://github.com/orbit-collective/orbit/commit/57f0ea0cf855aece5c9e2f3faa1466ffc8161fb6))
+* **dashboard:** edit saved layouts and pick colors with swatches ([b1f4ccb](https://github.com/orbit-collective/orbit/commit/b1f4ccba4381be0330f717fcfda2b2ff113796df))
+* **dashboard:** keep named layouts per user ([bdd9a7d](https://github.com/orbit-collective/orbit/commit/bdd9a7d149d99d93f966c0a6272af0665d889b1e))
+* **dashboard:** make the dashboard page editable ([88c2fb4](https://github.com/orbit-collective/orbit/commit/88c2fb43ff12895dbf3e1556090058d4f44fbe3c))
+* **dashboard:** refresh only the data that is loaded ([3b1b1a8](https://github.com/orbit-collective/orbit/commit/3b1b1a891a6da6b5468fdb08fb7e15ce2ef914d3))
+* **dashboard:** resize widgets to any size with snap ([b8c55fa](https://github.com/orbit-collective/orbit/commit/b8c55faddbb4a3d7634830e39c3a60c19bfba492))
+* **dashboard:** save layouts and send only needed data ([b695078](https://github.com/orbit-collective/orbit/commit/b695078082cc66152121ccb5020c44b56d0d8394))
+* **hooks:** add useElementWidth ([91f23c0](https://github.com/orbit-collective/orbit/commit/91f23c0785a535d884253e4d2bc2a9e1b7c8cbde))
+* **hooks:** add useMediaQuery ([7e60c34](https://github.com/orbit-collective/orbit/commit/7e60c34d772f144f409f82f357b2d15e70a40696))
+* **ui:** add ColorSwatches atom ([e83b221](https://github.com/orbit-collective/orbit/commit/e83b2218813e564391bee6c1d2d5bcd8aa121849))
+* **ui:** add SegmentedControl atom ([4c665d7](https://github.com/orbit-collective/orbit/commit/4c665d7fc01c4f4ff968481e84312393e3c9a182))
+* **ui:** slide the pill of SegmentedControl ([8a3f827](https://github.com/orbit-collective/orbit/commit/8a3f827ad6792d46a7c82fa378ccb79096f30afd))
+
+
+### Bug Fixes
+
+* **dashboard:** center the points of the trend line on the line ([88ff895](https://github.com/orbit-collective/orbit/commit/88ff895da695ce3f13640bd0773ad7fb8334b871))
+* **dashboard:** draw the trend line properly ([04038a5](https://github.com/orbit-collective/orbit/commit/04038a505030a9b9d6b2d0d60c20b83921c7538b))
+* **dashboard:** draw widgets as they are while editing ([3bc9259](https://github.com/orbit-collective/orbit/commit/3bc9259ba95e2ecdcedc57dac7be981d035ba77e))
+* **dashboard:** harden saved layouts and layout requests ([59c15b8](https://github.com/orbit-collective/orbit/commit/59c15b8d256cf8a1011ca6ec63e2867dd210f3da))
+* **dashboard:** keep layout previews small and gray ([970a99a](https://github.com/orbit-collective/orbit/commit/970a99aa36a90feb72950be3460da5b6b013332e))
+* **dashboard:** let widgets fill the height they are given ([d77aa62](https://github.com/orbit-collective/orbit/commit/d77aa62852a2bfed1e1202fd39aac7366f4955eb))
+* **dashboard:** make the editor usable on small screens ([87521bc](https://github.com/orbit-collective/orbit/commit/87521bc32189b8817d161afd12280997115af5a6))
+* **dashboard:** make the glass stat style look like glass ([19bd2fd](https://github.com/orbit-collective/orbit/commit/19bd2fd9648df9171b6edb6d14afca5207d0f4d8))
+* **dashboard:** make the widget editor friendlier to touch, keyboard and small widgets ([6676626](https://github.com/orbit-collective/orbit/commit/6676626a4896f24785fe2fb28b1309ab3fbdc1c7))
+* **dashboard:** resize only the edge that is dragged ([5e986a7](https://github.com/orbit-collective/orbit/commit/5e986a7370cf710efcecb6a9c9f0b6e28373751f))
+* **dashboard:** size layout previews by their measured width ([bda3a20](https://github.com/orbit-collective/orbit/commit/bda3a20cb10961ea7444cbc91fd52ad70b5e5c55))
+
 ## [0.13.1](https://github.com/orbit-collective/orbit/compare/v0.13.0...v0.13.1) (2026-11-07)
 
 
