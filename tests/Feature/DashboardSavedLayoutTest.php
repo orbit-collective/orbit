@@ -2,8 +2,10 @@
 
 use App\Models\DashboardSavedLayout;
 use App\Models\User;
+use App\Repositories\DashboardSavedLayoutRepository;
 use App\Services\DashboardSavedLayoutService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -250,4 +252,72 @@ test('the layout of another user cannot be updated', function () {
 
 test('guests cannot update a layout', function () {
     $this->patch('/dashboard/saved-layouts/1', ['name' => 'x'])->assertRedirect(route('login'));
+});
+
+test('a saved layout can be replaced with an empty one', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $id = DashboardSavedLayout::query()->value('id');
+
+    $this->actingAs($user)->patch("/dashboard/saved-layouts/$id", ['widgets' => []])->assertSessionHasNoErrors();
+
+    $layout = DashboardSavedLayout::query()->find($id);
+    expect($layout->widgets)->toBe([])->and($layout->name)->toBe('Focus');
+});
+
+test('a widget that is not an object, or has a type that is not text, is a validation error and not a crash', function (array $widgets) {
+    $user = User::factory()->create();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', savedLayoutPayload('Focus'));
+    $id = DashboardSavedLayout::query()->value('id');
+
+    $this->actingAs($user)->put('/dashboard/layout', ['widgets' => $widgets])->assertSessionHasErrors();
+    $this->actingAs($user)->post('/dashboard/saved-layouts', ['name' => 'Other', 'widgets' => $widgets])->assertSessionHasErrors();
+    $this->actingAs($user)->patch("/dashboard/saved-layouts/$id", ['widgets' => $widgets])->assertSessionHasErrors();
+})->with([
+    'type is a list' => [[['id' => 'a', 'type' => ['x'], 'variant' => 'default', 'width' => 40, 'height' => 85, 'visible' => true]]],
+    'widget is text' => [['trend']],
+    'type is missing' => [[['id' => 'a', 'variant' => 'default', 'width' => 40, 'height' => 85, 'visible' => true]]],
+]);
+
+test('a save counts and writes under one lock of the user', function () {
+    $user = User::factory()->create();
+    $baseline = DB::transactionLevel();
+    $levels = [];
+
+    $repository = Mockery::mock(DashboardSavedLayoutRepository::class)->makePartial();
+    $repository->shouldReceive('lockOwner')->once()->with($user->id)->andReturnUsing(function () use (&$levels) {
+        $levels['lock'] = DB::transactionLevel();
+    });
+    $repository->shouldReceive('countForUser')->once()->andReturnUsing(function () use (&$levels) {
+        $levels['count'] = DB::transactionLevel();
+
+        return 0;
+    });
+    $repository->shouldReceive('updateOrCreateForUser')->once()->andReturnUsing(function () use (&$levels) {
+        $levels['write'] = DB::transactionLevel();
+
+        return new DashboardSavedLayout;
+    });
+    app()->instance(DashboardSavedLayoutRepository::class, $repository);
+
+    app(DashboardSavedLayoutService::class)->save($user->id, 'Focus', []);
+
+    // All three happen inside the same transaction, which a test is already in one level of.
+    expect($levels)->toHaveKeys(['lock', 'count', 'write'])
+        ->and($levels['lock'])->toBeGreaterThan($baseline)
+        ->and($levels['count'])->toBe($levels['lock'])
+        ->and($levels['write'])->toBe($levels['lock']);
+});
+
+test('the check of the limit does not take a layout that is being replaced into account', function () {
+    $user = User::factory()->create();
+    $service = app(DashboardSavedLayoutService::class);
+
+    foreach (range(1, DashboardSavedLayoutService::MAX_PER_USER) as $i) {
+        $service->save($user->id, "Layout $i", []);
+    }
+
+    $service->save($user->id, 'Layout 1', []);
+
+    expect(DashboardSavedLayout::query()->where('user_id', $user->id)->count())->toBe(DashboardSavedLayoutService::MAX_PER_USER);
 });

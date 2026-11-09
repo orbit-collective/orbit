@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\DashboardLayout;
 use App\Models\DashboardSavedLayout;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 class DashboardSavedLayoutRepository
@@ -18,6 +19,16 @@ class DashboardSavedLayoutRepository
             ->latest('updated_at')
             ->latest('id')
             ->get();
+    }
+
+    /**
+     * Hold a lock on the user's row until the surrounding transaction ends, so
+     * two saves of one user wait for each other. Call it inside
+     * DB::transaction().
+     */
+    public function lockOwner(int $userId): void
+    {
+        User::query()->whereKey($userId)->lockForUpdate()->first();
     }
 
     public function countForUser(int $userId): int

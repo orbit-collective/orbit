@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Dashboard;
 
 use App\Services\DashboardLayoutService;
+use Illuminate\Validation\Rule;
 
 /**
  * Rename a saved layout, replace its widgets, or both. The widgets are checked
@@ -13,7 +14,9 @@ class UpdateDashboardSavedLayoutRequest extends UpdateDashboardLayoutRequest
     public function rules(): array
     {
         return array_merge(parent::rules(), [
-            'name' => 'required_without:widgets|string|max:40',
+            // An empty `widgets` list is a layout to replace with, so only a
+            // missing `widgets` key makes the name required.
+            'name' => [Rule::requiredIf(fn () => ! $this->has('widgets')), 'string', 'max:40'],
             'widgets' => 'sometimes|array|max:'.DashboardLayoutService::MAX_WIDGETS,
         ]);
     }
