@@ -21,6 +21,8 @@ import {
     GRID_COLUMNS,
     ROW_HEIGHT,
     WIDTH_PRESETS,
+    visibleOptions,
+    widgetLabel,
 } from '@/utils/dashboardLayout';
 import { FOCUS_RING } from '@/utils/focusRing';
 import { DURATION, EASE, SPRING, rowIn, rowsParent } from '@/utils/motion';
@@ -340,7 +342,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     <IconTile icon={entry.icon} />
                                     <div className="min-w-0">
                                         <h3 className="m-0 truncate text-sm font-semibold text-[var(--text-color)]">
-                                            {entry.label}
+                                            {widgetLabel(selected, entry)}
                                         </h3>
                                         <p className="m-0 text-[11px] leading-snug text-[var(--text-muted-color)]">
                                             {entry.description}
@@ -395,74 +397,83 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     </p>
                                 </Section>
 
-                                {entry.options.map((option) => {
-                                    const current =
-                                        selected.config[option.key] ??
-                                        option.default;
-                                    const labelOf = (value: string | number) =>
-                                        option.labels?.[String(value)] ??
-                                        (typeof value === 'string'
-                                            ? capitalize(value)
-                                            : String(value));
+                                {visibleOptions(entry, selected.config).map(
+                                    (option) => {
+                                        const current =
+                                            selected.config[option.key] ??
+                                            option.default;
+                                        const labelOf = (
+                                            value: string | number,
+                                        ) =>
+                                            option.labels?.[String(value)] ??
+                                            (typeof value === 'string'
+                                                ? capitalize(value)
+                                                : String(value));
 
-                                    return (
-                                        <Section
-                                            key={option.key}
-                                            title={option.label}
-                                        >
-                                            {option.kind === 'color' ? (
-                                                <ColorSwatches
-                                                    label={option.label}
-                                                    value={String(current)}
-                                                    options={option.options.map(
-                                                        (value) => ({
-                                                            value: String(
+                                        return (
+                                            <Section
+                                                key={option.key}
+                                                title={option.label}
+                                            >
+                                                {option.kind === 'color' ? (
+                                                    <ColorSwatches
+                                                        label={option.label}
+                                                        value={String(current)}
+                                                        options={option.options.map(
+                                                            (value) => ({
+                                                                value: String(
+                                                                    value,
+                                                                ),
+                                                                label: labelOf(
+                                                                    value,
+                                                                ),
+                                                                // "Automatic" is none of the colors.
+                                                                color:
+                                                                    value ===
+                                                                    'auto'
+                                                                        ? 'var(--text-muted-color)'
+                                                                        : DASHBOARD_COLOR_VALUES[
+                                                                              toDashboardColor(
+                                                                                  String(
+                                                                                      value,
+                                                                                  ),
+                                                                              )
+                                                                          ],
+                                                            }),
+                                                        )}
+                                                        onChange={(value) =>
+                                                            onOptionChange(
+                                                                selected.id,
+                                                                option.key,
                                                                 value,
-                                                            ),
-                                                            label: labelOf(
+                                                            )
+                                                        }
+                                                    />
+                                                ) : (
+                                                    <SegmentedControl
+                                                        label={option.label}
+                                                        value={current}
+                                                        options={option.options.map(
+                                                            (value) => ({
                                                                 value,
-                                                            ),
-                                                            color: DASHBOARD_COLOR_VALUES[
-                                                                toDashboardColor(
-                                                                    String(
-                                                                        value,
-                                                                    ),
-                                                                )
-                                                            ],
-                                                        }),
-                                                    )}
-                                                    onChange={(value) =>
-                                                        onOptionChange(
-                                                            selected.id,
-                                                            option.key,
-                                                            value,
-                                                        )
-                                                    }
-                                                />
-                                            ) : (
-                                                <SegmentedControl
-                                                    label={option.label}
-                                                    value={current}
-                                                    options={option.options.map(
-                                                        (value) => ({
-                                                            value,
-                                                            label: labelOf(
+                                                                label: labelOf(
+                                                                    value,
+                                                                ),
+                                                            }),
+                                                        )}
+                                                        onChange={(value) =>
+                                                            onOptionChange(
+                                                                selected.id,
+                                                                option.key,
                                                                 value,
-                                                            ),
-                                                        }),
-                                                    )}
-                                                    onChange={(value) =>
-                                                        onOptionChange(
-                                                            selected.id,
-                                                            option.key,
-                                                            value,
-                                                        )
-                                                    }
-                                                />
-                                            )}
-                                        </Section>
-                                    );
-                                })}
+                                                            )
+                                                        }
+                                                    />
+                                                )}
+                                            </Section>
+                                        );
+                                    },
+                                )}
 
                                 <Section title="Position">
                                     <div className="flex gap-2">

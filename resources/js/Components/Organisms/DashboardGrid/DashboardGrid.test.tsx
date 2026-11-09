@@ -2,7 +2,11 @@ import { DragEndEvent } from '@dnd-kit/core';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { DASHBOARD_CATALOG, makeWidget } from '@/tests/dashboardLayout';
+import {
+    DASHBOARD_CATALOG,
+    makeWidget,
+    makeStat,
+} from '@/tests/dashboardLayout';
 import DashboardGrid from './DashboardGrid';
 
 const dnd = vi.hoisted(() => ({
@@ -29,8 +33,8 @@ vi.mock('@/Components/Organisms/DashboardWidget/DashboardWidget', () => ({
 }));
 
 const widgets = [
-    makeWidget('stat_projects'),
-    makeWidget('stat_critical', { visible: false }),
+    makeStat('projects'),
+    makeStat('critical', { visible: false }),
     makeWidget('trend', { width: 80, height: 90 }),
 ];
 

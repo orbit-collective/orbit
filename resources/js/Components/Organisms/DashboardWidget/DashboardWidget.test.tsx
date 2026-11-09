@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { makeIssueRow } from '@/tests/dashboardIssues';
-import { makeWidget } from '@/tests/dashboardLayout';
+import { makeStat, makeWidget } from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
 import { DashboardWidget as Widget } from '@/types/Dashboard';
@@ -84,14 +84,14 @@ describe('DashboardWidget', () => {
     const stats = makeIssueStats({ high: 2, todo: 2, done: 2 });
 
     test.each([
-        ['stat_projects', 'Active Projects'],
-        ['stat_open_issues', 'Open Issues'],
-        ['stat_critical', 'Critical Tasks'],
-        ['stat_resolution', 'Resolution Rate'],
-    ] as const)('draws the %s stat card', (type, title) => {
+        ['projects', 'Active Projects'],
+        ['open_issues', 'Open Issues'],
+        ['critical', 'Critical Tasks'],
+        ['resolution', 'Resolution Rate'],
+    ] as const)('draws the %s stat card', (metric, title) => {
         render(
             <DashboardWidget
-                widget={widget({ type })}
+                widget={makeStat(metric)}
                 data={{ issueStats: stats, projects: [project(1)] }}
             />,
         );
@@ -102,7 +102,7 @@ describe('DashboardWidget', () => {
     test('computes the resolution rate from the issue counts', () => {
         render(
             <DashboardWidget
-                widget={widget({ type: 'stat_resolution' })}
+                widget={makeStat('resolution', { config: { show: 'percent' } })}
                 data={{ issueStats: stats, projects: [] }}
             />,
         );
@@ -112,21 +112,22 @@ describe('DashboardWidget', () => {
 
     test('shows a placeholder while the data of a widget has not arrived', () => {
         const types = [
-            'stat_open_issues',
-            'stat_critical',
-            'stat_resolution',
             'trend',
             'completion',
             'priority_breakdown',
             'activity',
         ] as const;
 
-        for (const type of types) {
+        const widgets = [
+            ...types.map((type) => widget({ type })),
+            ...['open_issues', 'critical', 'resolution', 'overdue'].map(
+                (metric) => makeStat(metric),
+            ),
+        ];
+
+        for (const item of widgets) {
             const { unmount } = render(
-                <DashboardWidget
-                    widget={widget({ type })}
-                    data={{ projects: [] }}
-                />,
+                <DashboardWidget widget={item} data={{ projects: [] }} />,
             );
 
             expect(
@@ -216,8 +217,8 @@ describe('DashboardWidget', () => {
         const data = { issueStats: stats, projects: [project(1)] };
         const statWidget = (
             config: Widget['config'],
-            type: Widget['type'] = 'stat_open_issues',
-        ) => makeWidget(type, { config });
+            metric: string = 'open_issues',
+        ) => makeStat(metric, { config });
 
         test.each([
             ['open', 'Open Issues', '2'],
@@ -248,7 +249,7 @@ describe('DashboardWidget', () => {
         test('the resolution rate can be shown as done out of all', () => {
             render(
                 <DashboardWidget
-                    widget={statWidget({ show: 'count' }, 'stat_resolution')}
+                    widget={statWidget({ show: 'fraction' }, 'resolution')}
                     data={data}
                 />,
             );
@@ -256,12 +257,138 @@ describe('DashboardWidget', () => {
             expect(screen.getByText('/ 4')).toBeInTheDocument();
         });
 
+        describe('the one statistic widget', () => {
+            const busy = makeIssueStats({
+                todo: 3,
+                inProgress: 1,
+                done: 4,
+                overdue: 2,
+                assigned: 3,
+            });
+            const busyData = { issueStats: busy, projects: [project(1)] };
+            const noIcon = { icon: 'off', description: 'off' } as const;
+
+            test('shows the number alone by default, with no ring', () => {
+                const { container } = render(
+                    <DashboardWidget
+                        widget={statWidget(noIcon, 'overdue')}
+                        data={busyData}
+                    />,
+                );
+
+                expect(screen.getByText('2')).toBeInTheDocument();
+                expect(container.querySelector('svg')).toBeNull();
+            });
+
+            test('shows a part of the whole with the share as a badge, or a ring when vivid', () => {
+                const { container } = render(
+                    <DashboardWidget
+                        widget={statWidget(
+                            { ...noIcon, show: 'fraction' },
+                            'overdue',
+                        )}
+                        data={busyData}
+                    />,
+                );
+
+                // Overdue is counted against the 4 open issues.
+                expect(screen.getByText('/ 4')).toBeInTheDocument();
+                expect(screen.getByText('50%')).toBeInTheDocument();
+                expect(container.querySelector('svg')).toBeNull();
+
+                cleanup();
+                const vivid = render(
+                    <DashboardWidget
+                        widget={makeStat('overdue', {
+                            variant: 'vivid',
+                            config: { ...noIcon, show: 'fraction' },
+                        })}
+                        data={busyData}
+                    />,
+                );
+                // In the vivid style the share is a ring.
+                expect(
+                    vivid.container.querySelector('svg circle'),
+                ).not.toBeNull();
+            });
+
+            test('shows the share alone as a percent', () => {
+                render(
+                    <DashboardWidget
+                        widget={statWidget(
+                            { ...noIcon, show: 'percent' },
+                            'assigned',
+                        )}
+                        data={busyData}
+                    />,
+                );
+
+                // 3 of the 4 open issues.
+                expect(screen.getAllByText('75%').length).toBeGreaterThan(0);
+            });
+
+            test('critical and the open issues are a part of every issue', () => {
+                render(
+                    <DashboardWidget
+                        widget={statWidget(
+                            { ...noIcon, show: 'fraction', count: 'todo' },
+                            'open_issues',
+                        )}
+                        data={busyData}
+                    />,
+                );
+
+                expect(screen.getByText('To Do')).toBeInTheDocument();
+                expect(screen.getByText('/ 8')).toBeInTheDocument();
+            });
+
+            test('the projects count is not a part of anything, so the format does not apply', () => {
+                render(
+                    <DashboardWidget
+                        widget={statWidget(
+                            { ...noIcon, show: 'percent' },
+                            'projects',
+                        )}
+                        data={busyData}
+                    />,
+                );
+
+                expect(screen.getByText('1')).toBeInTheDocument();
+                expect(screen.queryByText(/%/)).not.toBeInTheDocument();
+            });
+
+            test('projects need no issue stats and do not wait for them', () => {
+                render(
+                    <DashboardWidget
+                        widget={makeStat('projects')}
+                        data={{ projects: [project(1), project(2)] }}
+                    />,
+                );
+
+                expect(screen.getByText('2')).toBeInTheDocument();
+                expect(
+                    screen.queryByTestId('widget-placeholder'),
+                ).not.toBeInTheDocument();
+            });
+
+            test('an unknown metric falls back to the open issues', () => {
+                render(
+                    <DashboardWidget
+                        widget={statWidget({}, 'bogus')}
+                        data={busyData}
+                    />,
+                );
+
+                expect(screen.getByText('Open Issues')).toBeInTheDocument();
+            });
+        });
+
         test('a statistic can hide its icon and description', () => {
             const { container } = render(
                 <DashboardWidget
                     widget={statWidget(
                         { icon: 'off', description: 'off' },
-                        'stat_critical',
+                        'critical',
                     )}
                     data={data}
                 />,
@@ -273,7 +400,7 @@ describe('DashboardWidget', () => {
         test('a statistic takes its variant and color from the widget', () => {
             const { container } = render(
                 <DashboardWidget
-                    widget={makeWidget('stat_critical', {
+                    widget={makeStat('critical', {
                         variant: 'outline',
                         config: { color: 'warning' },
                     })}
@@ -287,7 +414,7 @@ describe('DashboardWidget', () => {
         test('an unknown variant or color falls back to the defaults', () => {
             const { container } = render(
                 <DashboardWidget
-                    widget={makeWidget('stat_critical', {
+                    widget={makeStat('critical', {
                         variant: 'nope',
                         config: { color: 'pink' },
                     })}
@@ -473,14 +600,14 @@ describe('DashboardWidget', () => {
         };
 
         test.each([
-            ['stat_overdue', 'Overdue Issues', '3'],
-            ['stat_assigned', 'Assigned to Me', '7'],
-            ['stat_due_soon', 'Due Soon', '5'],
+            ['overdue', 'Overdue Issues', '3'],
+            ['assigned', 'Assigned to Me', '7'],
+            ['due_soon', 'Due Soon', '5'],
         ] as const)(
-            '%s is a stat card with its number',
-            (type, title, value) => {
+            'the %s statistic shows its number',
+            (metric, title, value) => {
                 render(
-                    <DashboardWidget widget={makeWidget(type)} data={data} />,
+                    <DashboardWidget widget={makeStat(metric)} data={data} />,
                 );
 
                 expect(screen.getByText(title)).toBeInTheDocument();
@@ -491,7 +618,7 @@ describe('DashboardWidget', () => {
         test('the new stats take the same style and color options as the others', () => {
             const { container } = render(
                 <DashboardWidget
-                    widget={makeWidget('stat_overdue', {
+                    widget={makeStat('overdue', {
                         variant: 'outline',
                         config: { icon: 'off', description: 'off' },
                     })}
@@ -504,9 +631,6 @@ describe('DashboardWidget', () => {
         });
 
         test.each([
-            'stat_overdue',
-            'stat_assigned',
-            'stat_due_soon',
             'my_issues',
             'deadlines',
             'types_breakdown',

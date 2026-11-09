@@ -965,15 +965,15 @@ const cardStyle = (widget: DashboardWidget): CSSProperties => {
 
     switch (widget.variant) {
         case 'accent':
-            return widget.type.startsWith('stat_')
+            return widget.type === 'stat'
                 ? { ...base, borderColor: MUTED }
                 : base;
         case 'outline':
-            return widget.type.startsWith('stat_')
+            return widget.type === 'stat'
                 ? { ...base, backgroundColor: 'transparent' }
                 : base;
         case 'glass':
-            return widget.type.startsWith('stat_')
+            return widget.type === 'stat'
                 ? {
                       ...base,
                       backgroundColor:

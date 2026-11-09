@@ -7,7 +7,7 @@ import {
     users,
 } from '@/stories/fixtures';
 import { makeIssueRow } from '@/tests/dashboardIssues';
-import { makeWidget } from '@/tests/dashboardLayout';
+import { makeWidget, makeStat } from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
 import DashboardWidget from './DashboardWidget';
@@ -24,7 +24,7 @@ const meta = {
         ),
     ],
     args: {
-        widget: makeWidget('stat_open_issues'),
+        widget: makeStat('open_issues'),
         data: {
             projects: projects.map((project) => ({
                 ...project,
@@ -62,7 +62,7 @@ export const Stat: Story = {
 };
 
 export const VividStat: Story = {
-    args: { widget: makeWidget('stat_resolution', { variant: 'vivid' }) },
+    args: { widget: makeStat('resolution', { variant: 'vivid' }) },
 };
 
 export const CompletionBars: Story = {
@@ -84,7 +84,7 @@ export const Projects: Story = {
 /** Until the data of a widget arrives it is a placeholder. */
 export const WaitingForData: Story = {
     args: {
-        widget: makeWidget('stat_critical'),
+        widget: makeStat('critical'),
         data: { projects: [] },
     },
     play: async ({ canvasElement }) => {
@@ -95,17 +95,17 @@ export const WaitingForData: Story = {
 };
 
 export const GlassStat: Story = {
-    args: { widget: makeWidget('stat_projects', { variant: 'glass' }) },
+    args: { widget: makeStat('projects', { variant: 'glass' }) },
 };
 
 export const OutlineStat: Story = {
-    args: { widget: makeWidget('stat_critical', { variant: 'outline' }) },
+    args: { widget: makeStat('critical', { variant: 'outline' }) },
 };
 
 /** Which issues the statistic counts is an option of the widget. */
 export const InProgressCount: Story = {
     args: {
-        widget: makeWidget('stat_open_issues', {
+        widget: makeStat('open_issues', {
             config: {
                 count: 'in_progress',
                 color: 'warning',
@@ -118,7 +118,7 @@ export const InProgressCount: Story = {
 
 export const ResolutionAsCount: Story = {
     args: {
-        widget: makeWidget('stat_resolution', {
+        widget: makeStat('resolution', {
             config: { show: 'count', color: 'accent' },
         }),
     },
@@ -263,19 +263,19 @@ const secondWave = {
 };
 
 export const OverdueStat: Story = {
-    args: { widget: makeWidget('stat_overdue'), data: secondWave },
+    args: { widget: makeStat('overdue'), data: secondWave },
 };
 
 export const AssignedStat: Story = {
     args: {
-        widget: makeWidget('stat_assigned', { variant: 'vivid' }),
+        widget: makeStat('assigned', { variant: 'vivid' }),
         data: secondWave,
     },
 };
 
 export const DueSoonStat: Story = {
     args: {
-        widget: makeWidget('stat_due_soon', { variant: 'glass' }),
+        widget: makeStat('due_soon', { variant: 'glass' }),
         data: secondWave,
     },
 };

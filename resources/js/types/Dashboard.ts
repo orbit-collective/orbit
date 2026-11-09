@@ -1,18 +1,12 @@
 import { icons } from 'lucide-react';
 
 export type DashboardWidgetType =
-    | 'stat_projects'
-    | 'stat_open_issues'
-    | 'stat_critical'
-    | 'stat_resolution'
+    | 'stat'
     | 'trend'
     | 'completion'
     | 'priority_breakdown'
     | 'activity'
     | 'projects'
-    | 'stat_overdue'
-    | 'stat_assigned'
-    | 'stat_due_soon'
     | 'my_issues'
     | 'deadlines'
     | 'types_breakdown'
@@ -44,6 +38,8 @@ interface DashboardWidgetOption {
     labels?: Record<string, string>;
     /** `color` when the choice is one of the dashboard colors, shown as swatches. */
     kind?: 'color';
+    /** The option is shown only while the widget's other options have these values. */
+    when?: Record<string, string[]>;
 }
 
 /** What the server says a widget type can do (`DashboardWidgetType::catalog()`). */

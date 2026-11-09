@@ -13,6 +13,7 @@ import {
     makeDashboardLayout,
     makeSavedLayout,
     makeWidget,
+    makeStat,
 } from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
@@ -128,8 +129,17 @@ const startEditing = () =>
         mocks.commands.get('dashboard.edit')!.perform!();
     });
 
-const layoutOf = (...types: Parameters<typeof makeWidget>[0][]) =>
-    makeDashboardLayout(types.map((type) => makeWidget(type)));
+/** A layout of the given types; `stat_critical` is a statistic showing critical tasks. */
+const layoutOf = (
+    ...types: (Parameters<typeof makeWidget>[0] | `stat_${string}`)[]
+) =>
+    makeDashboardLayout(
+        types.map((type) =>
+            type.startsWith('stat_')
+                ? makeStat(type.slice(5))
+                : makeWidget(type as Parameters<typeof makeWidget>[0]),
+        ),
+    );
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -200,9 +210,9 @@ describe('Dashboard Page', () => {
     test('draws only the visible widgets, in the order of the layout', () => {
         renderDashboard({
             dashboardLayout: makeDashboardLayout([
-                makeWidget('stat_critical'),
-                makeWidget('stat_projects'),
-                makeWidget('stat_open_issues', { visible: false }),
+                makeStat('critical'),
+                makeStat('projects'),
+                makeStat('open_issues', { visible: false }),
             ]),
         });
 
@@ -347,8 +357,8 @@ describe('Dashboard editing', () => {
             '/dashboard/layout',
             {
                 widgets: [
-                    makeWidget('stat_projects'),
-                    makeWidget('stat_critical', { visible: false }),
+                    makeStat('projects'),
+                    makeStat('critical', { visible: false }),
                 ],
             },
             expect.objectContaining({ preserveScroll: true }),
@@ -481,7 +491,7 @@ describe('Dashboard editing', () => {
 
     test('adding a widget whose data did not arrive asks the server for it', async () => {
         renderDashboard({
-            dashboardLayout: layoutOf('stat_projects'),
+            dashboardLayout: layoutOf('projects'),
             issueStats: undefined,
             productivity_trend: undefined,
             activityLogs: undefined,
@@ -504,9 +514,7 @@ describe('Dashboard editing', () => {
     });
 
     describe('saved layouts', () => {
-        const saved = [
-            makeSavedLayout(5, 'Focus', [makeWidget('stat_critical')]),
-        ];
+        const saved = [makeSavedLayout(5, 'Focus', [makeStat('critical')])];
 
         const openSaved = async () => {
             startEditing();
@@ -557,7 +565,7 @@ describe('Dashboard editing', () => {
 
             expect(mocks.router.post).toHaveBeenCalledWith(
                 '/dashboard/saved-layouts',
-                { name: 'Wide', widgets: [makeWidget('stat_projects')] },
+                { name: 'Wide', widgets: [makeStat('projects')] },
                 expect.objectContaining({
                     only: ['savedLayouts'],
                     preserveState: true,
@@ -658,7 +666,7 @@ describe('Dashboard editing', () => {
 
             expect(mocks.router.patch).toHaveBeenCalledWith(
                 '/dashboard/saved-layouts/5',
-                { widgets: [makeWidget('stat_projects')] },
+                { widgets: [makeStat('projects')] },
                 expect.objectContaining({ preserveState: true }),
             );
         });

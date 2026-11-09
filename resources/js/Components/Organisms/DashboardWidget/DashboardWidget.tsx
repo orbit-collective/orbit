@@ -28,6 +28,7 @@ import { Project } from '@/types/Projects';
 import { AssignableUser } from '@/types/Users';
 import { toDashboardColor } from '@/utils/dashboardColors';
 import { isOn, optionOf } from '@/utils/dashboardLayout';
+import { statFigures } from '@/utils/dashboardStat';
 
 /** What the dashboard page received; a prop is missing until a widget needs it. */
 export interface DashboardData {
@@ -68,14 +69,18 @@ const pick = <T extends string>(
     fallback: T = options[0],
 ): T => options.find((option) => option === value) ?? fallback;
 
-/** What the open issues statistic can count, with its title and hint. */
-const OPEN_ISSUES_COUNTS = {
-    open: { title: 'Open Issues', hint: 'Active tasks assigned/open' },
-    todo: { title: 'To Do', hint: 'Issues waiting to be started' },
-    in_progress: { title: 'In Progress', hint: 'Issues being worked on' },
-    done: { title: 'Done Issues', hint: 'Issues that are finished' },
-    all: { title: 'All Issues', hint: 'Every issue in your projects' },
-} as const;
+/** What a statistic reads while the stats are on their way and it needs none. */
+const EMPTY_STATS: IssueStats = {
+    total: 0,
+    priority: [],
+    noPriority: 0,
+    topPriority: 0,
+    category: { todo: 0, in_progress: 0, done: 0 },
+    overdue: 0,
+    dueSoon: 0,
+    assigned: 0,
+    types: [],
+};
 
 /** Stands in for a widget whose data is still on its way. */
 const WidgetPlaceholder: FC = () => (
@@ -104,85 +109,57 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
     });
 
     switch (widget.type) {
-        case 'stat_projects':
-            return (
-                <StatCard
-                    {...statProps('accent', 'Tracked projects in workspace')}
-                    title="Active Projects"
-                    value={<AnimatedNumber value={projects.length} />}
-                    icon="FolderGit2"
-                />
-            );
-        case 'stat_open_issues': {
-            if (!issueStats) return <WidgetPlaceholder />;
+        case 'stat': {
+            const metric = optionOf(widget, 'metric', 'open_issues');
 
-            const count = pick(
-                Object.keys(
-                    OPEN_ISSUES_COUNTS,
-                ) as (keyof typeof OPEN_ISSUES_COUNTS)[],
+            if (!issueStats && metric !== 'projects') {
+                return <WidgetPlaceholder />;
+            }
+
+            const figures = statFigures(
+                metric,
                 optionOf(widget, 'count', 'open'),
+                issueStats ?? EMPTY_STATS,
+                projects.length,
             );
-            const { category, total } = issueStats;
-            const value = {
-                open: total - category.done,
-                todo: category.todo,
-                in_progress: category.in_progress,
-                done: category.done,
-                all: total,
-            }[count];
+            // "Automatic" is not one of the colors, so the metric's own stands.
+            const props = statProps(figures.color, figures.hint);
+            const show =
+                figures.whole === null
+                    ? 'value'
+                    : pick(
+                          ['value', 'fraction', 'percent'] as const,
+                          optionOf(widget, 'show', 'value'),
+                      );
+            const rate =
+                figures.whole === null
+                    ? 0
+                    : percent(figures.value, figures.whole);
 
             return (
                 <StatCard
-                    {...statProps('info', OPEN_ISSUES_COUNTS[count].hint)}
-                    title={OPEN_ISSUES_COUNTS[count].title}
-                    value={<AnimatedNumber value={value} />}
-                    icon="Layers"
-                />
-            );
-        }
-        case 'stat_critical':
-            return issueStats ? (
-                <StatCard
-                    {...statProps(
-                        'error',
-                        'Issues at the top of their priority scale',
-                    )}
-                    title="Critical Tasks"
-                    value={<AnimatedNumber value={issueStats.topPriority} />}
-                    icon="TriangleAlert"
-                />
-            ) : (
-                <WidgetPlaceholder />
-            );
-        case 'stat_resolution': {
-            if (!issueStats) return <WidgetPlaceholder />;
-
-            const rate = percent(issueStats.category.done, issueStats.total);
-
-            return (
-                <StatCard
-                    {...statProps('success', 'Share of issues that are done')}
-                    title="Resolution Rate"
+                    {...props}
+                    title={figures.title}
                     value={
-                        optionOf(widget, 'show', 'percent') === 'count' ? (
+                        show === 'fraction' ? (
                             <>
-                                <AnimatedNumber
-                                    value={issueStats.category.done}
-                                />
+                                <AnimatedNumber value={figures.value} />
                                 <span className="text-base font-semibold text-[var(--text-muted-color)]">
                                     {' '}
-                                    / {issueStats.total}
+                                    / {figures.whole}
                                 </span>
                             </>
-                        ) : (
+                        ) : show === 'percent' ? (
                             <AnimatedNumber
                                 value={rate}
                                 format={(n) => `${Math.round(n)}%`}
                             />
+                        ) : (
+                            <AnimatedNumber value={figures.value} />
                         )
                     }
-                    icon="CircleCheck"
-                    progress={rate}
+                    icon={figures.icon}
+                    progress={show === 'value' ? undefined : rate}
                 />
             );
         }
@@ -273,39 +250,6 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                     showHeader={isOn(widget, 'header')}
                     showViewAll={isOn(widget, 'viewAll')}
                 />
-            );
-        case 'stat_overdue':
-            return issueStats ? (
-                <StatCard
-                    {...statProps('error', 'Open issues past their due date')}
-                    title="Overdue Issues"
-                    value={<AnimatedNumber value={issueStats.overdue} />}
-                    icon="CalendarX"
-                />
-            ) : (
-                <WidgetPlaceholder />
-            );
-        case 'stat_assigned':
-            return issueStats ? (
-                <StatCard
-                    {...statProps('accent', 'Open issues assigned to you')}
-                    title="Assigned to Me"
-                    value={<AnimatedNumber value={issueStats.assigned} />}
-                    icon="UserCheck"
-                />
-            ) : (
-                <WidgetPlaceholder />
-            );
-        case 'stat_due_soon':
-            return issueStats ? (
-                <StatCard
-                    {...statProps('warning', 'Open issues due within a week')}
-                    title="Due Soon"
-                    value={<AnimatedNumber value={issueStats.dueSoon} />}
-                    icon="CalendarClock"
-                />
-            ) : (
-                <WidgetPlaceholder />
             );
         case 'my_issues':
             return data.myIssues ? (
