@@ -20,6 +20,15 @@ enum DashboardWidgetType: string
     case PriorityBreakdown = 'priority_breakdown';
     case Activity = 'activity';
     case Projects = 'projects';
+    case StatOverdue = 'stat_overdue';
+    case StatAssigned = 'stat_assigned';
+    case StatDueSoon = 'stat_due_soon';
+    case MyIssues = 'my_issues';
+    case Deadlines = 'deadlines';
+    case TypesBreakdown = 'types_breakdown';
+    case WeekSummary = 'week_summary';
+    case QuickActions = 'quick_actions';
+    case Greeting = 'greeting';
 
     /** A widget's width is counted in these parts of the dashboard's width. */
     public const GRID_COLUMNS = 120;
@@ -45,6 +54,15 @@ enum DashboardWidgetType: string
             self::PriorityBreakdown => 'Priority Breakdown',
             self::Activity => 'Recent Work Activity',
             self::Projects => 'Projects Directory',
+            self::StatOverdue => 'Overdue Issues',
+            self::StatAssigned => 'Assigned to Me',
+            self::StatDueSoon => 'Due Soon',
+            self::MyIssues => 'My Issues',
+            self::Deadlines => 'Upcoming Deadlines',
+            self::TypesBreakdown => 'Issue Types',
+            self::WeekSummary => 'Week Summary',
+            self::QuickActions => 'Quick Actions',
+            self::Greeting => 'Welcome',
         };
     }
 
@@ -60,6 +78,15 @@ enum DashboardWidgetType: string
             self::PriorityBreakdown => 'Your issues grouped by priority',
             self::Activity => 'Latest changes across your projects',
             self::Projects => 'Your projects with their progress',
+            self::StatOverdue => 'Open issues past their due date',
+            self::StatAssigned => 'Open issues assigned to you',
+            self::StatDueSoon => 'Open issues due within a week',
+            self::MyIssues => 'The open issues assigned to you',
+            self::Deadlines => 'What is due next, and what is late',
+            self::TypesBreakdown => 'Your issues grouped by type',
+            self::WeekSummary => 'This week at a glance',
+            self::QuickActions => 'Shortcuts to what you do often',
+            self::Greeting => 'A greeting with your day in numbers',
         };
     }
 
@@ -76,6 +103,15 @@ enum DashboardWidgetType: string
             self::PriorityBreakdown => 'ChartBarBig',
             self::Activity => 'Activity',
             self::Projects => 'FolderOpen',
+            self::StatOverdue => 'CalendarX',
+            self::StatAssigned => 'UserCheck',
+            self::StatDueSoon => 'CalendarClock',
+            self::MyIssues => 'ListChecks',
+            self::Deadlines => 'CalendarRange',
+            self::TypesBreakdown => 'Shapes',
+            self::WeekSummary => 'Gauge',
+            self::QuickActions => 'Zap',
+            self::Greeting => 'Sun',
         };
     }
 
@@ -83,12 +119,18 @@ enum DashboardWidgetType: string
     public function variants(): array
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => ['default', 'vivid', 'accent', 'glass', 'outline'],
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => ['default', 'vivid', 'accent', 'glass', 'outline'],
             self::Trend => ['bars', 'line', 'area'],
             self::Completion => ['bars', 'ring', 'stacked'],
             self::PriorityBreakdown => ['bar', 'list', 'donut'],
             self::Activity => ['feed', 'compact'],
             self::Projects => ['cards', 'grid', 'compact'],
+            self::MyIssues => ['list', 'compact', 'cards'],
+            self::Deadlines => ['list', 'timeline', 'week'],
+            self::TypesBreakdown => ['bar', 'list', 'donut'],
+            self::WeekSummary => ['numbers', 'sparkline', 'bars'],
+            self::QuickActions => ['grid', 'list', 'bar'],
+            self::Greeting => ['banner', 'compact', 'minimal'],
         };
     }
 
@@ -96,7 +138,7 @@ enum DashboardWidgetType: string
     public function minWidth(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 20,
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => 20,
             default => 30,
         };
     }
@@ -104,9 +146,10 @@ enum DashboardWidgetType: string
     public function defaultWidth(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 30,
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => 30,
             self::Trend, self::Activity => 80,
-            self::PriorityBreakdown => 120,
+            self::PriorityBreakdown, self::Greeting => 120,
+            self::MyIssues, self::Deadlines, self::QuickActions => 60,
             default => 40,
         };
     }
@@ -115,9 +158,11 @@ enum DashboardWidgetType: string
     public function minHeight(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 20,
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => 20,
             self::Trend => 56,
             self::Completion => 70,
+            self::MyIssues, self::Deadlines, self::TypesBreakdown => 60,
+            self::QuickActions, self::Greeting => 24,
             default => 40,
         };
     }
@@ -125,10 +170,14 @@ enum DashboardWidgetType: string
     public function defaultHeight(): int
     {
         return match ($this) {
-            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution => 32,
+            self::StatProjects, self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon => 32,
             self::Trend, self::Completion => 85,
             self::Activity, self::Projects => 170,
             self::PriorityBreakdown => 60,
+            self::MyIssues, self::Deadlines => 120,
+            self::TypesBreakdown => 85,
+            self::WeekSummary => 60,
+            self::QuickActions, self::Greeting => 36,
         };
     }
 
@@ -152,6 +201,9 @@ enum DashboardWidgetType: string
                 ],
             ] + self::statOptions('info'),
             self::StatCritical => self::statOptions('error'),
+            self::StatOverdue => self::statOptions('error'),
+            self::StatAssigned => self::statOptions('accent'),
+            self::StatDueSoon => self::statOptions('warning'),
             self::StatResolution => [
                 'show' => [
                     'label' => 'Show',
@@ -202,6 +254,71 @@ enum DashboardWidgetType: string
                 'header' => self::toggle('Title'),
                 'viewAll' => self::toggle('View all link'),
             ],
+            self::MyIssues => [
+                'limit' => ['label' => 'Issues shown', 'options' => [5, 10, 15], 'default' => 5],
+                'sort' => [
+                    'label' => 'Order',
+                    'options' => ['priority', 'due', 'updated'],
+                    'default' => 'priority',
+                    'labels' => ['priority' => 'Priority', 'due' => 'Due date', 'updated' => 'Last updated'],
+                ],
+                'header' => self::toggle('Title'),
+                'type' => self::toggle('Issue type'),
+                'project' => self::toggle('Project'),
+                'priority' => self::toggle('Priority'),
+                'due' => self::toggle('Due date'),
+            ],
+            self::Deadlines => [
+                'scope' => [
+                    'label' => 'Whose issues',
+                    'options' => ['mine', 'all'],
+                    'default' => 'mine',
+                    'labels' => ['mine' => 'Assigned to me', 'all' => 'All projects'],
+                ],
+                'range' => [
+                    'label' => 'Looking ahead',
+                    'options' => [7, 14, 30],
+                    'default' => 14,
+                    'labels' => ['7' => '7 days', '14' => '14 days', '30' => '30 days'],
+                ],
+                'overdue' => self::toggle('Overdue issues'),
+                'limit' => ['label' => 'Issues shown', 'options' => [5, 10, 15], 'default' => 10],
+                'header' => self::toggle('Title'),
+            ],
+            self::TypesBreakdown => [
+                'header' => self::toggle('Title'),
+                'percent' => self::toggle('Percentages'),
+                'sort' => [
+                    'label' => 'Order',
+                    'options' => ['count', 'name'],
+                    'default' => 'count',
+                    'labels' => ['count' => 'By count', 'name' => 'By name'],
+                ],
+            ],
+            self::WeekSummary => [
+                'header' => self::toggle('Title'),
+                'average' => self::toggle('Daily average'),
+                'best' => self::toggle('Best day'),
+                'color' => self::colorOption('accent'),
+            ],
+            self::QuickActions => [
+                'header' => self::toggle('Title'),
+                'labels' => self::toggle('Labels'),
+                'color' => self::colorOption('accent'),
+                'newProject' => self::toggle('New project'),
+                'search' => self::toggle('Search'),
+                'projects' => self::toggle('Projects'),
+                'notifications' => self::toggle('Notifications'),
+                'editDashboard' => self::toggle('Edit dashboard'),
+                'shortcuts' => self::toggle('Keyboard shortcuts', 'off'),
+            ],
+            self::Greeting => [
+                'name' => self::toggle('Your name'),
+                'date' => self::toggle('Date'),
+                'summary' => self::toggle('Day in numbers'),
+                'icon' => self::toggle('Time of day icon'),
+                'color' => self::colorOption('accent'),
+            ],
         };
     }
 
@@ -247,9 +364,13 @@ enum DashboardWidgetType: string
     {
         return match ($this) {
             self::StatProjects, self::Projects => ['projects'],
-            self::StatOpenIssues, self::StatCritical, self::StatResolution, self::Completion, self::PriorityBreakdown => ['issueStats'],
+            self::StatOpenIssues, self::StatCritical, self::StatResolution, self::StatOverdue, self::StatAssigned, self::StatDueSoon, self::Completion, self::PriorityBreakdown, self::TypesBreakdown, self::Greeting => ['issueStats'],
             self::Trend => ['productivity_trend'],
             self::Activity => ['activityLogs', 'users', 'issueTypes'],
+            self::MyIssues => ['myIssues'],
+            self::Deadlines => ['deadlines'],
+            self::WeekSummary => ['productivity_trend'],
+            self::QuickActions => [],
         };
     }
 
