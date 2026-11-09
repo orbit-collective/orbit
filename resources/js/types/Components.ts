@@ -492,8 +492,11 @@ export interface PriorityBreakdownCardProps {
     /** Count the issues without a priority as a group of their own; on by default. */
     showNoPriority?: boolean;
     showPercent?: boolean;
-    /** Most important first (default) or the biggest group first. */
-    sort?: 'priority' | 'count';
+    /** Most important first (default), the biggest group first, or by name. */
+    sort?: 'priority' | 'count' | 'name';
+    /** What the card is called, for a breakdown that is not of priorities. */
+    title?: string;
+    description?: string;
 }
 export interface ProductivityTrendCardProps {
     trendData: ProductivityTrendProps[];
