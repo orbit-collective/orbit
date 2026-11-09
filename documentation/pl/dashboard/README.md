@@ -44,7 +44,7 @@ waliduje kształt i to, co zależy od typu) oraz `DELETE /dashboard/layout`
 
 | Typ | Style | Czyta |
 | --- | --- | --- |
-| `stat_projects`, `stat_open_issues`, `stat_critical`, `stat_resolution`, `stat_overdue`, `stat_assigned`, `stat_due_soon` | default, vivid, accent, glass, outline | `projects` / `issueStats` |
+| `stat` | default, vivid, accent, glass, outline | `projects`, `issueStats` |
 | `trend` | bars, line, area | `productivity_trend` |
 | `completion` | bars, ring, stacked | `issueStats` |
 | `priority_breakdown`, `types_breakdown` | bar, list, donut | `issueStats` |
@@ -55,6 +55,42 @@ waliduje kształt i to, co zależy od typu) oraz `DELETE /dashboard/layout`
 | `week_summary` | numbers, sparkline, bars | `productivity_trend` |
 | `quick_actions` | grid, list, bar | nic (uruchamia komendy palety) |
 | `greeting` | banner, compact, minimal | `issueStats` i użytkownik ze strony |
+
+### Jeden widget statystyki, wiele liczb
+
+Liczby (aktywne projekty, otwarte issue'y, zadania krytyczne, wskaźnik
+rozwiązań, po terminie, przypisane do mnie, termin wkrótce) to jeden typ
+widgetu, `stat`, a nie osobny typ dla każdej. To, co pokazuje, wyznacza opcja
+`metric`; opcje pasujące tylko do części metryk mają w katalogu `when`
+(`{"metric": ["open_issues"]}`), a edytor pokazuje opcję tylko gdy ma
+zastosowanie (`visibleOptions()` w `utils/dashboardLayout.ts`):
+
+| Opcja | Znaczenie |
+| --- | --- |
+| `metric` | `projects`, `open_issues`, `critical`, `resolution`, `overdue`, `assigned`, `due_soon` |
+| `count` | dla `open_issues`: otwarte, do zrobienia, w toku, zrobione lub wszystkie |
+| `show` | `value` (liczba), `fraction` (część / całość, z udziałem jako plakietka, a w stylu vivid pierścień) lub `percent` |
+| `color` | `auto` (kolor metryki) lub jeden z palety |
+
+Każda metryka poza `projects` jest częścią całości, więc każdą da się pokazać
+jako ułamek lub procent: całością są wszystkie issue'y dla metryk issue'ów i
+otwarte issue'y dla `overdue`, `assigned` i `due_soon`. Edytor i siatka
+nazywają statystykę jej metryką (`widgetLabel()`).
+
+Układy zapisane, gdy każda liczba była osobnym typem (`stat_projects`,
+`stat_open_issues`, ...), są podnoszone w `DashboardLayoutService::normalize()`
+do `stat` z metryką, z zachowaniem id, stylu i opcji (dawne "Done / all"
+wskaźnika rozwiązań to teraz `fraction`).
+
+#### Dodaj liczbę do widgetu statystyki
+
+1. Dodaj metrykę do `DashboardWidgetType::STAT_METRICS` (jej tytuł) i do
+   `when` opcji, które jej dotyczą.
+2. Dodaj ją do `STAT_METRICS` i do `switch` w `statFigures()` w
+   `resources/js/utils/dashboardStat.ts`: tytuł, podpowiedź, ikona, domyślny
+   kolor, wartość i całość, której jest częścią.
+3. Jeśli czyta nowy prop, dodaj go we wpisie `Stat` w `props()`.
+4. Dodaj przypadek do `dashboardStat.test.ts` i testów widgetu.
 
 Widgety, które doszły po pierwszych dziewięciu, są w bibliotece, ale nie w układzie
 domyślnym, więc niczyj dashboard się nie zmienia, dopóki sam któregoś nie doda.
