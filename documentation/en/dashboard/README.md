@@ -40,6 +40,57 @@ saved layout. `PUT /dashboard/layout` (`UpdateDashboardLayoutRequest`
 validates the shape and what depends on the type) and `DELETE
 /dashboard/layout` (reset) both redirect back.
 
+## The widgets
+
+| Type | Styles | Reads |
+| --- | --- | --- |
+| `stat_projects`, `stat_open_issues`, `stat_critical`, `stat_resolution`, `stat_overdue`, `stat_assigned`, `stat_due_soon` | default, vivid, accent, glass, outline | `projects` / `issueStats` |
+| `trend` | bars, line, area | `productivity_trend` |
+| `completion` | bars, ring, stacked | `issueStats` |
+| `priority_breakdown`, `types_breakdown` | bar, list, donut | `issueStats` |
+| `activity` | feed, compact | `activityLogs`, `users`, `issueTypes` |
+| `projects` | cards, grid, compact | `projects` |
+| `my_issues` | list, compact, cards | `myIssues` |
+| `deadlines` | list, timeline, week | `deadlines` |
+| `week_summary` | numbers, sparkline, bars | `productivity_trend` |
+| `quick_actions` | grid, list, bar | nothing (runs commands of the palette) |
+| `greeting` | banner, compact, minimal | `issueStats` and the user of the page |
+
+The widgets that came after the first nine are in the library but not in the
+default layout, so nobody's dashboard changes until they add one.
+
+### Data of the issue widgets
+
+`issueStats` also holds `overdue`, `dueSoon` (due within seven days), `assigned`
+(open issues assigned to the user) and `types` (issues per issue type, types of
+the same name across projects merged). They come from
+`IssueRepository::openCountersForUser()` and `typeCountsForUser()`, merged in
+`IssueService::getStatsForUser()` and cached with the other stats.
+`myIssues` (`getMyIssuesForUser()`) and `deadlines` (`getDeadlinesForUser()`) are
+lists of plain rows (`IssueService::dashboardRow()`: ids, number, title,
+project, type, priority, status, assignee, end date) so they can be cached and
+sent as they are. Both are capped (30 and 60 issues), `myIssues` is ordered by
+the position of the priority, then the end date, and `deadlines` holds the open
+issues due within a month and every overdue one. The options of a widget (sort,
+limit, range, scope) are applied in the browser to that capped list
+(`utils/dashboardIssues.ts`). "Today" comes from the browser (`utils/dueDate.ts`),
+so a date is never shifted by the time zone of the server.
+
+Both are `Inertia::optional()` while no visible widget reads them and are part of
+the live and polling refreshes. The cached `deadlines` has the day in its key,
+so it does not live past midnight.
+
+### Making a widget friendly
+
+The new widgets follow what the first ones do, and a widget added later should
+too: every row or card is a real link or button with a name that says all of it
+(the number, the title, the project, how late it is), a status is a word and an
+icon as well as a color (`DueChip`), lists are `ul` or `ol` with `role="list"` and a
+label, controls are at least 44px tall and show the keyboard focus, a widget
+measures its own width (`useElementWidth`) and drops its extras when narrow
+instead of overflowing, and anything that moves is under the page's
+`MotionConfig reducedMotion="user"`.
+
 ## Saved layouts
 
 The panel's **Saved** tab keeps layouts under a name (`dashboard_saved_layouts`:

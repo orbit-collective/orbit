@@ -40,6 +40,56 @@ zapisanego układu. `PUT /dashboard/layout` (`UpdateDashboardLayoutRequest`
 waliduje kształt i to, co zależy od typu) oraz `DELETE /dashboard/layout`
 (reset) przekierowują z powrotem.
 
+## Widgety
+
+| Typ | Style | Czyta |
+| --- | --- | --- |
+| `stat_projects`, `stat_open_issues`, `stat_critical`, `stat_resolution`, `stat_overdue`, `stat_assigned`, `stat_due_soon` | default, vivid, accent, glass, outline | `projects` / `issueStats` |
+| `trend` | bars, line, area | `productivity_trend` |
+| `completion` | bars, ring, stacked | `issueStats` |
+| `priority_breakdown`, `types_breakdown` | bar, list, donut | `issueStats` |
+| `activity` | feed, compact | `activityLogs`, `users`, `issueTypes` |
+| `projects` | cards, grid, compact | `projects` |
+| `my_issues` | list, compact, cards | `myIssues` |
+| `deadlines` | list, timeline, week | `deadlines` |
+| `week_summary` | numbers, sparkline, bars | `productivity_trend` |
+| `quick_actions` | grid, list, bar | nic (uruchamia komendy palety) |
+| `greeting` | banner, compact, minimal | `issueStats` i użytkownik ze strony |
+
+Widgety, które doszły po pierwszych dziewięciu, są w bibliotece, ale nie w układzie
+domyślnym, więc niczyj dashboard się nie zmienia, dopóki sam któregoś nie doda.
+
+### Dane widgetów z issue
+
+`issueStats` ma teraz też `overdue`, `dueSoon` (termin w ciągu siedmiu dni),
+`assigned` (otwarte issue przypisane do użytkownika) i `types` (issue według typu,
+typy o tej samej nazwie z różnych projektów są łączone). Pochodzą z
+`IssueRepository::openCountersForUser()` i `typeCountsForUser()`, scalane w
+`IssueService::getStatsForUser()` i cache'owane razem z pozostałymi statystykami.
+`myIssues` (`getMyIssuesForUser()`) i `deadlines` (`getDeadlinesForUser()`) to listy
+prostych wierszy (`IssueService::dashboardRow()`: id, numer, tytuł, projekt, typ,
+priorytet, status, przypisany, termin), więc można je cache'ować i wysyłać bez
+zmian. Obie są ograniczone (30 i 60 issue), `myIssues` jest uporządkowane po
+pozycji priorytetu, potem po terminie, a `deadlines` zawiera otwarte issue z
+terminem w ciągu miesiąca i wszystkie zaległe. Opcje widgetu (sortowanie, limit,
+zakres, zakres własności) są stosowane w przeglądarce na tej ograniczonej liście
+(`utils/dashboardIssues.ts`). „Dziś” pochodzi z przeglądarki (`utils/dueDate.ts`),
+więc data nie przesuwa się przez strefę czasową serwera.
+
+Obie są `Inertia::optional()`, dopóki żaden widoczny widget ich nie czyta, i wchodzą
+do odświeżeń live oraz pollingu. Cache `deadlines` ma dzień w kluczu, więc nie żyje
+po północy.
+
+### Przyjazny widget
+
+Nowe widgety robią to, co pierwsze, i kolejne też powinny: każdy wiersz lub karta to
+prawdziwy link albo przycisk z nazwą, która mówi wszystko (numer, tytuł, projekt, jak
+bardzo się spóźnia), status to słowo i ikona, a nie tylko kolor (`DueChip`), listy to
+`ul` lub `ol` z `role="list"` i etykietą, kontrolki mają co najmniej 44 px
+wysokości i pokazują fokus z klawiatury, widget sam mierzy swoją szerokość
+(`useElementWidth`) i gdy jest wąski, porzuca dodatki zamiast się przelewać, a to, co
+się rusza, jest pod `MotionConfig reducedMotion="user"` strony.
+
 ## Zapisane układy
 
 Zakładka **Saved** w panelu przechowuje układy pod nazwą
