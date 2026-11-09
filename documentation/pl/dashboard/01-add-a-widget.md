@@ -1,7 +1,8 @@
 # Dodaj widget
 
-Przećwiczony przykład: widget `Overdue Issues`, karta ze statystyką z
-liczbą issue'ów użytkownika po terminie. Dodanie typu dotyka czterech
+Przećwiczony przykład: widget `Issue Age`, karta ze statystyką z liczbą
+issue'ów użytkownika. (Nowa *liczba* nie potrzebuje typu: dodaj metrykę do
+widgetu `stat`, zob. "Dodaj liczbę do widgetu statystyki" w README.) Dodanie typu dotyka czterech
 miejsc; edytor układu, walidacja i zapisane układy łapią go bez dalszej
 pracy.
 
@@ -11,15 +12,15 @@ W `app/Enums/Dashboard/DashboardWidgetType.php` dodaj case i odpowiedz w
 każdym `match`:
 
 ```php
-case StatOverdue = 'stat_overdue';
+case IssueAge = 'issue_age';
 
-// label():       self::StatOverdue => 'Overdue Issues',
-// description(): self::StatOverdue => 'Issues past their due date',
-// icon():        self::StatOverdue => 'CalendarClock',   // ikona lucide
+// label():       self::IssueAge => 'Issue Age',
+// description(): self::IssueAge => 'How many issues you track',
+// icon():        self::IssueAge => 'CalendarClock',   // ikona lucide
 // variants():    dodaj do grupy statystyk: ['default', 'vivid', 'accent']
 // minWidth(), defaultWidth(), minHeight(), defaultHeight(): dodaj do grupy
 //                statystyk (20 / 30 / 20 / 32)
-// props():       self::StatOverdue => ['issueStats'],
+// props():       self::IssueAge => ['issueStats'],
 ```
 
 - `options()` służy do ustawień widgetu (zobacz `Projects`, `limit`):
@@ -48,12 +49,12 @@ następnie dodaj case w
 `Components/Organisms/DashboardWidget/DashboardWidget.tsx`:
 
 ```tsx
-case 'stat_overdue':
+case 'issue_age':
     return issueStats ? (
         <StatCard
-            {...statProps('warning', 'Issues past their due date')}
-            title="Overdue Issues"
-            value={<AnimatedNumber value={issueStats.overdue} />}
+            {...statProps('warning', 'How many issues you track')}
+            title="Issue Age"
+            value={<AnimatedNumber value={issueStats.total} />}
             icon="CalendarClock"
         />
     ) : (

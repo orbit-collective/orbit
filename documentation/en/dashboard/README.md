@@ -44,7 +44,7 @@ validates the shape and what depends on the type) and `DELETE
 
 | Type | Styles | Reads |
 | --- | --- | --- |
-| `stat_projects`, `stat_open_issues`, `stat_critical`, `stat_resolution`, `stat_overdue`, `stat_assigned`, `stat_due_soon` | default, vivid, accent, glass, outline | `projects` / `issueStats` |
+| `stat` | default, vivid, accent, glass, outline | `projects`, `issueStats` |
 | `trend` | bars, line, area | `productivity_trend` |
 | `completion` | bars, ring, stacked | `issueStats` |
 | `priority_breakdown`, `types_breakdown` | bar, list, donut | `issueStats` |
@@ -55,6 +55,42 @@ validates the shape and what depends on the type) and `DELETE
 | `week_summary` | numbers, sparkline, bars | `productivity_trend` |
 | `quick_actions` | grid, list, bar | nothing (runs commands of the palette) |
 | `greeting` | banner, compact, minimal | `issueStats` and the user of the page |
+
+### One statistic widget, many numbers
+
+The numbers (active projects, open issues, critical tasks, resolution rate,
+overdue, assigned to me, due soon) are one widget type, `stat`, not one type
+each. What it shows is its `metric` option; the options that only fit some
+metrics carry `when` in the catalog (`{"metric": ["open_issues"]}`), and the
+editor shows an option only while it applies (`visibleOptions()` in
+`utils/dashboardLayout.ts`):
+
+| Option | Meaning |
+| --- | --- |
+| `metric` | `projects`, `open_issues`, `critical`, `resolution`, `overdue`, `assigned`, `due_soon` |
+| `count` | for `open_issues`: open, to do, in progress, done or all |
+| `show` | `value` (the number), `fraction` (part / whole, with the share as a badge, a ring in the vivid style) or `percent` |
+| `color` | `auto` (the metric's own color) or one of the palette |
+
+Every metric but `projects` is a part of a whole, so every one can be shown
+as a fraction or a percent: the whole is all the issues for the issue
+metrics and the open issues for `overdue`, `assigned` and `due_soon`. The
+editor and the grid name a statistic by its metric (`widgetLabel()`).
+
+Layouts saved when each number was its own type (`stat_projects`,
+`stat_open_issues`, ...) are upgraded in `DashboardLayoutService::normalize()`
+to a `stat` with the metric, keeping their id, style and options (the old
+resolution "Done / all" became `fraction`).
+
+#### Add a number to the statistic widget
+
+1. Add the metric to `DashboardWidgetType::STAT_METRICS` (its title) and to
+   `when` of the options that apply to it.
+2. Add it to `STAT_METRICS` and the `statFigures()` switch in
+   `resources/js/utils/dashboardStat.ts`: title, hint, icon, default color,
+   the value and the whole it is a part of.
+3. If it reads a new prop, add it to the `Stat` entry of `props()`.
+4. Add a case to `utils/dashboardStat.test.ts` and the widget tests.
 
 The widgets that came after the first nine are in the library but not in the
 default layout, so nobody's dashboard changes until they add one.

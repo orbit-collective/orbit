@@ -1,7 +1,9 @@
 # Add a widget
 
-Worked example: an `Overdue Issues` widget, a stat card with the number of
-the user's issues that are past their due date. Adding a type touches four
+Worked example: an `Issue Age` widget, a stat card with a number of the
+user's issues. (A new *number* does not need a type: add a metric to the
+`stat` widget instead, see "Add a number to the statistic widget" in the
+README.) Adding a type touches four
 places; the layout editor, validation and the saved layouts pick it up
 without further work.
 
@@ -11,15 +13,15 @@ In `app/Enums/Dashboard/DashboardWidgetType.php` add a case and answer every
 `match`:
 
 ```php
-case StatOverdue = 'stat_overdue';
+case IssueAge = 'issue_age';
 
-// label():       self::StatOverdue => 'Overdue Issues',
-// description(): self::StatOverdue => 'Issues past their due date',
-// icon():        self::StatOverdue => 'CalendarClock',   // a lucide icon
+// label():       self::IssueAge => 'Issue Age',
+// description(): self::IssueAge => 'How many issues you track',
+// icon():        self::IssueAge => 'CalendarClock',   // a lucide icon
 // variants():    add it to the stat group: ['default', 'vivid', 'accent']
 // minWidth(), defaultWidth(), minHeight(), defaultHeight(): add it to the
 //                stat group (20 / 30 / 20 / 32)
-// props():       self::StatOverdue => ['issueStats'],
+// props():       self::IssueAge => ['issueStats'],
 ```
 
 - `options()` is for settings of the widget (see `Projects`, `limit`): each
@@ -45,12 +47,12 @@ In `resources/js/types/Dashboard.ts` add the type to `DashboardWidgetType`,
 then give `Components/Organisms/DashboardWidget/DashboardWidget.tsx` a case:
 
 ```tsx
-case 'stat_overdue':
+case 'issue_age':
     return issueStats ? (
         <StatCard
-            {...statProps('warning', 'Issues past their due date')}
-            title="Overdue Issues"
-            value={<AnimatedNumber value={issueStats.overdue} />}
+            {...statProps('warning', 'How many issues you track')}
+            title="Issue Age"
+            value={<AnimatedNumber value={issueStats.total} />}
             icon="CalendarClock"
         />
     ) : (
