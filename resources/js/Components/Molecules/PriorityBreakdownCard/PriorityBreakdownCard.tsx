@@ -25,6 +25,8 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
     showNoPriority = true,
     showPercent = true,
     sort = 'priority',
+    title = 'Priority Breakdown',
+    description = 'Issues distribution by level of urgency',
 }) => {
     const items = [
         ...priorities.map((priority) => ({
@@ -47,6 +49,8 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
 
     if (sort === 'count') {
         items.sort((a, b) => b.count - a.count);
+    } else if (sort === 'name') {
+        items.sort((a, b) => a.label.localeCompare(b.label));
     }
 
     const legend = (
@@ -95,10 +99,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
     return (
         <VisualCard>
             {showHeader && (
-                <VisualCardHeader
-                    title="Priority Breakdown"
-                    description="Issues distribution by level of urgency"
-                />
+                <VisualCardHeader title={title} description={description} />
             )}
             <div className="flex min-h-0 flex-1 flex-col justify-center py-4">
                 {variant === 'donut' ? (

@@ -235,5 +235,32 @@ describe('PriorityBreakdownCard Component', () => {
             );
             expect(screen.getByText('No issues yet')).toBeInTheDocument();
         });
+
+        test('groups can be ordered by name', () => {
+            render(<PriorityBreakdownCard {...base} sort="name" />);
+
+            const labels = screen
+                .getAllByText(/^(High|Low|No priority)$/)
+                .map((el) => el.textContent);
+            expect(labels).toEqual(['High', 'Low', 'No priority']);
+        });
+
+        test('can be called something else, for a breakdown that is not of priorities', () => {
+            render(
+                <PriorityBreakdownCard
+                    {...base}
+                    title="Issue Types"
+                    description="Your issues grouped by type"
+                />,
+            );
+
+            expect(screen.getByText('Issue Types')).toBeInTheDocument();
+            expect(
+                screen.getByText('Your issues grouped by type'),
+            ).toBeInTheDocument();
+            expect(
+                screen.queryByText('Priority Breakdown'),
+            ).not.toBeInTheDocument();
+        });
     });
 });
