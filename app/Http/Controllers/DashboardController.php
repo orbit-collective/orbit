@@ -69,6 +69,8 @@ class DashboardController extends Controller
             'issueStats' => $prop('issueStats', fn () => $this->issueService->getStatsForUser($userId)),
             // The sidebar draws the projects, so they are always sent.
             'projects' => fn () => $this->projectService->withIssueCounts($this->projectService->getAllForUser($userId)),
+            'myIssues' => $prop('myIssues', fn () => $this->issueService->getMyIssuesForUser($userId)),
+            'deadlines' => $prop('deadlines', fn () => $this->issueService->getDeadlinesForUser($userId)),
             'productivity_trend' => $prop('productivity_trend', fn () => $this->issueService->getProductivityTrendForUser($userId)),
             'users' => $prop('users', fn () => $this->userService->getAssignableUsersForUserProjects($userId)),
             'queryParams' => $request->query() ?: null,

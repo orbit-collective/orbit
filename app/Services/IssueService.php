@@ -16,6 +16,7 @@ use App\Repositories\IssueTypeRepository;
 use App\Services\Automation\AutomationDispatcher;
 use App\Support\Cache\CacheVersion;
 use BackedEnum;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -124,6 +125,16 @@ class IssueService
      */
     private const int LIST_CACHE_TTL = 120;
 
+    /** "Due soon" counts the issues due within this many days. */
+    private const int DUE_SOON_DAYS = 7;
+
+    /** What the dashboard's issue lists hold at most, and how far ahead the deadlines look. */
+    private const int DASHBOARD_MY_ISSUES_LIMIT = 30;
+
+    private const int DASHBOARD_DEADLINES_LIMIT = 60;
+
+    private const int DASHBOARD_DEADLINE_DAYS = 30;
+
     /**
      * Issue counts for the dashboard (see IssueRepository::statsForUser()) -
      * a handful of numbers, so cheap to keep cached until an issue changes.
@@ -136,8 +147,94 @@ class IssueService
             [CacheVersion::ISSUES, CacheVersion::MEMBERSHIP],
             "user:$userId:issue-stats",
             self::LIST_CACHE_TTL,
-            fn () => $this->issueRepository->statsForUser($userId),
+            fn () => $this->issueRepository->statsForUser($userId) + $this->dateAndTypeStats($userId),
         );
+    }
+
+    /**
+     * What the stats have besides the counts per status and priority: the
+     * issues that are overdue, due within a week or assigned to the user, and
+     * how many there are of each issue type.
+     *
+     * @return array{overdue: int, dueSoon: int, assigned: int, types: list<array>}
+     */
+    private function dateAndTypeStats(int $userId): array
+    {
+        $today = Carbon::today();
+
+        return $this->issueRepository->openCountersForUser(
+            $userId,
+            $today->toDateString(),
+            $today->copy()->addDays(self::DUE_SOON_DAYS)->toDateString(),
+        ) + ['types' => $this->issueRepository->typeCountsForUser($userId)];
+    }
+
+    /**
+     * The open issues assigned to the user for the dashboard's list, as rows.
+     *
+     * @return list<array>
+     */
+    public function getMyIssuesForUser(int $userId): array
+    {
+        return CacheVersion::remember(
+            [CacheVersion::ISSUES, CacheVersion::MEMBERSHIP],
+            "user:$userId:dashboard-my-issues",
+            self::LIST_CACHE_TTL,
+            fn () => $this->issueRepository->openAssignedTo($userId, self::DASHBOARD_MY_ISSUES_LIMIT)
+                ->map(fn (Issue $issue) => $this->dashboardRow($issue))
+                ->all(),
+        );
+    }
+
+    /**
+     * The open issues of the user's projects due within the next month (and
+     * the overdue ones) for the dashboard's deadlines, as rows.
+     *
+     * @return list<array>
+     */
+    public function getDeadlinesForUser(int $userId): array
+    {
+        return CacheVersion::remember(
+            [CacheVersion::ISSUES, CacheVersion::MEMBERSHIP],
+            "user:$userId:dashboard-deadlines:".Carbon::today()->toDateString(),
+            self::LIST_CACHE_TTL,
+            fn () => $this->issueRepository->openWithDeadlineForUser(
+                $userId,
+                Carbon::today()->addDays(self::DASHBOARD_DEADLINE_DAYS)->toDateString(),
+                self::DASHBOARD_DEADLINES_LIMIT,
+            )->map(fn (Issue $issue) => $this->dashboardRow($issue))->all(),
+        );
+    }
+
+    /**
+     * One issue as the dashboard's lists show it: plain values, no models, so
+     * it can be cached and sent as it is.
+     *
+     * @return array<string, mixed>
+     */
+    private function dashboardRow(Issue $issue): array
+    {
+        return [
+            'id' => $issue->id,
+            'number' => $issue->number,
+            'title' => $issue->title,
+            'projectId' => $issue->project_id,
+            'projectName' => $issue->project?->name,
+            'projectColor' => $issue->project?->color,
+            'type' => $issue->issueType ? [
+                'name' => $issue->issueType->name,
+                'icon' => $issue->issueType->icon,
+                'color' => $issue->issueType->color,
+            ] : null,
+            'priority' => $issue->priority?->toDetails(),
+            'status' => $issue->workflowStatus ? [
+                'name' => $issue->workflowStatus->name,
+                'category' => $issue->workflowStatus->category->value,
+            ] : null,
+            'assigneeId' => $issue->assignee_id,
+            'endDate' => $issue->end_date === null ? null : substr((string) $issue->end_date, 0, 10),
+            'updatedAt' => $issue->updated_at?->toJSON(),
+        ];
     }
 
     /**
