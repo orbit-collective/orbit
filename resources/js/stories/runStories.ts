@@ -28,6 +28,8 @@ type RunnableStory = {
 /** The jsdom APIs components reach for that jsdom does not implement. */
 const installDomStubs = () => {
     class NoopObserver {
+        // The real ones take a callback; it is never called here.
+        constructor(_callback?: unknown) {}
         observe() {}
         unobserve() {}
         disconnect() {}
