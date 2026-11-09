@@ -48,17 +48,19 @@ then give `Components/Organisms/DashboardWidget/DashboardWidget.tsx` a case:
 case 'stat_overdue':
     return issueStats ? (
         <StatCard
-            className="h-full"
-            variant={variant}
+            {...statProps('warning', 'Issues past their due date')}
             title="Overdue Issues"
             value={<AnimatedNumber value={issueStats.overdue} />}
             icon="CalendarClock"
-            color="warning"
         />
     ) : (
         <WidgetPlaceholder />
     );
 ```
+
+`statProps(defaultColor, hint)` is defined in the component. It reads the style,
+the color, the icon and the description options of the widget, so a statistic
+follows them without more code.
 
 Always render `<WidgetPlaceholder />` when the prop is `undefined`: that is
 how a widget just added in the editor looks until its data arrives.

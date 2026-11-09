@@ -51,17 +51,18 @@ następnie dodaj case w
 case 'stat_overdue':
     return issueStats ? (
         <StatCard
-            className="h-full"
-            variant={variant}
+            {...statProps('warning', 'Issues past their due date')}
             title="Overdue Issues"
             value={<AnimatedNumber value={issueStats.overdue} />}
             icon="CalendarClock"
-            color="warning"
         />
     ) : (
         <WidgetPlaceholder />
     );
 ```
+
+`statProps(defaultColor, hint)` jest zdefiniowane w komponencie. Czyta styl,
+kolor, ikonę i opis widgetu, więc statystyka podąża za nimi bez dodatkowego kodu.
 
 Zawsze renderuj `<WidgetPlaceholder />`, gdy prop jest `undefined`: tak
 wygląda widget świeżo dodany w edytorze, dopóki nie dotrą jego dane.
