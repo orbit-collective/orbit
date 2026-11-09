@@ -56,11 +56,12 @@ const DashboardGrid: FC<DashboardGridProps> = ({
     onResize,
     onToggleVisible,
 }) => {
-    // A small drag distance keeps a plain tap a tap, on touch as on mouse.
+    // A small drag distance keeps a plain click a click; on touch a drag takes a
+    // press and hold, so a swipe over a widget still scrolls the page.
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
         useSensor(TouchSensor, {
-            activationConstraint: { delay: 120, tolerance: 8 },
+            activationConstraint: { delay: 250, tolerance: 5 },
         }),
     );
 
@@ -75,7 +76,7 @@ const DashboardGrid: FC<DashboardGridProps> = ({
                             className={`${GRID_ITEM_CLASS} p-2.5`}
                             style={gridItemStyle(widget)}
                         >
-                            <div className="h-full min-h-0 overflow-hidden [&>*]:h-full">
+                            <div className="h-full min-h-0 overflow-auto [&>*]:h-full">
                                 <DashboardWidget widget={widget} data={data} />
                             </div>
                         </PageSection>

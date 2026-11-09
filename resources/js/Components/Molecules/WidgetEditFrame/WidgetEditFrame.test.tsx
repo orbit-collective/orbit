@@ -1,7 +1,7 @@
 import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { makeWidget } from '@/tests/dashboardLayout';
 import WidgetEditFrame from './WidgetEditFrame';
 
@@ -81,7 +81,12 @@ describe('WidgetEditFrame', () => {
 
         const surface = screen.getByTestId('widget-drag-surface');
         expect(surface).toHaveClass('cursor-grab', 'absolute', 'inset-0');
-        expect(surface).toContainElement(screen.getByText('Trend'));
+        // The tag and the handles lie beside it, so they are not controls nested in a control.
+        expect(surface).not.toContainElement(screen.getByText('Trend'));
+        expect(surface).not.toContainElement(screen.getByTestId('resize-size'));
+        expect(surface).not.toContainElement(
+            screen.getByRole('button', { name: 'Hide Trend' }),
+        );
     });
 
     test('draws the widget itself untouched, under the editing layer', () => {
@@ -242,5 +247,108 @@ describe('WidgetEditFrame', () => {
 
         rerender(view('line'));
         expect(screen.getByText('content')).not.toBe(before);
+    });
+
+    describe('for a keyboard and for touch', () => {
+        test('the surface is a focusable button that says whether the widget is picked', () => {
+            setup({ selected: true });
+
+            const surface = screen.getByRole('button', {
+                name: 'Trend, widget',
+            });
+            expect(surface).toHaveAttribute('tabindex', '0');
+            expect(surface).toHaveAttribute('aria-pressed', 'true');
+        });
+
+        test('is not pressed while the widget is not picked', () => {
+            setup({ selected: false });
+
+            expect(
+                screen.getByRole('button', { name: 'Trend, widget' }),
+            ).toHaveAttribute('aria-pressed', 'false');
+        });
+
+        test.each([['{Enter}'], [' ']])(
+            'picks the widget with the %j key',
+            async (key) => {
+                const { onSelect } = setup();
+
+                screen.getByRole('button', { name: 'Trend, widget' }).focus();
+                await userEvent.keyboard(key);
+
+                expect(onSelect).toHaveBeenCalledOnce();
+            },
+        );
+
+        test('other keys do not pick it', async () => {
+            const { onSelect } = setup();
+
+            screen.getByRole('button', { name: 'Trend, widget' }).focus();
+            await userEvent.keyboard('a{Tab}');
+
+            expect(onSelect).not.toHaveBeenCalled();
+        });
+
+        test('a swipe over the widget can still scroll the page', () => {
+            setup();
+
+            const surface = screen.getByTestId('widget-drag-surface');
+            expect(surface).toHaveClass('touch-pan-y');
+            expect(surface).not.toHaveClass('touch-none');
+        });
+
+        test('the small handles do not scroll, so a resize is not taken for a swipe', () => {
+            setup();
+
+            expect(screen.getByTestId('resize-size')).toHaveClass('touch-none');
+        });
+    });
+
+    describe('on a narrow screen', () => {
+        afterEach(() => {
+            vi.unstubAllGlobals();
+        });
+
+        test('the corner only changes the height, as widgets are full width there', () => {
+            vi.stubGlobal(
+                'matchMedia',
+                vi.fn().mockReturnValue({ matches: false }),
+            );
+            const { onResize } = setup({ snap: false });
+
+            dragHandle('resize-size', { x: 0, y: 0 }, { x: 30, y: 12 });
+
+            expect(onResize).toHaveBeenLastCalledWith({
+                width: 60,
+                height: 83,
+            });
+        });
+
+        test('the corner changes both on a wide screen', () => {
+            vi.stubGlobal(
+                'matchMedia',
+                vi.fn().mockReturnValue({ matches: true }),
+            );
+            const { onResize } = setup({ snap: false });
+
+            dragHandle('resize-size', { x: 0, y: 0 }, { x: 30, y: 12 });
+
+            expect(onResize).toHaveBeenLastCalledWith({
+                width: 90,
+                height: 83,
+            });
+        });
+    });
+
+    test('dragging one edge leaves the other dimension as it was, even when it is not on the grid', () => {
+        const { onResize } = setup({
+            widget: makeWidget('trend', { width: 77, height: 83 }),
+        });
+
+        dragHandle('resize-width', { x: 0, y: 0 }, { x: 10, y: 99 });
+        expect(onResize).toHaveBeenLastCalledWith({ width: 90, height: 83 });
+
+        dragHandle('resize-height', { x: 0, y: 0 }, { x: 99, y: 40 });
+        expect(onResize).toHaveBeenLastCalledWith({ width: 77, height: 90 });
     });
 });

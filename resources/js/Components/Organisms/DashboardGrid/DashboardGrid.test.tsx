@@ -206,4 +206,36 @@ describe('DashboardGrid', () => {
             height: 90,
         });
     });
+
+    test('what does not fit in a widget scrolls instead of being cut off', () => {
+        render(
+            <DashboardGrid
+                widgets={[widgets[2]]}
+                catalog={DASHBOARD_CATALOG}
+                data={data}
+            />,
+        );
+
+        expect(screen.getByTestId('widget').parentElement).toHaveClass(
+            'overflow-auto',
+        );
+        expect(screen.getByTestId('widget').parentElement).not.toHaveClass(
+            'overflow-hidden',
+        );
+    });
+
+    test('while editing the widget is clipped the same way as on the dashboard', () => {
+        render(
+            <DashboardGrid
+                widgets={[widgets[2]]}
+                catalog={DASHBOARD_CATALOG}
+                data={data}
+                editing
+            />,
+        );
+
+        expect(screen.getByTestId('widget').parentElement).toHaveClass(
+            'overflow-auto',
+        );
+    });
 });
