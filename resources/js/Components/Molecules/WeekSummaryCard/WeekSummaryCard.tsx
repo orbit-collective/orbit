@@ -23,6 +23,13 @@ interface WeekSummaryCardProps {
     todayName?: string;
 }
 
+const TOOLTIP =
+    'pointer-events-none absolute z-20 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--text-color)] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100';
+
+/** The label a day gets on hover: "Mon: 2 updates". */
+const dayTip = (day: ProductivityTrendProps) =>
+    `${day.day}: ${day.count} ${day.count === 1 ? 'update' : 'updates'}`;
+
 /** The speech for a chart that is a picture: every day with its count. */
 const describeDays = (days: ProductivityTrendProps[]) =>
     days.map((day) => `${day.day} ${day.count}`).join(', ');
@@ -157,52 +164,90 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                     </div>
 
                     {variant === 'sparkline' ? (
-                        <motion.svg
-                            role="img"
-                            aria-label={`Updates per day: ${describeDays(trend)}`}
-                            viewBox="0 0 100 30"
-                            preserveAspectRatio="none"
-                            className="h-12 min-h-0 w-full shrink overflow-visible"
-                            initial={{ clipPath: 'inset(-10% 100% -10% -2%)' }}
-                            animate={{ clipPath: 'inset(-10% -2% -10% -2%)' }}
-                            transition={{ duration: DURATION.slow, ease: EASE }}
-                        >
-                            <defs>
-                                <linearGradient
-                                    id={gradientId}
-                                    x1="0"
-                                    y1="0"
-                                    x2="0"
-                                    y2="1"
-                                >
-                                    <stop
-                                        offset="0%"
-                                        stopColor={tint}
-                                        stopOpacity="0.3"
+                        <div className="relative h-12 min-h-0 w-full shrink">
+                            <motion.svg
+                                role="img"
+                                aria-label={`Updates per day: ${describeDays(trend)}`}
+                                viewBox="0 0 100 30"
+                                preserveAspectRatio="none"
+                                className="h-full w-full overflow-visible"
+                                initial={{
+                                    clipPath: 'inset(-10% 100% -10% -2%)',
+                                }}
+                                animate={{
+                                    clipPath: 'inset(-10% -2% -10% -2%)',
+                                }}
+                                transition={{
+                                    duration: DURATION.slow,
+                                    ease: EASE,
+                                }}
+                            >
+                                <defs>
+                                    <linearGradient
+                                        id={gradientId}
+                                        x1="0"
+                                        y1="0"
+                                        x2="0"
+                                        y2="1"
+                                    >
+                                        <stop
+                                            offset="0%"
+                                            stopColor={tint}
+                                            stopOpacity="0.3"
+                                        />
+                                        <stop
+                                            offset="100%"
+                                            stopColor={tint}
+                                            stopOpacity="0"
+                                        />
+                                    </linearGradient>
+                                </defs>
+                                {points.length > 1 && (
+                                    <path
+                                        d={`${line} L100,30 L0,30 Z`}
+                                        fill={`url(#${gradientId})`}
                                     />
-                                    <stop
-                                        offset="100%"
-                                        stopColor={tint}
-                                        stopOpacity="0"
-                                    />
-                                </linearGradient>
-                            </defs>
-                            {points.length > 1 && (
+                                )}
                                 <path
-                                    d={`${line} L100,30 L0,30 Z`}
-                                    fill={`url(#${gradientId})`}
+                                    d={line}
+                                    fill="none"
+                                    stroke={tint}
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    vectorEffect="non-scaling-stroke"
                                 />
-                            )}
-                            <path
-                                d={line}
-                                fill="none"
-                                stroke={tint}
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                vectorEffect="non-scaling-stroke"
-                            />
-                        </motion.svg>
+                            </motion.svg>
+                            <div
+                                aria-hidden="true"
+                                className="absolute inset-0 flex"
+                            >
+                                {trend.map((day, index) => (
+                                    <div
+                                        key={day.day}
+                                        data-testid="week-hover"
+                                        className="group relative h-full min-w-0 flex-1"
+                                    >
+                                        <span className="absolute inset-y-0 left-1/2 w-px bg-[var(--border-color-strong)] opacity-0 transition-opacity group-hover:opacity-100" />
+                                        <span
+                                            className="absolute left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full transition-transform group-hover:scale-100"
+                                            style={{
+                                                backgroundColor: tint,
+                                                top: `${(points[index].y / 30) * 100}%`,
+                                            }}
+                                        />
+                                        <span
+                                            className={cn(
+                                                TOOLTIP,
+                                                '-top-7 left-1/2 -translate-x-1/2',
+                                            )}
+                                        >
+                                            {dayTip(day)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     ) : (
                         <ul
                             aria-label={`Updates per day: ${describeDays(trend)}`}
@@ -216,8 +261,17 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                                 return (
                                     <li
                                         key={day.day}
-                                        className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                                        className="group relative flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
                                     >
+                                        <span
+                                            aria-hidden="true"
+                                            className={cn(
+                                                TOOLTIP,
+                                                'left-1/2 top-0 -translate-x-1/2 -translate-y-full',
+                                            )}
+                                        >
+                                            {dayTip(day)}
+                                        </span>
                                         <motion.span
                                             data-testid="week-bar"
                                             data-count={day.count}
