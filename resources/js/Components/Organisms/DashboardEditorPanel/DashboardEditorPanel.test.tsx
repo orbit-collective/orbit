@@ -5,6 +5,7 @@ import {
     DASHBOARD_CATALOG,
     makeSavedLayout,
     makeWidget,
+    makeStat,
 } from '@/tests/dashboardLayout';
 import { DashboardSavedLayout, DashboardWidget } from '@/types/Dashboard';
 import DashboardEditorPanel from './DashboardEditorPanel';
@@ -148,7 +149,7 @@ describe('DashboardEditorPanel', () => {
 
         expect(screen.getByRole('button', { name: '1/4' })).toBeInTheDocument();
 
-        setup(makeWidget('stat_projects'));
+        setup(makeStat('projects'));
     });
 
     test('has no style choice for a widget with a single style', () => {
@@ -167,7 +168,7 @@ describe('DashboardEditorPanel', () => {
     });
 
     test('names option values with their labels, or capitalises them', () => {
-        setup(makeWidget('stat_open_issues'));
+        setup(makeStat('open_issues'));
 
         const count = screen.getByRole('group', { name: 'Count' });
         expect(
@@ -182,6 +183,43 @@ describe('DashboardEditorPanel', () => {
         const icon = screen.getByRole('group', { name: 'Icon' });
         expect(
             within(icon).getByRole('button', { name: 'Hide' }),
+        ).toBeInTheDocument();
+    });
+
+    test('a statistic shows only the options that fit what it counts', () => {
+        setup(makeStat('open_issues'));
+
+        expect(
+            screen.getByRole('group', { name: 'Count' }),
+        ).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'As' })).toBeInTheDocument();
+    });
+
+    test('a statistic of projects has no count or format, as nothing is a part of the projects', () => {
+        setup(makeStat('projects'));
+
+        expect(
+            screen.getByRole('group', { name: 'Shows' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByRole('group', { name: 'Count' }),
+        ).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole('group', { name: 'As' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('a statistic is named by the number it shows, and its color can be automatic', () => {
+        setup(makeStat('overdue'));
+
+        expect(
+            screen.getByRole('heading', { name: 'Overdue Issues' }),
+        ).toBeInTheDocument();
+        expect(
+            within(screen.getByRole('group', { name: 'Color' })).getByRole(
+                'button',
+                { name: 'Automatic' },
+            ),
         ).toBeInTheDocument();
     });
 
@@ -292,7 +330,7 @@ describe('DashboardEditorPanel', () => {
 
     test('a choice of colors is swatches, not text', async () => {
         const { onOptionChange } = setup(
-            makeWidget('stat_critical', { config: { color: 'error' } }),
+            makeStat('critical', { config: { color: 'error' } }),
         );
 
         const group = screen.getByRole('group', { name: 'Color' });

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
-import { makeWidget } from '@/tests/dashboardLayout';
+import { makeWidget, makeStat } from '@/tests/dashboardLayout';
 import WidgetGlyph from './WidgetGlyph';
 
 const meta = {
@@ -48,7 +48,7 @@ export const Projects: Story = {
 };
 
 export const Stat: Story = {
-    args: { widget: makeWidget('stat_critical', { variant: 'glass' }) },
+    args: { widget: makeStat('critical', { variant: 'glass' }) },
     decorators: [
         (Story) => (
             <div

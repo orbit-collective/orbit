@@ -5,18 +5,12 @@ import { DashboardWidgetType } from '@/types/Dashboard';
 import WidgetGlyph from './WidgetGlyph';
 
 const TYPES: DashboardWidgetType[] = [
-    'stat_projects',
-    'stat_open_issues',
-    'stat_critical',
-    'stat_resolution',
+    'stat',
     'trend',
     'completion',
     'priority_breakdown',
     'activity',
     'projects',
-    'stat_overdue',
-    'stat_assigned',
-    'stat_due_soon',
     'my_issues',
     'deadlines',
     'types_breakdown',
@@ -48,7 +42,7 @@ describe('WidgetGlyph', () => {
     test('every style of every kind draws something different from its neighbours', () => {
         const drawings = new Map<string, string>();
         const variants: Partial<Record<DashboardWidgetType, string[]>> = {
-            stat_projects: ['default', 'vivid', 'accent', 'glass', 'outline'],
+            stat: ['default', 'vivid', 'accent', 'glass', 'outline'],
             trend: ['bars', 'line', 'area'],
             completion: ['bars', 'ring', 'stacked'],
             priority_breakdown: ['bar', 'list', 'donut'],
@@ -102,8 +96,7 @@ describe('WidgetGlyph', () => {
     test('a preview is gray: no kind, style or option brings a color in', () => {
         const colored = /(accent|success|warning|error|info)-color/;
         const variants: Partial<Record<DashboardWidgetType, string[]>> = {
-            stat_projects: ['default', 'vivid', 'accent', 'glass', 'outline'],
-            stat_critical: ['accent'],
+            stat: ['default', 'vivid', 'accent', 'glass', 'outline'],
             trend: ['bars', 'line', 'area'],
             completion: ['bars', 'ring', 'stacked'],
             priority_breakdown: ['bar', 'list', 'donut'],
@@ -217,16 +210,14 @@ describe('WidgetGlyph', () => {
 
     test('a statistic can leave its icon out', () => {
         const withIcon = render(
-            <WidgetGlyph
-                widget={makeWidget('stat_projects', { variant: 'vivid' })}
-            />,
+            <WidgetGlyph widget={makeWidget('stat', { variant: 'vivid' })} />,
         );
         const count = withIcon.container.querySelectorAll('span').length;
         withIcon.unmount();
 
         const { container } = render(
             <WidgetGlyph
-                widget={makeWidget('stat_projects', {
+                widget={makeWidget('stat', {
                     variant: 'vivid',
                     config: { icon: 'off' },
                 })}

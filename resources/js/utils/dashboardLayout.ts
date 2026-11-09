@@ -4,6 +4,7 @@ import {
     DashboardWidget,
     DashboardWidgetConfig,
 } from '@/types/Dashboard';
+import { statTitle } from '@/utils/dashboardStat';
 
 /** Most widgets one dashboard may hold, as on the server. */
 export const MAX_DASHBOARD_WIDGETS = 30;
@@ -183,3 +184,33 @@ export const isOn = (
     widget: Pick<DashboardWidget, 'config'>,
     key: string,
 ): boolean => optionOf(widget, key, 'on') !== 'off';
+
+/** The options of a widget that apply to how it is set up now (`when`). */
+export const visibleOptions = (
+    entry: Pick<DashboardCatalogEntry, 'options'>,
+    config: DashboardWidgetConfig,
+) => {
+    const valueOf = (key: string) =>
+        String(
+            config[key] ??
+                entry.options.find((option) => option.key === key)?.default ??
+                '',
+        );
+
+    return entry.options.filter(
+        (option) =>
+            !option.when ||
+            Object.entries(option.when).every(([key, allowed]) =>
+                allowed.includes(valueOf(key)),
+            ),
+    );
+};
+
+/** What the editor and the grid call a widget: a statistic by the number it shows. */
+export const widgetLabel = (
+    widget: Pick<DashboardWidget, 'type' | 'config'>,
+    entry?: Pick<DashboardCatalogEntry, 'label'>,
+): string =>
+    widget.type === 'stat'
+        ? statTitle(widget.config.metric)
+        : (entry?.label ?? widget.type);

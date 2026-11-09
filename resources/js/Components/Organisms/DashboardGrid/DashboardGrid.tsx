@@ -22,6 +22,7 @@ import {
     GRID_CLASS,
     GRID_ITEM_CLASS,
     gridItemStyle,
+    widgetLabel,
 } from '@/utils/dashboardLayout';
 
 interface DashboardGridProps {
@@ -109,7 +110,7 @@ const DashboardGrid: FC<DashboardGridProps> = ({
                             <WidgetEditFrame
                                 key={widget.id}
                                 widget={widget}
-                                label={entry?.label ?? widget.type}
+                                label={widgetLabel(widget, entry)}
                                 icon={entry?.icon ?? 'LayoutDashboard'}
                                 minWidth={entry?.minWidth ?? 20}
                                 minHeight={entry?.minHeight ?? 20}

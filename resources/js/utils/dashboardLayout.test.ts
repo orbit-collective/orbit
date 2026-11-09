@@ -10,6 +10,8 @@ import {
     sizeAfterResize,
     gridItemStyle,
     updateWidget,
+    visibleOptions,
+    widgetLabel,
 } from './dashboardLayout';
 
 const widget = (
@@ -241,4 +243,75 @@ describe('sizeAfterResize', () => {
 test('sameLayout compares widgets by value', () => {
     expect(sameLayout([widget('a')], [widget('a')])).toBe(true);
     expect(sameLayout([widget('a')], [widget('a', { width: 60 })])).toBe(false);
+});
+
+describe('visibleOptions', () => {
+    const statEntry = {
+        options: [
+            {
+                key: 'metric',
+                label: 'Shows',
+                options: ['projects', 'open_issues'],
+                default: 'open_issues',
+            },
+            {
+                key: 'count',
+                label: 'Count',
+                options: ['open', 'done'],
+                default: 'open',
+                when: { metric: ['open_issues'] },
+            },
+            {
+                key: 'show',
+                label: 'As',
+                options: ['value', 'percent'],
+                default: 'value',
+                when: { metric: ['open_issues'] },
+            },
+            {
+                key: 'icon',
+                label: 'Icon',
+                options: ['on', 'off'],
+                default: 'on',
+            },
+        ],
+    };
+
+    const keys = (config: DashboardWidget['config']) =>
+        visibleOptions(statEntry, config).map((option) => option.key);
+
+    test('keeps the options that apply to what the widget shows', () => {
+        expect(keys({ metric: 'open_issues' })).toEqual([
+            'metric',
+            'count',
+            'show',
+            'icon',
+        ]);
+    });
+
+    test('hides the options that apply to something else', () => {
+        expect(keys({ metric: 'projects' })).toEqual(['metric', 'icon']);
+    });
+
+    test('judges a missing value by its default', () => {
+        expect(keys({})).toContain('count');
+    });
+});
+
+describe('widgetLabel', () => {
+    test('names a statistic by the number it shows', () => {
+        expect(
+            widgetLabel(
+                widget('s', { type: 'stat', config: { metric: 'overdue' } }),
+                { label: 'Statistic' },
+            ),
+        ).toBe('Overdue Issues');
+    });
+
+    test('names the others by their kind', () => {
+        expect(widgetLabel(widget('t'), { label: 'Productivity Trend' })).toBe(
+            'Productivity Trend',
+        );
+        expect(widgetLabel(widget('t'))).toBe('trend');
+    });
 });

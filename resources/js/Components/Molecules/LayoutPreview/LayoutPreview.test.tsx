@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import { makeWidget } from '@/tests/dashboardLayout';
+import { makeWidget, makeStat } from '@/tests/dashboardLayout';
 import LayoutPreview from './LayoutPreview';
 
 describe('LayoutPreview', () => {
@@ -10,7 +10,7 @@ describe('LayoutPreview', () => {
                 widgets={[
                     makeWidget('trend', { width: 80, height: 90 }),
                     makeWidget('completion', { width: 40, height: 85 }),
-                    makeWidget('stat_projects', { visible: false }),
+                    makeStat('projects', { visible: false }),
                 ]}
             />,
         );
@@ -84,7 +84,7 @@ describe('LayoutPreview', () => {
     });
 
     test('a block cannot make the grid grow with its content', () => {
-        render(<LayoutPreview widgets={[makeWidget('stat_projects')]} />);
+        render(<LayoutPreview widgets={[makeStat('projects')]} />);
 
         expect(screen.getByTestId('layout-preview-block')).toHaveClass(
             'min-h-0',
