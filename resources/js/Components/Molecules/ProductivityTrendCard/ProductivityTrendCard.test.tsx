@@ -167,7 +167,7 @@ describe('ProductivityTrendCard Component', () => {
 
     describe('variants and options', () => {
         test('the line variant draws a line with a point for every day', () => {
-            const { container } = render(
+            render(
                 <ProductivityTrendCard trendData={trendData} variant="line" />,
             );
 
@@ -179,7 +179,7 @@ describe('ProductivityTrendCard Component', () => {
         });
 
         test('the area variant also fills under the line', () => {
-            const { container } = render(
+            render(
                 <ProductivityTrendCard trendData={trendData} variant="area" />,
             );
 

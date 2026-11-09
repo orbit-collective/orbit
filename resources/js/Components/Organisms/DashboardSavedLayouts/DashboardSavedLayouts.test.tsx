@@ -149,6 +149,7 @@ describe('DashboardSavedLayouts', () => {
             'Wide',
         );
         await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+        expect(onSave).toHaveBeenCalledWith('Wide');
 
         rerenderWith({
             layouts,
