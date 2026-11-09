@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Dashboard\DashboardWidgetType;
 use App\Models\DashboardLayout;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,7 +37,7 @@ test('a user saves a layout and the dashboard serves it', function () {
         ->where('dashboardLayout.widgets.0.type', 'projects')
         ->where('dashboardLayout.widgets.0.variant', 'compact')
         ->where('dashboardLayout.widgets.0.config.limit', 5)
-        ->has('dashboardLayout.catalog', 9)
+        ->has('dashboardLayout.catalog', count(DashboardWidgetType::cases()))
     );
 });
 

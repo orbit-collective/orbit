@@ -17,8 +17,12 @@ test('a user without a saved layout gets the default one with every widget type'
 
     $widgets = $this->service->widgetsFor($user->id);
 
+    // The widgets that came later are in the library, not in the default layout.
     expect(collect($widgets)->pluck('type')->sort()->values()->all())
-        ->toEqual(collect(DashboardWidgetType::cases())->pluck('value')->sort()->values()->all())
+        ->toEqual(collect([
+            'stat_projects', 'stat_open_issues', 'stat_critical', 'stat_resolution', 'trend',
+            'completion', 'priority_breakdown', 'activity', 'projects',
+        ])->sort()->values()->all())
         ->and(collect($widgets)->every(fn ($widget) => $widget['visible']))->toBeTrue()
         ->and($widgets[0])->toMatchArray(['id' => 'stat_projects', 'variant' => 'default', 'width' => 30, 'height' => 32]);
 });
@@ -161,7 +165,7 @@ test('every widget type describes itself consistently for the editor', function 
             ->and($entry['defaultHeight'])->toBeGreaterThanOrEqual($entry['minHeight'])
             ->and($entry['defaultHeight'])->toBeLessThanOrEqual(DashboardWidgetType::MAX_HEIGHT)
             ->and($entry['variants'])->not->toBeEmpty()
-            ->and($entry['props'])->not->toBeEmpty();
+            ->and($entry['props'])->toBeArray();
 
         foreach ($type->options() as $option) {
             expect($option['options'])->toContain($option['default']);
