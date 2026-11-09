@@ -1,6 +1,5 @@
 import { FC } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
-import ActivityFeedPanel from '@/Components/Molecules/ActivityFeedPanel/ActivityFeedPanel';
 import { CompletionRatioCard } from '@/Components/Molecules/CompletionRatioCard/CompletionRatioCard';
 import { PriorityBreakdownCard } from '@/Components/Molecules/PriorityBreakdownCard/PriorityBreakdownCard';
 import { ProductivityTrendCard } from '@/Components/Molecules/ProductivityTrendCard/ProductivityTrendCard';
@@ -8,6 +7,7 @@ import ProjectsDirectoryPanel, {
     DEFAULT_PROJECTS_SHOWN,
 } from '@/Components/Molecules/ProjectsDirectoryPanel/ProjectsDirectoryPanel';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
+import ActivityFeedPanel from '@/Components/Organisms/ActivityFeedPanel/ActivityFeedPanel';
 import { ActivityLogEntry } from '@/types/ActivityLog';
 import { DashboardWidget as DashboardWidgetModel } from '@/types/Dashboard';
 import {
