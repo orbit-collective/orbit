@@ -13,6 +13,10 @@ export const makeIssueStats = ({
     todo = 0,
     inProgress = 0,
     done = 0,
+    overdue = 0,
+    dueSoon = 0,
+    assigned = 0,
+    types = [],
 }: {
     high?: number;
     medium?: number;
@@ -21,6 +25,10 @@ export const makeIssueStats = ({
     todo?: number;
     inProgress?: number;
     done?: number;
+    overdue?: number;
+    dueSoon?: number;
+    assigned?: number;
+    types?: IssueStats['types'];
 } = {}): IssueStats => ({
     total: todo + inProgress + done,
     priority: [
@@ -49,4 +57,8 @@ export const makeIssueStats = ({
     noPriority,
     topPriority: high,
     category: { todo, in_progress: inProgress, done },
+    overdue,
+    dueSoon,
+    assigned,
+    types,
 });
