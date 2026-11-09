@@ -36,7 +36,12 @@ class UpdateDashboardLayoutRequest extends FormRequest
     {
         return [function (Validator $validator) {
             foreach ((array) $this->input('widgets', []) as $index => $widget) {
-                $type = DashboardWidgetType::tryFrom((string) ($widget['type'] ?? ''));
+                // The rules already refuse these; they only must not break this hook.
+                if (! is_array($widget) || ! is_string($widget['type'] ?? null)) {
+                    continue;
+                }
+
+                $type = DashboardWidgetType::tryFrom($widget['type']);
 
                 if ($type === null) {
                     continue;

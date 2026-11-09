@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DashboardLayout;
 use App\Repositories\DashboardSavedLayoutRepository;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -47,14 +48,20 @@ class DashboardSavedLayoutService
     {
         $name = trim($name);
 
-        if (! $this->layouts->existsForUser($userId, $name)
-            && $this->layouts->countForUser($userId) >= self::MAX_PER_USER) {
-            throw ValidationException::withMessages([
-                'name' => 'You can keep at most '.self::MAX_PER_USER.' saved layouts. Delete one first.',
-            ]);
-        }
+        // The limit is checked and the layout written under one lock, so two
+        // saves at once cannot both pass the check.
+        DB::transaction(function () use ($userId, $name, $widgets) {
+            $this->layouts->lockOwner($userId);
 
-        $this->layouts->updateOrCreateForUser($userId, $name, $this->dashboardLayouts->normalize($widgets));
+            if (! $this->layouts->existsForUser($userId, $name)
+                && $this->layouts->countForUser($userId) >= self::MAX_PER_USER) {
+                throw ValidationException::withMessages([
+                    'name' => 'You can keep at most '.self::MAX_PER_USER.' saved layouts. Delete one first.',
+                ]);
+            }
+
+            $this->layouts->updateOrCreateForUser($userId, $name, $this->dashboardLayouts->normalize($widgets));
+        });
     }
 
     /**
