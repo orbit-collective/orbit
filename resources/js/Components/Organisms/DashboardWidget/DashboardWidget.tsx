@@ -1,15 +1,23 @@
 import { FC } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import { CompletionRatioCard } from '@/Components/Molecules/CompletionRatioCard/CompletionRatioCard';
+import GreetingCard from '@/Components/Molecules/GreetingCard/GreetingCard';
 import { PriorityBreakdownCard } from '@/Components/Molecules/PriorityBreakdownCard/PriorityBreakdownCard';
 import { ProductivityTrendCard } from '@/Components/Molecules/ProductivityTrendCard/ProductivityTrendCard';
 import ProjectsDirectoryPanel, {
     DEFAULT_PROJECTS_SHOWN,
 } from '@/Components/Molecules/ProjectsDirectoryPanel/ProjectsDirectoryPanel';
+import QuickActionsCard from '@/Components/Molecules/QuickActionsCard/QuickActionsCard';
 import StatCard from '@/Components/Molecules/StatCard/StatCard';
+import WeekSummaryCard from '@/Components/Molecules/WeekSummaryCard/WeekSummaryCard';
 import ActivityFeedPanel from '@/Components/Organisms/ActivityFeedPanel/ActivityFeedPanel';
+import DeadlinesCard from '@/Components/Organisms/DeadlinesCard/DeadlinesCard';
+import MyIssuesCard from '@/Components/Organisms/MyIssuesCard/MyIssuesCard';
 import { ActivityLogEntry } from '@/types/ActivityLog';
-import { DashboardWidget as DashboardWidgetModel } from '@/types/Dashboard';
+import {
+    DashboardIssueRow,
+    DashboardWidget as DashboardWidgetModel,
+} from '@/types/Dashboard';
 import {
     IssueStats,
     PaginatedResponse,
@@ -30,6 +38,10 @@ export interface DashboardData {
     users?: AssignableUser[];
     issueTypes?: IssueType[];
     queryParams?: Record<string, any> | null;
+    myIssues?: DashboardIssueRow[];
+    deadlines?: DashboardIssueRow[];
+    /** The signed in user, from the shared page props. */
+    auth?: { user?: { id: number; name: string } };
 }
 
 interface DashboardWidgetProps {
@@ -261,6 +273,156 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                     showHeader={isOn(widget, 'header')}
                     showViewAll={isOn(widget, 'viewAll')}
                 />
+            );
+        case 'stat_overdue':
+            return issueStats ? (
+                <StatCard
+                    {...statProps('error', 'Open issues past their due date')}
+                    title="Overdue Issues"
+                    value={<AnimatedNumber value={issueStats.overdue} />}
+                    icon="CalendarX"
+                />
+            ) : (
+                <WidgetPlaceholder />
+            );
+        case 'stat_assigned':
+            return issueStats ? (
+                <StatCard
+                    {...statProps('accent', 'Open issues assigned to you')}
+                    title="Assigned to Me"
+                    value={<AnimatedNumber value={issueStats.assigned} />}
+                    icon="UserCheck"
+                />
+            ) : (
+                <WidgetPlaceholder />
+            );
+        case 'stat_due_soon':
+            return issueStats ? (
+                <StatCard
+                    {...statProps('warning', 'Open issues due within a week')}
+                    title="Due Soon"
+                    value={<AnimatedNumber value={issueStats.dueSoon} />}
+                    icon="CalendarClock"
+                />
+            ) : (
+                <WidgetPlaceholder />
+            );
+        case 'my_issues':
+            return data.myIssues ? (
+                <MyIssuesCard
+                    issues={data.myIssues}
+                    variant={widget.variant}
+                    limit={Number(widget.config.limit ?? 5)}
+                    sort={pick(
+                        ['priority', 'due', 'updated'] as const,
+                        optionOf(widget, 'sort', 'priority'),
+                    )}
+                    showHeader={isOn(widget, 'header')}
+                    show={{
+                        type: isOn(widget, 'type'),
+                        project: isOn(widget, 'project'),
+                        priority: isOn(widget, 'priority'),
+                        due: isOn(widget, 'due'),
+                    }}
+                />
+            ) : (
+                <WidgetPlaceholder />
+            );
+        case 'deadlines':
+            return data.deadlines ? (
+                <DeadlinesCard
+                    issues={data.deadlines}
+                    variant={widget.variant}
+                    scope={pick(
+                        ['mine', 'all'] as const,
+                        optionOf(widget, 'scope', 'mine'),
+                    )}
+                    userId={data.auth?.user?.id}
+                    range={Number(widget.config.range ?? 14)}
+                    overdue={isOn(widget, 'overdue')}
+                    limit={Number(widget.config.limit ?? 10)}
+                    showHeader={isOn(widget, 'header')}
+                />
+            ) : (
+                <WidgetPlaceholder />
+            );
+        case 'types_breakdown':
+            return issueStats ? (
+                <PriorityBreakdownCard
+                    priorities={issueStats.types.map((type, position) => ({
+                        ...type,
+                        position,
+                    }))}
+                    noPriority={0}
+                    total={issueStats.total}
+                    variant={widget.variant}
+                    showHeader={isOn(widget, 'header')}
+                    showPercent={isOn(widget, 'percent')}
+                    sort={
+                        optionOf(widget, 'sort', 'count') === 'name'
+                            ? 'name'
+                            : 'count'
+                    }
+                    title="Issue Types"
+                    description="Issues distribution by type"
+                />
+            ) : (
+                <WidgetPlaceholder />
+            );
+        case 'week_summary':
+            return data.productivity_trend ? (
+                <WeekSummaryCard
+                    trend={data.productivity_trend}
+                    variant={widget.variant}
+                    showHeader={isOn(widget, 'header')}
+                    showAverage={isOn(widget, 'average')}
+                    showBest={isOn(widget, 'best')}
+                    color={toDashboardColor(
+                        optionOf(widget, 'color', 'accent'),
+                    )}
+                />
+            ) : (
+                <WidgetPlaceholder />
+            );
+        case 'quick_actions':
+            return (
+                <QuickActionsCard
+                    variant={widget.variant}
+                    showHeader={isOn(widget, 'header')}
+                    showLabels={isOn(widget, 'labels')}
+                    color={toDashboardColor(
+                        optionOf(widget, 'color', 'accent'),
+                    )}
+                    enabled={{
+                        newProject: isOn(widget, 'newProject'),
+                        search: isOn(widget, 'search'),
+                        projects: isOn(widget, 'projects'),
+                        notifications: isOn(widget, 'notifications'),
+                        editDashboard: isOn(widget, 'editDashboard'),
+                        // Off unless it was turned on, unlike the others.
+                        shortcuts:
+                            optionOf(widget, 'shortcuts', 'off') === 'on',
+                    }}
+                />
+            );
+        case 'greeting':
+            return issueStats ? (
+                <GreetingCard
+                    variant={widget.variant}
+                    name={data.auth?.user?.name}
+                    showName={isOn(widget, 'name')}
+                    showDate={isOn(widget, 'date')}
+                    showSummary={isOn(widget, 'summary')}
+                    showIcon={isOn(widget, 'icon')}
+                    color={toDashboardColor(
+                        optionOf(widget, 'color', 'accent'),
+                    )}
+                    assigned={issueStats.assigned}
+                    overdue={issueStats.overdue}
+                    dueSoon={issueStats.dueSoon}
+                />
+            ) : (
+                <WidgetPlaceholder />
             );
         default:
             return null;

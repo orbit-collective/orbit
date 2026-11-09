@@ -594,6 +594,368 @@ const Stat: FC<{ widget: DashboardWidget }> = ({ widget }) => {
     );
 };
 
+const Rows: FC<{ widget: DashboardWidget; count: number }> = ({
+    widget,
+    count,
+}) => {
+    const compact = widget.variant === 'compact';
+
+    return (
+        <div
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+            style={{ gap: cqw(compact ? 0.9 : 1.5) }}
+        >
+            {Array.from({ length: count }, (_, row) => (
+                <div
+                    key={row}
+                    className="flex items-center"
+                    style={{ gap: cqw(1) }}
+                >
+                    <Dot color={MUTED} size={0.9} />
+                    <Line width={12} />
+                    <Line
+                        width={48}
+                        color="var(--text-gray-color)"
+                        opacity={0.6}
+                    />
+                    <span className="ml-auto flex" style={{ gap: cqw(0.8) }}>
+                        {isOn(widget, 'priority') && (
+                            <Dot color={SHADES[1]} size={0.9} />
+                        )}
+                        {isOn(widget, 'due') && (
+                            <span
+                                className="block rounded-full"
+                                style={{
+                                    width: cqw(3),
+                                    height: cqw(1),
+                                    backgroundColor: TRACK,
+                                }}
+                            />
+                        )}
+                    </span>
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const MyIssues: FC<{ widget: DashboardWidget }> = ({ widget }) => (
+    <Column style={{ gap: cqw(1.2) }}>
+        <Title widget={widget} />
+        {widget.variant === 'cards' ? (
+            <div
+                className="grid min-h-0 flex-1 grid-cols-2 content-start"
+                style={{ gap: cqw(1) }}
+            >
+                {[0, 1, 2, 3].map((tile) => (
+                    <div
+                        key={tile}
+                        className="flex flex-col border border-solid"
+                        style={{
+                            gap: cqw(0.6),
+                            borderColor: TRACK,
+                            borderRadius: cqw(0.6),
+                            padding: cqw(0.8),
+                        }}
+                    >
+                        <Line
+                            width={80}
+                            color="var(--text-gray-color)"
+                            opacity={0.6}
+                        />
+                        <Line width={45} />
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <Rows
+                widget={widget}
+                count={widget.variant === 'compact' ? 8 : 5}
+            />
+        )}
+    </Column>
+);
+
+const Deadlines: FC<{ widget: DashboardWidget }> = ({ widget }) => (
+    <Column style={{ gap: cqw(1.2) }}>
+        <Title widget={widget} />
+        {widget.variant === 'week' ? (
+            <div
+                className="flex min-h-0 flex-1 items-stretch"
+                style={{ gap: cqw(0.8) }}
+            >
+                {Array.from({ length: 7 }, (_, day) => (
+                    <div
+                        key={day}
+                        className="flex flex-1 flex-col border border-solid"
+                        style={{
+                            gap: cqw(0.6),
+                            borderColor: day === 0 ? MUTED : TRACK,
+                            borderRadius: cqw(0.6),
+                            padding: cqw(0.7),
+                        }}
+                    >
+                        <Line width={70} />
+                        {day % 3 !== 1 && (
+                            <Line
+                                width={90}
+                                color="var(--text-gray-color)"
+                                opacity={0.6}
+                            />
+                        )}
+                    </div>
+                ))}
+            </div>
+        ) : widget.variant === 'timeline' ? (
+            <div
+                className="relative flex min-h-0 flex-1 flex-col"
+                style={{ gap: cqw(1.8), paddingLeft: cqw(3) }}
+            >
+                <span
+                    className="absolute bottom-0 top-0 w-px"
+                    style={{ left: cqw(1), backgroundColor: TRACK }}
+                />
+                {[0, 1, 2].map((group) => (
+                    <div
+                        key={group}
+                        className="relative flex flex-col"
+                        style={{ gap: cqw(0.7) }}
+                    >
+                        <span
+                            className="absolute rounded-full"
+                            style={{
+                                left: cqw(-2.5),
+                                top: cqw(0.1),
+                                width: cqw(1.2),
+                                height: cqw(1.2),
+                                backgroundColor: group === 0 ? MUTED : TRACK,
+                            }}
+                        />
+                        <Line
+                            width={25}
+                            color="var(--text-gray-color)"
+                            opacity={0.7}
+                        />
+                        <Line width={70} />
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <Rows
+                widget={{
+                    ...widget,
+                    config: { ...widget.config, priority: 'off', due: 'on' },
+                }}
+                count={5}
+            />
+        )}
+    </Column>
+);
+
+const WeekSummary: FC<{ widget: DashboardWidget }> = ({ widget }) => (
+    <Column style={{ gap: cqw(1.2) }}>
+        <Title widget={widget} />
+        {widget.variant === 'numbers' ? (
+            <div
+                className="grid min-h-0 flex-1 grid-cols-3 content-center"
+                style={{ gap: cqw(2) }}
+            >
+                {[0, 1, 2].map((block) => (
+                    <div
+                        key={block}
+                        className="flex flex-col"
+                        style={{ gap: cqw(0.8) }}
+                    >
+                        <Line width={70} />
+                        <Line
+                            width={50}
+                            height={2.2}
+                            color="var(--text-gray-color)"
+                            opacity={0.8}
+                        />
+                    </div>
+                ))}
+            </div>
+        ) : (
+            <div className="flex min-h-0 flex-1 flex-col justify-between">
+                <Line
+                    width={22}
+                    height={2.6}
+                    color="var(--text-gray-color)"
+                    opacity={0.8}
+                />
+                {widget.variant === 'sparkline' ? (
+                    <svg
+                        viewBox="0 0 100 30"
+                        preserveAspectRatio="none"
+                        className="h-1/2 w-full overflow-visible"
+                        aria-hidden="true"
+                    >
+                        <path
+                            d={smoothLinePath(
+                                trendPoints.map((point) => ({
+                                    x: point.x,
+                                    y: point.y * 0.3,
+                                })),
+                            )}
+                            fill="none"
+                            stroke={MUTED}
+                            strokeWidth="2"
+                            vectorEffect="non-scaling-stroke"
+                        />
+                    </svg>
+                ) : (
+                    <div
+                        className="flex h-1/2 items-end"
+                        style={{ gap: cqw(0.7) }}
+                    >
+                        {TREND.map((value, index) => (
+                            <span
+                                key={index}
+                                className="block flex-1 rounded-t-[1px]"
+                                style={{
+                                    height: `${value}%`,
+                                    backgroundColor:
+                                        index === 4 ? MUTED : TRACK,
+                                }}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+        )}
+    </Column>
+);
+
+const QuickActions: FC<{ widget: DashboardWidget }> = ({ widget }) => {
+    const tile = (key: number, row = false) => (
+        <div
+            key={key}
+            className={
+                row
+                    ? 'flex items-center'
+                    : 'flex flex-col items-center justify-center'
+            }
+            style={{
+                gap: cqw(0.8),
+                borderRadius: cqw(0.6),
+                border: `1px solid ${TRACK}`,
+                padding: cqw(0.8),
+            }}
+        >
+            <span
+                className="block"
+                style={{
+                    width: cqw(2),
+                    height: cqw(2),
+                    borderRadius: cqw(0.5),
+                    backgroundColor: MUTED,
+                    opacity: 0.5,
+                }}
+            />
+            {(widget.variant !== 'bar' || isOn(widget, 'labels')) && (
+                <Line width={row ? 40 : 60} />
+            )}
+            {row && (
+                <span
+                    className="ml-auto block"
+                    style={{
+                        width: cqw(2),
+                        height: cqw(1),
+                        backgroundColor: TRACK,
+                        borderRadius: cqw(0.3),
+                    }}
+                />
+            )}
+        </div>
+    );
+
+    return (
+        <Column style={{ gap: cqw(1.2) }}>
+            {isOn(widget, 'header') && <Line width={38} />}
+            {widget.variant === 'list' ? (
+                <div
+                    className="flex min-h-0 flex-1 flex-col"
+                    style={{ gap: cqw(0.8) }}
+                >
+                    {[0, 1, 2, 3].map((key) => tile(key, true))}
+                </div>
+            ) : widget.variant === 'bar' ? (
+                <div
+                    className="flex min-h-0 flex-1 flex-wrap content-start"
+                    style={{ gap: cqw(0.9) }}
+                >
+                    {[0, 1, 2, 3, 4].map((key) => (
+                        <div
+                            key={key}
+                            style={{
+                                width: isOn(widget, 'labels')
+                                    ? '30%'
+                                    : undefined,
+                            }}
+                        >
+                            {tile(key, true)}
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div
+                    className="grid min-h-0 flex-1 grid-cols-3 content-start"
+                    style={{ gap: cqw(1) }}
+                >
+                    {[0, 1, 2, 3, 4, 5].map((key) => tile(key))}
+                </div>
+            )}
+        </Column>
+    );
+};
+
+const Greeting: FC<{ widget: DashboardWidget }> = ({ widget }) => {
+    const banner = widget.variant === 'banner';
+
+    return (
+        <div className="flex h-full items-center" style={{ gap: cqw(2) }}>
+            {isOn(widget, 'icon') && widget.variant !== 'minimal' && (
+                <span
+                    className="block shrink-0 rounded-full"
+                    style={{
+                        width: cqw(banner ? 5 : 3.4),
+                        height: cqw(banner ? 5 : 3.4),
+                        backgroundColor: TRACK,
+                    }}
+                />
+            )}
+            <div className="flex flex-1 flex-col" style={{ gap: cqw(0.8) }}>
+                <Line
+                    width={widget.variant === 'minimal' ? 50 : 40}
+                    height={banner ? 1.8 : 1.2}
+                    color="var(--text-gray-color)"
+                    opacity={0.8}
+                />
+                {isOn(widget, 'date') && widget.variant !== 'minimal' && (
+                    <Line width={25} />
+                )}
+            </div>
+            {isOn(widget, 'summary') && widget.variant !== 'minimal' && (
+                <div className="flex" style={{ gap: cqw(0.8) }}>
+                    {[0, 1, 2].map((chip) => (
+                        <span
+                            key={chip}
+                            className="block"
+                            style={{
+                                width: cqw(banner ? 6 : 4),
+                                height: cqw(1.8),
+                                borderRadius: cqw(1),
+                                backgroundColor: TRACK,
+                            }}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 /** The card a glyph is drawn on: the style of a statistic changes its edge and fill. */
 const cardStyle = (widget: DashboardWidget): CSSProperties => {
     const base: CSSProperties = {
@@ -639,7 +1001,23 @@ const WidgetGlyph: FC<WidgetGlyphProps> = ({ widget }) => {
             body = <Completion widget={widget} />;
             break;
         case 'priority_breakdown':
+        case 'types_breakdown':
             body = <Priority widget={widget} />;
+            break;
+        case 'my_issues':
+            body = <MyIssues widget={widget} />;
+            break;
+        case 'deadlines':
+            body = <Deadlines widget={widget} />;
+            break;
+        case 'week_summary':
+            body = <WeekSummary widget={widget} />;
+            break;
+        case 'quick_actions':
+            body = <QuickActions widget={widget} />;
+            break;
+        case 'greeting':
+            body = <Greeting widget={widget} />;
             break;
         case 'activity':
             body = <Activity widget={widget} />;

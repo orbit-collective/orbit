@@ -166,6 +166,8 @@ describe('dashboardReloads', () => {
                     'projects',
                     'activityLogs',
                     'issueTypes',
+                    'myIssues',
+                    'deadlines',
                 ],
             },
         ];
@@ -277,6 +279,8 @@ describe('fallback reloads', () => {
             'activityLogs',
             'users',
             'issueTypes',
+            'myIssues',
+            'deadlines',
         ]);
     });
 

@@ -14,6 +14,15 @@ const TYPES: DashboardWidgetType[] = [
     'priority_breakdown',
     'activity',
     'projects',
+    'stat_overdue',
+    'stat_assigned',
+    'stat_due_soon',
+    'my_issues',
+    'deadlines',
+    'types_breakdown',
+    'week_summary',
+    'quick_actions',
+    'greeting',
 ];
 
 describe('WidgetGlyph', () => {
@@ -45,6 +54,12 @@ describe('WidgetGlyph', () => {
             priority_breakdown: ['bar', 'list', 'donut'],
             activity: ['feed', 'compact'],
             projects: ['cards', 'grid', 'compact'],
+            my_issues: ['list', 'compact', 'cards'],
+            deadlines: ['list', 'timeline', 'week'],
+            types_breakdown: ['bar', 'list', 'donut'],
+            week_summary: ['numbers', 'sparkline', 'bars'],
+            quick_actions: ['grid', 'list', 'bar'],
+            greeting: ['banner', 'compact', 'minimal'],
         };
 
         for (const [type, styles] of Object.entries(variants)) {
@@ -94,6 +109,12 @@ describe('WidgetGlyph', () => {
             priority_breakdown: ['bar', 'list', 'donut'],
             activity: ['feed', 'compact'],
             projects: ['cards', 'grid', 'compact'],
+            my_issues: ['list', 'compact', 'cards'],
+            deadlines: ['list', 'timeline', 'week'],
+            types_breakdown: ['bar', 'list', 'donut'],
+            week_summary: ['numbers', 'sparkline', 'bars'],
+            quick_actions: ['grid', 'list', 'bar'],
+            greeting: ['banner', 'compact', 'minimal'],
         };
 
         for (const [type, styles] of Object.entries(variants)) {

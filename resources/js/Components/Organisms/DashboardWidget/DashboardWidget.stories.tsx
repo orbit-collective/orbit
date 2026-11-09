@@ -6,6 +6,7 @@ import {
     projects,
     users,
 } from '@/stories/fixtures';
+import { makeIssueRow } from '@/tests/dashboardIssues';
 import { makeWidget } from '@/tests/dashboardLayout';
 import { makeIssueStats } from '@/tests/issueStats';
 import { makePaginated } from '@/tests/paginated';
@@ -218,6 +219,174 @@ export const ActivityCompact: Story = {
     decorators: [
         (Story) => (
             <div className="flex h-[360px] w-[480px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+const issueRows = [
+    makeIssueRow(1, {
+        title: 'Fix login redirect after session timeout',
+        endDate: '2026-11-08',
+    }),
+    makeIssueRow(2, {
+        title: 'Add pagination to the activity feed',
+        endDate: '2026-11-12',
+    }),
+    makeIssueRow(3, {
+        title: 'Write the release notes',
+        endDate: null,
+        priority: null,
+    }),
+];
+
+const secondWave = {
+    ...meta.args.data,
+    issueStats: makeIssueStats({
+        high: 3,
+        todo: 4,
+        inProgress: 3,
+        done: 5,
+        overdue: 2,
+        dueSoon: 4,
+        assigned: 7,
+        types: [
+            { name: 'Task', color: '#3b82f6', icon: 'CheckSquare', count: 8 },
+            { name: 'Bug', color: '#ef4444', icon: 'Bug', count: 3 },
+            { name: 'Feature', color: '#8b5cf6', icon: 'Sparkles', count: 1 },
+        ],
+    }),
+    myIssues: issueRows,
+    deadlines: issueRows,
+    auth: { user: { id: 1, name: 'Jane Cooper' } },
+};
+
+export const OverdueStat: Story = {
+    args: { widget: makeWidget('stat_overdue'), data: secondWave },
+};
+
+export const AssignedStat: Story = {
+    args: {
+        widget: makeWidget('stat_assigned', { variant: 'vivid' }),
+        data: secondWave,
+    },
+};
+
+export const DueSoonStat: Story = {
+    args: {
+        widget: makeWidget('stat_due_soon', { variant: 'glass' }),
+        data: secondWave,
+    },
+};
+
+export const MyIssues: Story = {
+    args: { widget: makeWidget('my_issues'), data: secondWave },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[320px] w-[520px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const MyIssueCards: Story = {
+    args: {
+        widget: makeWidget('my_issues', { variant: 'cards' }),
+        data: secondWave,
+    },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[360px] w-[680px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const Deadlines: Story = {
+    args: {
+        widget: makeWidget('deadlines', {
+            config: {
+                scope: 'all',
+                range: 30,
+                overdue: 'on',
+                limit: 10,
+                header: 'on',
+            },
+        }),
+        data: secondWave,
+    },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[320px] w-[520px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const DeadlinesTimeline: Story = {
+    args: {
+        widget: makeWidget('deadlines', {
+            variant: 'timeline',
+            config: {
+                scope: 'all',
+                range: 30,
+                overdue: 'on',
+                limit: 10,
+                header: 'on',
+            },
+        }),
+        data: secondWave,
+    },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[360px] w-[520px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const IssueTypes: Story = {
+    args: {
+        widget: makeWidget('types_breakdown', { variant: 'donut' }),
+        data: secondWave,
+    },
+};
+
+export const WeekSummary: Story = {
+    args: {
+        widget: makeWidget('week_summary', { variant: 'sparkline' }),
+        data: secondWave,
+    },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[190px] w-[360px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const QuickActions: Story = {
+    args: { widget: makeWidget('quick_actions'), data: secondWave },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[200px] w-[480px]">
+                <Story />
+            </div>
+        ),
+    ],
+};
+
+export const Welcome: Story = {
+    args: { widget: makeWidget('greeting'), data: secondWave },
+    decorators: [
+        (Story) => (
+            <div className="flex h-[130px] w-[720px]">
                 <Story />
             </div>
         ),
