@@ -335,7 +335,7 @@ describe('DashboardEditorPanel', () => {
 
         const group = screen.getByRole('group', { name: 'Color' });
         const swatch = within(group).getByRole('button', { name: 'Success' });
-        expect(swatch).toHaveStyle({ backgroundColor: 'var(--success-color)' });
+        expect(swatch.style.backgroundColor).toBe('var(--success-color)');
         expect(swatch).toHaveTextContent('');
         expect(
             within(group).getByRole('button', { name: 'Error' }),

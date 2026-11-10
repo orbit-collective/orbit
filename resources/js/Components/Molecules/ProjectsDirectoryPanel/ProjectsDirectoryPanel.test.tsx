@@ -223,7 +223,7 @@ describe('ProjectsDirectoryPanel', () => {
                     .getAllByTestId('project-tile-progress')[0]
                     .closest('.grid')!;
                 expect((grid as HTMLElement).style.gridTemplateColumns).toBe(
-                    `repeat(${columns}, minmax(0, 1fr))`,
+                    `repeat(${columns}, minmax(0px, 1fr))`,
                 );
             },
         );
@@ -247,7 +247,7 @@ describe('ProjectsDirectoryPanel', () => {
                 .getByText('Alpha')
                 .closest('.grid') as HTMLElement;
             expect(grid.style.gridTemplateColumns).toBe(
-                'repeat(1, minmax(0, 1fr))',
+                'repeat(1, minmax(0px, 1fr))',
             );
         });
     });

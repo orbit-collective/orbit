@@ -160,8 +160,9 @@ describe('CalendarView Component', () => {
             screen.getByText('Custom priority task').closest('button'),
         ).toHaveStyle({ borderLeftColor: '#9c27b0' });
         expect(
-            screen.getByText('Unprioritised task').closest('button'),
-        ).toHaveStyle({ borderLeftColor: 'var(--text-muted-color)' });
+            screen.getByText('Unprioritised task').closest('button')!.style
+                .borderLeftColor,
+        ).toBe('var(--text-muted-color)');
     });
 
     test('shows a "+N more" indicator when a day has more issues than fit', () => {
