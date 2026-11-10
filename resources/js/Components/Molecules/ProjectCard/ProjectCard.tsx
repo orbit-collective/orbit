@@ -21,7 +21,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
     return (
         <Link
             href={`/projects/${project.id}`}
-            className="group relative flex flex-col gap-4 overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover) sm:p-5"
+            className="group relative flex flex-col gap-4 overflow-hidden rounded-xl border border-(--border-color) bg-(--surface-color) p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover) sm:p-5"
         >
             <span
                 aria-hidden="true"
@@ -66,7 +66,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
                 {project.description || 'No description provided.'}
             </p>
 
-            <div className="relative mt-auto flex items-center gap-4 border-t border-solid border-(--border-color) pt-3.5">
+            <div className="relative mt-auto flex items-center gap-4 border-t border-(--border-color) pt-3.5">
                 <div className="relative flex shrink-0 items-center justify-center">
                     <ProgressRing
                         radius={22}

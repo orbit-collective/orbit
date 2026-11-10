@@ -60,7 +60,7 @@ const ActivityFeedPanel: FC<ActivityFeedPanelProps> = ({
                 perPageParam={ACTIVITY_PER_PAGE_PARAM}
                 defaultPerPage={ACTIVITY_DEFAULT_PER_PAGE}
                 preserveState
-                className="border-t border-solid border-(--border-color) px-0 pb-0"
+                className="border-t border-(--border-color) px-0 pb-0"
             />
         )}
     </div>

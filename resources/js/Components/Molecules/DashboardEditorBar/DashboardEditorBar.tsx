@@ -50,7 +50,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: DURATION.base, ease: EASE }}
-            className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-1.5 overflow-hidden border-b border-solid border-(--bg-light-color) bg-(--accent-color-opacity) px-3 py-2 md:px-6"
+            className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-1.5 overflow-hidden border-b border-(--bg-light-color) bg-(--accent-color-opacity) px-3 py-2 md:px-6"
         >
             <div className="flex min-w-0 items-center gap-3">
                 <motion.span

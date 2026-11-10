@@ -151,7 +151,7 @@ export default function Show({
                         )}
                         <div
                             className={
-                                'relative flex flex-1 overflow-hidden border-t border-solid border-(--bg-light-color)'
+                                'relative flex flex-1 overflow-hidden border-t border-(--bg-light-color)'
                             }
                         >
                             <div
@@ -261,7 +261,7 @@ export default function Show({
                                                     ACTIVITY_DEFAULT_PER_PAGE
                                                 }
                                                 preserveState
-                                                className="border-t border-solid border-(--border-color) px-0 pb-0"
+                                                className="border-t border-(--border-color) px-0 pb-0"
                                             />
                                         </div>
                                     )}

@@ -62,7 +62,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         <>
             <div
                 data-tour="filter-bar"
-                className="sticky top-0 z-40 flex w-full flex-col gap-3 border-b border-solid border-(--border-color-strong) bg-(--bg-color) px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                className="sticky top-0 z-40 flex w-full flex-col gap-3 border-b border-(--border-color-strong) bg-(--bg-color) px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
                 <div className="flex flex-1 items-center">
                     <div className="relative flex w-full max-w-md items-center rounded-lg border border-(--border-color-strong) bg-(--surface-color) px-3 py-1.5 transition-all duration-150 focus-within:border-(--border-color-strong) focus-within:bg-(--bg-color-hover) focus-within:ring-1 focus-within:ring-(--border-color-strong)">

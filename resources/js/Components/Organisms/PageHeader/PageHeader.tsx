@@ -94,7 +94,7 @@ function PageHeader({
     }, [showNotificationsPopup]);
 
     return (
-        <header className="flex shrink-0 flex-col gap-3 border-b border-solid border-(--bg-light-color) bg-(--bg-color-hover) py-3 pr-4 pl-16 md:px-6">
+        <header className="flex shrink-0 flex-col gap-3 border-b border-(--bg-light-color) bg-(--bg-color-hover) py-3 pr-4 pl-16 md:px-6">
             <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-3">
                     {icon && (
