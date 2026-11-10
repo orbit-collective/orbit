@@ -51,7 +51,20 @@ describe('DashboardIssueRow', () => {
         render(<DashboardIssueRow issue={issue} now={NOW} />);
 
         expect(screen.getByRole('link')).toHaveAccessibleName(
-            '#11 Fix the thing 1, in Orbit, High priority',
+            '#11 Fix the thing 1, in Orbit, High priority, due in 4 days',
+        );
+    });
+
+    test('says when it is due in its name, so a screen reader hears it too', () => {
+        render(
+            <DashboardIssueRow
+                issue={{ ...issue, endDate: '2026-11-08' }}
+                now={NOW}
+            />,
+        );
+
+        expect(screen.getByRole('link')).toHaveAccessibleName(
+            /High priority, 2 days overdue$/,
         );
     });
 

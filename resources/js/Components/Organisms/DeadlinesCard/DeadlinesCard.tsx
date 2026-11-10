@@ -4,6 +4,7 @@ import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import DashboardIssueRow from '@/Components/Molecules/DashboardIssueRow/DashboardIssueRow';
 import { useElementWidth } from '@/hooks/useElementWidth';
+import { useNow } from '@/hooks/useNow';
 import { DashboardIssueRow as Row } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
@@ -80,14 +81,19 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
     now,
 }) => {
     const [ref, width] = useElementWidth<HTMLDivElement>();
-    const today = now ?? new Date();
+    const clock = useNow();
+    const today = now ?? clock;
     const filter = { scope, userId, range, overdue, limit, now: today };
     // The week looks at its seven days, whatever the range is, and keeps the
     // overdue ones in a column of their own.
     const shown = filterDeadlines(
         issues,
         variant === 'week'
-            ? { ...filter, range: WEEK_DAYS, limit: Number.MAX_SAFE_INTEGER }
+            ? {
+                  ...filter,
+                  range: WEEK_DAYS - 1,
+                  limit: Number.MAX_SAFE_INTEGER,
+              }
             : filter,
     );
     const lateCount = shown.filter(

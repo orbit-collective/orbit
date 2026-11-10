@@ -226,21 +226,30 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                                     <div
                                         key={day.day}
                                         data-testid="week-hover"
-                                        className="group relative h-full min-w-0 flex-1"
+                                        className="group h-full min-w-0 flex-1"
                                     >
-                                        <span className="absolute inset-y-0 left-1/2 w-px bg-[var(--border-color-strong)] opacity-0 transition-opacity group-hover:opacity-100" />
+                                        {/* Placed at the point of the line, not in the middle of the cell. */}
                                         <span
-                                            className="absolute left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full transition-transform group-hover:scale-100"
+                                            className="absolute inset-y-0 w-px bg-[var(--border-color-strong)] opacity-0 transition-opacity group-hover:opacity-100"
+                                            style={{
+                                                left: `${points[index].x}%`,
+                                            }}
+                                        />
+                                        <span
+                                            className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full transition-transform group-hover:scale-100"
                                             style={{
                                                 backgroundColor: tint,
+                                                left: `${points[index].x}%`,
                                                 top: `${(points[index].y / 30) * 100}%`,
                                             }}
                                         />
                                         <span
-                                            className={cn(
-                                                TOOLTIP,
-                                                '-top-7 left-1/2 -translate-x-1/2',
-                                            )}
+                                            className={cn(TOOLTIP, '-top-7')}
+                                            style={{
+                                                left: `${points[index].x}%`,
+                                                // The first label starts at the left edge, the last ends at the right one.
+                                                transform: `translateX(-${points[index].x}%)`,
+                                            }}
                                         >
                                             {dayTip(day)}
                                         </span>

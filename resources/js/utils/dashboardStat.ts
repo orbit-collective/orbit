@@ -13,7 +13,7 @@ type StatMetric =
 
 type StatCount = 'open' | 'todo' | 'in_progress' | 'done' | 'all';
 
-export const STAT_METRICS: StatMetric[] = [
+const STAT_METRICS: StatMetric[] = [
     'projects',
     'open_issues',
     'critical',
@@ -23,13 +23,7 @@ export const STAT_METRICS: StatMetric[] = [
     'due_soon',
 ];
 
-export const STAT_COUNTS: StatCount[] = [
-    'open',
-    'todo',
-    'in_progress',
-    'done',
-    'all',
-];
+const STAT_COUNTS: StatCount[] = ['open', 'todo', 'in_progress', 'done', 'all'];
 
 /** What the open issues statistic can count, with its title and hint. */
 const COUNTS = {

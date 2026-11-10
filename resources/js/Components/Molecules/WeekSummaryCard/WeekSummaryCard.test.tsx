@@ -213,6 +213,15 @@ describe('WeekSummaryCard', () => {
                 />,
             );
 
+            // The guide and the label stand on the points of the line: the first
+            // day at the left edge and the last at the right one.
+            const [first, last] = screen.getAllByTestId('week-hover');
+            const lefts = (cell: HTMLElement) =>
+                [...cell.querySelectorAll<HTMLElement>('span')].map(
+                    (span) => span.style.left,
+                );
+            expect(lefts(first)).toEqual(['0%', '0%', '0%']);
+            expect(lefts(last)).toEqual(['100%', '100%', '100%']);
             expect(screen.getAllByTestId('week-hover')).toHaveLength(2);
             expect(screen.getByText('Mon: 1 update')).toBeInTheDocument();
             expect(screen.getByText('Tue: 3 updates')).toBeInTheDocument();

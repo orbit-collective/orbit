@@ -187,6 +187,26 @@ describe('DeadlinesCard', () => {
             ]);
         });
 
+        test('does not count what is due in seven days, which has no column', () => {
+            render(
+                <DeadlinesCard
+                    {...base}
+                    variant="week"
+                    issues={[
+                        makeIssueRow(9, {
+                            title: 'In a week',
+                            endDate: '2026-11-17',
+                        }),
+                    ]}
+                />,
+            );
+
+            expect(screen.getByText('No deadlines ahead')).toBeInTheDocument();
+            expect(
+                screen.queryByRole('list', { name: 'The next seven days' }),
+            ).not.toBeInTheDocument();
+        });
+
         test('leaves the late column out when asked to', () => {
             render(<DeadlinesCard {...base} variant="week" overdue={false} />);
 

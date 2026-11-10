@@ -24,6 +24,7 @@ import Dashboard from './Dashboard';
 
 const mocks = vi.hoisted(() => ({
     useDashboardLive: vi.fn(),
+    requestLiveReload: vi.fn(),
     runCommand: vi.fn(),
     router: {
         put: vi.fn(),
@@ -33,6 +34,10 @@ const mocks = vi.hoisted(() => ({
         reload: vi.fn(),
     },
     commands: new Map<string, { perform?: () => void }>(),
+}));
+
+vi.mock('@/live/reloadQueue', () => ({
+    requestLiveReload: mocks.requestLiveReload,
 }));
 
 vi.mock('@/live/useDashboardLive', () => ({
@@ -147,6 +152,43 @@ beforeEach(() => {
 });
 
 describe('Dashboard Page', () => {
+    describe('when the day turns', () => {
+        beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
+        afterEach(() => vi.useRealTimers());
+
+        test('re-reads what is counted against today, and only what is loaded', () => {
+            vi.setSystemTime(new Date(2026, 10, 10, 23, 59, 0));
+            renderDashboard({
+                dashboardLayout: layoutOf('stat_projects'),
+                deadlines: [],
+            });
+
+            expect(mocks.requestLiveReload).not.toHaveBeenCalled();
+
+            act(() => {
+                vi.setSystemTime(new Date(2026, 10, 11, 0, 1, 0));
+                vi.advanceTimersByTime(60_000);
+            });
+
+            expect(mocks.requestLiveReload).toHaveBeenCalledTimes(1);
+            expect(mocks.requestLiveReload).toHaveBeenCalledWith({
+                only: ['issueStats', 'deadlines'],
+            });
+        });
+
+        test('does not re-read anything within the same day', () => {
+            vi.setSystemTime(new Date(2026, 10, 10, 9, 0, 0));
+            renderDashboard();
+
+            act(() => {
+                vi.setSystemTime(new Date(2026, 10, 10, 17, 0, 0));
+                vi.advanceTimersByTime(60_000);
+            });
+
+            expect(mocks.requestLiveReload).not.toHaveBeenCalled();
+        });
+    });
+
     test('follows live changes in every project of the user', () => {
         renderDashboard({
             projects: [makeProject({ id: 4 }), makeProject({ id: 9 })],

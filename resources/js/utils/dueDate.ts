@@ -75,16 +75,17 @@ export function dueInfo(endDate: string, now: Date = new Date()): DueInfo {
     };
 }
 
+/** The day `offset` calendar days from `now`; a clock change never shifts it. */
+const dayAfter = (now: Date, offset: number) =>
+    new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+
 /** "Mon", "Tue"... for the day `offset` days from `now`. */
 export const weekdayOf = (offset: number, now: Date = new Date()): string =>
-    new Date(startOfDay(now).getTime() + offset * DAY_MS).toLocaleDateString(
-        'en-US',
-        { weekday: 'short' },
-    );
+    dayAfter(now, offset).toLocaleDateString('en-US', { weekday: 'short' });
 
 /** The `YYYY-MM-DD` of the day `offset` days from `now`, in local time. */
 export function dateKeyOf(offset: number, now: Date = new Date()): string {
-    const date = new Date(startOfDay(now).getTime() + offset * DAY_MS);
+    const date = dayAfter(now, offset);
 
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
