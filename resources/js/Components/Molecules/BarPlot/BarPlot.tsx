@@ -99,7 +99,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                     duration: DURATION.base,
                                     delay: rowDelay(index),
                                 }}
-                                className="absolute -inset-x-4 border-t border-dotted border-(--border-color-strong)"
+                                className="absolute -inset-x-4 border-0 border-t border-dotted border-(--border-color-strong)"
                                 style={{ bottom: `${clamp(tick.percent)}%` }}
                             />
                         ))}
@@ -201,7 +201,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                     delay: 0.3,
                                 }}
                                 style={{ transformOrigin: 'left' }}
-                                className="pointer-events-none absolute -inset-x-4 z-5 border-t border-dashed border-(--text-gray-color)"
+                                className="pointer-events-none absolute -inset-x-4 z-5 border-0 border-t border-dashed border-(--text-gray-color)"
                             />
                         )}
                     </div>
