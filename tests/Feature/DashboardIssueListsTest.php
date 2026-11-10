@@ -4,6 +4,7 @@ use App\Models\Issue;
 use App\Models\IssueType;
 use App\Models\Project;
 use App\Models\User;
+use App\Repositories\IssueRepository;
 use App\Services\IssueService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -118,12 +119,13 @@ describe('my issues', function () {
     });
 
     test('is capped, so a long backlog is not shipped whole', function () {
-        Issue::factory()->todo()->count(35)->create([
+        Issue::factory()->todo()->count(100)->create([
             'project_id' => $this->project->id,
             'assignee_id' => $this->user->id,
         ]);
 
-        expect($this->service->getMyIssuesForUser($this->user->id))->toHaveCount(30);
+        // The top 30 of each of the three orders, merged: never the whole backlog.
+        expect(count($this->service->getMyIssuesForUser($this->user->id)))->toBeLessThanOrEqual(90);
     });
 });
 
@@ -199,5 +201,64 @@ describe('on the dashboard page', function () {
             ->has('issueStats.assigned')
             ->has('issueStats.types', 1)
         );
+    });
+});
+
+describe('the caps of the lists', function () {
+    beforeEach(function () {
+        $this->issues = app(IssueRepository::class);
+        $this->today = Carbon::today()->toDateString();
+        $this->until = Carbon::today()->addDays(30)->toDateString();
+    });
+
+    test('many overdue issues of other people do not push my upcoming deadline out', function () {
+        foreach (range(1, 5) as $days) {
+            dueIssue($this->project, -$days);
+        }
+        $mine = dueIssue($this->project, 3, ['assignee_id' => $this->user->id]);
+
+        $ids = $this->issues->openWithDeadlineForUser($this->user->id, $this->today, $this->until, 2)->pluck('id');
+
+        expect($ids)->toContain($mine->id);
+    });
+
+    test('many overdue issues do not push the upcoming ones out', function () {
+        foreach (range(1, 5) as $days) {
+            dueIssue($this->project, -$days);
+        }
+        $upcoming = dueIssue($this->project, 2);
+
+        $ids = $this->issues->openWithDeadlineForUser($this->user->id, $this->today, $this->until, 2)->pluck('id');
+
+        expect($ids)->toContain($upcoming->id);
+    });
+
+    test('the overdue kept are the latest ones and the result is nearest first', function () {
+        $old = dueIssue($this->project, -9);
+        $recent = dueIssue($this->project, -1);
+        $soon = dueIssue($this->project, 1);
+
+        $ids = $this->issues->openWithDeadlineForUser($this->user->id, $this->today, $this->until, 1)->pluck('id')->all();
+
+        expect($ids)->toBe([$recent->id, $soon->id])->not->toContain($old->id);
+    });
+
+    test('my issues keep the earliest deadline and the latest update whatever the priority order cuts', function () {
+        $assigned = ['assignee_id' => $this->user->id];
+        // Five issues the priority order ranks first (no end date, no priority: ties by update).
+        $fillers = collect(range(1, 5))->map(fn () => dueIssue($this->project, null, $assigned));
+        $earliest = dueIssue($this->project, 1, $assigned);
+        $latest = dueIssue($this->project, null, $assigned);
+
+        // Set the update times below the model events.
+        foreach ($fillers as $i => $filler) {
+            Issue::query()->whereKey($filler->id)->update(['updated_at' => Carbon::now()->subDays(10 + $i)]);
+        }
+        Issue::query()->whereKey($earliest->id)->update(['updated_at' => Carbon::now()->subDays(40)]);
+        Issue::query()->whereKey($latest->id)->update(['updated_at' => Carbon::now()->addDay()]);
+
+        $ids = $this->issues->openAssignedTo($this->user->id, 2)->pluck('id');
+
+        expect($ids)->toContain($earliest->id)->toContain($latest->id);
     });
 });
