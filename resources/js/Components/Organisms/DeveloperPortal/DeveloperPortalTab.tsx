@@ -94,7 +94,7 @@ export default function DeveloperPortalTab({
         <motion.div variants={riseIn} className="h-full">
             <StatCard
                 className="h-full"
-                variant="glass"
+                variant="default"
                 title={title}
                 value={<AnimatedNumber value={value} />}
                 icon={icon}
