@@ -223,7 +223,7 @@ export default function PortalContainersSection({
                         className="flex items-start gap-2 px-5 py-4 text-sm text-(--warning-color)"
                     >
                         <Icon
-                            name="TriangleAlert"
+                            name="TriangleExclamationPoint"
                             size={16}
                             className="mt-0.5 shrink-0"
                         />
@@ -278,7 +278,7 @@ export default function PortalContainersSection({
                                     ERROR_TINT_BORDER,
                                 )}
                             >
-                                <Icon name="CircleAlert" size={12} />
+                                <Icon name="CircleExclamationPoint" size={12} />
                                 {containers.containers.length -
                                     running.length}{' '}
                                 not running

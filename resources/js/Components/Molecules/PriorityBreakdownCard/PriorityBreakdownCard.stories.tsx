@@ -72,7 +72,7 @@ export const CustomScaleWithUnprioritised: Story = {
             {
                 name: 'Blocker',
                 color: '#9c27b0',
-                icon: 'OctagonAlert',
+                icon: 'OctagonExclamationPoint',
                 position: 0,
                 count: 2,
             },

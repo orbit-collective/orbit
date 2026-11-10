@@ -54,7 +54,7 @@ export const WithoutIconAndDescription: Story = {
 export const CustomContent: Story = {
     args: {
         title: 'Danger zone',
-        icon: 'TriangleAlert',
+        icon: 'TriangleExclamationPoint',
         children: (
             <p className="px-5 py-4 text-sm text-(--text-gray-color)">
                 Any content can sit in the panel body.

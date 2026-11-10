@@ -31,7 +31,7 @@ export default function WorkspaceSettingsDeleteIssueTypeModal({
                 onClose={onClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--error-color)/10 text-(--error-color)">
-                        <Icon name="TriangleAlert" size={16} />
+                        <Icon name="TriangleExclamationPoint" size={16} />
                     </span>
                 }
             />

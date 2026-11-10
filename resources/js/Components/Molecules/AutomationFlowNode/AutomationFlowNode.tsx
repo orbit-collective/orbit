@@ -101,7 +101,7 @@ export default function AutomationFlowNode({
 
                 {incomplete && (
                     <Icon
-                        name="TriangleAlert"
+                        name="TriangleExclamationPoint"
                         size={14}
                         className="shrink-0 text-(--warning-color)"
                     />

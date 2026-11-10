@@ -27,7 +27,7 @@ type AlertIntent = NonNullable<VariantProps<typeof iconVariants>['intent']>;
 const alertIcons: Record<AlertIntent, keyof typeof icons> = {
     success: 'CircleCheck',
     error: 'CircleX',
-    warning: 'TriangleAlert',
+    warning: 'TriangleExclamationPoint',
     information: 'BadgeInfo',
 };
 
