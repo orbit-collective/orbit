@@ -54,7 +54,7 @@ const METRICS: Record<
     critical: {
         title: 'Critical Tasks',
         hint: 'Issues at the top of their priority scale',
-        icon: 'TriangleAlert',
+        icon: 'TriangleExclamationPoint',
         color: 'error',
     },
     resolution: {

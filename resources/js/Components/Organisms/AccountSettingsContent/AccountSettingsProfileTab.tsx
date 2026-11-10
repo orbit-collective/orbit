@@ -172,7 +172,7 @@ export default function AccountSettingsProfileTab({
                                         ) : hasUnsavedChanges ? (
                                             <>
                                                 <Icon
-                                                    name="CircleAlert"
+                                                    name="CircleExclamationPoint"
                                                     size={14}
                                                 />
                                                 Unsaved changes

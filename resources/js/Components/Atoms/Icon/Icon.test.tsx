@@ -17,6 +17,13 @@ describe('Icon Component', () => {
         expect(container.querySelector('svg')).toBeInTheDocument();
     });
 
+    test('still resolves an icon name that lucide has since renamed', () => {
+        const { container } = render(<Icon name={'TriangleAlert' as never} />);
+
+        expect(container.querySelector('svg')).toBeInTheDocument();
+        expect(console.warn).not.toHaveBeenCalled();
+    });
+
     test('applies the size prop to the rendered svg', () => {
         const { container } = render(<Icon name="Check" size={32} />);
 

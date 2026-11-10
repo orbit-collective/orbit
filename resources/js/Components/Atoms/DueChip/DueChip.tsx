@@ -9,12 +9,12 @@ const TONES: Record<
     DueTone,
     {
         chip: string;
-        icon: 'CircleAlert' | 'Clock' | 'CalendarClock' | 'Calendar';
+        icon: 'CircleExclamationPoint' | 'Clock' | 'CalendarClock' | 'Calendar';
     }
 > = {
     overdue: {
         chip: 'bg-[color-mix(in_srgb,var(--error-color)_14%,transparent)] text-(--error-color)',
-        icon: 'CircleAlert',
+        icon: 'CircleExclamationPoint',
     },
     today: {
         chip: 'bg-[color-mix(in_srgb,var(--warning-color)_16%,transparent)] text-(--warning-color)',

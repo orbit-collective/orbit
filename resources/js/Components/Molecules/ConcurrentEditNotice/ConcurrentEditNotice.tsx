@@ -24,7 +24,11 @@ export default function ConcurrentEditNotice({
             role="status"
             className="flex items-start gap-2 rounded-lg border border-solid border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-(--text-color)"
         >
-            <Icon name="TriangleAlert" size={14} className="mt-0.5 shrink-0" />
+            <Icon
+                name="TriangleExclamationPoint"
+                size={14}
+                className="mt-0.5 shrink-0"
+            />
             <p>
                 <span className="font-medium">{list(names)}</span>{' '}
                 {names.length === 1 ? 'is' : 'are'} editing this {subject} too.

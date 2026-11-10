@@ -16,7 +16,7 @@ export default function DangerZonePanel({
             defaultCollapsed
             title="Danger zone"
             description="Deleting a project permanently removes it and everything in it."
-            icon="TriangleAlert"
+            icon="TriangleExclamationPoint"
         >
             <SettingsPanelRow
                 title={`Delete "${projectName}"`}

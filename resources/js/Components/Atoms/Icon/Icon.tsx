@@ -1,8 +1,27 @@
 import { AlertOctagon, icons, type LucideIcon } from 'lucide-react';
 import { IconProps } from '@/types/Components';
 
+// lucide-react 1.68 renamed the *Alert and *Warning icons. Names saved before
+// that (issue types, dashboard widget options, saved layouts) still resolve.
+const RENAMED_ICONS: Record<string, string> = {
+    BadgeAlert: 'BadgeExclamationPoint',
+    BatteryWarning: 'BatteryExclamationPoint',
+    BookAlert: 'BookExclamationPoint',
+    CircleAlert: 'CircleExclamationPoint',
+    ClockAlert: 'ClockExclamationPoint',
+    CloudAlert: 'CloudExclamationPoint',
+    MailWarning: 'MailExclamationPoint',
+    MessageCircleWarning: 'MessageCircleExclamationPoint',
+    MessageSquareWarning: 'MessageSquareExclamationPoint',
+    OctagonAlert: 'OctagonExclamationPoint',
+    SearchAlert: 'SearchExclamationPoint',
+    ShieldAlert: 'ShieldExclamationPoint',
+    TriangleAlert: 'TriangleExclamationPoint',
+};
+
 function Icon({ name, size = 16, color, className }: IconProps) {
-    const LucideIcon: LucideIcon = icons[name];
+    const LucideIcon: LucideIcon | undefined =
+        icons[name] ?? icons[RENAMED_ICONS[name] as typeof name];
 
     if (!LucideIcon) {
         console.warn(
