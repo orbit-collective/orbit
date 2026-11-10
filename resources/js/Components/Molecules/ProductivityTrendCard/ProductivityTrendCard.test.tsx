@@ -94,12 +94,12 @@ describe('ProductivityTrendCard Component', () => {
             <ProductivityTrendCard trendData={trendData} />,
         );
 
-        const bars = container.querySelectorAll(
+        const bars = container.querySelectorAll<HTMLElement>(
             '.rounded-t-sm:not(.border-dashed)',
         );
         // Today is mocked to Monday, so only the "Mon" bar is highlighted.
         expect(bars[0]).toHaveAttribute('data-active', 'true');
-        expect(bars[0]).toHaveStyle({ backgroundColor: 'var(--accent-color)' });
+        expect(bars[0].style.backgroundColor).toBe('var(--accent-color)');
         expect(bars[1]).toHaveAttribute('data-active', 'false');
     });
 
@@ -262,9 +262,10 @@ describe('ProductivityTrendCard Component', () => {
                 <ProductivityTrendCard trendData={trendData} color="warning" />,
             );
 
-            expect(container.querySelector('[data-active="true"]')).toHaveStyle(
-                { backgroundColor: 'var(--warning-color)' },
-            );
+            expect(
+                container.querySelector<HTMLElement>('[data-active="true"]')!
+                    .style.backgroundColor,
+            ).toBe('var(--warning-color)');
         });
 
         test('two charts do not share the gradient of their area', () => {

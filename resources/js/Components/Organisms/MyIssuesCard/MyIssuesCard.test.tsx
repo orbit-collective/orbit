@@ -152,7 +152,7 @@ describe('MyIssuesCard', () => {
             render(<MyIssuesCard issues={issues} variant="cards" now={NOW} />);
 
             expect(screen.getByRole('list').style.gridTemplateColumns).toBe(
-                `repeat(${columns}, minmax(0, 1fr))`,
+                `repeat(${columns}, minmax(0px, 1fr))`,
             );
         },
     );

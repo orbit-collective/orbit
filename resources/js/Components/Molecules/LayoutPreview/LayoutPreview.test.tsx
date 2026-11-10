@@ -110,7 +110,9 @@ describe('LayoutPreview', () => {
             render(<LayoutPreview widgets={[makeWidget('trend')]} />);
 
             expect(gridOf().style.getPropertyValue('--u')).toBe('2.5px');
-            expect(gridOf().style.gridAutoRows).toBe(`${2.5 / 3}px`);
+            expect(gridOf().style.gridAutoRows).toBe(
+                `${(2.5 / 3).toFixed(6)}px`,
+            );
         });
 
         test('uses a width of its own until it is measured', () => {
