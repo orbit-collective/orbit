@@ -145,7 +145,7 @@ class IssueService
     {
         return CacheVersion::remember(
             [CacheVersion::ISSUES, CacheVersion::MEMBERSHIP],
-            "user:$userId:issue-stats",
+            "user:$userId:issue-stats:".Carbon::today()->toDateString(),
             self::LIST_CACHE_TTL,
             fn () => $this->issueRepository->statsForUser($userId) + $this->dateAndTypeStats($userId),
         );
@@ -200,6 +200,7 @@ class IssueService
             self::LIST_CACHE_TTL,
             fn () => $this->issueRepository->openWithDeadlineForUser(
                 $userId,
+                Carbon::today()->toDateString(),
                 Carbon::today()->addDays(self::DASHBOARD_DEADLINE_DAYS)->toDateString(),
                 self::DASHBOARD_DEADLINES_LIMIT,
             )->map(fn (Issue $issue) => $this->dashboardRow($issue))->all(),

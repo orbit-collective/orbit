@@ -315,56 +315,87 @@ class IssueRepository
     }
 
     /**
-     * The open issues assigned to the user, the most important first: by the
-     * position of the priority (none last), then the nearest end date (none
-     * last), then the most recently updated.
+     * The open issues assigned to the user that can be on the top `$limit` of
+     * the list however it is sorted: the top of each of its three orders
+     * (priority, due date, last update), merged. The list is sorted and
+     * trimmed in the browser, so one cap in one order would hide the rows
+     * another order puts first.
      *
      * @return Collection<int, Issue>
      */
     public function openAssignedTo(int $userId, int $limit): Collection
     {
-        return Issue::query()
-            ->select('issues.*')
-            ->leftJoin('priorities as sort_priorities', 'issues.priority_id', '=', 'sort_priorities.id')
-            ->whereIn('issues.project_id', fn ($members) => $members
-                ->select('project_id')
-                ->from('project_user')
-                ->where('user_id', $userId))
-            ->where('issues.assignee_id', $userId)
-            ->where($this->isOpen())
-            ->with(['project', 'issueType', 'workflowStatus'])
-            ->orderByRaw('sort_priorities.position IS NULL')
-            ->orderBy('sort_priorities.position')
-            ->orderByRaw('issues.end_date IS NULL')
-            ->orderBy('issues.end_date')
-            ->orderByDesc('issues.updated_at')
-            ->orderBy('issues.id')
-            ->limit($limit)
-            ->get();
+        $orders = [
+            fn ($query) => $query
+                ->orderByRaw('sort_priorities.position IS NULL')
+                ->orderBy('sort_priorities.position')
+                ->orderByRaw('issues.end_date IS NULL')
+                ->orderBy('issues.end_date'),
+            fn ($query) => $query
+                ->orderByRaw('issues.end_date IS NULL')
+                ->orderBy('issues.end_date'),
+            fn ($query) => $query->orderByDesc('issues.updated_at'),
+        ];
+
+        return collect($orders)
+            ->flatMap(fn (\Closure $order) => $order(
+                Issue::query()
+                    ->select('issues.*')
+                    ->leftJoin('priorities as sort_priorities', 'issues.priority_id', '=', 'sort_priorities.id')
+                    ->whereIn('issues.project_id', fn ($members) => $members
+                        ->select('project_id')
+                        ->from('project_user')
+                        ->where('user_id', $userId))
+                    ->where('issues.assignee_id', $userId)
+                    ->where($this->isOpen())
+                    ->with(['project', 'issueType', 'workflowStatus'])
+            )->orderBy('issues.id')->limit($limit)->get())
+            ->unique('id')
+            ->values();
     }
 
     /**
-     * The open issues of the user's projects that have an end date up to
-     * `$until`, the nearest first. Overdue ones are in, however old.
+     * The open issues of the user's projects that can be on the dashboard's
+     * deadlines: the overdue ones (the latest first) and the ones due up to
+     * `$until`, each among the user's own and among everyone's, `$limit` of
+     * each. The list is filtered by whose issues and whether overdue ones
+     * show in the browser, so a cap over the whole set would let one kind of
+     * row push another out. Nearest first.
      *
      * @return Collection<int, Issue>
      */
-    public function openWithDeadlineForUser(int $userId, string $until, int $limit): Collection
+    public function openWithDeadlineForUser(int $userId, string $today, string $until, int $limit): Collection
     {
-        return Issue::query()
-            ->select('issues.*')
-            ->whereIn('issues.project_id', fn ($members) => $members
-                ->select('project_id')
-                ->from('project_user')
-                ->where('user_id', $userId))
-            ->whereNotNull('issues.end_date')
-            ->whereDate('issues.end_date', '<=', $until)
-            ->where($this->isOpen())
-            ->with(['project', 'issueType', 'workflowStatus'])
-            ->orderBy('issues.end_date')
-            ->orderBy('issues.id')
-            ->limit($limit)
-            ->get();
+        $rows = collect();
+
+        foreach ([true, false] as $overdue) {
+            foreach ([true, false] as $mine) {
+                $query = Issue::query()
+                    ->select('issues.*')
+                    ->whereIn('issues.project_id', fn ($members) => $members
+                        ->select('project_id')
+                        ->from('project_user')
+                        ->where('user_id', $userId))
+                    ->whereNotNull('issues.end_date')
+                    ->where($this->isOpen())
+                    ->with(['project', 'issueType', 'workflowStatus']);
+
+                if ($mine) {
+                    $query->where('issues.assignee_id', $userId);
+                }
+
+                $query = $overdue
+                    ? $query->whereDate('issues.end_date', '<', $today)->orderByDesc('issues.end_date')
+                    : $query->whereDate('issues.end_date', '>=', $today)->whereDate('issues.end_date', '<=', $until)->orderBy('issues.end_date');
+
+                $rows = $rows->concat($query->orderBy('issues.id')->limit($limit)->get());
+            }
+        }
+
+        return $rows
+            ->unique('id')
+            ->sortBy([['end_date', 'asc'], ['id', 'asc']])
+            ->values();
     }
 
     /** The open issues of the projects the user is a member of, joined for aggregates. */
