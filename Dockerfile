@@ -68,10 +68,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-# --legacy-peer-deps: tailwind-scrollbar@4 declares a tailwindcss 4.x peer while
-# the project is on tailwindcss 3.x; npm's default strict peer resolution fails
-# a clean `npm ci` over this even though the versions work together in practice.
-RUN npm ci --legacy-peer-deps
+RUN npm ci
 
 COPY . .
 
