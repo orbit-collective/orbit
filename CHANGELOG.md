@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.14.1](https://github.com/orbit-collective/orbit/compare/v0.14.0...v0.14.1) (2026-11-10)
+
+
+### Features
+
+* **dashboard:** add helpers for due dates, issue lists and greetings ([7c22f8c](https://github.com/orbit-collective/orbit/commit/7c22f8c889750b088b8ce1e04287f9ee0652ca4d))
+* **dashboard:** add nine widgets to the catalog ([65191cf](https://github.com/orbit-collective/orbit/commit/65191cf3e47fdf445358264b0891f1594a03d8f4))
+* **dashboard:** add the my issues and deadlines cards ([b366c5d](https://github.com/orbit-collective/orbit/commit/b366c5d2fa8fdd97e2f6b485c122d5d29e732f93))
+* **dashboard:** add the week summary, quick actions and welcome cards ([09bb6a4](https://github.com/orbit-collective/orbit/commit/09bb6a4634ddcd785a5392d57f84c182ba3c4fdf))
+* **dashboard:** count overdue, due soon and assigned issues and list issues for widgets ([ba99f9f](https://github.com/orbit-collective/orbit/commit/ba99f9f1d1aa14a9d40f32fe2b5547cbaad41d24))
+* **dashboard:** put the new widgets on the dashboard ([ae5f753](https://github.com/orbit-collective/orbit/commit/ae5f7536bb3460677cdba97cc0734b2281671a33))
+* **ui:** add DueChip and DashboardIssueRow ([2898d3e](https://github.com/orbit-collective/orbit/commit/2898d3ed847ef5f77daebe4597fd7f4ef34e4236))
+
+
+### Bug Fixes
+
+* **dashboard:** keep dates and days right in the cards ([0a6902f](https://github.com/orbit-collective/orbit/commit/0a6902f3b48697a66c84ed870e3291021dd4b5f3))
+* **dashboard:** keep the rows the browser filters and sorts by ([0a1df35](https://github.com/orbit-collective/orbit/commit/0a1df35a3ec0ddad74cd2b3d47302f947a08fee1))
+* **dashboard:** scroll issue types and add week hover labels ([f1c79ed](https://github.com/orbit-collective/orbit/commit/f1c79edde8b88e49698846d72eff5d3ae8929663))
+
+
+### Miscellaneous Chores
+
+* release 0.14.1 ([7e7648d](https://github.com/orbit-collective/orbit/commit/7e7648db73c001bb3b7f877b6447338b5710c241))
+
 ## [0.14.0](https://github.com/orbit-collective/orbit/compare/v0.13.1...v0.14.0) (2026-11-09)
 
 
