@@ -47,7 +47,7 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
     return (
         <section
             className={cn(
-                'rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4 sm:p-5',
+                'rounded-2xl border border-(--border-color) bg-(--surface-color) p-4 sm:p-5',
                 className,
             )}
         >
@@ -62,13 +62,13 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
 
             <Collapse id={bodyId} open={!collapsed}>
                 {summary && (
-                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--text-gray-color)]">
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-(--text-gray-color)">
                         {summary}
                     </div>
                 )}
 
                 {items.length === 0 ? (
-                    <p className="py-10 text-center text-sm text-[var(--text-gray-color)]">
+                    <p className="py-10 text-center text-sm text-(--text-gray-color)">
                         {emptyText}
                     </p>
                 ) : (

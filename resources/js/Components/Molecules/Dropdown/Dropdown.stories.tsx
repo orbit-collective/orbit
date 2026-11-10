@@ -106,7 +106,7 @@ export const Panel: Story = {
         variant: 'panel',
         options: [],
         children: (
-            <p className="p-3 text-sm text-[var(--text-color)]">
+            <p className="p-3 text-sm text-(--text-color)">
                 Any custom content goes here.
             </p>
         ),

@@ -24,7 +24,7 @@ interface WeekSummaryCardProps {
 }
 
 const TOOLTIP =
-    'pointer-events-none absolute z-20 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[10px] font-semibold text-[var(--text-color)] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100';
+    'pointer-events-none absolute z-20 whitespace-nowrap rounded-sm border border-solid border-(--border-color-strong) bg-(--surface-color) px-1.5 py-0.5 text-[10px] font-semibold text-(--text-color) opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100';
 
 /** The label a day gets on hover: "Mon: 2 updates". */
 const dayTip = (day: ProductivityTrendProps) =>
@@ -75,13 +75,13 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
     ].filter((stat) => stat.show);
 
     return (
-        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4">
             {showHeader && (
                 <div>
-                    <h3 className="m-0 text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                    <h3 className="m-0 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                         Week Summary
                     </h3>
-                    <p className="m-0 mt-1 text-xs text-[var(--text-muted-color)]">
+                    <p className="m-0 mt-1 text-xs text-(--text-muted-color)">
                         Issue updates and fixes this week
                     </p>
                 </div>
@@ -107,12 +107,12 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                             }}
                             className="min-w-0"
                         >
-                            <dt className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+                            <dt className="text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
                                 {stat.label}
                             </dt>
                             <dd className="m-0 mt-0.5 flex items-baseline gap-1.5">
                                 <span
-                                    className="text-2xl font-bold tabular-nums leading-none text-[var(--text-color)]"
+                                    className="text-2xl leading-none font-bold text-(--text-color) tabular-nums"
                                     style={
                                         index === 0
                                             ? { color: tint }
@@ -129,7 +129,7 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                                     />
                                 </span>
                                 {stat.note && (
-                                    <span className="text-xs font-medium text-[var(--text-gray-color)]">
+                                    <span className="text-xs font-medium text-(--text-gray-color)">
                                         {stat.note}
                                     </span>
                                 )}
@@ -141,17 +141,17 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                 <div className="flex min-h-0 flex-1 flex-col justify-between gap-3">
                     <div className="flex items-end justify-between gap-3">
                         <div>
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+                            <span className="block text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
                                 Total
                             </span>
                             <span
-                                className="text-3xl font-bold tabular-nums leading-none"
+                                className="text-3xl leading-none font-bold tabular-nums"
                                 style={{ color: tint }}
                             >
                                 <AnimatedNumber value={week.total} />
                             </span>
                         </div>
-                        <ul className="m-0 flex list-none flex-col items-end gap-0.5 p-0 text-[11px] text-[var(--text-gray-color)]">
+                        <ul className="m-0 flex list-none flex-col items-end gap-0.5 p-0 text-[11px] text-(--text-gray-color)">
                             {showAverage && (
                                 <li>{week.average.toFixed(1)} a day</li>
                             )}
@@ -230,7 +230,7 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                                     >
                                         {/* Placed at the point of the line, not in the middle of the cell. */}
                                         <span
-                                            className="absolute inset-y-0 w-px bg-[var(--border-color-strong)] opacity-0 transition-opacity group-hover:opacity-100"
+                                            className="absolute inset-y-0 w-px bg-(--border-color-strong) opacity-0 transition-opacity group-hover:opacity-100"
                                             style={{
                                                 left: `${points[index].x}%`,
                                             }}
@@ -297,7 +297,7 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                                                 'block w-full max-w-4 rounded-t-sm',
                                                 !isToday &&
                                                     !isBest &&
-                                                    'bg-[var(--bg-light-color)]',
+                                                    'bg-(--bg-light-color)',
                                             )}
                                             style={
                                                 isToday || isBest
@@ -310,7 +310,7 @@ const WeekSummaryCard: FC<WeekSummaryCardProps> = ({
                                                     : undefined
                                             }
                                         />
-                                        <span className="text-[9px] font-semibold text-[var(--text-muted-color)]">
+                                        <span className="text-[9px] font-semibold text-(--text-muted-color)">
                                             {day.day.charAt(0)}
                                             <span className="sr-only">
                                                 {day.day.slice(1)}

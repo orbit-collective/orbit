@@ -8,7 +8,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="w-[220px] rounded-lg bg-[var(--bg-color)] p-2">
+            <div className="w-[220px] rounded-lg bg-(--bg-color) p-2">
                 <Story />
             </div>
         ),
@@ -46,7 +46,7 @@ export const DotInsteadOfIcon: Story = {
     args: {
         icon: undefined,
         label: 'Orbit',
-        iconClassName: 'bg-[var(--accent-color)]',
+        iconClassName: 'bg-(--accent-color)',
     },
 };
 

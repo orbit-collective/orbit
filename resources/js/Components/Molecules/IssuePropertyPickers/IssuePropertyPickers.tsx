@@ -40,14 +40,14 @@ const trigger = (
     <button
         type="button"
         aria-label={label}
-        className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+        className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:outline-hidden"
     >
         {content}
         <Icon
             name="ChevronDown"
             size={12}
             className={cn(
-                'text-[var(--text-muted-color)]',
+                'text-(--text-muted-color)',
                 revealOnRowHover && REVEAL_ON_ROW_HOVER,
             )}
         />
@@ -79,7 +79,7 @@ export const TypePicker = ({
     );
 
     if (!value) {
-        return <span className="text-[var(--text-muted-color)]">&mdash;</span>;
+        return <span className="text-(--text-muted-color)">&mdash;</span>;
     }
 
     const badge = <IssueTypeBadge issueType={value} />;
@@ -127,7 +127,7 @@ export const StatusPicker = ({
     );
 
     if (!value) {
-        return <span className="text-[var(--text-muted-color)]">&mdash;</span>;
+        return <span className="text-(--text-muted-color)">&mdash;</span>;
     }
 
     const badge = <WorkflowStatusBadge status={value} />;
@@ -174,7 +174,7 @@ export const AssigneePicker = ({
                 value: '',
                 searchLabel: 'Unassigned',
                 label: (
-                    <span className="flex items-center gap-2 text-[var(--text-gray-color)]">
+                    <span className="flex items-center gap-2 text-(--text-gray-color)">
                         <Icon name="UserX" size={14} />
                         Unassigned
                     </span>
@@ -204,7 +204,7 @@ export const AssigneePicker = ({
             showTooltip={false}
         />
     ) : (
-        <span className="flex items-center gap-1.5 text-[var(--text-muted-color)]">
+        <span className="flex items-center gap-1.5 text-(--text-muted-color)">
             <Icon name="UserX" size={13} />
             Unassigned
         </span>
@@ -267,7 +267,7 @@ export const PriorityPicker = ({
     );
 
     const display = (
-        <span className="flex items-center gap-1.5 text-[var(--text-color)]">
+        <span className="flex items-center gap-1.5 text-(--text-color)">
             <PriorityIcon priority={value} tooltip={false} />
             {value?.name ?? 'None'}
         </span>
@@ -346,7 +346,7 @@ export const DatePicker = ({
                 onClick={() => setIsOpen(true)}
                 className={cn(
                     'inline-flex cursor-pointer items-center gap-1 whitespace-nowrap rounded-full border-none bg-transparent p-0 text-[11px]',
-                    'text-[var(--text-muted-color)] hover:text-[var(--text-color)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                    'text-(--text-muted-color) hover:text-(--text-color) focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)',
                 )}
             >
                 {text}
@@ -359,7 +359,7 @@ export const DatePicker = ({
             {isOpen &&
                 createPortal(
                     <div
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
+                        className="fixed inset-0 z-100 flex items-center justify-center bg-(--overlay-color) backdrop-blur-[2px]"
                         onClick={close}
                     >
                         <div onClick={(e) => e.stopPropagation()}>

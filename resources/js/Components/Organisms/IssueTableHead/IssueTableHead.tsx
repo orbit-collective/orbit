@@ -26,12 +26,12 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
     return (
         <thead>
             <tr>
-                <th className="group/rowheader sticky top-0 z-30 w-[48px] border-b border-[var(--bg-light-color)] bg-[var(--bg-color)] px-4 py-3 text-center">
+                <th className="group/rowheader sticky top-0 z-30 w-[48px] border-b border-(--bg-light-color) bg-(--bg-color) px-4 py-3 text-center">
                     <Checkbox onChange={onSelectAll} checked={isAllSelected} />
                     <div
-                        className={`absolute bottom-0 left-0 h-1 w-full cursor-row-resize transition-colors hover:bg-[var(--accent-color)] ${
+                        className={`absolute bottom-0 left-0 h-1 w-full cursor-row-resize transition-colors hover:bg-(--accent-color) ${
                             isResizingHeight
-                                ? 'h-1 bg-[var(--accent-color)]'
+                                ? 'h-1 bg-(--accent-color)'
                                 : 'bg-transparent'
                         }`}
                         onMouseDown={onHeightMouseDown}
@@ -53,10 +53,10 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
                     />
                 ))}
                 <th
-                    className="sticky top-0 z-30 border-b border-[var(--bg-light-color)] bg-[var(--bg-color)]"
+                    className="sticky top-0 z-30 border-b border-(--bg-light-color) bg-(--bg-color)"
                     aria-hidden="true"
                 />
-                <th className="sticky top-0 z-30 w-[50px] border-b border-[var(--bg-light-color)] bg-[var(--bg-color)] px-4 py-3 text-right">
+                <th className="sticky top-0 z-30 w-[50px] border-b border-(--bg-light-color) bg-(--bg-color) px-4 py-3 text-right">
                     <SelectionDropdown
                         options={[
                             {
@@ -104,7 +104,7 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
                                 iconName="Settings"
                                 iconSize={13}
                                 ariaLabel="Table display options"
-                                className="text-[var(--text-muted-color)] opacity-40 transition-opacity hover:opacity-100"
+                                className="text-(--text-muted-color) opacity-40 transition-opacity hover:opacity-100"
                             />
                         }
                     />

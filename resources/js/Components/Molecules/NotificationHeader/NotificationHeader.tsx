@@ -22,19 +22,19 @@ function NotificationHeader({
     return (
         <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--bg-light-color)]">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-(--bg-light-color)">
                     <Icon
                         name="Bell"
                         size={18}
-                        className="text-[var(--text-color)]"
+                        className="text-(--text-color)"
                     />
                 </span>
                 <div className="min-w-0">
-                    <h1 className="truncate text-base font-semibold tracking-tight text-[var(--text-color)]">
+                    <h1 className="truncate text-base font-semibold tracking-tight text-(--text-color)">
                         Notifications
                     </h1>
                     {unreadCount > 0 && (
-                        <p className="truncate text-xs font-medium text-[var(--text-gray-color)]">
+                        <p className="truncate text-xs font-medium text-(--text-gray-color)">
                             {unreadCount} unread
                         </p>
                     )}
@@ -52,8 +52,8 @@ function NotificationHeader({
                         className={cn(
                             'flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
                             isSelecting
-                                ? 'bg-[var(--text-color)] text-[var(--bg-dark-color)]'
-                                : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]',
+                                ? 'bg-(--text-color) text-(--bg-dark-color)'
+                                : 'bg-(--bg-light-color) text-(--text-gray-color) hover:bg-(--bg-light-color-hover) hover:text-(--text-color)',
                         )}
                     >
                         <Icon name="ListChecks" size={16} />
@@ -65,7 +65,7 @@ function NotificationHeader({
                     disabled={unreadCount === 0}
                     aria-label="Mark all as read"
                     title="Mark all as read"
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-light-color)] text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--bg-light-color) text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color-hover) hover:text-(--text-color) disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     <Icon name="CheckCheck" size={16} />
                 </button>
@@ -78,8 +78,8 @@ function NotificationHeader({
                     className={cn(
                         'flex h-9 w-9 items-center justify-center rounded-xl transition-colors',
                         onlyUnread
-                            ? 'bg-[var(--text-color)] text-[var(--bg-dark-color)]'
-                            : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]',
+                            ? 'bg-(--text-color) text-(--bg-dark-color)'
+                            : 'bg-(--bg-light-color) text-(--text-gray-color) hover:bg-(--bg-light-color-hover) hover:text-(--text-color)',
                     )}
                 >
                     <Icon name="ListFilter" size={16} />

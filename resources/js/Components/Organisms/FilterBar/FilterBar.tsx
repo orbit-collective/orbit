@@ -62,10 +62,10 @@ const FilterBar: React.FC<FilterBarProps> = ({
         <>
             <div
                 data-tour="filter-bar"
-                className="sticky top-0 z-40 flex w-full flex-col gap-3 border-b border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                className="sticky top-0 z-40 flex w-full flex-col gap-3 border-b border-solid border-(--border-color-strong) bg-(--bg-color) px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
                 <div className="flex flex-1 items-center">
-                    <div className="relative flex w-full max-w-md items-center rounded-lg border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-3 py-1.5 transition-all duration-150 focus-within:border-[var(--border-color-strong)] focus-within:bg-[var(--bg-color-hover)] focus-within:ring-1 focus-within:ring-[var(--border-color-strong)]">
+                    <div className="relative flex w-full max-w-md items-center rounded-lg border border-(--border-color-strong) bg-(--surface-color) px-3 py-1.5 transition-all duration-150 focus-within:border-(--border-color-strong) focus-within:bg-(--bg-color-hover) focus-within:ring-1 focus-within:ring-(--border-color-strong)">
                         <Icon name={'Search'} />
                         <Input
                             id="global-search-input"
@@ -75,7 +75,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                             onChange={handleSearch}
                             variant={'modal'}
                             ref={input}
-                            className="ml-2.5 w-full border-none bg-transparent p-0 text-sm text-[var(--text-color)] placeholder-[var(--text-muted-color)] shadow-none outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
+                            className="ml-2.5 w-full border-none bg-transparent p-0 text-sm text-(--text-color) placeholder-(--text-muted-color) shadow-none ring-0 outline-hidden focus:border-none focus:ring-0 focus:outline-hidden"
                         />
                     </div>
                 </div>

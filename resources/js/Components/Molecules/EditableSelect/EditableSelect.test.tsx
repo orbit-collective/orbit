@@ -229,7 +229,7 @@ describe('EditableSelect bare trigger', () => {
         render(<EditableSelect value="a" options={options} onSave={vi.fn()} />);
 
         expect(screen.getByRole('button')).toHaveClass(
-            'hover:bg-[var(--bg-light-color)]',
+            'hover:bg-(--bg-light-color)',
         );
     });
 
@@ -244,7 +244,7 @@ describe('EditableSelect bare trigger', () => {
         );
 
         expect(screen.getByRole('button')).not.toHaveClass(
-            'hover:bg-[var(--bg-light-color)]',
+            'hover:bg-(--bg-light-color)',
         );
     });
 });

@@ -132,7 +132,7 @@ const meta = {
     },
     decorators: [
         (Story) => (
-            <div className="h-[640px] bg-[var(--bg-color)]">
+            <div className="h-[640px] bg-(--bg-color)">
                 <Story />
             </div>
         ),

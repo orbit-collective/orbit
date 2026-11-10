@@ -26,16 +26,16 @@ export default function AccountSettingsNotificationTypeRow({
     emailDisabled = false,
 }: AccountSettingsNotificationTypeRowProps) {
     return (
-        <div className="flex items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5">
+        <div className="flex items-center justify-between gap-3 px-4 py-4 transition-colors hover:bg-(--bg-light-color) sm:px-5">
             <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--bg-light-color)] text-[var(--text-gray-color)]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--bg-light-color) text-(--text-gray-color)">
                     <Icon name={icon} size={14} />
                 </span>
                 <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                    <p className="truncate text-sm font-medium text-(--text-color)">
                         {title}
                     </p>
-                    <p className="truncate text-sm text-[var(--text-gray-color)]">
+                    <p className="truncate text-sm text-(--text-gray-color)">
                         {description}
                     </p>
                 </div>

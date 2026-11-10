@@ -5,7 +5,7 @@
  * rows and headers inside clipped panels where an outside ring would be cut.
  */
 export const FOCUS_RING =
-    'outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-color)]';
+    'outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:ring-offset-2 focus-visible:ring-offset-(--surface-color)';
 
 export const FOCUS_RING_INSET =
-    'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-color)]';
+    'outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--accent-color)';

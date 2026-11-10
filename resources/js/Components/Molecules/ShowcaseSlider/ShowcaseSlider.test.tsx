@@ -103,7 +103,7 @@ describe('ShowcaseSlider Component', () => {
         );
     });
 
-    test('pauses autoplay on focus and resumes on blur', () => {
+    test('pauses autoplay on focus and resumes on blur-sm', () => {
         render(<ShowcaseSlider autoPlayInterval={1000} />);
 
         const container = screen

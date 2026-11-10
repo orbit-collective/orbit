@@ -8,10 +8,10 @@ const meta = {
     args: {
         children: (
             <>
-                <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                <h3 className="text-sm font-semibold text-(--text-color)">
                     Track work
                 </h3>
-                <p className="mt-1 text-xs text-[var(--text-gray-color)]">
+                <p className="mt-1 text-xs text-(--text-gray-color)">
                     Keep every issue, project and teammate in one place.
                 </p>
             </>
@@ -36,7 +36,7 @@ export const Tall: Story = { args: { className: 'h-48' } };
 export const LongContent: Story = {
     args: {
         children: (
-            <p className="text-sm text-[var(--text-color)]">
+            <p className="text-sm text-(--text-color)">
                 {'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(
                     4,
                 )}

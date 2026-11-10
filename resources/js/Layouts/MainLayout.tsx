@@ -75,14 +75,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
     return (
         <div
-            className={
-                'flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]'
-            }
+            className={'flex h-screen w-screen overflow-hidden bg-(--bg-color)'}
         >
             <Sidebar projects={projects} />
             <div
                 className={
-                    'm-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]'
+                    'm-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-(--bg-color-hover)'
                 }
             >
                 <PageHeader

@@ -474,7 +474,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
         <form
             onSubmit={handleSubmit}
             aria-label="New comment"
-            className="relative flex flex-col rounded-xl border border-[var(--border-color)] bg-[var(--bg-color-hover)] transition-colors focus-within:border-[var(--accent-color)]"
+            className="relative flex flex-col rounded-xl border border-(--border-color) bg-(--bg-color-hover) transition-colors focus-within:border-(--accent-color)"
         >
             <label htmlFor={textareaId} className="sr-only">
                 Comment
@@ -506,15 +506,12 @@ const CommentForm: React.FC<CommentFormProps> = ({
                         : undefined
                 }
                 placeholder="Leave a comment..."
-                className="min-h-[84px] resize-none rounded-t-xl border-none bg-transparent px-4 pb-2 pt-3 text-sm focus:border-none"
+                className="min-h-[84px] resize-none rounded-t-xl border-none bg-transparent px-4 pt-3 pb-2 text-sm focus:border-none"
                 isDisabled={isSubmitting}
                 onDrop={handleDrop}
             />
-            <div className="flex items-center justify-between gap-3 px-3 pb-3 pt-1">
-                <p
-                    id={hintId}
-                    className="text-xs text-[var(--text-muted-color)]"
-                >
+            <div className="flex items-center justify-between gap-3 px-3 pt-1 pb-3">
+                <p id={hintId} className="text-xs text-(--text-muted-color)">
                     <kbd className="font-sans font-medium">Enter</kbd> to send,{' '}
                     <kbd className="font-sans font-medium">Shift + Enter</kbd>{' '}
                     for a new line. Use <span aria-hidden="true">@</span>
@@ -526,10 +523,10 @@ const CommentForm: React.FC<CommentFormProps> = ({
                     disabled={!canSubmit}
                     className={cn(
                         'group/send flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
-                        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)]',
+                        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-color)',
                         canSubmit
-                            ? 'cursor-pointer bg-[var(--accent-color)] text-[var(--text-color)] hover:bg-[var(--accent-light-color)]'
-                            : 'cursor-not-allowed bg-[var(--bg-light-color)] text-[var(--text-muted-color)]',
+                            ? 'cursor-pointer bg-(--accent-color) text-(--text-color) hover:bg-(--accent-light-color)'
+                            : 'cursor-not-allowed bg-(--bg-light-color) text-(--text-muted-color)',
                     )}
                 >
                     <Icon

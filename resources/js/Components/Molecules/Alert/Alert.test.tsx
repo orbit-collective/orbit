@@ -38,10 +38,10 @@ describe('Alert Component', () => {
     });
 
     test.each([
-        ['success', 'text-[var(--success-color)]'],
-        ['error', 'text-[var(--error-color)]'],
-        ['warning', 'text-[var(--warning-color)]'],
-        ['information', 'text-[var(--info-color)]'],
+        ['success', 'text-(--success-color)'],
+        ['error', 'text-(--error-color)'],
+        ['warning', 'text-(--warning-color)'],
+        ['information', 'text-(--info-color)'],
     ] as const)(
         'renders an icon styled for the %s intent',
         (type, colorClass) => {
@@ -62,7 +62,7 @@ describe('Alert Component', () => {
         );
 
         expect(container.querySelector('svg')).toHaveClass(
-            'text-[var(--info-color)]',
+            'text-(--info-color)',
         );
     });
 

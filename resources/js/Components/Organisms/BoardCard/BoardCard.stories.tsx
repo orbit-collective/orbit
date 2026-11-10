@@ -10,7 +10,7 @@ const meta = {
     decorators: [
         (Story) => (
             <DndContext>
-                <div className="w-[300px] bg-[var(--bg-color)] p-3">
+                <div className="w-[300px] bg-(--bg-color) p-3">
                     <Story />
                 </div>
             </DndContext>

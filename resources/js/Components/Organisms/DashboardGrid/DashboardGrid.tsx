@@ -77,7 +77,7 @@ const DashboardGrid: FC<DashboardGridProps> = ({
                             className={`${GRID_ITEM_CLASS} p-2.5`}
                             style={gridItemStyle(widget)}
                         >
-                            <div className="h-full min-h-0 overflow-auto [&>*]:h-full">
+                            <div className="h-full min-h-0 overflow-auto *:h-full">
                                 <DashboardWidget widget={widget} data={data} />
                             </div>
                         </PageSection>

@@ -13,7 +13,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="w-[320px] rounded-xl bg-[var(--bg-color-hover)] p-3">
+            <div className="w-[320px] rounded-xl bg-(--bg-color-hover) p-3">
                 <Story />
             </div>
         ),

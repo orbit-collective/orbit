@@ -8,7 +8,7 @@ import { IssuePageHeaderProps } from '@/types/Components';
 import { DURATION, EASE } from '@/utils/motion';
 
 const Separator = () => (
-    <span className="shrink-0 text-[var(--text-gray-color)]">/</span>
+    <span className="shrink-0 text-(--text-gray-color)">/</span>
 );
 
 const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
@@ -18,7 +18,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
     presence,
 }) => {
     return (
-        <header className="flex items-center justify-between gap-3 border-b border-solid border-[var(--border-color)] px-6 py-3">
+        <header className="flex items-center justify-between gap-3 border-b border-solid border-(--border-color) px-6 py-3">
             <motion.div
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -33,12 +33,12 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                 />
                 <Link
                     href={route('projects.show', project.id)}
-                    className="shrink-0 text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
+                    className="shrink-0 text-(--text-gray-color) hover:text-(--text-color)"
                 >
                     {project.name}
                 </Link>
                 <Separator />
-                <span className="shrink-0 text-[var(--text-gray-color)]">
+                <span className="shrink-0 text-(--text-gray-color)">
                     Issues
                 </span>
 
@@ -51,7 +51,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                                 ancestor.id,
                             ])}
                             title={ancestor.title}
-                            className="flex min-w-0 max-w-[14rem] shrink items-center gap-1.5 text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
+                            className="flex max-w-56 min-w-0 shrink items-center gap-1.5 text-(--text-gray-color) hover:text-(--text-color)"
                         >
                             {ancestor.issueType && (
                                 <Icon
@@ -70,7 +70,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                 ))}
 
                 <Separator />
-                <span className="flex min-w-0 items-center gap-1.5 text-[var(--text-color)]">
+                <span className="flex min-w-0 items-center gap-1.5 text-(--text-color)">
                     {issue.issueType && (
                         <Icon
                             name={issue.issueType.icon as keyof typeof icons}

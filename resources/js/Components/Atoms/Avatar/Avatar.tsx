@@ -29,7 +29,7 @@ const Avatar: React.FC<AvatarProps> = ({ src, alt, size = 'md', initials }) => {
                     className={'h-full w-full object-cover'}
                 />
             ) : (
-                <span className="font-medium text-[var(--text-color)]">
+                <span className="font-medium text-(--text-color)">
                     {initials}
                 </span>
             )}

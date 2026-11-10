@@ -45,8 +45,7 @@ export const WithSummary: Story = {
         summary: (
             <>
                 <span>
-                    Running:{' '}
-                    <strong className="text-[var(--text-color)]">9</strong>
+                    Running: <strong className="text-(--text-color)">9</strong>
                 </span>
                 <TrendBadge value={2.46} />
             </>

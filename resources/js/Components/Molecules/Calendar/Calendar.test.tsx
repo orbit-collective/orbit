@@ -65,7 +65,7 @@ describe('Calendar Component', () => {
         render(<Calendar onSelect={vi.fn()} onClose={vi.fn()} />);
 
         const todayButton = screen.getByText('25');
-        expect(todayButton).toHaveClass('border-[var(--accent-color)]');
+        expect(todayButton).toHaveClass('border-(--accent-color)');
     });
 
     test('highlights the selected date with the accent background', () => {
@@ -78,7 +78,7 @@ describe('Calendar Component', () => {
         );
 
         const selectedButton = screen.getByText('10');
-        expect(selectedButton).toHaveClass('bg-[var(--accent-color)]');
+        expect(selectedButton).toHaveClass('bg-(--accent-color)');
     });
 
     test('navigates to the next month when the next-month button is clicked', async () => {
@@ -187,6 +187,6 @@ describe('Calendar Component', () => {
         );
 
         const midRangeDay = screen.getByText('15');
-        expect(midRangeDay).toHaveClass('text-[var(--accent-color)]');
+        expect(midRangeDay).toHaveClass('text-(--accent-color)');
     });
 });

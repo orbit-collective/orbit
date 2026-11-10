@@ -32,10 +32,10 @@ export default function RowAction({
             disabled={disabled}
             onClick={onClick}
             className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-30',
+                'flex h-8 w-8 items-center justify-center rounded-lg text-(--text-gray-color) transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color) disabled:cursor-not-allowed disabled:opacity-30',
                 danger
-                    ? 'hover:bg-[var(--error-color)]/10 hover:text-[var(--error-color)]'
-                    : 'hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]',
+                    ? 'hover:bg-(--error-color)/10 hover:text-(--error-color)'
+                    : 'hover:bg-(--bg-dark-color) hover:text-(--text-color)',
                 !disabled && 'cursor-pointer',
             )}
         >

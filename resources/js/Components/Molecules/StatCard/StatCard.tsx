@@ -13,12 +13,12 @@ export const statCardVariants = cva(
         variants: {
             variant: {
                 default:
-                    'bg-[var(--surface-color)] border-[var(--border-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
-                accent: 'bg-gradient-to-br from-[var(--bg-dark-color)] to-[var(--accent-color-opacity)] border-[var(--accent-color)] shadow-[0_0_15px_rgba(136,68,218,0.15)]',
+                    'bg-(--surface-color) border-(--border-color) hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover)',
+                accent: 'bg-linear-to-br from-(--bg-dark-color) to-(--accent-color-opacity) border-(--accent-color) shadow-[0_0_15px_rgba(136,68,218,0.15)]',
                 glass: 'isolate border-[color-mix(in_srgb,var(--text-color)_14%,transparent)] bg-[color-mix(in_srgb,var(--text-color)_5%,transparent)] shadow-[inset_0_1px_0_color-mix(in_srgb,var(--text-color)_14%,transparent)] backdrop-blur-xl hover:bg-[color-mix(in_srgb,var(--text-color)_8%,transparent)]',
                 outline:
-                    'bg-transparent border-[var(--border-color-strong)] hover:border-[var(--text-muted-color)]',
-                vivid: 'flex-row items-center gap-3 rounded-2xl border-[var(--border-color)] bg-[var(--surface-color)] p-3.5 hover:border-[var(--border-color-strong)] hover:-translate-y-0',
+                    'bg-transparent border-(--border-color-strong) hover:border-(--text-muted-color)',
+                vivid: 'flex-row items-center gap-3 rounded-2xl border-(--border-color) bg-(--surface-color) p-3.5 hover:border-(--border-color-strong) hover:translate-y-0',
             },
         },
         defaultVariants: {
@@ -28,7 +28,7 @@ export const statCardVariants = cva(
 );
 
 const COLOR_BLOB_CLASSES = {
-    accent: 'bg-[var(--accent-color)]',
+    accent: 'bg-(--accent-color)',
     success: 'bg-[#4caf50]',
     warning: 'bg-[#ff9800]',
     error: 'bg-[#f44336]',
@@ -36,7 +36,7 @@ const COLOR_BLOB_CLASSES = {
 };
 
 const COLOR_RING_CLASSES = {
-    accent: 'stroke-[var(--accent-color)]',
+    accent: 'stroke-(--accent-color)',
     success: 'stroke-[#4caf50]',
     warning: 'stroke-[#ff9800]',
     error: 'stroke-[#f44336]',
@@ -44,15 +44,15 @@ const COLOR_RING_CLASSES = {
 };
 
 const COLOR_TEXT_CLASSES = {
-    accent: 'text-[var(--accent-color)]',
-    success: 'text-[var(--success-color)]',
-    warning: 'text-[var(--warning-color)]',
-    error: 'text-[var(--error-color)]',
-    info: 'text-[var(--info-color)]',
+    accent: 'text-(--accent-color)',
+    success: 'text-(--success-color)',
+    warning: 'text-(--warning-color)',
+    error: 'text-(--error-color)',
+    info: 'text-(--info-color)',
 };
 
 const COLOR_BG_CLASSES = {
-    accent: 'bg-[var(--accent-color-opacity)]',
+    accent: 'bg-(--accent-color-opacity)',
     success: 'bg-[#4caf50]/10',
     warning: 'bg-[#ff9800]/10',
     error: 'bg-[#f44336]/10',
@@ -67,7 +67,7 @@ const MiniBars: React.FC<{ className?: string }> = ({ className }) => (
         {[5, 9, 6, 12, 8].map((height, index) => (
             <span
                 key={index}
-                className="w-1 rounded-sm bg-[var(--bg-light-color)]"
+                className="w-1 rounded-xs bg-(--bg-light-color)"
                 style={{ height: `${height}px` }}
             />
         ))}
@@ -115,11 +115,11 @@ const StatCard: React.FC<StatCardProps> = ({
                 )}
 
                 <div className="relative z-10 min-w-0 flex-1">
-                    <span className="block truncate text-[11px] font-semibold uppercase tracking-wide text-[var(--text-gray-color)]">
+                    <span className="block truncate text-[11px] font-semibold tracking-wide text-(--text-gray-color) uppercase">
                         {title}
                     </span>
                     <div className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
-                        <h4 className="min-w-0 max-w-full break-words text-xl font-bold leading-none tracking-tight text-[var(--text-color)]">
+                        <h4 className="max-w-full min-w-0 text-xl leading-none font-bold tracking-tight wrap-break-word text-(--text-color)">
                             {value}
                         </h4>
                         {trend && (
@@ -127,8 +127,8 @@ const StatCard: React.FC<StatCardProps> = ({
                                 className={cn(
                                     'flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
                                     trend.isPositive
-                                        ? 'bg-[var(--success-color)]/10 text-[var(--success-color)]'
-                                        : 'bg-[var(--error-color)]/10 text-[var(--error-color)]',
+                                        ? 'bg-(--success-color)/10 text-(--success-color)'
+                                        : 'bg-(--error-color)/10 text-(--error-color)',
                                 )}
                             >
                                 <Icon
@@ -144,13 +144,13 @@ const StatCard: React.FC<StatCardProps> = ({
                             </span>
                         )}
                         {trend?.label && (
-                            <span className="truncate text-[11px] font-medium text-[var(--text-muted-color)]">
+                            <span className="truncate text-[11px] font-medium text-(--text-muted-color)">
                                 {trend.label}
                             </span>
                         )}
                     </div>
                     {description && !trend && (
-                        <p className="mt-0.5 truncate text-[11px] font-medium text-[var(--text-muted-color)]">
+                        <p className="mt-0.5 truncate text-[11px] font-medium text-(--text-muted-color)">
                             {description}
                         </p>
                     )}
@@ -163,9 +163,9 @@ const StatCard: React.FC<StatCardProps> = ({
                             stroke={3}
                             progress={progress}
                             colorClass={COLOR_RING_CLASSES[color]}
-                            bgColorClass="stroke-[var(--bg-light-color)]"
+                            bgColorClass="stroke-(--bg-light-color)"
                         />
-                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-[var(--text-color)]">
+                        <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-(--text-color)">
                             <AnimatedNumber
                                 value={progress}
                                 format={(n) => `${Math.round(n)}%`}
@@ -202,7 +202,7 @@ const StatCard: React.FC<StatCardProps> = ({
                             )}
                         />
                     )}
-                    <span className="truncate text-xs font-medium text-[var(--text-gray-color)]">
+                    <span className="truncate text-xs font-medium text-(--text-gray-color)">
                         {title}
                     </span>
                     {description && (
@@ -210,12 +210,12 @@ const StatCard: React.FC<StatCardProps> = ({
                             tooltip
                             tooltipText={description}
                             variant="ghost"
-                            className="shrink-0 !p-0"
+                            className="shrink-0 p-0!"
                         >
                             <Icon
                                 name="Info"
                                 size={12}
-                                className="text-[var(--text-muted-color)]"
+                                className="text-(--text-muted-color)"
                             />
                         </Badge>
                     )}
@@ -225,7 +225,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
             <div className="mt-auto pt-3">
                 <div className="flex flex-wrap items-baseline gap-2">
-                    <h4 className="min-w-0 max-w-full break-words text-2xl font-bold leading-none tracking-tight text-[var(--text-color)]">
+                    <h4 className="max-w-full min-w-0 text-2xl leading-none font-bold tracking-tight wrap-break-word text-(--text-color)">
                         {value}
                     </h4>
 
@@ -234,8 +234,8 @@ const StatCard: React.FC<StatCardProps> = ({
                             className={cn(
                                 'flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold',
                                 trend.isPositive
-                                    ? 'bg-[var(--success-color)]/10 text-[var(--success-color)]'
-                                    : 'bg-[var(--error-color)]/10 text-[var(--error-color)]',
+                                    ? 'bg-(--success-color)/10 text-(--success-color)'
+                                    : 'bg-(--error-color)/10 text-(--error-color)',
                             )}
                         >
                             <Icon
@@ -268,7 +268,7 @@ const StatCard: React.FC<StatCardProps> = ({
                 </div>
 
                 {trend?.label && (
-                    <p className="mt-1 truncate text-[11px] font-medium text-[var(--text-muted-color)]">
+                    <p className="mt-1 truncate text-[11px] font-medium text-(--text-muted-color)">
                         {trend.label}
                     </p>
                 )}

@@ -58,7 +58,7 @@ const meta = {
     component: ShortcutHelpModal,
     decorators: [
         (Story, context) => (
-            <div className="w-[640px] max-w-full rounded-2xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)]">
+            <div className="w-[640px] max-w-full rounded-2xl border border-solid border-(--border-color) bg-(--surface-color)">
                 <RegisterShortcuts
                     shortcuts={
                         (context.parameters

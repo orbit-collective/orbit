@@ -5,7 +5,7 @@ import { cn } from '@/utils/cn';
 
 /** The look of the tooltip, reused by anything that should read as the same small floating label. */
 export const BADGE_TOOLTIP_LOOK =
-    'bg-[var(--bg-color)] text-[var(--text-gray-color)] px-2 py-1 rounded-md text-[10px] font-medium whitespace-nowrap border border-[var(--border-color)] shadow-lg';
+    'bg-(--bg-color) text-(--text-gray-color) px-2 py-1 rounded-md text-[10px] font-medium whitespace-nowrap border border-(--border-color) shadow-lg';
 
 const tooltipStyles = `absolute flex gap-1.5 items-center left-1/2 -translate-x-1/2 ${BADGE_TOOLTIP_LOOK} opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 ease-in-out pointer-events-none z-50`;
 
@@ -20,11 +20,11 @@ export const badgeVariants = cva(
         variants: {
             variant: {
                 default:
-                    'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] border border-transparent',
+                    'bg-(--bg-light-color) text-(--text-gray-color) border border-transparent',
                 outline:
-                    'bg-transparent border-none border-[var(--border-color)] text-[var(--text-gray-color)]',
-                ghost: 'bg-transparent text-[var(--text-gray-color)]',
-                avatar: 'px-0 text-[var(--text-gray-color)]',
+                    'bg-transparent border-none border-(--border-color) text-(--text-gray-color)',
+                ghost: 'bg-transparent text-(--text-gray-color)',
+                avatar: 'px-0 text-(--text-gray-color)',
             },
             color: {
                 bug: 'text-[#f44336] bg-[#f44336]/10 border-[#f44336]/20',

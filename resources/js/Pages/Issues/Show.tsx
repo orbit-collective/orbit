@@ -278,7 +278,7 @@ export default function Show({
             value: '',
             searchLabel: 'Unassigned',
             label: (
-                <span className="flex items-center gap-2 text-[var(--text-gray-color)]">
+                <span className="flex items-center gap-2 text-(--text-gray-color)">
                     <Icon name="UserX" size={14} />
                     Unassigned
                 </span>
@@ -376,9 +376,9 @@ export default function Show({
     return (
         <ProjectLabelsProvider labels={labels}>
             <ProjectPrioritiesProvider priorities={priorities}>
-                <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
+                <div className="flex h-screen w-screen overflow-hidden bg-(--bg-color)">
                     <Sidebar projects={projects} />
-                    <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
+                    <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-(--bg-color-hover)">
                         <IssuePageHeader
                             project={project}
                             issue={issue}
@@ -399,7 +399,7 @@ export default function Show({
                                                 updateIssue({ title: value })
                                             }
                                             placeholder="Issue title"
-                                            displayClassName="text-2xl font-semibold text-[var(--text-color)]"
+                                            displayClassName="text-2xl font-semibold text-(--text-color)"
                                             inputClassName="text-2xl font-semibold"
                                         />
 
@@ -432,7 +432,7 @@ export default function Show({
                                         </PageSection>
                                     )}
 
-                                    <PageSection className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
+                                    <PageSection className="mt-2 flex flex-col gap-3 border-t border-(--border-color) pt-4">
                                         <TabSelection
                                             tabs={tabs}
                                             selectedTab={selectedTab}
@@ -526,7 +526,7 @@ export default function Show({
                                                             }
                                                             preserveState
                                                             only={ACTIVITY_ONLY}
-                                                            className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
+                                                            className="border-t border-solid border-(--border-color) px-0 pb-0"
                                                         />
                                                     </>
                                                 )}
@@ -564,7 +564,7 @@ export default function Show({
                                                             }
                                                         />
                                                     ) : (
-                                                        <span className="text-sm text-[var(--text-gray-color)]">
+                                                        <span className="text-sm text-(--text-gray-color)">
                                                             No type
                                                         </span>
                                                     )
@@ -600,7 +600,7 @@ export default function Show({
                                                             }
                                                         />
                                                     ) : (
-                                                        <span className="text-sm text-[var(--text-gray-color)]">
+                                                        <span className="text-sm text-(--text-gray-color)">
                                                             No status
                                                         </span>
                                                     )
@@ -611,7 +611,7 @@ export default function Show({
                                                 status={issue.workflowStatus}
                                             />
                                         ) : (
-                                            <span className="text-sm text-[var(--text-gray-color)]">
+                                            <span className="text-sm text-(--text-gray-color)">
                                                 No status
                                             </span>
                                         )}
@@ -635,7 +635,7 @@ export default function Show({
                                                         }
                                                         tooltip={false}
                                                     />
-                                                    <span className="text-sm text-[var(--text-color)]">
+                                                    <span className="text-sm text-(--text-color)">
                                                         {issue.priority ??
                                                             'No priority'}
                                                     </span>
@@ -674,7 +674,7 @@ export default function Show({
                                                         showTooltip={false}
                                                     />
                                                 ) : (
-                                                    <span className="flex items-center gap-2 text-[var(--text-gray-color)]">
+                                                    <span className="flex items-center gap-2 text-(--text-gray-color)">
                                                         <Icon
                                                             name="UserX"
                                                             size={14}
@@ -728,7 +728,7 @@ export default function Show({
                                                 'projects.show',
                                                 project.id,
                                             )}
-                                            className="flex items-center gap-2 rounded-full px-1.5 py-1 text-sm text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
+                                            className="flex items-center gap-2 rounded-full px-1.5 py-1 text-sm text-(--text-color) hover:bg-(--bg-light-color)"
                                         >
                                             <Icon name="FolderGit2" size={14} />
                                             {project.name}
@@ -773,7 +773,7 @@ export default function Show({
                                             <Icon
                                                 name="Calendar"
                                                 size={14}
-                                                className="mr-1 text-[var(--text-gray-color)]"
+                                                className="mr-1 text-(--text-gray-color)"
                                             />
                                             <button
                                                 type="button"
@@ -781,12 +781,12 @@ export default function Show({
                                                     setShowStartDate(true);
                                                     setShowEndDate(false);
                                                 }}
-                                                className="rounded-full px-1.5 py-1 text-xs text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
+                                                className="rounded-full px-1.5 py-1 text-xs text-(--text-color) hover:bg-(--bg-light-color)"
                                             >
                                                 {issue.start_date ||
                                                     'Start date'}
                                             </button>
-                                            <span className="text-xs text-[var(--text-gray-color)]">
+                                            <span className="text-xs text-(--text-gray-color)">
                                                 —
                                             </span>
                                             <button
@@ -795,7 +795,7 @@ export default function Show({
                                                     setShowEndDate(true);
                                                     setShowStartDate(false);
                                                 }}
-                                                className="rounded-full px-1.5 py-1 text-xs text-[var(--text-color)] hover:bg-[var(--bg-light-color)]"
+                                                className="rounded-full px-1.5 py-1 text-xs text-(--text-color) hover:bg-(--bg-light-color)"
                                             >
                                                 {issue.end_date || 'End date'}
                                             </button>
@@ -804,21 +804,21 @@ export default function Show({
 
                                     <motion.div
                                         variants={rowIn}
-                                        className="mt-auto flex flex-col gap-2 border-t border-[var(--border-color)] pt-4"
+                                        className="mt-auto flex flex-col gap-2 border-t border-(--border-color) pt-4"
                                     >
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-gray-color)]">
+                                            <span className="text-[10px] font-medium tracking-wider text-(--text-gray-color) uppercase">
                                                 Created
                                             </span>
-                                            <span className="text-xs text-[var(--text-gray-color)]">
+                                            <span className="text-xs text-(--text-gray-color)">
                                                 {formatDate(issue.created_at)}
                                             </span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--text-gray-color)]">
+                                            <span className="text-[10px] font-medium tracking-wider text-(--text-gray-color) uppercase">
                                                 Modified
                                             </span>
-                                            <span className="text-xs text-[var(--text-gray-color)]">
+                                            <span className="text-xs text-(--text-gray-color)">
                                                 {formatDate(issue.updated_at)}
                                             </span>
                                         </div>
@@ -835,7 +835,7 @@ export default function Show({
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: DURATION.fast }}
-                                className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--overlay-color)] backdrop-blur-[2px]"
+                                className="fixed inset-0 z-100 flex items-center justify-center bg-(--overlay-color) backdrop-blur-[2px]"
                                 onClick={() => {
                                     setShowStartDate(false);
                                     setShowEndDate(false);

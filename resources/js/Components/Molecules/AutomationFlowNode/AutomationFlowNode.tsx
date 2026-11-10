@@ -51,19 +51,19 @@ export default function AutomationFlowNode({
             ref={setNodeRef}
             style={style}
             className={cn(
-                'group relative flex w-full items-center gap-3 rounded-2xl border bg-[var(--surface-color)] px-4 py-3 text-left transition-colors',
+                'group relative flex w-full items-center gap-3 rounded-2xl border bg-(--surface-color) px-4 py-3 text-left transition-colors',
                 selected
-                    ? 'border-[var(--accent-color)] shadow-[0_0_0_1px_var(--accent-color)]'
-                    : 'border-[var(--border-color)] hover:border-[var(--border-color-strong)]',
+                    ? 'border-(--accent-color) shadow-[0_0_0_1px_var(--accent-color)]'
+                    : 'border-(--border-color) hover:border-(--border-color-strong)',
                 isDragging && 'z-10 opacity-90 shadow-2xl',
-                isDropTarget && !isDragging && 'border-[var(--accent-color)]',
+                isDropTarget && !isDragging && 'border-(--accent-color)',
             )}
         >
             {dragHandleProps && (
                 <button
                     type="button"
                     aria-label={`Reorder ${title}`}
-                    className="shrink-0 cursor-grab text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)] active:cursor-grabbing"
+                    className="shrink-0 cursor-grab text-(--text-muted-color) transition-colors hover:text-(--text-color) active:cursor-grabbing"
                     {...dragHandleProps.listeners}
                     {...dragHandleProps.attributes}
                 >
@@ -86,14 +86,14 @@ export default function AutomationFlowNode({
                 </span>
 
                 <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] font-semibold uppercase tracking-wide text-[var(--text-muted-color)]">
+                    <span className="block text-[10px] font-semibold tracking-wide text-(--text-muted-color) uppercase">
                         {eyebrow}
                     </span>
-                    <span className="block truncate text-sm font-medium text-[var(--text-color)]">
+                    <span className="block truncate text-sm font-medium text-(--text-color)">
                         {title}
                     </span>
                     {subtitle && (
-                        <span className="block truncate text-xs text-[var(--text-gray-color)]">
+                        <span className="block truncate text-xs text-(--text-gray-color)">
                             {subtitle}
                         </span>
                     )}
@@ -103,7 +103,7 @@ export default function AutomationFlowNode({
                     <Icon
                         name="TriangleAlert"
                         size={14}
-                        className="shrink-0 text-[var(--warning-color)]"
+                        className="shrink-0 text-(--warning-color)"
                     />
                 )}
             </button>
@@ -115,7 +115,7 @@ export default function AutomationFlowNode({
                     type="button"
                     aria-label={`Remove ${title}`}
                     onClick={onDelete}
-                    className="hover:bg-[var(--error-color)]/10 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--text-gray-color)] opacity-0 transition-opacity hover:text-[var(--error-color)] group-hover:opacity-100"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-(--text-gray-color) opacity-0 transition-opacity group-hover:opacity-100 hover:bg-(--error-color)/10 hover:text-(--error-color)"
                 >
                     <Icon name="X" size={13} />
                 </button>

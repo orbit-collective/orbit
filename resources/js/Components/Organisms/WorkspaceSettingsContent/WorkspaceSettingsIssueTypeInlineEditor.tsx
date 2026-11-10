@@ -61,7 +61,7 @@ function OptionGroup({
 }) {
     return (
         <div className="flex flex-wrap items-center gap-1.5" title={hint}>
-            <span className="w-28 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+            <span className="w-28 shrink-0 text-[11px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
                 {label}
             </span>
             {children}
@@ -189,7 +189,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                         ))}
                         <span
                             className={cn(
-                                'text-xs text-[var(--text-muted-color)]',
+                                'text-xs text-(--text-muted-color)',
                                 restrictedRoleTypes.length > 0 && 'hidden',
                             )}
                         >
@@ -217,7 +217,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                 autoComplete="off"
                 className={cn(
                     inlineFieldClass,
-                    'text-[var(--text-gray-color)] sm:flex-1',
+                    'text-(--text-gray-color) sm:flex-1',
                 )}
             />
         </InlineEditRow>

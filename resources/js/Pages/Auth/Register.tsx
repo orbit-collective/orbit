@@ -30,7 +30,7 @@ export default function Register() {
             showcaseTitle={
                 <>
                     Join the Team,{' '}
-                    <span className="text-[var(--accent-color)]">
+                    <span className="text-(--accent-color)">
                         Build Together
                     </span>
                 </>
@@ -104,11 +104,11 @@ export default function Register() {
                 <Divider label="Or continue with" />
                 <SocialLoginButtons />
 
-                <p className="text-center text-sm text-[var(--text-gray-color)]">
+                <p className="text-center text-sm text-(--text-gray-color)">
                     Already have an account?{' '}
                     <Link
                         href={route('login')}
-                        className="font-semibold text-[var(--accent-light-color)] hover:underline"
+                        className="font-semibold text-(--accent-light-color) hover:underline"
                     >
                         Log in
                     </Link>

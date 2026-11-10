@@ -14,8 +14,8 @@ export default function WorkspaceSettingsIntegrationPreview({
     integration,
 }: WorkspaceSettingsIntegrationPreviewProps) {
     return (
-        <div className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)]">
-            <div className="flex items-center justify-between border-b border-[var(--border-color)] bg-[var(--surface-color)] px-4 py-2.5">
+        <div className="overflow-hidden rounded-xl border border-(--border-color) bg-(--bg-color)">
+            <div className="flex items-center justify-between border-b border-(--border-color) bg-(--surface-color) px-4 py-2.5">
                 <div className="flex items-center gap-2">
                     <span
                         className={`flex h-6 w-6 items-center justify-center rounded-md ${integration.accentClassName}`}
@@ -25,15 +25,15 @@ export default function WorkspaceSettingsIntegrationPreview({
                             className="h-3.5 w-3.5"
                         />
                     </span>
-                    <span className="text-xs font-medium text-[var(--text-color)]">
+                    <span className="text-xs font-medium text-(--text-color)">
                         {integration.name} preview
                     </span>
                 </div>
-                <span className="rounded-full bg-[var(--bg-light-color)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                <span className="rounded-full bg-(--bg-light-color) px-2 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                     Sample
                 </span>
             </div>
-            <div className="divide-y divide-[var(--border-color)]">
+            <div className="divide-y divide-(--border-color)">
                 {integration.previewSamples.map((sample) => (
                     <div
                         key={sample.title}
@@ -47,10 +47,10 @@ export default function WorkspaceSettingsIntegrationPreview({
                                 className="h-3.5 w-3.5"
                             />
                         </span>
-                        <p className="min-w-0 flex-1 text-sm text-[var(--text-color)]">
+                        <p className="min-w-0 flex-1 text-sm text-(--text-color)">
                             {sample.title}
                         </p>
-                        <span className="shrink-0 text-[11px] text-[var(--text-muted-color)]">
+                        <span className="shrink-0 text-[11px] text-(--text-muted-color)">
                             {sample.time}
                         </span>
                     </div>

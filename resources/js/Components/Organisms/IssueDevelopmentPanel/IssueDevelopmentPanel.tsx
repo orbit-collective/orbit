@@ -30,10 +30,9 @@ const badgeVariants = cva(
     {
         variants: {
             tone: {
-                neutral:
-                    'border-[var(--border-color)] text-[var(--text-color)]',
-                merged: 'border-[var(--accent-color)] text-[var(--accent-color)]',
-                closed: 'border-[var(--error-color)] text-[var(--error-color)]',
+                neutral: 'border-(--border-color) text-(--text-color)',
+                merged: 'border-(--accent-color) text-(--accent-color)',
+                closed: 'border-(--error-color) text-(--error-color)',
             },
         },
     },
@@ -143,7 +142,7 @@ function CreateBranchForm({
                 event.preventDefault();
                 onSubmit({ repositoryId, name });
             }}
-            className="flex flex-col gap-1.5 rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-2"
+            className="flex flex-col gap-1.5 rounded-lg border border-(--bg-light-color) bg-(--bg-color) p-2"
         >
             <RepositoryPicker
                 repositories={repositories}
@@ -160,7 +159,7 @@ function CreateBranchForm({
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="cursor-pointer rounded-sm text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:text-[var(--text-color)] focus-visible:outline-2 focus-visible:outline-[var(--accent-color)]"
+                    className="cursor-pointer rounded-xs text-xs font-medium text-(--text-gray-color) transition-colors hover:text-(--text-color) focus-visible:outline-2 focus-visible:outline-(--accent-color)"
                 >
                     Cancel
                 </button>
@@ -203,7 +202,7 @@ function CreatePullRequestForm({
                 event.preventDefault();
                 onSubmit({ repositoryId, title, head, base: base || 'main' });
             }}
-            className="flex flex-col gap-1.5 rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-2"
+            className="flex flex-col gap-1.5 rounded-lg border border-(--bg-light-color) bg-(--bg-color) p-2"
         >
             <RepositoryPicker
                 repositories={repositories}
@@ -232,7 +231,7 @@ function CreatePullRequestForm({
                 <button
                     type="button"
                     onClick={onCancel}
-                    className="cursor-pointer rounded-sm text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:text-[var(--text-color)] focus-visible:outline-2 focus-visible:outline-[var(--accent-color)]"
+                    className="cursor-pointer rounded-xs text-xs font-medium text-(--text-gray-color) transition-colors hover:text-(--text-color) focus-visible:outline-2 focus-visible:outline-(--accent-color)"
                 >
                     Cancel
                 </button>
@@ -296,7 +295,7 @@ export default function IssueDevelopmentPanel({
                         href={pr.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex flex-col gap-1 rounded-lg border border-[var(--border-color)] px-2 py-1.5 text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                        className="flex flex-col gap-1 rounded-lg border border-(--border-color) px-2 py-1.5 text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                     >
                         <div className="flex items-center gap-1.5">
                             <BrandIcon
@@ -317,14 +316,14 @@ export default function IssueDevelopmentPanel({
                             )}
                         </div>
 
-                        <span className="truncate text-[11px] text-[var(--text-gray-color)]">
+                        <span className="truncate text-[11px] text-(--text-gray-color)">
                             {pr.repositoryOwner}/{pr.repositoryName} #
                             {pr.number}
                         </span>
 
                         {pr.sourceBranch && pr.targetBranch && (
                             <span
-                                className="truncate text-[11px] text-[var(--text-gray-color)]"
+                                className="truncate text-[11px] text-(--text-gray-color)"
                                 title={`${pr.sourceBranch} → ${pr.targetBranch}`}
                             >
                                 {pr.sourceBranch} → {pr.targetBranch}
@@ -358,10 +357,10 @@ export default function IssueDevelopmentPanel({
             })}
 
             {showGithubLinkHint && (
-                <span className="text-[11px] text-[var(--text-gray-color)]">
+                <span className="text-[11px] text-(--text-gray-color)">
                     <a
                         href={route('settings.security-access')}
-                        className="font-medium text-[var(--accent-color)] hover:underline"
+                        className="font-medium text-(--accent-color) hover:underline"
                     >
                         Link your GitHub account
                     </a>{' '}
@@ -372,7 +371,7 @@ export default function IssueDevelopmentPanel({
             {canCreate && openForm === null && (
                 <div className="flex flex-col items-start gap-2">
                     {pullRequests.length === 0 && (
-                        <span className="text-[11px] text-[var(--text-gray-color)]">
+                        <span className="text-[11px] text-(--text-gray-color)">
                             No linked pull requests yet.
                         </span>
                     )}
@@ -380,7 +379,7 @@ export default function IssueDevelopmentPanel({
                         <button
                             type="button"
                             onClick={() => setOpenForm('branch')}
-                            className="text-[11px] font-medium text-[var(--accent-color)] hover:underline"
+                            className="text-[11px] font-medium text-(--accent-color) hover:underline"
                         >
                             Create branch
                         </button>
@@ -389,7 +388,7 @@ export default function IssueDevelopmentPanel({
                         <button
                             type="button"
                             onClick={() => setOpenForm('pullRequest')}
-                            className="text-[11px] font-medium text-[var(--accent-color)] hover:underline"
+                            className="text-[11px] font-medium text-(--accent-color) hover:underline"
                         >
                             Create pull request
                         </button>

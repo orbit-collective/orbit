@@ -24,7 +24,7 @@ const meta = {
     args: { project, issue: epic, issueTypes },
     decorators: [
         (Story) => (
-            <div className="w-[640px] max-w-full bg-[var(--bg-color)] p-4">
+            <div className="w-[640px] max-w-full bg-(--bg-color) p-4">
                 <Story />
             </div>
         ),

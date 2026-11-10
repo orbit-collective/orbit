@@ -61,13 +61,13 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
     const [listRef, listWidth] = useElementWidth<HTMLDivElement>();
 
     return (
-        <div className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
+        <div className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4">
             {showHeader && (
                 <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                    <h3 className="text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                         Projects Directory
                     </h3>
-                    <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
+                    <span className="text-[10px] font-medium text-(--text-muted-color)">
                         Showing {shown.length}{' '}
                         {sort === 'latest' ? 'latest projects' : 'projects'}
                     </span>
@@ -101,7 +101,7 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
                         {showViewAll && projects.length > limit && (
                             <Link
                                 href="/projects"
-                                className="col-span-full cursor-pointer rounded-lg border border-dashed border-[var(--bg-light-color)] py-2.5 text-center text-xs font-semibold text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
+                                className="col-span-full cursor-pointer rounded-lg border border-dashed border-(--bg-light-color) py-2.5 text-center text-xs font-semibold text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                             >
                                 View all {projects.length} projects
                             </Link>
@@ -129,18 +129,18 @@ const CompactProjectRow: FC<{ project: Project }> = ({ project }) => {
     return (
         <Link
             href={`/projects/${project.id}`}
-            className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-[var(--text-color)] no-underline transition-colors hover:bg-[var(--bg-light-color)]"
+            className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-(--text-color) no-underline transition-colors hover:bg-(--bg-light-color)"
         >
             <span className="flex min-w-0 items-center gap-2">
                 <span
                     aria-hidden="true"
-                    className={`h-2 w-2 shrink-0 rounded-sm ${theme.accent}`}
+                    className={`h-2 w-2 shrink-0 rounded-xs ${theme.accent}`}
                 />
                 <span className="truncate text-sm font-medium">
                     {project.name}
                 </span>
             </span>
-            <span className="shrink-0 text-[11px] font-medium text-[var(--text-muted-color)]">
+            <span className="shrink-0 text-[11px] font-medium text-(--text-muted-color)">
                 {totalOf(project)} issues
             </span>
         </Link>
@@ -156,22 +156,22 @@ const ProjectTile: FC<{ project: Project }> = ({ project }) => {
     return (
         <Link
             href={`/projects/${project.id}`}
-            className="flex flex-col gap-3 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--bg-color-hover)] p-3 text-[var(--text-color)] no-underline transition-colors hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]"
+            className="flex flex-col gap-3 rounded-xl border border-solid border-(--border-color) bg-(--bg-color-hover) p-3 text-(--text-color) no-underline transition-colors hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover)"
         >
             <span className="flex min-w-0 items-center gap-2">
                 <span
                     aria-hidden="true"
-                    className={`h-2.5 w-2.5 shrink-0 rounded-sm ${theme.accent}`}
+                    className={`h-2.5 w-2.5 shrink-0 rounded-xs ${theme.accent}`}
                 />
                 <span className="truncate text-sm font-semibold">
                     {project.name}
                 </span>
             </span>
-            <span className="flex items-center justify-between text-[11px] text-[var(--text-muted-color)]">
+            <span className="flex items-center justify-between text-[11px] text-(--text-muted-color)">
                 <span>{total} issues</span>
                 <span className="font-semibold tabular-nums">{pct}%</span>
             </span>
-            <span className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+            <span className="h-1.5 w-full overflow-hidden rounded-full bg-(--bg-light-color)">
                 <span
                     data-testid="project-tile-progress"
                     className={`block h-full rounded-full ${theme.accent}`}

@@ -28,7 +28,7 @@ const BindingChips: React.FC<{ binding: string; description: string }> = ({
                 {formatBindingParts(binding).map((part, idx) => (
                     <React.Fragment key={idx}>
                         {idx > 0 && (
-                            <span className="text-[10px] text-[var(--text-gray-color)]">
+                            <span className="text-[10px] text-(--text-gray-color)">
                                 +
                             </span>
                         )}
@@ -51,7 +51,7 @@ const BindingChips: React.FC<{ binding: string; description: string }> = ({
                 .map((part, idx) => (
                     <React.Fragment key={idx}>
                         {idx > 0 && (
-                            <span className="text-[9px] font-medium text-[var(--text-gray-color)]">
+                            <span className="text-[9px] font-medium text-(--text-gray-color)">
                                 then
                             </span>
                         )}
@@ -116,20 +116,20 @@ export const ShortcutHelpModal: React.FC = () => {
     }, [shortcuts, availableScopes, search, activeScope]);
 
     return (
-        <div className="animate-in fade-in zoom-in shortcut-modal-marker flex w-full flex-col overflow-hidden rounded-2xl bg-[var(--bg-color)] shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] duration-200 motion-reduce:animate-none">
-            <div className="bg-[var(--bg-dark-color)]">
+        <div className="animate-in fade-in zoom-in shortcut-modal-marker flex w-full flex-col overflow-hidden rounded-2xl bg-(--bg-color) shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] duration-200 motion-reduce:animate-none">
+            <div className="bg-(--bg-dark-color)">
                 <div className="flex items-center gap-3 px-4 py-4">
                     <Search
                         size={18}
                         aria-hidden="true"
-                        className="text-[var(--text-gray-color)]"
+                        className="text-(--text-gray-color)"
                     />
                     <input
                         autoFocus
                         type="text"
                         aria-label="Search shortcuts"
                         placeholder="Search shortcuts..."
-                        className="flex-1 border-none bg-transparent text-[14px] text-[var(--text-color)] placeholder-[var(--text-gray-color)] outline-none focus:ring-0"
+                        className="flex-1 border-none bg-transparent text-[14px] text-(--text-color) placeholder-(--text-gray-color) outline-hidden focus:ring-0"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
@@ -155,8 +155,8 @@ export const ShortcutHelpModal: React.FC = () => {
                                     className={cn(
                                         'shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
                                         activeScope === scope
-                                            ? 'bg-[var(--text-color)] text-[var(--bg-dark-color)]'
-                                            : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
+                                            ? 'bg-(--text-color) text-(--bg-dark-color)'
+                                            : 'bg-(--bg-light-color) text-(--text-gray-color) hover:text-(--text-color)',
                                     )}
                                 >
                                     {label}
@@ -166,27 +166,27 @@ export const ShortcutHelpModal: React.FC = () => {
                     )}
                 </div>
             </div>
-            <div className="max-h-[450px] flex-1 overflow-y-auto p-1.5 [&::-webkit-scrollbar-thumb:hover]:bg-[var(--border-color-strong)] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--bg-light-color-hover)] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar]:w-1.5">
+            <div className="scrollbar-hover:bg-(--border-color-strong) max-h-[450px] flex-1 overflow-y-auto p-1.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-(--bg-light-color-hover) [&::-webkit-scrollbar-track]:bg-transparent">
                 {sections.length === 0 ? (
-                    <div className="py-12 text-center text-sm text-[var(--text-gray-color)]">
+                    <div className="py-12 text-center text-sm text-(--text-gray-color)">
                         No shortcuts found for "{search}"
                     </div>
                 ) : (
                     sections.map(({ scope, label, icon: ScopeIcon, items }) => (
                         <div key={scope} className="mb-2 last:mb-0">
-                            <h3 className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--text-gray-color)]">
+                            <h3 className="px-3 py-2 text-[10px] font-bold tracking-widest text-(--text-gray-color) uppercase">
                                 {label}
                             </h3>
                             <div className="space-y-0.5">
                                 {items.map((s, idx) => (
                                     <div
                                         key={idx}
-                                        className="group flex cursor-default items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-[var(--bg-light-color)]"
+                                        className="group flex cursor-default items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-(--bg-light-color)"
                                     >
-                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--bg-light-color)] text-[var(--text-gray-color)]">
+                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--bg-light-color) text-(--text-gray-color)">
                                             <ScopeIcon size={14} />
                                         </span>
-                                        <span className="flex-1 truncate text-[13px] text-[var(--text-gray-color)] transition-colors group-hover:text-[var(--text-color)]">
+                                        <span className="flex-1 truncate text-[13px] text-(--text-gray-color) transition-colors group-hover:text-(--text-color)">
                                             {s.description}
                                         </span>
                                         <div className="flex shrink-0 items-center gap-1.5">
@@ -196,7 +196,7 @@ export const ShortcutHelpModal: React.FC = () => {
                                                         key={binding}
                                                     >
                                                         {bIdx > 0 && (
-                                                            <span className="text-[9px] font-medium text-[var(--text-gray-color)]">
+                                                            <span className="text-[9px] font-medium text-(--text-gray-color)">
                                                                 or
                                                             </span>
                                                         )}
@@ -217,8 +217,8 @@ export const ShortcutHelpModal: React.FC = () => {
                     ))
                 )}
             </div>
-            <div className="flex items-center gap-6 bg-[var(--bg-dark-color)] px-4 py-2.5">
-                <div className="flex items-center gap-2 text-[10px] text-[var(--text-gray-color)]">
+            <div className="flex items-center gap-6 bg-(--bg-dark-color) px-4 py-2.5">
+                <div className="flex items-center gap-2 text-[10px] text-(--text-gray-color)">
                     <Keybind tooltipText={'Press ESC'} keybind={'ESC'} />
                     <span>close</span>
                 </div>

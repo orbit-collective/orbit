@@ -32,7 +32,7 @@ const meta = {
         onToggleVisible: fn(),
         onResize: fn(),
         children: (
-            <div className="p-4 text-sm text-[var(--text-color)]">
+            <div className="p-4 text-sm text-(--text-color)">
                 Widget content
             </div>
         ),

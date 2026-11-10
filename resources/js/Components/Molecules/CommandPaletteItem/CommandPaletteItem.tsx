@@ -27,7 +27,7 @@ const highlight = (title: string, ranges: MatchRange[]) => {
         parts.push(
             <mark
                 key={index}
-                className="rounded-sm bg-[var(--accent-color-opacity)] font-semibold text-[var(--text-color)]"
+                className="rounded-xs bg-(--accent-color-opacity) font-semibold text-(--text-color)"
             >
                 {title.slice(start, end)}
             </mark>,
@@ -66,31 +66,31 @@ function CommandPaletteItem({
             className={cn(
                 'flex h-12 cursor-pointer items-center gap-3 rounded-lg px-3 transition-colors md:h-10',
                 active
-                    ? 'bg-[var(--bg-light-color-hover)]'
-                    : 'hover:bg-[var(--bg-light-color)]',
+                    ? 'bg-(--bg-light-color-hover)'
+                    : 'hover:bg-(--bg-light-color)',
             )}
         >
             <Icon
                 name={command.icon}
                 size={16}
                 color={command.iconColor}
-                className="shrink-0 text-[var(--text-gray-color)]"
+                className="shrink-0 text-(--text-gray-color)"
             />
             {command.prefix && (
-                <span className="shrink-0 font-mono text-[12px] text-[var(--text-gray-color)]">
+                <span className="shrink-0 font-mono text-[12px] text-(--text-gray-color)">
                     {command.prefix}
                 </span>
             )}
             <span
                 title={command.title}
-                className="min-w-0 truncate text-[14px] text-[var(--text-color)]"
+                className="min-w-0 truncate text-[14px] text-(--text-color)"
             >
                 {highlight(command.title, ranges)}
             </span>
             {command.subtitle && (
                 <span
                     title={command.subtitle}
-                    className="min-w-0 flex-1 truncate text-[12px] text-[var(--text-gray-color)]"
+                    className="min-w-0 flex-1 truncate text-[12px] text-(--text-gray-color)"
                 >
                     {command.subtitle}
                 </span>
@@ -113,7 +113,7 @@ function CommandPaletteItem({
                 <Icon
                     name="ChevronRight"
                     size={14}
-                    className="shrink-0 text-[var(--text-gray-color)]"
+                    className="shrink-0 text-(--text-gray-color)"
                 />
             )}
         </div>

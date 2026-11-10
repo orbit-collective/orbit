@@ -35,24 +35,24 @@ export default function PendingInvitationsPanel({
                 invitations.map((invitation) => (
                     <div
                         key={invitation.id}
-                        className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:items-center md:justify-between"
+                        className="flex flex-col gap-3 px-4 py-4 transition-colors hover:bg-(--bg-light-color) sm:px-5 md:flex-row md:items-center md:justify-between"
                     >
                         <div className="flex min-w-0 items-center gap-3">
-                            <span className="bg-[var(--warning-color)]/10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--warning-color)]">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-(--warning-color)/10 text-(--warning-color)">
                                 <Icon name="Mail" size={14} />
                             </span>
                             <div className="min-w-0 space-y-1">
-                                <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                <p className="truncate text-sm font-medium text-(--text-color)">
                                     {invitation.email}
                                 </p>
-                                <p className="text-sm text-[var(--text-gray-color)]">
+                                <p className="text-sm text-(--text-gray-color)">
                                     Invited by{' '}
                                     {invitation.invitedByName ?? 'someone'} as{' '}
                                     {ROLE_LABELS[invitation.role]} · expires{' '}
                                     {formatDate(invitation.expiresAt)}
                                 </p>
                                 {invitation.roleIds.length > 0 && (
-                                    <p className="text-xs text-[var(--text-gray-color)]">
+                                    <p className="text-xs text-(--text-gray-color)">
                                         + custom roles:{' '}
                                         {invitation.roleIds
                                             .map(

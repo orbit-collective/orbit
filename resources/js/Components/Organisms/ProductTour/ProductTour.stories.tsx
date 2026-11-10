@@ -32,11 +32,11 @@ const meta = {
     args: { steps, onClose: fn() },
     decorators: [
         (Story) => (
-            <div className="min-h-screen bg-[var(--bg-color)] p-10">
+            <div className="min-h-screen bg-(--bg-color) p-10">
                 <button
                     type="button"
                     data-tour="story-target"
-                    className="rounded-lg border border-solid border-[var(--border-color)] bg-[var(--surface-color)] px-4 py-2 text-[var(--text-color)]"
+                    className="rounded-lg border border-solid border-(--border-color) bg-(--surface-color) px-4 py-2 text-(--text-color)"
                 >
                     Tour target
                 </button>

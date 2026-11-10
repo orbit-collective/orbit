@@ -10,15 +10,15 @@ import { cn } from '@/utils/cn';
 import Icon from '../../Atoms/Icon/Icon';
 
 const paginationVariants = cva(
-    'flex items-center justify-center min-w-[32px] h-[32px] px-2 rounded-md text-sm text-[var(--text-color)] no-underline transition-all duration-100 ease-in-out border border-solid border-transparent cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)]',
+    'flex items-center justify-center min-w-[32px] h-[32px] px-2 rounded-md text-sm text-(--text-color) no-underline transition-all duration-100 ease-in-out border border-solid border-transparent cursor-pointer focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-color)',
     {
         variants: {
             active: {
-                true: 'bg-[var(--accent-color)] text-white font-medium',
-                false: 'hover:bg-[var(--accent-color)]/10 hover:border-[var(--accent-color)]/20 hover:text-[var(--accent-color)]',
+                true: 'bg-(--accent-color) text-white font-medium',
+                false: 'hover:bg-(--accent-color)/10 hover:border-(--accent-color)/20 hover:text-(--accent-color)',
             },
             disabled: {
-                true: 'text-[var(--text-gray-color)] cursor-not-allowed opacity-40 pointer-events-none',
+                true: 'text-(--text-gray-color) cursor-not-allowed opacity-40 pointer-events-none',
                 false: '',
             },
         },
@@ -197,17 +197,17 @@ const Pagination = ({
                 className,
             )}
         >
-            <div className="text-center text-sm text-[var(--text-gray-color)] lg:text-left">
+            <div className="text-center text-sm text-(--text-gray-color) lg:text-left">
                 Showing{' '}
-                <span className="font-semibold text-[var(--text-color)]">
+                <span className="font-semibold text-(--text-color)">
                     {from || 0}
                 </span>{' '}
                 to{' '}
-                <span className="font-semibold text-[var(--text-color)]">
+                <span className="font-semibold text-(--text-color)">
                     {to || 0}
                 </span>{' '}
                 of{' '}
-                <span className="font-semibold text-[var(--text-color)]">
+                <span className="font-semibold text-(--text-color)">
                     {total}
                 </span>{' '}
                 results
@@ -216,7 +216,7 @@ const Pagination = ({
                 <div className="flex shrink-0 items-center gap-2">
                     <span
                         aria-hidden="true"
-                        className="whitespace-nowrap text-[var(--text-gray-color)]"
+                        className="whitespace-nowrap text-(--text-gray-color)"
                     >
                         Rows per page:
                     </span>
@@ -236,7 +236,7 @@ const Pagination = ({
                                         <span className="sr-only">
                                             Rows per page:
                                         </span>
-                                        <span className="font-semibold text-[var(--text-color)]">
+                                        <span className="font-semibold text-(--text-color)">
                                             {currentPerPage}
                                         </span>
                                     </div>
@@ -248,7 +248,7 @@ const Pagination = ({
                 {links && numericLinks.length > 1 && (
                     <nav
                         aria-label="Pagination"
-                        className="flex flex-nowrap items-center justify-center gap-1 overflow-x-auto scrollbar-none sm:gap-2"
+                        className="flex scrollbar-none flex-nowrap items-center justify-center gap-1 overflow-x-auto sm:gap-2"
                     >
                         {renderLink(prevLink, 'prev')}
                         {getCondensedPageNumbers(currentPage, lastPage).map(

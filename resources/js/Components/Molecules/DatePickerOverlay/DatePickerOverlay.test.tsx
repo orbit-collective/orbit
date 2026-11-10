@@ -98,7 +98,7 @@ describe('DatePickerOverlay Component', () => {
         );
 
         const selectedButton = screen.getByText('10');
-        expect(selectedButton).toHaveClass('bg-[var(--accent-color)]');
+        expect(selectedButton).toHaveClass('bg-(--accent-color)');
     });
 
     test('parses the endDate string into the end calendar selection', () => {
@@ -115,7 +115,7 @@ describe('DatePickerOverlay Component', () => {
         );
 
         const selectedButton = screen.getByText('20');
-        expect(selectedButton).toHaveClass('bg-[var(--accent-color)]');
+        expect(selectedButton).toHaveClass('bg-(--accent-color)');
     });
 
     test('calls onClose when the backdrop is clicked', async () => {

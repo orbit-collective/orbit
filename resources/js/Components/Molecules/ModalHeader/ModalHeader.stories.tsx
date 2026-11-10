@@ -9,7 +9,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="w-[420px] rounded-xl bg-[var(--bg-color)]">
+            <div className="w-[420px] rounded-xl bg-(--bg-color)">
                 <Story />
             </div>
         ),
@@ -35,7 +35,7 @@ export const WithIcon: Story = {
             <Icon
                 name="FolderPlus"
                 size={18}
-                className="text-[var(--accent-color)]"
+                className="text-(--accent-color)"
             />
         ),
     },

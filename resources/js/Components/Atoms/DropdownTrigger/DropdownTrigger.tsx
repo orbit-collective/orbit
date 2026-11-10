@@ -5,12 +5,12 @@ import { DropdownTriggerProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
 export const dropdownTriggerVariants = cva(
-    'flex cursor-pointer items-center text-left text-sm font-medium text-[var(--text-color)] outline-none transition-all duration-200 ease-linear disabled:cursor-not-allowed disabled:opacity-60',
+    'flex cursor-pointer items-center text-left text-sm font-medium text-(--text-color) outline-hidden transition-all duration-200 ease-linear disabled:cursor-not-allowed disabled:opacity-60',
     {
         variants: {
             variant: {
                 default:
-                    'justify-between gap-2 rounded-md border border-solid border-[var(--bg-light-color)] bg-[var(--bg-color)] px-2.5 py-1.5 hover:bg-[var(--bg-light-color)]',
+                    'justify-between gap-2 rounded-md border border-solid border-(--bg-light-color) bg-(--bg-color) px-2.5 py-1.5 hover:bg-(--bg-light-color)',
                 pill: 'h-9 justify-start gap-2 rounded-full border px-3.5',
             },
             isOpen: {
@@ -22,17 +22,17 @@ export const dropdownTriggerVariants = cva(
             {
                 variant: 'pill',
                 isOpen: false,
-                class: 'border-[var(--border-color)] bg-[var(--bg-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
+                class: 'border-(--border-color) bg-(--bg-color) hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover)',
             },
             {
                 variant: 'default',
                 isOpen: true,
-                class: 'border-[var(--accent-color-opacity)] bg-[var(--bg-color)]',
+                class: 'border-(--accent-color-opacity) bg-(--bg-color)',
             },
             {
                 variant: 'pill',
                 isOpen: true,
-                class: 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)] shadow-[0_0_0_3px_var(--accent-color-opacity)]',
+                class: 'border-(--accent-color) bg-(--accent-color-opacity) shadow-[0_0_0_3px_var(--accent-color-opacity)]',
             },
         ],
         defaultVariants: {
@@ -78,8 +78,8 @@ const DropdownTrigger = forwardRef<HTMLButtonElement, DropdownTriggerProps>(
                         className={cn(
                             'shrink-0',
                             variant === 'pill' && isOpen
-                                ? 'text-[var(--accent-color)]'
-                                : 'text-[var(--text-gray-color)]',
+                                ? 'text-(--accent-color)'
+                                : 'text-(--text-gray-color)',
                         )}
                     />
                 )}
@@ -87,7 +87,7 @@ const DropdownTrigger = forwardRef<HTMLButtonElement, DropdownTriggerProps>(
                     {label}
                 </span>
                 {badge !== undefined && badge > 0 && (
-                    <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-[var(--accent-color)] px-1 text-[10px] font-semibold text-white">
+                    <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-(--accent-color) px-1 text-[10px] font-semibold text-white">
                         {badge}
                     </span>
                 )}
@@ -96,7 +96,7 @@ const DropdownTrigger = forwardRef<HTMLButtonElement, DropdownTriggerProps>(
                     size={variant === 'pill' ? 12 : undefined}
                     className={cn(
                         'shrink-0 transition-transform duration-200',
-                        variant === 'pill' && 'text-[var(--text-gray-color)]',
+                        variant === 'pill' && 'text-(--text-gray-color)',
                         isOpen && 'rotate-180',
                     )}
                 />

@@ -17,7 +17,7 @@ describe('renderActivityLogBody', () => {
 
         expect(screen.getByText('open')).toBeInTheDocument();
         expect(screen.getByText('closed')).toBeInTheDocument();
-        expect(document.querySelectorAll('.rounded-sm')).not.toHaveLength(0);
+        expect(document.querySelectorAll('.rounded-xs')).not.toHaveLength(0);
     });
 
     test('renders "in_progress" with the underscore replaced by a space', () => {

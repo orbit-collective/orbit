@@ -8,7 +8,7 @@ const Demo = (args: ComponentProps<typeof ColorPicker>) => {
     const [color, setColor] = useState(args.value);
 
     return (
-        <div className="w-[296px] rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3">
+        <div className="w-[296px] rounded-xl border border-(--border-color) bg-(--bg-dark-color) p-3">
             <ColorPicker {...args} value={color} onChange={setColor} />
         </div>
     );

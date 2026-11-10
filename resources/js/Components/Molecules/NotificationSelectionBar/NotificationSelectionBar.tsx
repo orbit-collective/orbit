@@ -39,17 +39,17 @@ function NotificationSelectionBar({
                 transition: { duration: DURATION.fast },
             }}
             transition={{ duration: DURATION.base, ease: EASE }}
-            className="flex flex-wrap items-center gap-2 overflow-hidden rounded-xl bg-[var(--bg-light-color)] px-3 py-2"
+            className="flex flex-wrap items-center gap-2 overflow-hidden rounded-xl bg-(--bg-light-color) px-3 py-2"
         >
             <button
                 type="button"
                 onClick={onToggleAll}
                 disabled={totalCount === 0}
-                className="text-xs font-semibold text-[var(--text-color)] hover:underline disabled:opacity-40"
+                className="text-xs font-semibold text-(--text-color) hover:underline disabled:opacity-40"
             >
                 {allSelected ? 'Clear selection' : 'Select all'}
             </button>
-            <span className="text-xs text-[var(--text-gray-color)]">
+            <span className="text-xs text-(--text-gray-color)">
                 {selectedCount} selected
                 {limit !== undefined && selectedCount >= limit && ' (max)'}
             </span>
@@ -79,7 +79,7 @@ function NotificationSelectionBar({
                     onClick={onCancel}
                     aria-label="Cancel selection"
                     title="Cancel selection"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-(--text-gray-color) hover:text-(--text-color)"
                 >
                     <Icon name="X" size={14} />
                 </button>

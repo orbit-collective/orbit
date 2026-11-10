@@ -154,13 +154,13 @@ export default function WorkspaceSettingsRolesTab({
             >
                 {localRoles.length === 0 ? (
                     <div className="flex flex-col items-center gap-3 px-5 py-10 text-center">
-                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-(--accent-color-opacity) text-(--accent-color)">
                             <Icon name="ShieldPlus" size={22} />
                         </span>
-                        <p className="text-sm font-medium text-[var(--text-color)]">
+                        <p className="text-sm font-medium text-(--text-color)">
                             No custom roles yet
                         </p>
-                        <p className="max-w-sm text-sm text-[var(--text-gray-color)]">
+                        <p className="max-w-sm text-sm text-(--text-gray-color)">
                             Create a role to grant a precise set of permissions
                             to members, on top of their base Admin/Member
                             access.
@@ -169,7 +169,7 @@ export default function WorkspaceSettingsRolesTab({
                             <button
                                 type="button"
                                 onClick={() => setIsCreateModalOpen(true)}
-                                className="mt-1 flex items-center gap-1.5 rounded-md border border-dashed border-[var(--bg-light-color)] px-3 py-1.5 text-xs font-semibold text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                                className="mt-1 flex items-center gap-1.5 rounded-md border border-dashed border-(--bg-light-color) px-3 py-1.5 text-xs font-semibold text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                             >
                                 <Icon name="Plus" size={13} />
                                 Create role

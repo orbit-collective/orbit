@@ -197,7 +197,7 @@ describe('ShortcutHelpModal Component', () => {
         const { container } = render(<ShortcutHelpModal />);
 
         const avatars = container.querySelectorAll(
-            'span.rounded-lg.bg-\\[var\\(--bg-light-color\\)\\]',
+            'span.rounded-lg.bg-\\(--bg-light-color\\)',
         );
         expect(avatars.length).toBe(shortcutsHolder.shortcuts.length);
     });

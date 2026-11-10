@@ -16,7 +16,7 @@ const meta = {
                 // Storage can be unavailable; the board then starts on priority.
             }
             return (
-                <div className="h-[720px] bg-[var(--bg-color)]">
+                <div className="h-[720px] bg-(--bg-color)">
                     <Story />
                 </div>
             );

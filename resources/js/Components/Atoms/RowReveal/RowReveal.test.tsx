@@ -38,8 +38,8 @@ describe('RowReveal', () => {
 
         const wrapper = screen.getByRole('button').parentElement!;
         expect(wrapper.className).toContain('h-full');
-        expect(wrapper.className).toContain('[&>*]:w-full');
-        expect(wrapper.className).toContain('[&>*]:h-full');
+        expect(wrapper.className).toContain('*:w-full');
+        expect(wrapper.className).toContain('*:h-full');
     });
 
     test('without fill the wrapper adds no sizing of its own', () => {

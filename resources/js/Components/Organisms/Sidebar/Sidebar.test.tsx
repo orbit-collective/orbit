@@ -161,7 +161,7 @@ describe('Sidebar Component', () => {
         expect(aside).toHaveClass('translate-x-0');
 
         const backdrop = container.querySelector(
-            '.backdrop-blur-sm',
+            '.backdrop-blur-xs',
         ) as HTMLElement;
         await userEvent.click(backdrop);
 
@@ -397,7 +397,7 @@ describe('Sidebar Component', () => {
         render(<Sidebar projects={[]} />);
 
         const projectsLink = screen.getByText('Projects').closest('a');
-        expect(projectsLink).toHaveClass('text-[var(--text-color)]');
+        expect(projectsLink).toHaveClass('text-(--text-color)');
     });
 
     test('marks project as active when url starts with project path', () => {
@@ -409,7 +409,7 @@ describe('Sidebar Component', () => {
         );
 
         const projectLink = screen.getByText('Test Project').closest('a');
-        expect(projectLink).toHaveClass('text-[var(--text-color)]');
+        expect(projectLink).toHaveClass('text-(--text-color)');
     });
 
     test('registers a "p" command that opens the new project modal', () => {
@@ -499,7 +499,7 @@ describe('Sidebar Component', () => {
         render(<Sidebar projects={[]} />);
 
         const membersLink = screen.getByText('Members').closest('a');
-        expect(membersLink).toHaveClass('text-[var(--text-color)]');
+        expect(membersLink).toHaveClass('text-(--text-color)');
         expect(membersLink).toHaveAttribute('href', '/settings/members');
     });
 

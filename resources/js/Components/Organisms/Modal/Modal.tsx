@@ -15,13 +15,13 @@ export const ModalOrg = ({ modal, onClose }: ModalOrgProps) => {
         <Modal isOpen={true} onClose={() => onClose(modal.id)} size="md">
             <div className="flex h-full flex-col overflow-y-auto">
                 {!isShortcutModal && (
-                    <div className="flex items-start justify-between border-b border-[var(--border-color)] p-6">
+                    <div className="flex items-start justify-between border-b border-(--border-color) p-6">
                         <div className="flex-1">
-                            <h2 className="text-xl font-semibold text-[var(--text-color)]">
+                            <h2 className="text-xl font-semibold text-(--text-color)">
                                 {modal.title}
                             </h2>
                             {modal.description && (
-                                <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                                <p className="mt-1 text-sm text-(--text-gray-color)">
                                     {modal.description}
                                 </p>
                             )}

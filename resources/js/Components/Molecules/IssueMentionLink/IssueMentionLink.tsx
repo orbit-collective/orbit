@@ -78,7 +78,7 @@ export default function IssueMentionLink({
                 onFocus={(e) => void show(e.currentTarget)}
                 onBlur={hide}
                 onClick={(e) => e.stopPropagation()}
-                className="mx-0.5 font-medium text-[var(--accent-color)] hover:underline"
+                className="mx-0.5 font-medium text-(--accent-color) hover:underline"
             >
                 {label}
             </a>

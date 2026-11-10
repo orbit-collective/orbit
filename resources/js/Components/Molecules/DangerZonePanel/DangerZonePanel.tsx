@@ -25,7 +25,7 @@ export default function DangerZonePanel({
                     <button
                         type="button"
                         onClick={onDeleteRequest}
-                        className="flex h-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--error-color)] px-3 text-sm font-medium text-[var(--error-color)] transition-colors hover:bg-red-500/10"
+                        className="flex h-9 cursor-pointer items-center justify-center rounded-lg border border-(--error-color) px-3 text-sm font-medium text-(--error-color) transition-colors hover:bg-red-500/10"
                     >
                         Delete project
                     </button>

@@ -34,14 +34,14 @@ describe('boardCardVariants', () => {
 
     test('applies active border/background classes when active', () => {
         const result = boardCardVariants({ isActive: true, isClosed: false });
-        expect(result).toContain('border-[var(--border-color-strong)]');
-        expect(result).toContain('bg-[var(--bg-light-color-hover)]');
+        expect(result).toContain('border-(--border-color-strong)');
+        expect(result).toContain('bg-(--bg-light-color-hover)');
     });
 
     test('applies inactive border/background classes when not active', () => {
         const result = boardCardVariants({ isActive: false, isClosed: false });
-        expect(result).toContain('border-[var(--border-color)]');
-        expect(result).toContain('bg-[var(--bg-light-color)]');
+        expect(result).toContain('border-(--border-color)');
+        expect(result).toContain('bg-(--bg-light-color)');
     });
 
     test('applies reduced opacity when closed', () => {
@@ -66,13 +66,13 @@ describe('listRowVariants', () => {
 
     test('applies active background/text classes when active', () => {
         const result = listRowVariants({ isActive: true });
-        expect(result).toContain('bg-[var(--bg-light-color-hover)]');
-        expect(result).toContain('text-[var(--text-color)]');
+        expect(result).toContain('bg-(--bg-light-color-hover)');
+        expect(result).toContain('text-(--text-color)');
     });
 
     test('applies inactive background/text classes when not active', () => {
         const result = listRowVariants({ isActive: false });
-        expect(result).toContain('text-[var(--text-color)]');
-        expect(result).toContain('bg-[var(--bg-color)]');
+        expect(result).toContain('text-(--text-color)');
+        expect(result).toContain('bg-(--bg-color)');
     });
 });

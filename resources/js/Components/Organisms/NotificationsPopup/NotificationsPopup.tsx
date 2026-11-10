@@ -100,7 +100,7 @@ function NotificationsPopup({
             }}
             transition={{ duration: DURATION.base, ease: EASE }}
             style={{ transformOrigin: 'top right' }}
-            className="fixed right-2 top-16 z-[9999] w-[calc(100vw-1rem)] max-w-[420px] rounded-2xl bg-[var(--bg-dark-color)] p-4 text-[var(--text-color)] shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:right-4 sm:top-24 sm:w-[420px] sm:p-5"
+            className="fixed top-16 right-2 z-9999 w-[calc(100vw-1rem)] max-w-[420px] rounded-2xl bg-(--bg-dark-color) p-4 text-(--text-color) shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl sm:top-24 sm:right-4 sm:w-[420px] sm:p-5"
         >
             <NotificationHeader
                 unreadCount={feed.unreadCount}
@@ -154,7 +154,7 @@ function NotificationsPopup({
             />
 
             {!isSelecting && items.some((item) => item.read) && (
-                <div className="mt-3 flex justify-end border-t border-[var(--bg-light-color)] pt-3">
+                <div className="mt-3 flex justify-end border-t border-(--bg-light-color) pt-3">
                     <NotificationClearRead onConfirm={feed.deleteRead} />
                 </div>
             )}

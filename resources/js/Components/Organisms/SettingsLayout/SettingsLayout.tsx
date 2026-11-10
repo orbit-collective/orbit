@@ -59,10 +59,10 @@ export default function SettingsLayout({
     return (
         <MotionConfig reducedMotion="user">
             <SettingsSectionsProvider storageKey={`settings-sections:${tabId}`}>
-                <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
+                <div className="flex h-screen w-screen overflow-hidden bg-(--bg-color)">
                     <Sidebar projects={projects} />
 
-                    <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
+                    <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-(--bg-color-hover)">
                         <main
                             className={cn(
                                 'flex-1 overflow-y-auto',
@@ -77,7 +77,7 @@ export default function SettingsLayout({
                                 className={cn(
                                     'mx-auto flex w-full flex-col gap-6 px-4 sm:px-6',
                                     fullBleed
-                                        ? 'min-h-0 flex-1 pb-6 pt-6 md:min-h-[36rem]'
+                                        ? 'min-h-0 flex-1 pb-6 pt-6 md:min-h-144'
                                         : 'max-w-3xl gap-8 pb-16 pt-8 lg:px-10 lg:pt-10',
                                 )}
                             >
@@ -96,10 +96,10 @@ export default function SettingsLayout({
                                                 { label: tab.label },
                                             ]}
                                         />
-                                        <h1 className="text-2xl font-semibold text-[var(--text-color)] sm:text-3xl">
+                                        <h1 className="text-2xl font-semibold text-(--text-color) sm:text-3xl">
                                             {tab.label}
                                         </h1>
-                                        <p className="max-w-2xl text-sm text-[var(--text-gray-color)]">
+                                        <p className="max-w-2xl text-sm text-(--text-gray-color)">
                                             {tab.description}
                                         </p>
                                     </div>

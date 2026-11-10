@@ -26,18 +26,18 @@ const BoardCardContent = ({
                     status={isClosed ? 'done' : undefined}
                     color={isClosed ? undefined : issue.priorityDetails?.color}
                 />
-                <span className="truncate text-[11px] font-semibold text-[var(--text-muted-color)]">
+                <span className="truncate text-[11px] font-semibold text-(--text-muted-color)">
                     {issue.assignee?.name || 'Unassigned'}
                 </span>
             </div>
-            <span className="shrink-0 font-mono text-[10px] font-medium text-[var(--text-muted-color)]">
+            <span className="shrink-0 font-mono text-[10px] font-medium text-(--text-muted-color)">
                 #{issue.number ?? issue.id}
             </span>
         </div>
         <h4
             className={cn(
-                'line-clamp-2 text-[13px] font-medium leading-snug text-[var(--text-color)]',
-                isClosed && 'text-[var(--text-muted-color)] line-through',
+                'line-clamp-2 text-[13px] font-medium leading-snug text-(--text-color)',
+                isClosed && 'text-(--text-muted-color) line-through',
             )}
         >
             {issue.title}
@@ -48,7 +48,7 @@ const BoardCardContent = ({
                 badgeClassName="px-1.5 py-0.5 text-[9px]"
             />
         )}
-        <div className="mt-0.5 flex items-center justify-between gap-2 border-t border-[var(--border-color)] pt-2.5">
+        <div className="mt-0.5 flex items-center justify-between gap-2 border-t border-(--border-color) pt-2.5">
             {issue.workflowStatus ? (
                 <WorkflowStatusBadge status={issue.workflowStatus} />
             ) : (
@@ -62,7 +62,7 @@ const BoardCardContent = ({
                     size="sm"
                 />
             ) : (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--surface-color)] text-[10px] text-[var(--text-muted-color)]">
+                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-(--surface-color) text-[10px] text-(--text-muted-color)">
                     ?
                 </div>
             )}
@@ -131,7 +131,7 @@ export const BoardCardOverlay = ({
     <div
         className={cn(
             boardCardVariants({ isActive: false, isClosed }),
-            'ring-[var(--accent-color)]/40 w-[300px] rotate-2 cursor-grabbing shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7)] ring-1',
+            'ring-(--accent-color)/40 w-[300px] rotate-2 cursor-grabbing shadow-[0_24px_48px_-12px_rgba(0,0,0,0.7)] ring-1',
         )}
     >
         <BoardCardContent issue={issue} isClosed={isClosed} />

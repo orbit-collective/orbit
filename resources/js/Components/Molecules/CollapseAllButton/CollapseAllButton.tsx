@@ -18,7 +18,7 @@ const CollapseAllButton: React.FC<CollapseAllButtonProps> = ({
         type="button"
         onClick={onToggle}
         className={cn(
-            'flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-transparent px-2 py-1 text-xs font-medium text-[var(--text-gray-color)] transition-colors duration-200 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+            'flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-transparent px-2 py-1 text-xs font-medium text-(--text-gray-color) transition-colors duration-200 hover:bg-(--bg-light-color) hover:text-(--text-color)',
             FOCUS_RING,
         )}
     >

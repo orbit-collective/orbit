@@ -7,7 +7,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="flex w-[420px] rounded-xl bg-[var(--bg-color)] p-6">
+            <div className="flex w-[420px] rounded-xl bg-(--bg-color) p-6">
                 <Story />
             </div>
         ),

@@ -74,7 +74,7 @@ export default function WorkspaceSettingsLabelInlineEditor({
                 maxLength={255}
                 className={cn(
                     inlineFieldClass,
-                    'text-[var(--text-gray-color)] sm:flex-1',
+                    'text-(--text-gray-color) sm:flex-1',
                 )}
             />
         </InlineEditRow>

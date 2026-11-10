@@ -151,7 +151,7 @@ export default function Show({
                         )}
                         <div
                             className={
-                                'relative flex flex-1 overflow-hidden border-t border-solid border-[var(--bg-light-color)]'
+                                'relative flex flex-1 overflow-hidden border-t border-solid border-(--bg-light-color)'
                             }
                         >
                             <div
@@ -230,9 +230,9 @@ export default function Show({
                                             />
                                         </div>
                                     ) : (
-                                        <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 lg:col-span-2">
+                                        <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4 lg:col-span-2">
                                             <div className="mb-2">
-                                                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                                                <h3 className="text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                                                     Recent Work Activity
                                                 </h3>
                                             </div>
@@ -261,7 +261,7 @@ export default function Show({
                                                     ACTIVITY_DEFAULT_PER_PAGE
                                                 }
                                                 preserveState
-                                                className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
+                                                className="border-t border-solid border-(--border-color) px-0 pb-0"
                                             />
                                         </div>
                                     )}

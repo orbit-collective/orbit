@@ -66,7 +66,7 @@ const Section: FC<{ title: string; children: ReactNode }> = ({
     children,
 }) => (
     <motion.section variants={rowIn} className="flex flex-col gap-2">
-        <h4 className="m-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+        <h4 className="m-0 text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
             {title}
         </h4>
         {children}
@@ -78,14 +78,14 @@ const IconTile: FC<{ icon: DashboardCatalogEntry['icon'] }> = ({ icon }) => (
         initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
         animate={{ scale: 1, rotate: 0, opacity: 1 }}
         transition={SPRING}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)"
     >
         <Icon name={icon} size={16} />
     </motion.span>
 );
 
 const ACTION_BUTTON = cn(
-    'flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-solid border-[var(--border-color)] bg-transparent px-2.5 py-1.5 text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
+    'flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-solid border-(--border-color) bg-transparent px-2.5 py-1.5 text-xs font-medium text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color) disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
     FOCUS_RING,
 );
 
@@ -163,10 +163,10 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                 desktop ? { width: 0, opacity: 0 } : { height: 0, opacity: 0 }
             }
             transition={{ duration: DURATION.base, ease: EASE }}
-            className="shrink-0 overflow-hidden border-t border-solid border-[var(--border-color-strong)] bg-[var(--bg-color-hover)] lg:border-l lg:border-t-0 lg:border-[var(--bg-light-color)]"
+            className="shrink-0 overflow-hidden border-t border-solid border-(--border-color-strong) bg-(--bg-color-hover) lg:border-t-0 lg:border-l lg:border-(--bg-light-color)"
         >
             <div className="flex h-full w-full flex-col lg:w-80">
-                <div className="shrink-0 border-b border-solid border-[var(--bg-light-color)] p-3">
+                <div className="shrink-0 border-b border-solid border-(--bg-light-color) p-3">
                     <SegmentedControl
                         label="Panel"
                         fullWidth
@@ -235,7 +235,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                             setAdded(item.type);
                                                         }}
                                                         className={cn(
-                                                            'group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-2.5 text-left transition-colors hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)] disabled:cursor-not-allowed disabled:opacity-50',
+                                                            'group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-2.5 text-left transition-colors hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover) disabled:cursor-not-allowed disabled:opacity-50',
                                                             FOCUS_RING,
                                                         )}
                                                     >
@@ -243,7 +243,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                             icon={item.icon}
                                                         />
                                                         <span className="min-w-0 flex-1">
-                                                            <span className="flex items-center gap-1.5 text-sm font-medium text-[var(--text-color)]">
+                                                            <span className="flex items-center gap-1.5 text-sm font-medium text-(--text-color)">
                                                                 <span className="truncate">
                                                                     {item.label}
                                                                 </span>
@@ -262,13 +262,13 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                                         transition={
                                                                             SPRING
                                                                         }
-                                                                        className="shrink-0 rounded-full bg-[var(--bg-light-color)] px-1.5 text-[10px] font-semibold text-[var(--text-gray-color)]"
+                                                                        className="shrink-0 rounded-full bg-(--bg-light-color) px-1.5 text-[10px] font-semibold text-(--text-gray-color)"
                                                                     >
                                                                         ×{count}
                                                                     </motion.span>
                                                                 )}
                                                             </span>
-                                                            <span className="block text-[11px] leading-snug text-[var(--text-muted-color)]">
+                                                            <span className="block text-[11px] leading-snug text-(--text-muted-color)">
                                                                 {
                                                                     item.description
                                                                 }
@@ -305,8 +305,8 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                                 'flex shrink-0 transition-colors',
                                                                 added ===
                                                                     item.type
-                                                                    ? 'text-[var(--success-color)]'
-                                                                    : 'text-[var(--text-muted-color)] group-hover:text-[var(--accent-color)]',
+                                                                    ? 'text-(--success-color)'
+                                                                    : 'text-(--text-muted-color) group-hover:text-(--accent-color)',
                                                             )}
                                                         >
                                                             <Icon
@@ -341,10 +341,10 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                 >
                                     <IconTile icon={entry.icon} />
                                     <div className="min-w-0">
-                                        <h3 className="m-0 truncate text-sm font-semibold text-[var(--text-color)]">
+                                        <h3 className="m-0 truncate text-sm font-semibold text-(--text-color)">
                                             {widgetLabel(selected, entry)}
                                         </h3>
-                                        <p className="m-0 text-[11px] leading-snug text-[var(--text-muted-color)]">
+                                        <p className="m-0 text-[11px] leading-snug text-(--text-muted-color)">
                                             {entry.description}
                                         </p>
                                     </div>
@@ -386,7 +386,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                             onWidthChange(selected.id, width)
                                         }
                                     />
-                                    <p className="m-0 text-[11px] text-[var(--text-muted-color)]">
+                                    <p className="m-0 text-[11px] text-(--text-muted-color)">
                                         {Math.round(
                                             (selected.width / GRID_COLUMNS) *
                                                 100,
@@ -506,9 +506,9 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
 
                                 <motion.div
                                     variants={rowIn}
-                                    className="flex items-center justify-between gap-3 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] px-3 py-2.5"
+                                    className="flex items-center justify-between gap-3 rounded-xl border border-solid border-(--border-color) bg-(--surface-color) px-3 py-2.5"
                                 >
-                                    <span className="text-sm font-medium text-[var(--text-color)]">
+                                    <span className="text-sm font-medium text-(--text-color)">
                                         Show on dashboard
                                     </span>
                                     <ToggleSwitch
@@ -529,11 +529,11 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     // The tints are mixed, not set with an opacity: Tailwind 3
                                     // cannot give a CSS variable an alpha, and drops the class.
                                     className={cn(
-                                        'group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-solid border-[color-mix(in_srgb,var(--error-color)_28%,transparent)] bg-[color-mix(in_srgb,var(--error-color)_8%,transparent)] px-3 py-2.5 text-xs font-semibold text-[var(--error-color)] transition-colors duration-150 hover:border-[var(--error-color)] hover:bg-[color-mix(in_srgb,var(--error-color)_16%,transparent)]',
+                                        'group flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-solid border-[color-mix(in_srgb,var(--error-color)_28%,transparent)] bg-[color-mix(in_srgb,var(--error-color)_8%,transparent)] px-3 py-2.5 text-xs font-semibold text-(--error-color) transition-colors duration-150 hover:border-(--error-color) hover:bg-[color-mix(in_srgb,var(--error-color)_16%,transparent)]',
                                         FOCUS_RING,
                                     )}
                                 >
-                                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--error-color)_16%,transparent)] transition-transform duration-150 group-hover:-rotate-12 group-hover:scale-110">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--error-color)_16%,transparent)] transition-transform duration-150 group-hover:scale-110 group-hover:-rotate-12">
                                         <Icon name="Trash" size={12} />
                                     </span>
                                     Remove widget
@@ -548,14 +548,14 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                         ease: 'easeInOut',
                                         repeat: Infinity,
                                     }}
-                                    className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[var(--text-muted-color)]"
+                                    className="flex h-11 w-11 items-center justify-center rounded-full bg-(--bg-light-color) text-(--text-muted-color)"
                                 >
                                     <Icon name="MousePointerClick" size={20} />
                                 </motion.span>
-                                <p className="m-0 text-sm font-semibold text-[var(--text-color)]">
+                                <p className="m-0 text-sm font-semibold text-(--text-color)">
                                     Pick a widget
                                 </p>
-                                <p className="m-0 text-xs text-[var(--text-muted-color)]">
+                                <p className="m-0 text-xs text-(--text-muted-color)">
                                     Click one on the dashboard to change its
                                     style, size and options.
                                 </p>

@@ -55,26 +55,26 @@ export default function PermissionGroupCard({
         permissionIds.length > 0 && enabledCount === permissionIds.length;
 
     return (
-        <div className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] transition-colors">
+        <div className="overflow-hidden rounded-xl border border-(--border-color) bg-(--bg-color) transition-colors">
             <button
                 type="button"
                 onClick={() => setExpanded((prev) => !prev)}
-                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--bg-light-color-hover)]"
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-(--bg-light-color-hover)"
             >
                 <div className="flex items-center gap-2.5">
                     <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
                             isComplete
-                                ? `${SUCCESS_TINT} text-[var(--success-color)]`
-                                : 'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]'
+                                ? `${SUCCESS_TINT} text-(--success-color)`
+                                : 'bg-(--accent-color-opacity) text-(--accent-color)'
                         }`}
                     >
                         <Icon name={icon} size={13} />
                     </span>
-                    <span className="text-sm font-semibold text-[var(--text-color)]">
+                    <span className="text-sm font-semibold text-(--text-color)">
                         {label}
                     </span>
-                    <span className="text-xs text-[var(--text-gray-color)]">
+                    <span className="text-xs text-(--text-gray-color)">
                         <AnimatedNumber
                             value={enabledCount}
                             format={(n) =>
@@ -84,11 +84,11 @@ export default function PermissionGroupCard({
                     </span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-(--bg-light-color)">
                         <motion.div
                             data-testid="ratio-bar"
                             data-ratio={ratio}
-                            className="h-full rounded-full bg-[var(--accent-color)]"
+                            className="h-full rounded-full bg-(--accent-color)"
                             initial={{ width: 0 }}
                             animate={{ width: `${ratio}%` }}
                             transition={{
@@ -105,17 +105,15 @@ export default function PermissionGroupCard({
                             <button
                                 type="button"
                                 onClick={() => onSetAll(permissionIds, true)}
-                                className="text-[var(--accent-color)] hover:underline"
+                                className="text-(--accent-color) hover:underline"
                             >
                                 All
                             </button>
-                            <span className="text-[var(--text-gray-color)]">
-                                /
-                            </span>
+                            <span className="text-(--text-gray-color)">/</span>
                             <button
                                 type="button"
                                 onClick={() => onSetAll(permissionIds, false)}
-                                className="text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
+                                className="text-(--text-gray-color) hover:text-(--text-color)"
                             >
                                 None
                             </button>
@@ -125,7 +123,7 @@ export default function PermissionGroupCard({
                         <Icon
                             name="ChevronDown"
                             size={14}
-                            className={`text-[var(--text-gray-color)] transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                            className={`text-(--text-gray-color) transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                                 isExpanded ? 'rotate-180' : ''
                             }`}
                         />
@@ -134,11 +132,11 @@ export default function PermissionGroupCard({
             </button>
 
             <Collapse open={isExpanded}>
-                <div className="divide-y divide-[var(--border-color)] border-t border-[var(--border-color)]">
+                <div className="divide-y divide-(--border-color) border-t border-(--border-color)">
                     {sections.map((section) => (
                         <div key={section.section} className="px-4 py-3">
                             {section.section !== 'General' && (
-                                <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                                <p className="mb-2 text-[10px] font-semibold tracking-wider text-(--text-gray-color) uppercase">
                                     {section.section}
                                 </p>
                             )}
@@ -149,10 +147,10 @@ export default function PermissionGroupCard({
                                         className="flex items-center justify-between gap-3"
                                     >
                                         <div className="min-w-0">
-                                            <p className="text-sm text-[var(--text-color)]">
+                                            <p className="text-sm text-(--text-color)">
                                                 {getPermissionLabel(permission)}
                                             </p>
-                                            <p className="text-xs text-[var(--text-gray-color)]">
+                                            <p className="text-xs text-(--text-gray-color)">
                                                 {getPermissionDescription(
                                                     permission,
                                                 )}

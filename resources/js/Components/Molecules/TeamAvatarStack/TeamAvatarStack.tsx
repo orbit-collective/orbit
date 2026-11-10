@@ -15,7 +15,7 @@ export default function TeamAvatarStack({ members }: TeamAvatarStackProps) {
                 {visible.map((member) => (
                     <div
                         key={member.id}
-                        className="rounded-full ring-2 ring-[var(--surface-color)]"
+                        className="rounded-full ring-2 ring-(--surface-color)"
                     >
                         <Avatar
                             src={member.avatar ?? undefined}
@@ -25,12 +25,12 @@ export default function TeamAvatarStack({ members }: TeamAvatarStackProps) {
                     </div>
                 ))}
                 {overflow > 0 && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-xs font-medium text-[var(--text-color)] ring-2 ring-[var(--surface-color)]">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-(--bg-light-color) text-xs font-medium text-(--text-color) ring-2 ring-(--surface-color)">
                         +{overflow}
                     </div>
                 )}
             </div>
-            <p className="text-sm text-[var(--text-gray-color)]">
+            <p className="text-sm text-(--text-gray-color)">
                 {members.length}{' '}
                 {members.length === 1 ? 'person has' : 'people have'} access to
                 this project.

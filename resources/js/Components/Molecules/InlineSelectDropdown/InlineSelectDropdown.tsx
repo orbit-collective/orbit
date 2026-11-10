@@ -54,12 +54,12 @@ export default function InlineSelectDropdown({
                     disabled={disabled}
                     aria-label={label}
                     className={cn(
-                        'flex min-w-[9rem] cursor-pointer items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm transition-all duration-100 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-50',
+                        'flex min-w-36 cursor-pointer items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-sm transition-all duration-100 ease-in-out focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color) disabled:cursor-not-allowed disabled:opacity-50',
                         selectedOption && subtle
-                            ? 'border-solid border-[var(--border-color)] bg-[var(--bg-color)] text-[var(--text-color)]'
+                            ? 'border-solid border-(--border-color) bg-(--bg-color) text-(--text-color)'
                             : selectedOption
-                              ? 'border-solid border-[var(--accent-color-opacity)] bg-[var(--bg-color)] text-[var(--accent-color)]'
-                              : 'border-dashed border-[var(--bg-light-color)] bg-transparent text-[var(--text-gray-color)] hover:border-solid hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                              ? 'border-solid border-(--accent-color-opacity) bg-(--bg-color) text-(--accent-color)'
+                              : 'border-dashed border-(--bg-light-color) bg-transparent text-(--text-gray-color) hover:border-solid hover:bg-(--bg-light-color) hover:text-(--text-color)',
                     )}
                 >
                     <span className="flex min-w-0 items-center gap-1.5">
@@ -75,10 +75,10 @@ export default function InlineSelectDropdown({
                             className={cn(
                                 'truncate font-medium',
                                 selectedOption && subtle
-                                    ? 'text-[var(--text-color)]'
+                                    ? 'text-(--text-color)'
                                     : selectedOption
-                                      ? 'text-[var(--accent-color)]'
-                                      : 'text-[var(--text-gray-color)]',
+                                      ? 'text-(--accent-color)'
+                                      : 'text-(--text-gray-color)',
                             )}
                         >
                             {selectedOption?.label ?? placeholder}

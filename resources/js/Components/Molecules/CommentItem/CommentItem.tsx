@@ -29,7 +29,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
             ) : segment.type === 'mention' ? (
                 <span
                     key={`${keyPrefix}-${index}`}
-                    className="bg-[var(--accent-color)]/10 mx-0.5 inline-flex items-center gap-1 rounded px-1 align-middle font-medium text-[var(--accent-color)]"
+                    className="mx-0.5 inline-flex items-center gap-1 rounded-sm bg-(--accent-color)/10 px-1 align-middle font-medium text-(--accent-color)"
                 >
                     <Avatar
                         src={segment.avatar ?? undefined}
@@ -62,7 +62,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     <img
                         src={segment.url}
                         alt={segment.value}
-                        className="max-h-80 max-w-full rounded-lg border border-[var(--border-color)]"
+                        className="max-h-80 max-w-full rounded-lg border border-(--border-color)"
                     />
                 </a>
             ) : (
@@ -79,10 +79,10 @@ const CommentItem: React.FC<CommentItemProps> = ({
             />
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[var(--text-color)]">
+                    <span className="text-sm font-medium text-(--text-color)">
                         {comment.user?.name ?? 'Unknown'}
                     </span>
-                    <span className="text-xs text-[var(--text-gray-color)]">
+                    <span className="text-xs text-(--text-gray-color)">
                         {formatTimeAgo(comment.created_at)} ago
                     </span>
                 </div>
@@ -92,7 +92,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     onImageUpload={onImageUpload}
                     multiline
                     disabled={!comment.can_edit}
-                    displayClassName="whitespace-pre-wrap text-sm text-[var(--text-color)]"
+                    displayClassName="whitespace-pre-wrap text-sm text-(--text-color)"
                     renderDisplay={renderBody}
                 />
             </div>

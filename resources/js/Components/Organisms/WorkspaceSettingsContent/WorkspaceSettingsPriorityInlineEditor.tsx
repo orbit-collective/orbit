@@ -93,8 +93,8 @@ export default function WorkspaceSettingsPriorityInlineEditor({
                     className={cn(
                         'flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors',
                         isDefault
-                            ? 'bg-[var(--warning-color)]/15 text-[var(--warning-color)]'
-                            : 'cursor-pointer text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                            ? 'bg-(--warning-color)/15 text-(--warning-color)'
+                            : 'cursor-pointer text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color)',
                         isCurrentDefault && 'cursor-default',
                     )}
                 >

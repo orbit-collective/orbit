@@ -82,24 +82,24 @@ export default function AccountSettingsThemeCard({
             type="button"
             onClick={onSelect}
             {...liftProps}
-            className="relative rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-3 text-left transition-colors hover:border-[var(--border-color-strong)]"
+            className="relative rounded-xl border border-(--border-color) bg-(--surface-color) p-3 text-left transition-colors hover:border-(--border-color-strong)"
         >
             {selected && <SelectionHighlight layoutId={groupId} />}
             <div className="relative">
                 <div className="mb-3 flex items-start justify-between">
                     <div>
-                        <p className="text-sm font-medium text-[var(--text-color)]">
+                        <p className="text-sm font-medium text-(--text-color)">
                             {label}
                         </p>
-                        <p className="mt-1 text-xs text-[var(--text-gray-color)]">
+                        <p className="mt-1 text-xs text-(--text-gray-color)">
                             {subtitle}
                         </p>
                     </div>
                     <span
                         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-colors duration-200 ${
                             selected
-                                ? 'border-[var(--accent-color)] text-[var(--accent-color)]'
-                                : 'border-[var(--border-color-strong)] text-transparent'
+                                ? 'border-(--accent-color) text-(--accent-color)'
+                                : 'border-(--border-color-strong) text-transparent'
                         }`}
                     >
                         <motion.span
@@ -117,7 +117,7 @@ export default function AccountSettingsThemeCard({
                 </div>
                 <PreviewStage
                     playKey={playKey}
-                    className={`flex h-[74px] gap-1 overflow-hidden rounded-lg border border-[var(--border-color)] p-1 ${palette.frame}`}
+                    className={`flex h-[74px] gap-1 overflow-hidden rounded-lg border border-(--border-color) p-1 ${palette.frame}`}
                 >
                     <PreviewBlock
                         className={`w-5 shrink-0 space-y-1 rounded-md p-1 ${palette.sidebar}`}
@@ -128,16 +128,16 @@ export default function AccountSettingsThemeCard({
                         <PreviewBar
                             className={`h-1 rounded-full ${palette.row}`}
                         />
-                        <PreviewBar className="h-1 rounded-full bg-[var(--accent-color)]" />
+                        <PreviewBar className="h-1 rounded-full bg-(--accent-color)" />
                     </PreviewBlock>
                     <div className="flex flex-1 flex-col gap-1 overflow-hidden rounded-md">
                         <PreviewBlock
-                            className={`h-1.5 shrink-0 rounded-sm ${palette.topbar}`}
+                            className={`h-1.5 shrink-0 rounded-xs ${palette.topbar}`}
                         />
                         <PreviewBlock
-                            className={`flex-1 space-y-1.5 rounded-sm p-1 ${palette.canvas}`}
+                            className={`flex-1 space-y-1.5 rounded-xs p-1 ${palette.canvas}`}
                         >
-                            <PreviewBar className="h-1.5 w-2/3 rounded-full bg-[var(--accent-color)]" />
+                            <PreviewBar className="h-1.5 w-2/3 rounded-full bg-(--accent-color)" />
                             <PreviewBar
                                 className={`h-1.5 rounded-full ${palette.row}`}
                             />

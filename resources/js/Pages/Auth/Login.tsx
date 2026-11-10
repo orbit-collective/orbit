@@ -29,9 +29,7 @@ export default function Login() {
             showcaseTitle={
                 <>
                     Plan Better,{' '}
-                    <span className="text-[var(--accent-color)]">
-                        Ship Faster
-                    </span>
+                    <span className="text-(--accent-color)">Ship Faster</span>
                 </>
             }
             showcaseDescription="Bring issues, projects, and your whole team into one orbit — track progress and ship with confidence."
@@ -78,7 +76,7 @@ export default function Login() {
                             label="Remember me"
                         />
                         <span
-                            className="cursor-not-allowed text-sm font-medium text-[var(--text-gray-color)] opacity-60"
+                            className="cursor-not-allowed text-sm font-medium text-(--text-gray-color) opacity-60"
                             title="Password reset is coming soon"
                         >
                             Forgot password?
@@ -93,11 +91,11 @@ export default function Login() {
                 <Divider label="Or continue with" />
                 <SocialLoginButtons />
 
-                <p className="text-center text-sm text-[var(--text-gray-color)]">
+                <p className="text-center text-sm text-(--text-gray-color)">
                     Don&apos;t have an account?{' '}
                     <Link
                         href={route('register')}
-                        className="font-semibold text-[var(--accent-light-color)] hover:underline"
+                        className="font-semibold text-(--accent-light-color) hover:underline"
                     >
                         Sign up
                     </Link>

@@ -27,23 +27,23 @@ function DashboardEmptyState({
         <Link
             href={actionHref}
             onClick={handleClick}
-            className="hover:bg-[var(--accent-color)]/[0.02] group flex flex-col items-center justify-center bg-[var(--surface-color)] p-8 text-center transition-all duration-200"
+            className="group flex flex-col items-center justify-center bg-(--surface-color) p-8 text-center transition-all duration-200 hover:bg-(--accent-color)/2"
         >
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] text-[var(--text-muted-color)] transition-colors group-hover:border-purple-500/30 group-hover:text-[var(--accent-color)]">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-(--border-color-strong) bg-(--surface-color) text-(--text-muted-color) transition-colors group-hover:border-purple-500/30 group-hover:text-(--accent-color)">
                 <Icon name={iconName} size={22} />
             </div>
 
             <div className="max-w-xs">
-                <h4 className="text-sm font-semibold text-[var(--text-color)] transition-colors group-hover:text-[var(--text-color)]">
+                <h4 className="text-sm font-semibold text-(--text-color) transition-colors group-hover:text-(--text-color)">
                     {title}
                 </h4>
-                <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted-color)]">
+                <p className="mt-1 text-xs leading-relaxed text-(--text-muted-color)">
                     {description}
                 </p>
             </div>
 
             {showAction && (
-                <span className="mt-3 text-xs font-medium text-[var(--accent-color)] opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="mt-3 text-xs font-medium text-(--accent-color) opacity-0 transition-opacity group-hover:opacity-100">
                     {actionLabel}
                 </span>
             )}

@@ -124,15 +124,15 @@ const QuickActionsCard: FC<QuickActionsCardProps> = ({
     );
 
     return (
-        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4">
             {showHeader && (
-                <h3 className="m-0 text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                <h3 className="m-0 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                     Quick Actions
                 </h3>
             )}
 
             {actions.length === 0 ? (
-                <p className="m-auto max-w-[16rem] text-center text-xs text-[var(--text-muted-color)]">
+                <p className="m-auto max-w-[16rem] text-center text-xs text-(--text-muted-color)">
                     No actions are on. Turn some on in the settings of this
                     widget.
                 </p>
@@ -173,12 +173,12 @@ const QuickActionsCard: FC<QuickActionsCardProps> = ({
                                 delay: rowDelay(index),
                             }}
                             className={cn(
-                                'group flex min-h-11 cursor-pointer items-center gap-2.5 border border-solid border-[var(--border-color)] bg-[var(--bg-color-hover)] text-left text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
+                                'group flex min-h-11 cursor-pointer items-center gap-2.5 border border-solid border-(--border-color) bg-(--bg-color-hover) text-left text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover)',
                                 FOCUS_RING,
                                 variant === 'grid' &&
                                     'flex-col justify-center gap-2 rounded-xl px-3 py-3 text-center',
                                 variant === 'list' &&
-                                    'w-full justify-between rounded-lg border-transparent bg-transparent px-2 py-1.5 hover:bg-[var(--bg-light-color)]',
+                                    'w-full justify-between rounded-lg border-transparent bg-transparent px-2 py-1.5 hover:bg-(--bg-light-color)',
                                 variant === 'bar' && 'rounded-xl px-2.5 py-1.5',
                             )}
                         >
@@ -196,7 +196,7 @@ const QuickActionsCard: FC<QuickActionsCardProps> = ({
                                 )}
                             </span>
                             {variant === 'list' && action.hint && (
-                                <kbd className="shrink-0 rounded border border-solid border-[var(--border-color)] bg-[var(--bg-light-color)] px-1.5 font-mono text-[10px] font-bold text-[var(--text-gray-color)]">
+                                <kbd className="shrink-0 rounded-sm border border-solid border-(--border-color) bg-(--bg-light-color) px-1.5 font-mono text-[10px] font-bold text-(--text-gray-color)">
                                     {action.hint}
                                 </kbd>
                             )}

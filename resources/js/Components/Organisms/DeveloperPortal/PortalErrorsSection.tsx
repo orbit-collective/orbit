@@ -79,7 +79,7 @@ function ErrorEntry({
             initial="hidden"
             animate="show"
             transition={{ delay: rowDelay(index) }}
-            className="transition-colors duration-200 hover:bg-[var(--bg-light-color)]"
+            className="transition-colors duration-200 hover:bg-(--bg-light-color)"
         >
             <button
                 type="button"
@@ -95,8 +95,8 @@ function ErrorEntry({
                     className={cn(
                         'mt-0.5 shrink-0 uppercase',
                         entry.level === 'error'
-                            ? 'text-[var(--error-color)]'
-                            : 'text-[var(--accent-color)]',
+                            ? 'text-(--error-color)'
+                            : 'text-(--accent-color)',
                     )}
                 >
                     {entry.level}
@@ -104,13 +104,13 @@ function ErrorEntry({
                 <span className="min-w-0 flex-1">
                     <span
                         className={cn(
-                            'block text-sm text-[var(--text-color)]',
+                            'block text-sm text-(--text-color)',
                             !open && 'truncate',
                         )}
                     >
                         {entry.message}
                     </span>
-                    <span className="text-xs text-[var(--text-gray-color)]">
+                    <span className="text-xs text-(--text-gray-color)">
                         {formatDate(entry.loggedAt.replace(' ', 'T'))}
                     </span>
                 </span>
@@ -119,7 +119,7 @@ function ErrorEntry({
                 <pre
                     tabIndex={0}
                     className={cn(
-                        'mx-4 mb-3 overflow-x-auto rounded-lg bg-[var(--bg-dark-color)] p-3 text-[11px] leading-relaxed text-[var(--text-gray-color)] sm:mx-5',
+                        'mx-4 mb-3 overflow-x-auto rounded-lg bg-(--bg-dark-color) p-3 text-[11px] leading-relaxed text-(--text-gray-color) sm:mx-5',
                         FOCUS_RING_INSET,
                     )}
                 >
@@ -151,7 +151,7 @@ export default function PortalErrorsSection({
                 >
                     <p
                         role="status"
-                        className="animate-pulse px-5 py-6 text-sm text-[var(--text-gray-color)]"
+                        className="animate-pulse px-5 py-6 text-sm text-(--text-gray-color)"
                     >
                         Reading the log…
                     </p>
@@ -186,7 +186,7 @@ export default function PortalErrorsSection({
                 )}
             >
                 {errorLog.entries.data.length === 0 ? (
-                    <p className="px-5 py-6 text-sm text-[var(--text-gray-color)]">
+                    <p className="px-5 py-6 text-sm text-(--text-gray-color)">
                         No errors in the log. Nice.
                     </p>
                 ) : (

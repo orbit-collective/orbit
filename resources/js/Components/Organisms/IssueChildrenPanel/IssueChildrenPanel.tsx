@@ -97,12 +97,12 @@ export default function IssueChildrenPanel({
     };
 
     return (
-        <section className="mt-2 flex flex-col gap-3 border-t border-[var(--border-color)] pt-4">
+        <section className="mt-2 flex flex-col gap-3 border-t border-(--border-color) pt-4">
             <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-[var(--text-color)]">
+                <span className="text-sm font-medium text-(--text-color)">
                     Sub-issues
                     {children.length > 0 && (
-                        <span className="ml-1.5 text-xs font-normal text-[var(--text-gray-color)]">
+                        <span className="ml-1.5 text-xs font-normal text-(--text-gray-color)">
                             <AnimatedNumber value={children.length} />
                         </span>
                     )}
@@ -111,7 +111,7 @@ export default function IssueChildrenPanel({
                     <button
                         type="button"
                         onClick={open}
-                        className="flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-[var(--text-muted-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                        className="flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-(--text-muted-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                     >
                         <Icon name="Plus" size={13} />
                         Add sub-issue
@@ -119,9 +119,9 @@ export default function IssueChildrenPanel({
                 )}
             </div>
 
-            <div className="flex flex-col overflow-hidden rounded-xl border border-[var(--border-color)]">
+            <div className="flex flex-col overflow-hidden rounded-xl border border-(--border-color)">
                 {children.length === 0 && !isAdding && (
-                    <p className="px-3 py-4 text-xs text-[var(--text-gray-color)]">
+                    <p className="px-3 py-4 text-xs text-(--text-gray-color)">
                         No sub-issues yet. Break this one down into smaller
                         pieces.
                     </p>
@@ -131,13 +131,13 @@ export default function IssueChildrenPanel({
                     <RowReveal
                         key={child.id}
                         index={index}
-                        className="border-b border-[var(--border-color)] last:border-b-0"
+                        className="border-b border-(--border-color) last:border-b-0"
                     >
                         <Link
                             href={route('issues.show', [project.id, child.id])}
-                            className="flex items-center gap-3 px-3 py-2 text-xs text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                            className="flex items-center gap-3 px-3 py-2 text-xs text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                         >
-                            <span className="w-10 shrink-0 font-mono text-[11px] text-[var(--text-muted-color)]">
+                            <span className="w-10 shrink-0 font-mono text-[11px] text-(--text-muted-color)">
                                 #{child.number ?? child.id}
                             </span>
                             {child.issueType && (
@@ -174,7 +174,7 @@ export default function IssueChildrenPanel({
                                 duration: 0.3,
                                 ease: [0.22, 1, 0.36, 1],
                             }}
-                            className="flex items-center gap-2 overflow-hidden border-t border-[var(--border-color)] px-3 py-2"
+                            className="flex items-center gap-2 overflow-hidden border-t border-(--border-color) px-3 py-2"
                         >
                             <input
                                 ref={inputRef}
@@ -183,7 +183,7 @@ export default function IssueChildrenPanel({
                                 onKeyDown={handleKeyDown}
                                 disabled={isSubmitting}
                                 placeholder="What needs to be done?"
-                                className="min-w-0 flex-1 rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] disabled:opacity-60"
+                                className="min-w-0 flex-1 rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1 text-xs text-(--text-color) outline-hidden focus:border-(--accent-color) disabled:opacity-60"
                             />
                             {selectableTypes.length > 0 && (
                                 <InlineSelectDropdown
@@ -212,7 +212,7 @@ export default function IssueChildrenPanel({
                                 type="button"
                                 title="Cancel"
                                 onClick={cancel}
-                                className="rounded p-1 text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
+                                className="rounded-sm p-1 text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                             >
                                 <Icon name="X" size={13} />
                             </button>

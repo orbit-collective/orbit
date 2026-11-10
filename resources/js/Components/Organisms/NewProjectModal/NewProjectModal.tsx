@@ -40,12 +40,12 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
             <div className="flex h-full flex-col overflow-y-auto">
-                <div className="flex items-start justify-between border-b border-[var(--bg-light-color)] p-6">
+                <div className="flex items-start justify-between border-b border-(--bg-light-color) p-6">
                     <div className="flex-1">
-                        <h2 className="text-xl font-semibold text-[var(--text-color)]">
+                        <h2 className="text-xl font-semibold text-(--text-color)">
                             Create New Project
                         </h2>
-                        <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                        <p className="mt-1 text-sm text-(--text-gray-color)">
                             Set up a new project to organize your work and
                             collaborate with your team
                         </p>
@@ -62,9 +62,9 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                 data-tour="project-name"
                                 className="flex flex-col gap-1.5"
                             >
-                                <label className="text-sm font-medium text-[var(--text-color)]">
+                                <label className="text-sm font-medium text-(--text-color)">
                                     Project name
-                                    <span className="text-[var(--error-color)]">
+                                    <span className="text-(--error-color)">
                                         {' '}
                                         *
                                     </span>
@@ -78,7 +78,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     variant="modal"
                                 />
                                 {errors.name && (
-                                    <span className="text-xs text-[var(--error-color)]">
+                                    <span className="text-xs text-(--error-color)">
                                         {errors.name}
                                     </span>
                                 )}
@@ -87,9 +87,9 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                 data-tour="project-slug"
                                 className="flex flex-col gap-1.5"
                             >
-                                <label className="text-sm font-medium text-[var(--text-color)]">
+                                <label className="text-sm font-medium text-(--text-color)">
                                     Slug
-                                    <span className="text-[var(--error-color)]">
+                                    <span className="text-(--error-color)">
                                         {' '}
                                         *
                                     </span>
@@ -103,11 +103,11 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     variant="modal"
                                 />
                                 {errors.slug && (
-                                    <span className="text-xs text-[var(--error-color)]">
+                                    <span className="text-xs text-(--error-color)">
                                         {errors.slug}
                                     </span>
                                 )}
-                                <p className="text-xs text-[var(--text-gray-color)]">
+                                <p className="text-xs text-(--text-gray-color)">
                                     Unique key to identify your project
                                 </p>
                             </div>
@@ -115,7 +115,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                 data-tour="project-description"
                                 className="flex flex-col gap-1.5"
                             >
-                                <label className="text-sm font-medium text-[var(--text-color)]">
+                                <label className="text-sm font-medium text-(--text-color)">
                                     Description
                                 </label>
                                 <TextArea
@@ -127,7 +127,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     variant="modal"
                                 />
                                 {errors.description && (
-                                    <span className="text-xs text-[var(--error-color)]">
+                                    <span className="text-xs text-(--error-color)">
                                         {errors.description}
                                     </span>
                                 )}
@@ -168,10 +168,10 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                             />
                         </div>
                     </div>
-                    <div className="flex items-center justify-end gap-3 border-t border-[var(--bg-light-color)] px-6 py-4">
+                    <div className="flex items-center justify-end gap-3 border-t border-(--bg-light-color) px-6 py-4">
                         <button
                             type="button"
-                            className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-gray-color)] transition-colors duration-150 hover:text-[var(--text-color)]"
+                            className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
                             onClick={onClose}
                             disabled={processing}
                         >
@@ -181,7 +181,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                             type="submit"
                             data-tour="project-submit"
                             disabled={processing}
-                            className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-[var(--accent-color)] px-6 py-2 text-sm font-medium text-[var(--text-color)] transition-all duration-150 ease-in-out hover:bg-[var(--accent-light-color)] disabled:opacity-50"
+                            className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-(--accent-color) px-6 py-2 text-sm font-medium text-(--text-color) transition-all duration-150 ease-in-out hover:bg-(--accent-light-color) disabled:opacity-50"
                         >
                             {processing ? 'Creating...' : 'Create project'}
                         </button>

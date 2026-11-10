@@ -30,17 +30,17 @@ export default function WorkspaceSettingsDeleteIssueTypeModal({
                 title="Delete issue type"
                 onClose={onClose}
                 icon={
-                    <span className="bg-[var(--error-color)]/10 flex h-8 w-8 items-center justify-center rounded-lg text-[var(--error-color)]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--error-color)/10 text-(--error-color)">
                         <Icon name="TriangleAlert" size={16} />
                     </span>
                 }
             />
 
             <div className="space-y-3 px-6 py-5">
-                <p className="text-sm text-[var(--text-gray-color)]">
+                <p className="text-sm text-(--text-gray-color)">
                     This removes{' '}
                     <span
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-color)]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-(--border-color) px-2 py-0.5 text-xs font-medium text-(--text-color)"
                         style={{ verticalAlign: 'middle' }}
                     >
                         <Icon
@@ -53,24 +53,24 @@ export default function WorkspaceSettingsDeleteIssueTypeModal({
                     from this project&apos;s issue type catalog. This cannot be
                     undone.
                 </p>
-                <p className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-light-color)] px-3 py-2 text-xs text-[var(--text-gray-color)]">
+                <p className="rounded-lg border border-(--border-color) bg-(--bg-light-color) px-3 py-2 text-xs text-(--text-gray-color)">
                     If any issues still use this type, deleting it will fail —
                     reassign those issues to a different type first.
                 </p>
             </div>
 
-            <footer className="flex items-center justify-end gap-3 border-t border-[var(--bg-light-color)] px-6 py-4">
+            <footer className="flex items-center justify-end gap-3 border-t border-(--bg-light-color) px-6 py-4">
                 <button
                     type="button"
                     onClick={onClose}
-                    className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-gray-color)] transition-colors duration-150 hover:text-[var(--text-color)]"
+                    className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
                 >
                     Cancel
                 </button>
                 <button
                     type="button"
                     onClick={handleConfirm}
-                    className="cursor-pointer rounded-lg bg-[var(--error-color)] px-4 py-2 text-sm font-medium text-[var(--text-color)] transition-opacity hover:opacity-90"
+                    className="cursor-pointer rounded-lg bg-(--error-color) px-4 py-2 text-sm font-medium text-(--text-color) transition-opacity hover:opacity-90"
                 >
                     Delete issue type
                 </button>

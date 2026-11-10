@@ -5,21 +5,18 @@ import { UserBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import Avatar from '../../Atoms/Avatar/Avatar';
 
-const classVariants = cva(
-    'flex items-center gap-2.5 text-[var(--text-color)]',
-    {
-        variants: {
-            size: {
-                sm: 'gap-1.5',
-                md: 'gap-2.5',
-                lg: 'gap-3.5',
-            },
-        },
-        defaultVariants: {
-            size: 'md',
+const classVariants = cva('flex items-center gap-2.5 text-(--text-color)', {
+    variants: {
+        size: {
+            sm: 'gap-1.5',
+            md: 'gap-2.5',
+            lg: 'gap-3.5',
         },
     },
-);
+    defaultVariants: {
+        size: 'md',
+    },
+});
 
 const UserBadge: React.FC<UserBadgeProps> = ({
     name,
@@ -46,7 +43,7 @@ const UserBadge: React.FC<UserBadgeProps> = ({
                 <div className={'flex min-w-0 flex-col'}>
                     {showName && (
                         <span
-                            className={`overflow-hidden overflow-ellipsis whitespace-nowrap text-sm font-normal ${avatarSrc ? 'text-[var(--text-color)]' : 'text-[var(--text-gray-color)]'}`}
+                            className={`overflow-hidden text-sm font-normal text-ellipsis whitespace-nowrap ${avatarSrc ? 'text-(--text-color)' : 'text-(--text-gray-color)'}`}
                         >
                             {name}
                         </span>
@@ -54,7 +51,7 @@ const UserBadge: React.FC<UserBadgeProps> = ({
                     {showDetails && email && (
                         <span
                             className={
-                                'text-2xs overflow-hidden overflow-ellipsis whitespace-nowrap font-normal text-[var(--text-gray-color)]'
+                                'text-2xs overflow-hidden font-normal text-ellipsis whitespace-nowrap text-(--text-gray-color)'
                             }
                         >
                             {email}

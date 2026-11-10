@@ -136,21 +136,21 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                 onClick={() => setIsOpen(true)}
                 aria-label="Open sidebar"
                 aria-expanded={isOpen}
-                className="fixed left-4 top-4 z-40 rounded-md border border-solid border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] p-2 text-[var(--text-gray-color)] hover:text-[var(--text-color)] md:hidden"
+                className="fixed top-4 left-4 z-40 rounded-md border border-solid border-(--bg-light-color) bg-(--bg-dark-color) p-2 text-(--text-gray-color) hover:text-(--text-color) md:hidden"
             >
                 <Icon name="Menu" size={20} />
             </button>
             {isOpen && (
                 <div
                     aria-hidden="true"
-                    className="fixed inset-0 z-40 bg-[var(--overlay-color)] backdrop-blur-sm md:hidden"
+                    className="fixed inset-0 z-40 bg-(--overlay-color) backdrop-blur-xs md:hidden"
                     onClick={() => setIsOpen(false)}
                 />
             )}
 
             <aside
                 className={cn(
-                    'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col justify-between bg-[var(--bg-color)] p-3 pr-1 transition-all duration-300 ease-in-out motion-reduce:transition-none md:relative md:translate-x-0',
+                    'fixed inset-y-0 left-0 z-50 flex h-screen shrink-0 flex-col justify-between bg-(--bg-color) p-3 pr-1 transition-all duration-300 ease-in-out motion-reduce:transition-none md:relative md:translate-x-0',
                     isCollapsed ? 'w-[72px]' : 'w-[240px]',
                     isOpen ? 'translate-x-0' : '-translate-x-full',
                 )}
@@ -179,7 +179,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                 />
                             </div>
                             {!isCollapsed && (
-                                <span className="truncate text-sm font-semibold text-[var(--text-color)]">
+                                <span className="truncate text-sm font-semibold text-(--text-color)">
                                     Orbit
                                 </span>
                             )}
@@ -198,7 +198,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     ? 'Expand sidebar'
                                     : 'Collapse sidebar'
                             }
-                            className="hidden shrink-0 rounded-md p-2 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] md:flex"
+                            className="hidden shrink-0 rounded-md p-2 text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color) md:flex"
                         >
                             <Icon
                                 name={
@@ -214,7 +214,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             type="button"
                             onClick={() => setIsOpen(false)}
                             aria-label="Close sidebar"
-                            className="rounded-md p-2 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] md:hidden"
+                            className="rounded-md p-2 text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color) md:hidden"
                         >
                             <Icon name="X" size={18} />
                         </button>
@@ -255,7 +255,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             ).map(({ title, section }) => (
                                 <div key={section}>
                                     {!isCollapsed && (
-                                        <h3 className="mb-1.5 px-2.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                                        <h3 className="mb-1.5 px-2.5 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                                             {title}
                                         </h3>
                                     )}
@@ -296,7 +296,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     title="New project"
                                     aria-label="New project"
                                     data-tour="new-project"
-                                    className="mb-1.5 flex shrink-0 items-center justify-center rounded-md py-1.5 text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                    className="mb-1.5 flex shrink-0 items-center justify-center rounded-md py-1.5 text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                 >
                                     <Icon name="Plus" size={16} />
                                 </button>
@@ -314,12 +314,12 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                 >
                                     <span
                                         className={
-                                            'text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]'
+                                            'text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase group-hover:text-(--text-color)'
                                         }
                                     >
                                         PROJECTS
                                     </span>
-                                    <span className="flex items-center gap-1.5 text-[var(--text-gray-color)] group-hover:text-[var(--text-color)]">
+                                    <span className="flex items-center gap-1.5 text-(--text-gray-color) group-hover:text-(--text-color)">
                                         {projects.length > 0 && (
                                             <span className="text-xs font-medium">
                                                 {projects.length}
@@ -384,7 +384,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
 
                 <div
                     className={
-                        'relative shrink-0 border-t border-solid border-[var(--bg-light-color)] pt-3'
+                        'relative shrink-0 border-t border-solid border-(--bg-light-color) pt-3'
                     }
                 >
                     <Dropdown
@@ -403,7 +403,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     isCollapsed ? 'User menu' : undefined
                                 }
                                 className={cn(
-                                    'flex w-full cursor-pointer items-center rounded-lg px-2 py-1.5 text-left hover:bg-[var(--bg-light-color)]',
+                                    'flex w-full cursor-pointer items-center rounded-lg px-2 py-1.5 text-left hover:bg-(--bg-light-color)',
                                     isCollapsed
                                         ? 'justify-center'
                                         : 'justify-between',

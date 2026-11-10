@@ -51,11 +51,11 @@ const Chip = ({
         className={cn(
             'shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-medium',
             tone === 'accent' &&
-                'border-[var(--accent-color)] text-[var(--accent-color)]',
+                'border-(--accent-color) text-(--accent-color)',
             tone === 'warning' &&
-                'border-[var(--warning-color,#f59e0b)] text-[var(--warning-color,#f59e0b)]',
+                'border-(--warning-color,#f59e0b) text-(--warning-color,#f59e0b)',
             tone === 'muted' &&
-                'border-[var(--border-color)] text-[var(--text-gray-color)]',
+                'border-(--border-color) text-(--text-gray-color)',
         )}
     >
         {children}
@@ -102,20 +102,20 @@ function StatusCard({
                     : undefined,
             }}
             className={cn(
-                'flex items-center gap-3 rounded-xl border bg-[var(--surface-color)] px-3.5 py-3 transition-colors',
+                'flex items-center gap-3 rounded-xl border bg-(--surface-color) px-3.5 py-3 transition-colors',
                 draggable.isDragging
-                    ? 'z-10 border-[var(--accent-color)] opacity-90 shadow-xl'
-                    : 'border-[var(--border-color)]',
+                    ? 'z-10 border-(--accent-color) opacity-90 shadow-xl'
+                    : 'border-(--border-color)',
                 droppable.isOver &&
                     !draggable.isDragging &&
-                    'border-[var(--accent-color)]',
+                    'border-(--accent-color)',
             )}
         >
             {canUpdateWorkflow && (
                 <button
                     type="button"
                     aria-label={`Reorder ${status.name}`}
-                    className="shrink-0 cursor-grab text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)] active:cursor-grabbing"
+                    className="shrink-0 cursor-grab text-(--text-muted-color) transition-colors hover:text-(--text-color) active:cursor-grabbing"
                     {...draggable.listeners}
                     {...draggable.attributes}
                 >
@@ -123,7 +123,7 @@ function StatusCard({
                 </button>
             )}
 
-            <span className="w-5 shrink-0 text-center font-mono text-[11px] text-[var(--text-muted-color)]">
+            <span className="w-5 shrink-0 text-center font-mono text-[11px] text-(--text-muted-color)">
                 {index + 1}
             </span>
 
@@ -133,11 +133,11 @@ function StatusCard({
             />
 
             <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                <p className="truncate text-sm font-medium text-(--text-color)">
                     {status.name}
                 </p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                    <span className="text-[11px] text-[var(--text-gray-color)]">
+                    <span className="text-[11px] text-(--text-gray-color)">
                         {categoryLabel(status.category)}
                     </span>
                     {status.isInitial && <Chip tone="accent">Start</Chip>}
@@ -160,7 +160,7 @@ function StatusCard({
                             title="Make this the starting status"
                             aria-label={`Make ${status.name} the starting status`}
                             onClick={() => onMakeInitial(status.id)}
-                            className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--accent-color)]"
+                            className="flex h-7 w-7 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--accent-color)"
                         >
                             <Icon name="Flag" size={13} />
                         </button>
@@ -170,7 +170,7 @@ function StatusCard({
                         title="Delete status"
                         aria-label={`Delete ${status.name}`}
                         onClick={() => onDelete(status.id)}
-                        className="hover:bg-[var(--error-color)]/10 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--error-color)/10 hover:text-(--error-color)"
                     >
                         <Icon name="Trash" size={13} />
                     </button>
@@ -329,7 +329,7 @@ export default function WorkspaceSettingsWorkflowModal({
                 title={`${issueType.name} workflow`}
                 onClose={onClose}
                 icon={
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
                         <Icon name="Workflow" size={16} />
                     </span>
                 }
@@ -338,10 +338,10 @@ export default function WorkspaceSettingsWorkflowModal({
             <div className="max-h-[75vh] space-y-8 overflow-y-auto px-6 py-6">
                 <section className="space-y-4">
                     <div>
-                        <h4 className="text-sm font-semibold text-[var(--text-color)]">
+                        <h4 className="text-sm font-semibold text-(--text-color)">
                             Flow
                         </h4>
-                        <p className="mt-0.5 text-xs text-[var(--text-gray-color)]">
+                        <p className="mt-0.5 text-xs text-(--text-gray-color)">
                             {canUpdateWorkflow
                                 ? 'The stages an issue of this type moves through. Drag a status to reorder the flow.'
                                 : 'The stages an issue of this type moves through.'}
@@ -359,7 +359,7 @@ export default function WorkspaceSettingsWorkflowModal({
                                     {index > 0 && (
                                         <div
                                             aria-hidden="true"
-                                            className="flex justify-center py-0.5 text-[var(--text-muted-color)]"
+                                            className="flex justify-center py-0.5 text-(--text-muted-color)"
                                         >
                                             <Icon
                                                 name="ChevronDown"
@@ -383,7 +383,7 @@ export default function WorkspaceSettingsWorkflowModal({
                     </DndContext>
 
                     {canUpdateWorkflow && (
-                        <div className="space-y-3 rounded-xl border border-dashed border-[var(--border-color)] p-3.5">
+                        <div className="space-y-3 rounded-xl border border-dashed border-(--border-color) p-3.5">
                             <div className="flex flex-wrap items-center gap-2">
                                 <Input
                                     value={newName}
@@ -410,7 +410,7 @@ export default function WorkspaceSettingsWorkflowModal({
                                     type="button"
                                     onClick={handleAddStatus}
                                     disabled={!newName.trim()}
-                                    className="ml-auto rounded-md bg-[var(--accent-color)] px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="ml-auto rounded-md bg-(--accent-color) px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Add status
                                 </button>
@@ -442,10 +442,10 @@ export default function WorkspaceSettingsWorkflowModal({
 
                 <section className="space-y-4">
                     <div>
-                        <h4 className="text-sm font-semibold text-[var(--text-color)]">
+                        <h4 className="text-sm font-semibold text-(--text-color)">
                             Transitions
                         </h4>
-                        <p className="mt-0.5 text-xs text-[var(--text-gray-color)]">
+                        <p className="mt-0.5 text-xs text-(--text-gray-color)">
                             For each status, pick which other statuses an issue
                             may move directly to from there.
                         </p>
@@ -455,10 +455,10 @@ export default function WorkspaceSettingsWorkflowModal({
                         {statuses.map((from) => (
                             <div
                                 key={from.id}
-                                className="rounded-xl border border-[var(--border-color)] p-3.5"
+                                className="rounded-xl border border-(--border-color) p-3.5"
                             >
                                 <div className="mb-2.5 flex flex-wrap items-center gap-2">
-                                    <span className="text-xs font-medium uppercase tracking-wide text-[var(--text-gray-color)]">
+                                    <span className="text-xs font-medium tracking-wide text-(--text-gray-color) uppercase">
                                         From
                                     </span>
                                     <WorkflowStatusBadge status={from} />
@@ -494,8 +494,8 @@ export default function WorkspaceSettingsWorkflowModal({
                                                     className={cn(
                                                         'flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed',
                                                         isAllowed
-                                                            ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)] text-[var(--accent-color)]'
-                                                            : 'border-[var(--border-color)] bg-transparent text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)]',
+                                                            ? 'border-(--accent-color) bg-(--accent-color-opacity) text-(--accent-color)'
+                                                            : 'border-(--border-color) bg-transparent text-(--text-gray-color) hover:bg-(--bg-light-color)',
                                                     )}
                                                 >
                                                     <Icon

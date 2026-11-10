@@ -21,7 +21,7 @@ function NotificationFilterTabs({
     onChange,
 }: NotificationFilterTabsProps) {
     return (
-        <div className="no-scrollbar flex items-center gap-1 overflow-x-auto rounded-full bg-[var(--bg-light-color)] p-1">
+        <div className="no-scrollbar flex items-center gap-1 overflow-x-auto rounded-full bg-(--bg-light-color) p-1">
             {TABS.map((tab) => (
                 <button
                     key={tab.id}
@@ -31,15 +31,15 @@ function NotificationFilterTabs({
                     className={cn(
                         'relative w-full whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
                         activeFilter === tab.id
-                            ? 'text-[var(--bg-dark-color)]'
-                            : 'text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
+                            ? 'text-(--bg-dark-color)'
+                            : 'text-(--text-gray-color) hover:text-(--text-color)',
                     )}
                 >
                     {activeFilter === tab.id && (
                         <motion.span
                             layoutId="notification-filter"
                             data-testid="notification-filter-pill"
-                            className="absolute inset-0 rounded-full bg-[var(--text-color)]"
+                            className="absolute inset-0 rounded-full bg-(--text-color)"
                             transition={SPRING}
                         />
                     )}

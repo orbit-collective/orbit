@@ -228,7 +228,7 @@ export default function Dropdown({
                 <div
                     key={option.value}
                     role="separator"
-                    className="mx-2 my-1 h-px bg-[var(--bg-light-color)]"
+                    className="mx-2 my-1 h-px bg-(--bg-light-color)"
                 />
             );
         }
@@ -236,7 +236,7 @@ export default function Dropdown({
             return (
                 <p
                     key={option.value}
-                    className="px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]"
+                    className="px-2 pt-2 pb-1 text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase"
                 >
                     {option.label}
                 </p>
@@ -319,7 +319,7 @@ export default function Dropdown({
                             <>
                                 {showHeader && (
                                     <div className="flex shrink-0 items-center justify-between px-3 pt-3">
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
+                                        <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
                                             {title}
                                         </p>
                                         {onClear &&
@@ -335,7 +335,7 @@ export default function Dropdown({
                                                             close(true);
                                                         }
                                                     }}
-                                                    className="cursor-pointer rounded-sm text-[10px] font-medium text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)] focus:outline-none focus-visible:text-[var(--text-color)] focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+                                                    className="cursor-pointer rounded-xs text-[10px] font-medium text-(--text-muted-color) transition-colors hover:text-(--text-color) focus:outline-hidden focus-visible:text-(--text-color) focus-visible:ring-2 focus-visible:ring-(--accent-color)"
                                                 >
                                                     {clearLabel}
                                                 </button>
@@ -348,7 +348,7 @@ export default function Dropdown({
                                         <Icon
                                             name="Search"
                                             size={14}
-                                            className="shrink-0 text-[var(--text-muted-color)]"
+                                            className="shrink-0 text-(--text-muted-color)"
                                         />
                                         <input
                                             ref={searchRef}
@@ -365,13 +365,13 @@ export default function Dropdown({
                                             placeholder={
                                                 searchPlaceholder ?? 'Search…'
                                             }
-                                            className="w-full appearance-none rounded-md bg-transparent py-1 text-sm text-[var(--text-color)] outline-none placeholder:text-[var(--text-muted-color)]"
+                                            className="w-full appearance-none rounded-md bg-transparent py-1 text-sm text-(--text-color) outline-hidden placeholder:text-(--text-muted-color)"
                                         />
                                     </div>
                                 )}
 
                                 {showCount && (
-                                    <p className="shrink-0 px-3 pb-1.5 pt-2 text-[11px] text-[var(--text-muted-color)]">
+                                    <p className="shrink-0 px-3 pt-2 pb-1.5 text-[11px] text-(--text-muted-color)">
                                         {
                                             visibleOptions.filter(isSelectable)
                                                 .length
@@ -404,9 +404,9 @@ export default function Dropdown({
                                             <Icon
                                                 name="SearchX"
                                                 size={18}
-                                                className="text-[var(--text-muted-color)]"
+                                                className="text-(--text-muted-color)"
                                             />
-                                            <p className="text-xs font-medium text-[var(--text-muted-color)]">
+                                            <p className="text-xs font-medium text-(--text-muted-color)">
                                                 {emptyMessage}
                                             </p>
                                         </div>
@@ -422,15 +422,15 @@ export default function Dropdown({
                                             type="button"
                                             data-nav
                                             onClick={onSelectAll}
-                                            className="flex shrink-0 cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-xs text-[var(--text-gray-color)] transition-colors hover:text-[var(--text-color)] focus:outline-none focus-visible:text-[var(--text-color)] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-color)]"
+                                            className="flex shrink-0 cursor-pointer items-center gap-2 px-3 py-2.5 text-left text-xs text-(--text-gray-color) transition-colors hover:text-(--text-color) focus:outline-hidden focus-visible:text-(--text-color) focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:ring-inset"
                                         >
                                             <span
                                                 aria-hidden="true"
                                                 className={cn(
                                                     'flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] transition-all duration-150',
                                                     allSelected
-                                                        ? 'bg-[var(--accent-color)]'
-                                                        : 'bg-[var(--bg-light-color)]',
+                                                        ? 'bg-(--accent-color)'
+                                                        : 'bg-(--bg-light-color)',
                                                 )}
                                             >
                                                 {allSelected && (
@@ -444,7 +444,7 @@ export default function Dropdown({
                                             <span className="font-medium">
                                                 Select all
                                             </span>
-                                            <span className="ml-auto text-[var(--text-muted-color)]">
+                                            <span className="ml-auto text-(--text-muted-color)">
                                                 {enabledOptions.length}
                                             </span>
                                         </button>

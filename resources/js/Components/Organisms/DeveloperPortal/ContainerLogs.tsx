@@ -66,7 +66,7 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
     return (
         <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-                <div className="min-w-[10rem] flex-1">
+                <div className="min-w-40 flex-1">
                     <Input
                         type="search"
                         value={filter}
@@ -89,7 +89,7 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                     aria-label="Refresh logs"
                     onClick={() => void refresh()}
                     className={cn(
-                        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-gray-color)] transition-colors duration-200 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-(--text-gray-color) transition-colors duration-200 hover:bg-(--bg-light-color) hover:text-(--text-color)',
                         FOCUS_RING,
                     )}
                 >
@@ -104,7 +104,7 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                     aria-label="Copy logs"
                     onClick={() => void copy()}
                     className={cn(
-                        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[var(--text-gray-color)] transition-colors duration-200 hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                        'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-(--text-gray-color) transition-colors duration-200 hover:bg-(--bg-light-color) hover:text-(--text-color)',
                         FOCUS_RING,
                     )}
                 >
@@ -118,18 +118,18 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                 aria-label="Container logs"
                 tabIndex={0}
                 className={cn(
-                    'max-h-80 overflow-auto rounded-lg bg-[var(--bg-dark-color)] p-3 font-mono text-[11px] leading-relaxed',
+                    'max-h-80 overflow-auto rounded-lg bg-(--bg-dark-color) p-3 font-mono text-[11px] leading-relaxed',
                     FOCUS_RING_INSET,
                 )}
             >
                 {!loaded ? (
-                    <p className="animate-pulse text-[var(--text-gray-color)]">
+                    <p className="animate-pulse text-(--text-gray-color)">
                         Loading logs…
                     </p>
                 ) : error ? (
-                    <p className="text-[var(--error-color)]">{error}</p>
+                    <p className="text-(--error-color)">{error}</p>
                 ) : visible.length === 0 ? (
-                    <p className="text-[var(--text-gray-color)]">
+                    <p className="text-(--text-gray-color)">
                         {lines.length === 0
                             ? 'No output yet.'
                             : 'No lines match.'}
@@ -142,17 +142,17 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                             className={cn(
                                 'flex gap-2 whitespace-pre-wrap break-all',
                                 {
-                                    'text-[var(--error-color)]':
+                                    'text-(--error-color)':
                                         lineTone(line) === 'error',
-                                    'text-[var(--warning-color)]':
+                                    'text-(--warning-color)':
                                         lineTone(line) === 'warning',
-                                    'text-[var(--text-gray-color)]':
+                                    'text-(--text-gray-color)':
                                         lineTone(line) === 'normal',
                                 },
                             )}
                         >
                             {line.time && (
-                                <span className="shrink-0 text-[var(--text-muted-color)]">
+                                <span className="shrink-0 text-(--text-muted-color)">
                                     {clock(line.time)}
                                 </span>
                             )}
@@ -162,7 +162,7 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                 )}
             </div>
 
-            <p className="text-[11px] text-[var(--text-muted-color)]">
+            <p className="text-[11px] text-(--text-muted-color)">
                 {visible.length} of {lines.length} lines
                 {follow && ' · following'}
             </p>

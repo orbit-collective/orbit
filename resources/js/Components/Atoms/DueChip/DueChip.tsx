@@ -13,19 +13,19 @@ const TONES: Record<
     }
 > = {
     overdue: {
-        chip: 'bg-[color-mix(in_srgb,var(--error-color)_14%,transparent)] text-[var(--error-color)]',
+        chip: 'bg-[color-mix(in_srgb,var(--error-color)_14%,transparent)] text-(--error-color)',
         icon: 'CircleAlert',
     },
     today: {
-        chip: 'bg-[color-mix(in_srgb,var(--warning-color)_16%,transparent)] text-[var(--warning-color)]',
+        chip: 'bg-[color-mix(in_srgb,var(--warning-color)_16%,transparent)] text-(--warning-color)',
         icon: 'Clock',
     },
     soon: {
-        chip: 'bg-[color-mix(in_srgb,var(--accent-color)_14%,transparent)] text-[var(--accent-color)]',
+        chip: 'bg-[color-mix(in_srgb,var(--accent-color)_14%,transparent)] text-(--accent-color)',
         icon: 'CalendarClock',
     },
     later: {
-        chip: 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)]',
+        chip: 'bg-(--bg-light-color) text-(--text-gray-color)',
         icon: 'Calendar',
     },
 };

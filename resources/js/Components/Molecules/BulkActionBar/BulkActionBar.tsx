@@ -69,14 +69,14 @@ export const BulkActionBar: FC<BulkActionBarProps> = ({
                         ? 'translate-y-0 scale-100 opacity-100 duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]'
                         : 'translate-y-8 scale-90 opacity-0 duration-300 ease-[cubic-bezier(0.4,0,0.6,1)]',
                     'transition-[transform,opacity]',
-                    'pointer-events-auto flex items-center gap-1 rounded-2xl bg-[var(--bg-color)]/85 p-1.5 backdrop-blur-xl',
+                    'pointer-events-auto flex items-center gap-1 rounded-2xl bg-(--bg-color)/85 p-1.5 backdrop-blur-xl',
                 )}
             >
-                <div className="flex items-center gap-2.5 rounded-xl bg-[var(--accent-color-opacity)] py-1.5 pl-1.5 pr-3.5">
-                    <Badge className="h-7 min-w-7 rounded-lg border-transparent bg-[var(--accent-color)] px-1.5 text-xs font-bold tabular-nums text-white">
+                <div className="flex items-center gap-2.5 rounded-xl bg-(--accent-color-opacity) py-1.5 pr-3.5 pl-1.5">
+                    <Badge className="h-7 min-w-7 rounded-lg border-transparent bg-(--accent-color) px-1.5 text-xs font-bold text-white tabular-nums">
                         {count}
                     </Badge>
-                    <span className="whitespace-nowrap text-sm font-medium text-[var(--text-color)]">
+                    <span className="text-sm font-medium whitespace-nowrap text-(--text-color)">
                         {count === 1 ? 'issue' : 'issues'} selected
                     </span>
                 </div>
@@ -102,7 +102,7 @@ export const BulkActionBar: FC<BulkActionBarProps> = ({
                             ariaLabel="Clear"
                             onClick={onClear}
                             disabled={isDeleting}
-                            className="h-10 gap-2 rounded-xl px-3 text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
+                            className="h-10 gap-2 rounded-xl px-3 text-(--text-gray-color) hover:text-(--text-color)"
                         >
                             <Keybind
                                 tooltipText="Clear selection"

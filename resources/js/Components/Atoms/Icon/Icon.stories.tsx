@@ -8,7 +8,7 @@ const meta = {
     args: { name: 'Star', size: 16 },
     decorators: [
         (Story) => (
-            <div className="text-[var(--text-color)]">
+            <div className="text-(--text-color)">
                 <Story />
             </div>
         ),

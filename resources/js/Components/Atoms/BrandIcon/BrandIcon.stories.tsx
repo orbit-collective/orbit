@@ -51,7 +51,7 @@ export const Large: Story = {
 
 export const AllBrands: Story = {
     render: () => (
-        <div className="grid max-w-md grid-cols-7 gap-4 text-[var(--text-color)]">
+        <div className="grid max-w-md grid-cols-7 gap-4 text-(--text-color)">
             {names.map((name) => (
                 <BrandIcon key={name} name={name} />
             ))}

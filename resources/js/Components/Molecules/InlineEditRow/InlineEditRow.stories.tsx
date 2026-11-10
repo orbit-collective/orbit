@@ -9,7 +9,7 @@ const meta = {
     parameters: { layout: 'padded' },
     args: {
         leading: (
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-light-color)]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--bg-light-color)">
                 <Icon name="Flag" size={16} />
             </span>
         ),

@@ -12,8 +12,8 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
     radius = 18,
     stroke = 3,
     progress,
-    colorClass = 'stroke-[var(--accent-color)]',
-    bgColorClass = 'stroke-[var(--bg-light-color)]',
+    colorClass = 'stroke-(--accent-color)',
+    bgColorClass = 'stroke-(--bg-light-color)',
 }) => {
     const epoch = useRefreshEpoch();
     const normalizedRadius = radius - stroke * 2;
@@ -24,7 +24,7 @@ const ProgressRing: React.FC<ProgressRingProps> = ({
         <svg
             height={radius * 2}
             width={radius * 2}
-            className="shrink-0 rotate-[-90deg]"
+            className="shrink-0 -rotate-90"
         >
             <circle
                 className={`${bgColorClass} fill-transparent`}

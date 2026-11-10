@@ -87,7 +87,7 @@ export default function InviteByEmailPanel({
                         </Button>
                     </div>
                     {error && (
-                        <span className="text-xs text-[var(--error-color)]">
+                        <span className="text-xs text-(--error-color)">
                             {error}
                         </span>
                     )}

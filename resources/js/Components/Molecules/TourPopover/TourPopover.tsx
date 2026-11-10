@@ -69,13 +69,13 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                 aria-label={title}
                 aria-live="polite"
                 style={style}
-                className="fixed z-[1101] w-[340px] max-w-[calc(100vw-24px)] rounded-xl border border-[var(--border-color-strong)] bg-[var(--surface-color)] p-4 text-[var(--text-color)] shadow-2xl backdrop-blur-2xl transition-[top,left] duration-300 ease-out motion-reduce:transition-none"
+                className="fixed z-1101 w-[340px] max-w-[calc(100vw-24px)] rounded-xl border border-(--border-color-strong) bg-(--surface-color) p-4 text-(--text-color) shadow-2xl backdrop-blur-2xl transition-[top,left] duration-300 ease-out motion-reduce:transition-none"
             >
                 {placement !== 'center' && (
                     <span
                         aria-hidden="true"
                         className={cn(
-                            'absolute h-2.5 w-2.5 rotate-45 border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)]',
+                            'absolute h-2.5 w-2.5 rotate-45 border-solid border-(--border-color-strong) bg-(--surface-color)',
                             ARROW_SIDE[placement],
                         )}
                         style={
@@ -90,22 +90,22 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                     type="button"
                     onClick={onClose}
                     aria-label="Close tour"
-                    className="absolute right-2 top-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                    className="absolute top-2 right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color)"
                 >
                     <Icon name="X" size={16} />
                 </button>
 
                 <div key={stepId} className="max-h-[40vh] overflow-y-auto pr-8">
-                    <h2 className="flex items-center gap-1 text-sm font-semibold text-[var(--text-color)]">
+                    <h2 className="flex items-center gap-1 text-sm font-semibold text-(--text-color)">
                         {title} {icon && <Icon name={icon} />}
                     </h2>
-                    <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--text-gray-color)]">
+                    <p className="mt-1.5 text-[13px] leading-relaxed text-(--text-gray-color)">
                         {description}
                     </p>
                 </div>
 
                 {hint && (
-                    <p className="mt-3 flex items-center gap-2 rounded-md bg-[var(--accent-color-opacity)] px-2.5 py-1.5 text-xs font-medium text-[var(--accent-color)]">
+                    <p className="mt-3 flex items-center gap-2 rounded-md bg-(--accent-color-opacity) px-2.5 py-1.5 text-xs font-medium text-(--accent-color)">
                         <Icon name={hint.icon} size={14} />
                         {hint.text}
                     </p>
@@ -116,9 +116,9 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                         className="flex items-center gap-2"
                         aria-label={`Step ${currentStep + 1} of ${totalSteps}`}
                     >
-                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-(--bg-light-color)">
                             <div
-                                className="h-full rounded-full bg-[var(--accent-color)] transition-all duration-300 motion-reduce:transition-none"
+                                className="h-full rounded-full bg-(--accent-color) transition-all duration-300 motion-reduce:transition-none"
                                 style={{
                                     width: `${((currentStep + 1) / totalSteps) * 100}%`,
                                 }}
@@ -126,7 +126,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                         </div>
                         <span
                             aria-hidden="true"
-                            className="text-xs tabular-nums text-[var(--text-gray-color)]"
+                            className="text-xs text-(--text-gray-color) tabular-nums"
                         >
                             {currentStep + 1}/{totalSteps}
                         </span>
@@ -138,7 +138,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                             onClick={onPrev}
                             disabled={isFirstStep}
                             aria-label="Previous step"
-                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-solid border-[var(--border-color-strong)] bg-transparent text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-solid border-(--border-color-strong) bg-transparent text-(--text-color) transition-colors hover:bg-(--bg-light-color) disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                         >
                             <Icon name="ChevronLeft" size={16} />
                         </button>
@@ -155,7 +155,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                             aria-label={
                                 isLastStep ? 'Finish tour' : 'Next step'
                             }
-                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-[var(--accent-color)] text-white transition-colors hover:bg-[var(--accent-light-color)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--accent-color)]"
+                            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-(--accent-color) text-white transition-colors hover:bg-(--accent-light-color) disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-(--accent-color)"
                         >
                             <Icon
                                 name={isLastStep ? 'Check' : 'ChevronRight'}

@@ -57,10 +57,10 @@ export const ShowcaseSlider = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.3 }}
-                    className="max-w-xs text-xs leading-relaxed text-[var(--text-gray-color)]"
+                    className="max-w-xs text-xs leading-relaxed text-(--text-gray-color)"
                 >
                     {SLIDES[activeIndex].text}{' '}
-                    <span className="font-semibold text-[var(--text-color)]">
+                    <span className="font-semibold text-(--text-color)">
                         {SLIDES[activeIndex].highlightText}
                     </span>
                 </motion.p>

@@ -12,8 +12,8 @@ const classVariants = cva(
     {
         variants: {
             isActive: {
-                true: 'bg-[var(--bg-light-color)] text-[var(--text-color)]',
-                false: 'text-[var(--text-gray-color)]',
+                true: 'bg-(--bg-light-color) text-(--text-color)',
+                false: 'text-(--text-gray-color)',
             },
             collapsed: {
                 true: 'justify-center',
@@ -21,7 +21,7 @@ const classVariants = cva(
             },
             disabled: {
                 true: 'cursor-not-allowed opacity-50',
-                false: 'cursor-pointer hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                false: 'cursor-pointer hover:bg-(--bg-light-color) hover:text-(--text-color)',
             },
         },
         defaultVariants: {

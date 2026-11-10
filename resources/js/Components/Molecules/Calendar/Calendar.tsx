@@ -113,23 +113,23 @@ const Calendar: React.FC<CalendarProps> = ({
                 damping: 25,
                 stiffness: 300,
             }}
-            className="w-[320px] rounded-2xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+            className="w-[320px] rounded-2xl border border-(--border-color) bg-(--bg-dark-color) p-5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl"
         >
             <div className="mb-6 flex items-center justify-between">
                 <button
                     type="button"
                     onClick={prevMonth}
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                 >
                     <Icon name="ChevronLeft" size={16} />
                 </button>
-                <span className="text-sm font-semibold text-[var(--text-color)]">
+                <span className="text-sm font-semibold text-(--text-color)">
                     {monthNames[month]} {year}
                 </span>
                 <button
                     type="button"
                     onClick={nextMonth}
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                 >
                     <Icon name="ChevronRight" size={16} />
                 </button>
@@ -139,7 +139,7 @@ const Calendar: React.FC<CalendarProps> = ({
                 {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
                     <span
                         key={day}
-                        className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-gray-color)]"
+                        className="text-[10px] font-bold tracking-wider text-(--text-gray-color) uppercase"
                     >
                         {day}
                     </span>
@@ -226,7 +226,7 @@ const Calendar: React.FC<CalendarProps> = ({
                         >
                             {inRange && (
                                 <div
-                                    className={`absolute z-0 h-9 w-full bg-[var(--bg-light-color)] ${rangeStartNode || i % 7 === 0 ? 'rounded-l-xl' : ''} ${rangeEndNode || i % 7 === 6 ? 'rounded-r-xl' : ''} `}
+                                    className={`absolute z-0 h-9 w-full bg-(--bg-light-color) ${rangeStartNode || i % 7 === 0 ? 'rounded-l-xl' : ''} ${rangeEndNode || i % 7 === 6 ? 'rounded-r-xl' : ''} `}
                                 />
                             )}
                             <button
@@ -252,7 +252,7 @@ const Calendar: React.FC<CalendarProps> = ({
                                         ),
                                     );
                                 }}
-                                className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-xl text-[13px] transition-all duration-200 ${!dateObj.currentMonth ? 'opacity-20' : 'text-[var(--text-color)]'} ${selected ? 'bg-[var(--accent-color)] font-bold !text-white !opacity-100 shadow-[0_0_20px_rgba(0,0,0,0.4)]' : inRange ? 'text-[var(--accent-color)]' : 'hover:bg-[var(--bg-light-color)]'} ${today && !selected ? 'border border-[var(--accent-color)]' : 'border border-transparent'} ${disabled ? 'cursor-not-allowed opacity-5 grayscale' : 'cursor-pointer'} `}
+                                className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-xl text-[13px] transition-all duration-200 ${!dateObj.currentMonth ? 'opacity-20' : 'text-(--text-color)'} ${selected ? 'bg-(--accent-color) font-bold text-white! opacity-100! shadow-[0_0_20px_rgba(0,0,0,0.4)]' : inRange ? 'text-(--accent-color)' : 'hover:bg-(--bg-light-color)'} ${today && !selected ? 'border border-(--accent-color)' : 'border border-transparent'} ${disabled ? 'cursor-not-allowed opacity-5 grayscale' : 'cursor-pointer'} `}
                             >
                                 {dateObj.day}
                             </button>
@@ -261,20 +261,20 @@ const Calendar: React.FC<CalendarProps> = ({
                 })}
             </div>
 
-            <div className="mt-4 flex justify-between border-t border-[var(--bg-light-color)] pt-3">
+            <div className="mt-4 flex justify-between border-t border-(--bg-light-color) pt-3">
                 <button
                     type="button"
                     onClick={() => {
                         onSelect(new Date());
                     }}
-                    className="cursor-pointer text-[11px] font-medium text-[var(--accent-color)] hover:underline"
+                    className="cursor-pointer text-[11px] font-medium text-(--accent-color) hover:underline"
                 >
                     Today
                 </button>
                 <button
                     type="button"
                     onClick={onClose}
-                    className="cursor-pointer text-[11px] font-medium text-[var(--text-gray-color)] hover:text-[var(--text-color)]"
+                    className="cursor-pointer text-[11px] font-medium text-(--text-gray-color) hover:text-(--text-color)"
                 >
                     Close
                 </button>

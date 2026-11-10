@@ -18,9 +18,8 @@ const iconBgVariants = cva(
     {
         variants: {
             status: {
-                current:
-                    'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]',
-                other: 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)]',
+                current: 'bg-(--accent-color-opacity) text-(--accent-color)',
+                other: 'bg-(--bg-light-color) text-(--text-gray-color)',
             },
         },
         defaultVariants: {
@@ -76,7 +75,7 @@ export default function AccountSettingsSessionsList({
                 <RowReveal
                     key={session.id}
                     index={index}
-                    className="flex items-center gap-3 rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] px-3.5 py-3"
+                    className="flex items-center gap-3 rounded-xl border border-(--border-color) bg-(--surface-color) px-3.5 py-3"
                 >
                     <span
                         className={iconBgVariants({
@@ -91,16 +90,16 @@ export default function AccountSettingsSessionsList({
                         />
                     </span>
                     <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                        <p className="truncate text-sm font-medium text-(--text-color)">
                             {session.ipAddress}
                         </p>
-                        <p className="truncate text-xs text-[var(--text-gray-color)]">
+                        <p className="truncate text-xs text-(--text-gray-color)">
                             Active {formatTimeAgo(session.lastActiveAt)} ago ·{' '}
                             {session.userAgent}
                         </p>
                     </div>
                     {session.isCurrent ? (
-                        <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--border-color)] px-2.5 py-1 text-xs font-medium text-[var(--text-gray-color)]">
+                        <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-(--border-color) px-2.5 py-1 text-xs font-medium text-(--text-gray-color)">
                             <StatusDot status="low" size="sm" />
                             This device
                         </span>
@@ -124,7 +123,7 @@ export default function AccountSettingsSessionsList({
                         type="button"
                         onClick={revokeAllOthers}
                         disabled={isRevokingOthers}
-                        className="text-xs font-medium text-[var(--error-color)] transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                        className="text-xs font-medium text-(--error-color) transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {isRevokingOthers
                             ? 'Signing out…'

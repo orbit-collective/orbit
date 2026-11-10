@@ -5,7 +5,7 @@ import { ModalProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
 const panelVariants = cva(
-    'relative w-full flex flex-col overflow-hidden rounded-2xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] shadow-2xl max-h-[85vh] [animation:modalSlideUp_0.25s_cubic-bezier(0.16,1,0.3,1)]',
+    'relative w-full flex flex-col overflow-hidden rounded-2xl border border-(--bg-light-color) bg-(--bg-color) shadow-2xl max-h-[85vh] animate-[modalSlideUp_0.25s_cubic-bezier(0.16,1,0.3,1)]',
     {
         variants: {
             size: {
@@ -75,7 +75,7 @@ const Modal: React.FC<ModalProps> = ({
             `}</style>
             <div
                 className={
-                    'fixed inset-0 z-[1000] flex items-center justify-center bg-[var(--overlay-color)] p-4 backdrop-blur-sm [animation:modalFadeIn_0.2s_ease-out]'
+                    'fixed inset-0 z-1000 flex animate-[modalFadeIn_0.2s_ease-out] items-center justify-center bg-(--overlay-color) p-4 backdrop-blur-xs'
                 }
                 onClick={onClose}
             >

@@ -10,9 +10,9 @@ const meta = {
         isOpen: true,
         onClose: fn(),
         children: (
-            <div className="p-6 text-[var(--text-color)]">
+            <div className="p-6 text-(--text-color)">
                 <h2 className="mb-2 text-lg font-semibold">Delete project</h2>
-                <p className="text-sm text-[var(--text-gray-color)]">
+                <p className="text-sm text-(--text-gray-color)">
                     This removes the project and all of its issues.
                 </p>
             </div>

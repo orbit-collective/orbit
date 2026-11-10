@@ -19,7 +19,7 @@ export default function MemberRow({
     return (
         <RowReveal
             index={index}
-            className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:items-center md:justify-between"
+            className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-(--bg-light-color) sm:px-5 md:flex-row md:items-center md:justify-between"
         >
             <div className="flex min-w-0 items-center gap-3">
                 <Avatar
@@ -28,12 +28,12 @@ export default function MemberRow({
                     size="lg"
                 />
                 <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                    <p className="truncate text-sm font-medium text-(--text-color)">
                         {member.name}
                     </p>
-                    <p className="truncate text-xs text-[var(--text-gray-color)]">
+                    <p className="truncate text-xs text-(--text-gray-color)">
                         {member.email}
-                        <span className="mx-1.5 text-[var(--border-color-strong)]">
+                        <span className="mx-1.5 text-(--border-color-strong)">
                             &middot;
                         </span>
                         Joined {formatDate(member.joinedAt)}

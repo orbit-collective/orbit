@@ -123,7 +123,7 @@ describe('AccountSettingsAvatarLibrary', () => {
         });
         expect(buttons.length).toBeGreaterThan(0);
         buttons.forEach((button) =>
-            expect(button.parentElement!.className).toContain('[&>*]:w-full'),
+            expect(button.parentElement!.className).toContain('*:w-full'),
         );
         await waitFor(() => expect(buttons[0]).toBeVisible());
     });

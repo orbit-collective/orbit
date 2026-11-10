@@ -22,7 +22,7 @@ export default function RoleSidebar({
     onCreateRequest,
 }: RoleSidebarProps) {
     return (
-        <div className="space-y-2 border-b border-[var(--border-color)] p-4 lg:border-b-0 lg:border-r">
+        <div className="space-y-2 border-b border-(--border-color) p-4 lg:border-r lg:border-b-0">
             {roles.map((role, index) => (
                 <RowReveal key={role.id} index={index}>
                     <RoleListItem
@@ -39,7 +39,7 @@ export default function RoleSidebar({
                 <button
                     type="button"
                     onClick={onCreateRequest}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--bg-light-color)] px-3 py-2.5 text-xs font-semibold text-[var(--text-gray-color)] transition-colors hover:border-[var(--border-color-strong)] hover:text-[var(--text-color)]"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-(--bg-light-color) px-3 py-2.5 text-xs font-semibold text-(--text-gray-color) transition-colors hover:border-(--border-color-strong) hover:text-(--text-color)"
                 >
                     <Icon name="Plus" size={13} />
                     Create role

@@ -23,5 +23,5 @@ export const Complete: Story = { args: { progress: 100 } };
 export const Large: Story = { args: { radius: 40, stroke: 4 } };
 
 export const CustomColor: Story = {
-    args: { colorClass: 'stroke-[var(--success-color)]' },
+    args: { colorClass: 'stroke-(--success-color)' },
 };

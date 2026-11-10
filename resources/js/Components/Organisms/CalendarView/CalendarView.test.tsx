@@ -245,7 +245,7 @@ describe('CalendarView Component', () => {
         render(<CalendarView issues={[]} />);
 
         const todayCell = screen.getByText('25');
-        expect(todayCell).toHaveClass('bg-[var(--accent-color)]');
+        expect(todayCell).toHaveClass('bg-(--accent-color)');
     });
 
     test('navigates to the next month and no longer shows the previous month issue', async () => {

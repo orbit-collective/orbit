@@ -109,7 +109,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
 
     return (
         <Modal isOpen={!!integration} onClose={onClose} size="md">
-            <header className="flex items-start justify-between gap-4 border-b border-[var(--bg-light-color)] px-6 py-5">
+            <header className="flex items-start justify-between gap-4 border-b border-(--bg-light-color) px-6 py-5">
                 <div className="flex items-center gap-3">
                     <span
                         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${integration.accentClassName}`}
@@ -121,7 +121,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                     </span>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h2 className="text-sm font-semibold text-[var(--text-color)]">
+                            <h2 className="text-sm font-semibold text-(--text-color)">
                                 {integration.name}
                             </h2>
                             <Badge
@@ -133,7 +133,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                 {integration.category}
                             </Badge>
                         </div>
-                        <p className="text-sm text-[var(--text-gray-color)]">
+                        <p className="text-sm text-(--text-gray-color)">
                             {integration.vendor}
                         </p>
                     </div>
@@ -145,17 +145,17 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         rel="noopener noreferrer"
                         aria-label={`Visit the ${integration.name} website`}
                         title={`Visit the ${integration.name} website`}
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                     >
                         <Icon name="ExternalLink" size={16} />
                     </a>
                     {integration.comingSoon ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--bg-light-color)] px-3 py-1.5 text-sm text-[var(--text-gray-color)]">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-(--bg-light-color) px-3 py-1.5 text-sm text-(--text-gray-color)">
                             <Icon name="Lock" size={14} />
                             Coming soon
                         </span>
                     ) : integration.kind === 'github' ? (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--bg-light-color)] px-3 py-1.5 text-sm text-[var(--text-gray-color)]">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-(--bg-light-color) px-3 py-1.5 text-sm text-(--text-gray-color)">
                             <Icon
                                 name={
                                     githubConnected ? 'CircleCheck' : 'Circle'
@@ -170,8 +170,8 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                             onClick={() => onToggle(!enabled)}
                             className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                                 enabled
-                                    ? 'border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] text-[var(--text-color)] hover:border-[var(--border-color-strong)]'
-                                    : 'bg-[var(--accent-color)] text-white hover:opacity-90'
+                                    ? 'border border-(--bg-light-color) bg-(--bg-dark-color) text-(--text-color) hover:border-(--border-color-strong)'
+                                    : 'bg-(--accent-color) text-white hover:opacity-90'
                             }`}
                         >
                             <Icon
@@ -181,7 +181,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                             {enabledToggleLabel}
                         </button>
                     ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--bg-light-color)] px-3 py-1.5 text-sm text-[var(--text-gray-color)]">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg border border-(--bg-light-color) px-3 py-1.5 text-sm text-(--text-gray-color)">
                             <Icon
                                 name={enabled ? 'CircleCheck' : 'Circle'}
                                 size={14}
@@ -199,7 +199,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         type="button"
                         onClick={onClose}
                         aria-label="Close"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                     >
                         <Icon name="X" size={16} />
                     </button>
@@ -212,7 +212,7 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                 />
 
                 <section className="mt-6">
-                    <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                    <h3 className="text-sm font-semibold text-(--text-color)">
                         Overview
                     </h3>
                     <EditableMarkdown
@@ -225,12 +225,12 @@ export default function WorkspaceSettingsIntegrationDetailModal({
 
                 {showConfiguration && integration.kind === 'notify' && (
                     <section className="mt-6">
-                        <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                        <h3 className="text-sm font-semibold text-(--text-color)">
                             Webhook URL
                         </h3>
                         {canUpdate ? (
                             <>
-                                <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                                <p className="mt-1 text-sm text-(--text-gray-color)">
                                     Activity is posted to this webhook. You can
                                     create one from your {integration.name}{' '}
                                     server's integration settings.
@@ -255,14 +255,14 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                         onClick={() =>
                                             onSaveWebhookUrl(webhookUrlDraft)
                                         }
-                                        className="shrink-0 rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="shrink-0 rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         Save
                                     </button>
                                 </div>
                             </>
                         ) : (
-                            <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                            <p className="mt-1 text-sm text-(--text-gray-color)">
                                 {settings?.hasWebhookUrl
                                     ? 'A webhook URL is configured.'
                                     : 'No webhook URL has been configured yet.'}
@@ -273,20 +273,20 @@ export default function WorkspaceSettingsIntegrationDetailModal({
 
                 {integration.kind === 'notify' && integration.subOptions && (
                     <section className="mt-6">
-                        <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                        <h3 className="text-sm font-semibold text-(--text-color)">
                             Options
                         </h3>
-                        <div className="mt-3 divide-y divide-[var(--border-color)] rounded-xl border border-[var(--border-color)]">
+                        <div className="mt-3 divide-y divide-(--border-color) rounded-xl border border-(--border-color)">
                             {integration.subOptions?.map((option) => (
                                 <div
                                     key={option.id}
                                     className="flex items-center justify-between gap-4 px-4 py-3"
                                 >
                                     <div className="min-w-0">
-                                        <p className="text-sm font-medium text-[var(--text-color)]">
+                                        <p className="text-sm font-medium text-(--text-color)">
                                             {option.title}
                                         </p>
-                                        <p className="mt-0.5 text-sm text-[var(--text-gray-color)]">
+                                        <p className="mt-0.5 text-sm text-(--text-gray-color)">
                                             {option.description}
                                         </p>
                                     </div>

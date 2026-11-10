@@ -18,10 +18,10 @@ interface NotificationItemProps {
 }
 
 const DOT_COLOR_CLASSES: Record<NotificationTypes, string> = {
-    success: 'bg-[var(--success-color)]',
-    info: 'bg-[var(--info-color)]',
-    warning: 'bg-[var(--warning-color)]',
-    error: 'bg-[var(--error-color)]',
+    success: 'bg-(--success-color)',
+    info: 'bg-(--info-color)',
+    warning: 'bg-(--warning-color)',
+    error: 'bg-(--error-color)',
 };
 
 function NotificationItem({
@@ -36,7 +36,7 @@ function NotificationItem({
         <div
             className={cn(
                 'group px-1 py-3 transition-colors duration-200',
-                selected && 'bg-[var(--bg-light-color)]/40',
+                selected && 'bg-(--bg-light-color)/40',
             )}
         >
             <div className="flex items-center justify-between gap-2">
@@ -47,7 +47,7 @@ function NotificationItem({
                         transition={SPRING}
                         className={`h-1.5 w-1.5 shrink-0 rounded-[3px] ${DOT_COLOR_CLASSES[notification.type]}`}
                     />
-                    <h2 className="truncate text-sm text-[var(--text-gray-color)]">
+                    <h2 className="truncate text-sm text-(--text-gray-color)">
                         {notification.title}
                     </h2>
                 </div>
@@ -75,12 +75,12 @@ function NotificationItem({
 
             <div className="pl-3.5">
                 {notification.message && (
-                    <p className="mt-1.5 break-words text-sm font-medium leading-relaxed text-[var(--text-color)]">
+                    <p className="mt-1.5 text-sm leading-relaxed font-medium wrap-break-word text-(--text-color)">
                         {notification.message}
                     </p>
                 )}
 
-                <div className="mt-2 flex items-center gap-1.5 text-xs text-[var(--text-muted-color)]">
+                <div className="mt-2 flex items-center gap-1.5 text-xs text-(--text-muted-color)">
                     <Icon name="Calendar" size={12} />
                     <span>{formatShortDate(notification.created_at)}</span>
                     <span>&bull;</span>
@@ -91,7 +91,7 @@ function NotificationItem({
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={SPRING}
-                                className="flex items-center gap-1 font-medium text-[var(--success-color)]"
+                                className="flex items-center gap-1 font-medium text-(--success-color)"
                             >
                                 <Icon name="CircleCheck" size={12} />
                                 Read
@@ -104,7 +104,7 @@ function NotificationItem({
                                 title="Mark as read"
                                 exit={{ opacity: 0, scale: 0.8 }}
                                 transition={{ duration: 0.12 }}
-                                className="flex cursor-pointer items-center gap-1 font-medium text-[var(--info-color)] hover:underline"
+                                className="flex cursor-pointer items-center gap-1 font-medium text-(--info-color) hover:underline"
                             >
                                 <Icon name="Clock" size={12} />
                                 Unread
@@ -117,7 +117,7 @@ function NotificationItem({
                     <div className="mt-2.5">
                         <a
                             href={notification.action_url}
-                            className="text-xs font-medium text-[var(--accent-color)] hover:underline"
+                            className="text-xs font-medium text-(--accent-color) hover:underline"
                         >
                             View details
                         </a>

@@ -385,7 +385,7 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                 <div
                     key={blockerIndex}
                     data-testid="tour-blocker"
-                    className="fixed z-[1100]"
+                    className="fixed z-1100"
                     style={style}
                     aria-hidden="true"
                 />
@@ -396,12 +396,12 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                     data-testid="tour-spotlight"
                     aria-hidden="true"
                     style={spotlightStyle}
-                    className="pointer-events-none fixed z-[1100] rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] ring-2 ring-[var(--accent-color)] transition-all duration-300 ease-out motion-reduce:transition-none"
+                    className="pointer-events-none fixed z-1100 rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] ring-2 ring-(--accent-color) transition-all duration-300 ease-out motion-reduce:transition-none"
                 />
             ) : (
                 <div
                     aria-hidden="true"
-                    className="pointer-events-none fixed inset-0 z-[1100] bg-black/60 backdrop-blur-[2px]"
+                    className="pointer-events-none fixed inset-0 z-1100 bg-black/60 backdrop-blur-[2px]"
                 />
             )}
 

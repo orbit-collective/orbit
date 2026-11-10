@@ -18,12 +18,12 @@ import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
 import { formattedDate } from '@/utils/time';
 
 const tabVariants = cva(
-    'flex cursor-pointer items-center justify-center gap-1 py-2 text-sm transition-all duration-100 ease-in-out hover:text-[var(--text-color)]',
+    'flex cursor-pointer items-center justify-center gap-1 py-2 text-sm transition-all duration-100 ease-in-out hover:text-(--text-color)',
     {
         variants: {
             isActive: {
-                true: 'text-[var(--text-color)]',
-                false: 'text-[var(--text-gray-color)]',
+                true: 'text-(--text-color)',
+                false: 'text-(--text-gray-color)',
             },
         },
     },
@@ -94,7 +94,7 @@ function PageHeader({
     }, [showNotificationsPopup]);
 
     return (
-        <header className="flex shrink-0 flex-col gap-3 border-b border-solid border-[var(--bg-light-color)] bg-[var(--bg-color-hover)] py-3 pl-16 pr-4 md:px-6">
+        <header className="flex shrink-0 flex-col gap-3 border-b border-solid border-(--bg-light-color) bg-(--bg-color-hover) py-3 pr-4 pl-16 md:px-6">
             <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-3">
                     {icon && (
@@ -103,18 +103,18 @@ function PageHeader({
                                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
                                 iconColors
                                     ? getColorTheme(iconColors).badgeBg
-                                    : 'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]',
+                                    : 'bg-(--accent-color-opacity) text-(--accent-color)',
                             )}
                         >
                             <Icon name={icon} size={16} />
                         </span>
                     )}
                     <div className="flex min-w-0 flex-col">
-                        <h1 className="truncate text-base font-semibold text-[var(--text-color)]">
+                        <h1 className="truncate text-base font-semibold text-(--text-color)">
                             {title}
                         </h1>
                         {showDate && (
-                            <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+                            <span className="truncate text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
                                 {formattedDate()}
                             </span>
                         )}
@@ -125,7 +125,7 @@ function PageHeader({
                     <button
                         onClick={handleRefresh}
                         title="Refresh"
-                        className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-solid border-[var(--bg-light-color)] bg-transparent px-2.5 py-1.5 text-xs font-semibold text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] sm:px-3"
+                        className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-solid border-(--bg-light-color) bg-transparent px-2.5 py-1.5 text-xs font-semibold text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color) sm:px-3"
                     >
                         <Icon
                             name="RefreshCw"
@@ -139,7 +139,7 @@ function PageHeader({
                             onClick={primaryAction.onClick}
                             data-tour="primary-action"
                             title={primaryAction.label}
-                            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-[var(--accent-color)] px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--accent-light-color)] sm:px-3"
+                            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-(--accent-color) px-2.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-(--accent-light-color) sm:px-3"
                         >
                             {primaryAction.icon && (
                                 <Icon name={primaryAction.icon} size={13} />
@@ -151,7 +151,7 @@ function PageHeader({
                     )}
 
                     {(primaryAction || children) && (
-                        <div className="mx-1 h-6 w-px shrink-0 bg-[var(--bg-light-color)]" />
+                        <div className="mx-1 h-6 w-px shrink-0 bg-(--bg-light-color)" />
                     )}
 
                     {children}
@@ -161,7 +161,7 @@ function PageHeader({
                         onClick={requestOpenCommandPalette}
                         aria-label="Open command palette"
                         title="Open command palette"
-                        className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                        className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-(--bg-light-color)"
                     >
                         <Icon
                             name="Search"
@@ -171,7 +171,7 @@ function PageHeader({
                     </button>
 
                     <a
-                        className="hidden shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)] sm:flex"
+                        className="hidden shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-(--bg-light-color) sm:flex"
                         href={'https://docs.orbit-dev.app/reference/faq'}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -187,7 +187,7 @@ function PageHeader({
                         <button
                             data-tour="notifications"
                             className={
-                                'relative flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]'
+                                'relative flex cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-(--bg-light-color)'
                             }
                             onClick={() => {
                                 setNotificationsOptions({});
@@ -209,7 +209,7 @@ function PageHeader({
                                         animate={{ scale: 1 }}
                                         exit={{ scale: 0 }}
                                         transition={SPRING}
-                                        className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--error-color)] px-1 text-[9px] font-bold leading-none text-white"
+                                        className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-(--error-color) px-1 text-[9px] leading-none font-bold text-white"
                                     >
                                         {unreadNotificationsCount > 9
                                             ? '9+'
@@ -234,7 +234,7 @@ function PageHeader({
                     </div>
                     {showSettingsIcon && (
                         <button
-                            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)]"
+                            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-(--bg-light-color)"
                             onClick={() => router.visit(route('settings'))}
                         >
                             <Icon
@@ -267,8 +267,8 @@ function PageHeader({
                                 name={tab.icon}
                                 className={
                                     tab.isActive
-                                        ? 'text-[var(--text-color)]'
-                                        : 'text-[var(--text-gray-color)]'
+                                        ? 'text-(--text-color)'
+                                        : 'text-(--text-gray-color)'
                                 }
                             />
                             {tab.label}

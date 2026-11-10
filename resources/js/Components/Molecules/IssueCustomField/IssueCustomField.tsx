@@ -50,8 +50,8 @@ export default function IssueCustomField({
                             onClick={() => onSave(isSelected ? null : option)}
                             className={
                                 isSelected
-                                    ? 'rounded-full border border-[var(--accent-color)] bg-[var(--accent-color-opacity)] px-2 py-0.5 text-xs font-medium text-[var(--accent-color)]'
-                                    : 'rounded-full border border-[var(--border-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)]'
+                                    ? 'rounded-full border border-(--accent-color) bg-(--accent-color-opacity) px-2 py-0.5 text-xs font-medium text-(--accent-color)'
+                                    : 'rounded-full border border-(--border-color) px-2 py-0.5 text-xs font-medium text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color)'
                             }
                         >
                             {option}
@@ -72,7 +72,7 @@ export default function IssueCustomField({
                 onBlur={() => onSave(draft === '' ? null : draft)}
                 aria-label={field.label}
                 placeholder={field.placeholder ?? undefined}
-                className="w-full rounded-md border border-[var(--border-color)] bg-transparent px-2 py-1 text-sm text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] disabled:opacity-60"
+                className="w-full rounded-md border border-(--border-color) bg-transparent px-2 py-1 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color) disabled:opacity-60"
             />
         );
     }
@@ -85,7 +85,7 @@ export default function IssueCustomField({
             disabled={disabled}
             placeholder={emptyText}
             emptyText={emptyText}
-            displayClassName="text-sm text-[var(--text-color)]"
+            displayClassName="text-sm text-(--text-color)"
         />
     );
 }

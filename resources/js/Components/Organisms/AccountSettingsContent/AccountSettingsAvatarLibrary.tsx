@@ -101,10 +101,10 @@ export default function AccountSettingsAvatarLibrary({
                             onClick={() => onSelect(face.src)}
                             {...(disabled ? {} : liftProps)}
                             className={cn(
-                                'relative aspect-square rounded-full border p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-40',
+                                'relative aspect-square rounded-full border p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-color) disabled:cursor-not-allowed disabled:opacity-40',
                                 selected
-                                    ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
-                                    : 'border-[var(--border-color)] hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color)]',
+                                    ? 'border-(--accent-color) bg-(--accent-color-opacity)'
+                                    : 'border-(--border-color) hover:border-(--border-color-strong) hover:bg-(--bg-light-color)',
                             )}
                         >
                             <img
@@ -117,7 +117,7 @@ export default function AccountSettingsAvatarLibrary({
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={SPRING}
-                                    className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--accent-color)] text-white"
+                                    className="absolute -right-0.5 -bottom-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-(--accent-color) text-white"
                                 >
                                     <Icon name="Check" size={10} />
                                 </motion.span>

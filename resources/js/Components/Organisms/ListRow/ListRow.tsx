@@ -58,7 +58,7 @@ const Editable = ({
 );
 
 const cellBase =
-    'px-3 py-2 border-b border-[var(--border-color)] align-middle text-[12px] font-normal';
+    'px-3 py-2 border-b border-(--border-color) align-middle text-[12px] font-normal';
 
 export const ListRow = ({
     issue,
@@ -170,7 +170,7 @@ export const ListRow = ({
                     }
                 }}
                 className={cn(
-                    'group/row cursor-pointer select-none outline-none transition-colors hover:bg-[var(--bg-light-color)]',
+                    'group/row cursor-pointer select-none outline-hidden transition-colors hover:bg-(--bg-light-color)',
                 )}
                 style={{ height: rowHeight }}
             >
@@ -182,7 +182,7 @@ export const ListRow = ({
                         <input
                             type="checkbox"
                             className={cn(
-                                'h-3.5 w-3.5 cursor-pointer rounded border-[var(--border-color-strong)] bg-[var(--surface-color)] text-[var(--accent-color)] transition-opacity focus:ring-0',
+                                'h-3.5 w-3.5 cursor-pointer rounded-sm border-(--border-color-strong) bg-(--surface-color) text-(--accent-color) transition-opacity focus:ring-0',
                                 !issue?.isChecked &&
                                     'opacity-0 group-hover/row:opacity-100',
                                 isClosed && 'opacity-20',
@@ -197,7 +197,7 @@ export const ListRow = ({
                     <td
                         className={cn(
                             cellBase,
-                            'w-[75px] font-mono text-[11px] text-[var(--text-muted-color)]',
+                            'w-[75px] font-mono text-[11px] text-(--text-muted-color)',
                         )}
                         data-column="id"
                     >
@@ -206,10 +206,7 @@ export const ListRow = ({
                 )}
                 {enabledColumns.title && (
                     <td
-                        className={cn(
-                            cellBase,
-                            'truncate text-[var(--text-color)]',
-                        )}
+                        className={cn(cellBase, 'truncate text-(--text-color)')}
                         data-column="title"
                     >
                         <div
@@ -228,7 +225,7 @@ export const ListRow = ({
                                         e.stopPropagation();
                                         onToggleCollapse?.();
                                     }}
-                                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded text-[var(--text-muted-color)] transition-colors hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)]"
+                                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-(--text-muted-color) transition-colors hover:bg-(--bg-dark-color) hover:text-(--text-color)"
                                 >
                                     <Icon
                                         name={
@@ -261,7 +258,7 @@ export const ListRow = ({
                                             setIsEditingTitle(false);
                                         }
                                     }}
-                                    className="min-w-0 flex-1 rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+                                    className="min-w-0 flex-1 rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-0.5 text-xs font-medium text-(--text-color) outline-hidden focus:border-(--accent-color) focus-visible:ring-2 focus-visible:ring-(--accent-color)"
                                 />
                             ) : (
                                 <>
@@ -270,9 +267,9 @@ export const ListRow = ({
                                             // The row is the tab stop for the title, and a ring
                                             // on a table row itself doesn't render, so the title
                                             // shows the row's keyboard focus.
-                                            '-mx-1 truncate rounded px-1 font-medium group-focus-visible/row:ring-2 group-focus-visible/row:ring-[var(--accent-color)]',
+                                            '-mx-1 truncate rounded-sm px-1 font-medium group-focus-visible/row:ring-2 group-focus-visible/row:ring-(--accent-color)',
                                             isClosed &&
-                                                'text-[var(--text-muted-color)] line-through',
+                                                'text-(--text-muted-color) line-through',
                                         )}
                                     >
                                         {issue.title}
@@ -286,7 +283,7 @@ export const ListRow = ({
                                                 startTitleEdit();
                                             }}
                                             className={cn(
-                                                'flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded border-none bg-transparent p-0 text-[var(--text-muted-color)] hover:bg-[var(--bg-dark-color)] hover:text-[var(--text-color)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                                                'flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-(--text-muted-color) hover:bg-(--bg-dark-color) hover:text-(--text-color) focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)',
                                                 REVEAL_ON_ROW_HOVER,
                                             )}
                                         >
@@ -314,9 +311,7 @@ export const ListRow = ({
                         ) : issue.issueType ? (
                             <IssueTypeBadge issueType={issue.issueType} />
                         ) : (
-                            <span className="text-[var(--text-muted-color)]">
-                                —
-                            </span>
+                            <span className="text-(--text-muted-color)">—</span>
                         )}
                     </td>
                 )}
@@ -337,10 +332,7 @@ export const ListRow = ({
                 )}
                 {enabledColumns.assignee && (
                     <td
-                        className={cn(
-                            cellBase,
-                            'text-[var(--text-gray-color)]',
-                        )}
+                        className={cn(cellBase, 'text-(--text-gray-color)')}
                         data-column="assignee"
                     >
                         {can?.assign ? (
@@ -382,7 +374,7 @@ export const ListRow = ({
                                 <PriorityIcon
                                     priority={issue.priorityDetails}
                                 />
-                                <span className="truncate capitalize text-[var(--text-color)]">
+                                <span className="truncate text-(--text-color) capitalize">
                                     {issue.priority ?? 'None'}
                                 </span>
                             </div>
@@ -414,7 +406,7 @@ export const ListRow = ({
                     <td
                         className={cn(
                             cellBase,
-                            'whitespace-nowrap text-[11px] text-[var(--text-muted-color)]',
+                            'whitespace-nowrap text-[11px] text-(--text-muted-color)',
                         )}
                         data-column="updated"
                     >
@@ -428,7 +420,7 @@ export const ListRow = ({
                     <td
                         className={cn(
                             cellBase,
-                            'whitespace-nowrap text-[11px] text-[var(--text-muted-color)]',
+                            'whitespace-nowrap text-[11px] text-(--text-muted-color)',
                         )}
                         data-column="start_date"
                     >
@@ -456,7 +448,7 @@ export const ListRow = ({
                     <td
                         className={cn(
                             cellBase,
-                            'whitespace-nowrap text-[11px] text-[var(--text-muted-color)]',
+                            'whitespace-nowrap text-[11px] text-(--text-muted-color)',
                         )}
                         data-column="end_date"
                     >
@@ -492,7 +484,7 @@ export const ListRow = ({
                                 iconName="Ellipsis"
                                 ariaLabel="Issue actions"
                                 className={cn(
-                                    'rounded p-1 text-[var(--text-muted-color)] opacity-0 hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)] group-hover/row:opacity-100',
+                                    'rounded-sm p-1 text-(--text-muted-color) opacity-0 hover:bg-(--bg-light-color-hover) hover:text-(--text-color) group-hover/row:opacity-100',
                                     isMenuOpen && 'opacity-100',
                                 )}
                             />

@@ -64,7 +64,7 @@ export default function WorkspaceSettingsHierarchyModal({
                 title={`${issueType.name} hierarchy`}
                 onClose={onClose}
                 icon={
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
                         <Icon name="GitBranch" size={16} />
                     </span>
                 }
@@ -72,7 +72,7 @@ export default function WorkspaceSettingsHierarchyModal({
 
             <div className="max-h-[70vh] space-y-4 overflow-y-auto px-6 py-6">
                 {!issueType.allowsChildren ? (
-                    <div className="flex items-start gap-2 rounded-xl border border-dashed border-[var(--border-color)] p-3.5 text-xs text-[var(--text-gray-color)]">
+                    <div className="flex items-start gap-2 rounded-xl border border-dashed border-(--border-color) p-3.5 text-xs text-(--text-gray-color)">
                         <Icon
                             name="Info"
                             size={14}
@@ -87,10 +87,10 @@ export default function WorkspaceSettingsHierarchyModal({
                 ) : (
                     <>
                         <div>
-                            <h4 className="text-sm font-semibold text-[var(--text-color)]">
+                            <h4 className="text-sm font-semibold text-(--text-color)">
                                 Which types can be sub-issues
                             </h4>
-                            <p className="mt-0.5 text-xs text-[var(--text-gray-color)]">
+                            <p className="mt-0.5 text-xs text-(--text-gray-color)">
                                 Leave everything unselected to allow any issue
                                 type as a sub-issue of {issueType.name}.
                             </p>
@@ -111,7 +111,7 @@ export default function WorkspaceSettingsHierarchyModal({
                                         className={cn(
                                             'rounded-full transition-opacity disabled:cursor-not-allowed disabled:opacity-50',
                                             isAllowed &&
-                                                'ring-2 ring-[var(--accent-color)]',
+                                                'ring-2 ring-(--accent-color)',
                                         )}
                                     >
                                         <IssueTypeBadge issueType={type} />

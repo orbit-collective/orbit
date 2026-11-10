@@ -35,7 +35,7 @@ function SegmentedControl<T extends string | number>({
             role="group"
             aria-label={label}
             className={cn(
-                'flex flex-wrap gap-0.5 rounded-lg bg-[var(--bg-light-color)] p-0.5',
+                'flex flex-wrap gap-0.5 rounded-lg bg-(--bg-light-color) p-0.5',
                 fullWidth ? 'w-full' : 'w-fit max-w-full',
                 className,
             )}
@@ -54,8 +54,8 @@ function SegmentedControl<T extends string | number>({
                             FOCUS_RING,
                             fullWidth && 'flex-1',
                             active
-                                ? 'text-[var(--text-color)]'
-                                : 'text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
+                                ? 'text-(--text-color)'
+                                : 'text-(--text-gray-color) hover:text-(--text-color)',
                         )}
                     >
                         {active && (
@@ -64,7 +64,7 @@ function SegmentedControl<T extends string | number>({
                                 data-testid="segment-pill"
                                 aria-hidden="true"
                                 transition={SPRING}
-                                className="absolute inset-0 rounded-md bg-[var(--surface-color)] shadow-sm"
+                                className="absolute inset-0 rounded-md bg-(--surface-color) shadow-xs"
                             />
                         )}
                         <span className="relative">{option.label}</span>

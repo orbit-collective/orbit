@@ -25,7 +25,7 @@ export const WithOptions: Story = {
 export const Empty: Story = {
     render: (args) => (
         <DropdownPanel {...args}>
-            <p className="px-3 py-2 text-xs text-[var(--text-muted-color)]">
+            <p className="px-3 py-2 text-xs text-(--text-muted-color)">
                 No results
             </p>
         </DropdownPanel>

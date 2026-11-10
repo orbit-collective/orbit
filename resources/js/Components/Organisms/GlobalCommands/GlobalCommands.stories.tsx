@@ -14,7 +14,7 @@ const Demo = () => {
             <button
                 type="button"
                 onClick={() => openPalette()}
-                className="rounded-lg border border-[var(--border-color)] bg-[var(--surface-color)] px-3 py-1.5 text-sm text-[var(--text-color)]"
+                className="rounded-lg border border-(--border-color) bg-(--surface-color) px-3 py-1.5 text-sm text-(--text-color)"
             >
                 Open palette
             </button>

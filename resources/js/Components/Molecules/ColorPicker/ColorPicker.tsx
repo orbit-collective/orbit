@@ -111,7 +111,7 @@ export default function ColorPicker({
                 animate={{ borderRadius: radius }}
                 initial={false}
                 className={cn(
-                    'relative shrink-0 cursor-pointer border-0 p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                    'relative shrink-0 cursor-pointer border-0 p-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)',
                     expanded ? 'h-[26px] w-[26px]' : 'h-6 w-6',
                 )}
                 style={{ backgroundColor: color, borderRadius: radius }}
@@ -120,7 +120,7 @@ export default function ColorPicker({
                     <motion.span
                         layoutId="ring"
                         transition={SPRING}
-                        className="pointer-events-none absolute -inset-[4px] border-2 border-solid border-white shadow-[0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(0,0,0,0.45)]"
+                        className="pointer-events-none absolute inset-[-4px] border-2 border-solid border-white shadow-[0_0_0_1px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(0,0,0,0.45)]"
                         style={{ borderRadius: radius + 4 }}
                     />
                 )}
@@ -156,7 +156,7 @@ export default function ColorPicker({
             animate={{ borderRadius: radius }}
             initial={false}
             className={cn(
-                'flex shrink-0 cursor-pointer items-center justify-center border-0 p-0 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                'flex shrink-0 cursor-pointer items-center justify-center border-0 p-0 text-white focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)',
                 expanded ? 'h-[26px] w-[26px]' : 'h-6 w-6',
             )}
             style={{ background: RAINBOW, borderRadius: radius }}
@@ -190,7 +190,7 @@ export default function ColorPicker({
                         <div className="flex items-center gap-2">
                             <div
                                 ref={scroller}
-                                className="no-scrollbar relative flex min-w-0 flex-1 items-center gap-2 overflow-x-auto px-1.5 py-1.5 [mask-image:linear-gradient(to_right,transparent,#000_10px,#000_calc(100%-14px),transparent)]"
+                                className="no-scrollbar relative flex min-w-0 flex-1 items-center gap-2 overflow-x-auto mask-[linear-gradient(to_right,transparent,#000_10px,#000_calc(100%-14px),transparent)] px-1.5 py-1.5"
                             >
                                 {swatches.map(swatch)}
                             </div>
@@ -211,7 +211,7 @@ export default function ColorPicker({
                                 }}
                                 className="overflow-hidden"
                             >
-                                <div className="space-y-3 px-1 pb-1 pt-3">
+                                <div className="space-y-3 px-1 pt-3 pb-1">
                                     <HexColorPicker
                                         color={current}
                                         onChange={(next) =>
@@ -221,7 +221,7 @@ export default function ColorPicker({
                                     />
                                     <div className="flex items-center gap-2">
                                         <motion.span
-                                            className="h-8 w-8 shrink-0 rounded-lg border border-solid border-[var(--border-color-strong)]"
+                                            className="h-8 w-8 shrink-0 rounded-lg border border-solid border-(--border-color-strong)"
                                             animate={{
                                                 backgroundColor: current,
                                             }}
@@ -237,7 +237,7 @@ export default function ColorPicker({
                                             spellCheck={false}
                                             autoComplete="off"
                                             maxLength={7}
-                                            className="h-8 min-w-0 flex-1 rounded-lg border-0 bg-[var(--bg-light-color)] px-3 font-mono text-xs font-semibold uppercase tracking-wide text-[var(--text-color)] outline-none ring-0 transition-colors placeholder:text-[var(--text-muted-color)] focus:bg-[var(--bg-light-color-hover)] focus:ring-0"
+                                            className="h-8 min-w-0 flex-1 rounded-lg border-0 bg-(--bg-light-color) px-3 font-mono text-xs font-semibold tracking-wide text-(--text-color) uppercase ring-0 outline-hidden transition-colors placeholder:text-(--text-muted-color) focus:bg-(--bg-light-color-hover) focus:ring-0"
                                         />
                                     </div>
                                 </div>

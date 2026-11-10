@@ -139,7 +139,7 @@ function NotificationsList({
                         className="overflow-hidden"
                     >
                         {index > 0 && (
-                            <span className="block h-px w-full bg-[var(--bg-light-color)]" />
+                            <span className="block h-px w-full bg-(--bg-light-color)" />
                         )}
                         <NotificationItem
                             notification={item}
@@ -158,7 +158,7 @@ function NotificationsList({
             {hasMore && (
                 <div
                     ref={sentinelRef}
-                    className="flex justify-center py-3 text-xs text-[var(--text-muted-color)]"
+                    className="flex justify-center py-3 text-xs text-(--text-muted-color)"
                 >
                     {isLoadingMore ? (
                         <span role="status" className="flex items-center gap-2">
@@ -173,7 +173,7 @@ function NotificationsList({
                         <button
                             type="button"
                             onClick={onLoadMore}
-                            className="font-medium hover:text-[var(--text-color)] hover:underline"
+                            className="font-medium hover:text-(--text-color) hover:underline"
                         >
                             Load more
                         </button>
@@ -188,7 +188,7 @@ function ErrorRow({ onRetry }: { onRetry?: () => void }) {
     return (
         <p
             role="alert"
-            className="flex items-center justify-center gap-2 py-3 text-xs text-[var(--error-color)]"
+            className="flex items-center justify-center gap-2 py-3 text-xs text-(--error-color)"
         >
             Could not load notifications.
             {onRetry && (

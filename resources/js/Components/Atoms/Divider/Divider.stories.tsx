@@ -8,7 +8,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="w-80 text-[var(--text-color)]">
+            <div className="w-80 text-(--text-color)">
                 <Story />
             </div>
         ),

@@ -258,7 +258,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                         <RowReveal
                             key={priority.id}
                             index={index}
-                            className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                            className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-(--bg-light-color) sm:px-5"
                         >
                             <span
                                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
@@ -272,22 +272,22 @@ export default function WorkspaceSettingsPrioritiesTab({
                                 />
                             </span>
                             <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-2 gap-y-0.5 sm:flex-nowrap">
-                                <p className="max-w-full truncate text-sm font-medium text-[var(--text-color)]">
+                                <p className="max-w-full truncate text-sm font-medium text-(--text-color)">
                                     {priority.name}
                                 </p>
                                 {priority.isDefault && (
-                                    <span className="bg-[var(--warning-color)]/15 shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-[var(--warning-color)]">
+                                    <span className="shrink-0 rounded-full bg-(--warning-color)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--warning-color)">
                                         Default
                                     </span>
                                 )}
-                                <span className="shrink-0 text-xs text-[var(--text-muted-color)]">
+                                <span className="shrink-0 text-xs text-(--text-muted-color)">
                                     {priority.issueCount === 1
                                         ? '1 issue'
                                         : `${priority.issueCount} issues`}
                                 </span>
                             </div>
                             {(canUpdatePriorities || canDeletePriorities) && (
-                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:focus-within:opacity-100 [@media(hover:hover)]:sm:group-hover:opacity-100">
+                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:group-hover:opacity-100 [@media(hover:hover)]:sm:focus-within:opacity-100">
                                     {canUpdatePriorities &&
                                         priorities.length > 1 && (
                                             <>

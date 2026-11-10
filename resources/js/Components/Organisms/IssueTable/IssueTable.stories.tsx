@@ -16,7 +16,7 @@ const meta = {
     },
     decorators: [
         (Story) => (
-            <div className="flex min-h-[480px] bg-[var(--bg-color)] p-4">
+            <div className="flex min-h-[480px] bg-(--bg-color) p-4">
                 <Story />
             </div>
         ),

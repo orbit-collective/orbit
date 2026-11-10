@@ -16,7 +16,7 @@ const Skeleton: React.FC<SkeletonProps> = ({ className, index = 0 }) => (
     <motion.span
         data-testid="skeleton"
         aria-hidden="true"
-        className={cn('block rounded-md bg-[var(--bg-light-color)]', className)}
+        className={cn('block rounded-md bg-(--bg-light-color)', className)}
         initial={{ opacity: 0.45 }}
         animate={{ opacity: [0.45, 0.9, 0.45] }}
         transition={{

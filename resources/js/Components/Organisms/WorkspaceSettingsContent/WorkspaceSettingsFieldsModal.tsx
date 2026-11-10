@@ -154,7 +154,7 @@ export default function WorkspaceSettingsFieldsModal({
                 title={`${issueType.name} fields`}
                 onClose={onClose}
                 icon={
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
                         <Icon name="ListChecks" size={16} />
                     </span>
                 }
@@ -162,7 +162,7 @@ export default function WorkspaceSettingsFieldsModal({
 
             <div className="max-h-[75vh] space-y-5 overflow-y-auto px-6 py-6">
                 <div className="flex items-start justify-between gap-3">
-                    <p className="text-xs text-[var(--text-gray-color)]">
+                    <p className="text-xs text-(--text-gray-color)">
                         Extra fields shown on every {issueType.name}, on top of
                         the built-in title, description, assignee, labels,
                         priority and dates.
@@ -171,7 +171,7 @@ export default function WorkspaceSettingsFieldsModal({
                         <button
                             type="button"
                             onClick={startCreating}
-                            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-[var(--text-muted-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-(--text-muted-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                         >
                             <Icon name="Plus" size={13} />
                             New field
@@ -180,7 +180,7 @@ export default function WorkspaceSettingsFieldsModal({
                 </div>
 
                 {fields.length === 0 && !isFormOpen ? (
-                    <p className="rounded-xl border border-dashed border-[var(--border-color)] px-3.5 py-6 text-center text-xs text-[var(--text-gray-color)]">
+                    <p className="rounded-xl border border-dashed border-(--border-color) px-3.5 py-6 text-center text-xs text-(--text-gray-color)">
                         No extra fields yet.
                     </p>
                 ) : (
@@ -192,13 +192,13 @@ export default function WorkspaceSettingsFieldsModal({
                                 <div
                                     key={field.id}
                                     className={cn(
-                                        'flex items-start justify-between gap-3 rounded-xl border bg-[var(--surface-color)] px-3.5 py-3 transition-colors',
+                                        'flex items-start justify-between gap-3 rounded-xl border bg-(--surface-color) px-3.5 py-3 transition-colors',
                                         editingId === field.id
-                                            ? 'border-[var(--accent-color)]'
-                                            : 'border-[var(--border-color)]',
+                                            ? 'border-(--accent-color)'
+                                            : 'border-(--border-color)',
                                     )}
                                 >
-                                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[var(--bg-color)] text-[var(--text-muted-color)]">
+                                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-(--bg-color) text-(--text-muted-color)">
                                         <Icon
                                             name={meta?.icon ?? 'Type'}
                                             size={13}
@@ -207,16 +207,16 @@ export default function WorkspaceSettingsFieldsModal({
 
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-1.5">
-                                            <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                            <p className="truncate text-sm font-medium text-(--text-color)">
                                                 {field.label}
                                             </p>
                                             {field.isRequired && (
-                                                <span className="rounded-full border border-[var(--accent-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent-color)]">
+                                                <span className="rounded-full border border-(--accent-color) px-1.5 py-0.5 text-[10px] font-medium text-(--accent-color)">
                                                     Required
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="mt-0.5 text-[11px] text-[var(--text-gray-color)]">
+                                        <p className="mt-0.5 text-[11px] text-(--text-gray-color)">
                                             {meta?.label ?? field.type}
                                             {field.placeholder
                                                 ? ` · ${field.placeholder}`
@@ -227,7 +227,7 @@ export default function WorkspaceSettingsFieldsModal({
                                                 {field.options.map((option) => (
                                                     <span
                                                         key={option}
-                                                        className="rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]"
+                                                        className="rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)"
                                                     >
                                                         {option}
                                                     </span>
@@ -245,7 +245,7 @@ export default function WorkspaceSettingsFieldsModal({
                                                 onClick={() =>
                                                     startEditing(field)
                                                 }
-                                                className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                                className="flex h-7 w-7 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                             >
                                                 <Icon name="Pencil" size={13} />
                                             </button>
@@ -256,7 +256,7 @@ export default function WorkspaceSettingsFieldsModal({
                                                 onClick={() =>
                                                     handleDelete(field.id)
                                                 }
-                                                className="hover:bg-[var(--error-color)]/10 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                                className="flex h-7 w-7 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--error-color)/10 hover:text-(--error-color)"
                                             >
                                                 <Icon name="Trash" size={13} />
                                             </button>
@@ -269,8 +269,8 @@ export default function WorkspaceSettingsFieldsModal({
                 )}
 
                 {canManageFields && isFormOpen && (
-                    <div className="space-y-3 rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4">
-                        <h4 className="text-sm font-semibold text-[var(--text-color)]">
+                    <div className="space-y-3 rounded-xl border border-(--border-color) bg-(--surface-color) p-4">
+                        <h4 className="text-sm font-semibold text-(--text-color)">
                             {isEditing ? 'Edit field' : 'New field'}
                         </h4>
 
@@ -282,7 +282,7 @@ export default function WorkspaceSettingsFieldsModal({
                         />
 
                         <div className="space-y-1.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
+                            <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
                                 Field type
                             </p>
                             <div data-testid="new-field-type">
@@ -302,7 +302,7 @@ export default function WorkspaceSettingsFieldsModal({
 
                         {type === 'select' && (
                             <div className="space-y-1.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
+                                <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
                                     Choices
                                 </p>
                                 <Input
@@ -316,7 +316,7 @@ export default function WorkspaceSettingsFieldsModal({
 
                         {type !== 'checkbox' && (
                             <div className="space-y-1.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
+                                <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
                                     Hint
                                 </p>
                                 <Input
@@ -340,7 +340,7 @@ export default function WorkspaceSettingsFieldsModal({
                             <button
                                 type="button"
                                 onClick={closeForm}
-                                className="rounded-md px-3 py-1.5 text-sm font-medium text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                className="rounded-md px-3 py-1.5 text-sm font-medium text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                             >
                                 Cancel
                             </button>
@@ -348,7 +348,7 @@ export default function WorkspaceSettingsFieldsModal({
                                 type="button"
                                 onClick={handleSave}
                                 disabled={!label.trim()}
-                                className="rounded-md bg-[var(--accent-color)] px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-md bg-(--accent-color) px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {isEditing ? 'Save changes' : 'Add field'}
                             </button>

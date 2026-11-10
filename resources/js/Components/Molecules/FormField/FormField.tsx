@@ -20,19 +20,17 @@ const FormField = ({
         <div className="flex flex-col gap-1.5">
             <label
                 htmlFor={id}
-                className="text-sm font-medium text-[var(--text-color)]"
+                className="text-sm font-medium text-(--text-color)"
             >
                 {label}
-                {required && (
-                    <span className="text-[var(--error-color)]"> *</span>
-                )}
+                {required && <span className="text-(--error-color)"> *</span>}
             </label>
             <div className="relative">
                 {icon && (
                     <Icon
                         name={icon}
                         size={16}
-                        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-gray-color)]"
+                        className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-(--text-gray-color)"
                     />
                 )}
                 <Input
@@ -47,14 +45,12 @@ const FormField = ({
                     className={cn(
                         icon && 'pl-9',
                         error &&
-                            'border-[var(--error-color)] focus:border-[var(--error-color)]',
+                            'border-(--error-color) focus:border-(--error-color)',
                     )}
                 />
             </div>
             {error && (
-                <span className="text-xs text-[var(--error-color)]">
-                    {error}
-                </span>
+                <span className="text-xs text-(--error-color)">{error}</span>
             )}
         </div>
     );

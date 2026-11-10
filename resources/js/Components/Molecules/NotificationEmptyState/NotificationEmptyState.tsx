@@ -21,15 +21,15 @@ function NotificationEmptyState({
                 initial={{ scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ ...SPRING, delay: 0.1 }}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--bg-light-color)]"
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-(--bg-light-color)"
             >
                 <Icon
                     name="BellOff"
                     size={18}
-                    className="text-[var(--text-muted-color)]"
+                    className="text-(--text-muted-color)"
                 />
             </motion.span>
-            <p className="text-xs font-medium text-[var(--text-muted-color)]">
+            <p className="text-xs font-medium text-(--text-muted-color)">
                 {filtered
                     ? 'No notifications match these filters'
                     : 'No notifications to display'}

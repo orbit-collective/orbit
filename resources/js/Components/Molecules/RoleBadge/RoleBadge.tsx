@@ -14,7 +14,7 @@ export default function RoleBadge({ role }: RoleBadgeProps) {
             className={cn(
                 'gap-1',
                 (role === 'admin' || role === 'owner') &&
-                    'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]',
+                    'bg-(--accent-color-opacity) text-(--accent-color)',
             )}
         >
             <Icon name={ROLE_ICONS[role]} size={11} />

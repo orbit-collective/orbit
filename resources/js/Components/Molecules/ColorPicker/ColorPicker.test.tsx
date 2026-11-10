@@ -142,7 +142,7 @@ describe('ColorPicker', () => {
         expect(onChange).toHaveBeenLastCalledWith('#7038f4');
     });
 
-    test('an incomplete or invalid hex is not committed, and blur restores the real value', async () => {
+    test('an incomplete or invalid hex is not committed, and blur-sm restores the real value', async () => {
         const user = userEvent.setup();
         const { onChange } = renderPicker();
 

@@ -143,14 +143,14 @@ export default function AccountSettingsSecurityTab({
                                         ? undefined
                                         : 'Set a password first so you can still sign in after unlinking'
                                 }
-                                className="bg-[var(--error-color)]/10 hover:bg-[var(--error-color)]/20 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--error-color)] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                                className="rounded-md bg-(--error-color)/10 px-3 py-1.5 text-xs font-medium text-(--error-color) transition-colors hover:bg-(--error-color)/20 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {isUnlinking ? 'Unlinking...' : 'Unlink'}
                             </button>
                         ) : (
                             <a
                                 href={route('auth.github.redirect')}
-                                className="rounded-md bg-[var(--bg-color)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                                className="rounded-md bg-(--bg-color) px-3 py-1.5 text-xs font-medium text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                             >
                                 Link GitHub
                             </a>
@@ -241,7 +241,7 @@ export default function AccountSettingsSecurityTab({
                         <button
                             type="button"
                             onClick={() => setIsDeleteModalOpen(true)}
-                            className="bg-[var(--error-color)]/10 hover:bg-[var(--error-color)]/20 rounded-md px-3 py-1.5 text-xs font-medium text-[var(--error-color)] transition-colors"
+                            className="rounded-md bg-(--error-color)/10 px-3 py-1.5 text-xs font-medium text-(--error-color) transition-colors hover:bg-(--error-color)/20"
                         >
                             Delete account
                         </button>

@@ -48,14 +48,14 @@ const MyIssuesCard: FC<MyIssuesCardProps> = ({
     return (
         <div
             ref={ref}
-            className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4"
+            className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4"
         >
             {showHeader && (
                 <div className="flex items-center justify-between gap-2">
-                    <h3 className="m-0 text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                    <h3 className="m-0 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                         My Issues
                     </h3>
-                    <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
+                    <span className="text-[10px] font-medium text-(--text-muted-color)">
                         {issues.length === 0
                             ? 'Nothing assigned'
                             : `${shown.length} of ${issues.length} open`}
@@ -77,14 +77,14 @@ const MyIssuesCard: FC<MyIssuesCardProps> = ({
                             ease: 'easeInOut',
                             repeat: Infinity,
                         }}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[var(--success-color)]"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-(--bg-light-color) text-(--success-color)"
                     >
                         <Icon name="CircleCheck" size={20} />
                     </motion.span>
-                    <p className="m-0 text-sm font-semibold text-[var(--text-color)]">
+                    <p className="m-0 text-sm font-semibold text-(--text-color)">
                         Nothing is waiting for you
                     </p>
-                    <p className="m-0 max-w-[16rem] text-xs text-[var(--text-muted-color)]">
+                    <p className="m-0 max-w-[16rem] text-xs text-(--text-muted-color)">
                         Open issues assigned to you show up here.
                     </p>
                 </motion.div>

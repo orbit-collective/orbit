@@ -32,13 +32,13 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
                             <Icon
                                 name="ChevronRight"
                                 size={12}
-                                className="mx-0.5 shrink-0 text-[var(--text-muted-color)]"
+                                className="mx-0.5 shrink-0 text-(--text-muted-color)"
                             />
                         )}
                         {item.href && !isLast ? (
                             <Link
                                 href={item.href}
-                                className={`flex items-center gap-1.5 rounded-md px-1.5 py-0.5 font-medium text-[var(--text-muted-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] ${item.className ?? ''}`}
+                                className={`flex items-center gap-1.5 rounded-md px-1.5 py-0.5 font-medium text-(--text-muted-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color) ${item.className ?? ''}`}
                             >
                                 {content}
                             </Link>
@@ -46,8 +46,8 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
                             <span
                                 className={`flex items-center gap-1.5 px-1.5 py-0.5 font-medium ${
                                     isLast
-                                        ? 'text-[var(--text-color)]'
-                                        : 'text-[var(--text-muted-color)]'
+                                        ? 'text-(--text-color)'
+                                        : 'text-(--text-muted-color)'
                                 } ${item.className ?? ''}`}
                             >
                                 {content}

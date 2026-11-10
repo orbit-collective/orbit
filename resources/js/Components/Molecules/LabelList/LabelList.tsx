@@ -111,7 +111,7 @@ const LabelList: React.FC<LabelListProps> = ({
                 <div
                     ref={measureRef}
                     aria-hidden="true"
-                    className="pointer-events-none invisible absolute left-0 top-0 h-0 w-0 overflow-hidden"
+                    className="pointer-events-none invisible absolute top-0 left-0 h-0 w-0 overflow-hidden"
                 >
                     <div className="flex w-max gap-1.5 whitespace-nowrap">
                         {labels.map((label, idx) => (
@@ -159,7 +159,7 @@ const LabelList: React.FC<LabelListProps> = ({
                         <button
                             type="button"
                             className={cn(
-                                'inline-flex cursor-pointer items-center rounded-full border-none bg-[var(--bg-light-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                                'inline-flex cursor-pointer items-center rounded-full border-none bg-(--bg-light-color) px-2 py-0.5 text-xs font-medium text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color-hover) focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)',
                                 badgeClassName,
                                 isClosed && 'opacity-40',
                             )}
@@ -170,10 +170,10 @@ const LabelList: React.FC<LabelListProps> = ({
                 >
                     <div className="flex min-h-0 flex-col gap-2 p-3">
                         <div className="flex items-center justify-between">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
+                            <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
                                 More Labels
                             </p>
-                            <span className="text-[10px] text-[var(--text-muted-color)]">
+                            <span className="text-[10px] text-(--text-muted-color)">
                                 {remainingLabels.length}
                             </span>
                         </div>

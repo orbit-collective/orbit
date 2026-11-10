@@ -13,7 +13,7 @@ const meta = {
     },
     decorators: [
         (Story) => (
-            <div className="w-96 text-[var(--text-color)]">
+            <div className="w-96 text-(--text-color)">
                 <Story />
             </div>
         ),
@@ -43,7 +43,7 @@ export const Multiline: Story = {
 export const CustomDisplay: Story = {
     args: {
         renderDisplay: (value) => (
-            <strong className="text-[var(--accent-color)]">{value}</strong>
+            <strong className="text-(--accent-color)">{value}</strong>
         ),
     },
 };
