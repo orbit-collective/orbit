@@ -1,5 +1,5 @@
 import { AnimatePresence, MotionConfig } from 'framer-motion';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { PageStage } from '@/Components/Atoms/PageStage/PageStage';
 import DashboardEditorBar from '@/Components/Molecules/DashboardEditorBar/DashboardEditorBar';
@@ -12,10 +12,13 @@ import { useCommandPalette } from '@/context/CommandContext';
 import { useCommands } from '@/hooks/useCommands';
 import { useDashboardEditor } from '@/hooks/useDashboardEditor';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useNow } from '@/hooks/useNow';
+import { requestLiveReload } from '@/live/reloadQueue';
 import { useDashboardLive } from '@/live/useDashboardLive';
 import { Command } from '@/types/Commands';
 import { DashboardLayoutProp, DashboardSavedLayout } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
+import { dateKeyOf } from '@/utils/dueDate';
 
 /** The props widgets read; each one is missing until a widget needs it. */
 const DATA_PROPS = [
@@ -27,6 +30,9 @@ const DATA_PROPS = [
     'myIssues',
     'deadlines',
 ] as const;
+
+/** The props that count against today's date. */
+const DATE_PROPS = ['issueStats', 'myIssues', 'deadlines'];
 
 export default function Dashboard({
     dashboardLayout,
@@ -82,6 +88,20 @@ export default function Dashboard({
         projects.map((project) => project.id),
         loadedProps,
     );
+
+    // The counters and lists are counted against today, and nothing changes in
+    // the projects when the day does: re-read them when the day turns.
+    const today = dateKeyOf(0, useNow());
+    const seenDay = useRef(today);
+    useEffect(() => {
+        if (seenDay.current === today) return;
+
+        seenDay.current = today;
+        const only = DATE_PROPS.filter((prop) => loadedProps.includes(prop));
+
+        if (only.length > 0) requestLiveReload({ only });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [today]);
 
     const widgets = editor.editing ? editor.draft : dashboardLayout.widgets;
     const selected = editor.draft.find(

@@ -63,6 +63,15 @@ describe('GreetingCard', () => {
         expect(date).toHaveAttribute('datetime', '2026-11-10');
     });
 
+    test('dates the time element by the local day shown, not the UTC one', () => {
+        render(<GreetingCard {...base} now={new Date(2026, 10, 10, 0, 30)} />);
+
+        expect(screen.getByText('Tuesday, November 10')).toHaveAttribute(
+            'datetime',
+            '2026-11-10',
+        );
+    });
+
     test('can leave the date, the icon and the numbers out', () => {
         render(
             <GreetingCard

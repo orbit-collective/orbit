@@ -7,6 +7,7 @@ import {
     DashboardColor,
     DASHBOARD_COLOR_VALUES,
 } from '@/utils/dashboardColors';
+import { dateKeyOf } from '@/utils/dueDate';
 import { DayPeriod, firstName, greetingFor } from '@/utils/greeting';
 import { DURATION, EASE, SPRING, rowDelay } from '@/utils/motion';
 
@@ -176,9 +177,7 @@ const GreetingCard: FC<GreetingCardProps> = ({
                             }}
                             className="m-0 mt-0.5 truncate text-xs text-[var(--text-muted-color)]"
                         >
-                            <time dateTime={moment.toISOString().slice(0, 10)}>
-                                {date}
-                            </time>
+                            <time dateTime={dateKeyOf(0, moment)}>{date}</time>
                         </motion.p>
                     )}
                     {showSummary && variant === 'minimal' && (

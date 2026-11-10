@@ -49,3 +49,21 @@ test('weekdayOf and dateKeyOf name the days from today on', () => {
     expect(dateKeyOf(25, NOW)).toBe('2026-12-05');
     expect(dateKeyOf(-10, NOW)).toBe('2026-10-31');
 });
+
+describe('calendar days across a clock change', () => {
+    // The day after the autumn change is 25 hours after its midnight in a zone that has one.
+    const saturday = new Date(2026, 9, 31, 12, 0);
+
+    test('weekdayOf and dateKeyOf advance by calendar days', () => {
+        expect([0, 1, 2].map((offset) => dateKeyOf(offset, saturday))).toEqual([
+            '2026-10-31',
+            '2026-11-01',
+            '2026-11-02',
+        ]);
+        expect([0, 1, 2].map((offset) => weekdayOf(offset, saturday))).toEqual([
+            'Sat',
+            'Sun',
+            'Mon',
+        ]);
+    });
+});

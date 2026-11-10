@@ -7,6 +7,7 @@ import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
 import { DashboardIssueRow as Row } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
+import { dueInfo } from '@/utils/dueDate';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
 
 export interface DashboardIssueRowShow {
@@ -62,6 +63,7 @@ const DashboardIssueRow: FC<DashboardIssueRowProps> = ({
         `#${issue.number} ${issue.title}`,
         parts.project && issue.projectName ? `in ${issue.projectName}` : null,
         hasPriority ? `${issue.priority!.name} priority` : null,
+        dueDate ? dueInfo(dueDate, now).spoken : null,
     ]
         .filter(Boolean)
         .join(', ');

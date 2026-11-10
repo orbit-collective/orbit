@@ -5,6 +5,7 @@ import DashboardIssueRow, {
     DashboardIssueRowShow,
 } from '@/Components/Molecules/DashboardIssueRow/DashboardIssueRow';
 import { useElementWidth } from '@/hooks/useElementWidth';
+import { useNow } from '@/hooks/useNow';
 import { DashboardIssueRow as Row } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
 import { MyIssuesSort, sortIssues } from '@/utils/dashboardIssues';
@@ -39,6 +40,8 @@ const MyIssuesCard: FC<MyIssuesCardProps> = ({
     now,
 }) => {
     const [ref, width] = useElementWidth<HTMLDivElement>();
+    const clock = useNow();
+    const today = now ?? clock;
     const shown = sortIssues(issues, sort).slice(0, limit);
     const isCards = variant === 'cards';
 
@@ -123,7 +126,7 @@ const MyIssuesCard: FC<MyIssuesCardProps> = ({
                                     }
                                     narrow={width > 0 && width < NARROW}
                                     show={show}
-                                    now={now}
+                                    now={today}
                                 />
                             </motion.li>
                         ))}
