@@ -95,7 +95,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                     {ticks.map((tick) => (
                                         <div
                                             key={tick}
-                                            className="border-t border-dashed border-(--border-color)"
+                                            className="border-t border-(--border-color)"
                                         />
                                     ))}
                                 </div>

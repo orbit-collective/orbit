@@ -199,7 +199,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                             </span>
                         </div>
 
-                        <div className="flex h-32 items-end gap-4 border-l border-solid border-(--border-color-strong) pl-6">
+                        <div className="flex h-32 items-end gap-4 border-l border-(--border-color-strong) pl-6">
                             {bars.map((bar, index) => (
                                 <div
                                     key={bar.label}

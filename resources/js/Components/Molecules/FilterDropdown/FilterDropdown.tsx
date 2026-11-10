@@ -289,7 +289,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
                         type="button"
                         data-nav
                         onClick={switchMode}
-                        className="flex w-full cursor-pointer items-center gap-2 border-0 border-t border-solid border-(--border-color) bg-transparent px-3 py-2 text-left text-xs font-medium text-(--accent-color) transition-colors hover:bg-(--bg-light-color) focus:outline-hidden focus-visible:bg-(--bg-light-color) focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:ring-inset"
+                        className="flex w-full cursor-pointer items-center gap-2 border-0 border-t border-(--border-color) bg-transparent px-3 py-2 text-left text-xs font-medium text-(--accent-color) transition-colors hover:bg-(--bg-light-color) focus:outline-hidden focus-visible:bg-(--bg-light-color) focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:ring-inset"
                     >
                         <Icon name="ArrowLeftRight" size={12} />
                         {exact ? 'Show categories' : 'Show exact statuses'}

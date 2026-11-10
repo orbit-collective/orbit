@@ -416,7 +416,7 @@ const Activity: FC<{ widget: DashboardWidget }> = ({ widget }) => {
             </div>
             {isOn(widget, 'pagination') && (
                 <div
-                    className="flex justify-between border-t border-solid"
+                    className="flex justify-between border-t"
                     style={{ borderColor: TRACK, paddingTop: cqw(0.8) }}
                 >
                     <Line width={20} />

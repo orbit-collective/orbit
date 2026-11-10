@@ -4,7 +4,7 @@ import { cn } from '@/utils/cn';
 
 /** Class for a borderless text field that only shows a line under it while focused. */
 export const inlineFieldClass =
-    'min-w-0 bg-transparent px-0 py-1 text-sm text-(--text-color) outline-hidden ring-0 border-0 border-b border-solid border-transparent placeholder:text-(--text-muted-color) transition-colors hover:border-(--border-color) focus:border-(--accent-color) focus:outline-hidden focus:ring-0';
+    'min-w-0 bg-transparent px-0 py-1 text-sm text-(--text-color) outline-hidden ring-0 border-0 border-b border-transparent placeholder:text-(--text-muted-color) transition-colors hover:border-(--border-color) focus:border-(--accent-color) focus:outline-hidden focus:ring-0';
 
 interface InlineEditRowProps {
     /** Sits before the fields: usually the appearance picker. */
@@ -66,7 +66,7 @@ export default function InlineEditRow({
     return (
         <div
             onKeyDown={handleKeyDown}
-            className="border-l-2 border-solid border-(--accent-color) bg-(--accent-color)/6 py-2.5 pr-4 pl-[calc(1rem-2px)] sm:pr-5 sm:pl-[calc(1.25rem-2px)]"
+            className="border-l-2 border-(--accent-color) bg-(--accent-color)/6 py-2.5 pr-4 pl-[calc(1rem-2px)] sm:pr-5 sm:pl-[calc(1.25rem-2px)]"
         >
             <div className="flex items-center gap-3">
                 {leading}

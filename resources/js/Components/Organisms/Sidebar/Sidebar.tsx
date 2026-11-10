@@ -384,7 +384,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
 
                 <div
                     className={
-                        'relative shrink-0 border-t border-solid border-(--bg-light-color) pt-3'
+                        'relative shrink-0 border-t border-(--bg-light-color) pt-3'
                     }
                 >
                     <Dropdown

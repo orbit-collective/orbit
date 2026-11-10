@@ -18,7 +18,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
     presence,
 }) => {
     return (
-        <header className="flex items-center justify-between gap-3 border-b border-solid border-(--border-color) px-6 py-3">
+        <header className="flex items-center justify-between gap-3 border-b border-(--border-color) px-6 py-3">
             <motion.div
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}

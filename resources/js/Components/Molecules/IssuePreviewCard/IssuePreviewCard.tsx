@@ -98,7 +98,7 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                 </div>
             )}
 
-            <div className="mt-3 flex items-center justify-between gap-2 border-t border-solid border-(--border-color) pt-2.5">
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-(--border-color) pt-2.5">
                 <div className="flex min-w-0 items-center gap-1.5">
                     {issue.assignee ? (
                         <>

@@ -163,10 +163,10 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                 desktop ? { width: 0, opacity: 0 } : { height: 0, opacity: 0 }
             }
             transition={{ duration: DURATION.base, ease: EASE }}
-            className="shrink-0 overflow-hidden border-t border-solid border-(--border-color-strong) bg-(--bg-color-hover) lg:border-t-0 lg:border-l lg:border-(--bg-light-color)"
+            className="shrink-0 overflow-hidden border-t border-(--border-color-strong) bg-(--bg-color-hover) lg:border-t-0 lg:border-l lg:border-(--bg-light-color)"
         >
             <div className="flex h-full w-full flex-col lg:w-80">
-                <div className="shrink-0 border-b border-solid border-(--bg-light-color) p-3">
+                <div className="shrink-0 border-b border-(--bg-light-color) p-3">
                     <SegmentedControl
                         label="Panel"
                         fullWidth
