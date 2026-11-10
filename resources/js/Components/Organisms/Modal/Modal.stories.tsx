@@ -12,7 +12,7 @@ const meta = {
             title: 'Delete project',
             description: 'This action cannot be undone.',
             children: (
-                <p className="text-sm text-[var(--text-color)]">
+                <p className="text-sm text-(--text-color)">
                     All issues, comments and labels in this project will be
                     permanently removed.
                 </p>
@@ -39,7 +39,7 @@ export const WithoutDescription: Story = {
             id: 'modal-2',
             title: 'Rename project',
             children: (
-                <p className="text-sm text-[var(--text-color)]">
+                <p className="text-sm text-(--text-color)">
                     Pick a new name for the project.
                 </p>
             ),
@@ -54,7 +54,7 @@ export const LongContent: Story = {
             title: 'Release notes',
             description: 'Everything that changed in 0.10.',
             children: (
-                <ul className="flex flex-col gap-2 text-sm text-[var(--text-color)]">
+                <ul className="flex flex-col gap-2 text-sm text-(--text-color)">
                     {Array.from({ length: 30 }, (_, index) => (
                         <li key={index}>
                             Change number {index + 1}: a fix or improvement

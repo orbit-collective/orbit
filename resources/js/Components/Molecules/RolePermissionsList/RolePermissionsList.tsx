@@ -32,7 +32,7 @@ export default function RolePermissionsList({
                 <Icon
                     name="Search"
                     size={14}
-                    className="pointer-events-none absolute left-8 top-1/2 -translate-y-1/2 text-[var(--text-gray-color)]"
+                    className="pointer-events-none absolute top-1/2 left-8 -translate-y-1/2 text-(--text-gray-color)"
                 />
                 <Input
                     value={search}
@@ -44,7 +44,7 @@ export default function RolePermissionsList({
 
             <div className="max-h-[520px] space-y-3 overflow-y-auto px-5 pb-5">
                 {groups.length === 0 && (
-                    <p className="py-6 text-center text-sm text-[var(--text-gray-color)]">
+                    <p className="py-6 text-center text-sm text-(--text-gray-color)">
                         No permissions match "{search}".
                     </p>
                 )}

@@ -22,7 +22,7 @@ export default function OwnershipPanel({
                     <button
                         type="button"
                         onClick={onTransferRequest}
-                        className="flex h-9 cursor-pointer items-center justify-center rounded-lg border border-[var(--border-color)] px-3 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                        className="flex h-9 cursor-pointer items-center justify-center rounded-lg border border-(--border-color) px-3 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                     >
                         Transfer ownership
                     </button>

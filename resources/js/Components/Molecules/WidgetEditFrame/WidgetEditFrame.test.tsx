@@ -136,7 +136,7 @@ describe('WidgetEditFrame', () => {
         setup({ selected: true });
 
         expect(screen.getByTestId('widget-drag-surface')).toHaveClass(
-            'outline-[var(--accent-color)]',
+            'outline-(--accent-color)',
         );
     });
 

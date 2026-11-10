@@ -53,11 +53,11 @@ const StatusOrPriorityValue = ({
             {priority || status ? (
                 <StatusDot status={status} color={priority?.color} size="sm" />
             ) : (
-                <span className="inline-block h-2 w-2 shrink-0 rounded-sm bg-[var(--text-muted-color)]" />
+                <span className="inline-block h-2 w-2 shrink-0 rounded-xs bg-(--text-muted-color)" />
             )}
             <span
                 className={cn(
-                    'font-medium text-[var(--text-color)]',
+                    'font-medium text-(--text-color)',
                     kind === 'status' && 'capitalize',
                 )}
             >
@@ -114,11 +114,7 @@ const AssigneeValue = ({
 }) => (
     <span className="mx-0.5 inline-flex items-center gap-1 align-middle">
         {name === 'Unassigned' ? (
-            <Icon
-                name="UserX"
-                size={12}
-                className="text-[var(--text-gray-color)]"
-            />
+            <Icon name="UserX" size={12} className="text-(--text-gray-color)" />
         ) : (
             <Avatar
                 src={avatar ?? undefined}
@@ -127,7 +123,7 @@ const AssigneeValue = ({
                 size="sm"
             />
         )}
-        <span className="font-semibold text-[var(--text-color)]">{name}</span>
+        <span className="font-semibold text-(--text-color)">{name}</span>
     </span>
 );
 

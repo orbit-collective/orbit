@@ -7,7 +7,7 @@ export const AlertContainer = ({
     removeAlert,
 }: AlertContainerProps) => {
     return (
-        <div className="pointer-events-none fixed right-5 top-5 z-[1000] flex w-full max-w-sm flex-col items-end gap-3">
+        <div className="pointer-events-none fixed top-5 right-5 z-1000 flex w-full max-w-sm flex-col items-end gap-3">
             <AnimatePresence>
                 {alerts.map((alert) => (
                     <Alert

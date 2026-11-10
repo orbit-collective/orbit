@@ -224,7 +224,7 @@ describe('EditableMarkdown Component', () => {
         expect(getEditor().setEditable).not.toHaveBeenCalled();
     });
 
-    test('committing on blur calls onSave when the markdown changed', () => {
+    test('committing on blur-sm calls onSave when the markdown changed', () => {
         const onSave = vi.fn();
         const { getEditor } = setup('Old text', onSave);
         const editor = getEditor();
@@ -236,7 +236,7 @@ describe('EditableMarkdown Component', () => {
         expect(onSave).toHaveBeenCalledWith('New text');
     });
 
-    test('does not call onSave on blur when the markdown is unchanged', () => {
+    test('does not call onSave on blur-sm when the markdown is unchanged', () => {
         const onSave = vi.fn();
         const { getEditor } = setup('Same text', onSave);
         const editor = getEditor();

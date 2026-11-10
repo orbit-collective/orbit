@@ -17,8 +17,8 @@ export const ShowcaseDots = ({
                     aria-label={`Go to slide ${index + 1}`}
                     className={`h-1.5 cursor-pointer rounded-full transition-all duration-300 ${
                         isActive
-                            ? 'w-5 bg-[var(--accent-color)]'
-                            : 'w-1.5 bg-[var(--bg-light-color)] hover:bg-[var(--accent-light-color)]'
+                            ? 'w-5 bg-(--accent-color)'
+                            : 'w-1.5 bg-(--bg-light-color) hover:bg-(--accent-light-color)'
                     }`}
                 />
             );

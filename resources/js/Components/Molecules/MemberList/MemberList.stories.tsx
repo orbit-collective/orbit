@@ -61,7 +61,7 @@ const meta = {
     parameters: { layout: 'padded' },
     decorators: [
         (Story) => (
-            <div className="w-[720px] rounded-xl border border-[var(--border-color)]">
+            <div className="w-[720px] rounded-xl border border-(--border-color)">
                 <Story />
             </div>
         ),

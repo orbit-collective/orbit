@@ -73,8 +73,8 @@ describe('AccountSettingsNotificationsTab', () => {
 
         const toggles = screen.getAllByRole('button');
 
-        expect(toggles[0]).toHaveClass('bg-[var(--accent-color)]');
-        expect(toggles[1]).toHaveClass('bg-[var(--bg-light-color)]');
+        expect(toggles[0]).toHaveClass('bg-(--accent-color)');
+        expect(toggles[1]).toHaveClass('bg-(--bg-light-color)');
     });
 
     test('hydrates toggles from the notificationSettings prop', () => {
@@ -84,8 +84,8 @@ describe('AccountSettingsNotificationsTab', () => {
 
         const toggles = screen.getAllByRole('button');
 
-        expect(toggles[0]).toHaveClass('bg-[var(--bg-light-color)]');
-        expect(toggles[1]).toHaveClass('bg-[var(--accent-color)]');
+        expect(toggles[0]).toHaveClass('bg-(--bg-light-color)');
+        expect(toggles[1]).toHaveClass('bg-(--accent-color)');
     });
 
     test('toggling a switch persists it immediately and shows a success alert', async () => {
@@ -115,12 +115,12 @@ describe('AccountSettingsNotificationsTab', () => {
         const commentsInAppToggle = toggles[2];
         const otherToggle = toggles[0];
 
-        expect(commentsInAppToggle).toHaveClass('bg-[var(--accent-color)]');
+        expect(commentsInAppToggle).toHaveClass('bg-(--accent-color)');
 
         await userEvent.click(commentsInAppToggle);
 
-        expect(commentsInAppToggle).toHaveClass('bg-[var(--bg-light-color)]');
-        expect(otherToggle).toHaveClass('bg-[var(--accent-color)]');
+        expect(commentsInAppToggle).toHaveClass('bg-(--bg-light-color)');
+        expect(otherToggle).toHaveClass('bg-(--accent-color)');
     });
 
     test('reverts the toggle and shows an error alert when the request fails', async () => {
@@ -139,7 +139,7 @@ describe('AccountSettingsNotificationsTab', () => {
         const toggles = screen.getAllByRole('button');
         await userEvent.click(toggles[0]);
 
-        expect(toggles[0]).toHaveClass('bg-[var(--accent-color)]');
+        expect(toggles[0]).toHaveClass('bg-(--accent-color)');
         expect(
             screen.getByText('Failed to update notification settings.'),
         ).toBeInTheDocument();

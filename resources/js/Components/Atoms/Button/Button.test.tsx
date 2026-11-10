@@ -42,12 +42,8 @@ describe('Button Component', () => {
 
         const button = screen.getByRole('button');
 
-        expect(button).toHaveClass(
-            'py-1.5',
-            'px-3',
-            'bg-[var(--accent-color)]',
-        );
-        expect(button).not.toHaveClass('p-0', 'bg-[var(--bg-light-color)]');
+        expect(button).toHaveClass('py-1.5', 'px-3', 'bg-(--accent-color)');
+        expect(button).not.toHaveClass('p-0', 'bg-(--bg-light-color)');
     });
 
     test('applies box variant classes when isBox is true', () => {
@@ -55,7 +51,7 @@ describe('Button Component', () => {
 
         const button = screen.getByRole('button');
 
-        expect(button).toHaveClass('p-0', 'bg-[var(--bg-light-color)]');
+        expect(button).toHaveClass('p-0', 'bg-(--bg-light-color)');
         expect(button).not.toHaveClass('py-1.5', 'px-3');
     });
 
@@ -85,7 +81,7 @@ describe('Button Component', () => {
         render(<Button variant="danger">Delete</Button>);
 
         expect(screen.getByRole('button', { name: 'Delete' })).toHaveClass(
-            'bg-[var(--error-color)]',
+            'bg-(--error-color)',
         );
     });
 

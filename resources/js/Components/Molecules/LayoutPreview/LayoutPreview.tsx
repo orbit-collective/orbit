@@ -39,18 +39,18 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
             whileHover={{ scale: 1.015 }}
             transition={SPRING}
             className={cn(
-                'relative max-h-44 overflow-hidden rounded-lg border border-solid border-[var(--border-color)] bg-[var(--bg-color)] p-1.5',
+                'relative max-h-44 overflow-hidden rounded-lg border border-solid border-(--border-color) bg-(--bg-color) p-1.5',
                 className,
             )}
         >
             {visible.length === 0 ? (
-                <div className="flex h-12 items-center justify-center text-[10px] text-[var(--text-muted-color)]">
+                <div className="flex h-12 items-center justify-center text-[10px] text-(--text-muted-color)">
                     Empty
                 </div>
             ) : (
                 <div
                     data-testid="layout-preview-grid"
-                    className="grid grid-cols-[repeat(120,minmax(0,1fr))] [grid-auto-flow:dense]"
+                    className="grid grid-flow-dense grid-cols-120"
                     style={
                         {
                             '--u': `${unit}px`,
@@ -80,7 +80,7 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
                     ))}
                 </div>
             )}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[var(--bg-color)] to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-linear-to-t from-(--bg-color) to-transparent" />
         </motion.div>
     );
 };

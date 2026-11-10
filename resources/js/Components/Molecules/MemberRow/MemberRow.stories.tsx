@@ -20,7 +20,7 @@ const meta = {
     parameters: { layout: 'padded' },
     decorators: [
         (Story) => (
-            <div className="w-[640px] rounded-xl border border-[var(--border-color)]">
+            <div className="w-[640px] rounded-xl border border-(--border-color)">
                 <Story />
             </div>
         ),
@@ -59,7 +59,7 @@ export const LongNameAndEmail: Story = {
     },
     decorators: [
         (Story) => (
-            <div className="w-[420px] rounded-xl border border-[var(--border-color)]">
+            <div className="w-[420px] rounded-xl border border-(--border-color)">
                 <Story />
             </div>
         ),

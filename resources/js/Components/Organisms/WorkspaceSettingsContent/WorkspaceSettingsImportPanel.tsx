@@ -185,7 +185,7 @@ export default function WorkspaceSettingsImportPanel({
     return (
         <>
             <section className="mt-6">
-                <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                <h3 className="text-sm font-semibold text-(--text-color)">
                     Connect
                 </h3>
                 {canUpdate ? (
@@ -194,7 +194,7 @@ export default function WorkspaceSettingsImportPanel({
                             <div key={field.id}>
                                 <label
                                     htmlFor={`import-credential-${field.id}`}
-                                    className="mb-1 block text-sm text-[var(--text-gray-color)]"
+                                    className="mb-1 block text-sm text-(--text-gray-color)"
                                 >
                                     {field.label}
                                 </label>
@@ -216,18 +216,18 @@ export default function WorkspaceSettingsImportPanel({
                         <button
                             type="button"
                             onClick={() => onConnect(credentialDrafts)}
-                            className="rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                            className="rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                         >
                             {settings?.hasCredentials ? 'Reconnect' : 'Connect'}
                         </button>
                         {settings?.hasCredentials && (
-                            <p className="text-sm text-[var(--text-gray-color)]">
+                            <p className="text-sm text-(--text-gray-color)">
                                 Connected to {settings.instanceUrl}.
                             </p>
                         )}
                     </div>
                 ) : (
-                    <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                    <p className="mt-1 text-sm text-(--text-gray-color)">
                         {settings?.hasCredentials
                             ? `Connected to ${settings.instanceUrl}.`
                             : 'Not connected yet.'}
@@ -238,10 +238,10 @@ export default function WorkspaceSettingsImportPanel({
             {settings?.hasCredentials && (
                 <>
                     <section className="mt-6">
-                        <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                        <h3 className="text-sm font-semibold text-(--text-color)">
                             Field mapping
                         </h3>
-                        <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                        <p className="mt-1 text-sm text-(--text-gray-color)">
                             Map {integration.name}&apos;s values to Orbit&apos;s
                             — anything left unmapped falls back to a sensible
                             default.
@@ -253,16 +253,16 @@ export default function WorkspaceSettingsImportPanel({
 
                             return (
                                 <div key={mappingType} className="mt-4">
-                                    <p className="text-sm font-medium text-[var(--text-color)]">
+                                    <p className="text-sm font-medium text-(--text-color)">
                                         {MAPPING_TYPE_LABELS[mappingType]}
                                     </p>
-                                    <div className="mt-2 divide-y divide-[var(--border-color)] rounded-xl border border-[var(--border-color)]">
+                                    <div className="mt-2 divide-y divide-(--border-color) rounded-xl border border-(--border-color)">
                                         {options.map((option) => (
                                             <div
                                                 key={option.value}
                                                 className="flex items-center justify-between gap-4 px-4 py-2.5"
                                             >
-                                                <span className="text-sm text-[var(--text-color)]">
+                                                <span className="text-sm text-(--text-color)">
                                                     {option.label}
                                                 </span>
                                                 <InlineSelectDropdown
@@ -304,7 +304,7 @@ export default function WorkspaceSettingsImportPanel({
                             <button
                                 type="button"
                                 onClick={handleSaveMappings}
-                                className="mt-3 rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-2 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                                className="mt-3 rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-2 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                             >
                                 Save mapping
                             </button>
@@ -312,7 +312,7 @@ export default function WorkspaceSettingsImportPanel({
                     </section>
 
                     <section className="mt-6">
-                        <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                        <h3 className="text-sm font-semibold text-(--text-color)">
                             Import
                         </h3>
                         {canUpdate ? (
@@ -334,17 +334,17 @@ export default function WorkspaceSettingsImportPanel({
                                         onClick={() =>
                                             onImport(projectKey, syncExisting)
                                         }
-                                        className="shrink-0 rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="shrink-0 rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
                                         Import
                                     </button>
                                 </div>
-                                <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-[var(--border-color)] px-4 py-2.5">
+                                <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-(--border-color) px-4 py-2.5">
                                     <div className="min-w-0">
-                                        <p className="text-sm font-medium text-[var(--text-color)]">
+                                        <p className="text-sm font-medium text-(--text-color)">
                                             Update already-imported issues
                                         </p>
-                                        <p className="mt-0.5 text-sm text-[var(--text-gray-color)]">
+                                        <p className="mt-0.5 text-sm text-(--text-gray-color)">
                                             {integration.name} always wins on
                                             conflict — any local changes to a
                                             previously imported issue are
@@ -358,12 +358,12 @@ export default function WorkspaceSettingsImportPanel({
                                 </div>
                             </>
                         ) : (
-                            <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                            <p className="mt-1 text-sm text-(--text-gray-color)">
                                 Only a project admin can trigger an import.
                             </p>
                         )}
                         {settings?.lastImport && (
-                            <p className="mt-2 text-sm text-[var(--text-gray-color)]">
+                            <p className="mt-2 text-sm text-(--text-gray-color)">
                                 Last import (
                                 {new Date(
                                     settings.lastImport.ranAt,

@@ -15,9 +15,7 @@ describe('ToggleSwitch Component', () => {
             <ToggleSwitch checked={true} onChange={() => {}} />,
         );
 
-        expect(screen.getByRole('button')).toHaveClass(
-            'bg-[var(--accent-color)]',
-        );
+        expect(screen.getByRole('button')).toHaveClass('bg-(--accent-color)');
         expect(container.querySelector('span')).toHaveAttribute(
             'data-checked',
             'true',
@@ -29,9 +27,7 @@ describe('ToggleSwitch Component', () => {
             <ToggleSwitch checked={false} onChange={() => {}} />,
         );
 
-        expect(screen.getByRole('button')).toHaveClass(
-            'bg-[var(--bg-light-color)]',
-        );
+        expect(screen.getByRole('button')).toHaveClass('bg-(--bg-light-color)');
         expect(container.querySelector('span')).toHaveAttribute(
             'data-checked',
             'false',

@@ -55,7 +55,7 @@ const TOKEN_PATTERNS: Record<MentionKind, RegExp> = {
 };
 
 const CHIP_CLASS =
-    'bg-[var(--accent-color)]/10 mx-0.5 rounded px-1 font-medium text-[var(--accent-color)]';
+    'bg-(--accent-color)/10 mx-0.5 rounded-sm px-1 font-medium text-(--accent-color)';
 
 /** Brackets would break the token, and an empty label would not match it. */
 export const sanitizeMentionLabel = (label: string, fallback: string) =>

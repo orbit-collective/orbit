@@ -39,7 +39,7 @@ export const CustomValue: Story = {
     args: {
         bare: true,
         renderValue: (value) => (
-            <span className="flex items-center gap-2 text-sm capitalize text-[var(--text-color)]">
+            <span className="flex items-center gap-2 text-sm text-(--text-color) capitalize">
                 <StatusDot status={value as 'low'} size="sm" />
                 {value}
             </span>

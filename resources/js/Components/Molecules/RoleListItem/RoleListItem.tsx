@@ -43,7 +43,7 @@ export default function RoleListItem({
             {...liftProps}
             className={cn(
                 // No overflow-hidden: the highlight glides in from the previous role.
-                'group relative w-full rounded-xl border border-[var(--border-color)] bg-[var(--bg-color)] p-3 text-left transition-[border-color,background-color] duration-200 hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]',
+                'group relative w-full rounded-xl border border-(--border-color) bg-(--bg-color) p-3 text-left transition-[border-color,background-color] duration-200 hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover)',
             )}
         >
             {selected && (
@@ -65,18 +65,18 @@ export default function RoleListItem({
 
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                        <p className="min-w-0 truncate text-sm font-medium text-[var(--text-color)]">
+                        <p className="min-w-0 truncate text-sm font-medium text-(--text-color)">
                             {role.name}
                         </p>
                         {role.isSystem && (
                             <Icon
                                 name="Lock"
                                 size={11}
-                                className="shrink-0 text-[var(--text-gray-color)]"
+                                className="shrink-0 text-(--text-gray-color)"
                             />
                         )}
                     </div>
-                    <p className="truncate text-[11px] text-[var(--text-gray-color)]">
+                    <p className="truncate text-[11px] text-(--text-gray-color)">
                         <AnimatedNumber value={role.memberCount} />{' '}
                         {role.memberCount === 1 ? 'member' : 'members'}
                     </p>
@@ -92,13 +92,13 @@ export default function RoleListItem({
                             stroke={3}
                             progress={ratio}
                             colorClass={theme.ring}
-                            bgColorClass="stroke-[var(--bg-light-color)]"
+                            bgColorClass="stroke-(--bg-light-color)"
                         />
-                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-[var(--text-color)]">
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-(--text-color)">
                             <AnimatedNumber value={ratio} />
                         </span>
                     </div>
-                    <span className="text-[8px] font-semibold uppercase tracking-wide text-[var(--text-gray-color)]">
+                    <span className="text-[8px] font-semibold tracking-wide text-(--text-gray-color) uppercase">
                         % perms
                     </span>
                 </div>

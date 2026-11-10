@@ -429,7 +429,7 @@ describe('DashboardEditorPanel', () => {
             'color-mix(in_srgb,var(--error-color)',
         );
         expect(button.className).not.toMatch(/\]\/\d+/);
-        expect(button).toHaveClass('text-[var(--error-color)]');
+        expect(button).toHaveClass('text-(--error-color)');
         expect(button.querySelector('svg')).not.toBeNull();
     });
 });

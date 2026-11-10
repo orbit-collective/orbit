@@ -25,7 +25,7 @@ const meta = {
     component: CalendarView,
     decorators: [
         (Story) => (
-            <div className="min-h-[640px] bg-[var(--bg-color)] p-6">
+            <div className="min-h-[640px] bg-(--bg-color) p-6">
                 <Story />
             </div>
         ),

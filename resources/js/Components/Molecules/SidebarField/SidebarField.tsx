@@ -11,7 +11,7 @@ const SidebarField: React.FC<SidebarFieldProps> = ({ label, children }) => {
             variants={rowIn}
             className="flex flex-col items-start gap-1"
         >
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+            <label className="text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
                 {label}
             </label>
             {children}

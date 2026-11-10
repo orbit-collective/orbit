@@ -13,7 +13,7 @@ const meta = {
         tabId: 'preferences',
         projects,
         children: (
-            <p className="text-sm text-[var(--text-color)]">
+            <p className="text-sm text-(--text-color)">
                 Settings content goes here.
             </p>
         ),
@@ -36,7 +36,7 @@ export const FullBleed: Story = {
         tabId: 'automation',
         fullBleed: true,
         children: (
-            <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed border-[var(--border-color)] text-sm text-[var(--text-gray-color)]">
+            <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed border-(--border-color) text-sm text-(--text-gray-color)">
                 Full-bleed workspace
             </div>
         ),

@@ -7,10 +7,10 @@ export const VisualCardHeader: FC<VisualCardHeaderProps> = ({
 }) => {
     return (
         <div className="mb-4">
-            <span className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+            <span className="block text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                 {title}
             </span>
-            <p className="mt-1 text-xs text-[var(--text-muted-color)]">
+            <p className="mt-1 text-xs text-(--text-muted-color)">
                 {description}
             </p>
         </div>

@@ -9,7 +9,7 @@ export const iconButtonVariants = cva(
         variants: {
             variant: {
                 default:
-                    'bg-transparent border-none p-2 rounded-full hover:bg-[var(--bg-light-color)]/30 transition-colors duration-100',
+                    'bg-transparent border-none p-2 rounded-full hover:bg-(--bg-light-color)/30 transition-colors duration-100',
             },
         },
         defaultVariants: {

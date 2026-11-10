@@ -29,7 +29,7 @@ export interface QuickAddIssueRowHandle {
 }
 
 const cellBase =
-    'px-3 py-2 border-b border-[var(--border-color)] align-middle text-[12px] font-normal';
+    'px-3 py-2 border-b border-(--border-color) align-middle text-[12px] font-normal';
 
 /**
  * What the row sends on top of the title and type. A field the user never
@@ -69,9 +69,7 @@ export const fallbackStatus = (
     );
 };
 
-const mutedCell = (
-    <span className="text-[var(--text-muted-color)]">&mdash;</span>
-);
+const mutedCell = <span className="text-(--text-muted-color)">&mdash;</span>;
 
 interface QuickAddIssueRowProps {
     colSpan: number;
@@ -250,13 +248,13 @@ export const QuickAddIssueRow = forwardRef<
                 <tr>
                     <td
                         colSpan={colSpan}
-                        className="border-b border-[var(--border-color)] px-3 py-2"
+                        className="border-b border-(--border-color) px-3 py-2"
                         style={{ paddingLeft }}
                     >
                         <button
                             type="button"
                             onClick={reveal}
-                            className="flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 text-xs font-medium text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
+                            className="flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 text-xs font-medium text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                         >
                             <Icon name="Plus" size={13} />
                             {label}
@@ -267,15 +265,15 @@ export const QuickAddIssueRow = forwardRef<
         }
 
         return (
-            <tr className="bg-[var(--accent-color-opacity)]">
+            <tr className="bg-(--accent-color-opacity)">
                 <td className={cn(cellBase, 'w-[48px] px-2 text-center')}>
-                    <span className="inline-block h-3.5 w-3.5 rounded border border-[var(--border-color-strong)] opacity-40" />
+                    <span className="inline-block h-3.5 w-3.5 rounded-sm border border-(--border-color-strong) opacity-40" />
                 </td>
                 {enabledColumns.id && (
                     <td
                         className={cn(
                             cellBase,
-                            'w-[75px] font-mono text-[11px] text-[var(--text-muted-color)]',
+                            'w-[75px] font-mono text-[11px] text-(--text-muted-color)',
                         )}
                     >
                         {nextIssueId !== null ? `#${nextIssueId}` : mutedCell}
@@ -293,7 +291,7 @@ export const QuickAddIssueRow = forwardRef<
                             onKeyDown={handleKeyDown}
                             disabled={isSubmitting}
                             placeholder="What needs to be done?"
-                            className="w-full min-w-[160px] rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)] focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] disabled:opacity-60"
+                            className="w-full min-w-[160px] rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1 text-xs text-(--text-color) outline-hidden focus:border-(--accent-color) focus-visible:ring-2 focus-visible:ring-(--accent-color) disabled:opacity-60"
                         />
                     </td>
                 )}
@@ -317,21 +315,21 @@ export const QuickAddIssueRow = forwardRef<
                                         type="button"
                                         aria-label="Issue type"
                                         disabled={isSubmitting}
-                                        className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]"
+                                        className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:outline-hidden"
                                     >
                                         {selectedType ? (
                                             <IssueTypeBadge
                                                 issueType={selectedType}
                                             />
                                         ) : (
-                                            <span className="text-xs text-[var(--text-muted-color)]">
+                                            <span className="text-xs text-(--text-muted-color)">
                                                 Type
                                             </span>
                                         )}
                                         <Icon
                                             name="ChevronDown"
                                             size={12}
-                                            className="text-[var(--text-muted-color)]"
+                                            className="text-(--text-muted-color)"
                                         />
                                     </button>
                                 }
@@ -386,12 +384,7 @@ export const QuickAddIssueRow = forwardRef<
                     </td>
                 )}
                 {enabledColumns.updated && (
-                    <td
-                        className={cn(
-                            cellBase,
-                            'text-[var(--text-muted-color)]',
-                        )}
-                    >
+                    <td className={cn(cellBase, 'text-(--text-muted-color)')}>
                         Just now
                     </td>
                 )}
@@ -428,7 +421,7 @@ export const QuickAddIssueRow = forwardRef<
                         type="button"
                         title="Cancel"
                         onClick={cancel}
-                        className="rounded p-1 text-[var(--text-muted-color)] transition-colors hover:text-[var(--text-color)]"
+                        className="rounded-sm p-1 text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                     >
                         <Icon name="X" size={13} />
                     </button>

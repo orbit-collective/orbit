@@ -26,7 +26,7 @@ const RowReveal: React.FC<RowRevealProps> = ({
             key={epoch}
             className={cn(
                 // In a grid the wrapper is the cell: its child must still fill it.
-                fill && 'h-full [&>*]:h-full [&>*]:w-full',
+                fill && 'h-full *:h-full *:w-full',
                 className,
             )}
             variants={rowIn}

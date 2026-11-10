@@ -17,7 +17,7 @@ export const Default: Story = {
         <PageStage className="mx-auto flex max-w-xl flex-col gap-4">
             {['Stats', 'Charts', 'Activity'].map((name) => (
                 <PageSection key={name}>
-                    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-6 text-sm text-[var(--text-color)]">
+                    <div className="rounded-xl border border-(--border-color) bg-(--surface-color) p-6 text-sm text-(--text-color)">
                         {name}
                     </div>
                 </PageSection>

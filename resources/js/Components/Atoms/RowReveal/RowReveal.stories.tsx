@@ -14,12 +14,12 @@ type Story = StoryObj<typeof meta>;
 /** Rows rise one after another; the stagger stops growing after ten. */
 export const Staggered: Story = {
     render: () => (
-        <div className="w-72 divide-y divide-[var(--border-color)] rounded-xl border border-[var(--border-color)]">
+        <div className="w-72 divide-y divide-(--border-color) rounded-xl border border-(--border-color)">
             {['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon'].map((name, i) => (
                 <RowReveal
                     key={name}
                     index={i}
-                    className="px-4 py-3 text-sm text-[var(--text-color)]"
+                    className="px-4 py-3 text-sm text-(--text-color)"
                 >
                     {name}
                 </RowReveal>

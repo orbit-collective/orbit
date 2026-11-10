@@ -39,7 +39,7 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
     return (
         <section
             className={cn(
-                'rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4 sm:p-5',
+                'rounded-2xl border border-(--border-color) bg-(--surface-color) p-4 sm:p-5',
                 className,
             )}
         >
@@ -53,12 +53,12 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
             />
 
             <Collapse id={bodyId} open={!collapsed}>
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[var(--text-gray-color)]">
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-(--text-gray-color)">
                     <Badge className="gap-1.5 px-2.5 py-1 text-xs">
                         {totalLabel}
                         <strong
                             data-testid="total"
-                            className="text-sm font-semibold text-[var(--text-color)]"
+                            className="text-sm font-semibold text-(--text-color)"
                         >
                             {total}
                         </strong>
@@ -93,7 +93,7 @@ const PercentBarsCard: React.FC<PercentBarsCardProps> = ({
                 />
 
                 {footnote && (
-                    <p className="mt-5 text-center text-xs text-[var(--accent-color)]">
+                    <p className="mt-5 text-center text-xs text-(--accent-color)">
                         {footnote}
                     </p>
                 )}

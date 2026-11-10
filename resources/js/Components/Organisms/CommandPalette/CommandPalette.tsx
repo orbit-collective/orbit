@@ -317,13 +317,13 @@ function CommandPalette() {
 
     return createPortal(
         <div
-            className="fixed inset-0 z-[100] flex items-start justify-center md:px-4 md:pt-[14vh]"
+            className="fixed inset-0 z-100 flex items-start justify-center md:px-4 md:pt-[14vh]"
             onKeyDown={trapFocus}
         >
             <div
                 aria-hidden="true"
                 data-testid="command-palette-backdrop"
-                className="absolute inset-0 bg-[var(--overlay-color)] backdrop-blur-sm"
+                className="absolute inset-0 bg-(--overlay-color) backdrop-blur-xs"
                 onClick={closePalette}
             />
             <div
@@ -331,7 +331,7 @@ function CommandPalette() {
                 role="dialog"
                 aria-modal="true"
                 aria-label="Command palette"
-                className="relative flex max-h-[85dvh] w-full animate-[palette-in_120ms_ease-out] flex-col overflow-hidden rounded-b-2xl border border-[var(--border-color)] bg-[var(--bg-color)] shadow-2xl motion-reduce:animate-none md:max-h-[70vh] md:max-w-[640px] md:rounded-2xl"
+                className="relative flex max-h-[85dvh] w-full animate-[palette-in_120ms_ease-out] flex-col overflow-hidden rounded-b-2xl border border-(--border-color) bg-(--bg-color) shadow-2xl motion-reduce:animate-none md:max-h-[70vh] md:max-w-[640px] md:rounded-2xl"
             >
                 <CommandPaletteInput
                     ref={inputRef}
@@ -406,7 +406,7 @@ function CommandPalette() {
                         </div>
                     )}
                     {flat.length === 0 && !showSkeleton && (
-                        <div className="py-10 text-center text-sm text-[var(--text-gray-color)]">
+                        <div className="py-10 text-center text-sm text-(--text-gray-color)">
                             {emptyMessage}
                         </div>
                     )}
@@ -421,9 +421,9 @@ function CommandPalette() {
                                     key={row}
                                     className="flex h-12 animate-pulse items-center gap-3 motion-reduce:animate-none md:h-10"
                                 >
-                                    <div className="h-4 w-4 rounded bg-[var(--bg-light-color)]" />
+                                    <div className="h-4 w-4 rounded-sm bg-(--bg-light-color)" />
                                     <div
-                                        className="h-3 rounded bg-[var(--bg-light-color)]"
+                                        className="h-3 rounded-sm bg-(--bg-light-color)"
                                         style={{ width: `${70 - row * 15}%` }}
                                     />
                                 </div>
@@ -435,7 +435,7 @@ function CommandPalette() {
                 {search.status === 'error' && (
                     <div
                         role="status"
-                        className="border-t border-[var(--border-color)] px-4 py-2 text-[11px] text-[var(--text-gray-color)]"
+                        className="border-t border-(--border-color) px-4 py-2 text-[11px] text-(--text-gray-color)"
                     >
                         Issue and project search is unavailable. Showing
                         commands only.
@@ -455,7 +455,7 @@ function CommandPalette() {
                           : `${flat.length} ${flat.length === 1 ? 'result' : 'results'}`}
                 </div>
 
-                <div className="hidden items-center gap-5 border-t border-[var(--border-color)] bg-[var(--bg-dark-color)] px-4 py-2.5 text-[10px] text-[var(--text-gray-color)] sm:flex">
+                <div className="hidden items-center gap-5 border-t border-(--border-color) bg-(--bg-dark-color) px-4 py-2.5 text-[10px] text-(--text-gray-color) sm:flex">
                     <span className="flex items-center gap-1.5">
                         <Keybind
                             tooltipText="Navigate"

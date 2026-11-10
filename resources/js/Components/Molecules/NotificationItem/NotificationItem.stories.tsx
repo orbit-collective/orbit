@@ -46,7 +46,7 @@ export const Read: Story = {
 /** One story per notification type shows the colored status dot. */
 export const Types: Story = {
     render: (args) => (
-        <div className="flex flex-col divide-y divide-[var(--border-color)]">
+        <div className="flex flex-col divide-y divide-(--border-color)">
             {(['success', 'info', 'warning', 'error'] as const).map((type) => (
                 <NotificationItem
                     key={type}

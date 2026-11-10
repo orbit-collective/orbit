@@ -19,8 +19,8 @@ const TrendBadge: React.FC<TrendBadgeProps> = ({
             className={cn(
                 'inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-semibold',
                 good
-                    ? [SUCCESS_TINT, 'text-[var(--success-color)]']
-                    : [ERROR_TINT, 'text-[var(--error-color)]'],
+                    ? [SUCCESS_TINT, 'text-(--success-color)']
+                    : [ERROR_TINT, 'text-(--error-color)'],
                 className,
             )}
         >

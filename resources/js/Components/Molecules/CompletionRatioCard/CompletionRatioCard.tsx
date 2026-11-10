@@ -11,23 +11,23 @@ const tierFor = (donePct: number) => {
     if (donePct >= 75) {
         return {
             label: 'Excellent',
-            colorClass: 'bg-[var(--success-color)]',
-            ringClass: 'stroke-[var(--success-color)]',
+            colorClass: 'bg-(--success-color)',
+            ringClass: 'stroke-(--success-color)',
         };
     }
 
     if (donePct >= 40) {
         return {
             label: 'On track',
-            colorClass: 'bg-[var(--accent-color)]',
-            ringClass: 'stroke-[var(--accent-color)]',
+            colorClass: 'bg-(--accent-color)',
+            ringClass: 'stroke-(--accent-color)',
         };
     }
 
     return {
         label: 'Needs attention',
-        colorClass: 'bg-[var(--warning-color)]',
-        ringClass: 'stroke-[var(--warning-color)]',
+        colorClass: 'bg-(--warning-color)',
+        ringClass: 'stroke-(--warning-color)',
     };
 };
 
@@ -42,16 +42,16 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
     showTier = true,
 }) => {
     const bars = [
-        { label: 'To Do', value: todo, colorClass: 'bg-[var(--info-color)]' },
+        { label: 'To Do', value: todo, colorClass: 'bg-(--info-color)' },
         {
             label: 'In Progress',
             value: inProgress,
-            colorClass: 'bg-[var(--accent-color)]',
+            colorClass: 'bg-(--accent-color)',
         },
         {
             label: 'Done',
             value: done,
-            colorClass: 'bg-[var(--success-color)]',
+            colorClass: 'bg-(--success-color)',
         },
     ];
     const maxValue = Math.max(1, todo, inProgress, done);
@@ -80,7 +80,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                     transition={SPRING}
                                     className={`h-1.5 w-1.5 rounded-full ${tier.colorClass}`}
                                 />
-                                <span className="text-xs font-medium text-[var(--text-gray-color)]">
+                                <span className="text-xs font-medium text-(--text-gray-color)">
                                     {tier.label}
                                 </span>
                             </div>
@@ -91,13 +91,13 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                 {variant === 'stacked' ? (
                     <div className="mt-6 flex flex-col gap-5">
                         <div className="flex items-end justify-between gap-3">
-                            <span className="text-5xl font-bold tabular-nums leading-none tracking-tight text-[var(--text-color)]">
+                            <span className="text-5xl leading-none font-bold tracking-tight text-(--text-color) tabular-nums">
                                 <AnimatedNumber
                                     value={donePct}
                                     format={(n) => `${Math.round(n)}%`}
                                 />
                             </span>
-                            <span className="pb-1 text-xs text-[var(--text-gray-color)]">
+                            <span className="pb-1 text-xs text-(--text-gray-color)">
                                 <AnimatedNumber
                                     value={done}
                                     format={(n) =>
@@ -106,7 +106,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                 />
                             </span>
                         </div>
-                        <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                        <div className="flex h-3 w-full overflow-hidden rounded-full bg-(--bg-light-color)">
                             {bars.map((bar, index) => (
                                 <motion.div
                                     key={bar.label}
@@ -131,13 +131,13 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                     key={bar.label}
                                     className="flex flex-col gap-0.5"
                                 >
-                                    <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-gray-color)]">
+                                    <span className="flex items-center gap-1.5 text-[11px] text-(--text-gray-color)">
                                         <span
-                                            className={`h-2 w-2 rounded-sm ${bar.colorClass}`}
+                                            className={`h-2 w-2 rounded-xs ${bar.colorClass}`}
                                         />
                                         {bar.label}
                                     </span>
-                                    <span className="text-sm font-semibold tabular-nums text-[var(--text-color)]">
+                                    <span className="text-sm font-semibold text-(--text-color) tabular-nums">
                                         <AnimatedNumber value={bar.value} />
                                     </span>
                                 </li>
@@ -153,7 +153,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                 progress={donePct}
                                 colorClass={tier.ringClass}
                             />
-                            <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold tabular-nums text-[var(--text-color)]">
+                            <span className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-(--text-color) tabular-nums">
                                 <AnimatedNumber
                                     value={donePct}
                                     format={(n) => `${Math.round(n)}%`}
@@ -164,13 +164,13 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                             {bars.map((bar) => (
                                 <li
                                     key={bar.label}
-                                    className="flex items-center gap-2 text-xs text-[var(--text-gray-color)]"
+                                    className="flex items-center gap-2 text-xs text-(--text-gray-color)"
                                 >
                                     <span
-                                        className={`h-2 w-2 rounded-sm ${bar.colorClass}`}
+                                        className={`h-2 w-2 rounded-xs ${bar.colorClass}`}
                                     />
                                     <span>{bar.label}</span>
-                                    <span className="font-semibold tabular-nums text-[var(--text-color)]">
+                                    <span className="font-semibold text-(--text-color) tabular-nums">
                                         <AnimatedNumber value={bar.value} />
                                     </span>
                                 </li>
@@ -180,16 +180,16 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                 ) : (
                     <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-5">
                         <div className="flex flex-col">
-                            <span className="text-6xl font-bold tabular-nums leading-none tracking-tight text-[var(--text-color)]">
+                            <span className="text-6xl leading-none font-bold tracking-tight text-(--text-color) tabular-nums">
                                 <AnimatedNumber
                                     value={donePct}
                                     format={(n) => `${Math.round(n)}%`}
                                 />
                             </span>
-                            <span className="mt-3 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-muted-color)]">
+                            <span className="mt-3 text-[10px] font-semibold tracking-widest text-(--text-muted-color) uppercase">
                                 Resolved
                             </span>
-                            <span className="mt-1 text-xs text-[var(--text-gray-color)]">
+                            <span className="mt-1 text-xs text-(--text-gray-color)">
                                 <AnimatedNumber
                                     value={done}
                                     format={(n) =>
@@ -199,16 +199,16 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                             </span>
                         </div>
 
-                        <div className="flex h-32 items-end gap-4 border-l border-solid border-[var(--border-color-strong)] pl-6">
+                        <div className="flex h-32 items-end gap-4 border-l border-solid border-(--border-color-strong) pl-6">
                             {bars.map((bar, index) => (
                                 <div
                                     key={bar.label}
                                     className="flex flex-col items-center gap-2"
                                 >
-                                    <span className="text-xs font-semibold tabular-nums text-[var(--text-color)]">
+                                    <span className="text-xs font-semibold text-(--text-color) tabular-nums">
                                         <AnimatedNumber value={bar.value} />
                                     </span>
-                                    <div className="flex h-20 w-6 items-end overflow-hidden rounded-md bg-[var(--bg-light-color)]">
+                                    <div className="flex h-20 w-6 items-end overflow-hidden rounded-md bg-(--bg-light-color)">
                                         <motion.div
                                             data-testid="completion-bar"
                                             data-height-percent={
@@ -227,7 +227,7 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                             title={`${bar.label}: ${bar.value}`}
                                         />
                                     </div>
-                                    <span className="whitespace-nowrap text-[10px] font-medium text-[var(--text-muted-color)]">
+                                    <span className="text-[10px] font-medium whitespace-nowrap text-(--text-muted-color)">
                                         {bar.label}
                                     </span>
                                 </div>

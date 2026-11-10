@@ -132,15 +132,15 @@ export default function AccountSettingsProfileTab({
                                 className={cn(
                                     'w-56',
                                     errors.name &&
-                                        'border-[var(--error-color)] focus:border-[var(--error-color)]',
+                                        'border-(--error-color) focus:border-(--error-color)',
                                 )}
                             />
                             {errors.name && (
-                                <span className="text-xs text-[var(--error-color)]">
+                                <span className="text-xs text-(--error-color)">
                                     {errors.name}
                                 </span>
                             )}
-                            <span className="relative flex h-4 items-center overflow-hidden text-xs text-[var(--text-gray-color)]">
+                            <span className="relative flex h-4 items-center overflow-hidden text-xs text-(--text-gray-color)">
                                 {/* The save state swaps with the shared motion, so a change reads as an event. */}
                                 <AnimatePresence mode="wait" initial={false}>
                                     <motion.span
@@ -182,7 +182,7 @@ export default function AccountSettingsProfileTab({
                                                 <Icon
                                                     name="CircleCheck"
                                                     size={14}
-                                                    className="text-[var(--success-color)]"
+                                                    className="text-(--success-color)"
                                                 />
                                                 Changes saved
                                             </>

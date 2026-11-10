@@ -71,7 +71,7 @@ const DashboardIssueRow: FC<DashboardIssueRowProps> = ({
     const projectDot = theme && (
         <span
             aria-hidden="true"
-            className={cn('h-1.5 w-1.5 shrink-0 rounded-sm', theme.accent)}
+            className={cn('h-1.5 w-1.5 shrink-0 rounded-xs', theme.accent)}
         />
     );
 
@@ -83,8 +83,8 @@ const DashboardIssueRow: FC<DashboardIssueRowProps> = ({
                 'group flex min-w-0 no-underline transition-colors',
                 FOCUS_RING_INSET,
                 isCard
-                    ? 'flex-col gap-2 rounded-xl border border-solid border-[var(--border-color)] bg-[var(--bg-color-hover)] p-3 hover:border-[var(--border-color-strong)] hover:bg-[var(--bg-light-color-hover)]'
-                    : 'items-center gap-2.5 rounded-lg px-2 hover:bg-[var(--bg-light-color)]',
+                    ? 'flex-col gap-2 rounded-xl border border-solid border-(--border-color) bg-(--bg-color-hover) p-3 hover:border-(--border-color-strong) hover:bg-(--bg-light-color-hover)'
+                    : 'items-center gap-2.5 rounded-lg px-2 hover:bg-(--bg-light-color)',
                 density === 'row' && 'min-h-10 py-1.5',
                 density === 'compact' && 'min-h-8 py-1',
             )}
@@ -98,13 +98,13 @@ const DashboardIssueRow: FC<DashboardIssueRowProps> = ({
                         className="shrink-0"
                     />
                 )}
-                <span className="shrink-0 text-[11px] font-medium tabular-nums text-[var(--text-muted-color)]">
+                <span className="shrink-0 text-[11px] font-medium text-(--text-muted-color) tabular-nums">
                     #{issue.number}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                     <span
                         className={cn(
-                            'text-[var(--text-color)]',
+                            'text-(--text-color)',
                             isCard
                                 ? 'line-clamp-2 text-sm font-medium'
                                 : 'truncate text-sm',
@@ -123,7 +123,7 @@ const DashboardIssueRow: FC<DashboardIssueRowProps> = ({
             {trailing && (
                 <span className="flex shrink-0 items-center gap-2">
                     {showProject && (
-                        <span className="hidden max-w-[7rem] items-center gap-1.5 text-[11px] text-[var(--text-muted-color)] sm:inline-flex">
+                        <span className="hidden max-w-28 items-center gap-1.5 text-[11px] text-(--text-muted-color) sm:inline-flex">
                             {projectDot}
                             <span className="truncate">
                                 {issue.projectName}
@@ -143,7 +143,7 @@ const DashboardIssueRow: FC<DashboardIssueRowProps> = ({
             )}
 
             {isCard && (parts.project || hasPriority || dueDate) && (
-                <span className="flex items-center justify-between gap-2 text-[11px] text-[var(--text-muted-color)]">
+                <span className="flex items-center justify-between gap-2 text-[11px] text-(--text-muted-color)">
                     <span className="flex min-w-0 items-center gap-1.5">
                         {parts.project && issue.projectName && (
                             <>

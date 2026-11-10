@@ -110,9 +110,9 @@ export default function Dashboard({
 
     return (
         <MotionConfig reducedMotion="user">
-            <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-color)]">
+            <div className="flex h-screen w-screen overflow-hidden bg-(--bg-color)">
                 <Sidebar projects={projects} />
-                <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[var(--bg-color-hover)]">
+                <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-(--bg-color-hover)">
                     <PageHeader
                         title="Dashboard"
                         icon="LayoutDashboard"
@@ -129,7 +129,7 @@ export default function Dashboard({
                             title="Open dashboard editor"
                             onClick={() => runCommand('dashboard.edit')}
                             disabled={editor.editing}
-                            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-[var(--bg-light-color)] disabled:cursor-default disabled:bg-[var(--bg-light-color)]"
+                            className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-(--bg-light-color) disabled:cursor-default disabled:bg-(--bg-light-color)"
                         >
                             <Icon
                                 name="PenLine"

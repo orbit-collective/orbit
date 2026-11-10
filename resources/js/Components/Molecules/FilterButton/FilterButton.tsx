@@ -16,8 +16,8 @@ const FilterButton: React.FC<FilterButtonProps> = ({
             className={cn(
                 'flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm transition-all duration-100 ease-in-out',
                 isActive
-                    ? 'border-solid border-[var(--accent-color-opacity)] bg-[var(--bg-color)] text-[var(--accent-color)]'
-                    : 'border-dashed border-[var(--bg-light-color)] bg-transparent text-[var(--text-gray-color)] hover:border-solid hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                    ? 'border-solid border-(--accent-color-opacity) bg-(--bg-color) text-(--accent-color)'
+                    : 'border-dashed border-(--bg-light-color) bg-transparent text-(--text-gray-color) hover:border-solid hover:bg-(--bg-light-color) hover:text-(--text-color)',
             )}
             onClick={onClick}
         >
@@ -34,8 +34,8 @@ const FilterButton: React.FC<FilterButtonProps> = ({
                     className={cn(
                         'font-medium',
                         isActive
-                            ? 'text-[var(--accent-color)]'
-                            : 'text-[var(--text-color)]',
+                            ? 'text-(--accent-color)'
+                            : 'text-(--text-color)',
                     )}
                 >
                     {value}

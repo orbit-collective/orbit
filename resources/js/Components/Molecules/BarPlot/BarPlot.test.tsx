@@ -138,7 +138,7 @@ describe('BarPlot', () => {
         expect(screen.getAllByTestId('custom')).toHaveLength(3);
     });
 
-    test('bars are rounded only on top, flat at the base', () => {
+    test('bars are rounded-sm only on top, flat at the base', () => {
         renderPlot();
 
         screen.getAllByTestId('bar').forEach((bar) => {
@@ -178,11 +178,9 @@ describe('BarPlot', () => {
         );
 
         expect(screen.getByText('74%').className).toContain(
-            'border-[var(--border-color)]',
+            'border-(--border-color)',
         );
-        expect(screen.getByText('74%').className).toContain(
-            'bg-[var(--bg-color)]',
-        );
+        expect(screen.getByText('74%').className).toContain('bg-(--bg-color)');
     });
 
     test('every bar fills its own box, even a tiny one, so it sits on the baseline', () => {
@@ -210,7 +208,7 @@ describe('BarPlot', () => {
             'no-scrollbar',
         );
         screen.getAllByTestId('plot-column').forEach((column) => {
-            expect(column).toHaveClass('snap-center', 'min-w-[3.25rem]');
+            expect(column).toHaveClass('snap-center', 'min-w-13');
         });
     });
 

@@ -70,7 +70,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         ],
         editorProps: {
             attributes: {
-                class: 'prose max-w-none text-sm focus:outline-none',
+                class: 'prose max-w-none text-sm focus:outline-hidden',
             },
             handlePaste: (_view, event) => {
                 const files = extractImageFiles(event.clipboardData);
@@ -262,7 +262,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
             className={cn(
                 !disabled && !isEditing && 'cursor-text',
                 isDraggingOver &&
-                    'rounded-lg ring-2 ring-[var(--accent-color)] ring-offset-2 ring-offset-[var(--bg-color)]',
+                    'rounded-lg ring-2 ring-(--accent-color) ring-offset-2 ring-offset-(--bg-color)',
                 className,
             )}
         >
@@ -290,7 +290,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                 />
             )}
             {pendingUploads > 0 && (
-                <span className="mt-1 block text-xs text-[var(--text-gray-color)]">
+                <span className="mt-1 block text-xs text-(--text-gray-color)">
                     Uploading {pendingUploads}{' '}
                     {pendingUploads === 1 ? 'image' : 'images'}...
                 </span>

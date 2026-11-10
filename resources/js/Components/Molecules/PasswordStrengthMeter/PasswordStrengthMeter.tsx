@@ -30,12 +30,12 @@ export default function PasswordStrengthMeter({
                         className={`h-1 flex-1 rounded-full ${
                             index <= activeIndex
                                 ? passwordStrengthCopy[strength].className
-                                : 'bg-[var(--bg-light-color)]'
+                                : 'bg-(--bg-light-color)'
                         }`}
                     />
                 ))}
             </div>
-            <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
+            <span className="text-[10px] font-medium text-(--text-muted-color)">
                 {passwordStrengthCopy[strength].label}
             </span>
         </div>

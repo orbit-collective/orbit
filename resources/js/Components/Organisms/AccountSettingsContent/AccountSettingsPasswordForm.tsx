@@ -112,13 +112,13 @@ export default function AccountSettingsPasswordForm() {
             noValidate
         >
             {isLocked && (
-                <div className="border-[var(--error-color)]/30 bg-[var(--error-color)]/10 flex items-center gap-2.5 rounded-lg border px-3.5 py-2.5">
+                <div className="flex items-center gap-2.5 rounded-lg border border-(--error-color)/30 bg-(--error-color)/10 px-3.5 py-2.5">
                     <Icon
                         name="ShieldAlert"
                         size={16}
-                        className="shrink-0 text-[var(--error-color)]"
+                        className="shrink-0 text-(--error-color)"
                     />
-                    <p className="text-xs text-[var(--error-color)]">
+                    <p className="text-xs text-(--error-color)">
                         Too many attempts. Try again in {lockoutSeconds}s.
                     </p>
                 </div>
@@ -173,7 +173,7 @@ export default function AccountSettingsPasswordForm() {
             </div>
 
             <div className="flex items-center justify-between gap-3 pt-1">
-                <p className="text-xs text-[var(--text-muted-color)]">
+                <p className="text-xs text-(--text-muted-color)">
                     Use at least 8 characters with a mix of letters, numbers,
                     and symbols.
                 </p>

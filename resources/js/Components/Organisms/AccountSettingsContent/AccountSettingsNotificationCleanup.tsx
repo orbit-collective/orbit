@@ -223,7 +223,7 @@ export default function AccountSettingsNotificationCleanup({
                 <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
                     <p
                         role={error ? 'alert' : undefined}
-                        className="text-sm text-[var(--error-color)]"
+                        className="text-sm text-(--error-color)"
                     >
                         {error}
                     </p>
@@ -293,7 +293,7 @@ export default function AccountSettingsNotificationCleanup({
                                         <button
                                             type="button"
                                             onClick={() => setConfirming(null)}
-                                            className="text-xs font-medium text-[var(--text-gray-color)] hover:underline"
+                                            className="text-xs font-medium text-(--text-gray-color) hover:underline"
                                         >
                                             Cancel
                                         </button>

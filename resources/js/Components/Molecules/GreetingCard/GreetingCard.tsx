@@ -81,7 +81,7 @@ const GreetingCard: FC<GreetingCardProps> = ({
         <section
             aria-label="Welcome"
             className={cn(
-                'relative flex h-full min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)]',
+                'relative flex h-full min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color)',
                 variant === 'minimal'
                     ? 'items-center px-4 py-2'
                     : 'items-center p-4',
@@ -97,7 +97,7 @@ const GreetingCard: FC<GreetingCardProps> = ({
                         ease: 'easeInOut',
                         repeat: Infinity,
                     }}
-                    className="pointer-events-none absolute -right-10 -top-16 h-48 w-48 rounded-full blur-3xl"
+                    className="pointer-events-none absolute -top-16 -right-10 h-48 w-48 rounded-full blur-3xl"
                     style={{ backgroundColor: tint }}
                 />
             )}
@@ -151,7 +151,7 @@ const GreetingCard: FC<GreetingCardProps> = ({
                             delay: 0.05,
                         }}
                         className={cn(
-                            'm-0 truncate font-semibold text-[var(--text-color)]',
+                            'm-0 truncate font-semibold text-(--text-color)',
                             isBanner
                                 ? 'text-2xl'
                                 : variant === 'compact'
@@ -162,7 +162,7 @@ const GreetingCard: FC<GreetingCardProps> = ({
                         {greeting.text}
                         {who && <span>, {who}</span>}
                         {variant === 'minimal' && (
-                            <span className="font-normal text-[var(--text-gray-color)]">
+                            <span className="font-normal text-(--text-gray-color)">
                                 .
                             </span>
                         )}
@@ -175,13 +175,13 @@ const GreetingCard: FC<GreetingCardProps> = ({
                                 duration: DURATION.base,
                                 delay: 0.15,
                             }}
-                            className="m-0 mt-0.5 truncate text-xs text-[var(--text-muted-color)]"
+                            className="m-0 mt-0.5 truncate text-xs text-(--text-muted-color)"
                         >
                             <time dateTime={dateKeyOf(0, moment)}>{date}</time>
                         </motion.p>
                     )}
                     {showSummary && variant === 'minimal' && (
-                        <p className="m-0 truncate text-xs text-[var(--text-muted-color)]">
+                        <p className="m-0 truncate text-xs text-(--text-muted-color)">
                             {sentence}
                         </p>
                     )}
@@ -205,8 +205,8 @@ const GreetingCard: FC<GreetingCardProps> = ({
                                     'rounded-full border border-solid px-2.5 py-1 text-[11px] font-medium',
                                     variant === 'compact' && 'hidden md:block',
                                     chip.hot
-                                        ? 'border-[color-mix(in_srgb,var(--error-color)_40%,transparent)] bg-[color-mix(in_srgb,var(--error-color)_12%,transparent)] text-[var(--error-color)]'
-                                        : 'border-[var(--border-color)] bg-[var(--bg-color-hover)] text-[var(--text-gray-color)]',
+                                        ? 'border-[color-mix(in_srgb,var(--error-color)_40%,transparent)] bg-[color-mix(in_srgb,var(--error-color)_12%,transparent)] text-(--error-color)'
+                                        : 'border-(--border-color) bg-(--bg-color-hover) text-(--text-gray-color)',
                                 )}
                             >
                                 {chip.text}

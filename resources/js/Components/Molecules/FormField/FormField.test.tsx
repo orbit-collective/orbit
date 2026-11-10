@@ -98,7 +98,7 @@ describe('FormField Component', () => {
         expect(container.querySelector('svg')).toBeInTheDocument();
         expect(screen.getByRole('textbox')).toHaveClass(
             'pl-9',
-            'border-[var(--error-color)]',
+            'border-(--error-color)',
         );
     });
 });

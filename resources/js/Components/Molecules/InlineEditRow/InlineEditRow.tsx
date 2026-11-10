@@ -4,7 +4,7 @@ import { cn } from '@/utils/cn';
 
 /** Class for a borderless text field that only shows a line under it while focused. */
 export const inlineFieldClass =
-    'min-w-0 bg-transparent px-0 py-1 text-sm text-[var(--text-color)] outline-none ring-0 border-0 border-b border-solid border-transparent placeholder:text-[var(--text-muted-color)] transition-colors hover:border-[var(--border-color)] focus:border-[var(--accent-color)] focus:outline-none focus:ring-0';
+    'min-w-0 bg-transparent px-0 py-1 text-sm text-(--text-color) outline-hidden ring-0 border-0 border-b border-solid border-transparent placeholder:text-(--text-muted-color) transition-colors hover:border-(--border-color) focus:border-(--accent-color) focus:outline-hidden focus:ring-0';
 
 interface InlineEditRowProps {
     /** Sits before the fields: usually the appearance picker. */
@@ -66,7 +66,7 @@ export default function InlineEditRow({
     return (
         <div
             onKeyDown={handleKeyDown}
-            className="bg-[var(--accent-color)]/[0.06] border-l-2 border-solid border-[var(--accent-color)] py-2.5 pl-[calc(1rem-2px)] pr-4 sm:pl-[calc(1.25rem-2px)] sm:pr-5"
+            className="border-l-2 border-solid border-(--accent-color) bg-(--accent-color)/6 py-2.5 pr-4 pl-[calc(1rem-2px)] sm:pr-5 sm:pl-[calc(1.25rem-2px)]"
         >
             <div className="flex items-center gap-3">
                 {leading}
@@ -80,7 +80,7 @@ export default function InlineEditRow({
                         title="Cancel"
                         aria-label="Cancel"
                         onClick={onCancel}
-                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                     >
                         <Icon name="X" size={15} />
                     </button>
@@ -93,8 +93,8 @@ export default function InlineEditRow({
                         className={cn(
                             'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
                             canSave
-                                ? 'cursor-pointer bg-[var(--accent-color)] text-white hover:opacity-90'
-                                : 'cursor-not-allowed text-[var(--text-muted-color)] opacity-50',
+                                ? 'cursor-pointer bg-(--accent-color) text-white hover:opacity-90'
+                                : 'cursor-not-allowed text-(--text-muted-color) opacity-50',
                         )}
                     >
                         <Icon name="Check" size={15} />
@@ -106,7 +106,7 @@ export default function InlineEditRow({
                 <p
                     id={errorId}
                     role="alert"
-                    className="mt-1.5 pl-12 text-xs text-[var(--error-color)]"
+                    className="mt-1.5 pl-12 text-xs text-(--error-color)"
                 >
                     {error}
                 </p>

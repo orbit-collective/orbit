@@ -22,8 +22,8 @@ describe('VisualCard Component', () => {
 
         expect(screen.getByText('Card content').parentElement).toHaveClass(
             'rounded-lg',
-            'border-[var(--border-color)]',
-            'bg-[var(--surface-color)]',
+            'border-(--border-color)',
+            'bg-(--surface-color)',
         );
     });
 

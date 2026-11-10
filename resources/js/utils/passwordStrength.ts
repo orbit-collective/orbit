@@ -4,9 +4,9 @@ export const passwordStrengthCopy: Record<
     PasswordStrength,
     { label: string; className: string }
 > = {
-    weak: { label: 'Weak', className: 'bg-[var(--error-color)]' },
-    fair: { label: 'Fair', className: 'bg-[var(--warning-color)]' },
-    strong: { label: 'Strong', className: 'bg-[var(--success-color)]' },
+    weak: { label: 'Weak', className: 'bg-(--error-color)' },
+    fair: { label: 'Fair', className: 'bg-(--warning-color)' },
+    strong: { label: 'Strong', className: 'bg-(--success-color)' },
 };
 
 export const getPasswordStrength = (

@@ -25,7 +25,7 @@ export default function ProjectDetailsForm({
             className="flex flex-col gap-4 px-4 py-4 sm:px-5"
         >
             <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-[var(--text-color)]">
+                <label className="text-sm font-medium text-(--text-color)">
                     Name
                 </label>
                 <Input
@@ -36,7 +36,7 @@ export default function ProjectDetailsForm({
                 />
             </div>
             <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-[var(--text-color)]">
+                <label className="text-sm font-medium text-(--text-color)">
                     Description
                 </label>
                 <TextArea
@@ -48,7 +48,7 @@ export default function ProjectDetailsForm({
                 />
             </div>
             <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-[var(--text-color)]">
+                <label className="text-sm font-medium text-(--text-color)">
                     Color
                 </label>
                 <div className="flex flex-wrap gap-3">
@@ -73,7 +73,7 @@ export default function ProjectDetailsForm({
                 <button
                     type="submit"
                     disabled={isSaving}
-                    className="flex h-9 cursor-pointer items-center justify-center rounded-lg bg-[var(--accent-color)] px-4 text-sm font-medium text-[var(--text-color)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-9 cursor-pointer items-center justify-center rounded-lg bg-(--accent-color) px-4 text-sm font-medium text-(--text-color) transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     {isSaving ? 'Saving...' : 'Save changes'}
                 </button>

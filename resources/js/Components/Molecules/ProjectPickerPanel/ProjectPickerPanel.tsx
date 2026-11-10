@@ -47,12 +47,12 @@ export default function ProjectPickerPanel({
                                 onClick={() => onSelect(project.id)}
                                 {...liftProps}
                                 className={cn(
-                                    'group relative flex items-center gap-3 overflow-hidden rounded-xl border bg-gradient-to-br p-3 text-left transition-[border-color,box-shadow,background-color] duration-300',
+                                    'group relative flex items-center gap-3 overflow-hidden rounded-xl border bg-linear-to-br p-3 text-left transition-[border-color,box-shadow,background-color] duration-300',
                                     theme.gradient,
                                     theme.border,
                                     selected
-                                        ? 'border-[var(--accent-color)] shadow-lg'
-                                        : 'border-[var(--border-color)] bg-[var(--bg-color)] hover:shadow-lg',
+                                        ? 'border-(--accent-color) shadow-lg'
+                                        : 'border-(--border-color) bg-(--bg-color) hover:shadow-lg',
                                 )}
                             >
                                 <span
@@ -66,13 +66,13 @@ export default function ProjectPickerPanel({
                                 <span className="min-w-0 flex-1">
                                     <span
                                         className={cn(
-                                            'block truncate text-sm font-medium text-[var(--text-color)]',
+                                            'block truncate text-sm font-medium text-(--text-color)',
                                             theme.textGroupHover,
                                         )}
                                     >
                                         {project.name}
                                     </span>
-                                    <span className="flex items-center gap-1.5 text-[11px] text-[var(--text-gray-color)]">
+                                    <span className="flex items-center gap-1.5 text-[11px] text-(--text-gray-color)">
                                         <span
                                             className={cn(
                                                 'h-1.5 w-1.5 shrink-0 rounded-full',
@@ -85,7 +85,7 @@ export default function ProjectPickerPanel({
                                     </span>
                                 </span>
                                 {selected && (
-                                    <span className="absolute right-2.5 top-2.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--accent-color)] text-white">
+                                    <span className="absolute top-2.5 right-2.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-(--accent-color) text-white">
                                         <Icon name="Check" size={11} />
                                     </span>
                                 )}

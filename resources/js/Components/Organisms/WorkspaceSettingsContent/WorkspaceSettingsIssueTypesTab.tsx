@@ -285,7 +285,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                         <RowReveal
                             key={issueType.id}
                             index={index}
-                            className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                            className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-(--bg-light-color) sm:px-5"
                         >
                             <span
                                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
@@ -300,23 +300,23 @@ export default function WorkspaceSettingsIssueTypesTab({
                                 />
                             </span>
                             <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                                <p className="shrink-0 text-sm font-medium text-[var(--text-color)]">
+                                <p className="shrink-0 text-sm font-medium text-(--text-color)">
                                     {issueType.name}
                                 </p>
                                 {issueType.isSystem && (
-                                    <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                    <span className="shrink-0 rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                                         System
                                     </span>
                                 )}
                                 {issueType.allowsChildren && (
-                                    <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                    <span className="shrink-0 rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                                         {childTypeCount > 0
                                             ? `Allows ${childTypeCount} sub-issue type${childTypeCount === 1 ? '' : 's'}`
                                             : 'Allows sub-issues'}
                                     </span>
                                 )}
                                 {issueType.description && (
-                                    <p className="truncate text-xs text-[var(--text-muted-color)]">
+                                    <p className="truncate text-xs text-(--text-muted-color)">
                                         {issueType.description}
                                     </p>
                                 )}
@@ -325,7 +325,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                                 configureOptions.length > 0 ||
                                 (canDeleteIssueTypes &&
                                     !issueType.isSystem)) && (
-                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:focus-within:opacity-100 [@media(hover:hover)]:sm:group-hover:opacity-100">
+                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:group-hover:opacity-100 [@media(hover:hover)]:sm:focus-within:opacity-100">
                                     {configureOptions.length > 0 && (
                                         <Dropdown
                                             variant="menu"

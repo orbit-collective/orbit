@@ -60,12 +60,12 @@ export default function SettingsPanel({
     return (
         <motion.section
             variants={rise ? riseIn : undefined}
-            className="overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] backdrop-blur-sm"
+            className="overflow-hidden rounded-2xl border border-(--border-color) bg-(--surface-color) backdrop-blur-xs"
         >
             <header
                 className={cn(
                     'px-5 py-4',
-                    !collapsed && 'border-b border-[var(--border-color)]',
+                    !collapsed && 'border-b border-(--border-color)',
                 )}
             >
                 <CardHeader
@@ -83,7 +83,7 @@ export default function SettingsPanel({
                     variants={rowsParent}
                     initial="hidden"
                     animate="show"
-                    className="divide-y divide-[var(--border-color)]"
+                    className="divide-y divide-(--border-color)"
                 >
                     {children}
                 </motion.div>

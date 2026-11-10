@@ -22,12 +22,12 @@ describe('StatusDot Component', () => {
     });
 
     test.each([
-        ['todo', 'bg-[var(--info-color)]'],
-        ['in_progress', 'bg-[var(--accent-color)]'],
-        ['done', 'bg-[var(--pending-color)]'],
-        ['low', 'bg-[var(--success-color)]'],
-        ['medium', 'bg-[var(--warning-color)]'],
-        ['high', 'bg-[var(--error-color)]'],
+        ['todo', 'bg-(--info-color)'],
+        ['in_progress', 'bg-(--accent-color)'],
+        ['done', 'bg-(--pending-color)'],
+        ['low', 'bg-(--success-color)'],
+        ['medium', 'bg-(--warning-color)'],
+        ['high', 'bg-(--error-color)'],
     ] as const)('applies the correct color for status "%s"', (status, cls) => {
         const { container } = render(<StatusDot status={status} />);
 

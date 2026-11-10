@@ -32,7 +32,7 @@ const meta = {
     args: { pullRequests: [pullRequest()] },
     decorators: [
         (Story) => (
-            <div className="w-[300px] bg-[var(--bg-color)] p-4">
+            <div className="w-[300px] bg-(--bg-color) p-4">
                 <Story />
             </div>
         ),

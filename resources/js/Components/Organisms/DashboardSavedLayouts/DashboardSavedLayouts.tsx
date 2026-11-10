@@ -27,7 +27,7 @@ interface DashboardSavedLayoutsProps {
 }
 
 const SMALL_BUTTON = cn(
-    'flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-solid border-[var(--border-color)] bg-transparent px-2.5 py-1.5 text-xs font-medium text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-40',
+    'flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-solid border-(--border-color) bg-transparent px-2.5 py-1.5 text-xs font-medium text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color) disabled:cursor-not-allowed disabled:opacity-40',
     FOCUS_RING,
 );
 
@@ -108,10 +108,10 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: DURATION.base, ease: EASE }}
             className={cn(
-                'flex flex-col gap-2.5 rounded-xl border border-solid bg-[var(--surface-color)] p-2.5 transition-colors',
+                'flex flex-col gap-2.5 rounded-xl border border-solid bg-(--surface-color) p-2.5 transition-colors',
                 current
-                    ? 'border-[var(--accent-color)]'
-                    : 'border-[var(--border-color)] hover:border-[var(--border-color-strong)]',
+                    ? 'border-(--accent-color)'
+                    : 'border-(--border-color) hover:border-(--border-color-strong)',
             )}
         >
             <LayoutPreview widgets={layout.widgets} />
@@ -139,7 +139,7 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                             type="submit"
                             aria-label={`Save the name of ${layout.name}`}
                             className={cn(
-                                'flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-[var(--accent-color)] px-2.5 text-white hover:bg-[var(--accent-light-color)]',
+                                'flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-(--accent-color) px-2.5 text-white hover:bg-(--accent-light-color)',
                                 FOCUS_RING,
                             )}
                         >
@@ -157,7 +157,7 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                     {renameError && (
                         <p
                             role="alert"
-                            className="m-0 text-[11px] text-[var(--error-color)]"
+                            className="m-0 text-[11px] text-(--error-color)"
                         >
                             {renameError}
                         </p>
@@ -167,7 +167,7 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                 <div className="flex items-center justify-between gap-2">
                     <span className="min-w-0">
                         <span className="flex items-center gap-1.5">
-                            <span className="truncate text-sm font-medium text-[var(--text-color)]">
+                            <span className="truncate text-sm font-medium text-(--text-color)">
                                 {layout.name}
                             </span>
                             {current && (
@@ -175,13 +175,13 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                                     initial={{ scale: 0.6, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     transition={SPRING}
-                                    className="shrink-0 rounded-full bg-[var(--accent-color-opacity)] px-1.5 text-[10px] font-semibold text-[var(--accent-color)]"
+                                    className="shrink-0 rounded-full bg-(--accent-color-opacity) px-1.5 text-[10px] font-semibold text-(--accent-color)"
                                 >
                                     Current
                                 </motion.span>
                             )}
                         </span>
-                        <span className="block text-[11px] text-[var(--text-muted-color)]">
+                        <span className="block text-[11px] text-(--text-muted-color)">
                             {
                                 layout.widgets.filter(
                                     (widget) => widget.visible,
@@ -203,7 +203,7 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                 >
                     {pending ? (
                         <>
-                            <span className="text-[11px] text-[var(--text-gray-color)]">
+                            <span className="text-[11px] text-(--text-gray-color)">
                                 {pending === 'delete'
                                     ? 'Delete this layout?'
                                     : 'Replace it with the current layout?'}
@@ -226,8 +226,8 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                                     className={cn(
                                         'cursor-pointer rounded-lg border-none px-2.5 py-1.5 text-xs font-semibold text-white hover:brightness-110',
                                         pending === 'delete'
-                                            ? 'bg-[var(--error-color)]'
-                                            : 'bg-[var(--accent-color)]',
+                                            ? 'bg-(--error-color)'
+                                            : 'bg-(--accent-color)',
                                         FOCUS_RING,
                                     )}
                                 >
@@ -290,7 +290,7 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                                 className={cn(
                                     SMALL_BUTTON,
                                     applied &&
-                                        'border-[var(--success-color)] text-[var(--success-color)]',
+                                        'border-(--success-color) text-(--success-color)',
                                 )}
                             >
                                 <Icon
@@ -351,7 +351,7 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
             <form onSubmit={submit} className="flex flex-col gap-2">
                 <label
                     htmlFor="saved-layout-name"
-                    className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]"
+                    className="text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase"
                 >
                     Save this layout as
                 </label>
@@ -374,7 +374,7 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                         type="submit"
                         disabled={trimmed === ''}
                         className={cn(
-                            'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-[var(--accent-color)] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--accent-light-color)] disabled:cursor-not-allowed disabled:bg-[var(--pending-color)]',
+                            'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-(--accent-color) px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-(--accent-light-color) disabled:cursor-not-allowed disabled:bg-(--pending-color)',
                             FOCUS_RING,
                         )}
                     >
@@ -385,13 +385,13 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                 {error && renamingId === null ? (
                     <p
                         role="alert"
-                        className="m-0 text-[11px] text-[var(--error-color)]"
+                        className="m-0 text-[11px] text-(--error-color)"
                     >
                         {error}
                     </p>
                 ) : (
                     replaces && (
-                        <p className="m-0 text-[11px] text-[var(--text-muted-color)]">
+                        <p className="m-0 text-[11px] text-(--text-muted-color)">
                             A layout with this name exists and will be replaced.
                         </p>
                     )
@@ -399,7 +399,7 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
             </form>
 
             <section className="flex flex-col gap-2">
-                <h4 className="m-0 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+                <h4 className="m-0 text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
                     Saved layouts
                 </h4>
                 {layouts.length === 0 ? (
@@ -416,14 +416,14 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                                 ease: 'easeInOut',
                                 repeat: Infinity,
                             }}
-                            className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[var(--text-muted-color)]"
+                            className="flex h-11 w-11 items-center justify-center rounded-full bg-(--bg-light-color) text-(--text-muted-color)"
                         >
                             <Icon name="Bookmark" size={20} />
                         </motion.span>
-                        <p className="m-0 text-sm font-semibold text-[var(--text-color)]">
+                        <p className="m-0 text-sm font-semibold text-(--text-color)">
                             No saved layouts yet
                         </p>
-                        <p className="m-0 text-xs text-[var(--text-muted-color)]">
+                        <p className="m-0 text-xs text-(--text-muted-color)">
                             Arrange the dashboard, give it a name and come back
                             to it whenever you like.
                         </p>

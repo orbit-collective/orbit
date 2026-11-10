@@ -36,30 +36,30 @@ const getDeadlineMeta = (endDate: string) => {
                 diffDays === -1
                     ? 'Overdue by 1 day'
                     : `Overdue by ${Math.abs(diffDays)} days`,
-            colorClass: 'text-[var(--error-color)]',
+            colorClass: 'text-(--error-color)',
         };
     }
     if (diffDays === 0) {
         return {
             label: 'Due today',
-            colorClass: 'text-[var(--warning-color)]',
+            colorClass: 'text-(--warning-color)',
         };
     }
     if (diffDays === 1) {
         return {
             label: 'Due tomorrow',
-            colorClass: 'text-[var(--warning-color)]',
+            colorClass: 'text-(--warning-color)',
         };
     }
     if (diffDays <= 7) {
         return {
             label: `Due in ${diffDays} days`,
-            colorClass: 'text-[var(--text-muted-color)]',
+            colorClass: 'text-(--text-muted-color)',
         };
     }
     return {
         label: end.toLocaleDateString('en-US', SHORT_DATE_FORMAT),
-        colorClass: 'text-[var(--text-muted-color)]',
+        colorClass: 'text-(--text-muted-color)',
     };
 };
 
@@ -81,13 +81,13 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
 
     return (
         <Reveal className="flex h-full items-center p-6">
-            <div className="flex max-h-[420px] w-full flex-col overflow-hidden rounded-2xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4 xl:w-80 xl:shrink-0">
+            <div className="flex max-h-[420px] w-full flex-col overflow-hidden rounded-2xl border border-solid border-(--border-color) bg-(--surface-color) p-4 xl:w-80 xl:shrink-0">
                 <div className="mb-3 flex items-center justify-between">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                    <h3 className="text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                         Upcoming Deadlines
                     </h3>
                     {upcoming.length > 0 && (
-                        <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
+                        <span className="text-[10px] font-medium text-(--text-muted-color)">
                             <AnimatedNumber value={upcoming.length} />
                         </span>
                     )}
@@ -98,9 +98,9 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
                         <Icon
                             name="CalendarClock"
                             size={22}
-                            className="text-[var(--text-muted-color)]"
+                            className="text-(--text-muted-color)"
                         />
-                        <p className="text-xs font-medium text-[var(--text-muted-color)]">
+                        <p className="text-xs font-medium text-(--text-muted-color)">
                             No upcoming deadlines
                         </p>
                     </div>
@@ -123,7 +123,7 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
                                                 ]),
                                             )
                                         }
-                                        className="group flex w-full items-start gap-2.5 rounded-xl border border-solid border-transparent px-2.5 py-2.5 text-left transition-all hover:border-[var(--border-color)] hover:bg-[var(--bg-light-color)]"
+                                        className="group flex w-full items-start gap-2.5 rounded-xl border border-solid border-transparent px-2.5 py-2.5 text-left transition-all hover:border-(--border-color) hover:bg-(--bg-light-color)"
                                     >
                                         <StatusDot
                                             color={issue.priorityDetails?.color}
@@ -131,7 +131,7 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
                                             className="mt-1.5 shrink-0"
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <p className="truncate text-xs font-semibold text-[var(--text-color)]">
+                                            <p className="truncate text-xs font-semibold text-(--text-color)">
                                                 {issue.title}
                                             </p>
                                             <div className="mt-1 flex items-center justify-between gap-2">

@@ -208,7 +208,7 @@ export default function WorkspaceSettingsTemplatesModal({
                     title={`${issueType.name} templates`}
                     onClose={onClose}
                     icon={
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
                             <Icon name="FileText" size={16} />
                         </span>
                     }
@@ -216,7 +216,7 @@ export default function WorkspaceSettingsTemplatesModal({
 
                 <div className="max-h-[75vh] space-y-5 overflow-y-auto px-6 py-6">
                     <div className="flex items-start justify-between gap-3">
-                        <p className="text-xs text-[var(--text-gray-color)]">
+                        <p className="text-xs text-(--text-gray-color)">
                             The starting point for a new {issueType.name}. The
                             first template is applied automatically; anything
                             typed on the issue itself wins over it.
@@ -225,7 +225,7 @@ export default function WorkspaceSettingsTemplatesModal({
                             <button
                                 type="button"
                                 onClick={startCreating}
-                                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-[var(--text-muted-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-(--text-muted-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                             >
                                 <Icon name="Plus" size={13} />
                                 New template
@@ -234,7 +234,7 @@ export default function WorkspaceSettingsTemplatesModal({
                     </div>
 
                     {templates.length === 0 && !isFormOpen ? (
-                        <p className="rounded-xl border border-dashed border-[var(--border-color)] px-3.5 py-6 text-center text-xs text-[var(--text-gray-color)]">
+                        <p className="rounded-xl border border-dashed border-(--border-color) px-3.5 py-6 text-center text-xs text-(--text-gray-color)">
                             No templates yet for this issue type.
                         </p>
                     ) : (
@@ -243,27 +243,27 @@ export default function WorkspaceSettingsTemplatesModal({
                                 <div
                                     key={template.id}
                                     className={cn(
-                                        'rounded-xl border bg-[var(--surface-color)] px-3.5 py-3 transition-colors',
+                                        'rounded-xl border bg-(--surface-color) px-3.5 py-3 transition-colors',
                                         editingId === template.id
-                                            ? 'border-[var(--accent-color)]'
-                                            : 'border-[var(--border-color)]',
+                                            ? 'border-(--accent-color)'
+                                            : 'border-(--border-color)',
                                     )}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0 flex-1">
                                             <div className="flex flex-wrap items-center gap-1.5">
-                                                <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                                <p className="truncate text-sm font-medium text-(--text-color)">
                                                     {template.name}
                                                 </p>
                                                 {index === 0 && (
-                                                    <span className="rounded-full border border-[var(--accent-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--accent-color)]">
+                                                    <span className="rounded-full border border-(--accent-color) px-1.5 py-0.5 text-[10px] font-medium text-(--accent-color)">
                                                         Applied by default
                                                     </span>
                                                 )}
                                                 {priorityLabel(
                                                     template.defaultPriority,
                                                 ) && (
-                                                    <span className="rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                                    <span className="rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                                                         {priorityLabel(
                                                             template.defaultPriority,
                                                         )}{' '}
@@ -296,7 +296,7 @@ export default function WorkspaceSettingsTemplatesModal({
                                                     onClick={() =>
                                                         startEditing(template)
                                                     }
-                                                    className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                                    className="flex h-7 w-7 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                                 >
                                                     <Icon
                                                         name="Pencil"
@@ -312,7 +312,7 @@ export default function WorkspaceSettingsTemplatesModal({
                                                             template.id,
                                                         )
                                                     }
-                                                    className="hover:bg-[var(--error-color)]/10 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                                    className="flex h-7 w-7 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--error-color)/10 hover:text-(--error-color)"
                                                 >
                                                     <Icon
                                                         name="Trash"
@@ -324,7 +324,7 @@ export default function WorkspaceSettingsTemplatesModal({
                                     </div>
 
                                     {template.description && (
-                                        <pre className="mt-2 max-h-24 overflow-hidden whitespace-pre-wrap rounded-lg bg-[var(--bg-color)] px-2.5 py-2 font-sans text-[11px] leading-relaxed text-[var(--text-gray-color)]">
+                                        <pre className="mt-2 max-h-24 overflow-hidden rounded-lg bg-(--bg-color) px-2.5 py-2 font-sans text-[11px] leading-relaxed whitespace-pre-wrap text-(--text-gray-color)">
                                             {template.description}
                                         </pre>
                                     )}
@@ -334,8 +334,8 @@ export default function WorkspaceSettingsTemplatesModal({
                     )}
 
                     {canManageTemplates && isFormOpen && (
-                        <div className="space-y-3 rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4">
-                            <h4 className="text-sm font-semibold text-[var(--text-color)]">
+                        <div className="space-y-3 rounded-xl border border-(--border-color) bg-(--surface-color) p-4">
+                            <h4 className="text-sm font-semibold text-(--text-color)">
                                 {isEditing ? 'Edit template' : 'New template'}
                             </h4>
 
@@ -357,7 +357,7 @@ export default function WorkspaceSettingsTemplatesModal({
                             />
 
                             <div className="space-y-1.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
+                                <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
                                     Default priority
                                 </p>
                                 <InlineSelectDropdown
@@ -371,11 +371,11 @@ export default function WorkspaceSettingsTemplatesModal({
                             </div>
 
                             <div className="space-y-1.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
+                                <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
                                     Default labels
                                 </p>
                                 {labels.length === 0 ? (
-                                    <p className="text-xs text-[var(--text-gray-color)]">
+                                    <p className="text-xs text-(--text-gray-color)">
                                         This project has no labels yet.
                                     </p>
                                 ) : (
@@ -410,7 +410,7 @@ export default function WorkspaceSettingsTemplatesModal({
                                 <button
                                     type="button"
                                     onClick={closeForm}
-                                    className="rounded-md px-3 py-1.5 text-sm font-medium text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                    className="rounded-md px-3 py-1.5 text-sm font-medium text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                 >
                                     Cancel
                                 </button>
@@ -418,7 +418,7 @@ export default function WorkspaceSettingsTemplatesModal({
                                     type="button"
                                     onClick={handleSave}
                                     disabled={!name.trim()}
-                                    className="rounded-md bg-[var(--accent-color)] px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-md bg-(--accent-color) px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {isEditing
                                         ? 'Save changes'

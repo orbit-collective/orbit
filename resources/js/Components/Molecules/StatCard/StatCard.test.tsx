@@ -90,11 +90,11 @@ describe('StatCard Component', () => {
     });
 
     test.each([
-        ['accent', 'text-[var(--accent-color)]'],
-        ['success', 'text-[var(--success-color)]'],
-        ['warning', 'text-[var(--warning-color)]'],
-        ['error', 'text-[var(--error-color)]'],
-        ['info', 'text-[var(--info-color)]'],
+        ['accent', 'text-(--accent-color)'],
+        ['success', 'text-(--success-color)'],
+        ['warning', 'text-(--warning-color)'],
+        ['error', 'text-(--error-color)'],
+        ['info', 'text-(--info-color)'],
     ] as const)(
         'colors the progress badge for the %s color',
         (color, expectedClass) => {
@@ -120,9 +120,7 @@ describe('StatCard Component', () => {
             <StatCard title="Accent" value={1} icon="Inbox" variant="accent" />,
         );
 
-        expect(container.firstChild).toHaveClass(
-            'border-[var(--accent-color)]',
-        );
+        expect(container.firstChild).toHaveClass('border-(--accent-color)');
     });
 
     test('the icon can be left out of both layouts', () => {
@@ -188,7 +186,7 @@ describe('StatCard Component', () => {
             'isolate',
         );
         expect(container.firstElementChild).not.toHaveClass(
-            'bg-[var(--surface-color)]',
+            'bg-(--surface-color)',
         );
     });
 });

@@ -55,7 +55,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                 {ticks.map((tick) => (
                     <span
                         key={tick.percent}
-                        className="absolute right-2.5 translate-y-1/2 text-[11px] leading-none text-[var(--text-muted-color)] sm:right-3"
+                        className="absolute right-2.5 translate-y-1/2 text-[11px] leading-none text-(--text-muted-color) sm:right-3"
                         style={{ bottom: `${clamp(tick.percent)}%` }}
                     >
                         {tick.label}
@@ -99,7 +99,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                     duration: DURATION.base,
                                     delay: rowDelay(index),
                                 }}
-                                className="absolute -inset-x-4 border-t border-dotted border-[var(--border-color-strong)]"
+                                className="absolute -inset-x-4 border-t border-dotted border-(--border-color-strong)"
                                 style={{ bottom: `${clamp(tick.percent)}%` }}
                             />
                         ))}
@@ -113,7 +113,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                     <div
                                         key={bar.key}
                                         data-testid="plot-column"
-                                        className="relative flex h-full min-w-[3.25rem] flex-1 snap-center items-end justify-center px-0.5 sm:px-1"
+                                        className="relative flex h-full min-w-13 flex-1 snap-center items-end justify-center px-0.5 sm:px-1"
                                     >
                                         <motion.div
                                             className="relative w-full max-w-10"
@@ -145,8 +145,8 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                                     'h-full w-full rounded-none rounded-t-full border-0 p-0 transition-colors duration-200',
                                                     FOCUS_RING,
                                                     highlighted
-                                                        ? 'bg-[var(--accent-color)]'
-                                                        : 'bg-[var(--bg-light-color)] hover:bg-[color-mix(in_srgb,var(--text-muted-color)_60%,transparent)] focus-visible:bg-[color-mix(in_srgb,var(--text-muted-color)_60%,transparent)]',
+                                                        ? 'bg-(--accent-color)'
+                                                        : 'bg-(--bg-light-color) hover:bg-[color-mix(in_srgb,var(--text-muted-color)_60%,transparent)] focus-visible:bg-[color-mix(in_srgb,var(--text-muted-color)_60%,transparent)]',
                                                 )}
                                             >
                                                 {highlighted && (
@@ -169,7 +169,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                                                 0.15 +
                                                                 DURATION.slow,
                                                         }}
-                                                        className="absolute bottom-full left-1/2 -ml-1 mb-1.5 h-2 w-2 rounded-full bg-[var(--accent-color)]"
+                                                        className="absolute bottom-full left-1/2 mb-1.5 -ml-1 h-2 w-2 rounded-full bg-(--accent-color)"
                                                     />
                                                 )}
                                             </Badge>
@@ -201,7 +201,7 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                     delay: 0.3,
                                 }}
                                 style={{ transformOrigin: 'left' }}
-                                className="pointer-events-none absolute -inset-x-4 z-[5] border-t border-dashed border-[var(--text-gray-color)]"
+                                className="pointer-events-none absolute -inset-x-4 z-5 border-t border-dashed border-(--text-gray-color)"
                             />
                         )}
                     </div>
@@ -212,17 +212,17 @@ const BarPlot: React.FC<BarPlotProps> = ({
                                 key={bar.key}
                                 title={bar.label}
                                 className={cn(
-                                    'min-w-[3.25rem] flex-1 px-0.5 text-center text-[11px]',
+                                    'min-w-13 flex-1 px-0.5 text-center text-[11px]',
                                     bar.key === highlightKey
-                                        ? 'font-semibold text-[var(--text-color)]'
-                                        : 'text-[var(--text-muted-color)]',
+                                        ? 'font-semibold text-(--text-color)'
+                                        : 'text-(--text-muted-color)',
                                 )}
                             >
                                 <span className="block truncate">
                                     {bar.label}
                                 </span>
                                 {bar.caption && (
-                                    <span className="block text-[10px] tabular-nums text-[var(--text-gray-color)]">
+                                    <span className="block text-[10px] text-(--text-gray-color) tabular-nums">
                                         {bar.caption}
                                     </span>
                                 )}

@@ -31,7 +31,7 @@ export default function WorkspaceSettingsIntegrationCard({
                     onOpen();
                 }
             }}
-            className="group flex cursor-pointer flex-col gap-4 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-[var(--border-color-strong)] hover:shadow-lg"
+            className="group flex cursor-pointer flex-col gap-4 rounded-2xl border border-(--border-color) bg-(--surface-color) p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-(--border-color-strong) hover:shadow-lg"
         >
             <div className="flex items-start justify-between gap-3">
                 <span
@@ -53,38 +53,38 @@ export default function WorkspaceSettingsIntegrationCard({
 
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-[var(--text-color)]">
+                    <h3 className="text-sm font-semibold text-(--text-color)">
                         {integration.name}
                     </h3>
                     {integration.comingSoon ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--bg-light-color)] px-2 py-0.5 text-[11px] font-medium text-[var(--text-gray-color)]">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-(--bg-light-color) px-2 py-0.5 text-[11px] font-medium text-(--text-gray-color)">
                             <Icon name="Lock" size={10} />
                             Soon
                         </span>
                     ) : (
                         <span
-                            className={`rounded-full ${enabled ? 'bg-[var(--accent-color-opacity)] text-[var(--accent-color)]' : 'bg-[var(--bg-muted-color)] text-[var(--text-muted-color)]'} px-2 py-0.5 text-[11px] font-semibold`}
+                            className={`rounded-full ${enabled ? 'bg-(--accent-color-opacity) text-(--accent-color)' : 'bg-(--bg-muted-color) text-(--text-muted-color)'} px-2 py-0.5 text-[11px] font-semibold`}
                         >
                             {enabled ? 'Enabled' : 'Disabled'}
                         </span>
                     )}
                 </div>
-                <p className="mt-0.5 text-sm text-[var(--text-muted-color)]">
+                <p className="mt-0.5 text-sm text-(--text-muted-color)">
                     {integration.vendor}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--text-gray-color)]">
+                <p className="mt-2 text-sm leading-6 text-(--text-gray-color)">
                     {integration.description}
                 </p>
             </div>
 
-            <div className="flex items-center justify-between border-t border-[var(--border-color)] pt-3">
+            <div className="flex items-center justify-between border-t border-(--border-color) pt-3">
                 <Badge
                     variant="outline"
                     className={getCategoryBadgeClassName(integration.category)}
                 >
                     {integration.category}
                 </Badge>
-                <span className="flex items-center gap-1 text-sm font-medium text-[var(--text-gray-color)] transition-colors group-hover:text-[var(--accent-color)]">
+                <span className="flex items-center gap-1 text-sm font-medium text-(--text-gray-color) transition-colors group-hover:text-(--accent-color)">
                     View details
                     <Icon name="ChevronRight" size={14} />
                 </span>

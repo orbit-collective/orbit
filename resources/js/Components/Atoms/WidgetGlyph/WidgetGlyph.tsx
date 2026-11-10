@@ -712,7 +712,7 @@ const Deadlines: FC<{ widget: DashboardWidget }> = ({ widget }) => (
                 style={{ gap: cqw(1.8), paddingLeft: cqw(3) }}
             >
                 <span
-                    className="absolute bottom-0 top-0 w-px"
+                    className="absolute top-0 bottom-0 w-px"
                     style={{ left: cqw(1), backgroundColor: TRACK }}
                 />
                 {[0, 1, 2].map((group) => (
@@ -1034,7 +1034,7 @@ const WidgetGlyph: FC<WidgetGlyphProps> = ({ widget }) => {
             data-testid="widget-glyph"
             data-type={widget.type}
             data-variant={widget.variant}
-            className="h-full w-full overflow-hidden border border-solid border-[var(--border-color-strong)] bg-[var(--bg-light-color)]"
+            className="h-full w-full overflow-hidden border border-solid border-(--border-color-strong) bg-(--bg-light-color)"
             style={cardStyle(widget)}
         >
             {body}

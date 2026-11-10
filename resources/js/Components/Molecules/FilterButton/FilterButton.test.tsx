@@ -72,11 +72,9 @@ describe('FilterButton Component', () => {
 
         expect(screen.getByRole('button')).toHaveClass(
             'border-solid',
-            'border-[var(--accent-color-opacity)]',
+            'border-(--accent-color-opacity)',
         );
-        expect(screen.getByText('Open')).toHaveClass(
-            'text-[var(--accent-color)]',
-        );
+        expect(screen.getByText('Open')).toHaveClass('text-(--accent-color)');
         container.querySelectorAll('svg').forEach((svg) => {
             expect(svg).toHaveAttribute('stroke', 'var(--accent-color)');
         });

@@ -238,7 +238,7 @@ function DraggableActionNode({
 function FlowConnector() {
     return (
         <div className="flex h-6 items-center justify-start pl-[1.15rem]">
-            <div className="h-full w-px bg-[var(--border-color)]" />
+            <div className="h-full w-px bg-(--border-color)" />
         </div>
     );
 }
@@ -531,10 +531,10 @@ export default function WorkspaceSettingsAutomationTab({
     return (
         <div className="flex min-h-0 flex-1 flex-col gap-5">
             <div className="shrink-0">
-                <h2 className="text-lg font-semibold text-[var(--text-color)]">
+                <h2 className="text-lg font-semibold text-(--text-color)">
                     Automation
                 </h2>
-                <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                <p className="mt-1 text-sm text-(--text-gray-color)">
                     Automatically act on issue and GitHub pull request events,
                     without anything being hardcoded.
                 </p>
@@ -558,10 +558,10 @@ export default function WorkspaceSettingsAutomationTab({
                     <></>
                 </SettingsPanel>
             ) : (
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] lg:flex-row">
-                    <div className="flex max-h-56 shrink-0 flex-col overflow-y-auto border-b border-[var(--border-color)] lg:h-auto lg:max-h-none lg:w-64 lg:border-b-0 lg:border-r">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-(--border-color) lg:flex-row">
+                    <div className="flex max-h-56 shrink-0 flex-col overflow-y-auto border-b border-(--border-color) lg:h-auto lg:max-h-none lg:w-64 lg:border-r lg:border-b-0">
                         <div className="flex items-center justify-between gap-2 px-4 py-3.5">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted-color)]">
+                            <span className="text-xs font-semibold tracking-wide text-(--text-muted-color) uppercase">
                                 Rules
                             </span>
                             {canUpdateAutomation && (
@@ -569,7 +569,7 @@ export default function WorkspaceSettingsAutomationTab({
                                     type="button"
                                     aria-label="New rule"
                                     onClick={startNewRule}
-                                    className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                                    className="flex h-6 w-6 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                 >
                                     <Icon name="Plus" size={14} />
                                 </button>
@@ -578,7 +578,7 @@ export default function WorkspaceSettingsAutomationTab({
 
                         {automationRules.length === 0 &&
                             selectedRuleId !== 'new' && (
-                                <p className="px-4 py-2 text-sm text-[var(--text-gray-color)]">
+                                <p className="px-4 py-2 text-sm text-(--text-gray-color)">
                                     No rules yet.
                                 </p>
                             )}
@@ -594,8 +594,8 @@ export default function WorkspaceSettingsAutomationTab({
                                             className={cn(
                                                 'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors',
                                                 selectedRuleId === rule.id
-                                                    ? 'bg-[var(--bg-light-color)]'
-                                                    : 'hover:bg-[var(--bg-light-color)]',
+                                                    ? 'bg-(--bg-light-color)'
+                                                    : 'hover:bg-(--bg-light-color)',
                                             )}
                                         >
                                             <Icon
@@ -604,15 +604,15 @@ export default function WorkspaceSettingsAutomationTab({
                                                 color={meta.color}
                                                 className="shrink-0"
                                             />
-                                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--text-color)]">
+                                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-(--text-color)">
                                                 {rule.name}
                                             </span>
                                             <span
                                                 className={cn(
                                                     'h-1.5 w-1.5 shrink-0 rounded-full',
                                                     rule.enabled
-                                                        ? 'bg-[var(--success-color)]'
-                                                        : 'bg-[var(--text-muted-color)]',
+                                                        ? 'bg-(--success-color)'
+                                                        : 'bg-(--text-muted-color)',
                                                 )}
                                             />
                                         </button>
@@ -628,9 +628,9 @@ export default function WorkspaceSettingsAutomationTab({
                                 <Icon
                                     name="Workflow"
                                     size={28}
-                                    className="text-[var(--text-muted-color)]"
+                                    className="text-(--text-muted-color)"
                                 />
-                                <p className="text-sm text-[var(--text-gray-color)]">
+                                <p className="text-sm text-(--text-gray-color)">
                                     Select a rule, or create a new one, to see
                                     its flow.
                                 </p>
@@ -640,15 +640,15 @@ export default function WorkspaceSettingsAutomationTab({
                                 key={draft.id ?? 'new'}
                                 className="flex min-h-0 flex-1 flex-col"
                             >
-                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-color)] px-4 py-3 sm:flex-nowrap sm:gap-3">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-(--border-color) px-4 py-3 sm:flex-nowrap sm:gap-3">
                                     <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-                                        <span className="text-[var(--text-gray-color)]">
+                                        <span className="text-(--text-gray-color)">
                                             Automation
                                         </span>
                                         <Icon
                                             name="ChevronRight"
                                             size={13}
-                                            className="shrink-0 text-[var(--text-muted-color)]"
+                                            className="shrink-0 text-(--text-muted-color)"
                                         />
                                         {canUpdateAutomation ? (
                                             <Input
@@ -662,7 +662,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                 className="bg-transparent"
                                             />
                                         ) : (
-                                            <span className="truncate font-medium text-[var(--text-color)]">
+                                            <span className="truncate font-medium text-(--text-color)">
                                                 {draft.name || 'Untitled rule'}
                                             </span>
                                         )}
@@ -693,7 +693,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                         if (rule)
                                                             deleteRule(rule);
                                                     }}
-                                                    className="rounded-lg bg-[var(--error-color)] px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:bg-[var(--error-color)] hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+                                                    className="rounded-lg bg-(--error-color) px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:bg-(--error-color) hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
                                                 >
                                                     Delete
                                                 </Button>
@@ -703,7 +703,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                 type="button"
                                                 disabled={!isDirty}
                                                 onClick={saveDraft}
-                                                className="rounded-lg bg-[var(--accent-color)] px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                                                className="rounded-lg bg-(--accent-color) px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                                             >
                                                 Save
                                             </button>
@@ -791,13 +791,13 @@ export default function WorkspaceSettingsAutomationTab({
                                             ) : (
                                                 canUpdateAutomation && (
                                                     <div className="flex items-center gap-1 pb-1 pl-1">
-                                                        <div className="h-4 w-px bg-[var(--border-color)]" />
+                                                        <div className="h-4 w-px bg-(--border-color)" />
                                                         <button
                                                             type="button"
                                                             onClick={
                                                                 addCondition
                                                             }
-                                                            className="ml-2 text-xs font-medium text-[var(--text-gray-color)] hover:text-[var(--accent-color)]"
+                                                            className="ml-2 text-xs font-medium text-(--text-gray-color) hover:text-(--accent-color)"
                                                         >
                                                             + Add condition
                                                         </button>
@@ -879,11 +879,11 @@ export default function WorkspaceSettingsAutomationTab({
                                     </div>
 
                                     {selectedNode && (
-                                        <div className="w-full shrink-0 border-t border-[var(--border-color)] px-4 py-4 lg:w-72 lg:overflow-y-auto lg:border-l lg:border-t-0">
+                                        <div className="w-full shrink-0 border-t border-(--border-color) px-4 py-4 lg:w-72 lg:overflow-y-auto lg:border-t-0 lg:border-l">
                                             {selectedNode.kind ===
                                                 'trigger' && (
                                                 <div className="flex flex-col gap-3">
-                                                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted-color)]">
+                                                    <p className="text-xs font-semibold tracking-wide text-(--text-muted-color) uppercase">
                                                         Trigger
                                                     </p>
                                                     <InlineSelectDropdown
@@ -909,7 +909,7 @@ export default function WorkspaceSettingsAutomationTab({
                                             {selectedNode.kind ===
                                                 'conditions' && (
                                                 <div className="flex flex-col gap-3">
-                                                    <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted-color)]">
+                                                    <p className="text-xs font-semibold tracking-wide text-(--text-muted-color) uppercase">
                                                         Conditions (all must
                                                         match)
                                                     </p>
@@ -917,7 +917,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                         (condition, index) => (
                                                             <div
                                                                 key={index}
-                                                                className="flex flex-col gap-1.5 rounded-lg border border-[var(--border-color)] p-2"
+                                                                className="flex flex-col gap-1.5 rounded-lg border border-(--border-color) p-2"
                                                             >
                                                                 <InlineSelectDropdown
                                                                     label="Field"
@@ -1039,7 +1039,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                                                 )
                                                                             }
                                                                             placeholder="Value"
-                                                                            className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1 text-xs text-[var(--text-color)] outline-none focus:border-[var(--accent-color)]"
+                                                                            className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1 text-xs text-(--text-color) outline-hidden focus:border-(--accent-color)"
                                                                         />
                                                                     );
                                                                 })()}
@@ -1051,7 +1051,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                                                 index,
                                                                             )
                                                                         }
-                                                                        className="self-start text-[11px] text-[var(--error-color)] hover:underline"
+                                                                        className="self-start text-[11px] text-(--error-color) hover:underline"
                                                                     >
                                                                         Remove
                                                                     </button>
@@ -1065,7 +1065,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                             onClick={
                                                                 addCondition
                                                             }
-                                                            className="text-xs font-medium text-[var(--accent-color)] hover:underline"
+                                                            className="text-xs font-medium text-(--accent-color) hover:underline"
                                                         >
                                                             + Add condition
                                                         </button>
@@ -1149,7 +1149,7 @@ function ActionInspector({
 
     return (
         <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted-color)]">
+            <p className="text-xs font-semibold tracking-wide text-(--text-muted-color) uppercase">
                 {actionLabel(action.type)}
             </p>
 
@@ -1167,7 +1167,7 @@ function ActionInspector({
                     />
                     {statusOptions.length > 0 && (
                         <>
-                            <p className="text-[11px] text-[var(--text-muted-color)]">
+                            <p className="text-[11px] text-(--text-muted-color)">
                                 A category moves each issue to its own type's
                                 matching status. Or pick one exact status
                                 instead - it only applies to issues of that
@@ -1209,7 +1209,7 @@ function ActionInspector({
                     disabled={!canUpdate}
                     onChange={(e) => onChange({ user_id: e.target.value })}
                     placeholder="User ID"
-                    className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1.5 text-sm text-[var(--text-color)] outline-none focus:border-[var(--accent-color)]"
+                    className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1.5 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color)"
                 />
             )}
 
@@ -1220,7 +1220,7 @@ function ActionInspector({
                     disabled={!canUpdate}
                     onChange={(e) => onChange({ label: e.target.value })}
                     placeholder="Label name"
-                    className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1.5 text-sm text-[var(--text-color)] outline-none focus:border-[var(--accent-color)]"
+                    className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1.5 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color)"
                 />
             )}
 
@@ -1233,7 +1233,7 @@ function ActionInspector({
                             onChange({ ...params, title: e.target.value })
                         }
                         placeholder="Notification title"
-                        className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1.5 text-sm text-[var(--text-color)] outline-none focus:border-[var(--accent-color)]"
+                        className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1.5 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color)"
                     />
                     <textarea
                         value={params.message ?? ''}
@@ -1243,7 +1243,7 @@ function ActionInspector({
                         }
                         placeholder="Notification message"
                         rows={3}
-                        className="rounded-md border border-[var(--border-color)] bg-[var(--bg-color)] px-2 py-1.5 text-sm text-[var(--text-color)] outline-none focus:border-[var(--accent-color)]"
+                        className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1.5 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color)"
                     />
                 </>
             )}

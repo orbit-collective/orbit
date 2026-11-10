@@ -13,8 +13,8 @@ describe('Badge Component', () => {
         render(<Badge>Default</Badge>);
 
         expect(screen.getByText('Default')).toHaveClass(
-            'bg-[var(--bg-light-color)]',
-            'text-[var(--text-gray-color)]',
+            'bg-(--bg-light-color)',
+            'text-(--text-gray-color)',
         );
     });
 

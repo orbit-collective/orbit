@@ -109,7 +109,7 @@ describe('DashboardGrid', () => {
         );
 
         const surfaces = screen.getAllByTestId('widget-drag-surface');
-        expect(surfaces[2]).toHaveClass('outline-[var(--accent-color)]');
+        expect(surfaces[2]).toHaveClass('outline-(--accent-color)');
 
         surfaces[0].click();
         expect(onSelect).toHaveBeenCalledWith('stat_projects');

@@ -40,7 +40,7 @@ describe('RowAction', () => {
 
         expect(
             screen.getByRole('button', { name: 'Delete' }).className,
-        ).toContain('hover:text-[var(--error-color)]');
+        ).toContain('hover:text-(--error-color)');
     });
 
     test('passes through the popup attributes a Dropdown adds to its trigger', () => {

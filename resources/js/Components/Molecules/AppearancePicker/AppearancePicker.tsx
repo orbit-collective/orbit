@@ -47,7 +47,7 @@ export default function AppearancePicker({
                 <button
                     type="button"
                     aria-label={ariaLabel}
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-transparent transition-[background-color,border-color,transform] duration-200 hover:border-[var(--border-color-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] active:scale-95"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-transparent transition-[background-color,border-color,transform] duration-200 hover:border-(--border-color-strong) focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:outline-hidden active:scale-95"
                     style={{
                         backgroundColor: HEX_COLOR.test(color)
                             ? `${color}1f`
@@ -57,7 +57,7 @@ export default function AppearancePicker({
                     {children}
                 </button>
             }
-            panelClassName="max-w-[calc(100vw-1rem)] slide-in-from-top-1 max-h-[min(34rem,80vh)] duration-200 overflow-y-auto rounded-xl border border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3 shadow-2xl"
+            panelClassName="max-w-[calc(100vw-1rem)] slide-in-from-top-1 max-h-[min(34rem,80vh)] duration-200 overflow-y-auto rounded-xl border border-(--border-color) bg-(--bg-dark-color) p-3 shadow-2xl"
         >
             <div className="space-y-3">
                 <ColorPicker
@@ -67,7 +67,7 @@ export default function AppearancePicker({
                 />
 
                 {offersIcons && (
-                    <div className="grid grid-cols-8 gap-1 border-t border-[var(--border-color)] pt-3">
+                    <div className="grid grid-cols-8 gap-1 border-t border-(--border-color) pt-3">
                         {iconOptions!.map((option) => (
                             <button
                                 key={option}
@@ -77,10 +77,10 @@ export default function AppearancePicker({
                                 aria-label={`Use icon ${option}`}
                                 aria-pressed={icon === option}
                                 className={cn(
-                                    'flex h-8 w-8 cursor-pointer items-center justify-center justify-self-center touch-manipulation rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                                    'flex h-8 w-8 cursor-pointer items-center justify-center justify-self-center touch-manipulation rounded-lg transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)',
                                     icon === option
-                                        ? 'bg-[var(--bg-light-color-hover)] text-[var(--text-color)]'
-                                        : 'text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]',
+                                        ? 'bg-(--bg-light-color-hover) text-(--text-color)'
+                                        : 'text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color)',
                                 )}
                             >
                                 <Icon name={option} size={15} />

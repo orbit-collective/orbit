@@ -22,7 +22,7 @@ export default function ConcurrentEditNotice({
     return (
         <div
             role="status"
-            className="flex items-start gap-2 rounded-lg border border-solid border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-[var(--text-color)]"
+            className="flex items-start gap-2 rounded-lg border border-solid border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-(--text-color)"
         >
             <Icon name="TriangleAlert" size={14} className="mt-0.5 shrink-0" />
             <p>

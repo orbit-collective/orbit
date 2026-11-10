@@ -84,7 +84,7 @@ export default function WorkspaceSettingsCreateRoleModal({
                 title="Create a custom role"
                 onClose={handleClose}
                 icon={
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
                         <Icon name="Sparkles" size={16} />
                     </span>
                 }
@@ -92,7 +92,7 @@ export default function WorkspaceSettingsCreateRoleModal({
 
             <form onSubmit={handleSubmit}>
                 <div className="space-y-4 px-6 py-5">
-                    <p className="text-sm text-[var(--text-gray-color)]">
+                    <p className="text-sm text-(--text-gray-color)">
                         New roles start with every permission turned off. You'll
                         fine-tune exactly what this role can do from the
                         permission matrix right after creating it.
@@ -101,7 +101,7 @@ export default function WorkspaceSettingsCreateRoleModal({
                     <div className="space-y-1.5">
                         <label
                             htmlFor="role-name"
-                            className="text-sm font-medium text-[var(--text-color)]"
+                            className="text-sm font-medium text-(--text-color)"
                         >
                             Name
                         </label>
@@ -113,7 +113,7 @@ export default function WorkspaceSettingsCreateRoleModal({
                             placeholder="e.g. QA Engineer"
                         />
                         {errors.name && (
-                            <span className="text-xs text-[var(--error-color)]">
+                            <span className="text-xs text-(--error-color)">
                                 {errors.name}
                             </span>
                         )}
@@ -122,7 +122,7 @@ export default function WorkspaceSettingsCreateRoleModal({
                     <div className="space-y-1.5">
                         <label
                             htmlFor="role-slug"
-                            className="text-sm font-medium text-[var(--text-color)]"
+                            className="text-sm font-medium text-(--text-color)"
                         >
                             Slug
                         </label>
@@ -137,7 +137,7 @@ export default function WorkspaceSettingsCreateRoleModal({
                             placeholder="qa-engineer"
                         />
                         {errors.slug && (
-                            <span className="text-xs text-[var(--error-color)]">
+                            <span className="text-xs text-(--error-color)">
                                 {errors.slug}
                             </span>
                         )}

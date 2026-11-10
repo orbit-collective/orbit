@@ -24,7 +24,7 @@ const meta = {
     },
     decorators: [
         (Story) => (
-            <p className="w-[360px] pt-64 text-sm text-[var(--text-color)]">
+            <p className="w-[360px] pt-64 text-sm text-(--text-color)">
                 This looks related to <Story /> from last week.
             </p>
         ),

@@ -30,7 +30,7 @@ export default function AccountSettingsSessionTimeoutCard({
             onClick={onSelect}
             disabled={isDisabled}
             {...(isDisabled ? {} : liftProps)}
-            className="relative rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] p-3 text-left transition-colors hover:border-[var(--border-color-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="relative rounded-xl border border-(--border-color) bg-(--surface-color) p-3 text-left transition-colors hover:border-(--border-color-strong) disabled:cursor-not-allowed disabled:opacity-60"
         >
             {selected && <SelectionHighlight layoutId={groupId} />}
             <div className="relative">
@@ -38,17 +38,17 @@ export default function AccountSettingsSessionTimeoutCard({
                     <span
                         className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${
                             selected
-                                ? 'bg-[var(--accent-color)]/20 text-[var(--accent-color)]'
-                                : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)]'
+                                ? 'bg-(--accent-color)/20 text-(--accent-color)'
+                                : 'bg-(--bg-light-color) text-(--text-gray-color)'
                         }`}
                     >
                         <Icon name={icon} size={14} />
                     </span>
-                    <p className="text-sm font-medium text-[var(--text-color)]">
+                    <p className="text-sm font-medium text-(--text-color)">
                         {label}
                     </p>
                 </div>
-                <p className="text-xs leading-5 text-[var(--text-muted-color)]">
+                <p className="text-xs leading-5 text-(--text-muted-color)">
                     {description}
                 </p>
             </div>

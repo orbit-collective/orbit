@@ -32,10 +32,10 @@ interface DeadlinesCardProps {
 }
 
 const DOT_TONES: Record<DueTone, string> = {
-    overdue: 'bg-[var(--error-color)]',
-    today: 'bg-[var(--warning-color)]',
-    soon: 'bg-[var(--accent-color)]',
-    later: 'bg-[var(--text-muted-color)]',
+    overdue: 'bg-(--error-color)',
+    today: 'bg-(--warning-color)',
+    soon: 'bg-(--accent-color)',
+    later: 'bg-(--text-muted-color)',
 };
 
 const WEEK_DAYS = 7;
@@ -53,14 +53,14 @@ const Empty: FC<{ scope: string }> = ({ scope }) => (
         <motion.span
             animate={{ y: [0, -4, 0] }}
             transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity }}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[var(--success-color)]"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-(--bg-light-color) text-(--success-color)"
         >
             <Icon name="CalendarCheck" size={20} />
         </motion.span>
-        <p className="m-0 text-sm font-semibold text-[var(--text-color)]">
+        <p className="m-0 text-sm font-semibold text-(--text-color)">
             No deadlines ahead
         </p>
-        <p className="m-0 max-w-[16rem] text-xs text-[var(--text-muted-color)]">
+        <p className="m-0 max-w-[16rem] text-xs text-(--text-muted-color)">
             {scope === 'mine'
                 ? 'Nothing assigned to you is due in this time.'
                 : 'Nothing in your projects is due in this time.'}
@@ -120,7 +120,7 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
                         animate={{ scaleY: 1 }}
                         transition={{ duration: DURATION.slow, ease: EASE }}
                         style={{ originY: 0 }}
-                        className="absolute bottom-0 left-[7px] top-1 w-px bg-[var(--border-color-strong)]"
+                        className="absolute top-1 bottom-0 left-[7px] w-px bg-(--border-color-strong)"
                     />
                     {groups.map((group, index) => (
                         <motion.li
@@ -143,13 +143,13 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
                                     delay: 0.15 + rowDelay(index),
                                 }}
                                 className={cn(
-                                    'absolute -left-[22px] top-1 h-3 w-3 rounded-full border-2 border-solid border-[var(--surface-color)]',
+                                    'absolute left-[-22px] top-1 h-3 w-3 rounded-full border-2 border-solid border-(--surface-color)',
                                     DOT_TONES[group.tone],
                                 )}
                             />
-                            <h4 className="m-0 mb-1 flex items-center gap-2 text-xs font-semibold text-[var(--text-color)]">
+                            <h4 className="m-0 mb-1 flex items-center gap-2 text-xs font-semibold text-(--text-color)">
                                 {group.label}
-                                <span className="rounded-full bg-[var(--bg-light-color)] px-1.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                <span className="rounded-full bg-(--bg-light-color) px-1.5 text-[10px] font-medium text-(--text-gray-color)">
                                     {group.rows.length}
                                     <span className="sr-only">
                                         {group.rows.length === 1
@@ -273,14 +273,14 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
     return (
         <div
             ref={ref}
-            className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4"
+            className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4"
         >
             {showHeader && (
                 <div className="flex items-center justify-between gap-2">
-                    <h3 className="m-0 text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                    <h3 className="m-0 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                         Upcoming Deadlines
                     </h3>
-                    <span className="text-[10px] font-medium text-[var(--text-muted-color)]">
+                    <span className="text-[10px] font-medium text-(--text-muted-color)">
                         {lateCount > 0
                             ? `${lateCount} overdue`
                             : `Next ${variant === 'week' ? WEEK_DAYS : range} days`}
@@ -323,21 +323,21 @@ const WeekColumn: FC<WeekColumnProps> = ({
                 delay: rowDelay(index),
             }}
             className={cn(
-                'flex min-w-[6.5rem] snap-start flex-col gap-1.5 rounded-lg border border-solid p-2',
-                spread ? 'min-w-0 flex-1' : 'flex-none basis-[7.5rem]',
+                'flex min-w-26 snap-start flex-col gap-1.5 rounded-lg border border-solid p-2',
+                spread ? 'min-w-0 flex-1' : 'flex-none basis-30',
                 tone === 'today'
-                    ? 'border-[var(--accent-color)] bg-[color-mix(in_srgb,var(--accent-color)_8%,transparent)]'
+                    ? 'border-(--accent-color) bg-[color-mix(in_srgb,var(--accent-color)_8%,transparent)]'
                     : tone === 'overdue'
                       ? 'border-[color-mix(in_srgb,var(--error-color)_45%,transparent)] bg-[color-mix(in_srgb,var(--error-color)_6%,transparent)]'
-                      : 'border-[var(--border-color)] bg-[var(--bg-color-hover)]',
+                      : 'border-(--border-color) bg-(--bg-color-hover)',
             )}
         >
             <div className="flex items-baseline justify-between gap-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-gray-color)]">
+                <span className="text-[11px] font-semibold tracking-wide text-(--text-gray-color) uppercase">
                     {title}
                 </span>
                 {sub && (
-                    <span className="text-xs font-semibold tabular-nums text-[var(--text-color)]">
+                    <span className="text-xs font-semibold text-(--text-color) tabular-nums">
                         {sub}
                     </span>
                 )}
@@ -345,7 +345,7 @@ const WeekColumn: FC<WeekColumnProps> = ({
             {rows.length === 0 ? (
                 <span
                     aria-hidden="true"
-                    className="text-[11px] text-[var(--text-muted-color)]"
+                    className="text-[11px] text-(--text-muted-color)"
                 >
                     Free
                 </span>
@@ -365,7 +365,7 @@ const WeekColumn: FC<WeekColumnProps> = ({
                                     href={`/projects/${row.projectId}/issues/${row.id}`}
                                     aria-label={`#${row.number} ${row.title}`}
                                     className={cn(
-                                        'flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] text-[var(--text-color)] no-underline hover:bg-[var(--bg-light-color)]',
+                                        'flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] text-(--text-color) no-underline hover:bg-(--bg-light-color)',
                                         FOCUS_RING_INSET,
                                     )}
                                 >
@@ -373,7 +373,7 @@ const WeekColumn: FC<WeekColumnProps> = ({
                                         <span
                                             aria-hidden="true"
                                             className={cn(
-                                                'h-1.5 w-1.5 shrink-0 rounded-sm',
+                                                'h-1.5 w-1.5 shrink-0 rounded-xs',
                                                 theme.accent,
                                             )}
                                         />
@@ -386,7 +386,7 @@ const WeekColumn: FC<WeekColumnProps> = ({
                         );
                     })}
                     {rows.length > 3 && (
-                        <li className="px-1 text-[10px] font-medium text-[var(--text-muted-color)]">
+                        <li className="px-1 text-[10px] font-medium text-(--text-muted-color)">
                             +{rows.length - 3} more
                         </li>
                     )}

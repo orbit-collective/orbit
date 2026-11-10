@@ -211,7 +211,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                             initial={{ opacity: 0, scale: 0.97 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: DURATION.base, ease: EASE }}
-                            className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--border-color-strong)] px-3 text-center text-xs text-[var(--text-muted-color)]"
+                            className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-(--border-color-strong) px-3 text-center text-xs text-(--text-muted-color)"
                         >
                             <Icon name="EyeOff" size={18} />
                             <span>
@@ -224,7 +224,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                             initial={{ opacity: 0, scale: 0.97 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: DURATION.base, ease: EASE }}
-                            className="h-full min-h-0 overflow-auto [&>*]:h-full"
+                            className="h-full min-h-0 overflow-auto *:h-full"
                         >
                             {children}
                         </motion.div>
@@ -253,13 +253,13 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                         // `pan-y` keeps a swipe over the widget scrolling the page;
                         // on a touch screen a drag starts after a press and hold.
                         className={cn(
-                            'absolute inset-0 cursor-grab touch-pan-y select-none rounded-xl outline-2 outline-offset-0 transition-[outline-color,background-color] duration-150 focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-color)] active:cursor-grabbing',
+                            'absolute inset-0 cursor-grab touch-pan-y select-none rounded-xl outline-2 outline-offset-0 transition-[outline-color,background-color] duration-150 focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:ring-offset-2 focus-visible:ring-offset-(--surface-color) active:cursor-grabbing',
                             selected
-                                ? 'outline outline-[var(--accent-color)]'
-                                : 'outline outline-transparent hover:bg-[var(--accent-color-opacity)] hover:outline-[var(--border-color-strong)]',
+                                ? 'outline-solid outline-(--accent-color)'
+                                : 'outline-solid outline-transparent hover:bg-(--accent-color-opacity) hover:outline-(--border-color-strong)',
                             isOver &&
                                 !isDragging &&
-                                'bg-[var(--accent-color-opacity)] outline-dashed outline-[var(--accent-color)]',
+                                'bg-(--accent-color-opacity) outline-dashed outline-(--accent-color)',
                         )}
                     />
 
@@ -271,7 +271,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                             initial={{ opacity: 0.6, scale: 1 }}
                             animate={{ opacity: 0, scale: 1.035 }}
                             transition={{ duration: 0.6, ease: EASE }}
-                            className="pointer-events-none absolute inset-0 rounded-xl border-2 border-solid border-[var(--accent-color)]"
+                            className="pointer-events-none absolute inset-0 rounded-xl border-2 border-solid border-(--accent-color)"
                         />
                     )}
 
@@ -283,7 +283,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                             ease: EASE,
                             delay: 0.15 + rowDelay(index),
                         }}
-                        className="pointer-events-none absolute -top-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-solid border-[var(--border-color-strong)] bg-[var(--bg-color)] py-0.5 pl-1.5 pr-0.5 shadow-md"
+                        className="pointer-events-none absolute -top-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-solid border-(--border-color-strong) bg-(--bg-color) py-0.5 pr-0.5 pl-1.5 shadow-md"
                     >
                         <Icon
                             name="GripVertical"
@@ -295,12 +295,12 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                             size={12}
                             color="var(--text-gray-color)"
                         />
-                        <span className="min-w-0 truncate text-[11px] font-semibold text-[var(--text-color)]">
+                        <span className="min-w-0 truncate text-[11px] font-semibold text-(--text-color)">
                             {label}
                         </span>
                         <span
                             data-testid="widget-size"
-                            className="hidden shrink-0 text-[10px] font-medium tabular-nums text-[var(--text-muted-color)] sm:inline"
+                            className="hidden shrink-0 text-[10px] font-medium text-(--text-muted-color) tabular-nums sm:inline"
                         >
                             {Math.round((widget.width / GRID_COLUMNS) * 100)}% ·{' '}
                             {widget.height * ROW_HEIGHT}px
@@ -312,7 +312,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                             }
                             title={hidden ? 'Show' : 'Hide'}
                             onClick={onToggleVisible}
-                            className="pointer-events-auto flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                            className="pointer-events-auto flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                         >
                             <Icon name={hidden ? 'EyeOff' : 'Eye'} size={12} />
                         </button>
@@ -341,7 +341,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                                 <span
                                     aria-hidden="true"
                                     className={cn(
-                                        'absolute rounded-full bg-[var(--accent-color)] opacity-0 transition-opacity group-hover/handle:opacity-100',
+                                        'absolute rounded-full bg-(--accent-color) opacity-0 transition-opacity group-hover/handle:opacity-100',
                                         handle.line,
                                     )}
                                 />
@@ -349,7 +349,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                                 <svg
                                     aria-hidden="true"
                                     viewBox="0 0 12 12"
-                                    className="absolute bottom-1 right-1 h-3 w-3 text-[var(--text-gray-color)] transition-colors group-hover/handle:text-[var(--accent-color)]"
+                                    className="absolute right-1 bottom-1 h-3 w-3 text-(--text-gray-color) transition-colors group-hover/handle:text-(--accent-color)"
                                 >
                                     <path
                                         d="M11 5 5 11M11 8l-3 3"

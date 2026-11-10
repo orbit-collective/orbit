@@ -8,7 +8,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="w-[420px] rounded-xl bg-[var(--bg-color)]">
+            <div className="w-[420px] rounded-xl bg-(--bg-color)">
                 <Story />
             </div>
         ),
@@ -45,7 +45,7 @@ export const Submitting: Story = {
 export const CustomChildren: Story = {
     args: {
         children: (
-            <span className="text-sm text-[var(--text-gray-color)]">
+            <span className="text-sm text-(--text-gray-color)">
                 Custom footer content
             </span>
         ),

@@ -32,10 +32,10 @@ describe('Keybind Component', () => {
         render(<Keybind tooltipText="Save" keybind="S" tooltip={false} />);
 
         const kbd = screen.getByText('S');
-        expect(kbd.className).toContain('var(--bg-light-color)');
-        expect(kbd.className).toContain('var(--border-color)');
-        expect(kbd.className).toContain('var(--text-gray-color)');
-        expect(kbd.className).not.toContain('var(--text-muted-color)');
+        expect(kbd.className).toContain('(--bg-light-color)');
+        expect(kbd.className).toContain('(--border-color)');
+        expect(kbd.className).toContain('(--text-gray-color)');
+        expect(kbd.className).not.toContain('(--text-muted-color)');
         expect(kbd.className).not.toMatch(/#[0-9a-f]{3}/i);
     });
 });

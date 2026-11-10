@@ -8,7 +8,7 @@ const meta = {
     component: ActivityLogs,
     decorators: [
         (Story) => (
-            <div className="w-[420px] bg-[var(--bg-color)] p-4">
+            <div className="w-[420px] bg-(--bg-color) p-4">
                 <Story />
             </div>
         ),

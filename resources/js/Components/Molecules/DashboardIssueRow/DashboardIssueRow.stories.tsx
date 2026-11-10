@@ -11,7 +11,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="w-[420px] rounded-xl bg-[var(--surface-color)] p-3">
+            <div className="w-[420px] rounded-xl bg-(--surface-color) p-3">
                 <Story />
             </div>
         ),

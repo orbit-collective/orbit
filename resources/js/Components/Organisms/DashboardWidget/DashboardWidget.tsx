@@ -86,7 +86,7 @@ const EMPTY_STATS: IssueStats = {
 const WidgetPlaceholder: FC = () => (
     <div
         data-testid="widget-placeholder"
-        className="h-full min-h-28 animate-pulse rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)]"
+        className="h-full min-h-28 animate-pulse rounded-xl border border-solid border-(--border-color) bg-(--surface-color)"
     />
 );
 
@@ -144,7 +144,7 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                         show === 'fraction' ? (
                             <>
                                 <AnimatedNumber value={figures.value} />
-                                <span className="text-base font-semibold text-[var(--text-muted-color)]">
+                                <span className="text-base font-semibold text-(--text-muted-color)">
                                     {' '}
                                     / {figures.whole}
                                 </span>

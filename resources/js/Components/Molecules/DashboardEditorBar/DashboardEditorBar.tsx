@@ -20,7 +20,7 @@ interface DashboardEditorBarProps {
 }
 
 const GHOST_BUTTON = cn(
-    'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-solid border-[var(--bg-light-color)] bg-transparent px-2 py-1.5 text-xs font-semibold text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] sm:px-3 hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:opacity-50',
+    'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-solid border-(--bg-light-color) bg-transparent px-2 py-1.5 text-xs font-semibold text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) sm:px-3 hover:text-(--text-color) disabled:cursor-not-allowed disabled:opacity-50',
     FOCUS_RING,
 );
 
@@ -50,25 +50,25 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: DURATION.base, ease: EASE }}
-            className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-1.5 overflow-hidden border-b border-solid border-[var(--bg-light-color)] bg-[var(--accent-color-opacity)] px-3 py-2 md:px-6"
+            className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-1.5 overflow-hidden border-b border-solid border-(--bg-light-color) bg-(--accent-color-opacity) px-3 py-2 md:px-6"
         >
             <div className="flex min-w-0 items-center gap-3">
                 <motion.span
                     initial={{ scale: 0, rotate: -30 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ ...SPRING, delay: 0.1 }}
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color)] text-white"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-(--accent-color) text-white"
                 >
                     <Icon name="PenLine" size={14} />
                 </motion.span>
                 <div className="min-w-0">
-                    <p className="m-0 text-sm font-semibold text-[var(--text-color)]">
+                    <p className="m-0 text-sm font-semibold text-(--text-color)">
                         <span className="sm:hidden">Editing</span>
                         <span className="hidden sm:inline">
                             Editing dashboard
                         </span>
                     </p>
-                    <p className="m-0 hidden text-[11px] text-[var(--text-gray-color)] sm:block">
+                    <p className="m-0 hidden text-[11px] text-(--text-gray-color) sm:block">
                         Drag a header to move a widget, drag its edge or corner
                         to resize it.
                     </p>
@@ -84,7 +84,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
             >
                 {confirmingReset ? (
                     <>
-                        <span className="text-xs text-[var(--text-gray-color)]">
+                        <span className="text-xs text-(--text-gray-color)">
                             Back to the default layout?
                         </span>
                         <button
@@ -95,7 +95,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                                 onReset();
                             }}
                             className={cn(
-                                'cursor-pointer rounded-md border-none bg-[var(--error-color)] px-3 py-1.5 text-xs font-semibold text-white transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50',
+                                'cursor-pointer rounded-md border-none bg-(--error-color) px-3 py-1.5 text-xs font-semibold text-white transition-[filter] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50',
                                 FOCUS_RING,
                             )}
                         >
@@ -112,7 +112,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                     </>
                 ) : (
                     <>
-                        <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[var(--text-gray-color)]">
+                        <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-(--text-gray-color)">
                             <span className="hidden sm:inline">
                                 Snap to grid
                             </span>
@@ -143,7 +143,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                             />
                             <span className="hidden sm:inline">Panel</span>
                         </button>
-                        <div className="mx-1 hidden h-6 w-px bg-[var(--border-color-strong)] sm:block" />
+                        <div className="mx-1 hidden h-6 w-px bg-(--border-color-strong) sm:block" />
                         <motion.button
                             whileTap={{ scale: 0.95 }}
                             type="button"
@@ -175,7 +175,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                             disabled={!dirty || saving}
                             onClick={onSave}
                             className={cn(
-                                'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-[var(--accent-color)] px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-[var(--accent-light-color)] disabled:cursor-not-allowed disabled:bg-[var(--pending-color)]',
+                                'flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-(--accent-color) px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-(--accent-light-color) disabled:cursor-not-allowed disabled:bg-(--pending-color)',
                                 FOCUS_RING,
                             )}
                         >

@@ -101,7 +101,7 @@ describe('UpcomingDeadlinesPanel Component', () => {
         render(<UpcomingDeadlinesPanel issues={[issue]} />);
 
         const label = screen.getByText('Overdue by 5 days');
-        expect(label).toHaveClass('text-[var(--error-color)]');
+        expect(label).toHaveClass('text-(--error-color)');
     });
 
     test('labels a due-today issue', () => {

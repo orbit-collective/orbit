@@ -30,7 +30,7 @@ const SelectionHighlight: React.FC<SelectionHighlightProps> = ({
         animate={layoutId ? undefined : { opacity: 1 }}
         transition={layoutId ? SPRING : { duration: DURATION.fast }}
         className={cn(
-            'pointer-events-none absolute inset-0 rounded-xl border border-[var(--accent-color)] bg-[var(--accent-color-opacity)]',
+            'pointer-events-none absolute inset-0 rounded-xl border border-(--accent-color) bg-(--accent-color-opacity)',
             className,
         )}
     />

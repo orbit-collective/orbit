@@ -19,7 +19,7 @@ const meta = {
     parameters: { layout: 'fullscreen' },
     decorators: [
         (Story) => (
-            <div className="h-[380px] p-4 text-sm text-[var(--text-color)]">
+            <div className="h-[380px] p-4 text-sm text-(--text-color)">
                 Hey @ma
                 <Story />
             </div>

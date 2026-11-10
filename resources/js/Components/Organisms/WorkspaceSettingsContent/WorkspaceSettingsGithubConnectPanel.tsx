@@ -34,10 +34,10 @@ const HEALTH_COLOR_CLASSES: Record<
     Exclude<GithubIntegrationHealth, null>,
     string
 > = {
-    healthy: 'bg-[var(--success-color)]/15 text-[var(--success-color)]',
-    degraded: 'bg-[var(--warning-color)]/15 text-[var(--warning-color)]',
-    error: 'bg-[var(--error-color)]/15 text-[var(--error-color)]',
-    revoked: 'bg-[var(--pending-color)]/15 text-[var(--pending-color)]',
+    healthy: 'bg-(--success-color)/15 text-(--success-color)',
+    degraded: 'bg-(--warning-color)/15 text-(--warning-color)',
+    error: 'bg-(--error-color)/15 text-(--error-color)',
+    revoked: 'bg-(--pending-color)/15 text-(--pending-color)',
 };
 
 function HealthPill({ health }: { health: GithubIntegrationHealth }) {
@@ -54,11 +54,11 @@ function HealthPill({ health }: { health: GithubIntegrationHealth }) {
 
 function GithubDiagnostics({ status }: { status: GithubConnectStatus }) {
     return (
-        <details className="rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm">
-            <summary className="cursor-pointer font-medium text-[var(--text-color)]">
+        <details className="rounded-xl border border-(--border-color) px-4 py-3 text-sm">
+            <summary className="cursor-pointer font-medium text-(--text-color)">
                 Diagnostics
             </summary>
-            <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-[var(--text-gray-color)]">
+            <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-(--text-gray-color)">
                 <dt>Connection status</dt>
                 <dd>{status.status}</dd>
                 <dt>Health</dt>
@@ -126,9 +126,9 @@ function ConnectedRepositories({
     const [isPickerOpen, setIsPickerOpen] = useState(false);
 
     return (
-        <div className="rounded-xl border border-[var(--border-color)] px-4 py-3">
+        <div className="rounded-xl border border-(--border-color) px-4 py-3">
             <div className="flex items-center justify-between gap-4">
-                <p className="text-sm font-medium text-[var(--text-color)]">
+                <p className="text-sm font-medium text-(--text-color)">
                     Connected repositories
                 </p>
                 <div className="flex items-center gap-2">
@@ -137,7 +137,7 @@ function ConnectedRepositories({
                             type="button"
                             onClick={onRefreshRepositories}
                             disabled={isRefreshingRepositories}
-                            className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-1.5 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong) disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isRefreshingRepositories
                                 ? 'Refreshing…'
@@ -154,7 +154,7 @@ function ConnectedRepositories({
 
                                 if (next) onOpenRepositoryPicker?.();
                             }}
-                            className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-1.5 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                            className="rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-1.5 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                         >
                             {isPickerOpen ? 'Close' : 'Add repository'}
                         </button>
@@ -163,7 +163,7 @@ function ConnectedRepositories({
             </div>
 
             {repositories.length === 0 ? (
-                <p className="mt-2 text-sm text-[var(--text-gray-color)]">
+                <p className="mt-2 text-sm text-(--text-gray-color)">
                     No repositories connected.
                 </p>
             ) : (
@@ -173,7 +173,7 @@ function ConnectedRepositories({
                             key={repository.id}
                             className="flex items-center justify-between gap-4 text-sm"
                         >
-                            <span className="text-[var(--text-color)]">
+                            <span className="text-(--text-color)">
                                 {repository.owner}/{repository.name}
                             </span>
                             {canUpdate && onRemoveRepository && (
@@ -182,7 +182,7 @@ function ConnectedRepositories({
                                     onClick={() =>
                                         onRemoveRepository(repository.id)
                                     }
-                                    className="text-[var(--text-gray-color)] transition-colors hover:text-[var(--error-color)]"
+                                    className="text-(--text-gray-color) transition-colors hover:text-(--error-color)"
                                 >
                                     Remove
                                 </button>
@@ -193,14 +193,14 @@ function ConnectedRepositories({
             )}
 
             {isPickerOpen && canUpdate && (
-                <div className="mt-3 border-t border-[var(--border-color)] pt-3">
+                <div className="mt-3 border-t border-(--border-color) pt-3">
                     {isLoadingAvailableRepositories ? (
-                        <p className="text-sm text-[var(--text-gray-color)]">
+                        <p className="text-sm text-(--text-gray-color)">
                             Loading…
                         </p>
                     ) : !availableRepositories ||
                       availableRepositories.length === 0 ? (
-                        <p className="text-sm text-[var(--text-gray-color)]">
+                        <p className="text-sm text-(--text-gray-color)">
                             No other repositories are accessible to this
                             installation.
                         </p>
@@ -214,7 +214,7 @@ function ConnectedRepositories({
                                             onAddRepository?.(repository.id);
                                             setIsPickerOpen(false);
                                         }}
-                                        className="w-full rounded-lg px-2 py-1.5 text-left text-sm text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                                        className="w-full rounded-lg px-2 py-1.5 text-left text-sm text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                                     >
                                         {repository.owner}/{repository.name}
                                     </button>
@@ -261,23 +261,23 @@ export default function WorkspaceSettingsGithubConnectPanel({
 
     return (
         <section className="mt-6">
-            <h3 className="text-sm font-semibold text-[var(--text-color)]">
+            <h3 className="text-sm font-semibold text-(--text-color)">
                 Connect
             </h3>
 
             {state === 'connected' && status?.repository ? (
                 <div className="mt-3 space-y-3">
-                    <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border-color)] px-4 py-3">
+                    <div className="flex items-center justify-between gap-4 rounded-xl border border-(--border-color) px-4 py-3">
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-medium text-[var(--text-color)]">
+                                <p className="text-sm font-medium text-(--text-color)">
                                     {status.repository.owner}/
                                     {status.repository.name}
                                 </p>
                                 <HealthPill health={health} />
                             </div>
                             {health === 'healthy' && (
-                                <p className="mt-0.5 text-sm text-[var(--text-gray-color)]">
+                                <p className="mt-0.5 text-sm text-(--text-gray-color)">
                                     Pull requests with an{' '}
                                     <code>{'<!-- orbit-issue:ID -->'}</code>{' '}
                                     marker in their description will be linked
@@ -286,13 +286,13 @@ export default function WorkspaceSettingsGithubConnectPanel({
                             )}
                             {(health === 'degraded' || health === 'error') &&
                                 status.errorMessage && (
-                                    <p className="mt-0.5 text-sm text-[var(--error-color)]">
+                                    <p className="mt-0.5 text-sm text-(--error-color)">
                                         {status.errorMessage}
                                     </p>
                                 )}
                             {health === 'healthy' &&
                                 status.lastSuccessfulSyncAt && (
-                                    <p className="mt-1 text-xs text-[var(--text-gray-color)]">
+                                    <p className="mt-1 text-xs text-(--text-gray-color)">
                                         Last synced:{' '}
                                         {formatTimeAgo(
                                             status.lastSuccessfulSyncAt,
@@ -301,7 +301,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                                     </p>
                                 )}
                             {health === 'degraded' && (
-                                <p className="mt-1 text-xs text-[var(--text-gray-color)]">
+                                <p className="mt-1 text-xs text-(--text-gray-color)">
                                     {status.lastSuccessfulSyncAt &&
                                         `Last successful sync: ${formatTimeAgo(status.lastSuccessfulSyncAt)} ago`}
                                     {status.lastSyncAttemptAt &&
@@ -315,7 +315,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                                     <button
                                         type="button"
                                         onClick={onRetry}
-                                        className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-2 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                                        className="rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-2 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                                     >
                                         Retry sync
                                     </button>
@@ -324,7 +324,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                                     <button
                                         type="button"
                                         onClick={onConnect}
-                                        className="rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                                        className="rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                                     >
                                         Reconnect
                                     </button>
@@ -332,7 +332,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                                 <button
                                     type="button"
                                     onClick={onDisconnect}
-                                    className="rounded-lg border border-[var(--bg-light-color)] bg-[var(--bg-dark-color)] px-3 py-2 text-sm font-medium text-[var(--text-color)] transition-colors hover:border-[var(--border-color-strong)]"
+                                    className="rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-2 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                                 >
                                     Disconnect
                                 </button>
@@ -356,7 +356,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                 </div>
             ) : state === 'revoked' ? (
                 <div className="mt-3 space-y-3">
-                    <p className="text-sm text-[var(--text-gray-color)]">
+                    <p className="text-sm text-(--text-gray-color)">
                         {canUpdate
                             ? 'The GitHub connection was disconnected. Reconnect to resume linking pull requests.'
                             : 'The GitHub connection was disconnected.'}
@@ -365,7 +365,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                         <button
                             type="button"
                             onClick={onConnect}
-                            className="rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                            className="rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                         >
                             Reconnect
                         </button>
@@ -373,7 +373,7 @@ export default function WorkspaceSettingsGithubConnectPanel({
                 </div>
             ) : canUpdate ? (
                 <div className="mt-3 space-y-3">
-                    <p className="text-sm text-[var(--text-gray-color)]">
+                    <p className="text-sm text-(--text-gray-color)">
                         Connect a GitHub repository to link pull requests to
                         Orbit issues via a hidden marker in the pull request's
                         description.
@@ -381,20 +381,20 @@ export default function WorkspaceSettingsGithubConnectPanel({
                     <button
                         type="button"
                         onClick={onConnect}
-                        className="rounded-lg bg-[var(--accent-color)] px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                        className="rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                     >
                         {state === 'pending'
                             ? 'Reopen install page'
                             : 'Connect with GitHub'}
                     </button>
                     {state === 'pending' && (
-                        <p className="text-sm text-[var(--text-gray-color)]">
+                        <p className="text-sm text-(--text-gray-color)">
                             Waiting for the GitHub App installation to finish…
                         </p>
                     )}
                 </div>
             ) : (
-                <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                <p className="mt-1 text-sm text-(--text-gray-color)">
                     {state === 'pending'
                         ? 'A connection is pending.'
                         : 'Not connected yet.'}

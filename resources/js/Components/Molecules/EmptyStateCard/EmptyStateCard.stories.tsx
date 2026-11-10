@@ -8,7 +8,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="w-[360px] rounded-xl border border-[var(--border-color)]">
+            <div className="w-[360px] rounded-xl border border-(--border-color)">
                 <Story />
             </div>
         ),

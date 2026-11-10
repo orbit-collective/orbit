@@ -9,7 +9,7 @@ describe('SelectionHighlight', () => {
         const frame = screen.getByTestId('selection-highlight');
         expect(frame).toHaveAttribute('aria-hidden', 'true');
         expect(frame.className).toContain('pointer-events-none');
-        expect(frame.className).toContain('border-[var(--accent-color)]');
+        expect(frame.className).toContain('border-(--accent-color)');
     });
 
     test('takes extra classes', () => {

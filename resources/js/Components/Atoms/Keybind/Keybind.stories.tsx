@@ -27,7 +27,7 @@ export const Solid: Story = {
     args: { surface: 'solid' },
     decorators: [
         (Story) => (
-            <div className="rounded-md bg-[var(--bg-light-color)] p-3">
+            <div className="rounded-md bg-(--bg-light-color) p-3">
                 <Story />
             </div>
         ),

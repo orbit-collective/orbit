@@ -68,7 +68,7 @@ export default function MemberList({
                                 type="button"
                                 title="Remove from project"
                                 onClick={() => onRemove(member.id)}
-                                className="flex h-9 w-9 items-center justify-center rounded-md text-[var(--text-gray-color)] transition-colors hover:bg-red-500/10 hover:text-red-400"
+                                className="flex h-9 w-9 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-red-500/10 hover:text-red-400"
                             >
                                 <Icon name="UserMinus" size={15} />
                             </button>

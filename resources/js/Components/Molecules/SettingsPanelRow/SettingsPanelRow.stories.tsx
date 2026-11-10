@@ -10,7 +10,7 @@ const meta = {
     parameters: { layout: 'centered' },
     decorators: [
         (Story) => (
-            <div className="w-[640px] rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)]">
+            <div className="w-[640px] rounded-2xl border border-(--border-color) bg-(--surface-color)">
                 <Story />
             </div>
         ),
@@ -47,9 +47,7 @@ export const WithChildren: Story = {
     args: {
         action: <Button>Add</Button>,
         children: (
-            <p className="text-sm text-[var(--text-muted-color)]">
-                No items yet.
-            </p>
+            <p className="text-sm text-(--text-muted-color)">No items yet.</p>
         ),
     },
 };

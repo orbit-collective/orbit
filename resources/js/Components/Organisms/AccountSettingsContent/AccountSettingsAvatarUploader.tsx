@@ -154,7 +154,7 @@ export default function AccountSettingsAvatarUploader({
                 disabled={!onToggleLibrary}
                 aria-expanded={onToggleLibrary ? isLibraryOpen : undefined}
                 aria-label="Choose an avatar from the library"
-                className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent-color)] enabled:cursor-pointer enabled:hover:opacity-80"
+                className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-color) enabled:cursor-pointer enabled:hover:opacity-80"
             >
                 <Avatar
                     src={avatarSrc ?? undefined}
@@ -170,7 +170,7 @@ export default function AccountSettingsAvatarUploader({
                         <button
                             type="button"
                             onClick={openFilePicker}
-                            className="rounded-md border border-[var(--border-color-strong)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                            className="rounded-md border border-(--border-color-strong) px-3 py-1.5 text-xs font-medium text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                         >
                             Upload new photo
                         </button>
@@ -179,7 +179,7 @@ export default function AccountSettingsAvatarUploader({
                                 type="button"
                                 onClick={onToggleLibrary}
                                 aria-expanded={isLibraryOpen}
-                                className="flex items-center gap-1.5 rounded-md border border-[var(--border-color-strong)] px-3 py-1.5 text-xs font-medium text-[var(--text-color)] transition-colors hover:bg-[var(--bg-light-color)]"
+                                className="flex items-center gap-1.5 rounded-md border border-(--border-color-strong) px-3 py-1.5 text-xs font-medium text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                             >
                                 <Icon name="Images" size={14} />
                                 Choose from library
@@ -189,13 +189,13 @@ export default function AccountSettingsAvatarUploader({
                             type="button"
                             onClick={handleReset}
                             disabled={!avatarSrc}
-                            className="px-1 text-xs font-medium text-[var(--error-color)] transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:no-underline"
+                            className="px-1 text-xs font-medium text-(--error-color) transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:no-underline"
                         >
                             Reset to default
                         </button>
                     </>
                 ) : (
-                    <span className="flex items-center gap-1.5 text-xs text-[var(--text-gray-color)]">
+                    <span className="flex items-center gap-1.5 text-xs text-(--text-gray-color)">
                         <Icon
                             name="LoaderCircle"
                             size={14}

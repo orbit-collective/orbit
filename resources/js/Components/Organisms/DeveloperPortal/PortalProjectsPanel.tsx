@@ -52,7 +52,7 @@ export default function PortalProjectsPanel({
                 />
                 <ul
                     aria-label="Issue counts legend"
-                    className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--text-muted-color)] md:flex"
+                    className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-(--text-muted-color) md:flex"
                 >
                     {CATEGORIES.map(({ key, label }) => (
                         <li key={key} className="flex items-center gap-1.5">
@@ -63,7 +63,7 @@ export default function PortalProjectsPanel({
                 </ul>
             </div>
             {projects.data.length === 0 ? (
-                <p className="px-5 py-6 text-sm text-[var(--text-gray-color)]">
+                <p className="px-5 py-6 text-sm text-(--text-gray-color)">
                     No projects match.
                 </p>
             ) : (
@@ -74,7 +74,7 @@ export default function PortalProjectsPanel({
                         initial="hidden"
                         animate="show"
                         transition={{ delay: rowDelay(index) }}
-                        className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5 md:flex-row md:items-center md:gap-3"
+                        className="flex flex-col gap-2 px-4 py-3 transition-colors hover:bg-(--bg-light-color) sm:px-5 md:flex-row md:items-center md:gap-3"
                     >
                         <div className="flex min-w-0 items-center gap-3 md:flex-1">
                             <StatusDot
@@ -88,13 +88,13 @@ export default function PortalProjectsPanel({
                                 <Link
                                     href={`/projects/${project.id}`}
                                     className={cn(
-                                        'block truncate rounded text-sm font-medium text-[var(--text-color)] no-underline transition-colors duration-200 hover:text-[var(--accent-color)]',
+                                        'block truncate rounded-sm text-sm font-medium text-(--text-color) no-underline transition-colors duration-200 hover:text-(--accent-color)',
                                         FOCUS_RING,
                                     )}
                                 >
                                     {project.name}
                                 </Link>
-                                <p className="truncate text-xs text-[var(--text-gray-color)]">
+                                <p className="truncate text-xs text-(--text-gray-color)">
                                     {project.slug} · {project.membersCount}{' '}
                                     {project.membersCount === 1
                                         ? 'member'
@@ -103,7 +103,7 @@ export default function PortalProjectsPanel({
                             </div>
                         </div>
                         {/* Narrow: its own line under the name, with the words. Wide: compact, on the right. */}
-                        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-[1.375rem] text-xs tabular-nums text-[var(--text-gray-color)] md:shrink-0 md:flex-nowrap md:gap-x-2.5 md:pl-0">
+                        <ul className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-5.5 text-xs text-(--text-gray-color) tabular-nums md:shrink-0 md:flex-nowrap md:gap-x-2.5 md:pl-0">
                             {CATEGORIES.map(({ key, label }) => (
                                 <li
                                     key={key}

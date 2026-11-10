@@ -35,16 +35,16 @@ const CommandPaletteInput = forwardRef<
         },
         ref,
     ) => (
-        <div className="flex h-14 items-center gap-3 border-b border-[var(--border-color)] px-4 md:h-[52px]">
+        <div className="flex h-14 items-center gap-3 border-b border-(--border-color) px-4 md:h-[52px]">
             <Search
                 size={18}
                 aria-hidden="true"
-                className="shrink-0 text-[var(--text-gray-color)]"
+                className="shrink-0 text-(--text-gray-color)"
             />
             {breadcrumb.length > 0 && (
                 <ol
                     aria-label="Current step"
-                    className="flex shrink-0 items-center gap-1 text-[13px] text-[var(--text-gray-color)]"
+                    className="flex shrink-0 items-center gap-1 text-[13px] text-(--text-gray-color)"
                 >
                     {breadcrumb.map((title, index) => (
                         <li
@@ -55,7 +55,7 @@ const CommandPaletteInput = forwardRef<
                                 <ChevronRight
                                     size={12}
                                     aria-hidden="true"
-                                    className="text-[var(--text-gray-color)]"
+                                    className="text-(--text-gray-color)"
                                 />
                             )}
                             <span>{title}</span>
@@ -64,7 +64,7 @@ const CommandPaletteInput = forwardRef<
                     <ChevronRight
                         size={12}
                         aria-hidden="true"
-                        className="text-[var(--text-gray-color)]"
+                        className="text-(--text-gray-color)"
                     />
                 </ol>
             )}
@@ -83,7 +83,7 @@ const CommandPaletteInput = forwardRef<
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 onKeyDown={onKeyDown}
-                className="min-w-0 flex-1 border-none bg-transparent text-base text-[var(--text-color)] placeholder-[var(--text-gray-color)] outline-none focus:ring-0 md:text-[15px]"
+                className="min-w-0 flex-1 border-none bg-transparent text-base text-(--text-color) placeholder-(--text-gray-color) outline-hidden focus:ring-0 md:text-[15px]"
             />
             {onClose && (
                 // Touch has no Esc. Out of the Tab order: keyboard users already
@@ -95,7 +95,7 @@ const CommandPaletteInput = forwardRef<
                     ariaLabel="Close command palette"
                     tabIndex={-1}
                     onClick={onClose}
-                    className="-mr-2 shrink-0 text-[var(--text-gray-color)] md:hidden"
+                    className="-mr-2 shrink-0 text-(--text-gray-color) md:hidden"
                 />
             )}
         </div>

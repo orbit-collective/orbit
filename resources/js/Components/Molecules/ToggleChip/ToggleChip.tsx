@@ -21,10 +21,10 @@ export default function ToggleChip({
             disabled={disabled}
             onClick={onClick}
             className={cn(
-                'inline-flex items-center rounded-full border border-solid px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)] disabled:cursor-not-allowed disabled:opacity-50',
+                'inline-flex items-center rounded-full border border-solid px-2.5 py-1 text-xs font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color) disabled:cursor-not-allowed disabled:opacity-50',
                 pressed
-                    ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)] text-[var(--text-color)]'
-                    : 'border-[var(--border-color)] bg-transparent text-[var(--text-gray-color)] hover:border-[var(--border-color-strong)] hover:text-[var(--text-color)]',
+                    ? 'border-(--accent-color) bg-(--accent-color-opacity) text-(--text-color)'
+                    : 'border-(--border-color) bg-transparent text-(--text-gray-color) hover:border-(--border-color-strong) hover:text-(--text-color)',
                 !disabled && 'cursor-pointer',
             )}
         >

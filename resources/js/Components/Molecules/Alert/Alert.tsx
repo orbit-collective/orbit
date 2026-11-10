@@ -5,16 +5,16 @@ import Icon from '@/Components/Atoms/Icon/Icon';
 import { AlertItem } from '@/types/Alert';
 
 const alertVariants = cva(
-    'pointer-events-auto inline-flex max-w-md items-center gap-3 rounded-[24px] border border-[var(--border-color-strong)] bg-[var(--surface-color)] px-4 py-2.5 shadow-lg backdrop-blur-md transition-all duration-300 text-[var(--text-color)]',
+    'pointer-events-auto inline-flex max-w-md items-center gap-3 rounded-[24px] border border-(--border-color-strong) bg-(--surface-color) px-4 py-2.5 shadow-lg backdrop-blur-md transition-all duration-300 text-(--text-color)',
 );
 
-const iconVariants = cva('w-4 h-4 flex-shrink-0', {
+const iconVariants = cva('w-4 h-4 shrink-0', {
     variants: {
         intent: {
-            success: 'text-[var(--success-color)]',
-            error: 'text-[var(--error-color)]',
-            warning: 'text-[var(--warning-color)]',
-            information: 'text-[var(--info-color)]',
+            success: 'text-(--success-color)',
+            error: 'text-(--error-color)',
+            warning: 'text-(--warning-color)',
+            information: 'text-(--info-color)',
         },
     },
     defaultVariants: {
@@ -57,7 +57,7 @@ export const Alert = ({ alert, onClose }: AlertProps) => {
                 className={iconVariants({ intent })}
             />
 
-            <div className="select-none text-sm font-medium leading-5 text-[var(--text-color)]">
+            <div className="text-sm leading-5 font-medium text-(--text-color) select-none">
                 {message}
                 {actionUrl && (
                     <a
@@ -72,7 +72,7 @@ export const Alert = ({ alert, onClose }: AlertProps) => {
             <button
                 onClick={onClose}
                 type="button"
-                className="ml-1 flex shrink-0 items-center justify-center rounded-full p-1 text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)]"
+                className="ml-1 flex shrink-0 items-center justify-center rounded-full p-1 text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                 aria-label="Close Alert"
             >
                 <X className="h-3.5 w-3.5" />

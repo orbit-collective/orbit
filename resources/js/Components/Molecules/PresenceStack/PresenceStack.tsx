@@ -36,7 +36,7 @@ export default function PresenceStack({ users, max = 4 }: PresenceStackProps) {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}
                         transition={SPRING}
-                        className="rounded-full ring-2 ring-[var(--bg-color-hover)]"
+                        className="rounded-full ring-2 ring-(--bg-color-hover)"
                     >
                         <Avatar
                             src={user.avatar ?? undefined}
@@ -47,7 +47,7 @@ export default function PresenceStack({ users, max = 4 }: PresenceStackProps) {
                 ))}
             </AnimatePresence>
             {overflow > 0 && (
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[10px] font-medium text-[var(--text-color)] ring-2 ring-[var(--bg-color-hover)]">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-(--bg-light-color) text-[10px] font-medium text-(--text-color) ring-2 ring-(--bg-color-hover)">
                     +{overflow}
                 </div>
             )}

@@ -10,7 +10,7 @@ const meta = {
     args: { projects },
     decorators: [
         (Story) => (
-            <div className="flex h-screen bg-[var(--bg-color)]">
+            <div className="flex h-screen bg-(--bg-color)">
                 <Story />
             </div>
         ),

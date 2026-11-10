@@ -6,17 +6,17 @@ function ToggleDemo() {
     const [open, setOpen] = useState(true);
 
     return (
-        <div className="w-80 rounded-2xl bg-[var(--surface-color)] p-4">
+        <div className="w-80 rounded-2xl bg-(--surface-color) p-4">
             <button
                 type="button"
                 aria-expanded={open}
                 onClick={() => setOpen((value) => !value)}
-                className="text-sm text-[var(--text-color)]"
+                className="text-sm text-(--text-color)"
             >
                 {open ? 'Fold' : 'Unfold'}
             </button>
             <Collapse open={open}>
-                <p className="pt-3 text-sm text-[var(--text-gray-color)]">
+                <p className="pt-3 text-sm text-(--text-gray-color)">
                     The body slides and fades with the shared easing.
                 </p>
             </Collapse>

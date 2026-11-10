@@ -189,7 +189,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                     value
                 )
             ) : (
-                <span className="italic text-[var(--text-gray-color)]">
+                <span className="text-(--text-gray-color) italic">
                     {placeholder || emptyText}
                 </span>
             )}

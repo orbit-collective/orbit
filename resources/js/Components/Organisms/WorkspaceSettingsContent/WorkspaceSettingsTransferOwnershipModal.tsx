@@ -76,21 +76,21 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                 title="Transfer ownership"
                 onClose={handleClose}
                 icon={
-                    <span className="bg-[var(--warning-color)]/10 flex h-8 w-8 items-center justify-center rounded-lg text-[var(--warning-color)]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--warning-color)/10 text-(--warning-color)">
                         <Icon name="Crown" size={16} />
                     </span>
                 }
             />
 
             <div className="space-y-3 px-6 py-5">
-                <p className="text-sm text-[var(--text-gray-color)]">
+                <p className="text-sm text-(--text-gray-color)">
                     You'll be demoted to Admin. The new owner gains full,
                     unconditional control over this project, including deleting
                     it.
                 </p>
 
                 {candidates.length === 0 ? (
-                    <p className="text-sm text-[var(--text-gray-color)]">
+                    <p className="text-sm text-(--text-gray-color)">
                         There's no one else in this project to transfer
                         ownership to.
                     </p>
@@ -104,8 +104,8 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                                 className={cn(
                                     'flex w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-colors',
                                     selectedMemberId === member.id
-                                        ? 'border-[var(--accent-color)] bg-[var(--accent-color-opacity)]'
-                                        : 'border-[var(--border-color)] bg-[var(--bg-color)] hover:border-[var(--border-color-strong)]',
+                                        ? 'border-(--accent-color) bg-(--accent-color-opacity)'
+                                        : 'border-(--border-color) bg-(--bg-color) hover:border-(--border-color-strong)',
                                 )}
                             >
                                 <Avatar
@@ -114,10 +114,10 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                                     size="sm"
                                 />
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium text-[var(--text-color)]">
+                                    <p className="truncate text-sm font-medium text-(--text-color)">
                                         {member.name}
                                     </p>
-                                    <p className="truncate text-xs text-[var(--text-gray-color)]">
+                                    <p className="truncate text-xs text-(--text-gray-color)">
                                         {member.email}
                                     </p>
                                 </div>
@@ -125,7 +125,7 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                                     <Icon
                                         name="Check"
                                         size={14}
-                                        className="shrink-0 text-[var(--accent-color)]"
+                                        className="shrink-0 text-(--accent-color)"
                                     />
                                 )}
                             </button>
@@ -134,11 +134,11 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                 )}
             </div>
 
-            <footer className="flex items-center justify-end gap-3 border-t border-[var(--bg-light-color)] px-6 py-4">
+            <footer className="flex items-center justify-end gap-3 border-t border-(--bg-light-color) px-6 py-4">
                 <button
                     type="button"
                     onClick={handleClose}
-                    className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-gray-color)] transition-colors duration-150 hover:text-[var(--text-color)]"
+                    className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
                 >
                     Cancel
                 </button>
@@ -146,7 +146,7 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                     type="button"
                     onClick={handleConfirm}
                     disabled={!selectedMember || isSubmitting}
-                    className="cursor-pointer rounded-lg bg-[var(--warning-color)] px-4 py-2 text-sm font-medium text-[var(--text-color)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="cursor-pointer rounded-lg bg-(--warning-color) px-4 py-2 text-sm font-medium text-(--text-color) transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                     {isSubmitting ? 'Transferring...' : 'Transfer ownership'}
                 </button>

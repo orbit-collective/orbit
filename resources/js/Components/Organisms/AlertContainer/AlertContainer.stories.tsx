@@ -8,7 +8,7 @@ const meta = {
     parameters: { layout: 'fullscreen' },
     decorators: [
         (Story) => (
-            <div className="relative h-[360px] bg-[var(--bg-color)]">
+            <div className="relative h-[360px] bg-(--bg-color)">
                 <Story />
             </div>
         ),

@@ -29,10 +29,10 @@ const CommentList: React.FC<CommentListProps> = ({
                     <Icon
                         name="MessageSquare"
                         size={22}
-                        className="text-[var(--text-muted-color)]"
+                        className="text-(--text-muted-color)"
                     />
                 </motion.span>
-                <p className="text-xs font-medium text-[var(--text-muted-color)]">
+                <p className="text-xs font-medium text-(--text-muted-color)">
                     No comments yet
                 </p>
             </motion.div>

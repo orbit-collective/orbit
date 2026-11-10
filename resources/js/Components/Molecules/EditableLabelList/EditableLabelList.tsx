@@ -55,9 +55,7 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
             }
         >
             {labels.length === 0 && (
-                <span className="text-sm text-[var(--text-gray-color)]">
-                    None
-                </span>
+                <span className="text-sm text-(--text-gray-color)">None</span>
             )}
             {maxDisplay === undefined ? (
                 labels.map((label) => <LabelBadge key={label} label={label} />)
@@ -92,8 +90,8 @@ const EditableLabelList: React.FC<EditableLabelListProps> = ({
                         disabled={disabled}
                         aria-label="Edit labels"
                         className={cn(
-                            'flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-[var(--text-gray-color)] transition-colors hover:bg-[var(--bg-light-color)] hover:text-[var(--text-color)] disabled:cursor-not-allowed disabled:hover:bg-transparent',
-                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-color)]',
+                            'flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color) disabled:cursor-not-allowed disabled:hover:bg-transparent',
+                            'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)',
                             revealTrigger && REVEAL_ON_ROW_HOVER,
                         )}
                     >

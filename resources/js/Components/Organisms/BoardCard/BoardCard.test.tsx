@@ -196,7 +196,7 @@ describe('BoardCard Component', () => {
 
         const title = screen.getByText('Fix the login page');
         expect(title).toHaveClass('line-through');
-        expect(title).toHaveClass('text-[var(--text-muted-color)]');
+        expect(title).toHaveClass('text-(--text-muted-color)');
     });
 
     test('shows the priority dot when the issue is open, and the status dot when closed', () => {
@@ -229,7 +229,7 @@ describe('BoardCard Component', () => {
 
         // Closed: the leading dot reflects the done status rather than priority.
         expect(
-            container.querySelector('.bg-\\[var\\(--pending-color\\)\\]'),
+            container.querySelector('.bg-\\(--pending-color\\)'),
         ).toBeInTheDocument();
     });
 });

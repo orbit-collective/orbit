@@ -47,7 +47,7 @@ const EditableSelect: React.FC<EditableSelectProps> = ({
                     className={cn(
                         'flex cursor-pointer items-center gap-2 rounded-full text-left transition-colors disabled:cursor-not-allowed',
                         !bare &&
-                            'px-2 py-1 hover:bg-[var(--bg-light-color)] disabled:hover:bg-transparent',
+                            'px-2 py-1 hover:bg-(--bg-light-color) disabled:hover:bg-transparent',
                     )}
                 >
                     {renderValue

@@ -56,7 +56,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
     const legend = (
         <div className="flex flex-col gap-2.5">
             {items.length === 0 && (
-                <span className="text-xs text-[var(--text-muted-color)]">
+                <span className="text-xs text-(--text-muted-color)">
                     No issues yet
                 </span>
             )}
@@ -68,19 +68,19 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                 >
                     <div className="flex min-w-0 items-center gap-2">
                         <span
-                            className="inline-block h-2.5 w-2.5 shrink-0 rounded-sm"
+                            className="inline-block h-2.5 w-2.5 shrink-0 rounded-xs"
                             style={{ backgroundColor: item.color }}
                         />
-                        <span className="truncate font-medium text-[var(--text-color)]">
+                        <span className="truncate font-medium text-(--text-color)">
                             {item.label}
                         </span>
                     </div>
-                    <span className="shrink-0 pl-2 font-semibold text-[var(--text-color)]">
+                    <span className="shrink-0 pl-2 font-semibold text-(--text-color)">
                         <AnimatedNumber value={item.count} />
                         {showPercent && (
                             <>
                                 {' '}
-                                <span className="font-medium text-[var(--text-muted-color)]">
+                                <span className="font-medium text-(--text-muted-color)">
                                     <AnimatedNumber
                                         value={item.pct}
                                         format={(n) => `(${Math.round(n)}%)`}
@@ -157,10 +157,10 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                                         })}
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-2xl font-bold tabular-nums text-[var(--text-color)]">
+                                    <span className="text-2xl font-bold text-(--text-color) tabular-nums">
                                         <AnimatedNumber value={total} />
                                     </span>
-                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted-color)]">
+                                    <span className="text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
                                         issues
                                     </span>
                                 </div>
@@ -170,7 +170,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                     ) : variant === 'list' ? (
                         <div className="flex flex-col gap-4">
                             {items.length === 0 && (
-                                <span className="text-xs text-[var(--text-muted-color)]">
+                                <span className="text-xs text-(--text-muted-color)">
                                     No issues yet
                                 </span>
                             )}
@@ -181,15 +181,15 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                                     className="flex flex-col gap-1.5"
                                 >
                                     <div className="flex items-center justify-between text-xs">
-                                        <span className="truncate font-medium text-[var(--text-color)]">
+                                        <span className="truncate font-medium text-(--text-color)">
                                             {item.label}
                                         </span>
-                                        <span className="shrink-0 pl-2 font-semibold text-[var(--text-color)]">
+                                        <span className="shrink-0 pl-2 font-semibold text-(--text-color)">
                                             <AnimatedNumber
                                                 value={item.count}
                                             />
                                             {showPercent && (
-                                                <span className="pl-1 font-medium text-[var(--text-muted-color)]">
+                                                <span className="pl-1 font-medium text-(--text-muted-color)">
                                                     <AnimatedNumber
                                                         value={item.pct}
                                                         format={(n) =>
@@ -200,7 +200,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                                             )}
                                         </span>
                                     </div>
-                                    <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                                    <div className="h-2 w-full overflow-hidden rounded-full bg-(--bg-light-color)">
                                         <motion.div
                                             data-testid="priority-row-bar"
                                             data-width-percent={item.pct}
@@ -222,7 +222,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                         </div>
                     ) : (
                         <>
-                            <div className="flex h-3 w-full overflow-hidden rounded-full bg-[var(--bg-light-color)]">
+                            <div className="flex h-3 w-full overflow-hidden rounded-full bg-(--bg-light-color)">
                                 {items.map((item, index) => (
                                     <motion.div
                                         key={item.key}

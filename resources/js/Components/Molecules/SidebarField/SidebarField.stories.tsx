@@ -33,7 +33,7 @@ export const TextValue: Story = {
     args: {
         label: 'Created',
         children: (
-            <span className="text-xs text-[var(--text-color)]">3 days ago</span>
+            <span className="text-xs text-(--text-color)">3 days ago</span>
         ),
     },
 };

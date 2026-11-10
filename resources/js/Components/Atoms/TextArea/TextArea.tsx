@@ -4,7 +4,7 @@ import { TextAreaProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
 export const textareaVariants = cva(
-    'w-full resize-y rounded-md border border-[var(--bg-light-color)] bg-[var(--bg-color)] px-3 py-[6px] text-sm text-[var(--text-color)] transition-none outline-none ring-0 shadow-none focus:outline-none focus:ring-0 focus:shadow-none focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:bg-[var(--pending-color)] min-h-[200px]',
+    'w-full resize-y rounded-md border border-(--bg-light-color) bg-(--bg-color) px-3 py-[6px] text-sm text-(--text-color) transition-none outline-hidden ring-0 shadow-none focus:outline-hidden focus:ring-0 focus:shadow-none focus-visible:outline-hidden focus-visible:ring-0 disabled:cursor-not-allowed disabled:bg-(--pending-color) min-h-[200px]',
     {
         variants: {
             variant: {

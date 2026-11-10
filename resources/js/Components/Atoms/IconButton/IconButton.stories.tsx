@@ -9,7 +9,7 @@ const meta = {
     args: { iconName: 'Settings', ariaLabel: 'Settings', onClick: fn() },
     decorators: [
         (Story) => (
-            <div className="text-[var(--text-color)]">
+            <div className="text-(--text-color)">
                 <Story />
             </div>
         ),

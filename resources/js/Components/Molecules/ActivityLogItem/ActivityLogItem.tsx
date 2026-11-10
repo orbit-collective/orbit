@@ -10,11 +10,11 @@ import { DURATION, EASE, SPRING, rowDelay } from '@/utils/motion';
 import { formatTimeAgo } from '@/utils/time';
 
 const COLOR_TEXT_CLASSES = {
-    accent: 'text-[var(--accent-color)]',
-    success: 'text-[var(--success-color)]',
-    warning: 'text-[var(--warning-color)]',
-    error: 'text-[var(--error-color)]',
-    info: 'text-[var(--info-color)]',
+    accent: 'text-(--accent-color)',
+    success: 'text-(--success-color)',
+    warning: 'text-(--warning-color)',
+    error: 'text-(--error-color)',
+    info: 'text-(--info-color)',
 };
 
 const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
@@ -34,7 +34,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
             >
                 <span
                     title={new Date(group.createdAt).toLocaleString()}
-                    className="shrink-0 cursor-default whitespace-nowrap text-[10px] font-medium text-[var(--text-muted-color)]"
+                    className="shrink-0 cursor-default text-[10px] font-medium whitespace-nowrap text-(--text-muted-color)"
                 >
                     {formatTimeAgo(group.createdAt)} ago
                 </span>
@@ -45,7 +45,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                     animate={{ scaleX: 1 }}
                     transition={{ duration: DURATION.slow, ease: EASE }}
                     style={{ transformOrigin: 'left' }}
-                    className="h-px flex-1 bg-[var(--border-color)]"
+                    className="h-px flex-1 bg-(--border-color)"
                 />
             </div>
 
@@ -69,7 +69,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                 <div className="min-w-0 flex-1 pt-0.5">
                     <span
                         className={cn(
-                            'truncate font-semibold text-[var(--text-color)]',
+                            'truncate font-semibold text-(--text-color)',
                             compact ? 'text-xs' : 'text-sm',
                         )}
                     >
@@ -97,7 +97,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                                         ease: EASE,
                                         delay: 0.15 + rowDelay(entryIndex),
                                     }}
-                                    className="flex items-start gap-1.5 text-xs leading-relaxed text-[var(--text-gray-color)]"
+                                    className="flex items-start gap-1.5 text-xs leading-relaxed text-(--text-gray-color)"
                                 >
                                     <Icon
                                         name={icon}
@@ -107,7 +107,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                                             COLOR_TEXT_CLASSES[color],
                                         )}
                                     />
-                                    <span className="min-w-0 break-words">
+                                    <span className="min-w-0 wrap-break-word">
                                         {renderActivityLogBody(
                                             entry.body,
                                             users,

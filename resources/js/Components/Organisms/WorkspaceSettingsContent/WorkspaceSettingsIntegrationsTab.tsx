@@ -641,10 +641,10 @@ export default function WorkspaceSettingsIntegrationsTab({
     return (
         <div className="space-y-5">
             <motion.div variants={riseIn}>
-                <h2 className="text-xl font-semibold text-[var(--text-color)]">
+                <h2 className="text-xl font-semibold text-(--text-color)">
                     Your integrations
                 </h2>
-                <p className="mt-1 text-sm text-[var(--text-gray-color)]">
+                <p className="mt-1 text-sm text-(--text-gray-color)">
                     Connect third-party tools to bring activity from Orbit into
                     the apps your team already uses.
                 </p>
@@ -693,7 +693,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                                 FOCUS_RING,
                                 isActive
                                     ? 'text-white'
-                                    : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:text-[var(--text-color)]',
+                                    : 'bg-(--bg-light-color) text-(--text-gray-color) hover:text-(--text-color)',
                             )}
                         >
                             {isActive && (
@@ -701,7 +701,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                                     layoutId="integration-category"
                                     transition={SPRING}
                                     aria-hidden="true"
-                                    className="absolute inset-0 rounded-full bg-[var(--accent-color)]"
+                                    className="absolute inset-0 rounded-full bg-(--accent-color)"
                                 />
                             )}
                             <span className="relative">{category}</span>
@@ -710,7 +710,7 @@ export default function WorkspaceSettingsIntegrationsTab({
                                     'relative text-xs',
                                     isActive
                                         ? 'text-white/70'
-                                        : 'text-[var(--text-muted-color)]',
+                                        : 'text-(--text-muted-color)',
                                 )}
                             >
                                 <AnimatedNumber value={count} />

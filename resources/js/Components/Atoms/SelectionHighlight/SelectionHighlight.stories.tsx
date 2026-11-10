@@ -21,7 +21,7 @@ function Group() {
                     key={id}
                     type="button"
                     onClick={() => setSelected(id)}
-                    className="relative h-16 w-28 rounded-xl border border-[var(--border-color)] bg-[var(--surface-color)] text-sm text-[var(--text-color)]"
+                    className="relative h-16 w-28 rounded-xl border border-(--border-color) bg-(--surface-color) text-sm text-(--text-color)"
                 >
                     {selected === id && (
                         <SelectionHighlight layoutId="story-group" />

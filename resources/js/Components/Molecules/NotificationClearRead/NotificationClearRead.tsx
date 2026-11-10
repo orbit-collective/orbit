@@ -13,7 +13,7 @@ function NotificationClearRead({ onConfirm }: NotificationClearReadProps) {
             <button
                 type="button"
                 onClick={() => setIsConfirming(true)}
-                className="text-xs font-medium text-[var(--text-gray-color)] hover:text-[var(--text-color)] hover:underline"
+                className="text-xs font-medium text-(--text-gray-color) hover:text-(--text-color) hover:underline"
             >
                 Delete all read
             </button>
@@ -22,7 +22,7 @@ function NotificationClearRead({ onConfirm }: NotificationClearReadProps) {
 
     return (
         <span className="flex items-center gap-2 text-xs">
-            <span className="text-[var(--text-gray-color)]">
+            <span className="text-(--text-gray-color)">
                 Delete every read notification?
             </span>
             <button
@@ -31,14 +31,14 @@ function NotificationClearRead({ onConfirm }: NotificationClearReadProps) {
                     setIsConfirming(false);
                     onConfirm();
                 }}
-                className="font-semibold text-[var(--error-color)] hover:underline"
+                className="font-semibold text-(--error-color) hover:underline"
             >
                 Delete
             </button>
             <button
                 type="button"
                 onClick={() => setIsConfirming(false)}
-                className="font-medium text-[var(--text-gray-color)] hover:underline"
+                className="font-medium text-(--text-gray-color) hover:underline"
             >
                 Cancel
             </button>

@@ -206,13 +206,13 @@ export default function WorkspaceSettingsLabelsTab({
                 {labels.length === 0 &&
                     editorTarget !== NEW_LABEL_EDITOR_TARGET && (
                         <div className="flex flex-col items-center gap-2 px-5 py-10 text-center">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[var(--text-gray-color)]">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-(--bg-light-color) text-(--text-gray-color)">
                                 <Icon name="Tag" size={16} />
                             </span>
-                            <p className="text-sm font-medium text-[var(--text-color)]">
+                            <p className="text-sm font-medium text-(--text-color)">
                                 No labels yet
                             </p>
-                            <p className="max-w-xs text-sm text-[var(--text-gray-color)]">
+                            <p className="max-w-xs text-sm text-(--text-gray-color)">
                                 Create your first label to start categorizing
                                 issues in this project.
                             </p>
@@ -232,7 +232,7 @@ export default function WorkspaceSettingsLabelsTab({
                         <RowReveal
                             key={label.id}
                             index={index}
-                            className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--bg-light-color)] sm:px-5"
+                            className="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-(--bg-light-color) sm:px-5"
                         >
                             <span
                                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
@@ -244,22 +244,22 @@ export default function WorkspaceSettingsLabelsTab({
                                 />
                             </span>
                             <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                                <p className="shrink-0 text-sm font-medium text-[var(--text-color)]">
+                                <p className="shrink-0 text-sm font-medium text-(--text-color)">
                                     {label.name}
                                 </p>
                                 {label.isSystem && (
-                                    <span className="shrink-0 rounded-full border border-[var(--border-color)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                                    <span className="shrink-0 rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                                         System
                                     </span>
                                 )}
                                 {label.description && (
-                                    <p className="truncate text-xs text-[var(--text-muted-color)]">
+                                    <p className="truncate text-xs text-(--text-muted-color)">
                                         {label.description}
                                     </p>
                                 )}
                             </div>
                             {(canUpdateLabels || canDeleteLabels) && (
-                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:focus-within:opacity-100 [@media(hover:hover)]:sm:group-hover:opacity-100">
+                                <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:group-hover:opacity-100 [@media(hover:hover)]:sm:focus-within:opacity-100">
                                     {canUpdateLabels && (
                                         <RowAction
                                             title="Edit label"

@@ -16,7 +16,7 @@ const meta = {
     },
     decorators: [
         (Story) => (
-            <div className="overflow-x-auto bg-[var(--bg-color)]">
+            <div className="overflow-x-auto bg-(--bg-color)">
                 <table className="w-full border-separate border-spacing-0 text-left text-xs">
                     <tbody>
                         <Story />

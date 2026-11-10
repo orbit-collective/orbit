@@ -5,7 +5,7 @@ import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
 
 const iconBox =
-    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-color-opacity)] text-[var(--accent-color)]';
+    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)';
 
 /**
  * The icon + title row at the top of a card. With `onToggleCollapse` the whole
@@ -28,13 +28,13 @@ const CardHeader: React.FC<CardHeaderProps> = ({
                     <Icon name={icon} size={15} />
                 </span>
             )}
-            <span className="min-w-0 flex-1 text-left text-sm font-semibold text-[var(--text-color)]">
+            <span className="min-w-0 flex-1 text-left text-sm font-semibold text-(--text-color)">
                 {title}
             </span>
             {collapsed && collapsedSummary && (
                 <span
                     data-testid="collapsed-summary"
-                    className="min-w-0 truncate text-xs text-[var(--text-gray-color)]"
+                    className="min-w-0 truncate text-xs text-(--text-gray-color)"
                 >
                     {collapsedSummary}
                 </span>
@@ -44,7 +44,7 @@ const CardHeader: React.FC<CardHeaderProps> = ({
                     name="ChevronDown"
                     size={16}
                     className={cn(
-                        'shrink-0 text-[var(--text-muted-color)] transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+                        'shrink-0 text-(--text-muted-color) transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
                         collapsed && '-rotate-90',
                     )}
                 />
@@ -78,7 +78,7 @@ const CardHeader: React.FC<CardHeaderProps> = ({
             {description && !collapsed && (
                 <p
                     className={cn(
-                        'mt-1 text-sm text-[var(--text-gray-color)]',
+                        'mt-1 text-sm text-(--text-gray-color)',
                         icon && 'pl-11',
                     )}
                 >

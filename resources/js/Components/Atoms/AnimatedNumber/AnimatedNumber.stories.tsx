@@ -10,7 +10,7 @@ function UpdatingDemo({ className }: { className?: string }) {
             <AnimatedNumber value={value} className={className} />
             <button
                 type="button"
-                className="rounded-md border border-[var(--border-color)] px-3 py-1 text-sm text-[var(--text-color)]"
+                className="rounded-md border border-(--border-color) px-3 py-1 text-sm text-(--text-color)"
                 onClick={() => setValue((v) => v + 137)}
             >
                 Add 137
@@ -25,7 +25,7 @@ const meta = {
     parameters: { layout: 'centered' },
     args: {
         value: 725,
-        className: 'text-4xl font-bold text-[var(--text-color)]',
+        className: 'text-4xl font-bold text-(--text-color)',
     },
 } satisfies Meta<typeof AnimatedNumber>;
 

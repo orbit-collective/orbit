@@ -27,9 +27,9 @@ interface PortalContainersSectionProps {
 }
 
 const STATE_DOT: Record<string, string> = {
-    running: 'bg-[var(--success-color)]',
-    restarting: 'bg-[var(--warning-color)]',
-    paused: 'bg-[var(--warning-color)]',
+    running: 'bg-(--success-color)',
+    restarting: 'bg-(--warning-color)',
+    paused: 'bg-(--warning-color)',
 };
 
 /** Re-renders every second so uptime counts up without asking the server. */
@@ -53,13 +53,10 @@ const hours = (seconds: number) =>
 function Detail({ label, value }: { label: string; value: string }) {
     return (
         <div className="min-w-0">
-            <dt className="text-[11px] uppercase tracking-wide text-[var(--text-muted-color)]">
+            <dt className="text-[11px] tracking-wide text-(--text-muted-color) uppercase">
                 {label}
             </dt>
-            <dd
-                className="truncate text-xs text-[var(--text-color)]"
-                title={value}
-            >
+            <dd className="truncate text-xs text-(--text-color)" title={value}>
                 {value}
             </dd>
         </div>
@@ -85,7 +82,7 @@ function ContainerRow({
             initial="hidden"
             animate="show"
             transition={{ delay: rowDelay(index) }}
-            className="transition-colors duration-200 hover:bg-[var(--bg-light-color)]"
+            className="transition-colors duration-200 hover:bg-(--bg-light-color)"
         >
             <button
                 type="button"
@@ -101,15 +98,15 @@ function ContainerRow({
                     name="ChevronRight"
                     size={14}
                     className={cn(
-                        'shrink-0 text-[var(--text-muted-color)] transition-transform duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)]',
+                        'shrink-0 text-(--text-muted-color) transition-transform duration-400 ease-[cubic-bezier(0.22,1,0.36,1)]',
                         open && 'rotate-90',
                     )}
                 />
                 <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-[var(--text-color)]">
+                    <span className="block truncate text-sm font-medium text-(--text-color)">
                         {container.service}
                     </span>
-                    <span className="block truncate text-xs text-[var(--text-gray-color)]">
+                    <span className="block truncate text-xs text-(--text-gray-color)">
                         {container.name} · {container.image}
                     </span>
                 </span>
@@ -119,8 +116,8 @@ function ContainerRow({
                             variant="outline"
                             className={cn(
                                 container.health === 'healthy'
-                                    ? 'text-[var(--success-color)]'
-                                    : 'text-[var(--error-color)]',
+                                    ? 'text-(--success-color)'
+                                    : 'text-(--error-color)',
                             )}
                         >
                             {container.health}
@@ -131,19 +128,19 @@ function ContainerRow({
                             {container.restartCount} restarts
                         </Badge>
                     )}
-                    <span className="flex items-center gap-1.5 text-sm tabular-nums text-[var(--text-color)]">
+                    <span className="flex items-center gap-1.5 text-sm text-(--text-color) tabular-nums">
                         <span
                             aria-hidden="true"
                             className="relative flex h-2 w-2"
                         >
                             {running && (
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--success-color)] opacity-50 [animation-duration:2.4s] motion-reduce:hidden" />
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-(--success-color) opacity-50 [animation-duration:2.4s] motion-reduce:hidden" />
                             )}
                             <span
                                 className={cn(
                                     'relative inline-flex h-2 w-2 rounded-full',
                                     STATE_DOT[container.state] ??
-                                        'bg-[var(--error-color)]',
+                                        'bg-(--error-color)',
                                 )}
                             />
                         </span>
@@ -157,7 +154,7 @@ function ContainerRow({
             </button>
 
             <Collapse open={open} id={panelId} unmountWhenClosed>
-                <div className="space-y-4 border-t border-[var(--border-color)] px-4 py-4 sm:px-5">
+                <div className="space-y-4 border-t border-(--border-color) px-4 py-4 sm:px-5">
                     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                         <Detail label="Container" value={container.id} />
                         <Detail
@@ -203,7 +200,7 @@ export default function PortalContainersSection({
                 >
                     <p
                         role="status"
-                        className="animate-pulse px-5 py-6 text-sm text-[var(--text-gray-color)]"
+                        className="animate-pulse px-5 py-6 text-sm text-(--text-gray-color)"
                     >
                         Reading Docker…
                     </p>
@@ -223,7 +220,7 @@ export default function PortalContainersSection({
                 >
                     <p
                         role="alert"
-                        className="flex items-start gap-2 px-5 py-4 text-sm text-[var(--warning-color)]"
+                        className="flex items-start gap-2 px-5 py-4 text-sm text-(--warning-color)"
                     >
                         <Icon
                             name="TriangleAlert"
@@ -263,7 +260,7 @@ export default function PortalContainersSection({
                     <>
                         <Badge
                             className={cn(
-                                'gap-1.5 px-2.5 py-1 text-xs text-[var(--success-color)]',
+                                'gap-1.5 px-2.5 py-1 text-xs text-(--success-color)',
                                 SUCCESS_TINT,
                                 SUCCESS_TINT_BORDER,
                             )}
@@ -276,7 +273,7 @@ export default function PortalContainersSection({
                         {containers.containers.length > running.length && (
                             <Badge
                                 className={cn(
-                                    'gap-1.5 px-2.5 py-1 text-xs text-[var(--error-color)]',
+                                    'gap-1.5 px-2.5 py-1 text-xs text-(--error-color)',
                                     ERROR_TINT,
                                     ERROR_TINT_BORDER,
                                 )}

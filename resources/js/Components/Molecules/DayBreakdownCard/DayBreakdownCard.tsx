@@ -81,7 +81,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
     return (
         <section
             className={cn(
-                'rounded-2xl border border-[var(--border-color)] bg-[var(--surface-color)] p-4 sm:p-5',
+                'rounded-2xl border border-(--border-color) bg-(--surface-color) p-4 sm:p-5',
                 className,
             )}
         >
@@ -96,7 +96,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
 
             <Collapse id={bodyId} open={!collapsed}>
                 {days.length === 0 || !selected ? (
-                    <p className="py-10 text-center text-sm text-[var(--text-gray-color)]">
+                    <p className="py-10 text-center text-sm text-(--text-gray-color)">
                         {emptyText}
                     </p>
                 ) : (
@@ -113,7 +113,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                         duration: DURATION.fast,
                                         ease: EASE,
                                     }}
-                                    className="text-2xl font-semibold tracking-tight text-[var(--text-color)]"
+                                    className="text-2xl font-semibold tracking-tight text-(--text-color)"
                                 >
                                     {headline(total)}
                                 </motion.p>
@@ -157,11 +157,11 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                                     onKeyDown(event, index)
                                                 }
                                                 className={cn(
-                                                    'relative flex h-[5.25rem] w-12 shrink-0 cursor-pointer snap-center flex-col items-center justify-center gap-1.5 rounded-full border-0 px-0.5 text-[11px] transition-colors duration-200',
+                                                    'relative flex h-21 w-12 shrink-0 cursor-pointer snap-center flex-col items-center justify-center gap-1.5 rounded-full border-0 px-0.5 text-[11px] transition-colors duration-200',
                                                     FOCUS_RING,
                                                     active
                                                         ? 'text-white'
-                                                        : 'bg-[var(--bg-light-color)] text-[var(--text-gray-color)] hover:bg-[var(--bg-light-color-hover)] hover:text-[var(--text-color)]',
+                                                        : 'bg-(--bg-light-color) text-(--text-gray-color) hover:bg-(--bg-light-color-hover) hover:text-(--text-color)',
                                                 )}
                                             >
                                                 {active && (
@@ -169,7 +169,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                                         layoutId="day-indicator"
                                                         transition={SPRING}
                                                         aria-hidden="true"
-                                                        className="absolute inset-0 rounded-full bg-[var(--accent-color)]"
+                                                        className="absolute inset-0 rounded-full bg-(--accent-color)"
                                                     />
                                                 )}
                                                 <span className="relative text-[10px] uppercase opacity-70">
@@ -185,7 +185,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                                         hasData
                                                             ? active
                                                                 ? 'bg-white'
-                                                                : 'bg-[var(--accent-color)]'
+                                                                : 'bg-(--accent-color)'
                                                             : 'bg-transparent',
                                                     )}
                                                 />
@@ -218,7 +218,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                         },
                                     }}
                                     transition={{ duration: DURATION.fast }}
-                                    className="divide-y divide-[var(--border-color)] rounded-xl border border-[var(--border-color)]"
+                                    className="divide-y divide-(--border-color) rounded-xl border border-(--border-color)"
                                 >
                                     {selected.rows.map((row) => (
                                         <motion.li
@@ -243,8 +243,8 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                                                     backgroundColor: row.color,
                                                 }}
                                             />
-                                            <span className="min-w-0 flex-1 truncate text-[var(--text-gray-color)]">
-                                                <strong className="mr-1 font-semibold text-[var(--text-color)]">
+                                            <span className="min-w-0 flex-1 truncate text-(--text-gray-color)">
+                                                <strong className="mr-1 font-semibold text-(--text-color)">
                                                     <AnimatedNumber
                                                         value={row.value}
                                                     />

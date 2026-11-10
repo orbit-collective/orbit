@@ -416,7 +416,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                 className={cn(
                     'relative flex max-h-[calc(100vh-240px)] flex-col overflow-y-hidden',
                     !bare &&
-                        'rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] shadow-xl',
+                        'rounded-xl border border-(--bg-light-color) bg-(--bg-color) shadow-xl',
                 )}
             >
                 <div className="flex-1 overflow-x-auto">

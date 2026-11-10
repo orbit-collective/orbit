@@ -56,7 +56,7 @@ export const CustomContent: Story = {
         title: 'Danger zone',
         icon: 'TriangleAlert',
         children: (
-            <p className="px-5 py-4 text-sm text-[var(--text-gray-color)]">
+            <p className="px-5 py-4 text-sm text-(--text-gray-color)">
                 Any content can sit in the panel body.
             </p>
         ),

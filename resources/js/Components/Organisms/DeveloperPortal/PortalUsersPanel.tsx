@@ -44,7 +44,7 @@ export default function PortalUsersPanel({
                 />
             </div>
             {users.data.length === 0 ? (
-                <p className="px-5 py-6 text-sm text-[var(--text-gray-color)]">
+                <p className="px-5 py-6 text-sm text-(--text-gray-color)">
                     No users match.
                 </p>
             ) : (
@@ -55,7 +55,7 @@ export default function PortalUsersPanel({
                         initial="hidden"
                         animate="show"
                         transition={{ delay: rowDelay(index) }}
-                        className="flex flex-col gap-1.5 px-4 py-3 transition-colors hover:bg-[var(--bg-light-color)] sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5"
+                        className="flex flex-col gap-1.5 px-4 py-3 transition-colors hover:bg-(--bg-light-color) sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-5"
                     >
                         <div className="min-w-0 sm:flex-1">
                             <UserBadge
@@ -68,7 +68,7 @@ export default function PortalUsersPanel({
                                 className="max-w-full"
                             />
                         </div>
-                        <p className="pl-[2.875rem] text-xs text-[var(--text-gray-color)] sm:shrink-0 sm:pl-0">
+                        <p className="pl-11.5 text-xs text-(--text-gray-color) sm:shrink-0 sm:pl-0">
                             {user.projectsCount}{' '}
                             {user.projectsCount === 1 ? 'project' : 'projects'}
                             {user.createdAt &&

@@ -31,15 +31,13 @@ function ToggleSwitch({
             className={cn(
                 'relative h-5 w-9 cursor-pointer rounded-full border-0 transition-colors duration-200 ease-in-out disabled:cursor-not-allowed disabled:opacity-50',
                 FOCUS_RING,
-                checked
-                    ? 'bg-[var(--accent-color)]'
-                    : 'bg-[var(--bg-light-color)]',
+                checked ? 'bg-(--accent-color)' : 'bg-(--bg-light-color)',
             )}
         >
             {/* The knob springs across instead of sliding linearly. */}
             <motion.span
                 data-checked={checked}
-                className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white"
+                className="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white"
                 initial={false}
                 animate={{ x: checked ? 16 : 0 }}
                 transition={SPRING}

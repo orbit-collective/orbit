@@ -71,7 +71,7 @@ describe('IssueCustomField', () => {
         expect(onSave).toHaveBeenCalledWith(null);
     });
 
-    test('a number field saves on blur', () => {
+    test('a number field saves on blur-sm', () => {
         const onSave = vi.fn();
         render(
             <IssueCustomField

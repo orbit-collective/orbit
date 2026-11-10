@@ -66,7 +66,7 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                 width: CARD_WIDTH,
                 zIndex: 9999,
             }}
-            className="animate-in fade-in zoom-in-95 pointer-events-none rounded-2xl border border-solid border-[var(--border-color)] bg-[var(--bg-dark-color)] p-3.5 shadow-2xl backdrop-blur-md duration-100"
+            className="animate-in fade-in zoom-in-95 pointer-events-none rounded-2xl border border-solid border-(--border-color) bg-(--bg-dark-color) p-3.5 shadow-2xl backdrop-blur-md duration-100"
         >
             <div className="flex items-start gap-2">
                 <StatusDot
@@ -74,17 +74,17 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                     size="sm"
                     className="mt-1.5 shrink-0"
                 />
-                <p className="min-w-0 flex-1 text-sm font-semibold leading-snug text-[var(--text-color)]">
+                <p className="min-w-0 flex-1 text-sm leading-snug font-semibold text-(--text-color)">
                     {issue.title}
                 </p>
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-[var(--border-color)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-(--border-color) px-2 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                     <StatusDot status={issueCategory(issue)} size="xs" />
                     {issue.workflowStatus?.name ?? 'No status'}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-[var(--border-color)] px-2 py-0.5 text-[10px] font-medium text-[var(--text-gray-color)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-(--border-color) px-2 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                     <StatusDot color={issue.priorityDetails?.color} size="xs" />
                     {issue.priority ?? 'No priority'}
                 </span>
@@ -98,7 +98,7 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                 </div>
             )}
 
-            <div className="mt-3 flex items-center justify-between gap-2 border-t border-solid border-[var(--border-color)] pt-2.5">
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-solid border-(--border-color) pt-2.5">
                 <div className="flex min-w-0 items-center gap-1.5">
                     {issue.assignee ? (
                         <>
@@ -108,7 +108,7 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                                 initials={issue.assignee.name.charAt(0)}
                                 size="sm"
                             />
-                            <span className="truncate text-[11px] font-medium text-[var(--text-color)]">
+                            <span className="truncate text-[11px] font-medium text-(--text-color)">
                                 {issue.assignee.name}
                             </span>
                         </>
@@ -117,9 +117,9 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                             <Icon
                                 name="UserX"
                                 size={13}
-                                className="text-[var(--text-muted-color)]"
+                                className="text-(--text-muted-color)"
                             />
-                            <span className="text-[11px] font-medium text-[var(--text-muted-color)]">
+                            <span className="text-[11px] font-medium text-(--text-muted-color)">
                                 Unassigned
                             </span>
                         </>
@@ -127,7 +127,7 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                 </div>
 
                 {dateRange && (
-                    <div className="flex shrink-0 items-center gap-1 text-[10px] font-medium text-[var(--text-muted-color)]">
+                    <div className="flex shrink-0 items-center gap-1 text-[10px] font-medium text-(--text-muted-color)">
                         <Icon name="CalendarRange" size={12} />
                         {dateRange}
                     </div>

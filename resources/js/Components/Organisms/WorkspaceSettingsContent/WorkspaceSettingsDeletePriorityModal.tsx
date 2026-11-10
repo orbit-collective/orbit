@@ -50,17 +50,17 @@ export default function WorkspaceSettingsDeletePriorityModal({
                 title="Delete priority"
                 onClose={handleClose}
                 icon={
-                    <span className="bg-[var(--error-color)]/10 flex h-8 w-8 items-center justify-center rounded-lg text-[var(--error-color)]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--error-color)/10 text-(--error-color)">
                         <Icon name="TriangleAlert" size={16} />
                     </span>
                 }
             />
 
             <div className="space-y-4 px-6 py-5">
-                <p className="text-sm text-[var(--text-gray-color)]">
+                <p className="text-sm text-(--text-gray-color)">
                     This removes{' '}
                     <span
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-color)] px-2 py-0.5 text-xs font-medium text-[var(--text-color)]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-(--border-color) px-2 py-0.5 text-xs font-medium text-(--text-color)"
                         style={{ verticalAlign: 'middle' }}
                     >
                         <PriorityIcon priority={priority} tooltip={false} />
@@ -74,7 +74,7 @@ export default function WorkspaceSettingsDeletePriorityModal({
                     <div className="space-y-1.5">
                         <label
                             htmlFor="priority-replacement"
-                            className="text-xs font-medium text-[var(--text-gray-color)]"
+                            className="text-xs font-medium text-(--text-gray-color)"
                         >
                             {priority.issueCount === 1
                                 ? 'Move its 1 issue to'
@@ -84,7 +84,7 @@ export default function WorkspaceSettingsDeletePriorityModal({
                             id="priority-replacement"
                             value={replacement}
                             onChange={(e) => setReplacement(e.target.value)}
-                            className="w-full cursor-pointer rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)] px-3 py-2 text-sm text-[var(--text-color)] focus:border-[var(--accent-color)] focus:outline-none"
+                            className="w-full cursor-pointer rounded-lg border border-(--border-color) bg-(--bg-color) px-3 py-2 text-sm text-(--text-color) focus:border-(--accent-color) focus:outline-hidden"
                         >
                             {otherPriorities.map((other) => (
                                 <option key={other.id} value={String(other.id)}>
@@ -95,15 +95,15 @@ export default function WorkspaceSettingsDeletePriorityModal({
                         </select>
                     </div>
                 ) : (
-                    <p className="text-sm text-[var(--text-gray-color)]">
+                    <p className="text-sm text-(--text-gray-color)">
                         No issues use this priority.
                     </p>
                 )}
 
                 {nextDefault && (
-                    <p className="rounded-lg border border-[var(--border-color)] bg-[var(--bg-light-color)] px-3 py-2 text-xs text-[var(--text-gray-color)]">
+                    <p className="rounded-lg border border-(--border-color) bg-(--bg-light-color) px-3 py-2 text-xs text-(--text-gray-color)">
                         This is the default for new issues.{' '}
-                        <span className="font-medium text-[var(--text-color)]">
+                        <span className="font-medium text-(--text-color)">
                             {nextDefault.name}
                         </span>{' '}
                         becomes the default instead.
@@ -111,18 +111,18 @@ export default function WorkspaceSettingsDeletePriorityModal({
                 )}
             </div>
 
-            <footer className="flex items-center justify-end gap-3 border-t border-[var(--bg-light-color)] px-6 py-4">
+            <footer className="flex items-center justify-end gap-3 border-t border-(--bg-light-color) px-6 py-4">
                 <button
                     type="button"
                     onClick={handleClose}
-                    className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-[var(--text-gray-color)] transition-colors duration-150 hover:text-[var(--text-color)]"
+                    className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
                 >
                     Cancel
                 </button>
                 <button
                     type="button"
                     onClick={handleConfirm}
-                    className="cursor-pointer rounded-lg bg-[var(--error-color)] px-4 py-2 text-sm font-medium text-[var(--text-color)] transition-opacity hover:opacity-90"
+                    className="cursor-pointer rounded-lg bg-(--error-color) px-4 py-2 text-sm font-medium text-(--text-color) transition-opacity hover:opacity-90"
                 >
                     Delete priority
                 </button>

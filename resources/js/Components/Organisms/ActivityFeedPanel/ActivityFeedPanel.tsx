@@ -33,10 +33,10 @@ const ActivityFeedPanel: FC<ActivityFeedPanelProps> = ({
     showHeader = true,
     showPagination = true,
 }) => (
-    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-solid border-[var(--border-color)] bg-[var(--surface-color)] p-4">
+    <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4">
         {showHeader && (
             <div className="mb-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-gray-color)]">
+                <h3 className="text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
                     Recent Work Activity
                 </h3>
             </div>
@@ -60,7 +60,7 @@ const ActivityFeedPanel: FC<ActivityFeedPanelProps> = ({
                 perPageParam={ACTIVITY_PER_PAGE_PARAM}
                 defaultPerPage={ACTIVITY_DEFAULT_PER_PAGE}
                 preserveState
-                className="border-t border-solid border-[var(--border-color)] px-0 pb-0"
+                className="border-t border-solid border-(--border-color) px-0 pb-0"
             />
         )}
     </div>

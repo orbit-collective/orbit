@@ -10,11 +10,11 @@ export default function AccountSettingsExportTab() {
                 description="Generate portable snapshots of your account data."
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
-                    <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                        <p className="text-sm font-medium text-[var(--text-color)]">
+                    <div className="rounded-xl border border-(--bg-light-color) bg-(--bg-color) p-4">
+                        <p className="text-sm font-medium text-(--text-color)">
                             Full account export
                         </p>
-                        <p className="mt-1 text-xs text-[var(--text-gray-color)]">
+                        <p className="mt-1 text-xs text-(--text-gray-color)">
                             Includes profile, preferences, and activity.
                         </p>
                         <Button
@@ -25,11 +25,11 @@ export default function AccountSettingsExportTab() {
                             Request export
                         </Button>
                     </div>
-                    <div className="rounded-xl border border-[var(--bg-light-color)] bg-[var(--bg-color)] p-4">
-                        <p className="text-sm font-medium text-[var(--text-color)]">
+                    <div className="rounded-xl border border-(--bg-light-color) bg-(--bg-color) p-4">
+                        <p className="text-sm font-medium text-(--text-color)">
                             Activity log export
                         </p>
-                        <p className="mt-1 text-xs text-[var(--text-gray-color)]">
+                        <p className="mt-1 text-xs text-(--text-gray-color)">
                             Download a machine-readable archive of activity
                             events.
                         </p>

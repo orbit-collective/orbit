@@ -37,7 +37,7 @@ describe('EditableText Component', () => {
         expect(screen.getByRole('textbox')).toHaveValue('Fix login crash');
     });
 
-    test('committing a change on blur calls onSave with the new value', async () => {
+    test('committing a change on blur-sm calls onSave with the new value', async () => {
         const handleSave = vi.fn();
         render(<EditableText value="Old title" onSave={handleSave} />);
 
@@ -76,7 +76,7 @@ describe('EditableText Component', () => {
         expect(screen.getByText('Old title')).toBeInTheDocument();
     });
 
-    test('does not call onSave on blur when the value is unchanged', async () => {
+    test('does not call onSave on blur-sm when the value is unchanged', async () => {
         const handleSave = vi.fn();
         render(<EditableText value="Same title" onSave={handleSave} />);
 

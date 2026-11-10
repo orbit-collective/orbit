@@ -41,7 +41,7 @@ function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
             ref={setNodeRef}
             initial={{ opacity: 0, y: 18 }}
             animate={rise}
-            className="flex h-full w-[calc(100vw-3.5rem)] flex-shrink-0 snap-center flex-col overflow-hidden rounded-2xl border transition-colors duration-150 sm:w-[336px]"
+            className="flex h-full w-[calc(100vw-3.5rem)] shrink-0 snap-center flex-col overflow-hidden rounded-2xl border transition-colors duration-150 sm:w-[336px]"
             style={{
                 borderColor: isOver
                     ? `${meta.accent}66`
@@ -53,7 +53,7 @@ function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
             }}
         >
             <div
-                className="flex items-center gap-3 border-b border-[var(--border-color)] px-4 py-3.5"
+                className="flex items-center gap-3 border-b border-(--border-color) px-4 py-3.5"
                 style={{
                     background: `linear-gradient(180deg, ${meta.accent}12 0%, transparent 100%)`,
                 }}
@@ -77,10 +77,10 @@ function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
                             <Icon name={meta.icon} size={17} />
                         </motion.div>
                         <div className="min-w-0">
-                            <h3 className="truncate text-[13px] font-semibold leading-tight text-[var(--text-color)]">
+                            <h3 className="truncate text-[13px] leading-tight font-semibold text-(--text-color)">
                                 {meta.label}
                             </h3>
-                            <p className="truncate text-[11px] leading-tight text-[var(--text-muted-color)]">
+                            <p className="truncate text-[11px] leading-tight text-(--text-muted-color)">
                                 {meta.hint}
                             </p>
                         </div>
@@ -109,15 +109,15 @@ function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
             </div>
             {issues.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-dashed border-[var(--border-color-strong)] bg-[var(--bg-light-color)] text-[var(--text-muted-color)]">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-dashed border-(--border-color-strong) bg-(--bg-light-color) text-(--text-muted-color)">
                         <Icon name="Inbox" size={20} />
                     </div>
-                    <span className="text-xs font-medium text-[var(--text-muted-color)]">
+                    <span className="text-xs font-medium text-(--text-muted-color)">
                         No issues
                     </span>
                 </div>
             ) : (
-                <div className="no-scrollbar flex flex-1 select-none flex-col gap-2.5 overflow-y-auto p-3">
+                <div className="no-scrollbar flex flex-1 flex-col gap-2.5 overflow-y-auto p-3 select-none">
                     <AnimatePresence initial={false}>
                         {issues.map((issue, cardIndex) => (
                             <IssueElement

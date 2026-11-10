@@ -22,15 +22,15 @@ export default function SettingsPanelRow({
     return (
         <motion.div
             variants={rowIn}
-            className="flex flex-col gap-3 px-4 py-4 transition-colors duration-200 hover:bg-[var(--bg-light-color)] sm:px-5"
+            className="flex flex-col gap-3 px-4 py-4 transition-colors duration-200 hover:bg-(--bg-light-color) sm:px-5"
         >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="min-w-0 space-y-1">
-                    <p className="text-sm font-medium text-[var(--text-color)]">
+                    <p className="text-sm font-medium text-(--text-color)">
                         {title}
                     </p>
                     {description && (
-                        <p className="text-sm text-[var(--text-gray-color)]">
+                        <p className="text-sm text-(--text-gray-color)">
                             {description}
                         </p>
                     )}

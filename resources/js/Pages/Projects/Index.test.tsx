@@ -147,7 +147,7 @@ describe('Projects Index Page', () => {
         const cell = screen
             .getByText('Project One')
             .closest('a')!.parentElement!;
-        expect(cell.className).toContain('[&>*]:w-full');
+        expect(cell.className).toContain('*:w-full');
         expect(cell.className).toContain('h-full');
         // The New Project card is a cell of the grid too.
         expect(

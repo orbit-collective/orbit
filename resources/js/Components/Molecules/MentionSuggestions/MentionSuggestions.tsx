@@ -114,7 +114,7 @@ export default function MentionSuggestions({
                         zIndex: 9999,
                     }}
                 >
-                    <p className="px-3 pt-3 text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted-color)]">
+                    <p className="px-3 pt-3 text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
                         {isIssue ? 'Issues' : 'Members'}
                     </p>
                     {isEmpty ? (
@@ -125,9 +125,9 @@ export default function MentionSuggestions({
                             <Icon
                                 name="SearchX"
                                 size={18}
-                                className="text-[var(--text-muted-color)]"
+                                className="text-(--text-muted-color)"
                             />
-                            <p className="text-xs font-medium text-[var(--text-muted-color)]">
+                            <p className="text-xs font-medium text-(--text-muted-color)">
                                 {emptyLabel}
                             </p>
                         </div>
@@ -140,7 +140,7 @@ export default function MentionSuggestions({
                                     ? 'Issue suggestions'
                                     : 'Member suggestions'
                             }
-                            className="mt-2 max-h-64 min-h-0 flex-1 space-y-0.5 overflow-y-auto overflow-x-hidden p-1.5 pt-0"
+                            className="mt-2 max-h-64 min-h-0 flex-1 space-y-0.5 overflow-x-hidden overflow-y-auto p-1.5 pt-0"
                         >
                             {isIssue
                                 ? issues.map((issue, index) => (
@@ -159,7 +159,7 @@ export default function MentionSuggestions({
                                           onClick={() => onSelectIssue?.(issue)}
                                           label={
                                               <>
-                                                  <span className="shrink-0 text-[var(--text-muted-color)]">
+                                                  <span className="shrink-0 text-(--text-muted-color)">
                                                       #
                                                       {issue.number ?? issue.id}
                                                   </span>
@@ -200,7 +200,7 @@ export default function MentionSuggestions({
                                                   </span>
                                                   {(nameCounts.get(user.name) ??
                                                       0) > 1 && (
-                                                      <span className="shrink-0 font-normal text-[var(--text-muted-color)]">
+                                                      <span className="shrink-0 font-normal text-(--text-muted-color)">
                                                           #{user.id}
                                                       </span>
                                                   )}

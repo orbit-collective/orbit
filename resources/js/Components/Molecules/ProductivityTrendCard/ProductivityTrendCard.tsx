@@ -83,7 +83,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                     className={`flex min-h-0 flex-1 flex-col ${showHeader ? 'mt-6' : 'mt-1'}`}
                 >
                     <div className="flex min-h-0 flex-1 gap-3">
-                        <div className="flex w-6 shrink-0 flex-col justify-between text-right text-[10px] font-medium tabular-nums text-[var(--text-muted-color)]">
+                        <div className="flex w-6 shrink-0 flex-col justify-between text-right text-[10px] font-medium text-(--text-muted-color) tabular-nums">
                             {ticks.map((tick) => (
                                 <span key={tick}>{tick}</span>
                             ))}
@@ -95,7 +95,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                     {ticks.map((tick) => (
                                         <div
                                             key={tick}
-                                            className="border-t border-dashed border-[var(--border-color)]"
+                                            className="border-t border-dashed border-(--border-color)"
                                         />
                                     ))}
                                 </div>
@@ -186,7 +186,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                 {/* A guide through the day under the pointer. */}
                                                 <span
                                                     aria-hidden="true"
-                                                    className="absolute inset-y-0 left-1/2 w-px bg-[var(--border-color-strong)] opacity-0 transition-opacity group-hover:opacity-100"
+                                                    className="absolute inset-y-0 left-1/2 w-px bg-(--border-color-strong) opacity-0 transition-opacity group-hover:opacity-100"
                                                 />
                                                 {/* The anchor is the exact point of the day on the line; the dot and the
                                                     count are placed around it with plain offsets, which a transform
@@ -200,13 +200,13 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                 >
                                                     <div className="absolute bottom-3 left-0 flex w-0 justify-center">
                                                         <span
-                                                            className={`z-20 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-color)] transition-all ${alwaysShown ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}
+                                                            className={`z-20 rounded-sm border border-solid border-(--border-color-strong) bg-(--surface-color) px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-(--text-color) transition-all ${alwaysShown ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}
                                                         >
                                                             {day.count}
                                                         </span>
                                                     </div>
                                                     <motion.span
-                                                        className="absolute -bottom-[5px] -left-[5px] block h-2.5 w-2.5"
+                                                        className="absolute bottom-[-5px] left-[-5px] block h-2.5 w-2.5"
                                                         initial={{
                                                             opacity: 0,
                                                             scale: 0,
@@ -285,12 +285,12 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                         }}
                                                     >
                                                         <span
-                                                            className={`absolute -top-7 z-20 whitespace-nowrap rounded border border-solid border-[var(--border-color-strong)] bg-[var(--surface-color)] px-1.5 py-0.5 text-[9px] font-semibold text-[var(--text-color)] transition-all ${alwaysShown ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}
+                                                            className={`absolute -top-7 z-20 rounded-sm border border-solid border-(--border-color-strong) bg-(--surface-color) px-1.5 py-0.5 text-[9px] font-semibold whitespace-nowrap text-(--text-color) transition-all ${alwaysShown ? 'scale-100' : 'scale-0 group-hover:scale-100'}`}
                                                         >
                                                             {day.count}
                                                         </span>
                                                         {isZero ? (
-                                                            <div className="h-full w-full max-w-[16px] rounded-t-sm border border-dashed border-[var(--border-color-strong)] bg-[var(--bg-light-color)] transition-colors group-hover:border-[var(--text-muted-color)]" />
+                                                            <div className="h-full w-full max-w-[16px] rounded-t-sm border border-dashed border-(--border-color-strong) bg-(--bg-light-color) transition-colors group-hover:border-(--text-muted-color)" />
                                                         ) : (
                                                             <div
                                                                 data-active={
@@ -299,7 +299,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                                                 className={`h-full w-full max-w-[16px] rounded-t-sm transition-colors ${
                                                                     isActive
                                                                         ? ''
-                                                                        : 'bg-[var(--bg-light-color)] group-hover:bg-[var(--bg-light-color-hover)]'
+                                                                        : 'bg-(--bg-light-color) group-hover:bg-(--bg-light-color-hover)'
                                                                 }`}
                                                                 style={
                                                                     isActive
@@ -329,7 +329,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                             {trendData.map((day, idx) => (
                                 <span
                                     key={idx}
-                                    className="flex-1 text-center text-[10px] font-semibold text-[var(--text-muted-color)]"
+                                    className="flex-1 text-center text-[10px] font-semibold text-(--text-muted-color)"
                                 >
                                     {day.day}
                                 </span>
@@ -339,14 +339,14 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                 </div>
             ) : (
                 <div className="flex flex-1 flex-col items-center justify-center gap-3 py-8 text-center">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--bg-light-color)] text-[var(--text-muted-color)]">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-(--bg-light-color) text-(--text-muted-color)">
                         <Icon name="Activity" size={20} />
                     </div>
                     <div>
-                        <p className="text-sm font-semibold text-[var(--text-color)]">
+                        <p className="text-sm font-semibold text-(--text-color)">
                             No activity yet this week
                         </p>
-                        <p className="mt-1 max-w-[220px] text-xs text-[var(--text-muted-color)]">
+                        <p className="mt-1 max-w-[220px] text-xs text-(--text-muted-color)">
                             Issue updates and fixes will show up here as your
                             team gets to work.
                         </p>

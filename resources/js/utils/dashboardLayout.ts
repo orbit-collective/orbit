@@ -36,11 +36,11 @@ export const WIDTH_PRESETS = [
  * `--widget-width` columns from `lg` on, always `--widget-height` rows.
  */
 export const GRID_ITEM_CLASS =
-    'min-w-0 [grid-column:1/-1] [grid-row:span_var(--widget-height)] lg:[grid-column:span_var(--widget-width)]';
+    'min-w-0 col-span-full row-[span_var(--widget-height)] lg:col-[span_var(--widget-width)]';
 
 /** The grid the cells sit on: rows of a few pixels, packed densely. */
 export const GRID_CLASS =
-    '-m-2.5 grid auto-rows-[4px] grid-cols-1 [grid-auto-flow:dense] lg:grid-cols-[repeat(120,minmax(0,1fr))]';
+    '-m-2.5 grid auto-rows-[4px] grid-cols-1 grid-flow-dense lg:grid-cols-120';
 
 export const gridItemStyle = (widget: DashboardWidget): CSSProperties =>
     ({

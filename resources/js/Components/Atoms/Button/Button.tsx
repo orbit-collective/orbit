@@ -9,12 +9,12 @@ export const buttonVariants = cva(
     {
         variants: {
             isBox: {
-                false: 'py-1.5 px-3 rounded-sm bg-[var(--accent-color)] text-[var(--text-color)] hover:bg-[var(--accent-light-color)] disabled:bg-[var(--pending-color)]',
-                true: 'p-0 rounded-sm bg-[var(--bg-light-color)] text-[var(--text-color)] hover:brightness-90',
+                false: 'py-1.5 px-3 rounded-xs bg-(--accent-color) text-(--text-color) hover:bg-(--accent-light-color) disabled:bg-(--pending-color)',
+                true: 'p-0 rounded-xs bg-(--bg-light-color) text-(--text-color) hover:brightness-90',
             },
             variant: {
                 default: '',
-                danger: 'bg-[var(--error-color)] text-white hover:bg-[var(--error-color)] hover:brightness-110 disabled:bg-[var(--error-color)] disabled:opacity-50',
+                danger: 'bg-(--error-color) text-white hover:bg-(--error-color) hover:brightness-110 disabled:bg-(--error-color) disabled:opacity-50',
             },
         },
         defaultVariants: {
