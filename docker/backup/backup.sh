@@ -134,7 +134,13 @@ if [ "${1:-}" = "once" ]; then
 fi
 
 log "watching $DB every ${INTERVAL}s, keeping $KEEP snapshots + $KEEP_DAILY daily"
+# As PID 1 this shell ignores SIGTERM unless it traps it, so `docker compose
+# down` used to wait out the 10 s grace period and then kill the container.
+# The sleep runs in the background so the trap fires at once; a backup that is
+# already running finishes first.
+trap 'exit 0' TERM INT
 while true; do
     backup_once || true
-    sleep "$INTERVAL"
+    sleep "$INTERVAL" &
+    wait $!
 done
