@@ -491,6 +491,10 @@ services:
             interval: 10s
             timeout: 3s
             retries: 5
+            # Probe every second while starting so the services that wait for
+            # a healthy redis do not sit through a whole 10 s interval first.
+            start_period: 10s
+            start_interval: 1s
 
         restart: unless-stopped
 
