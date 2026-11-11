@@ -407,6 +407,11 @@ services:
             VITE_APP_NAME: ${VITE_APP_NAME}
             VITE_SENTRY_DSN: ${VITE_SENTRY_DSN}
 
+            # File watching and test parallelism (see vite.config.js).
+            VITE_WATCH_POLLING: ${VITE_WATCH_POLLING:-true}
+            VITE_WATCH_INTERVAL: ${VITE_WATCH_INTERVAL:-1000}
+            VITEST_MAX_WORKERS: ${VITEST_MAX_WORKERS:-6}
+
         volumes:
             - .:/app
             - /app/node_modules
