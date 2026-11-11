@@ -24,10 +24,26 @@ export default defineConfig({
             host: 'localhost',
             port: 5173,
         },
-        // Use polling instead of fs.watch to avoid stale watchers in Docker volumes.
+        // Use polling instead of fs.watch to avoid stale watchers in Docker
+        // volumes. A 100 ms interval kept the container at ~45% of a core
+        // while idle; 1 s costs ~5% and HMR still reacts. Set
+        // VITE_WATCH_POLLING=false to use native fs events (idle ~0%) on
+        // storage where they work, or VITE_WATCH_INTERVAL to tune the poll.
         watch: {
-            usePolling: true,
-            interval: 100,
+            usePolling: process.env.VITE_WATCH_POLLING !== 'false',
+            interval: Number(process.env.VITE_WATCH_INTERVAL) || 1000,
+            // Not frontend sources, but thousands of files the poller would
+            // otherwise stat on every tick. (node_modules and .git are
+            // already ignored by Vite.)
+            ignored: [
+                '**/vendor/**',
+                '**/storage/**',
+                '**/backup/**',
+                '**/coverage/**',
+                '**/coverage-html/**',
+                '**/public/build/**',
+                '**/database/**',
+            ],
         },
     },
     resolve: {
@@ -44,8 +60,12 @@ export default defineConfig({
         // ~44% of the run. Needs the `performance` polyfill in setup.ts.
         pool: 'vmThreads',
         // Vitest leaves one core free by default; on the 4 vCPU CI runner that
-        // is a quarter of the capacity. Locally the default is kept.
-        maxWorkers: process.env.CI ? os.availableParallelism() : undefined,
+        // is a quarter of the capacity, so CI uses them all. Locally 6 workers
+        // finish the suite in the same time as the default (all cores but
+        // one) with ~27% less CPU; override with VITEST_MAX_WORKERS.
+        maxWorkers: process.env.CI
+            ? os.availableParallelism()
+            : Number(process.env.VITEST_MAX_WORKERS) || 6,
         setupFiles: './resources/js/tests/setup.ts',
         css: true,
 
