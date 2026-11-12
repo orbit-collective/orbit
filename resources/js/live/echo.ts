@@ -1,7 +1,8 @@
 import axios from 'axios';
-import Echo from 'laravel-echo';
-import Pusher, { type ChannelAuthorizationCallback } from 'pusher-js';
+import type Echo from 'laravel-echo';
+import type { ChannelAuthorizationCallback } from 'pusher-js';
 import { LiveConnection, LiveStatus } from '@/types/Live';
+import { echoLibraries } from './echoLoader';
 
 type Reverb = Echo<'reverb'>;
 type AuthData = Parameters<ChannelAuthorizationCallback>[1];
@@ -13,7 +14,8 @@ const signatureOf = (c: LiveConnection) =>
     `${c.scheme}://${c.host}:${c.port}/${c.key}`;
 
 /**
- * The one Echo instance for the page, created on first use. Private channels
+ * The one Echo instance for the page, created on first use (after
+ * `loadEchoLibraries()` has resolved). Private channels
  * are authorised through `POST /broadcasting/auth` with axios, so the session
  * cookie and the XSRF token travel exactly like every other request (Echo's
  * own XHR only knows a csrf-token meta tag, which this app does not render).
@@ -26,6 +28,8 @@ export function getEcho(connection: LiveConnection): Reverb {
     }
 
     disconnectEcho();
+
+    const { Echo, Pusher } = echoLibraries();
 
     // Echo reads the Pusher client from `window`.
     (window as unknown as { Pusher: typeof Pusher }).Pusher = Pusher;
