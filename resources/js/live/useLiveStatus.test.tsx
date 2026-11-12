@@ -4,11 +4,17 @@ import { LiveConnection, LiveStatus } from '@/types/Live';
 
 const mocks = vi.hoisted(() => ({
     connection: null as LiveConnection | null,
+    live: { enabled: false } as { enabled: boolean },
     onLiveStatus: vi.fn(),
     stop: vi.fn(),
     emit: undefined as ((status: LiveStatus) => void) | undefined,
 }));
 
+vi.mock('@inertiajs/react', () => ({
+    usePage: () => ({
+        props: { live: mocks.connection ?? mocks.live },
+    }),
+}));
 vi.mock('./useLiveConnection', () => ({
     useLiveConnection: () => mocks.connection,
 }));
@@ -39,6 +45,15 @@ describe('useLiveStatus', () => {
         mocks.onLiveStatus.mockClear();
         mocks.stop.mockClear();
         mocks.connection = null;
+        mocks.live = { enabled: false };
+    });
+
+    test('is connecting while live updates are on but the socket libraries are still loading', () => {
+        mocks.live = { enabled: true };
+        const { result } = renderHook(() => useLiveStatus());
+
+        expect(result.current).toBe('connecting');
+        expect(mocks.onLiveStatus).not.toHaveBeenCalled();
     });
 
     test('is off without a connection and never touches the socket', () => {

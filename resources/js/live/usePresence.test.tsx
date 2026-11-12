@@ -26,6 +26,8 @@ const mocks = vi.hoisted(() => {
 vi.mock('@inertiajs/react', () => ({
     usePage: () => ({ props: { live: mocks.live } }),
 }));
+// The socket libraries load lazily; these tests start with them ready.
+vi.mock('./echoLoader', () => ({ useEchoReady: () => true }));
 vi.mock('./echo', () => ({
     getEcho: () => ({ join: mocks.join, leave: mocks.leave }),
 }));

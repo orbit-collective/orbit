@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, test, vi } from 'vitest';
 import { LiveConnection } from '@/types/Live';
 
 const mocks = vi.hoisted(() => ({
@@ -27,6 +27,7 @@ vi.mock('pusher-js', () => ({ default: class {} }));
 vi.mock('axios', () => ({ default: { post: mocks.post } }));
 
 import { currentSocketId, disconnectEcho, getEcho, onLiveStatus } from './echo';
+import { loadEchoLibraries } from './echoLoader';
 
 const connection: LiveConnection = {
     enabled: true,
@@ -36,6 +37,10 @@ const connection: LiveConnection = {
     port: 443,
     scheme: 'https',
 };
+
+beforeAll(async () => {
+    await loadEchoLibraries();
+});
 
 describe('getEcho', () => {
     afterEach(() => {
