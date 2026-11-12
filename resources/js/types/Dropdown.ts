@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { CSSProperties, ReactNode } from 'react';
 
 /**

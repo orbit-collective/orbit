@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import React, { createContext, useContext, useId } from 'react';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
 import Collapse from '@/Components/Molecules/Collapse/Collapse';

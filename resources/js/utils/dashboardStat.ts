@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { IssueStats } from '@/types/Issues';
 import { DashboardColor } from '@/utils/dashboardColors';
 

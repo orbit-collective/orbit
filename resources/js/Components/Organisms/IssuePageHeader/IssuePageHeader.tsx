@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';

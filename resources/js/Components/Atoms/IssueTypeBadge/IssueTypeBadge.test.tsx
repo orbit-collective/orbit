@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import IssueTypeBadge from './IssueTypeBadge';
@@ -19,14 +19,17 @@ describe('IssueTypeBadge Component', () => {
         expect(icon).toHaveAttribute('stroke', '#ef4444');
     });
 
-    test('falls back to the warning icon for an unknown icon name', () => {
+    test('falls back to the warning icon for an unknown icon name', async () => {
         const { container } = render(
             <IssueTypeBadge
                 issueType={{ name: 'Custom', icon: 'NotAnIcon', color: '#000' }}
             />,
         );
 
-        expect(container.querySelector('svg')).toBeInTheDocument();
+        // An icon outside the bundled registry resolves once the full set loads.
+        await waitFor(() =>
+            expect(container.querySelector('svg')).toBeInTheDocument(),
+        );
     });
 
     test('calls onClick when clicked', async () => {

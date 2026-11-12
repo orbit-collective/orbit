@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { useState } from 'react';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';

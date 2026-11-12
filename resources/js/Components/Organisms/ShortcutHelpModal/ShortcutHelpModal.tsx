@@ -1,10 +1,8 @@
-import {
-    CircleDot,
-    FolderGit2,
-    Globe,
-    type LucideIcon,
-    Search,
-} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import CircleDot from 'lucide-react/icons/circle-dot';
+import FolderGit2 from 'lucide-react/icons/folder-git-2';
+import Globe from 'lucide-react/icons/globe';
+import Search from 'lucide-react/icons/search';
 import React, { useMemo, useState } from 'react';
 import Keybind from '@/Components/Atoms/Keybind/Keybind';
 import { useShortcuts } from '@/context/ShortcutContext';

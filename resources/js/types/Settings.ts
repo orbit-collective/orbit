@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 
 export type SettingsSectionId = 'account' | 'workspace' | 'developer';
 

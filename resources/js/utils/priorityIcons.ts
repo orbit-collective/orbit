@@ -1,4 +1,5 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
+import { isLucideIconName } from '@/utils/lucideIconNames';
 
 /**
  * Curated subset of lucide-react icon names offered by the priority icon
@@ -48,5 +49,7 @@ export const PRIORITY_ICON_OPTIONS: (keyof typeof icons)[] = [
 export const DEFAULT_PRIORITY_ICON: keyof typeof icons = 'Flag';
 
 export function resolvePriorityIcon(name: string): keyof typeof icons {
-    return name in icons ? (name as keyof typeof icons) : DEFAULT_PRIORITY_ICON;
+    return isLucideIconName(name)
+        ? (name as keyof typeof icons)
+        : DEFAULT_PRIORITY_ICON;
 }

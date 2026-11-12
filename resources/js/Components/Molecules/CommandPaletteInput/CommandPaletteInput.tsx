@@ -1,4 +1,5 @@
-import { ChevronRight, Search } from 'lucide-react';
+import ChevronRight from 'lucide-react/icons/chevron-right';
+import Search from 'lucide-react/icons/search';
 import { forwardRef, KeyboardEvent } from 'react';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 

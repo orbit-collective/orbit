@@ -1,7 +1,7 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import {
     FC,
     PointerEvent as ReactPointerEvent,

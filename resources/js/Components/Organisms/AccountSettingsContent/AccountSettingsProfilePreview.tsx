@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { ReactNode } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';

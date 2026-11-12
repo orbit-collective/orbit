@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ModalHeader from '@/Components/Molecules/ModalHeader/ModalHeader';
