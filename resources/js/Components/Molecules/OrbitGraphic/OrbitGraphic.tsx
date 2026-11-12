@@ -1,4 +1,4 @@
-import image from '@assets/logo.png';
+import image from '@assets/logo.webp';
 import { OrbitRing } from '../OrbitRing/OrbitRing';
 
 const ORBIT_DURATION = 32;

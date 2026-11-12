@@ -1,4 +1,4 @@
-import image from '@assets/logo.png';
+import image from '@assets/logo.webp';
 import { Link } from '@inertiajs/react';
 import AuthShowcase from '@/Components/Organisms/AuthShowcase/AuthShowcase';
 import { GuestLayoutProps } from '@/types/Components';
