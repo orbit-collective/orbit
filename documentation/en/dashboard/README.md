@@ -161,8 +161,7 @@ editor). A show/hide option is `toggle()` (`on`/`off`). A choice of colors is
 
 ## Styling notes
 
-The project builds with Tailwind 3 (`tailwind.config.js`), which has no container
-queries (`@container`, `@md:`, `cqw`) and no trailing `!`. Where a widget has to
+The project builds with Tailwind 4 (`resources/css/global.css`). Where a widget has to
 adapt to the width of its own box (the grid style of the projects, the preview of
 a layout) it reads that width with `useElementWidth` and passes it on as a style
 or a CSS variable. A Tailwind translate class on an element that `framer-motion`
