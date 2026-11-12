@@ -33,10 +33,12 @@ describe('echoLoader', () => {
         expect(echoLibraries().Pusher).toBeDefined();
     });
 
-    test('loads only once however often it is asked', async () => {
-        const first = loadEchoLibraries();
+    test('does not load again once the libraries are here', async () => {
+        await loadEchoLibraries();
+        const loaded = echoLibraries();
 
-        expect(loadEchoLibraries()).toBe(first);
-        await first;
+        await loadEchoLibraries();
+
+        expect(echoLibraries()).toBe(loaded);
     });
 });

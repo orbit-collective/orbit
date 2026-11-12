@@ -5,6 +5,7 @@ import { LiveConnection, LiveStatus } from '@/types/Live';
 const mocks = vi.hoisted(() => ({
     connection: null as LiveConnection | null,
     live: { enabled: false } as { enabled: boolean },
+    downloadFailed: false,
     onLiveStatus: vi.fn(),
     stop: vi.fn(),
     emit: undefined as ((status: LiveStatus) => void) | undefined,
@@ -15,6 +16,7 @@ vi.mock('@inertiajs/react', () => ({
         props: { live: mocks.connection ?? mocks.live },
     }),
 }));
+vi.mock('./echoLoader', () => ({ useEchoFailed: () => mocks.downloadFailed }));
 vi.mock('./useLiveConnection', () => ({
     useLiveConnection: () => mocks.connection,
 }));
@@ -46,6 +48,7 @@ describe('useLiveStatus', () => {
         mocks.stop.mockClear();
         mocks.connection = null;
         mocks.live = { enabled: false };
+        mocks.downloadFailed = false;
     });
 
     test('is connecting while live updates are on but the socket libraries are still loading', () => {
@@ -53,6 +56,15 @@ describe('useLiveStatus', () => {
         const { result } = renderHook(() => useLiveStatus());
 
         expect(result.current).toBe('connecting');
+        expect(mocks.onLiveStatus).not.toHaveBeenCalled();
+    });
+
+    test('is offline, so polling takes over, when the socket libraries could not be downloaded', () => {
+        mocks.live = { enabled: true };
+        mocks.downloadFailed = true;
+        const { result } = renderHook(() => useLiveStatus());
+
+        expect(result.current).toBe('offline');
         expect(mocks.onLiveStatus).not.toHaveBeenCalled();
     });
 
