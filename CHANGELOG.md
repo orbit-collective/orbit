@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.14.2](https://github.com/orbit-collective/orbit/compare/v0.14.1...v0.14.2) (2026-11-12)
+
+
+### Bug Fixes
+
+* **docker:** stop the backup container on SIGTERM ([8ad7a2a](https://github.com/orbit-collective/orbit/commit/8ad7a2a0fe1e4c3517450a21b50b3c85b31e341e))
+* **hooks:** stop archiving the removed tailwind.config.js in pre-push ([ebd764f](https://github.com/orbit-collective/orbit/commit/ebd764f9feccd3e65132d3e2606e7cab07d57810))
+* **live:** retry the socket libraries after a failed download ([10a4979](https://github.com/orbit-collective/orbit/commit/10a49798f8753678a29b455a01f6e4da084f7194))
+* **ui:** show the fallback icon when the full icon set fails to load ([44c5919](https://github.com/orbit-collective/orbit/commit/44c5919fb8b055169ccb1b03f58c1dfa373ee533))
+
+
+### Performance Improvements
+
+* **docker:** probe redis every second while it starts ([53d4e6a](https://github.com/orbit-collective/orbit/commit/53d4e6aad50354cc883ba173ad357d54c00d6ac7))
+* **live:** load laravel-echo and pusher-js after the first render ([89030bf](https://github.com/orbit-collective/orbit/commit/89030bf773bc833d4bdb463150d9c90eefa6b9fb))
+* **ui:** keep Sentry and page tests out of the first bundle ([f582a35](https://github.com/orbit-collective/orbit/commit/f582a35976f3c248906d34e64eab48b0747d17d7))
+* **ui:** load the full lucide icon set on demand ([f7dfdf9](https://github.com/orbit-collective/orbit/commit/f7dfdf9572405f53d39e2f1b16725843fad06567))
+* **ui:** self-host Poppins instead of Google Fonts ([d4ade22](https://github.com/orbit-collective/orbit/commit/d4ade22f0cf7f48c59b3fab77cc8c50ae8e26aaf))
+* **ui:** serve the logos as 128 px WebP ([923bb0a](https://github.com/orbit-collective/orbit/commit/923bb0a0adc5333f5787b4607b76804fce2ff990))
+* **vite:** cut dev-server and test CPU usage ([08e8f79](https://github.com/orbit-collective/orbit/commit/08e8f79b58af69eecf0c22f4160e6fe5006077e3))
+
 ## [0.14.1](https://github.com/orbit-collective/orbit/compare/v0.14.0...v0.14.1) (2026-11-10)
 
 
