@@ -3,12 +3,14 @@
 use App\Http\Middleware\EnforceSessionLifetime;
 use App\Http\Middleware\EnsureDeveloperPortalAccess;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Support\ErrorPage;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Sentry\Laravel\Integration;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -72,6 +74,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e->getMessage() ?: 'This action is unauthorized.',
             );
         });
+
+        // 403, 404, 500 and 503 (a policy denial, an unknown URL or a model
+        // route binding could not find, a crash, maintenance mode) show the
+        // React error page instead of Laravel's plain HTML one. JSON answers
+        // keep their JSON, and a 500 keeps the debug page while APP_DEBUG is on.
+        $exceptions->respond(
+            fn (SymfonyResponse $response, Throwable $e, Request $request) => ErrorPage::render($request, $response) ?? $response,
+        );
 
         Integration::handles($exceptions);
     })->create();

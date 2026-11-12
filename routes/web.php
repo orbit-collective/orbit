@@ -152,3 +152,9 @@ Route::get('/health', function () {
 
 require __DIR__.'/auth.php';
 require __DIR__.'/account.php';
+
+// An unmatched URL never enters the `web` middleware group on its own, so the
+// 404 page would render without the shared Inertia props (`auth`, ...) the
+// layout reads. A fallback route puts the request through the group first;
+// the exception handler in bootstrap/app.php then renders Errors/NotFound.
+Route::fallback(fn () => abort(404));
