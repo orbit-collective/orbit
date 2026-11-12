@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import AppearancePicker from '@/Components/Molecules/AppearancePicker/AppearancePicker';

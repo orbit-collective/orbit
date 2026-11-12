@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { IssueTypeBadgeProps } from '@/types/Components';

@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import Icon from './Icon';
 
@@ -40,11 +40,26 @@ describe('Icon Component', () => {
         expect(container.querySelector('svg')).toHaveClass('text-red-500');
     });
 
-    test('renders a fallback icon and warns when the icon name is unknown', () => {
+    test('renders an icon outside the bundled registry once the full set has loaded', async () => {
+        const { container } = render(<Icon name="Anchor" size={20} />);
+
+        // Until the chunk arrives the icon's box is reserved, without an svg.
+        expect(container.querySelector('svg')).not.toBeInTheDocument();
+
+        await waitFor(() =>
+            expect(container.querySelector('svg')).toBeInTheDocument(),
+        );
+        expect(container.querySelector('svg')).toHaveAttribute('width', '20');
+        expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    test('renders a fallback icon and warns when the icon name is unknown', async () => {
         const warnSpy = vi.spyOn(console, 'warn');
         const { container } = render(<Icon name={'NotARealIcon' as any} />);
 
-        expect(container.querySelector('svg')).toBeInTheDocument();
+        await waitFor(() =>
+            expect(container.querySelector('svg')).toBeInTheDocument(),
+        );
         expect(warnSpy).toHaveBeenCalledWith(
             expect.stringContaining('NotARealIcon'),
         );

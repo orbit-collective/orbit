@@ -66,7 +66,7 @@ Every component has a colocated `X.stories.tsx` (`title: 'Atoms|Molecules|Organi
 ### Styling
 - Tailwind CSS. Class-variance-authority (`cva`) + `cn()` for component variants.
 - Theme is **dark-only**, driven by CSS custom properties consumed in Tailwind as arbitrary values, e.g. `bg-[var(--bg-color)]`, `text-[var(--accent-color)]`. Use these variables rather than hardcoding colors.
-- Icons come from `lucide-react`, wrapped by `Components/Atoms/Icon`.
+- Icons come from `lucide-react`, wrapped by `Components/Atoms/Icon`. The first bundle carries only the icons listed in `utils/iconRegistry.ts` (each imported from `lucide-react/icons/<name>`); any other name loads the full set on demand. Never import from the `lucide-react` barrel as a value (`icons[...]`, `name in icons`, named icon imports) outside that registry: it pulls all ~2000 icons back into the first load (use `import type { icons }` for the name type and `isLucideIconName()` to validate a name). Add an icon to the registry when a component starts using it by name; `utils/lucideIconNames.ts` must be regenerated after a lucide upgrade (a test checks it).
 - Fonts are self-hosted (`@fontsource/poppins`, weights 400/500/600/700 and 400 italic, imported at the top of `resources/css/global.css`), not loaded from Google Fonts.
 
 ## Testing

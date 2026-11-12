@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { useState } from 'react';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import Icon from '@/Components/Atoms/Icon/Icon';

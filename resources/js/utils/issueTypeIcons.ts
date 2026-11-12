@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 
 /**
  * Curated subset of lucide-react icon names offered by the issue type icon

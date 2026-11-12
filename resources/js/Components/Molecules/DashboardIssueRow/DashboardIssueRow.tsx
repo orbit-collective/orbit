@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { FC } from 'react';
 import DueChip from '@/Components/Atoms/DueChip/DueChip';
 import Icon from '@/Components/Atoms/Icon/Icon';

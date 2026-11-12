@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import {
     Command,
     CommandGroup,
@@ -8,11 +8,14 @@ import {
     PaletteSearchProject,
 } from '@/types/Commands';
 import { recordHistory } from '@/utils/commandHistory';
+import { isLucideIconName } from '@/utils/lucideIconNames';
 
 const FALLBACK_ISSUE_ICON: keyof typeof icons = 'CircleDot';
 
 const resolveIcon = (name: string | undefined): keyof typeof icons =>
-    name && name in icons ? (name as keyof typeof icons) : FALLBACK_ISSUE_ICON;
+    name && isLucideIconName(name)
+        ? (name as keyof typeof icons)
+        : FALLBACK_ISSUE_ICON;
 
 /** A server issue as a palette row; running it opens the issue and remembers it. */
 export const issueToCommand = (

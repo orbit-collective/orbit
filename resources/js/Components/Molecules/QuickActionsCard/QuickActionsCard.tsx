@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { useCommandPalette } from '@/context/CommandContext';

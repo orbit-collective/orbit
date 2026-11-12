@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { PermissionDefinition } from '@/types/Roles';
 import { getPermissionSection } from '@/utils/permissions';
 

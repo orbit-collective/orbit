@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import SelectionHighlight from '@/Components/Atoms/SelectionHighlight/SelectionHighlight';

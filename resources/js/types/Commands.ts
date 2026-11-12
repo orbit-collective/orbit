@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { ShortcutDefinition, ShortcutScope } from '@/types/Shortcuts';
 
 export type CommandGroup =

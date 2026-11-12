@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
-import { icons, X } from 'lucide-react';
+import type { icons } from 'lucide-react';
+import X from 'lucide-react/icons/x';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { AlertItem } from '@/types/Alert';
 

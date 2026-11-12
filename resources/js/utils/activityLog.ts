@@ -1,4 +1,4 @@
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import { ActivityLogEntry, ActivityLogGroup } from '@/types/ActivityLog';
 
 /** Query-string names of the activity log pager (mirrors ActivityLogService on the backend). */

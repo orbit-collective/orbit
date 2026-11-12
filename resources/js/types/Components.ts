@@ -1,5 +1,5 @@
 import type { VariantProps } from 'class-variance-authority';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import React, {
     AriaRole,
     ButtonHTMLAttributes,

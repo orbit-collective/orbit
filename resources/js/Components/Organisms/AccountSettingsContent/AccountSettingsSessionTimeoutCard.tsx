@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { icons } from 'lucide-react';
+import type { icons } from 'lucide-react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import SelectionHighlight from '@/Components/Atoms/SelectionHighlight/SelectionHighlight';
 import { liftProps } from '@/utils/motion';
