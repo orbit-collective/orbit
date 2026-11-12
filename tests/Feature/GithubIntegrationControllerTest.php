@@ -206,7 +206,8 @@ test('a member cannot add a repository', function () {
     ]);
 
     $response->assertForbidden();
-    Http::assertNothingSent();
+    // The 403 page is an Inertia page, so only the SSR gateway may be asked.
+    Http::assertNotSent(fn ($request) => ! str_contains($request->url(), '__inertia_ssr'));
 });
 
 test('an admin can remove a repository', function () {
