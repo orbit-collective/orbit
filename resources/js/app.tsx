@@ -2,7 +2,6 @@ import '../css/global.css';
 import './bootstrap';
 import type { ResolvedComponent } from '@inertiajs/react';
 import { createInertiaApp } from '@inertiajs/react';
-import * as Sentry from '@sentry/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import CommandPalette from '@/Components/Organisms/CommandPalette/CommandPalette';
@@ -20,24 +19,23 @@ import '@/utils/motionPreference';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
-Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN,
-    dataCollection: {
-        // To disable sending user data and HTTP bodies, uncomment the lines below. For more info visit:
-        // https://docs.sentry.io/platforms/javascript/guides/react/configuration/options/#dataCollection
-        // userInfo: false,
-        // httpBodies: []
-    },
-});
+// Sentry is the biggest third-party chunk of the first load, so it is fetched
+// after the page has started, and only when a DSN is configured.
+if (import.meta.env.VITE_SENTRY_DSN) {
+    void import('@sentry/react').then((Sentry) =>
+        Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN }),
+    );
+}
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
         resolvePageComponent<{ default: ResolvedComponent }>(
             `./Pages/${name}.tsx`,
-            import.meta.glob<{ default: ResolvedComponent }>(
+            import.meta.glob<{ default: ResolvedComponent }>([
                 './Pages/**/*.tsx',
-            ),
+                '!./Pages/**/*.test.tsx',
+            ]),
         ).then((module) => module.default),
     setup({ el, App, props }) {
         const root = createRoot(el);
