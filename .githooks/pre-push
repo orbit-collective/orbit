@@ -34,7 +34,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
     # It must not match a .gitignore rule, or oxfmt would skip its files.
     # node_modules is resolved by walking up from it.
     tmp=$(mktemp -d "$top/.pre-push-oxfmt.XXXXXX") || exit 1
-    git archive "$local_sha" resources/js .oxfmtrc.json tailwind.config.js </dev/null | tar -x -C "$tmp" || exit 1
+    git archive "$local_sha" resources/js resources/css .oxfmtrc.json </dev/null | tar -x -C "$tmp" || exit 1
 
     if [ -x node_modules/.bin/oxfmt ]; then
         (cd "$tmp" && "$top/node_modules/.bin/oxfmt" --check resources/js) </dev/null || failed=1

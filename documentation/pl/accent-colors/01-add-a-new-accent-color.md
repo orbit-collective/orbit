@@ -53,7 +53,7 @@ teal: {
 },
 ```
 
-Muszą być **napisane dosłownie**, nie zbudowane z szablonu — skaner Tailwinda generuje klasę narzędziową tylko wtedy, gdy dokładny string pojawia się gdzieś w zeskanowanym źródle (`content` w `tailwind.config.js` obejmuje glob `resources/js/**/*.{ts,tsx}`); wyrażenie szablonowe `` `bg-${color}-500` `` jest niewidoczne dla tego skanu i po cichu nie wyprodukowałoby żadnego CSS, niezależnie od tego, jak poprawny okazałby się string w czasie działania. Skopiuj dokładnie kształt pięciu właściwości z istniejącego koloru, zamieniając tylko nazwę koloru.
+Muszą być **napisane dosłownie**, nie zbudowane z szablonu — skaner Tailwinda generuje klasę narzędziową tylko wtedy, gdy dokładny string pojawia się gdzieś w zeskanowanym źródle (Tailwind 4 wykrywa klasy automatycznie w plikach źródłowych projektu, w tym w `resources/js`); wyrażenie szablonowe `` `bg-${color}-500` `` jest niewidoczne dla tego skanu i po cichu nie wyprodukowałoby żadnego CSS, niezależnie od tego, jak poprawny okazałby się string w czasie działania. Skopiuj dokładnie kształt pięciu właściwości z istniejącego koloru, zamieniając tylko nazwę koloru.
 
 ## Krok 3 — Nic do zrobienia: strażnik akcentu podąża za mapą
 

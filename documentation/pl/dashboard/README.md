@@ -162,8 +162,7 @@ edytorze). Opcja pokaż/ukryj to `toggle()` (`on`/`off`). Wybór koloru to
 
 ## Uwagi o stylach
 
-Projekt buduje się z Tailwindem 3 (`tailwind.config.js`), który nie ma
-zapytań kontenerowych (`@container`, `@md:`, `cqw`) ani końcowego `!`. Tam, gdzie
+Projekt buduje się z Tailwindem 4 (`resources/css/global.css`). Tam, gdzie
 widget ma dopasować się do szerokości własnego pudełka (styl kafelkowy projektów,
 miniatura układu), odczytuje ją przez `useElementWidth` i przekazuje dalej jako
 styl lub zmienną CSS. Klasa translate z Tailwinda na elemencie animowanym przez

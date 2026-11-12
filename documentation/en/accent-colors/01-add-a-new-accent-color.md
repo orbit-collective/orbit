@@ -70,8 +70,8 @@ teal: {
 
 These must be **written out literally**, not built from a template —
 Tailwind's scanner only generates a utility class if the exact string
-appears somewhere in the scanned source (`tailwind.config.js`'s
-`content` globs include `resources/js/**/*.{ts,tsx}`); a
+appears somewhere in the scanned source (Tailwind 4 detects classes
+automatically in the project's source files, `resources/js` included); a
 `` `bg-${color}-500` `` template expression is invisible to that scan
 and would silently produce no CSS at all, no matter how correct the
 runtime string ends up being. Copy the five-property shape from an
