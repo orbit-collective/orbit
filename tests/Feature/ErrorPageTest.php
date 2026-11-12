@@ -91,6 +91,36 @@ test('maintenance renders the error page', function () {
             ->where('status', 503));
 });
 
+test('maintenance mode renders the error page before a session exists', function () {
+    // Maintenance mode answers from the global middleware, before the web
+    // group starts a session, so this route is deliberately outside it.
+    Route::get('/_down_raw', fn () => abort(503));
+
+    $this->get('/_down_raw')
+        ->assertStatus(503)
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Errors/Error')
+            ->where('status', 503)
+            ->where('auth.user', null));
+});
+
+test('the headers of the original error are kept', function () {
+    Route::get('/_retry', fn () => abort(503, '', ['Retry-After' => '120']));
+
+    $this->get('/_retry')
+        ->assertStatus(503)
+        ->assertHeader('Retry-After', '120')
+        ->assertInertia(fn (Assert $page) => $page->component('Errors/Error'));
+});
+
+test('the headers of the error page itself are not overwritten', function () {
+    Route::get('/_headers', fn () => abort(403, '', ['Content-Type' => 'text/plain']));
+
+    $response = $this->get('/_headers')->assertForbidden();
+
+    expect($response->headers->get('Content-Type'))->toContain('text/html');
+});
+
 test('a status the page does not cover keeps the default answer', function () {
     Route::middleware('web')->get('/_teapot', fn () => abort(418));
 
