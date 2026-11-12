@@ -31,16 +31,25 @@ let fullSet: IconSet | null = null;
 let loading: Promise<IconSet> | null = null;
 
 function loadFullSet(): Promise<IconSet> {
-    loading ??= import('lucide-react').then((module) => {
-        fullSet = module.icons as unknown as IconSet;
-        return fullSet;
-    });
+    loading ??= import('lucide-react').then(
+        (module) => {
+            fullSet = module.icons as unknown as IconSet;
+            return fullSet;
+        },
+        (error: unknown) => {
+            // A failed download is not kept: the next icon to need the set
+            // tries again.
+            loading = null;
+            throw error;
+        },
+    );
 
     return loading;
 }
 
 function LazyIcon({ name, size, color, className }: IconProps) {
     const [set, setSet] = useState<IconSet | null>(fullSet);
+    const [failed, setFailed] = useState(false);
 
     useEffect(() => {
         if (set) {
@@ -48,12 +57,19 @@ function LazyIcon({ name, size, color, className }: IconProps) {
         }
 
         let active = true;
-        void loadFullSet().then((loaded) => active && setSet(loaded));
+        loadFullSet().then(
+            (loaded) => active && setSet(loaded),
+            () => active && setFailed(true),
+        );
 
         return () => {
             active = false;
         };
     }, [set]);
+
+    if (failed) {
+        return <FallbackIcon size={size} color={color} className={className} />;
+    }
 
     if (!set) {
         // Keep the icon's box so the layout does not jump when it arrives.
