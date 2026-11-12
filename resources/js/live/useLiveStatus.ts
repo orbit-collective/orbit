@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { LiveStatus } from '@/types/Live';
 import { onLiveStatus } from './echo';
+import { useEchoFailed } from './echoLoader';
 import { useLiveConnection } from './useLiveConnection';
 
 /**
@@ -10,10 +11,16 @@ import { useLiveConnection } from './useLiveConnection';
  */
 export function useLiveStatus(): LiveStatus {
     // Enabled but without a connection yet means the socket libraries are
-    // still downloading: that is `connecting`, not `off`.
+    // still downloading (`connecting`), or could not be downloaded and are
+    // being retried (`offline`, so the polling fallback takes over).
     const enabled = Boolean(usePage().props.live?.enabled);
+    const downloadFailed = useEchoFailed();
     const connection = useLiveConnection();
-    const idle: LiveStatus = enabled ? 'connecting' : 'off';
+    const idle: LiveStatus = !enabled
+        ? 'off'
+        : downloadFailed
+          ? 'offline'
+          : 'connecting';
     const [status, setStatus] = useState<LiveStatus>(idle);
 
     useEffect(() => {
