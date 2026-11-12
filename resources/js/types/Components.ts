@@ -1027,3 +1027,9 @@ export interface PageSectionProps {
     style?: React.CSSProperties;
     children: React.ReactNode;
 }
+
+export interface ErrorScreenProps {
+    status: 403 | 404 | 500 | 503;
+    /** The requested path, shown so a typo is easy to spot. */
+    path?: string;
+}
