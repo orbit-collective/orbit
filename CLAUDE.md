@@ -67,6 +67,7 @@ Every component has a colocated `X.stories.tsx` (`title: 'Atoms|Molecules|Organi
 - Tailwind CSS. Class-variance-authority (`cva`) + `cn()` for component variants.
 - Theme is **dark-only**, driven by CSS custom properties consumed in Tailwind as arbitrary values, e.g. `bg-[var(--bg-color)]`, `text-[var(--accent-color)]`. Use these variables rather than hardcoding colors.
 - Icons come from `lucide-react`, wrapped by `Components/Atoms/Icon`.
+- Fonts are self-hosted (`@fontsource/poppins`, weights 400/500/600/700 and 400 italic, imported at the top of `resources/css/global.css`), not loaded from Google Fonts.
 
 ## Testing
 

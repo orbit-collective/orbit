@@ -1,5 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap')
-layer(base);
+/*
+  Poppins is served from our own origin (@fontsource) instead of a render
+  blocking @import of Google Fonts, and only the weights the UI uses:
+  400, 500, 600, 700 and 400 italic. The browser fetches a subset file
+  (latin, latin-ext for Polish) only when the page has characters in it.
+*/
+@import '@fontsource/poppins/400.css' layer(base);
+@import '@fontsource/poppins/500.css' layer(base);
+@import '@fontsource/poppins/600.css' layer(base);
+@import '@fontsource/poppins/700.css' layer(base);
+@import '@fontsource/poppins/400-italic.css' layer(base);
 
 @import 'tailwindcss';
 
