@@ -1,4 +1,4 @@
-import logo from '@assets/1820.png';
+import logo from '@assets/1820.webp';
 import { Link, router, usePage } from '@inertiajs/react';
 import { FC, useEffect, useMemo, useState } from 'react';
 import Divider from '@/Components/Atoms/Divider/Divider';
