@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.15.0](https://github.com/orbit-collective/orbit/compare/v0.14.2...v0.15.0) (2026-11-12)
+
+
+### Features
+
+* **errors:** render 403, 404, 500 and 503 as the error page ([59181d1](https://github.com/orbit-collective/orbit/commit/59181d175c77cf4902fd99792fe81e3fcb3243b0))
+* **ui:** add the Errors/Error page ([0053b27](https://github.com/orbit-collective/orbit/commit/0053b27ec0d9226c707839f7b0d6fb47688d8943))
+* **ui:** add the ErrorScreen organism ([71c941f](https://github.com/orbit-collective/orbit/commit/71c941f66c1f32db5b6efdf07b1bf7b4bc27f659))
+
+
+### Bug Fixes
+
+* **errors:** render the error page in maintenance mode ([73b22f5](https://github.com/orbit-collective/orbit/commit/73b22f55764776aa99e5fab53cf515021e48f066))
+
 ## [0.14.2](https://github.com/orbit-collective/orbit/compare/v0.14.1...v0.14.2) (2026-11-12)
 
 
