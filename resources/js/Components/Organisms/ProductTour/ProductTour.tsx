@@ -1,4 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import {
     CSSProperties,
     useCallback,
@@ -52,6 +53,7 @@ const HINT_ICONS = {
 } as const;
 
 export default function ProductTour({ steps, onClose }: ProductTourProps) {
+    const { t } = useLaravelReactI18n();
     const { url, props } = usePage<PageProps>();
     const hasProjects = props?.hasProjects ?? false;
     const urlRef = useRef(url);
@@ -409,9 +411,9 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                 <TourPopover
                     ref={popoverRef}
                     stepId={step.id}
-                    title={step.title}
+                    title={t(step.title)}
                     icon={step.icon}
-                    description={step.description}
+                    description={t(step.description)}
                     currentStep={index}
                     totalSteps={steps.length}
                     placement={position.placement}
@@ -424,7 +426,7 @@ export default function ProductTour({ steps, onClose }: ProductTourProps) {
                         interaction
                             ? {
                                   icon: HINT_ICONS[interaction.type],
-                                  text: interaction.hint,
+                                  text: t(interaction.hint),
                               }
                             : undefined
                     }

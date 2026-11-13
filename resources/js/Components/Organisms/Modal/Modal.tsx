@@ -9,7 +9,7 @@ interface ModalOrgProps {
 }
 
 export const ModalOrg = ({ modal, onClose }: ModalOrgProps) => {
-    const isShortcutModal = modal.title === 'Keyboard Shortcuts';
+    const isShortcutModal = modal.bare === true;
 
     return (
         <Modal isOpen={true} onClose={() => onClose(modal.id)} size="md">

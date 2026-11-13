@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useRef } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Skeleton from '@/Components/Atoms/Skeleton/Skeleton';
@@ -41,6 +42,7 @@ function NotificationsList({
     selectedIds,
     onToggleSelect,
 }: NotificationsListProps) {
+    const { t } = useLaravelReactI18n();
     const containerRef = useRef<HTMLDivElement>(null);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +76,7 @@ function NotificationsList({
         return (
             <div
                 role="status"
-                aria-label="Loading notifications"
+                aria-label={t('notifications_list.loading')}
                 className="mt-2 space-y-1"
             >
                 {[0, 1, 2, 3].map((index) => (
@@ -96,7 +98,9 @@ function NotificationsList({
                         </div>
                     </motion.div>
                 ))}
-                <span className="sr-only">Loading notifications…</span>
+                <span className="sr-only">
+                    {t('notifications_list.loading_status')}
+                </span>
             </div>
         );
     }
@@ -167,7 +171,7 @@ function NotificationsList({
                                 size={13}
                                 className="animate-spin"
                             />
-                            Loading more…
+                            {t('notifications_list.loading_more')}
                         </span>
                     ) : (
                         <button
@@ -175,7 +179,7 @@ function NotificationsList({
                             onClick={onLoadMore}
                             className="font-medium hover:text-(--text-color) hover:underline"
                         >
-                            Load more
+                            {t('notifications_list.load_more')}
                         </button>
                     )}
                 </div>
@@ -185,19 +189,21 @@ function NotificationsList({
 }
 
 function ErrorRow({ onRetry }: { onRetry?: () => void }) {
+    const { t } = useLaravelReactI18n();
+
     return (
         <p
             role="alert"
             className="flex items-center justify-center gap-2 py-3 text-xs text-(--error-color)"
         >
-            Could not load notifications.
+            {t('notifications_list.error')}
             {onRetry && (
                 <button
                     type="button"
                     onClick={onRetry}
                     className="font-semibold hover:underline"
                 >
-                    Retry
+                    {t('notifications_list.retry')}
                 </button>
             )}
         </p>
