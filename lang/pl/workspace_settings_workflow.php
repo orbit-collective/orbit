@@ -12,7 +12,7 @@ return [
     'reorder_aria' => 'Zmień kolejność: :name',
     'start' => 'Start',
     'no_transitions' => 'Brak przejść',
-    'transitions_count' => '{1} :count przejście|[2,4] :count przejścia|[5,*] :count przejść',
+    'transitions_count' => ':count przejście|:count przejścia|:count przejść',
     'make_initial_title' => 'Ustaw jako status początkowy',
     'make_initial_aria' => 'Ustaw status :name jako początkowy',
     'delete_title' => 'Usuń status',

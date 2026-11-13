@@ -38,7 +38,7 @@ return [
         'when' => 'Gdy',
         'if' => 'Jeśli',
         'choose_trigger' => 'Wybierz wyzwalacz',
-        'conditions' => '{1} :count warunek|[2,4] :count warunki|[5,*] :count warunków',
+        'conditions' => ':count warunek|:count warunki|:count warunków',
         'add_condition' => '+ Dodaj warunek',
         'add_action' => 'Dodaj akcję',
         'add_action_placeholder' => '+ Dodaj akcję',

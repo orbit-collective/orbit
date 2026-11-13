@@ -25,7 +25,7 @@ return [
         'custom' => 'Własne etykiety',
         'system_count' => 'Etykiety systemowe',
         'picker_description' => 'Wybierz projekt, którego taksonomię etykiet edytujesz.',
-        'summary' => '{1} :count etykieta|[2,4] :count etykiety|[5,*] :count etykiet',
+        'summary' => ':count etykieta|:count etykiety|:count etykiet',
         'panel_description' => 'Etykiety dostępne dla zgłoszeń w projekcie :project.',
         'empty_title' => 'Brak etykiet',
         'empty_description' => 'Utwórz pierwszą etykietę, aby zacząć kategoryzować zgłoszenia w tym projekcie.',

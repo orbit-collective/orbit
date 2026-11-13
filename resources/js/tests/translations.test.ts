@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import pluralization from 'laravel-react-i18n/dist/utils/pluralization';
 import { describe, expect, it } from 'vitest';
 import { loadTranslations } from './langFiles';
 
@@ -54,6 +55,44 @@ describe('translations', () => {
             );
 
             expect(mismatched).toEqual([]);
+        });
+    });
+
+    describe('Polish plurals', () => {
+        const pl = loadTranslations('pl');
+        const plurals = Object.entries(pl).filter(([, text]) =>
+            text.includes('|'),
+        );
+
+        it('are plain one|few|many forms, left to the language rules', () => {
+            const wrong = plurals
+                .filter(
+                    ([, text]) =>
+                        /[{[]\s*[\d*]/.test(text) ||
+                        text.split('|').length !== 3,
+                )
+                .map(([key]) => key);
+
+            expect(wrong).toEqual([]);
+        });
+
+        it.each([
+            [1, 0],
+            [2, 1],
+            [4, 1],
+            [5, 2],
+            [12, 2],
+            [14, 2],
+            [22, 1],
+            [24, 1],
+            [25, 2],
+            [112, 2],
+        ])('picks the right form for %i', (count, form) => {
+            for (const [, text] of plurals) {
+                expect(pluralization(text, count, 'pl')).toBe(
+                    text.split('|')[form].trim(),
+                );
+            }
         });
     });
 

@@ -16,7 +16,7 @@ return [
     'governed' => 'Objęci członkowie',
     'governed_hint' => 'Przypisania do wszystkich własnych ról',
     'picker_description' => 'Wybierz projekt, którego rolami chcesz zarządzać.',
-    'summary' => '{1} :count rola|[2,4] :count role|[5,*] :count ról',
+    'summary' => ':count rola|:count role|:count ról',
     'panel_description' => 'Zdefiniuj role wykraczające poza podstawowy dostęp Administratora/Członka i nadaj im dokładnie te uprawnienia, których potrzebują.',
     'empty_title' => 'Brak własnych ról',
     'empty_description' => 'Utwórz rolę, aby nadać członkom precyzyjny zestaw uprawnień, oprócz ich podstawowego dostępu Administratora/Członka.',

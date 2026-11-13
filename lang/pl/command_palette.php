@@ -27,7 +27,7 @@ return [
     'live' => [
         'searching' => 'Wyszukiwanie',
         'no_results' => 'Brak wyników',
-        'results' => '{1} :count wynik|[2,4] :count wyniki|[5,*] :count wyników',
+        'results' => ':count wynik|:count wyniki|:count wyników',
     ],
     'footer' => [
         'navigate_tooltip' => 'Nawiguj',

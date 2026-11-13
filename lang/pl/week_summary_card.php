@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 return [
-    'day_tip' => '{1} :day: :count aktualizacja|[2,4] :day: :count aktualizacje|[5,*] :day: :count aktualizacji',
+    'day_tip' => ':day: :count aktualizacja|:day: :count aktualizacje|:day: :count aktualizacji',
     'total' => 'Razem',
     'today' => 'Dzisiaj',
     'average' => 'Średnia dzienna',

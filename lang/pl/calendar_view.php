@@ -12,6 +12,6 @@ return [
         'month' => 'miesiąc',
         'week' => 'tydzień',
     ],
-    'items' => '{1} :count element|[2,4] :count elementy|[5,*] :count elementów',
+    'items' => ':count element|:count elementy|:count elementów',
     'more' => '+:count więcej',
 ];

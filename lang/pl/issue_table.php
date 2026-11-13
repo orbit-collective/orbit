@@ -23,7 +23,7 @@ return [
         'start_date' => 'data startu',
         'end_date' => 'data końca',
     ],
-    'removed' => '{1} Usunięto :count zgłoszenie|[2,4] Usunięto :count zgłoszenia|[5,*] Usunięto :count zgłoszeń',
+    'removed' => 'Usunięto :count zgłoszenie|Usunięto :count zgłoszenia|Usunięto :count zgłoszeń',
     'delete_failed' => 'Wystąpił błąd podczas usuwania',
     'create_failed' => 'Nie udało się utworzyć zgłoszenia',
     'update_failed' => 'Nie udało się zaktualizować zgłoszenia',
