@@ -25,10 +25,22 @@ export const getStoredLocale = (): Locale => {
     }
 };
 
+const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
+
+/**
+ * The server reads the language from this cookie (validation errors and flash
+ * messages are translated there), so it has to follow every change.
+ */
+const writeLocaleCookie = (locale: Locale): void => {
+    document.cookie = `${LOCALE_STORAGE_KEY}=${locale}; path=/; max-age=${ONE_YEAR_IN_SECONDS}; SameSite=Lax`;
+};
+
 export const storeLocale = (locale: Locale): void => {
     try {
         localStorage.setItem(LOCALE_STORAGE_KEY, locale);
     } catch {
         // Storage can be blocked; the choice then lasts for this visit only.
     }
+
+    writeLocaleCookie(locale);
 };

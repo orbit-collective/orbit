@@ -98,13 +98,14 @@ const Pagination = ({
         }),
     );
 
-    const renderLabel = (label: string) => {
-        if (label.includes('Previous')) {
-            return <Icon name="ChevronLeft" size={16} />;
-        }
-        if (label.includes('Next')) {
-            return <Icon name="ChevronRight" size={16} />;
-        }
+    // Laravel words the first and last link in the server's language
+    // ("&laquo; Previous", "&laquo; Poprzednia"), so they are told apart by
+    // position, never by their text.
+    type LinkKind = 'prev' | 'next' | 'page';
+
+    const renderLabel = (label: string, kind: LinkKind) => {
+        if (kind === 'prev') return <Icon name="ChevronLeft" size={16} />;
+        if (kind === 'next') return <Icon name="ChevronRight" size={16} />;
         return label;
     };
     const currentPerPage: string =
@@ -129,9 +130,9 @@ const Pagination = ({
         });
     };
 
-    const getLinkAriaLabel = (label: string) => {
-        if (label.includes('Previous')) return t('pagination_bar.previous');
-        if (label.includes('Next')) return t('pagination_bar.next');
+    const getLinkAriaLabel = (label: string, kind: LinkKind) => {
+        if (kind === 'prev') return t('pagination_bar.previous');
+        if (kind === 'next') return t('pagination_bar.next');
         return t('pagination_bar.page', { page: label });
     };
 
@@ -153,6 +154,7 @@ const Pagination = ({
     const renderLink = (
         link: { url: string | null; label: string; active: boolean },
         key: Key,
+        kind: LinkKind = 'page',
     ) => {
         const isLinkDisabled = !link.url;
 
@@ -169,10 +171,10 @@ const Pagination = ({
                 <span
                     key={key}
                     className={className}
-                    aria-label={getLinkAriaLabel(link.label)}
+                    aria-label={getLinkAriaLabel(link.label, kind)}
                     aria-disabled="true"
                 >
-                    {renderLabel(link.label)}
+                    {renderLabel(link.label, kind)}
                 </span>
             );
         }
@@ -184,10 +186,10 @@ const Pagination = ({
                 preserveState={preserveState}
                 only={only}
                 className={className}
-                aria-label={getLinkAriaLabel(link.label)}
+                aria-label={getLinkAriaLabel(link.label, kind)}
                 aria-current={link.active ? 'page' : undefined}
             >
-                {renderLabel(link.label)}
+                {renderLabel(link.label, kind)}
             </Link>
         );
     };
@@ -252,7 +254,7 @@ const Pagination = ({
                         aria-label={t('pagination_bar.nav')}
                         className="flex scrollbar-none flex-nowrap items-center justify-center gap-1 overflow-x-auto sm:gap-2"
                     >
-                        {renderLink(prevLink, 'prev')}
+                        {renderLink(prevLink, 'prev', 'prev')}
                         {getCondensedPageNumbers(currentPage, lastPage).map(
                             (page, index) =>
                                 page === 'ellipsis' ? (
@@ -276,7 +278,7 @@ const Pagination = ({
                                     )
                                 ),
                         )}
-                        {renderLink(nextLink, 'next')}
+                        {renderLink(nextLink, 'next', 'next')}
                     </nav>
                 )}
             </div>

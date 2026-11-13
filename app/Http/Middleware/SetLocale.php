@@ -10,11 +10,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SetLocale
 {
+    /** The languages the interface is translated into. */
+    public const SUPPORTED = ['en', 'pl'];
+
+    /**
+     * Server-side texts (validation errors, flash messages) follow the
+     * language the user picked in the browser: the frontend keeps it in the
+     * plain `locale` cookie (see `utils/locale.ts`, excluded from cookie
+     * encryption in `bootstrap/app.php`), which also works for guests. The
+     * session value set by `locale.update` is the fallback.
+     */
     public function handle(Request $request, Closure $next): Response
     {
-        $locale = Session::get('locale', config('app.locale'));
+        $locale = $request->cookie('locale')
+            ?? Session::get('locale', config('app.locale'));
 
-        if (in_array($locale, ['en', 'pl'])) {
+        if (in_array($locale, self::SUPPORTED, true)) {
             App::setLocale($locale);
         }
 

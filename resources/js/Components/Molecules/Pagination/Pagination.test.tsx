@@ -205,6 +205,25 @@ describe('Pagination Component', () => {
         expect(screen.queryByText('20 rows')).not.toBeInTheDocument();
     });
 
+    test('draws the arrows whatever language the server words the links in', () => {
+        const links = buildLinks().map((link, index, all) =>
+            index === 0
+                ? { ...link, label: '&laquo; Poprzednia' }
+                : index === all.length - 1
+                  ? { ...link, label: 'Następna &raquo;' }
+                  : link,
+        );
+        render(<Pagination links={links} from={1} to={10} total={25} />);
+
+        expect(screen.getByLabelText('Previous page')).toBeInTheDocument();
+        expect(
+            screen.getByRole('link', { name: 'Next page' }),
+        ).toBeInTheDocument();
+        expect(
+            screen.queryByText(/Poprzednia|Następna/),
+        ).not.toBeInTheDocument();
+    });
+
     test('exposes a labelled pagination landmark with named, current-aware links', () => {
         render(<Pagination links={buildLinks()} from={1} to={10} total={25} />);
 

@@ -27,6 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ['middleware' => ['web', 'auth', 'throttle:120,1']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The language cookie is written by the browser, so it is not encrypted.
+        $middleware->encryptCookies(except: ['locale']);
+
         $middleware->web(append: [
             SetLocale::class,
             EnforceSessionLifetime::class,
