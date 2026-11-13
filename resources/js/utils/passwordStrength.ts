@@ -1,22 +1,20 @@
 export type PasswordStrength = 'weak' | 'fair' | 'strong';
 
+/** `labelKey` is a translation key: translate it with `t()`. */
 export const passwordStrengthCopy: Record<
     PasswordStrength,
-    { label: string; labelKey: string; className: string }
+    { labelKey: string; className: string }
 > = {
     weak: {
-        label: 'Weak',
-        labelKey: 'util_password_strength.weak',
+        labelKey: 'password_strength_meter.weak',
         className: 'bg-(--error-color)',
     },
     fair: {
-        label: 'Fair',
-        labelKey: 'util_password_strength.fair',
+        labelKey: 'password_strength_meter.fair',
         className: 'bg-(--warning-color)',
     },
     strong: {
-        label: 'Strong',
-        labelKey: 'util_password_strength.strong',
+        labelKey: 'password_strength_meter.strong',
         className: 'bg-(--success-color)',
     },
 };
