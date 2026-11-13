@@ -21,6 +21,10 @@ return [
         'system' => 'Użyj motywu systemowego',
         'current' => 'Bieżący',
     ],
+    'language' => [
+        'title' => 'Zmień język…',
+        'current' => 'Obecny',
+    ],
     'refresh' => [
         'title' => 'Odśwież stronę',
     ],
@@ -54,6 +58,9 @@ return [
         'home' => 'strona główna',
         'preferences' => 'preferencje',
         'configuration' => 'konfiguracja',
+        'language' => 'język',
+        'locale' => 'ustawienia regionalne',
+        'translation' => 'tłumaczenie',
         'theme' => 'motyw',
         'appearance' => 'wygląd',
         'color' => 'kolor',
