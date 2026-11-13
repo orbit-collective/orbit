@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { useState } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
@@ -56,6 +57,7 @@ export default function WorkspaceSettingsIssueTypesTab({
     canDeleteIssueTypes = false,
     canUpdateWorkflow = false,
 }: WorkspaceSettingsIssueTypesTabProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [editorTarget, setEditorTarget] = useState<string | null>(null);
     const [deletingIssueType, setDeletingIssueType] =
@@ -87,20 +89,26 @@ export default function WorkspaceSettingsIssueTypesTab({
         return (
             <SettingsPanel
                 id="catalog"
-                title="Issue types"
-                description="Customize the catalog of issue types used across your issues."
+                title={t('workspace_settings_issue_types.tab.title')}
+                description={t(
+                    'workspace_settings_issue_types.tab.description',
+                )}
                 icon="Shapes"
             >
                 <SettingsPanelRow
                     title={
                         !selectedProject
-                            ? "You're not part of any project yet"
-                            : "You don't have access to this project's issue types"
+                            ? t('workspace_settings_issue_types.tab.no_project')
+                            : t('workspace_settings_issue_types.tab.no_access')
                     }
                     description={
                         !selectedProject
-                            ? 'Create or join a project to manage its issue types here.'
-                            : 'Ask a project admin for the issue_types.view permission to see issue types here.'
+                            ? t(
+                                  'workspace_settings_issue_types.tab.no_project_hint',
+                              )
+                            : t(
+                                  'workspace_settings_issue_types.tab.no_access_hint',
+                              )
                     }
                 />
             </SettingsPanel>
@@ -138,7 +146,10 @@ export default function WorkspaceSettingsIssueTypesTab({
     const handleSaveIssueType = (values: IssueTypeFormValues) => {
         const onSuccess = () => setEditorTarget(null);
         const onError = () =>
-            addAlert('Could not save this issue type.', 'error');
+            addAlert(
+                t('workspace_settings_issue_types.tab.save_error'),
+                'error',
+            );
 
         if (editingIssueType) {
             router.patch(
@@ -182,7 +193,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                 },
                 onError: () =>
                     addAlert(
-                        'Could not delete this issue type. Make sure no issues use it.',
+                        t('workspace_settings_issue_types.tab.delete_error'),
                         'error',
                     ),
             },
@@ -195,7 +206,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="Total issue types"
+                        title={t('workspace_settings_issue_types.tab.total')}
                         value={<AnimatedNumber value={issueTypes.length} />}
                         icon="Shapes"
                         color="accent"
@@ -204,7 +215,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="Custom issue types"
+                        title={t('workspace_settings_issue_types.tab.custom')}
                         value={<AnimatedNumber value={customCount} />}
                         icon="Sparkles"
                         color="info"
@@ -213,7 +224,9 @@ export default function WorkspaceSettingsIssueTypesTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="System issue types"
+                        title={t(
+                            'workspace_settings_issue_types.tab.system_count',
+                        )}
                         value={<AnimatedNumber value={systemCount} />}
                         icon="ShieldCheck"
                         color="warning"
@@ -224,15 +237,25 @@ export default function WorkspaceSettingsIssueTypesTab({
             <ProjectPickerPanel
                 projects={memberProjects}
                 selectedProjectId={selectedProject.id}
-                description="Choose which project's issue type catalog you're editing."
+                description={t(
+                    'workspace_settings_issue_types.tab.picker_description',
+                )}
                 onSelect={switchProject}
             />
 
             <SettingsPanel
                 id="catalog"
-                collapsedSummary={`${issueTypes.length} ${issueTypes.length === 1 ? 'type' : 'types'}`}
-                title="Issue type catalog"
-                description={`Issue types available for issues in ${selectedProject.name}.`}
+                collapsedSummary={tChoice(
+                    'workspace_settings_issue_types.tab.summary',
+                    issueTypes.length,
+                )}
+                title={t('workspace_settings_issue_types.tab.catalog_title')}
+                description={t(
+                    'workspace_settings_issue_types.tab.catalog_description',
+                    {
+                        project: selectedProject.name,
+                    },
+                )}
                 icon="Shapes"
             >
                 {issueTypes.map((issueType, index) => {
@@ -253,7 +276,9 @@ export default function WorkspaceSettingsIssueTypesTab({
                             ? [
                                   {
                                       value: 'workflow',
-                                      label: 'Workflow',
+                                      label: t(
+                                          'workspace_settings_issue_types.tab.workflow',
+                                      ),
                                       icon: 'Workflow' as const,
                                   },
                               ]
@@ -262,17 +287,23 @@ export default function WorkspaceSettingsIssueTypesTab({
                             ? [
                                   {
                                       value: 'hierarchy',
-                                      label: 'Hierarchy',
+                                      label: t(
+                                          'workspace_settings_issue_types.tab.hierarchy',
+                                      ),
                                       icon: 'GitBranch' as const,
                                   },
                                   {
                                       value: 'templates',
-                                      label: 'Templates',
+                                      label: t(
+                                          'workspace_settings_issue_types.tab.templates',
+                                      ),
                                       icon: 'FileText' as const,
                                   },
                                   {
                                       value: 'fields',
-                                      label: 'Custom fields',
+                                      label: t(
+                                          'workspace_settings_issue_types.tab.custom_fields',
+                                      ),
                                       icon: 'ListChecks' as const,
                                   },
                               ]
@@ -305,14 +336,21 @@ export default function WorkspaceSettingsIssueTypesTab({
                                 </p>
                                 {issueType.isSystem && (
                                     <span className="shrink-0 rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
-                                        System
+                                        {t(
+                                            'workspace_settings_issue_types.tab.system',
+                                        )}
                                     </span>
                                 )}
                                 {issueType.allowsChildren && (
                                     <span className="shrink-0 rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                                         {childTypeCount > 0
-                                            ? `Allows ${childTypeCount} sub-issue type${childTypeCount === 1 ? '' : 's'}`
-                                            : 'Allows sub-issues'}
+                                            ? tChoice(
+                                                  'workspace_settings_issue_types.tab.allows_n',
+                                                  childTypeCount,
+                                              )
+                                            : t(
+                                                  'workspace_settings_issue_types.tab.allows_sub_issues',
+                                              )}
                                     </span>
                                 )}
                                 {issueType.description && (
@@ -329,7 +367,12 @@ export default function WorkspaceSettingsIssueTypesTab({
                                     {configureOptions.length > 0 && (
                                         <Dropdown
                                             variant="menu"
-                                            ariaLabel={`Configure ${issueType.name}`}
+                                            ariaLabel={t(
+                                                'workspace_settings_issue_types.tab.configure_aria',
+                                                {
+                                                    name: issueType.name,
+                                                },
+                                            )}
                                             align="end"
                                             width={176}
                                             options={configureOptions}
@@ -341,7 +384,9 @@ export default function WorkspaceSettingsIssueTypesTab({
                                             }
                                             trigger={
                                                 <RowAction
-                                                    title="Configure"
+                                                    title={t(
+                                                        'workspace_settings_issue_types.tab.configure',
+                                                    )}
                                                     icon="SlidersHorizontal"
                                                     onClick={() => {}}
                                                 />
@@ -350,7 +395,9 @@ export default function WorkspaceSettingsIssueTypesTab({
                                     )}
                                     {canUpdateIssueTypes && (
                                         <RowAction
-                                            title="Edit issue type"
+                                            title={t(
+                                                'workspace_settings_issue_types.tab.edit',
+                                            )}
                                             icon="Pencil"
                                             onClick={() =>
                                                 toggleEditEditor(issueType)
@@ -360,7 +407,9 @@ export default function WorkspaceSettingsIssueTypesTab({
                                     {canDeleteIssueTypes &&
                                         !issueType.isSystem && (
                                             <RowAction
-                                                title="Delete issue type"
+                                                title={t(
+                                                    'workspace_settings_issue_types.tab.delete',
+                                                )}
                                                 icon="Trash"
                                                 danger
                                                 onClick={() =>
@@ -387,7 +436,7 @@ export default function WorkspaceSettingsIssueTypesTab({
                 ) : (
                     canCreateIssueTypes && (
                         <AddRowButton
-                            label="Add issue type"
+                            label={t('workspace_settings_issue_types.tab.add')}
                             onClick={toggleCreateEditor}
                         />
                     )

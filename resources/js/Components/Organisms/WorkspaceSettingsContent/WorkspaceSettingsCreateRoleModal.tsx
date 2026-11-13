@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { SyntheticEvent, useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -25,6 +26,7 @@ export default function WorkspaceSettingsCreateRoleModal({
     onClose,
     projectId,
 }: WorkspaceSettingsCreateRoleModalProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [name, setName] = useState('');
     const [slug, setSlug] = useState('');
@@ -65,7 +67,12 @@ export default function WorkspaceSettingsCreateRoleModal({
                 onStart: () => setIsSubmitting(true),
                 onFinish: () => setIsSubmitting(false),
                 onSuccess: () => {
-                    addAlert(`The "${name}" role has been created.`, 'success');
+                    addAlert(
+                        t('workspace_settings_modals_a.create_role.created', {
+                            name,
+                        }),
+                        'success',
+                    );
                     onClose();
                 },
                 onError: (validationErrors) => {
@@ -81,7 +88,7 @@ export default function WorkspaceSettingsCreateRoleModal({
     return (
         <Modal isOpen={isOpen} onClose={handleClose} size="sm">
             <ModalHeader
-                title="Create a custom role"
+                title={t('workspace_settings_modals_a.create_role.title')}
                 onClose={handleClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
@@ -93,9 +100,7 @@ export default function WorkspaceSettingsCreateRoleModal({
             <form onSubmit={handleSubmit}>
                 <div className="space-y-4 px-6 py-5">
                     <p className="text-sm text-(--text-gray-color)">
-                        New roles start with every permission turned off. You'll
-                        fine-tune exactly what this role can do from the
-                        permission matrix right after creating it.
+                        {t('workspace_settings_modals_a.create_role.intro')}
                     </p>
 
                     <div className="space-y-1.5">
@@ -103,14 +108,16 @@ export default function WorkspaceSettingsCreateRoleModal({
                             htmlFor="role-name"
                             className="text-sm font-medium text-(--text-color)"
                         >
-                            Name
+                            {t('workspace_settings_modals_a.create_role.name')}
                         </label>
                         <Input
                             id="role-name"
                             variant="modal"
                             value={name}
                             onChange={(event) => setName(event.target.value)}
-                            placeholder="e.g. QA Engineer"
+                            placeholder={t(
+                                'workspace_settings_modals_a.create_role.name_placeholder',
+                            )}
                         />
                         {errors.name && (
                             <span className="text-xs text-(--error-color)">
@@ -124,7 +131,7 @@ export default function WorkspaceSettingsCreateRoleModal({
                             htmlFor="role-slug"
                             className="text-sm font-medium text-(--text-color)"
                         >
-                            Slug
+                            {t('workspace_settings_modals_a.create_role.slug')}
                         </label>
                         <Input
                             id="role-slug"
@@ -146,7 +153,9 @@ export default function WorkspaceSettingsCreateRoleModal({
 
                 <ModalFooter
                     onCancel={handleClose}
-                    submitLabel="Create role"
+                    submitLabel={t(
+                        'workspace_settings_modals_a.create_role.submit',
+                    )}
                     isSubmitting={isSubmitting}
                 />
             </form>

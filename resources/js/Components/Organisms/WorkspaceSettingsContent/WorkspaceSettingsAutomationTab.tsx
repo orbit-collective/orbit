@@ -9,6 +9,7 @@ import {
     type DragEndEvent,
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useMemo, useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -32,6 +33,7 @@ import { IssueType } from '@/types/IssueTypes';
 import { ProjectPriority } from '@/types/Priorities';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import {
+    automationTypeLabel,
     actionMeta,
     CATEGORY_CONDITION_FIELDS,
     conditionFieldsForTrigger,
@@ -52,18 +54,42 @@ interface WorkspaceSettingsAutomationTabProps {
     canUpdateAutomation?: boolean;
 }
 
+type Translate = (
+    key: string,
+    replacements?: Record<string, string | number>,
+) => string;
+
+/** Option lists below carry translation keys in `label`; see translateOptions. */
 const CONDITION_OPERATORS: AutomationOption[] = [
-    { value: 'equals', label: 'equals' },
-    { value: 'not_equals', label: 'does not equal' },
-    { value: 'contains', label: 'contains' },
-    { value: 'in', label: 'is one of (comma-separated)' },
+    {
+        value: 'equals',
+        label: 'workspace_settings_automation.operators.equals',
+    },
+    {
+        value: 'not_equals',
+        label: 'workspace_settings_automation.operators.not_equals',
+    },
+    {
+        value: 'contains',
+        label: 'workspace_settings_automation.operators.contains',
+    },
+    { value: 'in', label: 'workspace_settings_automation.operators.in' },
 ];
 
 const STATUS_CATEGORY_OPTIONS: AutomationOption[] = [
-    { value: 'todo', label: 'To Do' },
-    { value: 'in_progress', label: 'In Progress' },
-    { value: 'done', label: 'Done' },
+    { value: 'todo', label: 'workspace_settings_automation.categories.todo' },
+    {
+        value: 'in_progress',
+        label: 'workspace_settings_automation.categories.in_progress',
+    },
+    { value: 'done', label: 'workspace_settings_automation.categories.done' },
 ];
+
+const translateOptions = (
+    options: AutomationOption[],
+    t: Translate,
+): AutomationOption[] =>
+    options.map((option) => ({ ...option, label: t(option.label) }));
 
 type NodeSelection =
     | { kind: 'trigger' }
@@ -119,9 +145,13 @@ function defaultParamsFor(
     }
 }
 
-const categoryLabel = (category: string) =>
-    STATUS_CATEGORY_OPTIONS.find((option) => option.value === category)
-        ?.label ?? category;
+const categoryLabel = (category: string, t: Translate) => {
+    const option = STATUS_CATEGORY_OPTIONS.find(
+        (candidate) => candidate.value === category,
+    );
+
+    return option ? t(option.label) : category;
+};
 
 function isActionIncomplete(action: AutomationActionConfig): boolean {
     switch (action.type) {
@@ -144,22 +174,34 @@ function isActionIncomplete(action: AutomationActionConfig): boolean {
 function actionSubtitle(
     action: AutomationActionConfig,
     statusLabels: Record<string, string>,
+    t: Translate,
 ): string | undefined {
     switch (action.type) {
         case 'change_status':
             return action.params.workflow_status_id
                 ? (statusLabels[String(action.params.workflow_status_id)] ??
-                      'A deleted status')
+                      t(
+                          'workspace_settings_automation.subtitle.deleted_status',
+                      ))
                 : action.params.category
-                  ? `Category: ${categoryLabel(String(action.params.category))}`
+                  ? t('workspace_settings_automation.subtitle.category', {
+                        category: categoryLabel(
+                            String(action.params.category),
+                            t,
+                        ),
+                    })
                   : undefined;
         case 'change_priority':
             return action.params.priority
-                ? `Priority: ${action.params.priority}`
+                ? t('workspace_settings_automation.subtitle.priority', {
+                      priority: String(action.params.priority),
+                  })
                 : undefined;
         case 'assign_user':
             return action.params.user_id
-                ? `User #${action.params.user_id}`
+                ? t('workspace_settings_automation.subtitle.user', {
+                      id: String(action.params.user_id),
+                  })
                 : undefined;
         case 'add_label':
         case 'remove_label':
@@ -193,6 +235,7 @@ function DraggableActionNode({
     actionLabel: (type: string) => string;
     statusLabels: Record<string, string>;
 }) {
+    const { t } = useLaravelReactI18n();
     const draggable = useDraggable({
         id: `action-${index}`,
         disabled: !canUpdate,
@@ -215,9 +258,11 @@ function DraggableActionNode({
             isDropTarget={droppable.isOver}
             icon={meta.icon}
             color={meta.color}
-            eyebrow={`Then · Step ${index + 1}`}
+            eyebrow={t('workspace_settings_automation.flow.then_step', {
+                step: index + 1,
+            })}
             title={actionLabel(action.type)}
-            subtitle={actionSubtitle(action, statusLabels)}
+            subtitle={actionSubtitle(action, statusLabels, t)}
             selected={selected}
             incomplete={isActionIncomplete(action)}
             onClick={onSelect}
@@ -255,14 +300,45 @@ export default function WorkspaceSettingsAutomationTab({
     memberProjects = [],
     selectedProjectId = null,
     automationRules = [],
-    triggerTypes = [],
-    actionTypes = [],
+    triggerTypes: serverTriggerTypes = [],
+    actionTypes: serverActionTypes = [],
     issueTypes = [],
     priorities = [],
     hasAutomationAccess = false,
     canUpdateAutomation = false,
 }: WorkspaceSettingsAutomationTabProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const { addAlert } = useAlert();
+    // The server names the trigger/action types in English; the translation is
+    // looked up by type and the server text stays as the fallback.
+    const triggerTypes = useMemo(
+        () =>
+            serverTriggerTypes.map((option) => ({
+                ...option,
+                label: automationTypeLabel(
+                    t,
+                    'triggers',
+                    option.value,
+                    option.label,
+                ),
+            })),
+        [serverTriggerTypes, t],
+    );
+    const actionTypes = useMemo(
+        () =>
+            serverActionTypes.map((option) => ({
+                ...option,
+                label: automationTypeLabel(
+                    t,
+                    'actions',
+                    option.value,
+                    option.label,
+                ),
+            })),
+        [serverActionTypes, t],
+    );
+    const operatorOptions = translateOptions(CONDITION_OPERATORS, t);
+    const categoryOptions = translateOptions(STATUS_CATEGORY_OPTIONS, t);
 
     // A specific status belongs to one issue type's workflow, so it is named
     // together with its type; the category option is the one that works for all.
@@ -461,7 +537,7 @@ export default function WorkspaceSettingsAutomationTab({
             draft.actions.length === 0
         ) {
             addAlert(
-                'A rule needs a name, a trigger, and at least one action.',
+                t('workspace_settings_automation.alerts.incomplete'),
                 'error',
             );
             return;
@@ -475,10 +551,15 @@ export default function WorkspaceSettingsAutomationTab({
             actions: draft.actions,
         };
 
-        const onSuccess = () => addAlert('Automation rule saved.', 'success');
+        const onSuccess = () =>
+            addAlert(
+                t('workspace_settings_automation.alerts.saved'),
+                'success',
+            );
         const onError = (errors: Record<string, string>) =>
             addAlert(
-                Object.values(errors)[0] ?? 'Could not save the rule',
+                Object.values(errors)[0] ??
+                    t('workspace_settings_automation.alerts.save_failed'),
                 'error',
             );
 
@@ -532,11 +613,10 @@ export default function WorkspaceSettingsAutomationTab({
         <div className="flex min-h-0 flex-1 flex-col gap-5">
             <div className="shrink-0">
                 <h2 className="text-lg font-semibold text-(--text-color)">
-                    Automation
+                    {t('workspace_settings_automation.title')}
                 </h2>
                 <p className="mt-1 text-sm text-(--text-gray-color)">
-                    Automatically act on issue and GitHub pull request events,
-                    without anything being hardcoded.
+                    {t('workspace_settings_automation.description')}
                 </p>
             </div>
 
@@ -544,7 +624,9 @@ export default function WorkspaceSettingsAutomationTab({
                 <ProjectPickerPanel
                     projects={memberProjects}
                     selectedProjectId={selectedProject.id}
-                    description="Choose which project's automation rules to manage."
+                    description={t(
+                        'workspace_settings_automation.pick_project',
+                    )}
                     onSelect={switchProject}
                 />
             </div>
@@ -552,8 +634,10 @@ export default function WorkspaceSettingsAutomationTab({
             {!hasAutomationAccess ? (
                 <SettingsPanel
                     id="no-access"
-                    title="No access"
-                    description="You don't have permission to view this project's automation rules."
+                    title={t('workspace_settings_automation.no_access.title')}
+                    description={t(
+                        'workspace_settings_automation.no_access.description',
+                    )}
                 >
                     <></>
                 </SettingsPanel>
@@ -562,12 +646,16 @@ export default function WorkspaceSettingsAutomationTab({
                     <div className="flex max-h-56 shrink-0 flex-col overflow-y-auto border-b border-(--border-color) lg:h-auto lg:max-h-none lg:w-64 lg:border-r lg:border-b-0">
                         <div className="flex items-center justify-between gap-2 px-4 py-3.5">
                             <span className="text-xs font-semibold tracking-wide text-(--text-muted-color) uppercase">
-                                Rules
+                                {t(
+                                    'workspace_settings_automation.rules.heading',
+                                )}
                             </span>
                             {canUpdateAutomation && (
                                 <button
                                     type="button"
-                                    aria-label="New rule"
+                                    aria-label={t(
+                                        'workspace_settings_automation.rules.new_rule',
+                                    )}
                                     onClick={startNewRule}
                                     className="flex h-6 w-6 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                 >
@@ -579,7 +667,9 @@ export default function WorkspaceSettingsAutomationTab({
                         {automationRules.length === 0 &&
                             selectedRuleId !== 'new' && (
                                 <p className="px-4 py-2 text-sm text-(--text-gray-color)">
-                                    No rules yet.
+                                    {t(
+                                        'workspace_settings_automation.rules.empty',
+                                    )}
                                 </p>
                             )}
 
@@ -631,8 +721,9 @@ export default function WorkspaceSettingsAutomationTab({
                                     className="text-(--text-muted-color)"
                                 />
                                 <p className="text-sm text-(--text-gray-color)">
-                                    Select a rule, or create a new one, to see
-                                    its flow.
+                                    {t(
+                                        'workspace_settings_automation.rules.select_hint',
+                                    )}
                                 </p>
                             </div>
                         ) : (
@@ -643,7 +734,9 @@ export default function WorkspaceSettingsAutomationTab({
                                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-(--border-color) px-4 py-3 sm:flex-nowrap sm:gap-3">
                                     <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
                                         <span className="text-(--text-gray-color)">
-                                            Automation
+                                            {t(
+                                                'workspace_settings_automation.rules.breadcrumb',
+                                            )}
                                         </span>
                                         <Icon
                                             name="ChevronRight"
@@ -658,12 +751,17 @@ export default function WorkspaceSettingsAutomationTab({
                                                         name: e.target.value,
                                                     })
                                                 }
-                                                placeholder="Untitled rule"
+                                                placeholder={t(
+                                                    'workspace_settings_automation.rules.untitled',
+                                                )}
                                                 className="bg-transparent"
                                             />
                                         ) : (
                                             <span className="truncate font-medium text-(--text-color)">
-                                                {draft.name || 'Untitled rule'}
+                                                {draft.name ||
+                                                    t(
+                                                        'workspace_settings_automation.rules.untitled',
+                                                    )}
                                             </span>
                                         )}
                                     </div>
@@ -695,7 +793,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                     }}
                                                     className="rounded-lg bg-(--error-color) px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:bg-(--error-color) hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
                                                 >
-                                                    Delete
+                                                    {t('common.delete')}
                                                 </Button>
                                             )}
                                         {canUpdateAutomation && (
@@ -705,7 +803,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                 onClick={saveDraft}
                                                 className="rounded-lg bg-(--accent-color) px-3 py-1.5 text-xs font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                                             >
-                                                Save
+                                                {t('common.save')}
                                             </button>
                                         )}
                                     </div>
@@ -732,13 +830,17 @@ export default function WorkspaceSettingsAutomationTab({
                                                         draft.triggerType,
                                                     ).color
                                                 }
-                                                eyebrow="When"
+                                                eyebrow={t(
+                                                    'workspace_settings_automation.flow.when',
+                                                )}
                                                 title={
                                                     draft.triggerType
                                                         ? triggerLabel(
                                                               draft.triggerType,
                                                           )
-                                                        : 'Choose a trigger'
+                                                        : t(
+                                                              'workspace_settings_automation.flow.choose_trigger',
+                                                          )
                                                 }
                                                 incomplete={!draft.triggerType}
                                                 selected={
@@ -759,8 +861,14 @@ export default function WorkspaceSettingsAutomationTab({
                                                     <AutomationFlowNode
                                                         icon="ListFilter"
                                                         color="var(--warning-color)"
-                                                        eyebrow="If"
-                                                        title={`${draft.conditions.length} condition${draft.conditions.length === 1 ? '' : 's'}`}
+                                                        eyebrow={t(
+                                                            'workspace_settings_automation.flow.if',
+                                                        )}
+                                                        title={tChoice(
+                                                            'workspace_settings_automation.flow.conditions',
+                                                            draft.conditions
+                                                                .length,
+                                                        )}
                                                         subtitle={draft.conditions
                                                             .map((c) => c.field)
                                                             .filter(Boolean)
@@ -799,7 +907,9 @@ export default function WorkspaceSettingsAutomationTab({
                                                             }
                                                             className="ml-2 text-xs font-medium text-(--text-gray-color) hover:text-(--accent-color)"
                                                         >
-                                                            + Add condition
+                                                            {t(
+                                                                'workspace_settings_automation.flow.add_condition',
+                                                            )}
                                                         </button>
                                                     </div>
                                                 )
@@ -861,8 +971,12 @@ export default function WorkspaceSettingsAutomationTab({
                                             {canUpdateAutomation && (
                                                 <div className="mt-2 flex justify-start pl-1">
                                                     <InlineSelectDropdown
-                                                        label="Add action"
-                                                        placeholder="+ Add action"
+                                                        label={t(
+                                                            'workspace_settings_automation.flow.add_action',
+                                                        )}
+                                                        placeholder={t(
+                                                            'workspace_settings_automation.flow.add_action_placeholder',
+                                                        )}
                                                         options={
                                                             actionTypeOptions
                                                         }
@@ -884,11 +998,17 @@ export default function WorkspaceSettingsAutomationTab({
                                                 'trigger' && (
                                                 <div className="flex flex-col gap-3">
                                                     <p className="text-xs font-semibold tracking-wide text-(--text-muted-color) uppercase">
-                                                        Trigger
+                                                        {t(
+                                                            'workspace_settings_automation.inspector.trigger',
+                                                        )}
                                                     </p>
                                                     <InlineSelectDropdown
-                                                        label="When"
-                                                        placeholder="Choose a trigger"
+                                                        label={t(
+                                                            'workspace_settings_automation.flow.when',
+                                                        )}
+                                                        placeholder={t(
+                                                            'workspace_settings_automation.flow.choose_trigger',
+                                                        )}
                                                         options={triggerOptions}
                                                         value={
                                                             draft.triggerType
@@ -910,8 +1030,9 @@ export default function WorkspaceSettingsAutomationTab({
                                                 'conditions' && (
                                                 <div className="flex flex-col gap-3">
                                                     <p className="text-xs font-semibold tracking-wide text-(--text-muted-color) uppercase">
-                                                        Conditions (all must
-                                                        match)
+                                                        {t(
+                                                            'workspace_settings_automation.inspector.conditions',
+                                                        )}
                                                     </p>
                                                     {draft.conditions.map(
                                                         (condition, index) => (
@@ -920,10 +1041,17 @@ export default function WorkspaceSettingsAutomationTab({
                                                                 className="flex flex-col gap-1.5 rounded-lg border border-(--border-color) p-2"
                                                             >
                                                                 <InlineSelectDropdown
-                                                                    label="Field"
-                                                                    placeholder="Choose a field"
-                                                                    options={conditionFieldsForTrigger(
-                                                                        draft.triggerType,
+                                                                    label={t(
+                                                                        'workspace_settings_automation.inspector.field',
+                                                                    )}
+                                                                    placeholder={t(
+                                                                        'workspace_settings_automation.inspector.choose_field',
+                                                                    )}
+                                                                    options={translateOptions(
+                                                                        conditionFieldsForTrigger(
+                                                                            draft.triggerType,
+                                                                        ),
+                                                                        t,
                                                                     )}
                                                                     value={
                                                                         condition.field ||
@@ -946,10 +1074,14 @@ export default function WorkspaceSettingsAutomationTab({
                                                                     }
                                                                 />
                                                                 <InlineSelectDropdown
-                                                                    label="Operator"
-                                                                    placeholder="Operator"
+                                                                    label={t(
+                                                                        'workspace_settings_automation.inspector.operator',
+                                                                    )}
+                                                                    placeholder={t(
+                                                                        'workspace_settings_automation.inspector.operator',
+                                                                    )}
                                                                     options={
-                                                                        CONDITION_OPERATORS
+                                                                        operatorOptions
                                                                     }
                                                                     value={
                                                                         condition.operator
@@ -981,7 +1113,7 @@ export default function WorkspaceSettingsAutomationTab({
                                                                         CATEGORY_CONDITION_FIELDS.includes(
                                                                             condition.field,
                                                                         )
-                                                                            ? STATUS_CATEGORY_OPTIONS
+                                                                            ? categoryOptions
                                                                             : isExact &&
                                                                                 STATUS_NAME_CONDITION_FIELDS.includes(
                                                                                     condition.field,
@@ -993,8 +1125,12 @@ export default function WorkspaceSettingsAutomationTab({
 
                                                                     return valueOptions ? (
                                                                         <InlineSelectDropdown
-                                                                            label="Value"
-                                                                            placeholder="Choose a value"
+                                                                            label={t(
+                                                                                'workspace_settings_automation.inspector.value',
+                                                                            )}
+                                                                            placeholder={t(
+                                                                                'workspace_settings_automation.inspector.choose_value',
+                                                                            )}
                                                                             options={
                                                                                 valueOptions
                                                                             }
@@ -1038,7 +1174,9 @@ export default function WorkspaceSettingsAutomationTab({
                                                                                     },
                                                                                 )
                                                                             }
-                                                                            placeholder="Value"
+                                                                            placeholder={t(
+                                                                                'workspace_settings_automation.inspector.value',
+                                                                            )}
                                                                             className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1 text-xs text-(--text-color) outline-hidden focus:border-(--accent-color)"
                                                                         />
                                                                     );
@@ -1053,7 +1191,9 @@ export default function WorkspaceSettingsAutomationTab({
                                                                         }
                                                                         className="self-start text-[11px] text-(--error-color) hover:underline"
                                                                     >
-                                                                        Remove
+                                                                        {t(
+                                                                            'common.remove',
+                                                                        )}
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -1067,7 +1207,9 @@ export default function WorkspaceSettingsAutomationTab({
                                                             }
                                                             className="text-xs font-medium text-(--accent-color) hover:underline"
                                                         >
-                                                            + Add condition
+                                                            {t(
+                                                                'workspace_settings_automation.flow.add_condition',
+                                                            )}
                                                         </button>
                                                     )}
                                                 </div>
@@ -1116,13 +1258,19 @@ export default function WorkspaceSettingsAutomationTab({
             {!canUpdateAutomation && hasAutomationAccess && (
                 <SettingsPanel
                     id="read-only"
-                    title="Read-only access"
-                    description="You can see this project's automation rules, but you don't have permission to change them."
+                    title={t('workspace_settings_automation.read_only.title')}
+                    description={t(
+                        'workspace_settings_automation.read_only.description',
+                    )}
                     icon="Eye"
                 >
                     <SettingsPanelRow
-                        title="Ask a project admin"
-                        description="Only members with the projects.automation.update permission can create or edit rules."
+                        title={t(
+                            'workspace_settings_automation.read_only.ask_admin',
+                        )}
+                        description={t(
+                            'workspace_settings_automation.read_only.ask_admin_description',
+                        )}
                     />
                 </SettingsPanel>
             )}
@@ -1145,6 +1293,7 @@ function ActionInspector({
     priorityOptions: AutomationOption[];
     onChange: (params: Record<string, string>) => void;
 }) {
+    const { t } = useLaravelReactI18n();
     const params = action.params as Record<string, string>;
 
     return (
@@ -1156,9 +1305,13 @@ function ActionInspector({
             {action.type === 'change_status' && (
                 <>
                     <InlineSelectDropdown
-                        label="Move to category"
-                        placeholder="Choose a category"
-                        options={STATUS_CATEGORY_OPTIONS}
+                        label={t(
+                            'workspace_settings_automation.inspector.move_to_category',
+                        )}
+                        placeholder={t(
+                            'workspace_settings_automation.inspector.choose_category',
+                        )}
+                        options={translateOptions(STATUS_CATEGORY_OPTIONS, t)}
                         value={params.category ?? null}
                         disabled={!canUpdate}
                         onChange={(value) =>
@@ -1168,14 +1321,17 @@ function ActionInspector({
                     {statusOptions.length > 0 && (
                         <>
                             <p className="text-[11px] text-(--text-muted-color)">
-                                A category moves each issue to its own type's
-                                matching status. Or pick one exact status
-                                instead - it only applies to issues of that
-                                type.
+                                {t(
+                                    'workspace_settings_automation.inspector.category_hint',
+                                )}
                             </p>
                             <InlineSelectDropdown
-                                label="Exact status"
-                                placeholder="Or choose an exact status"
+                                label={t(
+                                    'workspace_settings_automation.inspector.exact_status',
+                                )}
+                                placeholder={t(
+                                    'workspace_settings_automation.inspector.choose_exact_status',
+                                )}
                                 options={statusOptions}
                                 value={params.workflow_status_id ?? null}
                                 disabled={!canUpdate}
@@ -1194,8 +1350,12 @@ function ActionInspector({
 
             {action.type === 'change_priority' && (
                 <InlineSelectDropdown
-                    label="Priority"
-                    placeholder="Choose a priority"
+                    label={t(
+                        'workspace_settings_automation.inspector.priority',
+                    )}
+                    placeholder={t(
+                        'workspace_settings_automation.inspector.choose_priority',
+                    )}
                     options={priorityOptions}
                     value={params.priority ?? null}
                     disabled={!canUpdate}
@@ -1208,7 +1368,9 @@ function ActionInspector({
                     value={params.user_id ?? ''}
                     disabled={!canUpdate}
                     onChange={(e) => onChange({ user_id: e.target.value })}
-                    placeholder="User ID"
+                    placeholder={t(
+                        'workspace_settings_automation.inspector.user_id',
+                    )}
                     className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1.5 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color)"
                 />
             )}
@@ -1219,7 +1381,9 @@ function ActionInspector({
                     value={params.label ?? ''}
                     disabled={!canUpdate}
                     onChange={(e) => onChange({ label: e.target.value })}
-                    placeholder="Label name"
+                    placeholder={t(
+                        'workspace_settings_automation.inspector.label_name',
+                    )}
                     className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1.5 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color)"
                 />
             )}
@@ -1232,7 +1396,9 @@ function ActionInspector({
                         onChange={(e) =>
                             onChange({ ...params, title: e.target.value })
                         }
-                        placeholder="Notification title"
+                        placeholder={t(
+                            'workspace_settings_automation.inspector.notification_title',
+                        )}
                         className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1.5 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color)"
                     />
                     <textarea
@@ -1241,7 +1407,9 @@ function ActionInspector({
                         onChange={(e) =>
                             onChange({ ...params, message: e.target.value })
                         }
-                        placeholder="Notification message"
+                        placeholder={t(
+                            'workspace_settings_automation.inspector.notification_message',
+                        )}
                         rows={3}
                         className="rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1.5 text-sm text-(--text-color) outline-hidden focus:border-(--accent-color)"
                     />

@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import DangerZonePanel from '@/Components/Molecules/DangerZonePanel/DangerZonePanel';
 import InviteByEmailPanel from '@/Components/Molecules/InviteByEmailPanel/InviteByEmailPanel';
@@ -56,6 +57,7 @@ export default function WorkspaceSettingsMembersTab({
     canUpdateProjectDetails = false,
     canDeleteProject = false,
 }: WorkspaceSettingsMembersTabProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const { props } = usePage<PageProps>();
     const emailEnabled = props.emailEnabled;
     const assignableRoles = roles.filter((role) => !role.isSystem);
@@ -101,13 +103,15 @@ export default function WorkspaceSettingsMembersTab({
         return (
             <SettingsPanel
                 id="members"
-                title="Members"
-                description="View and manage the people who have access to your projects."
+                title={t('workspace_settings_members.title')}
+                description={t('workspace_settings_members.description')}
                 icon="Users"
             >
                 <SettingsPanelRow
-                    title="You're not part of any project yet"
-                    description="Create or join a project to manage its members here."
+                    title={t('workspace_settings_members.no_project')}
+                    description={t(
+                        'workspace_settings_members.no_project_hint',
+                    )}
                 />
             </SettingsPanel>
         );
@@ -118,27 +122,31 @@ export default function WorkspaceSettingsMembersTab({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <motion.div variants={riseIn}>
                     <StatCard
-                        title="Team members"
+                        title={t('workspace_settings_members.team_members')}
                         value={<AnimatedNumber value={members.length} />}
                         icon="Users"
                         color="accent"
                         variant="vivid"
-                        description={`Across "${selectedProject.name}"`}
+                        description={t('workspace_settings_members.across', {
+                            project: selectedProject.name,
+                        })}
                     />
                 </motion.div>
                 <motion.div variants={riseIn}>
                     <StatCard
-                        title="Managers"
+                        title={t('workspace_settings_members.managers')}
                         value={<AnimatedNumber value={managerCount} />}
                         icon="ShieldCheck"
                         color="info"
                         variant="vivid"
-                        description="Can manage members & invites"
+                        description={t(
+                            'workspace_settings_members.managers_hint',
+                        )}
                     />
                 </motion.div>
                 <motion.div variants={riseIn}>
                     <StatCard
-                        title="Pending invites"
+                        title={t('workspace_settings_members.pending')}
                         value={
                             <AnimatedNumber value={pendingInvitations.length} />
                         }
@@ -147,8 +155,12 @@ export default function WorkspaceSettingsMembersTab({
                         variant="vivid"
                         description={
                             emailEnabled
-                                ? 'Awaiting a response'
-                                : 'Invitations are disabled'
+                                ? t(
+                                      'workspace_settings_members.pending_awaiting',
+                                  )
+                                : t(
+                                      'workspace_settings_members.pending_disabled',
+                                  )
                         }
                     />
                 </motion.div>
@@ -157,15 +169,20 @@ export default function WorkspaceSettingsMembersTab({
             <ProjectPickerPanel
                 projects={memberProjects}
                 selectedProjectId={selectedProject.id}
-                description="Choose which project's members to manage."
+                description={t('workspace_settings_members.picker_description')}
                 onSelect={switchProject}
             />
 
             <SettingsPanel
                 id="members"
-                collapsedSummary={`${members.length} ${members.length === 1 ? 'member' : 'members'}`}
-                title="Members"
-                description={`People with access to "${selectedProject.name}".`}
+                collapsedSummary={tChoice(
+                    'workspace_settings_members.summary',
+                    members.length,
+                )}
+                title={t('workspace_settings_members.title')}
+                description={t('workspace_settings_members.panel_description', {
+                    project: selectedProject.name,
+                })}
                 icon="Users"
             >
                 <MemberList
@@ -184,8 +201,10 @@ export default function WorkspaceSettingsMembersTab({
                 <SettingsPanel
                     id="project-details"
                     collapsedSummary={selectedProject.name}
-                    title="Project details"
-                    description="Rename the project, update its description, or change its color."
+                    title={t('workspace_settings_members.details_title')}
+                    description={t(
+                        'workspace_settings_members.details_description',
+                    )}
                     icon="FolderCog"
                 >
                     <ProjectDetailsForm

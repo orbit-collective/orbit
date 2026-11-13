@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -68,17 +69,24 @@ const IMPORT_POLL_INTERVAL_MS = 1500;
 const GITHUB_POLL_INTERVAL_MS = 2000;
 const GITHUB_POLL_TIMEOUT_MS = 5 * 60 * 1000;
 
-function describeImportCounts(progress: {
-    imported: number;
-    updated: number;
-    skipped: number;
-    failed: number;
-}): string {
-    const parts = [`${progress.imported} imported`];
+function describeImportCounts(
+    progress: {
+        imported: number;
+        updated: number;
+        skipped: number;
+        failed: number;
+    },
+    t: (key: string, replacements?: Record<string, string | number>) => string,
+): string {
+    const count = (key: 'imported' | 'updated' | 'skipped' | 'failed') =>
+        t(`workspace_settings_integrations.tab.counts.${key}`, {
+            count: progress[key],
+        });
+    const parts = [count('imported')];
 
-    if (progress.updated) parts.push(`${progress.updated} updated`);
-    if (progress.skipped) parts.push(`${progress.skipped} skipped`);
-    if (progress.failed) parts.push(`${progress.failed} failed`);
+    if (progress.updated) parts.push(count('updated'));
+    if (progress.skipped) parts.push(count('skipped'));
+    if (progress.failed) parts.push(count('failed'));
 
     return parts.join(', ');
 }
@@ -97,6 +105,10 @@ export default function WorkspaceSettingsIntegrationsTab({
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsIntegrationsTabProps) {
+    const { t } = useLaravelReactI18n();
+    // The alert effect below must not re-run when `t` changes identity.
+    const tRef = useRef(t);
+    tRef.current = t;
     const { addAlert, updateAlert, removeAlert } = useAlert();
     const [openIntegrationId, setOpenIntegrationId] =
         useState<IntegrationId | null>(null);
@@ -133,7 +145,15 @@ export default function WorkspaceSettingsIntegrationsTab({
 
         if (jiraImportProgress.status === 'running') {
             updateAlert(alertId, {
-                message: `Importing… ${describeImportCounts(jiraImportProgress)}`,
+                message: tRef.current(
+                    'workspace_settings_integrations.tab.importing',
+                    {
+                        counts: describeImportCounts(
+                            jiraImportProgress,
+                            tRef.current,
+                        ),
+                    },
+                ),
             });
 
             return;
@@ -145,13 +165,23 @@ export default function WorkspaceSettingsIntegrationsTab({
 
         if (jiraImportProgress.status === 'done') {
             addAlert(
-                `Import done — ${describeImportCounts(jiraImportProgress)}.`,
+                tRef.current(
+                    'workspace_settings_integrations.tab.import_done',
+                    {
+                        counts: describeImportCounts(
+                            jiraImportProgress,
+                            tRef.current,
+                        ),
+                    },
+                ),
                 jiraImportProgress.failed > 0 ? 'warning' : 'success',
                 6000,
             );
         } else {
             addAlert(
-                'Import failed — check your notifications for details.',
+                tRef.current(
+                    'workspace_settings_integrations.tab.import_failed',
+                ),
                 'error',
                 6000,
             );
@@ -257,12 +287,20 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveState: true,
                 onSuccess: () => {
                     addAlert(
-                        `${checked ? 'Enabled' : 'Disabled'} the ${integrationId} integration.`,
+                        t(
+                            checked
+                                ? 'workspace_settings_integrations.tab.enabled'
+                                : 'workspace_settings_integrations.tab.disabled',
+                            { integration: integrationId },
+                        ),
                         'success',
                     );
                 },
                 onError: () => {
-                    addAlert('Failed to update the integration.', 'error');
+                    addAlert(
+                        t('workspace_settings_integrations.tab.update_failed'),
+                        'error',
+                    );
                 },
             },
         );
@@ -284,11 +322,18 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    addAlert('Integration settings updated.', 'success');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.settings_updated',
+                        ),
+                        'success',
+                    );
                 },
                 onError: () => {
                     addAlert(
-                        'Failed to update the integration settings.',
+                        t(
+                            'workspace_settings_integrations.tab.settings_update_failed',
+                        ),
                         'error',
                     );
                 },
@@ -311,10 +356,23 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    addAlert(`Connected to ${integrationId}.`, 'success');
+                    addAlert(
+                        t('workspace_settings_integrations.tab.connected_to', {
+                            integration: integrationId,
+                        }),
+                        'success',
+                    );
                 },
                 onError: () => {
-                    addAlert(`Failed to connect to ${integrationId}.`, 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.connect_failed',
+                            {
+                                integration: integrationId,
+                            },
+                        ),
+                        'error',
+                    );
                 },
             },
         );
@@ -335,10 +393,20 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    addAlert('Field mappings updated.', 'success');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.mappings_updated',
+                        ),
+                        'success',
+                    );
                 },
                 onError: () => {
-                    addAlert('Failed to update field mappings.', 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.mappings_failed',
+                        ),
+                        'error',
+                    );
                 },
             },
         );
@@ -366,7 +434,9 @@ export default function WorkspaceSettingsIntegrationsTab({
                     // their own progress prop wired the same way.
                     if (integrationId !== 'jira') {
                         addAlert(
-                            'Import started — this can take a few minutes.',
+                            t(
+                                'workspace_settings_integrations.tab.import_started',
+                            ),
                             'success',
                         );
 
@@ -377,7 +447,17 @@ export default function WorkspaceSettingsIntegrationsTab({
                     importBaselineRunIdRef.current =
                         jiraImportProgress?.runId ?? null;
                     importAlertIdRef.current = addAlert(
-                        'Importing… 0 imported',
+                        t('workspace_settings_integrations.tab.importing', {
+                            counts: describeImportCounts(
+                                {
+                                    imported: 0,
+                                    updated: 0,
+                                    skipped: 0,
+                                    failed: 0,
+                                },
+                                t,
+                            ),
+                        }),
                         'information',
                         0,
                     );
@@ -397,7 +477,12 @@ export default function WorkspaceSettingsIntegrationsTab({
                     }, IMPORT_POLL_INTERVAL_MS);
                 },
                 onError: () => {
-                    addAlert('Failed to start the import.', 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.import_start_failed',
+                        ),
+                        'error',
+                    );
                 },
             },
         );
@@ -419,7 +504,7 @@ export default function WorkspaceSettingsIntegrationsTab({
 
         if (!installTab) {
             addAlert(
-                'Your browser blocked the GitHub install tab. Allow pop-ups for this site and try again.',
+                t('workspace_settings_integrations.tab.popup_blocked'),
                 'error',
             );
 
@@ -445,7 +530,12 @@ export default function WorkspaceSettingsIntegrationsTab({
                 },
                 onError: () => {
                     installTab.close();
-                    addAlert('Failed to connect to GitHub.', 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.github_connect_failed',
+                        ),
+                        'error',
+                    );
                 },
             },
         );
@@ -465,7 +555,12 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onError: () => {
-                    addAlert('Failed to disconnect GitHub.', 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.github_disconnect_failed',
+                        ),
+                        'error',
+                    );
                 },
             },
         );
@@ -481,7 +576,12 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onError: () => {
-                    addAlert('Failed to retry the GitHub sync.', 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.github_retry_failed',
+                        ),
+                        'error',
+                    );
                 },
             },
         );
@@ -528,7 +628,12 @@ export default function WorkspaceSettingsIntegrationsTab({
         } catch {
             if (requestId !== githubPickerRequestIdRef.current) return;
 
-            addAlert('Failed to load available repositories.', 'error');
+            addAlert(
+                t(
+                    'workspace_settings_integrations.tab.repositories_load_failed',
+                ),
+                'error',
+            );
             setAvailableGithubRepositories([]);
         } finally {
             if (requestId === githubPickerRequestIdRef.current) {
@@ -549,12 +654,22 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    addAlert('Repository connected.', 'success');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.repository_connected',
+                        ),
+                        'success',
+                    );
                     githubPickerRequestedRef.current = false;
                     setAvailableGithubRepositories(null);
                 },
                 onError: () => {
-                    addAlert('Failed to connect the repository.', 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.repository_connect_failed',
+                        ),
+                        'error',
+                    );
                 },
             },
         );
@@ -572,10 +687,20 @@ export default function WorkspaceSettingsIntegrationsTab({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => {
-                    addAlert('Repository disconnected.', 'success');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.repository_disconnected',
+                        ),
+                        'success',
+                    );
                 },
                 onError: () => {
-                    addAlert('Failed to disconnect the repository.', 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.repository_disconnect_failed',
+                        ),
+                        'error',
+                    );
                 },
             },
         );
@@ -605,7 +730,12 @@ export default function WorkspaceSettingsIntegrationsTab({
                     }
                 },
                 onError: () => {
-                    addAlert('Failed to refresh repositories.', 'error');
+                    addAlert(
+                        t(
+                            'workspace_settings_integrations.tab.repositories_refresh_failed',
+                        ),
+                        'error',
+                    );
                 },
                 onFinish: () => {
                     setIsRefreshingGithubRepositories(false);
@@ -618,20 +748,28 @@ export default function WorkspaceSettingsIntegrationsTab({
         return (
             <SettingsPanel
                 id="integrations"
-                title="Integrations"
-                description="Connect third-party tools to bring activity from Orbit into the apps your team already uses."
+                title={t('workspace_settings_integrations.tab.title')}
+                description={t(
+                    'workspace_settings_integrations.tab.description',
+                )}
                 icon="Plug"
             >
                 <SettingsPanelRow
                     title={
                         !selectedProject
-                            ? "You're not part of any project yet"
-                            : "You don't have access to this project's integrations"
+                            ? t(
+                                  'workspace_settings_integrations.tab.no_project',
+                              )
+                            : t('workspace_settings_integrations.tab.no_access')
                     }
                     description={
                         !selectedProject
-                            ? 'Create or join a project to manage its integrations here.'
-                            : 'Ask a project admin for the integrations.view permission to see integrations here.'
+                            ? t(
+                                  'workspace_settings_integrations.tab.no_project_hint',
+                              )
+                            : t(
+                                  'workspace_settings_integrations.tab.no_access_hint',
+                              )
                     }
                 />
             </SettingsPanel>
@@ -642,31 +780,38 @@ export default function WorkspaceSettingsIntegrationsTab({
         <div className="space-y-5">
             <motion.div variants={riseIn}>
                 <h2 className="text-xl font-semibold text-(--text-color)">
-                    Your integrations
+                    {t('workspace_settings_integrations.tab.heading')}
                 </h2>
                 <p className="mt-1 text-sm text-(--text-gray-color)">
-                    Connect third-party tools to bring activity from Orbit into
-                    the apps your team already uses.
+                    {t('workspace_settings_integrations.tab.description')}
                 </p>
             </motion.div>
 
             <ProjectPickerPanel
                 projects={memberProjects}
                 selectedProjectId={selectedProject.id}
-                description="Choose which project's integrations to manage."
+                description={t(
+                    'workspace_settings_integrations.tab.pick_project',
+                )}
                 onSelect={switchProject}
             />
 
             {!canUpdateIntegrations && (
                 <SettingsPanel
                     id="read-only"
-                    title="Read-only access"
-                    description="You can see how integrations are configured, but you don't have permission to change them."
+                    title={t('workspace_settings_integrations.tab.read_only')}
+                    description={t(
+                        'workspace_settings_integrations.tab.read_only_description',
+                    )}
                     icon="Eye"
                 >
                     <SettingsPanelRow
-                        title="Ask a project admin"
-                        description="Only members with the integrations.update permission can enable or disable integrations."
+                        title={t(
+                            'workspace_settings_integrations.tab.ask_admin',
+                        )}
+                        description={t(
+                            'workspace_settings_integrations.tab.ask_admin_description',
+                        )}
                     />
                 </SettingsPanel>
             )}
@@ -704,7 +849,13 @@ export default function WorkspaceSettingsIntegrationsTab({
                                     className="absolute inset-0 rounded-full bg-(--accent-color)"
                                 />
                             )}
-                            <span className="relative">{category}</span>
+                            <span className="relative">
+                                {category === 'All'
+                                    ? t('common.all')
+                                    : t(
+                                          `workspace_settings_integrations.categories.${category.toLowerCase().replace(' ', '_')}`,
+                                      )}
+                            </span>
                             <span
                                 className={cn(
                                     'relative text-xs',

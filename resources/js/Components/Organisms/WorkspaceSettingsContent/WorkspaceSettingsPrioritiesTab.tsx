@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import { PriorityIcon } from '@/Components/Atoms/PriorityIcon/PriorityIcon';
@@ -41,6 +42,7 @@ export default function WorkspaceSettingsPrioritiesTab({
     canUpdatePriorities = false,
     canDeletePriorities = false,
 }: WorkspaceSettingsPrioritiesTabProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [editorTarget, setEditorTarget] = useState<string | null>(null);
     const [deletingPriority, setDeletingPriority] =
@@ -76,26 +78,38 @@ export default function WorkspaceSettingsPrioritiesTab({
                     <ProjectPickerPanel
                         projects={memberProjects}
                         selectedProjectId={selectedProject.id}
-                        description="Choose which project's priority scale you're viewing."
+                        description={t(
+                            'workspace_settings_priorities.tab.picker_description',
+                        )}
                         onSelect={switchProject}
                     />
                 )}
                 <SettingsPanel
                     id="scale"
-                    title="Priority scale"
-                    description="Name, color and order the priorities issues can have."
+                    title={t('workspace_settings_priorities.tab.title')}
+                    description={t(
+                        'workspace_settings_priorities.tab.description',
+                    )}
                     icon="Flag"
                 >
                     <SettingsPanelRow
                         title={
                             !selectedProject
-                                ? "You're not part of any project yet"
-                                : "You don't have access to this project's priorities"
+                                ? t(
+                                      'workspace_settings_priorities.tab.no_project',
+                                  )
+                                : t(
+                                      'workspace_settings_priorities.tab.no_access',
+                                  )
                         }
                         description={
                             !selectedProject
-                                ? 'Create or join a project to manage its priorities here.'
-                                : 'Ask a project admin for the priorities.view permission to see priorities here.'
+                                ? t(
+                                      'workspace_settings_priorities.tab.no_project_hint',
+                                  )
+                                : t(
+                                      'workspace_settings_priorities.tab.no_access_hint',
+                                  )
                         }
                     />
                 </SettingsPanel>
@@ -124,7 +138,10 @@ export default function WorkspaceSettingsPrioritiesTab({
             onSuccess: closeEditor,
             onError: (serverErrors: Record<string, string>) => {
                 setErrors(serverErrors);
-                addAlert('Could not save this priority.', 'error');
+                addAlert(
+                    t('workspace_settings_priorities.tab.save_error'),
+                    'error',
+                );
             },
         };
 
@@ -163,7 +180,10 @@ export default function WorkspaceSettingsPrioritiesTab({
                 onStart: () => setReordering(true),
                 onFinish: () => setReordering(false),
                 onError: () =>
-                    addAlert('Could not reorder the priorities.', 'error'),
+                    addAlert(
+                        t('workspace_settings_priorities.tab.reorder_error'),
+                        'error',
+                    ),
             },
         );
     };
@@ -186,7 +206,10 @@ export default function WorkspaceSettingsPrioritiesTab({
                     if (editorTarget === target) closeEditor();
                 },
                 onError: () =>
-                    addAlert('Could not delete this priority.', 'error'),
+                    addAlert(
+                        t('workspace_settings_priorities.tab.delete_error'),
+                        'error',
+                    ),
             },
         );
     };
@@ -203,7 +226,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="Priority levels"
+                        title={t('workspace_settings_priorities.tab.levels')}
                         value={<AnimatedNumber value={priorities.length} />}
                         icon="Flag"
                         color="accent"
@@ -212,7 +235,9 @@ export default function WorkspaceSettingsPrioritiesTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="Issues prioritised"
+                        title={t(
+                            'workspace_settings_priorities.tab.prioritised',
+                        )}
                         value={<AnimatedNumber value={issueCount} />}
                         icon="ListChecks"
                         color="info"
@@ -221,8 +246,13 @@ export default function WorkspaceSettingsPrioritiesTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="Default for new issues"
-                        value={defaultPriority?.name ?? 'None'}
+                        title={t(
+                            'workspace_settings_priorities.tab.default_for_new',
+                        )}
+                        value={
+                            defaultPriority?.name ??
+                            t('workspace_settings_priorities.tab.none')
+                        }
                         icon="Star"
                         color="warning"
                     />
@@ -232,15 +262,25 @@ export default function WorkspaceSettingsPrioritiesTab({
             <ProjectPickerPanel
                 projects={memberProjects}
                 selectedProjectId={selectedProject.id}
-                description="Choose which project's priority scale you're viewing."
+                description={t(
+                    'workspace_settings_priorities.tab.picker_description',
+                )}
                 onSelect={switchProject}
             />
 
             <SettingsPanel
                 id="scale"
-                collapsedSummary={`${priorities.length} ${priorities.length === 1 ? 'priority' : 'priorities'}`}
-                title="Priority scale"
-                description={`Priorities available for issues in ${selectedProject.name}, most important first.`}
+                collapsedSummary={tChoice(
+                    'workspace_settings_priorities.tab.summary',
+                    priorities.length,
+                )}
+                title={t('workspace_settings_priorities.tab.title')}
+                description={t(
+                    'workspace_settings_priorities.tab.panel_description',
+                    {
+                        project: selectedProject.name,
+                    },
+                )}
                 icon="Flag"
             >
                 {priorities.map((priority, index) =>
@@ -277,13 +317,16 @@ export default function WorkspaceSettingsPrioritiesTab({
                                 </p>
                                 {priority.isDefault && (
                                     <span className="shrink-0 rounded-full bg-(--warning-color)/15 px-1.5 py-0.5 text-[10px] font-semibold text-(--warning-color)">
-                                        Default
+                                        {t(
+                                            'workspace_settings_priorities.tab.default',
+                                        )}
                                     </span>
                                 )}
                                 <span className="shrink-0 text-xs text-(--text-muted-color)">
-                                    {priority.issueCount === 1
-                                        ? '1 issue'
-                                        : `${priority.issueCount} issues`}
+                                    {tChoice(
+                                        'workspace_settings_priorities.tab.issue_count',
+                                        priority.issueCount,
+                                    )}
                                 </span>
                             </div>
                             {(canUpdatePriorities || canDeletePriorities) && (
@@ -292,7 +335,9 @@ export default function WorkspaceSettingsPrioritiesTab({
                                         priorities.length > 1 && (
                                             <>
                                                 <RowAction
-                                                    title="Move up"
+                                                    title={t(
+                                                        'workspace_settings_priorities.tab.move_up',
+                                                    )}
                                                     icon="ArrowUp"
                                                     disabled={
                                                         reordering ||
@@ -303,7 +348,9 @@ export default function WorkspaceSettingsPrioritiesTab({
                                                     }
                                                 />
                                                 <RowAction
-                                                    title="Move down"
+                                                    title={t(
+                                                        'workspace_settings_priorities.tab.move_down',
+                                                    )}
                                                     icon="ArrowDown"
                                                     disabled={
                                                         reordering ||
@@ -319,7 +366,9 @@ export default function WorkspaceSettingsPrioritiesTab({
                                         )}
                                     {canUpdatePriorities && (
                                         <RowAction
-                                            title="Edit priority"
+                                            title={t(
+                                                'workspace_settings_priorities.tab.edit',
+                                            )}
                                             icon="Pencil"
                                             onClick={() =>
                                                 toggleEditor(
@@ -331,7 +380,9 @@ export default function WorkspaceSettingsPrioritiesTab({
                                     {canDeletePriorities &&
                                         priorities.length > 1 && (
                                             <RowAction
-                                                title="Delete priority"
+                                                title={t(
+                                                    'workspace_settings_priorities.tab.delete',
+                                                )}
                                                 icon="Trash"
                                                 danger
                                                 onClick={() =>
@@ -360,7 +411,7 @@ export default function WorkspaceSettingsPrioritiesTab({
                 ) : (
                     canCreatePriorities && (
                         <AddRowButton
-                            label="Add priority"
+                            label={t('workspace_settings_priorities.tab.add')}
                             onClick={() =>
                                 toggleEditor(NEW_PRIORITY_EDITOR_TARGET)
                             }

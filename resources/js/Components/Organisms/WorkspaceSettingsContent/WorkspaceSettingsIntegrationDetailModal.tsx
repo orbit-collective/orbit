@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useState } from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
@@ -6,6 +7,7 @@ import Input from '@/Components/Atoms/Input/Input';
 import Modal from '@/Components/Atoms/Modal/Modal';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
+import { useIntegrationText } from '@/hooks/useIntegrationText';
 import { IntegrationDefinition } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
 import { ProjectLabel } from '@/types/Labels';
@@ -79,6 +81,8 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     isRefreshingGithubRepositories,
     onClose,
 }: WorkspaceSettingsIntegrationDetailModalProps) {
+    const { t } = useLaravelReactI18n();
+    const text = useIntegrationText();
     const [webhookUrlDraft, setWebhookUrlDraft] = useState(
         settings?.webhookUrl ?? '',
     );
@@ -97,11 +101,11 @@ export default function WorkspaceSettingsIntegrationDetailModal({
     const enabledToggleLabel =
         integration.kind === 'import'
             ? enabled
-                ? 'Active'
-                : 'Activate'
+                ? t('workspace_settings_integrations.detail.active')
+                : t('workspace_settings_integrations.detail.activate')
             : enabled
-              ? 'Connected'
-              : 'Connect';
+              ? t('workspace_settings_integrations.detail.connected')
+              : t('workspace_settings_integrations.detail.connect');
     // 'github' has no generic enabled/disabled boolean to toggle from here -
     // connecting/disconnecting is a real GitHub App installation flow, owned
     // entirely by the panel below. The header just reflects that status.
@@ -130,11 +134,13 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                     integration.category,
                                 )}
                             >
-                                {integration.category}
+                                {t(
+                                    `workspace_settings_integrations.categories.${integration.category.toLowerCase().replace(' ', '_')}`,
+                                )}
                             </Badge>
                         </div>
                         <p className="text-sm text-(--text-gray-color)">
-                            {integration.vendor}
+                            {text.vendor(integration)}
                         </p>
                     </div>
                 </div>
@@ -143,8 +149,18 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                         href={integration.websiteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        aria-label={`Visit the ${integration.name} website`}
-                        title={`Visit the ${integration.name} website`}
+                        aria-label={t(
+                            'workspace_settings_integrations.detail.visit_website',
+                            {
+                                name: integration.name,
+                            },
+                        )}
+                        title={t(
+                            'workspace_settings_integrations.detail.visit_website',
+                            {
+                                name: integration.name,
+                            },
+                        )}
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                     >
                         <Icon name="ExternalLink" size={16} />
@@ -152,7 +168,9 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                     {integration.comingSoon ? (
                         <span className="inline-flex items-center gap-1.5 rounded-lg border border-(--bg-light-color) px-3 py-1.5 text-sm text-(--text-gray-color)">
                             <Icon name="Lock" size={14} />
-                            Coming soon
+                            {t(
+                                'workspace_settings_integrations.detail.coming_soon',
+                            )}
                         </span>
                     ) : integration.kind === 'github' ? (
                         <span className="inline-flex items-center gap-1.5 rounded-lg border border-(--bg-light-color) px-3 py-1.5 text-sm text-(--text-gray-color)">
@@ -162,7 +180,13 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                 }
                                 size={14}
                             />
-                            {githubConnected ? 'Connected' : 'Not connected'}
+                            {githubConnected
+                                ? t(
+                                      'workspace_settings_integrations.detail.connected',
+                                  )
+                                : t(
+                                      'workspace_settings_integrations.detail.not_connected',
+                                  )}
                         </span>
                     ) : canUpdate ? (
                         <button
@@ -188,17 +212,25 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                             />
                             {integration.kind === 'import'
                                 ? enabled
-                                    ? 'Active'
-                                    : 'Not active'
+                                    ? t(
+                                          'workspace_settings_integrations.detail.active',
+                                      )
+                                    : t(
+                                          'workspace_settings_integrations.detail.not_active',
+                                      )
                                 : enabled
-                                  ? 'Connected'
-                                  : 'Not connected'}
+                                  ? t(
+                                        'workspace_settings_integrations.detail.connected',
+                                    )
+                                  : t(
+                                        'workspace_settings_integrations.detail.not_connected',
+                                    )}
                         </span>
                     )}
                     <button
                         type="button"
                         onClick={onClose}
-                        aria-label="Close"
+                        aria-label={t('common.close')}
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                     >
                         <Icon name="X" size={16} />
@@ -213,10 +245,10 @@ export default function WorkspaceSettingsIntegrationDetailModal({
 
                 <section className="mt-6">
                     <h3 className="text-sm font-semibold text-(--text-color)">
-                        Overview
+                        {t('workspace_settings_integrations.detail.overview')}
                     </h3>
                     <EditableMarkdown
-                        value={integration.overview}
+                        value={text.overview(integration)}
                         onSave={() => {}}
                         disabled
                         className="mt-2"
@@ -226,14 +258,19 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                 {showConfiguration && integration.kind === 'notify' && (
                     <section className="mt-6">
                         <h3 className="text-sm font-semibold text-(--text-color)">
-                            Webhook URL
+                            {t(
+                                'workspace_settings_integrations.detail.webhook_url',
+                            )}
                         </h3>
                         {canUpdate ? (
                             <>
                                 <p className="mt-1 text-sm text-(--text-gray-color)">
-                                    Activity is posted to this webhook. You can
-                                    create one from your {integration.name}{' '}
-                                    server's integration settings.
+                                    {t(
+                                        'workspace_settings_integrations.detail.webhook_hint',
+                                        {
+                                            name: integration.name,
+                                        },
+                                    )}
                                 </p>
                                 <div className="mt-3 flex items-center gap-2">
                                     <Input
@@ -257,15 +294,19 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                         }
                                         className="shrink-0 rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
-                                        Save
+                                        {t('common.save')}
                                     </button>
                                 </div>
                             </>
                         ) : (
                             <p className="mt-1 text-sm text-(--text-gray-color)">
                                 {settings?.hasWebhookUrl
-                                    ? 'A webhook URL is configured.'
-                                    : 'No webhook URL has been configured yet.'}
+                                    ? t(
+                                          'workspace_settings_integrations.detail.webhook_configured',
+                                      )
+                                    : t(
+                                          'workspace_settings_integrations.detail.webhook_missing',
+                                      )}
                             </p>
                         )}
                     </section>
@@ -274,7 +315,9 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                 {integration.kind === 'notify' && integration.subOptions && (
                     <section className="mt-6">
                         <h3 className="text-sm font-semibold text-(--text-color)">
-                            Options
+                            {t(
+                                'workspace_settings_integrations.detail.options',
+                            )}
                         </h3>
                         <div className="mt-3 divide-y divide-(--border-color) rounded-xl border border-(--border-color)">
                             {integration.subOptions?.map((option) => (
@@ -284,10 +327,16 @@ export default function WorkspaceSettingsIntegrationDetailModal({
                                 >
                                     <div className="min-w-0">
                                         <p className="text-sm font-medium text-(--text-color)">
-                                            {option.title}
+                                            {text.optionTitle(
+                                                integration,
+                                                option,
+                                            )}
                                         </p>
                                         <p className="mt-0.5 text-sm text-(--text-gray-color)">
-                                            {option.description}
+                                            {text.optionDescription(
+                                                integration,
+                                                option,
+                                            )}
                                         </p>
                                     </div>
                                     <ToggleSwitch

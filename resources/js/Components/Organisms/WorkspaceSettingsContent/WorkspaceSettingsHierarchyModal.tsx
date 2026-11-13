@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IssueTypeBadge from '@/Components/Atoms/IssueTypeBadge/IssueTypeBadge';
@@ -25,13 +26,14 @@ export default function WorkspaceSettingsHierarchyModal({
     allIssueTypes,
     canUpdateIssueTypes = false,
 }: WorkspaceSettingsHierarchyModalProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [isSaving, setIsSaving] = useState(false);
 
     if (!issueType) return null;
 
     const allowedIds = issueType.allowedChildTypeIds ?? [];
-    const otherTypes = allIssueTypes.filter((t) => t.id !== issueType.id);
+    const otherTypes = allIssueTypes.filter((type) => type.id !== issueType.id);
 
     const handleToggle = (childTypeId: number) => {
         const next = allowedIds.includes(childTypeId)
@@ -50,7 +52,9 @@ export default function WorkspaceSettingsHierarchyModal({
                 preserveState: true,
                 onError: () =>
                     addAlert(
-                        'Could not update allowed sub-issue types.',
+                        t(
+                            'workspace_settings_modals_a.hierarchy.update_failed',
+                        ),
                         'error',
                     ),
                 onFinish: () => setIsSaving(false),
@@ -61,7 +65,9 @@ export default function WorkspaceSettingsHierarchyModal({
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="md">
             <ModalHeader
-                title={`${issueType.name} hierarchy`}
+                title={t('workspace_settings_modals_a.hierarchy.title', {
+                    name: issueType.name,
+                })}
                 onClose={onClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
@@ -79,20 +85,26 @@ export default function WorkspaceSettingsHierarchyModal({
                             className="mt-0.5 shrink-0"
                         />
                         <p>
-                            Turn on &quot;Allows sub-issues&quot; in this
-                            type&apos;s general settings first, then choose
-                            which types are allowed here.
+                            {t(
+                                'workspace_settings_modals_a.hierarchy.enable_first',
+                            )}
                         </p>
                     </div>
                 ) : (
                     <>
                         <div>
                             <h4 className="text-sm font-semibold text-(--text-color)">
-                                Which types can be sub-issues
+                                {t(
+                                    'workspace_settings_modals_a.hierarchy.heading',
+                                )}
                             </h4>
                             <p className="mt-0.5 text-xs text-(--text-gray-color)">
-                                Leave everything unselected to allow any issue
-                                type as a sub-issue of {issueType.name}.
+                                {t(
+                                    'workspace_settings_modals_a.hierarchy.hint',
+                                    {
+                                        name: issueType.name,
+                                    },
+                                )}
                             </p>
                         </div>
 

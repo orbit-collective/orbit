@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -36,6 +37,7 @@ export default function WorkspaceSettingsTemplatesModal({
     priorities = [],
     canManageTemplates = false,
 }: WorkspaceSettingsTemplatesModalProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const priorityOptions = priorities.map((priority) => ({
         value: priority.name,
@@ -156,7 +158,11 @@ export default function WorkspaceSettingsTemplatesModal({
             preserveScroll: true,
             preserveState: true,
             onSuccess: closeForm,
-            onError: () => addAlert('Could not save this template.', 'error'),
+            onError: () =>
+                addAlert(
+                    t('workspace_settings_templates_modal.save_error'),
+                    'error',
+                ),
         };
 
         if (isEditing) {
@@ -194,7 +200,10 @@ export default function WorkspaceSettingsTemplatesModal({
                 preserveState: true,
                 onSuccess: closeForm,
                 onError: () =>
-                    addAlert('Could not delete this template.', 'error'),
+                    addAlert(
+                        t('workspace_settings_templates_modal.delete_error'),
+                        'error',
+                    ),
             },
         );
     };
@@ -205,7 +214,9 @@ export default function WorkspaceSettingsTemplatesModal({
         <ProjectLabelsProvider labels={labels}>
             <Modal isOpen={isOpen} onClose={onClose} size="lg">
                 <ModalHeader
-                    title={`${issueType.name} templates`}
+                    title={t('workspace_settings_templates_modal.title', {
+                        type: issueType.name,
+                    })}
                     onClose={onClose}
                     icon={
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
@@ -217,9 +228,9 @@ export default function WorkspaceSettingsTemplatesModal({
                 <div className="max-h-[75vh] space-y-5 overflow-y-auto px-6 py-6">
                     <div className="flex items-start justify-between gap-3">
                         <p className="text-xs text-(--text-gray-color)">
-                            The starting point for a new {issueType.name}. The
-                            first template is applied automatically; anything
-                            typed on the issue itself wins over it.
+                            {t('workspace_settings_templates_modal.intro', {
+                                type: issueType.name,
+                            })}
                         </p>
                         {canManageTemplates && !isFormOpen && (
                             <button
@@ -228,14 +239,14 @@ export default function WorkspaceSettingsTemplatesModal({
                                 className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-(--text-muted-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                             >
                                 <Icon name="Plus" size={13} />
-                                New template
+                                {t('workspace_settings_templates_modal.new')}
                             </button>
                         )}
                     </div>
 
                     {templates.length === 0 && !isFormOpen ? (
                         <p className="rounded-xl border border-dashed border-(--border-color) px-3.5 py-6 text-center text-xs text-(--text-gray-color)">
-                            No templates yet for this issue type.
+                            {t('workspace_settings_templates_modal.empty')}
                         </p>
                     ) : (
                         <div className="space-y-2">
@@ -257,17 +268,24 @@ export default function WorkspaceSettingsTemplatesModal({
                                                 </p>
                                                 {index === 0 && (
                                                     <span className="rounded-full border border-(--accent-color) px-1.5 py-0.5 text-[10px] font-medium text-(--accent-color)">
-                                                        Applied by default
+                                                        {t(
+                                                            'workspace_settings_templates_modal.applied_by_default',
+                                                        )}
                                                     </span>
                                                 )}
                                                 {priorityLabel(
                                                     template.defaultPriority,
                                                 ) && (
                                                     <span className="rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
-                                                        {priorityLabel(
-                                                            template.defaultPriority,
-                                                        )}{' '}
-                                                        priority
+                                                        {t(
+                                                            'workspace_settings_templates_modal.priority_badge',
+                                                            {
+                                                                priority:
+                                                                    priorityLabel(
+                                                                        template.defaultPriority,
+                                                                    ) ?? '',
+                                                            },
+                                                        )}
                                                     </span>
                                                 )}
                                             </div>
@@ -291,8 +309,15 @@ export default function WorkspaceSettingsTemplatesModal({
                                             <div className="flex shrink-0 items-center gap-1">
                                                 <button
                                                     type="button"
-                                                    title="Edit template"
-                                                    aria-label={`Edit ${template.name}`}
+                                                    title={t(
+                                                        'workspace_settings_templates_modal.edit_title',
+                                                    )}
+                                                    aria-label={t(
+                                                        'workspace_settings_templates_modal.edit_aria',
+                                                        {
+                                                            name: template.name,
+                                                        },
+                                                    )}
                                                     onClick={() =>
                                                         startEditing(template)
                                                     }
@@ -305,8 +330,15 @@ export default function WorkspaceSettingsTemplatesModal({
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    title="Delete template"
-                                                    aria-label={`Delete ${template.name}`}
+                                                    title={t(
+                                                        'workspace_settings_templates_modal.delete_title',
+                                                    )}
+                                                    aria-label={t(
+                                                        'workspace_settings_templates_modal.delete_aria',
+                                                        {
+                                                            name: template.name,
+                                                        },
+                                                    )}
                                                     onClick={() =>
                                                         handleDelete(
                                                             template.id,
@@ -336,13 +368,21 @@ export default function WorkspaceSettingsTemplatesModal({
                     {canManageTemplates && isFormOpen && (
                         <div className="space-y-3 rounded-xl border border-(--border-color) bg-(--surface-color) p-4">
                             <h4 className="text-sm font-semibold text-(--text-color)">
-                                {isEditing ? 'Edit template' : 'New template'}
+                                {isEditing
+                                    ? t(
+                                          'workspace_settings_templates_modal.form_edit',
+                                      )
+                                    : t(
+                                          'workspace_settings_templates_modal.form_new',
+                                      )}
                             </h4>
 
                             <Input
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="Template name"
+                                placeholder={t(
+                                    'workspace_settings_templates_modal.name_placeholder',
+                                )}
                                 variant="modal"
                             />
                             <TextArea
@@ -351,18 +391,26 @@ export default function WorkspaceSettingsTemplatesModal({
                                 onChange={(e) => setDescription(e.target.value)}
                                 onPaste={handleDescriptionPaste}
                                 onDrop={handleDescriptionDrop}
-                                placeholder="Description every new issue of this type starts from"
+                                placeholder={t(
+                                    'workspace_settings_templates_modal.description_placeholder',
+                                )}
                                 variant="modal"
                                 className="min-h-[120px] font-mono text-xs"
                             />
 
                             <div className="space-y-1.5">
                                 <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                                    Default priority
+                                    {t(
+                                        'workspace_settings_templates_modal.default_priority',
+                                    )}
                                 </p>
                                 <InlineSelectDropdown
-                                    label="Default priority"
-                                    placeholder="No default"
+                                    label={t(
+                                        'workspace_settings_templates_modal.default_priority',
+                                    )}
+                                    placeholder={t(
+                                        'workspace_settings_templates_modal.no_default',
+                                    )}
                                     options={priorityOptions}
                                     value={defaultPriority}
                                     onChange={setDefaultPriority}
@@ -372,11 +420,15 @@ export default function WorkspaceSettingsTemplatesModal({
 
                             <div className="space-y-1.5">
                                 <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                                    Default labels
+                                    {t(
+                                        'workspace_settings_templates_modal.default_labels',
+                                    )}
                                 </p>
                                 {labels.length === 0 ? (
                                     <p className="text-xs text-(--text-gray-color)">
-                                        This project has no labels yet.
+                                        {t(
+                                            'workspace_settings_templates_modal.no_labels',
+                                        )}
                                     </p>
                                 ) : (
                                     <div className="flex flex-wrap gap-1.5">
@@ -412,7 +464,7 @@ export default function WorkspaceSettingsTemplatesModal({
                                     onClick={closeForm}
                                     className="rounded-md px-3 py-1.5 text-sm font-medium text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                 >
-                                    Cancel
+                                    {t('common.cancel')}
                                 </button>
                                 <button
                                     type="button"
@@ -421,8 +473,12 @@ export default function WorkspaceSettingsTemplatesModal({
                                     className="rounded-md bg-(--accent-color) px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {isEditing
-                                        ? 'Save changes'
-                                        : 'Add template'}
+                                        ? t(
+                                              'workspace_settings_templates_modal.save_changes',
+                                          )
+                                        : t(
+                                              'workspace_settings_templates_modal.add',
+                                          )}
                                 </button>
                             </div>
                         </div>

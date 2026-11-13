@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
@@ -17,6 +18,7 @@ export default function WorkspaceSettingsDeleteRoleModal({
     projectId,
     onClose,
 }: WorkspaceSettingsDeleteRoleModalProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -38,13 +40,20 @@ export default function WorkspaceSettingsDeleteRoleModal({
             onFinish: () => setIsDeleting(false),
             onSuccess: () => {
                 addAlert(
-                    `The "${role.name}" role has been deleted.`,
+                    t('workspace_settings_modals_a.delete_role.deleted', {
+                        name: role.name,
+                    }),
                     'success',
                 );
                 onClose();
             },
             onError: () => {
-                addAlert(`Failed to delete the "${role.name}" role.`, 'error');
+                addAlert(
+                    t('workspace_settings_modals_a.delete_role.failed', {
+                        name: role.name,
+                    }),
+                    'error',
+                );
             },
         });
     };
@@ -52,7 +61,7 @@ export default function WorkspaceSettingsDeleteRoleModal({
     return (
         <Modal isOpen={role !== null} onClose={handleClose} size="sm">
             <ModalHeader
-                title="Delete role"
+                title={t('workspace_settings_modals_a.delete_role.title')}
                 onClose={handleClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--error-color)/10 text-(--error-color)">
@@ -63,21 +72,19 @@ export default function WorkspaceSettingsDeleteRoleModal({
 
             <div className="space-y-3 px-6 py-5">
                 <p className="text-sm text-(--text-gray-color)">
-                    This permanently removes{' '}
+                    {t('workspace_settings_modals_a.delete_role.before')}{' '}
                     <span className="font-semibold text-(--text-color)">
                         {role?.name}
                     </span>{' '}
-                    and its permission grants.{' '}
-                    {role && role.memberCount > 0 ? (
-                        <>
-                            {role.memberCount}{' '}
-                            {role.memberCount === 1 ? 'member' : 'members'}{' '}
-                            currently holding this role will lose the access it
-                            grants.
-                        </>
-                    ) : (
-                        'No members currently hold this role.'
-                    )}
+                    {t('workspace_settings_modals_a.delete_role.after')}{' '}
+                    {role && role.memberCount > 0
+                        ? tChoice(
+                              'workspace_settings_modals_a.delete_role.members',
+                              role.memberCount,
+                          )
+                        : t(
+                              'workspace_settings_modals_a.delete_role.no_members',
+                          )}
                 </p>
             </div>
 
@@ -87,7 +94,7 @@ export default function WorkspaceSettingsDeleteRoleModal({
                     onClick={handleClose}
                     className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
                 >
-                    Cancel
+                    {t('workspace_settings_modals_a.cancel')}
                 </button>
                 <button
                     type="button"
@@ -95,7 +102,9 @@ export default function WorkspaceSettingsDeleteRoleModal({
                     disabled={isDeleting}
                     className="cursor-pointer rounded-lg bg-(--error-color) px-4 py-2 text-sm font-medium text-(--text-color) transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    {isDeleting ? 'Deleting...' : 'Delete role'}
+                    {isDeleting
+                        ? t('workspace_settings_modals_a.deleting')
+                        : t('workspace_settings_modals_a.delete_role.submit')}
                 </button>
             </footer>
         </Modal>

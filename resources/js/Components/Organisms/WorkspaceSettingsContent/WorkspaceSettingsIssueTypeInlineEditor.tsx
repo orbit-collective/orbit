@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { ReactNode, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -11,21 +12,29 @@ import { cn } from '@/utils/cn';
 import { ISSUE_TYPE_ICON_OPTIONS } from '@/utils/issueTypeIcons';
 import { LABEL_COLOR_PALETTE } from '@/utils/labelColors';
 
+/** `label` is a translation key. */
 const REQUIRED_FIELD_OPTIONS: { value: string; label: string }[] = [
-    { value: 'description', label: 'Description' },
-    { value: 'assignee', label: 'Assignee' },
-    { value: 'labels', label: 'Labels' },
-    { value: 'start_date', label: 'Start date' },
-    { value: 'end_date', label: 'End date' },
-    { value: 'priority', label: 'Priority' },
-];
+    'description',
+    'assignee',
+    'labels',
+    'start_date',
+    'end_date',
+    'priority',
+].map((value) => ({
+    value,
+    label: `workspace_settings_issue_types.editor.required_fields.${value}`,
+}));
 
+/** `label` is a translation key. */
 const ROLE_TYPE_OPTIONS: { value: string; label: string }[] = [
-    { value: 'owner', label: 'Owner' },
-    { value: 'admin', label: 'Admin' },
-    { value: 'member', label: 'Member' },
-    { value: 'viewer', label: 'Viewer' },
-];
+    'owner',
+    'admin',
+    'member',
+    'viewer',
+].map((value) => ({
+    value,
+    label: `workspace_settings_issue_types.editor.role_types.${value}`,
+}));
 
 export type IssueTypeFormValues = {
     name: string;
@@ -75,6 +84,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
     onSave,
     onCancel,
 }: WorkspaceSettingsIssueTypeInlineEditorProps) {
+    const { t } = useLaravelReactI18n();
     const [name, setName] = useState(issueType?.name ?? '');
     const [description, setDescription] = useState(
         issueType?.description ?? '',
@@ -123,7 +133,9 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                     icon={icon}
                     onIconChange={setIcon}
                     iconOptions={ISSUE_TYPE_ICON_OPTIONS}
-                    ariaLabel="Issue type icon and color"
+                    ariaLabel={t(
+                        'workspace_settings_issue_types.editor.appearance_aria',
+                    )}
                 >
                     <Icon
                         name={icon as keyof typeof icons}
@@ -133,33 +145,49 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                 </AppearancePicker>
             }
             canSave={trimmedName !== ''}
-            saveLabel={isEditing ? 'Save issue type' : 'Create issue type'}
+            saveLabel={
+                isEditing
+                    ? t('workspace_settings_issue_types.editor.save')
+                    : t('workspace_settings_issue_types.editor.create')
+            }
             onSave={handleSave}
             onCancel={onCancel}
             below={
                 <>
-                    <OptionGroup label="Hierarchy">
+                    <OptionGroup
+                        label={t(
+                            'workspace_settings_issue_types.editor.hierarchy',
+                        )}
+                    >
                         <ToggleChip
-                            label="Allows sub-issues"
+                            label={t(
+                                'workspace_settings_issue_types.editor.allows_sub_issues',
+                            )}
                             pressed={allowsChildren}
                             onClick={() =>
                                 setAllowsChildren((current) => !current)
                             }
                         />
                         <ToggleChip
-                            label="Can be created on its own"
+                            label={t(
+                                'workspace_settings_issue_types.editor.top_level',
+                            )}
                             pressed={isTopLevel}
                             onClick={() => setIsTopLevel((current) => !current)}
                         />
                     </OptionGroup>
                     <OptionGroup
-                        label="Required"
-                        hint="Fields that must be filled in before an issue of this type can be created."
+                        label={t(
+                            'workspace_settings_issue_types.editor.required',
+                        )}
+                        hint={t(
+                            'workspace_settings_issue_types.editor.required_hint',
+                        )}
                     >
                         {REQUIRED_FIELD_OPTIONS.map((option) => (
                             <ToggleChip
                                 key={option.value}
-                                label={option.label}
+                                label={t(option.label)}
                                 pressed={requiredFields.includes(option.value)}
                                 onClick={() =>
                                     setRequiredFields((current) =>
@@ -170,13 +198,17 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                         ))}
                     </OptionGroup>
                     <OptionGroup
-                        label="Who can create"
-                        hint="Leave everything off to allow anyone who can create issues."
+                        label={t(
+                            'workspace_settings_issue_types.editor.who_can_create',
+                        )}
+                        hint={t(
+                            'workspace_settings_issue_types.editor.who_can_create_hint',
+                        )}
                     >
                         {ROLE_TYPE_OPTIONS.map((option) => (
                             <ToggleChip
                                 key={option.value}
-                                label={option.label}
+                                label={t(option.label)}
                                 pressed={restrictedRoleTypes.includes(
                                     option.value,
                                 )}
@@ -193,7 +225,7 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                                 restrictedRoleTypes.length > 0 && 'hidden',
                             )}
                         >
-                            Anyone who can create issues
+                            {t('workspace_settings_issue_types.editor.anyone')}
                         </span>
                     </OptionGroup>
                 </>
@@ -203,8 +235,12 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Issue type name"
-                aria-label="Issue type name"
+                placeholder={t(
+                    'workspace_settings_issue_types.editor.name_placeholder',
+                )}
+                aria-label={t(
+                    'workspace_settings_issue_types.editor.name_aria',
+                )}
                 autoComplete="off"
                 maxLength={50}
                 className={cn(inlineFieldClass, 'font-medium sm:w-44')}
@@ -212,8 +248,12 @@ export default function WorkspaceSettingsIssueTypeInlineEditor({
             <input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="What is it used for? (optional)"
-                aria-label="Issue type description"
+                placeholder={t(
+                    'workspace_settings_issue_types.editor.description_placeholder',
+                )}
+                aria-label={t(
+                    'workspace_settings_issue_types.editor.description_aria',
+                )}
                 autoComplete="off"
                 className={cn(
                     inlineFieldClass,
