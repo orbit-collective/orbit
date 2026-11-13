@@ -80,6 +80,7 @@ class HandleInertiaRequests extends Middleware
             'notificationUnreadCount' => fn () => $request->user()
                 ? $this->notificationService->unreadCountForUser($request->user()->id)
                 : 0,
+            'locale' => fn () => app()->getLocale(),
         ];
     }
 }
