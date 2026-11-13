@@ -106,11 +106,6 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                 icon: 'CircleQuestionMark',
             },
             {
-                value: 'settings',
-                label: t('sidebar.settings'),
-                icon: 'Settings',
-            },
-            {
                 value: 'languages',
                 label: t('sidebar.languages'),
                 icon: 'Languages',
@@ -121,6 +116,11 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                     role: 'menuitemradio',
                     indicator: 'check',
                 })),
+            },
+            {
+                value: 'settings',
+                label: t('sidebar.settings'),
+                icon: 'Settings',
             },
             { value: 'logout-separator', label: '', kind: 'separator' },
             {
