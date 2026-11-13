@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { SyntheticEvent } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Input from '@/Components/Atoms/Input/Input';
@@ -19,16 +20,17 @@ export default function JoinWithCodePanel({
     onChange,
     onSubmit,
 }: JoinWithCodePanelProps) {
+    const { t } = useLaravelReactI18n();
     return (
         <SettingsPanel
             id="join"
-            title="Join with an invite code"
-            description="Already have an invitation? Paste its code to join instantly."
+            title={t('join_with_code_panel.title')}
+            description={t('join_with_code_panel.description')}
             icon="Link"
         >
             <SettingsPanelRow
-                title="Invitation code"
-                description="If the link in your email doesn't work, paste the code here."
+                title={t('join_with_code_panel.row_title')}
+                description={t('join_with_code_panel.row_description')}
                 action={
                     <form
                         onSubmit={onSubmit}
@@ -40,7 +42,9 @@ export default function JoinWithCodePanel({
                                 onChange={(event) =>
                                     onChange(event.target.value)
                                 }
-                                placeholder="Invitation code"
+                                placeholder={t(
+                                    'join_with_code_panel.placeholder',
+                                )}
                                 className="h-9 w-56"
                             />
                             <Button
@@ -48,7 +52,7 @@ export default function JoinWithCodePanel({
                                 isDisabled={isJoining}
                                 className="h-9"
                             >
-                                Join
+                                {t('join_with_code_panel.join')}
                             </Button>
                         </div>
                         {error && (

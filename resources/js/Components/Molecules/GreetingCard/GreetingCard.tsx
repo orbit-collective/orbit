@@ -1,4 +1,5 @@
 import { TargetAndTransition, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { useNow } from '@/hooks/useNow';
@@ -40,9 +41,6 @@ const ICON_MOTION: Record<
     night: { animate: { y: [0, -3, 0], rotate: [-6, 6, -6] }, duration: 6 },
 };
 
-const plural = (count: number, word: string) =>
-    `${count} ${word}${count === 1 ? '' : 's'}`;
-
 /** A greeting for the time of day, the date, and the day in numbers. */
 const GreetingCard: FC<GreetingCardProps> = ({
     variant = 'banner',
@@ -57,29 +55,45 @@ const GreetingCard: FC<GreetingCardProps> = ({
     dueSoon = 0,
     now,
 }) => {
+    const { t, tChoice, currentLocale } = useLaravelReactI18n();
     const clock = useNow();
     const moment = now ?? clock;
     const greeting = greetingFor(moment);
     const who = showName ? firstName(name) : null;
     const tint = DASHBOARD_COLOR_VALUES[color];
-    const date = moment.toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-    });
+    const date = moment.toLocaleDateString(
+        currentLocale() === 'pl' ? 'pl-PL' : 'en-US',
+        {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+        },
+    );
     const moving = ICON_MOTION[greeting.period];
 
     const chips = [
-        { key: 'assigned', text: `${assigned} assigned to you`, hot: false },
-        { key: 'overdue', text: `${overdue} overdue`, hot: overdue > 0 },
-        { key: 'soon', text: `${dueSoon} due this week`, hot: false },
+        {
+            key: 'assigned',
+            text: t('greeting_card.chips.assigned', { count: assigned }),
+            hot: false,
+        },
+        {
+            key: 'overdue',
+            text: t('greeting_card.chips.overdue', { count: overdue }),
+            hot: overdue > 0,
+        },
+        {
+            key: 'soon',
+            text: t('greeting_card.chips.soon', { count: dueSoon }),
+            hot: false,
+        },
     ];
-    const sentence = `You have ${plural(assigned, 'open issue')} assigned${overdue > 0 ? `, ${overdue} overdue` : ''}${dueSoon > 0 ? ` and ${dueSoon} due this week` : ''}.`;
+    const sentence = `${tChoice('greeting_card.sentence.head', assigned)}${overdue > 0 ? t('greeting_card.sentence.overdue', { count: overdue }) : ''}${dueSoon > 0 ? t('greeting_card.sentence.soon', { count: dueSoon }) : ''}.`;
     const isBanner = variant === 'banner';
 
     return (
         <section
-            aria-label="Welcome"
+            aria-label={t('greeting_card.welcome')}
             className={cn(
                 'relative flex h-full min-h-0 min-w-0 flex-1 overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color)',
                 variant === 'minimal'
@@ -159,7 +173,7 @@ const GreetingCard: FC<GreetingCardProps> = ({
                                   : 'text-sm',
                         )}
                     >
-                        {greeting.text}
+                        {t(`greeting_card.period.${greeting.period}`)}
                         {who && <span>, {who}</span>}
                         {variant === 'minimal' && (
                             <span className="font-normal text-(--text-gray-color)">
@@ -189,7 +203,7 @@ const GreetingCard: FC<GreetingCardProps> = ({
 
                 {showSummary && variant !== 'minimal' && (
                     <ul
-                        aria-label="Your day in numbers"
+                        aria-label={t('greeting_card.numbers')}
                         className="m-0 flex list-none flex-wrap justify-end gap-2 p-0"
                     >
                         {chips.map((chip, index) => (

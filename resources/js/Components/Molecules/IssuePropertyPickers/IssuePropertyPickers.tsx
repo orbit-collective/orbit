@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ReactNode, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -13,7 +14,7 @@ import { PriorityDetails, ProjectPriority } from '@/types/Priorities';
 import { AssignableUser } from '@/types/Users';
 import { WorkflowStatus } from '@/types/Workflow';
 import { cn } from '@/utils/cn';
-import { formatWeekdayDate, parseDateKey } from '@/utils/time';
+import { formatWeekdayDate, intlLocale, parseDateKey } from '@/utils/time';
 
 /**
  * Controlled pickers for one issue property each, shared by the quick-add row
@@ -68,6 +69,7 @@ export const TypePicker = ({
     disabled = false,
     revealOnRowHover,
 }: TypePickerProps) => {
+    const { t } = useLaravelReactI18n();
     const options = useMemo(
         (): DropdownOptionItem[] =>
             types.map((type) => ({
@@ -89,15 +91,19 @@ export const TypePicker = ({
     return (
         <Dropdown
             variant="select"
-            title="Issue type"
-            ariaLabel="Issue type"
+            title={t('issue_property_pickers.type')}
+            ariaLabel={t('issue_property_pickers.type')}
             options={options}
             selectedValues={[String(value.id)]}
             onSelect={(id) => {
                 const next = types.find((type) => type.id === Number(id));
                 if (next && next.id !== value.id) onChange(next);
             }}
-            trigger={trigger('Issue type', badge, revealOnRowHover)}
+            trigger={trigger(
+                t('issue_property_pickers.type'),
+                badge,
+                revealOnRowHover,
+            )}
         />
     );
 };
@@ -116,6 +122,7 @@ export const StatusPicker = ({
     disabled = false,
     revealOnRowHover,
 }: StatusPickerProps) => {
+    const { t } = useLaravelReactI18n();
     const options = useMemo(
         (): DropdownOptionItem[] =>
             statuses.map((status) => ({
@@ -137,8 +144,8 @@ export const StatusPicker = ({
     return (
         <Dropdown
             variant="select"
-            title="Status"
-            ariaLabel="Status"
+            title={t('issue_property_pickers.status')}
+            ariaLabel={t('issue_property_pickers.status')}
             options={options}
             selectedValues={[String(value.id)]}
             onSelect={(id) => {
@@ -147,7 +154,11 @@ export const StatusPicker = ({
                 );
                 if (next) onChange(next);
             }}
-            trigger={trigger('Status', badge, revealOnRowHover)}
+            trigger={trigger(
+                t('issue_property_pickers.status'),
+                badge,
+                revealOnRowHover,
+            )}
         />
     );
 };
@@ -168,15 +179,16 @@ export const AssigneePicker = ({
     disabled = false,
     revealOnRowHover,
 }: AssigneePickerProps) => {
+    const { t } = useLaravelReactI18n();
     const options = useMemo(
         (): DropdownOptionItem[] => [
             {
                 value: '',
-                searchLabel: 'Unassigned',
+                searchLabel: t('issue_property_pickers.unassigned'),
                 label: (
                     <span className="flex items-center gap-2 text-(--text-gray-color)">
                         <Icon name="UserX" size={14} />
-                        Unassigned
+                        {t('issue_property_pickers.unassigned')}
                     </span>
                 ),
             },
@@ -193,7 +205,7 @@ export const AssigneePicker = ({
                 ),
             })),
         ],
-        [users],
+        [users, t],
     );
 
     const display = value ? (
@@ -206,7 +218,7 @@ export const AssigneePicker = ({
     ) : (
         <span className="flex items-center gap-1.5 text-(--text-muted-color)">
             <Icon name="UserX" size={13} />
-            Unassigned
+            {t('issue_property_pickers.unassigned')}
         </span>
     );
 
@@ -215,13 +227,17 @@ export const AssigneePicker = ({
     return (
         <Dropdown
             variant="select"
-            title="Assignee"
-            ariaLabel="Assignee"
+            title={t('issue_property_pickers.assignee')}
+            ariaLabel={t('issue_property_pickers.assignee')}
             searchable="auto"
             options={options}
             selectedValues={[selectedId !== null ? String(selectedId) : '']}
             onSelect={(id) => onChange(id ? Number(id) : null)}
-            trigger={trigger('Assignee', display, revealOnRowHover)}
+            trigger={trigger(
+                t('issue_property_pickers.assignee'),
+                display,
+                revealOnRowHover,
+            )}
         />
     );
 };
@@ -240,6 +256,7 @@ export const PriorityPicker = ({
     disabled = false,
     revealOnRowHover,
 }: PriorityPickerProps) => {
+    const { t } = useLaravelReactI18n();
     const options = useMemo(
         (): DropdownOptionItem[] => [
             ...priorities.map((priority) => ({
@@ -254,22 +271,22 @@ export const PriorityPicker = ({
             })),
             {
                 value: '',
-                searchLabel: 'No priority',
+                searchLabel: t('issue_property_pickers.no_priority'),
                 label: (
                     <span className="flex items-center gap-2">
                         <PriorityIcon priority={null} tooltip={false} />
-                        No priority
+                        {t('issue_property_pickers.no_priority')}
                     </span>
                 ),
             },
         ],
-        [priorities],
+        [priorities, t],
     );
 
     const display = (
         <span className="flex items-center gap-1.5 text-(--text-color)">
             <PriorityIcon priority={value} tooltip={false} />
-            {value?.name ?? 'None'}
+            {value?.name ?? t('issue_property_pickers.none')}
         </span>
     );
 
@@ -278,12 +295,16 @@ export const PriorityPicker = ({
     return (
         <Dropdown
             variant="select"
-            title="Priority"
-            ariaLabel="Priority"
+            title={t('issue_property_pickers.priority')}
+            ariaLabel={t('issue_property_pickers.priority')}
             options={options}
             selectedValues={[value?.name ?? '']}
             onSelect={(name) => onChange(name || null)}
-            trigger={trigger('Priority', display, revealOnRowHover)}
+            trigger={trigger(
+                t('issue_property_pickers.priority'),
+                display,
+                revealOnRowHover,
+            )}
         />
     );
 };
@@ -319,12 +340,15 @@ export const DatePicker = ({
     disabled = false,
     revealOnRowHover,
 }: DatePickerProps) => {
+    const { t, currentLocale } = useLaravelReactI18n();
     const [isOpen, setIsOpen] = useState(false);
 
     const text = (
         <>
             <Icon name={value ? 'CalendarDays' : 'CalendarX2'} size={12} />
-            {value ? formatWeekdayDate(value) : 'No date'}
+            {value
+                ? formatWeekdayDate(value, intlLocale(currentLocale()))
+                : t('issue_property_pickers.no_date')}
         </>
     );
 

@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { KeyboardEvent, ReactNode } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { cn } from '@/utils/cn';
@@ -41,6 +42,7 @@ export default function InlineEditRow({
     onSave,
     onCancel,
 }: InlineEditRowProps) {
+    const { t } = useLaravelReactI18n();
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         // A panel opened from the row (the appearance picker) is portaled out
         // of it, but its key events still bubble here: they belong to the
@@ -77,8 +79,8 @@ export default function InlineEditRow({
                 <div className="flex shrink-0 items-center gap-0.5">
                     <button
                         type="button"
-                        title="Cancel"
-                        aria-label="Cancel"
+                        title={t('inline_edit_row.cancel')}
+                        aria-label={t('inline_edit_row.cancel')}
                         onClick={onCancel}
                         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                     >

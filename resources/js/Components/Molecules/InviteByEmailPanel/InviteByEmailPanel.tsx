@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { SyntheticEvent } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Input from '@/Components/Atoms/Input/Input';
@@ -38,21 +39,24 @@ export default function InviteByEmailPanel({
     onToggleRoleId,
     onSubmit,
 }: InviteByEmailPanelProps) {
+    const { t } = useLaravelReactI18n();
     return (
         <SettingsPanel
             id="invite"
-            title="Invite by email"
+            title={t('invite_by_email_panel.title')}
             description={
                 emailEnabled
-                    ? "Send a one-time invite link to a teammate's email address."
-                    : "Email notifications aren't configured yet, so invitations are disabled."
+                    ? t('invite_by_email_panel.description_enabled')
+                    : t('invite_by_email_panel.description_disabled')
             }
             icon="Mail"
         >
             {!emailEnabled ? (
                 <SettingsPanelRow
-                    title="Invitations unavailable"
-                    description="Ask an administrator to configure outgoing email to enable project invitations."
+                    title={t('invite_by_email_panel.unavailable.title')}
+                    description={t(
+                        'invite_by_email_panel.unavailable.description',
+                    )}
                 />
             ) : canInvite ? (
                 <form
@@ -66,7 +70,9 @@ export default function InviteByEmailPanel({
                             onChange={(event) =>
                                 onEmailChange(event.target.value)
                             }
-                            placeholder="teammate@company.com"
+                            placeholder={t(
+                                'invite_by_email_panel.email_placeholder',
+                            )}
                             className="h-9 min-w-[200px] flex-1"
                         />
                         <MemberRoleDropdown
@@ -83,7 +89,7 @@ export default function InviteByEmailPanel({
                             isDisabled={isInviting}
                             className="h-9"
                         >
-                            Invite
+                            {t('invite_by_email_panel.invite')}
                         </Button>
                     </div>
                     {error && (
@@ -94,8 +100,10 @@ export default function InviteByEmailPanel({
                 </form>
             ) : (
                 <SettingsPanelRow
-                    title="You don't have permission to invite"
-                    description="Ask someone who can manage members to invite new teammates."
+                    title={t('invite_by_email_panel.no_permission.title')}
+                    description={t(
+                        'invite_by_email_panel.no_permission.description',
+                    )}
                 />
             )}
         </SettingsPanel>

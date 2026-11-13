@@ -1,4 +1,5 @@
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, {
     KeyboardEvent,
     useEffect,
@@ -22,12 +23,13 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
     initialDayKey,
     headline,
     headlineTrend,
-    emptyText = 'No data for these days.',
+    emptyText,
     collapsed = false,
     onToggleCollapse,
     collapsedSummary,
     className,
 }) => {
+    const { t } = useLaravelReactI18n();
     const bodyId = useId();
     const tabs = useRef<Record<string, HTMLButtonElement | null>>({});
     // Until a day is picked, the card follows the newest one, so a page left
@@ -97,7 +99,7 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
             <Collapse id={bodyId} open={!collapsed}>
                 {days.length === 0 || !selected ? (
                     <p className="py-10 text-center text-sm text-(--text-gray-color)">
-                        {emptyText}
+                        {emptyText ?? t('day_breakdown_card.empty')}
                     </p>
                 ) : (
                     <>
@@ -130,7 +132,9 @@ const DayBreakdownCard: React.FC<DayBreakdownCardProps> = ({
                             >
                                 <div
                                     role="tablist"
-                                    aria-label={`${title} days`}
+                                    aria-label={t('day_breakdown_card.days', {
+                                        title,
+                                    })}
                                     className="mx-auto flex w-max gap-2"
                                 >
                                     {days.map((day, index) => {

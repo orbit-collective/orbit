@@ -6,6 +6,7 @@ import TaskList from '@tiptap/extension-task-list';
 import { Transaction } from '@tiptap/pm/state';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Markdown } from 'tiptap-markdown';
 import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
@@ -19,13 +20,14 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     value,
     onSave,
     onImageUpload,
-    placeholder = 'Add a description...',
+    placeholder,
     disabled = false,
     className,
     users,
     projectId,
     onEditingChange,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [isEditing, setIsEditing] = useState(false);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [pendingUploads, setPendingUploads] = useState(0);
@@ -47,7 +49,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
             }),
             Markdown.configure({ html: false }),
             Placeholder.configure({
-                placeholder,
+                placeholder: placeholder ?? t('editable_markdown.placeholder'),
                 showOnlyWhenEditable: false,
             }),
             TaskList,

@@ -4,6 +4,7 @@ import {
     SuggestionProps,
 } from '@tiptap/suggestion';
 import axios from 'axios';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useRef, useState } from 'react';
 import { IssueSuggestion } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
@@ -41,6 +42,10 @@ interface Options {
  * goes through refs to stay current.
  */
 export function useMentionSuggestions({ users, projectId }: Options) {
+    const { t } = useLaravelReactI18n();
+    // Read through a ref: the suggestion callbacks are created once.
+    const tRef = useRef(t);
+    tRef.current = t;
     const [menu, setMenu] = useState<MentionMenu | null>(null);
     const menuRef = useRef<MentionMenu | null>(null);
     const usersRef = useRef(users ?? []);
@@ -78,10 +83,10 @@ export function useMentionSuggestions({ users, projectId }: Options) {
             },
             emptyLabel:
                 kind === 'user'
-                    ? 'No members found'
+                    ? tRef.current('editable_markdown.members_empty')
                     : props.query === ''
-                      ? 'Type an issue number'
-                      : 'No issues found',
+                      ? tRef.current('editable_markdown.issue_type')
+                      : tRef.current('editable_markdown.issues_empty'),
             select: (index) => {
                 const item = items[index];
 

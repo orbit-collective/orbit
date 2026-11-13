@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { ReactNode, useEffect, useMemo, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -21,8 +22,11 @@ interface FilterOption {
     render: () => ReactNode;
 }
 
+type Translate = (key: string) => string;
+
 interface FilterConfig {
     paramKey: string;
+    /** A translation key; the component translates it when it renders. */
     label: string;
     multiSelect: boolean;
     options: FilterOption[];
@@ -35,21 +39,37 @@ const optionRow = (label: string, dot: ReactNode) => (
     </span>
 );
 
-const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
+const PARAM_KEYS = {
+    status: 'status',
+    workflowStatus: 'workflow_status',
+};
+
+const filterConfig = (
+    t: Translate,
+): Record<FilterDropdownType, FilterConfig> => ({
     labels: {
         paramKey: 'labels',
-        label: 'Labels',
+        label: 'filter_dropdown.labels',
         multiSelect: true,
         options: [],
     },
     status: {
-        paramKey: 'status',
-        label: 'Status',
+        paramKey: PARAM_KEYS.status,
+        label: 'filter_dropdown.status',
         multiSelect: false,
         options: [
-            { value: 'todo', label: 'To Do' },
-            { value: 'in_progress', label: 'In Progress' },
-            { value: 'done', label: 'Done' },
+            {
+                value: 'todo',
+                label: t('filter_dropdown.status_options.todo'),
+            },
+            {
+                value: 'in_progress',
+                label: t('filter_dropdown.status_options.in_progress'),
+            },
+            {
+                value: 'done',
+                label: t('filter_dropdown.status_options.done'),
+            },
         ].map(({ value, label }) => ({
             value,
             label,
@@ -58,25 +78,25 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
         })),
     },
     workflowStatus: {
-        paramKey: 'workflow_status',
-        label: 'Exact status',
+        paramKey: PARAM_KEYS.workflowStatus,
+        label: 'filter_dropdown.workflow_status',
         multiSelect: true,
         options: [],
     },
     priority: {
         paramKey: 'priority',
-        label: 'Priority',
+        label: 'filter_dropdown.priority',
         multiSelect: true,
         options: [],
     },
     assignee: {
         paramKey: 'assignee',
-        label: 'Assignee',
+        label: 'filter_dropdown.assignee',
         multiSelect: true,
         options: [
             {
                 value: 'unassigned',
-                label: 'Unassigned',
+                label: t('filter_dropdown.unassigned'),
                 icon: 'UserX' as const,
             },
         ].map(({ value, label, icon }) => ({
@@ -93,11 +113,14 @@ const FILTER_CONFIG: Record<FilterDropdownType, FilterConfig> = {
                 ),
         })),
     },
-};
+});
 
 /** One option per priority of the project's scale; the value is its id, which the server filters by. */
-const buildPriorityConfig = (priorities: ProjectPriority[]): FilterConfig => ({
-    ...FILTER_CONFIG.priority,
+const buildPriorityConfig = (
+    base: FilterConfig,
+    priorities: ProjectPriority[],
+): FilterConfig => ({
+    ...base,
     options: priorities.map((priority) => ({
         value: String(priority.id),
         label: priority.name,
@@ -110,8 +133,11 @@ const buildPriorityConfig = (priorities: ProjectPriority[]): FilterConfig => ({
     })),
 });
 
-const buildLabelsConfig = (labels: ProjectLabel[]): FilterConfig => ({
-    ...FILTER_CONFIG.labels,
+const buildLabelsConfig = (
+    base: FilterConfig,
+    labels: ProjectLabel[],
+): FilterConfig => ({
+    ...base,
     options: labels.map((label) => ({
         value: String(label.id),
         label: label.name,
@@ -123,8 +149,11 @@ const buildLabelsConfig = (labels: ProjectLabel[]): FilterConfig => ({
  * One option per status name; its value is the ids of every issue type's
  * status with that name, dot-joined, so a single choice selects them all.
  */
-const buildWorkflowStatusConfig = (groups: StatusGroup[]): FilterConfig => ({
-    ...FILTER_CONFIG.workflowStatus,
+const buildWorkflowStatusConfig = (
+    base: FilterConfig,
+    groups: StatusGroup[],
+): FilterConfig => ({
+    ...base,
     options: groups.map((group) => ({
         value: group.ids.join('.'),
         label: group.name,
@@ -139,10 +168,13 @@ const buildWorkflowStatusConfig = (groups: StatusGroup[]): FilterConfig => ({
     })),
 });
 
-const buildAssigneeConfig = (users: AssignableUser[]): FilterConfig => ({
-    ...FILTER_CONFIG.assignee,
+const buildAssigneeConfig = (
+    base: FilterConfig,
+    users: AssignableUser[],
+): FilterConfig => ({
+    ...base,
     options: [
-        ...FILTER_CONFIG.assignee.options,
+        ...base.options,
         ...users.map((user) => ({
             value: String(user.id),
             label: user.name,
@@ -167,6 +199,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     isOpen,
     onOpenChange,
 }) => {
+    const { t } = useLaravelReactI18n();
     const { labels: projectLabels } = useProjectLabels();
     const { priorities } = useProjectPriorities();
 
@@ -185,21 +218,25 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     const mode: FilterDropdownType =
         canShowExact && exact ? 'workflowStatus' : type;
 
+    const filters = useMemo(() => filterConfig(t), [t]);
+
     const config = useMemo(() => {
-        if (mode === 'assignee') return buildAssigneeConfig(users);
-        if (mode === 'labels') return buildLabelsConfig(projectLabels);
-        if (mode === 'priority') return buildPriorityConfig(priorities);
+        const base = filters[mode];
+
+        if (mode === 'assignee') return buildAssigneeConfig(base, users);
+        if (mode === 'labels') return buildLabelsConfig(base, projectLabels);
+        if (mode === 'priority') return buildPriorityConfig(base, priorities);
         if (mode === 'workflowStatus')
-            return buildWorkflowStatusConfig(statusGroups);
-        return FILTER_CONFIG[mode];
-    }, [mode, users, projectLabels, priorities, statusGroups]);
+            return buildWorkflowStatusConfig(base, statusGroups);
+        return base;
+    }, [filters, mode, users, projectLabels, priorities, statusGroups]);
 
     const switchMode = () => {
         // The other mode's selection would keep filtering without being
         // visible, so it is cleared on the way over.
         const nextParams: Record<string, any> = { ...queryParams, page: 1 };
-        delete nextParams[FILTER_CONFIG.status.paramKey];
-        delete nextParams[FILTER_CONFIG.workflowStatus.paramKey];
+        delete nextParams[PARAM_KEYS.status];
+        delete nextParams[PARAM_KEYS.workflowStatus];
         router.get(window.location.pathname, nextParams, {
             preserveState: true,
             replace: true,
@@ -268,8 +305,10 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
     return (
         <Dropdown
             variant={config.multiSelect ? 'multiselect' : 'select'}
-            title={`Filter by ${config.label}`}
-            searchPlaceholder={`Search ${config.label.toLowerCase()}…`}
+            title={t('filter_dropdown.title', { label: t(config.label) })}
+            searchPlaceholder={t('filter_dropdown.search', {
+                label: t(config.label).toLowerCase(),
+            })}
             showCount
             width={256}
             options={options}
@@ -292,7 +331,9 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
                         className="flex w-full cursor-pointer items-center gap-2 border-0 border-t border-(--border-color) bg-transparent px-3 py-2 text-left text-xs font-medium text-(--accent-color) transition-colors hover:bg-(--bg-light-color) focus:outline-hidden focus-visible:bg-(--bg-light-color) focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:ring-inset"
                     >
                         <Icon name="ArrowLeftRight" size={12} />
-                        {exact ? 'Show categories' : 'Show exact statuses'}
+                        {exact
+                            ? t('filter_dropdown.show_categories')
+                            : t('filter_dropdown.show_exact')}
                     </button>
                 ) : undefined
             }
@@ -300,7 +341,7 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
             onOpenChange={onOpenChange}
             trigger={
                 <FilterButton
-                    label={FILTER_CONFIG[type].label}
+                    label={t(filters[type].label)}
                     value={
                         selected.length > 0
                             ? String(selected.length)

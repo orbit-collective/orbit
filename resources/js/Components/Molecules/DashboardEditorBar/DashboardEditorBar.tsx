@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
@@ -39,12 +40,13 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
     onCancel,
     onReset,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [confirmingReset, setConfirmingReset] = useState(false);
 
     return (
         <motion.div
             role="toolbar"
-            aria-label="Dashboard editor"
+            aria-label={t('dashboard_editor_bar.aria_label')}
             // The bar unfolds under the header and folds away again.
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -63,14 +65,15 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                 </motion.span>
                 <div className="min-w-0">
                     <p className="m-0 text-sm font-semibold text-(--text-color)">
-                        <span className="sm:hidden">Editing</span>
+                        <span className="sm:hidden">
+                            {t('dashboard_editor_bar.editing_short')}
+                        </span>
                         <span className="hidden sm:inline">
-                            Editing dashboard
+                            {t('dashboard_editor_bar.editing')}
                         </span>
                     </p>
                     <p className="m-0 hidden text-[11px] text-(--text-gray-color) sm:block">
-                        Drag a header to move a widget, drag its edge or corner
-                        to resize it.
+                        {t('dashboard_editor_bar.hint')}
                     </p>
                 </div>
             </div>
@@ -85,7 +88,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                 {confirmingReset ? (
                     <>
                         <span className="text-xs text-(--text-gray-color)">
-                            Back to the default layout?
+                            {t('dashboard_editor_bar.reset_question')}
                         </span>
                         <button
                             type="button"
@@ -99,7 +102,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                                 FOCUS_RING,
                             )}
                         >
-                            Yes, reset
+                            {t('dashboard_editor_bar.reset_confirm')}
                         </button>
                         <motion.button
                             whileTap={{ scale: 0.95 }}
@@ -107,29 +110,33 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                             onClick={() => setConfirmingReset(false)}
                             className={GHOST_BUTTON}
                         >
-                            Keep
+                            {t('dashboard_editor_bar.keep')}
                         </motion.button>
                     </>
                 ) : (
                     <>
                         <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-(--text-gray-color)">
                             <span className="hidden sm:inline">
-                                Snap to grid
+                                {t('dashboard_editor_bar.snap_to_grid')}
                             </span>
-                            <span className="sm:hidden">Snap</span>
+                            <span className="sm:hidden">
+                                {t('dashboard_editor_bar.snap')}
+                            </span>
                             <ToggleSwitch
-                                label="Snap to grid"
+                                label={t('dashboard_editor_bar.snap_to_grid')}
                                 checked={snap}
                                 onChange={onSnapChange}
                             />
                         </label>
                         <button
                             type="button"
-                            aria-label="Panel"
+                            aria-label={t('dashboard_editor_bar.panel')}
                             aria-pressed={panelOpen}
                             onClick={onTogglePanel}
                             title={
-                                panelOpen ? 'Hide the panel' : 'Show the panel'
+                                panelOpen
+                                    ? t('dashboard_editor_bar.hide_panel')
+                                    : t('dashboard_editor_bar.show_panel')
                             }
                             className={GHOST_BUTTON}
                         >
@@ -141,19 +148,23 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                                 }
                                 size={13}
                             />
-                            <span className="hidden sm:inline">Panel</span>
+                            <span className="hidden sm:inline">
+                                {t('dashboard_editor_bar.panel')}
+                            </span>
                         </button>
                         <div className="mx-1 hidden h-6 w-px bg-(--border-color-strong) sm:block" />
                         <motion.button
                             whileTap={{ scale: 0.95 }}
                             type="button"
-                            aria-label="Reset"
+                            aria-label={t('dashboard_editor_bar.reset')}
                             disabled={saving}
                             onClick={() => setConfirmingReset(true)}
                             className={GHOST_BUTTON}
                         >
                             <Icon name="RotateCcw" size={13} />
-                            <span className="hidden sm:inline">Reset</span>
+                            <span className="hidden sm:inline">
+                                {t('dashboard_editor_bar.reset')}
+                            </span>
                         </motion.button>
                         <motion.button
                             whileTap={{ scale: 0.95 }}
@@ -162,7 +173,7 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                             onClick={onCancel}
                             className={GHOST_BUTTON}
                         >
-                            Cancel
+                            {t('dashboard_editor_bar.cancel')}
                         </motion.button>
                         <motion.button
                             type="button"
@@ -180,7 +191,9 @@ const DashboardEditorBar: FC<DashboardEditorBarProps> = ({
                             )}
                         >
                             <Icon name="Check" size={13} />
-                            {saving ? 'Saving…' : 'Save'}
+                            {saving
+                                ? t('dashboard_editor_bar.saving')
+                                : t('dashboard_editor_bar.save')}
                         </motion.button>
                     </>
                 )}
