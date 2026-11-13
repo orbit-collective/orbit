@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -33,20 +34,20 @@ const chipStyle = (issue: Issue): React.CSSProperties => {
     };
 };
 
-const MONTH_NAMES = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-];
+/** Month name (`long`, nominative) or abbreviation (`short`) in the given locale. */
+const monthName = (locale: string, month: number, style: 'long' | 'short') =>
+    new Intl.DateTimeFormat(locale, { month: style }).format(
+        new Date(2000, month, 1),
+    );
+
+/** The seven weekday abbreviations in the given locale, Sunday first. */
+const weekdayNames = (locale: string) => {
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+    // 2023-01-01 was a Sunday.
+    return Array.from({ length: 7 }, (_, i) =>
+        formatter.format(new Date(2023, 0, 1 + i)),
+    );
+};
 
 const pad = (value: number) => String(value).padStart(2, '0');
 
@@ -63,6 +64,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     issues,
     onRangeChange,
 }) => {
+    const { t, tChoice, currentLocale } = useLaravelReactI18n();
+    const locale = currentLocale();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [viewMode, setViewMode] = useState<ViewMode>('month');
     const [preview, setPreview] = useState<{
@@ -183,7 +186,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         return map;
     }, [issues]);
 
-    const weekDayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekDayLabels = useMemo(() => weekdayNames(locale), [locale]);
 
     // Which way the user is paging, so the title and the grid slide that way.
     const [direction, setDirection] = useState<1 | -1>(1);
@@ -220,7 +223,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
         if (viewMode === 'month') {
             return (
                 <>
-                    {MONTH_NAMES[month]}{' '}
+                    {monthName(locale, month, 'long')}{' '}
                     <span className="font-medium text-(--text-muted-color)">
                         {year}
                     </span>
@@ -230,11 +233,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
         const start = weekViewDays[0];
         const end = weekViewDays[6];
-        const startLabel = `${MONTH_NAMES[start.month].slice(0, 3)} ${start.day}`;
+        const startLabel = `${monthName(locale, start.month, 'short')} ${start.day}`;
         const endLabel =
             start.month === end.month
                 ? `${end.day}`
-                : `${MONTH_NAMES[end.month].slice(0, 3)} ${end.day}`;
+                : `${monthName(locale, end.month, 'short')} ${end.day}`;
 
         return (
             <>
@@ -244,7 +247,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                 </span>
             </>
         );
-    }, [viewMode, month, year, weekViewDays]);
+    }, [viewMode, month, year, weekViewDays, locale]);
 
     return (
         <div className="flex min-h-[600px] min-w-0 flex-1 flex-col p-6 xl:h-full xl:min-h-0">
@@ -279,7 +282,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                             onClick={goToToday}
                             className="px-3 py-1 text-xs font-semibold text-(--text-gray-color) transition-all hover:text-(--text-color)"
                         >
-                            Today
+                            {t('calendar_view.today')}
                         </button>
                         <button
                             type="button"
@@ -295,15 +298,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                     <div className="flex items-center gap-3 text-[11px] font-medium text-(--text-muted-color)">
                         <span className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-(--error-color)" />
-                            High
+                            {t('calendar_view.priority_high')}
                         </span>
                         <span className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-(--warning-color)" />
-                            Medium
+                            {t('calendar_view.priority_medium')}
                         </span>
                         <span className="flex items-center gap-1.5">
                             <span className="h-2 w-2 rounded-full bg-(--success-color)" />
-                            Low
+                            {t('calendar_view.priority_low')}
                         </span>
                     </div>
 
@@ -329,7 +332,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                         className="absolute inset-0 rounded-lg bg-(--accent-color)"
                                     />
                                 )}
-                                <span className="relative">{mode}</span>
+                                <span className="relative">
+                                    {t(`calendar_view.mode.${mode}`)}
+                                </span>
                             </button>
                         ))}
                     </div>
@@ -347,7 +352,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                         </div>
                     ))}
                     <div className="py-3 text-center text-[10px] font-bold tracking-widest text-(--text-muted-color) uppercase sm:hidden">
-                        Schedule
+                        {t('calendar_view.schedule')}
                     </div>
                 </div>
 
@@ -408,10 +413,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                     </div>
                                     {dayIssues.length > 0 && (
                                         <span className="hidden text-[10px] font-bold text-(--text-muted-color) 2xl:block">
-                                            {dayIssues.length}{' '}
-                                            {dayIssues.length === 1
-                                                ? 'item'
-                                                : 'items'}
+                                            {tChoice(
+                                                'calendar_view.items',
+                                                dayIssues.length,
+                                            )}
                                         </span>
                                     )}
                                 </div>
@@ -452,7 +457,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                     ))}
                                     {hiddenCount > 0 && (
                                         <span className="px-2 text-[10px] font-semibold text-(--text-muted-color)">
-                                            +{hiddenCount} more
+                                            {t('calendar_view.more', {
+                                                count: hiddenCount,
+                                            })}
                                         </span>
                                     )}
                                 </div>

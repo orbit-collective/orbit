@@ -8,6 +8,7 @@ import {
     useReducedMotion,
     useTransform,
 } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Keybind from '@/Components/Atoms/Keybind/Keybind';
@@ -16,25 +17,26 @@ import { ErrorScreenProps } from '@/types/Components';
 import { DURATION, EASE, riseIn, staggerParent } from '@/utils/motion';
 import { isMacPlatform } from '@/utils/shortcutKeys';
 
+/** The `title`/`text` of each status are translation keys: pass them through `t()`. */
 export const ERROR_COPY: Record<
     ErrorScreenProps['status'],
     { title: string; text: string }
 > = {
     403: {
-        title: 'Access denied',
-        text: 'You do not have permission to open this page. Ask a project owner or admin for access.',
+        title: 'error_screen.copy.403.title',
+        text: 'error_screen.copy.403.text',
     },
     404: {
-        title: 'Page not found',
-        text: 'The link may be broken or the page may have been moved.',
+        title: 'error_screen.copy.404.title',
+        text: 'error_screen.copy.404.text',
     },
     500: {
-        title: 'Something went wrong',
-        text: 'An unexpected error happened on our side. Try again in a moment.',
+        title: 'error_screen.copy.500.title',
+        text: 'error_screen.copy.500.text',
     },
     503: {
-        title: 'Back soon',
-        text: 'Orbit is down for maintenance. Try again in a moment.',
+        title: 'error_screen.copy.503.title',
+        text: 'error_screen.copy.503.text',
     },
 };
 
@@ -92,12 +94,14 @@ function useViewport() {
  * command palette.
  */
 export default function ErrorScreen({ status, path }: ErrorScreenProps) {
+    const { t } = useLaravelReactI18n();
     const reduceMotion = useReducedMotion();
     const { width } = useViewport();
     // The shared props can be missing when the error came before the app shell.
     const props: Partial<PageProps> = usePage<PageProps>().props;
     const signedIn = Boolean(props.auth?.user);
-    const { title, text } = ERROR_COPY[status];
+    const title = t(ERROR_COPY[status].title);
+    const text = t(ERROR_COPY[status].text);
     const isFailure = status >= 500;
 
     // A tab opened straight on a bad link has nothing to go back to.
@@ -257,7 +261,7 @@ export default function ErrorScreen({ status, path }: ErrorScreenProps) {
                     </div>
 
                     <span role="status" className="sr-only">
-                        {loading ? 'Loading' : ''}
+                        {loading ? t('error_screen.loading') : ''}
                     </span>
 
                     <div className="flex flex-col items-center gap-6 text-center">
@@ -293,7 +297,9 @@ export default function ErrorScreen({ status, path }: ErrorScreenProps) {
                                 aria-disabled={loading}
                                 className={`rounded-xs bg-(--accent-color) px-3 py-1.5 text-sm font-medium text-(--text-color) transition-all duration-150 hover:bg-(--accent-light-color) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-light-color) ${loading ? 'pointer-events-none opacity-60' : ''}`}
                             >
-                                {signedIn ? 'Back to dashboard' : 'Log in'}
+                                {signedIn
+                                    ? t('error_screen.back_to_dashboard')
+                                    : t('error_screen.log_in')}
                             </Link>
                             {isFailure ? (
                                 <button
@@ -302,7 +308,9 @@ export default function ErrorScreen({ status, path }: ErrorScreenProps) {
                                     disabled={loading}
                                     className={`${SECONDARY_BUTTON} disabled:cursor-default disabled:opacity-60`}
                                 >
-                                    {loading ? 'Trying again…' : 'Try again'}
+                                    {loading
+                                        ? t('error_screen.trying_again')
+                                        : t('error_screen.try_again')}
                                 </button>
                             ) : (
                                 canGoBack && (
@@ -311,7 +319,7 @@ export default function ErrorScreen({ status, path }: ErrorScreenProps) {
                                         onClick={() => window.history.back()}
                                         className={SECONDARY_BUTTON}
                                     >
-                                        Go back
+                                        {t('error_screen.go_back')}
                                     </button>
                                 )
                             )}
@@ -322,18 +330,20 @@ export default function ErrorScreen({ status, path }: ErrorScreenProps) {
                                 variants={riseIn}
                                 className="flex items-center gap-2 text-xs text-(--text-muted-color)"
                             >
-                                Looking for something? Press
+                                {t('error_screen.search_hint_before')}
                                 <span className="flex items-center gap-1">
                                     {paletteKeys.map((key) => (
                                         <Keybind
                                             key={key}
                                             keybind={key}
                                             tooltip={false}
-                                            tooltipText="Search"
+                                            tooltipText={t(
+                                                'error_screen.search',
+                                            )}
                                         />
                                     ))}
                                 </span>
-                                to search.
+                                {t('error_screen.search_hint_after')}
                             </motion.p>
                         )}
                     </div>

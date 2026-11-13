@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import BulkActionBar from '@/Components/Molecules/BulkActionBar/BulkActionBar';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
@@ -41,6 +42,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     projectRole = null,
     nextIssueId = null,
 }) => {
+    const { t, tChoice } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const tableRef = useRef<HTMLTableElement>(null);
 
@@ -162,22 +164,22 @@ export const IssueTable: React.FC<IssueTableProps> = ({
     const handleColumnToggle = (columnValue: string) => {
         if (columnValue === 'reset_sizes') {
             resetWidths();
-            addAlert('Column sizes reset', 'information');
+            addAlert(t('issue_table.column_sizes_reset'), 'information');
             return;
         }
         if (columnValue === 'row_compact') {
             updateRowHeight(32);
-            addAlert('Row height: Compact', 'information');
+            addAlert(t('issue_table.row_height_compact'), 'information');
             return;
         }
         if (columnValue === 'row_comfortable') {
             updateRowHeight(44);
-            addAlert('Row height: Comfortable', 'information');
+            addAlert(t('issue_table.row_height_comfortable'), 'information');
             return;
         }
         if (columnValue === 'row_spacious') {
             updateRowHeight(64);
-            addAlert('Row height: Spacious', 'information');
+            addAlert(t('issue_table.row_height_spacious'), 'information');
             return;
         }
 
@@ -195,7 +197,10 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        addAlert('Table columns updated', 'information');
+                        addAlert(
+                            t('issue_table.columns_updated'),
+                            'information',
+                        );
                     },
                 },
             );
@@ -224,7 +229,14 @@ export const IssueTable: React.FC<IssueTableProps> = ({
         });
 
         addAlert(
-            `Sorting by ${column} ${nextDirection === 'AZ' ? 'ascending' : 'descending'}`,
+            t('issue_table.sorting_by', {
+                column: t(`issue_table.sort_columns.${column}`),
+                direction: t(
+                    nextDirection === 'AZ'
+                        ? 'issue_table.ascending'
+                        : 'issue_table.descending',
+                ),
+            }),
             'information',
         );
     };
@@ -256,10 +268,10 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             onSuccess: () => {
                 const count = selectedIds.length;
                 setSelectedIds([]);
-                addAlert(`Successfully removed ${count} items`, 'success');
+                addAlert(tChoice('issue_table.removed', count), 'success');
             },
             onError: () => {
-                addAlert('An error occurred while deleting', 'error');
+                addAlert(t('issue_table.delete_failed'), 'error');
             },
             onFinish: () => {
                 setIsDeleting(false);
@@ -355,7 +367,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                     onError: (errors) =>
                         addAlert(
                             Object.values(errors)[0] ??
-                                'Could not create the issue',
+                                t('issue_table.create_failed'),
                             'error',
                         ),
                     onSuccess: () => {
@@ -376,7 +388,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
             preserveState: true,
             onError: (errors) =>
                 addAlert(
-                    Object.values(errors)[0] ?? 'Could not update the issue',
+                    Object.values(errors)[0] ?? t('issue_table.update_failed'),
                     'error',
                 ),
         });
@@ -394,7 +406,7 @@ export const IssueTable: React.FC<IssueTableProps> = ({
 
     const headers: HeaderConfig[] = ISSUE_TABLE_COLUMNS.map(
         (column): HeaderConfig => ({
-            label: column.label,
+            label: t(`issue_table.columns.${column.value}`),
             value: column.value,
         }),
     ).filter((h) => enabledColumns[h.value]);
@@ -516,7 +528,9 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                                             nextIssueId
                                                         }
                                                         indent={depth + 1}
-                                                        label="Add sub-issue"
+                                                        label={t(
+                                                            'issue_table.add_sub_issue',
+                                                        )}
                                                         isSubmitting={
                                                             isCreatingIssue
                                                         }
@@ -546,10 +560,14 @@ export const IssueTable: React.FC<IssueTableProps> = ({
                                         className="p-0"
                                     >
                                         <EmptyStateCard
-                                            title="All done!"
-                                            description="No issues found in this view. Everything is completed or no tasks have been assigned yet."
+                                            title={t('issue_table.empty.title')}
+                                            description={t(
+                                                'issue_table.empty.description',
+                                            )}
                                             iconName="FolderPlus"
-                                            actionLabel="Create Issue"
+                                            actionLabel={t(
+                                                'issue_table.empty.action',
+                                            )}
                                             actionCommand="issue.create"
                                         />
                                     </td>

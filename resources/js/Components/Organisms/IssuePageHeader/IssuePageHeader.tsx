@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -17,6 +18,8 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
     ancestors = [],
     presence,
 }) => {
+    const { t } = useLaravelReactI18n();
+
     return (
         <header className="flex items-center justify-between gap-3 border-b border-(--border-color) px-6 py-3">
             <motion.div
@@ -29,7 +32,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                     isLink
                     link={route('projects.show', project.id)}
                     iconName="ArrowLeft"
-                    ariaLabel="Back to project"
+                    ariaLabel={t('issue_page_header.back_to_project')}
                 />
                 <Link
                     href={route('projects.show', project.id)}
@@ -39,7 +42,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                 </Link>
                 <Separator />
                 <span className="shrink-0 text-(--text-gray-color)">
-                    Issues
+                    {t('issue_page_header.issues')}
                 </span>
 
                 {ancestors.map((ancestor) => (
@@ -88,7 +91,7 @@ const IssuePageHeader: React.FC<IssuePageHeaderProps> = ({
                 {presence}
                 <IconButton
                     iconName="Link"
-                    ariaLabel="Copy issue link"
+                    ariaLabel={t('issue_page_header.copy_link')}
                     onClick={() =>
                         navigator.clipboard.writeText(window.location.href)
                     }

@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -12,6 +13,7 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({
     issueTypes = [],
     compact = false,
 }) => {
+    const { t } = useLaravelReactI18n();
     const groups = useMemo(() => groupActivityLogs(logs), [logs]);
 
     if (groups.length === 0) {
@@ -23,7 +25,7 @@ const ActivityLogs: React.FC<ActivityLogsProps> = ({
                     className="text-(--text-muted-color)"
                 />
                 <p className="text-xs font-medium text-(--text-muted-color)">
-                    No activity yet
+                    {t('activity_logs.empty')}
                 </p>
             </div>
         );

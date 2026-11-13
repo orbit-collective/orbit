@@ -10,6 +10,7 @@ import {
     useSensors,
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useState } from 'react';
 import BoardColumn from '@/Components/Molecules/BoardColumn/BoardColumn';
 import { BoardCardOverlay } from '@/Components/Organisms/BoardCard/BoardCard';
@@ -25,7 +26,6 @@ import { Issue } from '@/types/Issues';
 import { PriorityDetails } from '@/types/Priorities';
 import { cn } from '@/utils/cn';
 import { resolvePriorityIcon } from '@/utils/priorityIcons';
-import { formatStatusLabel } from '@/utils/text';
 import {
     getReachableStatuses,
     isIssueDone,
@@ -48,6 +48,7 @@ const priorityColumnId = (priorityId: number | null | undefined) =>
  */
 const buildPriorityColumns = (
     priorities: PriorityDetails[],
+    t: Translate,
 ): BoardColumnMeta[] => [
     ...priorities.map((priority): BoardColumnMeta => ({
         id: priorityColumnId(priority.id),
@@ -58,43 +59,50 @@ const buildPriorityColumns = (
     })),
     {
         id: NO_PRIORITY_COLUMN_ID,
-        label: 'No priority',
-        hint: 'Not prioritised yet',
+        label: t('issue_board.no_priority.label'),
+        hint: t('issue_board.no_priority.hint'),
         accent: '#757575',
         icon: 'CircleDashed',
     },
 ];
 
+type Translate = (
+    key: string,
+    replacements?: Record<string, string | number>,
+) => string;
+
+/** `label`/`hint` are translation keys, resolved when the columns are built. */
 const STATUS_COLUMNS: BoardColumnMeta[] = [
     {
         id: 'todo',
-        label: 'To Do',
-        hint: 'Not started yet',
+        label: 'issue_board.status_columns.todo.label',
+        hint: 'issue_board.status_columns.todo.hint',
         accent: 'var(--info-color)',
         icon: 'GitPullRequest',
     },
     {
         id: 'in_progress',
-        label: 'In Progress',
-        hint: 'Being worked on',
+        label: 'issue_board.status_columns.in_progress.label',
+        hint: 'issue_board.status_columns.in_progress.hint',
         accent: 'var(--accent-color)',
         icon: 'CircleDashed',
     },
     {
         id: 'done',
-        label: 'Done',
-        hint: 'Completed',
+        label: 'issue_board.status_columns.done.label',
+        hint: 'issue_board.status_columns.done.hint',
         accent: 'var(--pending-color)',
         icon: 'CircleCheck',
     },
 ];
 
 const GROUP_BY_OPTIONS: { value: BoardGroupBy; label: string }[] = [
-    { value: 'priority', label: 'Priority' },
-    { value: 'status', label: 'Status' },
+    { value: 'priority', label: 'issue_board.group_by.priority' },
+    { value: 'status', label: 'issue_board.group_by.status' },
 ];
 
 function IssueBoard({ issues }: IssueBoardProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [boardIssues, setBoardIssues] = useState<Issue[]>(issues);
     const [draggingIssue, setDraggingIssue] = useState<Issue | null>(null);
@@ -140,7 +148,13 @@ function IssueBoard({ issues }: IssueBoardProps) {
               ].sort((a, b) => a.position - b.position);
 
     const columns =
-        groupBy === 'priority' ? buildPriorityColumns(scale) : STATUS_COLUMNS;
+        groupBy === 'priority'
+            ? buildPriorityColumns(scale, t)
+            : STATUS_COLUMNS.map((column) => ({
+                  ...column,
+                  label: t(column.label),
+                  hint: t(column.hint),
+              }));
 
     const groupIssues = (issues: Issue[]) => {
         const board: Record<string, Issue[]> = {};
@@ -196,7 +210,12 @@ function IssueBoard({ issues }: IssueBoardProps) {
                         i.id === issue.id ? { ...i, ...previous } : i,
                     ),
                 );
-                addAlert(`Failed to update issue ${label}`, 'error');
+                addAlert(
+                    t('issue_board.update_failed', {
+                        field: t(`issue_board.fields.${label}`),
+                    }),
+                    'error',
+                );
             },
         });
     };
@@ -256,7 +275,9 @@ function IssueBoard({ issues }: IssueBoardProps) {
 
         if (!target) {
             addAlert(
-                `This issue type has no reachable ${formatStatusLabel(targetValue)} status`,
+                t('issue_board.no_reachable_status', {
+                    status: t(`issue_board.categories.${targetValue}`),
+                }),
                 'error',
             );
             return;
@@ -296,7 +317,7 @@ function IssueBoard({ issues }: IssueBoardProps) {
                                         : 'text-(--text-muted-color) hover:text-(--text-gray-color)',
                                 )}
                             >
-                                {option.label}
+                                {t(option.label)}
                             </button>
                         ))}
                     </div>
