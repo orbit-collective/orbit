@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { SyntheticEvent, useEffect } from 'react';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import Input from '@/Components/Atoms/Input/Input';
@@ -14,6 +15,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
     isOpen,
     onClose,
 }) => {
+    const { t } = useLaravelReactI18n();
     const { data, setData, post, processing, reset, errors } = useForm({
         name: '',
         slug: '',
@@ -43,11 +45,10 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                 <div className="flex items-start justify-between border-b border-(--bg-light-color) p-6">
                     <div className="flex-1">
                         <h2 className="text-xl font-semibold text-(--text-color)">
-                            Create New Project
+                            {t('new_project_modal.title')}
                         </h2>
                         <p className="mt-1 text-sm text-(--text-gray-color)">
-                            Set up a new project to organize your work and
-                            collaborate with your team
+                            {t('new_project_modal.subtitle')}
                         </p>
                     </div>
                     <IconButton iconName="X" onClick={onClose} iconSize={20} />
@@ -63,7 +64,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                 className="flex flex-col gap-1.5"
                             >
                                 <label className="text-sm font-medium text-(--text-color)">
-                                    Project name
+                                    {t('new_project_modal.name.label')}
                                     <span className="text-(--error-color)">
                                         {' '}
                                         *
@@ -74,7 +75,9 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     onChange={(e) =>
                                         setData('name', e.target.value)
                                     }
-                                    placeholder="Enter project name"
+                                    placeholder={t(
+                                        'new_project_modal.name.placeholder',
+                                    )}
                                     variant="modal"
                                 />
                                 {errors.name && (
@@ -88,7 +91,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                 className="flex flex-col gap-1.5"
                             >
                                 <label className="text-sm font-medium text-(--text-color)">
-                                    Slug
+                                    {t('new_project_modal.slug.label')}
                                     <span className="text-(--error-color)">
                                         {' '}
                                         *
@@ -99,7 +102,9 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     onChange={(e) =>
                                         setData('slug', e.target.value)
                                     }
-                                    placeholder="e.g. MOB"
+                                    placeholder={t(
+                                        'new_project_modal.slug.placeholder',
+                                    )}
                                     variant="modal"
                                 />
                                 {errors.slug && (
@@ -108,7 +113,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                     </span>
                                 )}
                                 <p className="text-xs text-(--text-gray-color)">
-                                    Unique key to identify your project
+                                    {t('new_project_modal.slug.hint')}
                                 </p>
                             </div>
                             <div
@@ -116,14 +121,16 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                                 className="flex flex-col gap-1.5"
                             >
                                 <label className="text-sm font-medium text-(--text-color)">
-                                    Description
+                                    {t('new_project_modal.description.label')}
                                 </label>
                                 <TextArea
                                     value={data.description}
                                     onChange={(e) =>
                                         setData('description', e.target.value)
                                     }
-                                    placeholder="Describe your project..."
+                                    placeholder={t(
+                                        'new_project_modal.description.placeholder',
+                                    )}
                                     variant="modal"
                                 />
                                 {errors.description && (
@@ -134,7 +141,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                             </div>
                         </div>
                         <div className="flex flex-col gap-4">
-                            <SidebarField label="Color">
+                            <SidebarField label={t('new_project_modal.color')}>
                                 <div
                                     data-tour="project-color"
                                     className="flex flex-wrap gap-3"
@@ -175,7 +182,7 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                             onClick={onClose}
                             disabled={processing}
                         >
-                            Cancel
+                            {t('new_project_modal.cancel')}
                         </button>
                         <button
                             type="submit"
@@ -183,7 +190,9 @@ const NewProjectModal: React.FC<NewProjectModalProps> = ({
                             disabled={processing}
                             className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-(--accent-color) px-6 py-2 text-sm font-medium text-(--text-color) transition-all duration-150 ease-in-out hover:bg-(--accent-light-color) disabled:opacity-50"
                         >
-                            {processing ? 'Creating...' : 'Create project'}
+                            {processing
+                                ? t('new_project_modal.creating')
+                                : t('new_project_modal.submit')}
                         </button>
                     </div>
                 </form>

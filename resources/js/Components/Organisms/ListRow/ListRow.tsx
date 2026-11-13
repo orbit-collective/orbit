@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
@@ -26,11 +27,14 @@ import { useRefreshEpoch } from '@/utils/refreshEpoch';
 import { formatTimeAgo } from '@/utils/time';
 import { getReachableStatuses } from '@/utils/workflow';
 
-const rowMenuOptions = (removeDisabled: boolean): DropdownOptionItem[] => [
-    { value: 'open', label: 'Open issue', icon: 'Maximize2' },
+const rowMenuOptions = (
+    removeDisabled: boolean,
+    t: (key: string) => string,
+): DropdownOptionItem[] => [
+    { value: 'open', label: t('list_row.open_issue'), icon: 'Maximize2' },
     {
         value: 'remove',
-        label: 'Remove',
+        label: t('list_row.remove'),
         icon: 'Trash',
         disabled: removeDisabled,
     },
@@ -75,6 +79,7 @@ export const ListRow = ({
     editing,
     index = 0,
 }: ListRowProps) => {
+    const { t } = useLaravelReactI18n();
     // A refresh remounts the row so it rises in again.
     const epoch = useRefreshEpoch();
     const { priorities } = useProjectPriorities();
@@ -218,8 +223,8 @@ export const ListRow = ({
                                     type="button"
                                     aria-label={
                                         isCollapsed
-                                            ? 'Expand sub-issues'
-                                            : 'Collapse sub-issues'
+                                            ? t('list_row.expand_subissues')
+                                            : t('list_row.collapse_subissues')
                                     }
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -244,7 +249,7 @@ export const ListRow = ({
                                     ref={titleInputRef}
                                     value={titleDraft}
                                     maxLength={255}
-                                    aria-label="Issue title"
+                                    aria-label={t('list_row.issue_title')}
                                     onChange={(e) =>
                                         setTitleDraft(e.target.value)
                                     }
@@ -277,7 +282,9 @@ export const ListRow = ({
                                     {can?.update && (
                                         <button
                                             type="button"
-                                            aria-label="Edit title"
+                                            aria-label={t(
+                                                'list_row.edit_title',
+                                            )}
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 startTitleEdit();
@@ -350,7 +357,10 @@ export const ListRow = ({
                         ) : (
                             <UserBadge
                                 avatarSrc={issue.assignee?.avatar}
-                                name={issue.assignee?.name ?? 'Unassigned'}
+                                name={
+                                    issue.assignee?.name ??
+                                    t('list_row.unassigned')
+                                }
                                 size="sm"
                             />
                         )}
@@ -375,7 +385,7 @@ export const ListRow = ({
                                     priority={issue.priorityDetails}
                                 />
                                 <span className="truncate text-(--text-color) capitalize">
-                                    {issue.priority ?? 'None'}
+                                    {issue.priority ?? t('list_row.none')}
                                 </span>
                             </div>
                         )}
@@ -412,7 +422,9 @@ export const ListRow = ({
                     >
                         <div className={'flex items-center gap-1'}>
                             <Icon name="Clock" size={12} />
-                            {formatTimeAgo(issue.updated_at)} ago
+                            {t('list_row.ago', {
+                                time: formatTimeAgo(issue.updated_at, t),
+                            })}
                         </div>
                     </td>
                 )}
@@ -426,7 +438,7 @@ export const ListRow = ({
                     >
                         <Editable enabled={!!can?.update}>
                             <DatePicker
-                                label="Start date"
+                                label={t('list_row.start_date')}
                                 value={issue.start_date}
                                 disabled={!can?.update}
                                 revealOnRowHover
@@ -454,7 +466,7 @@ export const ListRow = ({
                     >
                         <Editable enabled={!!can?.update}>
                             <DatePicker
-                                label="End date"
+                                label={t('list_row.end_date')}
                                 value={issue.end_date}
                                 minDate={issue.start_date}
                                 disabled={!can?.update}
@@ -471,10 +483,10 @@ export const ListRow = ({
                 >
                     <Dropdown
                         variant="menu"
-                        ariaLabel="Issue actions"
+                        ariaLabel={t('list_row.issue_actions')}
                         align="end"
                         width={192}
-                        options={rowMenuOptions(!onRemove)}
+                        options={rowMenuOptions(!onRemove, t)}
                         onSelect={handleMenuSelect}
                         open={isMenuOpen}
                         onOpenChange={handleMenuOpenChange}
@@ -482,7 +494,7 @@ export const ListRow = ({
                         trigger={
                             <IconButton
                                 iconName="Ellipsis"
-                                ariaLabel="Issue actions"
+                                ariaLabel={t('list_row.issue_actions')}
                                 className={cn(
                                     'rounded-sm p-1 text-(--text-muted-color) opacity-0 hover:bg-(--bg-light-color-hover) hover:text-(--text-color) group-hover/row:opacity-100',
                                     isMenuOpen && 'opacity-100',

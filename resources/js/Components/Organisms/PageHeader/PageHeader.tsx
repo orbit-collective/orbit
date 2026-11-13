@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import NotificationsPopup from '@/Components/Organisms/NotificationsPopup/NotificationsPopup';
@@ -15,7 +16,7 @@ import {
     OpenNotificationsOptions,
 } from '@/utils/notificationsPopupEvent';
 import { bumpRefreshEpoch } from '@/utils/refreshEpoch';
-import { formattedDate } from '@/utils/time';
+import { formattedDate, intlLocale } from '@/utils/time';
 
 const tabVariants = cva(
     'flex cursor-pointer items-center justify-center gap-1 py-2 text-sm transition-all duration-100 ease-in-out hover:text-(--text-color)',
@@ -39,6 +40,7 @@ function PageHeader({
     tabs,
     children,
 }: PageHeaderProps) {
+    const { t, currentLocale } = useLaravelReactI18n();
     const [showNotificationsPopup, setShowNotificationsPopup] = useState(false);
     const [notificationsOptions, setNotificationsOptions] =
         useState<OpenNotificationsOptions>({});
@@ -115,7 +117,7 @@ function PageHeader({
                         </h1>
                         {showDate && (
                             <span className="truncate text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
-                                {formattedDate()}
+                                {formattedDate(intlLocale(currentLocale()))}
                             </span>
                         )}
                     </div>
@@ -124,7 +126,7 @@ function PageHeader({
                 <div className="scrollbar-hide flex shrink-0 items-center gap-2 overflow-x-auto">
                     <button
                         onClick={handleRefresh}
-                        title="Refresh"
+                        title={t('page_header.refresh')}
                         className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-solid border-(--bg-light-color) bg-transparent px-2.5 py-1.5 text-xs font-semibold text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color) sm:px-3"
                     >
                         <Icon
@@ -132,7 +134,9 @@ function PageHeader({
                             size={13}
                             className={isRefreshing ? 'animate-spin' : ''}
                         />
-                        <span className="hidden sm:inline">Refresh</span>
+                        <span className="hidden sm:inline">
+                            {t('page_header.refresh')}
+                        </span>
                     </button>
                     {primaryAction && (
                         <button
@@ -159,8 +163,8 @@ function PageHeader({
                     <button
                         type="button"
                         onClick={requestOpenCommandPalette}
-                        aria-label="Open command palette"
-                        title="Open command palette"
+                        aria-label={t('page_header.open_command_palette')}
+                        title={t('page_header.open_command_palette')}
                         className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-(--bg-light-color)"
                     >
                         <Icon

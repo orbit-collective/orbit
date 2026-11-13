@@ -78,6 +78,7 @@ describe('ModalOrg Component', () => {
             <ModalOrg
                 modal={buildModal({
                     title: 'Keyboard Shortcuts',
+                    bare: true,
                     description: 'Should not appear',
                     children: <p>Shortcut list</p>,
                 })}
@@ -106,6 +107,7 @@ describe('ModalOrg Component', () => {
             <ModalOrg
                 modal={buildModal({
                     title: 'Keyboard Shortcuts',
+                    bare: true,
                     children: <p>Shortcut list</p>,
                 })}
                 onClose={() => {}}
