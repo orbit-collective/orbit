@@ -456,7 +456,10 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                         ) =>
                                             catalogText(
                                                 t,
-                                                `widgets.${selected.type}.options.${option.key}.values.${value}`,
+                                                // Colors are the same words in every widget.
+                                                option.kind === 'color'
+                                                    ? `colors.${value}`
+                                                    : `widgets.${selected.type}.options.${option.key}.values.${value}`,
                                                 option.labels?.[
                                                     String(value)
                                                 ] ??

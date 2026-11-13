@@ -40,9 +40,6 @@ return [
                 ],
                 'color' => [
                     'label' => 'Color',
-                    'values' => [
-                        'auto' => 'Automatic',
-                    ],
                 ],
                 'icon' => [
                     'label' => 'Icon',
@@ -452,6 +449,14 @@ return [
                 ],
             ],
         ],
+    ],
+    'colors' => [
+        'auto' => 'Automatic',
+        'accent' => 'Accent',
+        'success' => 'Success',
+        'warning' => 'Warning',
+        'error' => 'Error',
+        'info' => 'Info',
     ],
     'variants' => [
         'default' => 'Default',
