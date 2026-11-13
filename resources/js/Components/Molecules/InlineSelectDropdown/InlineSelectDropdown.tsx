@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { useMemo } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -20,6 +21,7 @@ export default function InlineSelectDropdown({
     disabled = false,
     subtle = false,
 }: InlineSelectDropdownProps) {
+    const { t } = useLaravelReactI18n();
     const selectedOption = useMemo(
         () => options.find((option) => option.value === value) ?? null,
         [options, value],
@@ -41,7 +43,9 @@ export default function InlineSelectDropdown({
             variant="select"
             title={label}
             ariaLabel={label}
-            searchPlaceholder={`Search ${label.toLowerCase()}…`}
+            searchPlaceholder={t('inline_select_dropdown.search', {
+                label: label.toLowerCase(),
+            })}
             options={items}
             selectedValues={value ? [value] : []}
             // Picking the current value again clears it.

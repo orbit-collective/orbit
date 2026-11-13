@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import LabelBadge from '@/Components/Atoms/LabelBadge/LabelBadge';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
@@ -46,6 +47,7 @@ const LabelList: React.FC<LabelListProps> = ({
     className,
     maxDisplay = 2,
 }) => {
+    const { t } = useLaravelReactI18n();
     const isAuto = maxDisplay === 'auto';
     const containerRef = useRef<HTMLDivElement>(null);
     const measureRef = useRef<HTMLDivElement>(null);
@@ -152,7 +154,7 @@ const LabelList: React.FC<LabelListProps> = ({
             {remainingLabels.length > 0 && (
                 <Dropdown
                     variant="panel"
-                    ariaLabel="More labels"
+                    ariaLabel={t('label_list.more')}
                     align="end"
                     width={224}
                     trigger={
@@ -171,7 +173,7 @@ const LabelList: React.FC<LabelListProps> = ({
                     <div className="flex min-h-0 flex-col gap-2 p-3">
                         <div className="flex items-center justify-between">
                             <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                                More Labels
+                                {t('label_list.more_title')}
                             </p>
                             <span className="text-[10px] text-(--text-muted-color)">
                                 {remainingLabels.length}

@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { FC } from 'react';
 import DueChip from '@/Components/Atoms/DueChip/DueChip';
@@ -9,6 +10,7 @@ import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
 import { dueInfo } from '@/utils/dueDate';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
+import { intlLocale } from '@/utils/time';
 
 export interface DashboardIssueRowShow {
     type: boolean;
@@ -46,6 +48,7 @@ const DashboardIssueRow: FC<DashboardIssueRowProps> = ({
     narrow = false,
     now,
 }) => {
+    const { t, currentLocale } = useLaravelReactI18n();
     const parts = { ...ALL, ...show };
     const isCard = density === 'card';
     const theme = issue.projectColor
@@ -61,9 +64,19 @@ const DashboardIssueRow: FC<DashboardIssueRowProps> = ({
 
     const label = [
         `#${issue.number} ${issue.title}`,
-        parts.project && issue.projectName ? `in ${issue.projectName}` : null,
-        hasPriority ? `${issue.priority!.name} priority` : null,
-        dueDate ? dueInfo(dueDate, now).spoken : null,
+        parts.project && issue.projectName
+            ? t('dashboard_issue_row.in_project', {
+                  project: issue.projectName,
+              })
+            : null,
+        hasPriority
+            ? t('dashboard_issue_row.priority', {
+                  name: issue.priority!.name,
+              })
+            : null,
+        dueDate
+            ? dueInfo(dueDate, now, t, intlLocale(currentLocale())).spoken
+            : null,
     ]
         .filter(Boolean)
         .join(', ');

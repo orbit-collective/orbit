@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
@@ -21,9 +22,12 @@ export default function IssueCustomField({
     onSave,
     disabled = false,
 }: IssueCustomFieldProps) {
+    const { t } = useLaravelReactI18n();
     const [draft, setDraft] = useState(value === null ? '' : String(value));
 
-    const emptyText = field.placeholder ?? `Add ${field.label.toLowerCase()}`;
+    const emptyText =
+        field.placeholder ??
+        t('issue_custom_field.add', { label: field.label.toLowerCase() });
 
     if (field.type === 'checkbox') {
         return (

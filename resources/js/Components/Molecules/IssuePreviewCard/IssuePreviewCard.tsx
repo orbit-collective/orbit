@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -11,8 +12,8 @@ const CARD_WIDTH = 260;
 const ESTIMATED_HEIGHT = 220;
 const VIEWPORT_MARGIN = 12;
 
-const formatShort = (dateString: string) =>
-    parseDateKey(dateString).toLocaleDateString('en-US', {
+const formatShort = (dateString: string, locale: string) =>
+    parseDateKey(dateString).toLocaleDateString(locale, {
         month: 'short',
         day: 'numeric',
     });
@@ -22,6 +23,8 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
     anchorRect,
     placement = 'auto',
 }) => {
+    const { t, currentLocale } = useLaravelReactI18n();
+    const dateLocale = currentLocale() === 'pl' ? 'pl-PL' : 'en-US';
     const cardRef = useRef<HTMLDivElement>(null);
     const [height, setHeight] = useState(ESTIMATED_HEIGHT);
 
@@ -49,12 +52,12 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
 
     const dateRange = useMemo(() => {
         if (!issue.start_date) return null;
-        const start = formatShort(issue.start_date);
+        const start = formatShort(issue.start_date, dateLocale);
         if (!issue.end_date || issue.end_date === issue.start_date) {
             return start;
         }
-        return `${start} – ${formatShort(issue.end_date)}`;
-    }, [issue.start_date, issue.end_date]);
+        return `${start} – ${formatShort(issue.end_date, dateLocale)}`;
+    }, [issue.start_date, issue.end_date, dateLocale]);
 
     return (
         <div
@@ -82,11 +85,12 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-(--border-color) px-2 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                     <StatusDot status={issueCategory(issue)} size="xs" />
-                    {issue.workflowStatus?.name ?? 'No status'}
+                    {issue.workflowStatus?.name ??
+                        t('issue_preview_card.no_status')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-solid border-(--border-color) px-2 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
                     <StatusDot color={issue.priorityDetails?.color} size="xs" />
-                    {issue.priority ?? 'No priority'}
+                    {issue.priority ?? t('issue_preview_card.no_priority')}
                 </span>
             </div>
 
@@ -120,7 +124,7 @@ const IssuePreviewCard: React.FC<IssuePreviewCardProps> = ({
                                 className="text-(--text-muted-color)"
                             />
                             <span className="text-[11px] font-medium text-(--text-muted-color)">
-                                Unassigned
+                                {t('issue_preview_card.unassigned')}
                             </span>
                         </>
                     )}

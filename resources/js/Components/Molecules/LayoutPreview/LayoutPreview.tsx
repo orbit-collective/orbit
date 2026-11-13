@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { CSSProperties, FC } from 'react';
 import WidgetGlyph from '@/Components/Atoms/WidgetGlyph/WidgetGlyph';
 import { useElementWidth } from '@/hooks/useElementWidth';
@@ -26,6 +27,7 @@ const FRAME = 14;
  * queries cannot do that).
  */
 const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
+    const { t } = useLaravelReactI18n();
     const visible = widgets.filter((widget) => widget.visible);
     const [ref, width] = useElementWidth<HTMLDivElement>();
     const unit = Math.max((width || FALLBACK_WIDTH) - FRAME, 0) / 100;
@@ -45,7 +47,7 @@ const LayoutPreview: FC<LayoutPreviewProps> = ({ widgets, className }) => {
         >
             {visible.length === 0 ? (
                 <div className="flex h-12 items-center justify-center text-[10px] text-(--text-muted-color)">
-                    Empty
+                    {t('layout_preview.empty')}
                 </div>
             ) : (
                 <div
