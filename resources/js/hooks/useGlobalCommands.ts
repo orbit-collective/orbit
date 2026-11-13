@@ -1,9 +1,10 @@
 import { router, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useCommands } from '@/hooks/useCommands';
+import { useLanguage } from '@/hooks/useLanguage';
 import { PageProps } from '@/types';
 import { Command } from '@/types/Commands';
 import { SETTINGS_TABS } from '@/types/Settings';
@@ -29,6 +30,11 @@ const THEMES: { mode: ThemeMode; title: string; icon: Command['icon'] }[] = [
 export const useGlobalCommands = (): void => {
     const { t } = useLaravelReactI18n();
     const { theme, setTheme } = useTheme();
+    const { locale, locales, setLanguage } = useLanguage();
+    // Read through a ref: the setter's identity must not re-register every
+    // command when the i18n provider re-renders.
+    const setLanguageRef = useRef(setLanguage);
+    setLanguageRef.current = setLanguage;
     const { openHelp } = useShortcuts();
     const { props } = usePage<PageProps>();
     const isAuthenticated = Boolean(props.auth?.user);
@@ -107,6 +113,32 @@ export const useGlobalCommands = (): void => {
                 ],
                 perform: () => setTheme(mode),
             })),
+            {
+                id: 'language',
+                title: t('hook_global_commands.language.title'),
+                subtitle: locales.find((language) => language.code === locale)
+                    ?.name,
+                group: 'preferences',
+                icon: 'Languages',
+                keywords: [
+                    t('hook_global_commands.keywords.language'),
+                    t('hook_global_commands.keywords.locale'),
+                    t('hook_global_commands.keywords.translation'),
+                ],
+                children: () =>
+                    locales.map((language): Command => ({
+                        id: `language.${language.code}`,
+                        title: language.name,
+                        subtitle:
+                            language.code === locale
+                                ? t('hook_global_commands.language.current')
+                                : undefined,
+                        group: 'preferences',
+                        icon: 'Languages',
+                        keywords: [language.code],
+                        perform: () => setLanguageRef.current(language.code),
+                    })),
+            },
             {
                 id: 'page.refresh',
                 title: t('hook_global_commands.refresh.title'),
@@ -209,7 +241,16 @@ export const useGlobalCommands = (): void => {
                 perform: () => openExternal(LEARN_URL),
             },
         ];
-    }, [isAuthenticated, hasUnreadNotifications, theme, setTheme, openHelp, t]);
+    }, [
+        isAuthenticated,
+        hasUnreadNotifications,
+        theme,
+        setTheme,
+        locale,
+        locales,
+        openHelp,
+        t,
+    ]);
 
     useCommands(commands);
 };

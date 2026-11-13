@@ -21,6 +21,10 @@ return [
         'system' => 'Use system theme',
         'current' => 'Current',
     ],
+    'language' => [
+        'title' => 'Change language…',
+        'current' => 'Current',
+    ],
     'refresh' => [
         'title' => 'Refresh page',
     ],
@@ -54,6 +58,9 @@ return [
         'home' => 'home',
         'preferences' => 'preferences',
         'configuration' => 'configuration',
+        'language' => 'language',
+        'locale' => 'locale',
+        'translation' => 'translation',
         'theme' => 'theme',
         'appearance' => 'appearance',
         'color' => 'color',

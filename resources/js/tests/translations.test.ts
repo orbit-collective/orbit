@@ -16,33 +16,45 @@ const sourceFiles = (dir: string): string[] =>
             : [];
     });
 
+// Every folder in lang/ is a language; English is the reference.
+const otherLocales = readdirSync(join(root, 'lang')).filter(
+    (name) => name !== 'en' && statSync(join(root, 'lang', name)).isDirectory(),
+);
+
 describe('translations', () => {
     const en = loadTranslations('en');
-    const pl = loadTranslations('pl');
 
-    it('has the same keys in every language', () => {
-        expect(Object.keys(pl).sort()).toEqual(Object.keys(en).sort());
+    it('has more than the reference language', () => {
+        expect(otherLocales.length).toBeGreaterThan(0);
     });
 
-    it('has no empty translation', () => {
-        const empty = [...Object.entries(en), ...Object.entries(pl)]
-            .filter(([, value]) => String(value).trim() === '')
-            .map(([key]) => key);
+    describe.each(otherLocales)('%s', (locale) => {
+        const texts = loadTranslations(locale);
 
-        expect(empty).toEqual([]);
-    });
+        it('has the same keys as English', () => {
+            expect(Object.keys(texts).sort()).toEqual(Object.keys(en).sort());
+        });
 
-    it('keeps the :placeholders of the English text in the Polish one', () => {
-        const placeholders = (text: string) =>
-            (text.match(/:[a-z_]+/g) ?? []).sort();
-        const mismatched = Object.keys(en).filter(
-            (key) =>
-                !String(en[key]).includes('|') &&
-                JSON.stringify(placeholders(String(en[key]))) !==
-                    JSON.stringify(placeholders(String(pl[key]))),
-        );
+        it('has no empty translation', () => {
+            const empty = Object.entries(texts)
+                .filter(([, value]) => String(value).trim() === '')
+                .map(([key]) => key);
 
-        expect(mismatched).toEqual([]);
+            expect(empty).toEqual([]);
+        });
+
+        it('keeps the :placeholders of the English text', () => {
+            const placeholders = (text: string) =>
+                (text.match(/:[a-z_]+/g) ?? []).sort();
+            const mismatched = Object.keys(en).filter(
+                (key) =>
+                    !String(en[key]).includes('|') &&
+                    JSON.stringify(placeholders(String(en[key]))) !==
+                        JSON.stringify(placeholders(String(texts[key]))),
+            );
+
+            expect(mismatched).toEqual([]);
+        });
     });
 
     it('defines every literal key the source passes to t() / tChoice()', () => {

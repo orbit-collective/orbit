@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
         reload: vi.fn(),
     },
     setTheme: vi.fn(),
+    setLanguage: vi.fn(),
+    locale: 'en',
     openHelp: vi.fn(),
     useCommands: vi.fn(),
     page: {
@@ -35,6 +37,16 @@ vi.mock('@/context/ShortcutContext', () => ({
     useShortcuts: () => ({ openHelp: mocks.openHelp }),
 }));
 vi.mock('@/hooks/useCommands', () => ({ useCommands: mocks.useCommands }));
+vi.mock('@/hooks/useLanguage', () => ({
+    useLanguage: () => ({
+        locale: mocks.locale,
+        locales: [
+            { code: 'en', name: 'English' },
+            { code: 'pl', name: 'Polski' },
+        ],
+        setLanguage: mocks.setLanguage,
+    }),
+}));
 
 import { useGlobalCommands } from './useGlobalCommands';
 
@@ -50,9 +62,31 @@ beforeEach(() => {
         notificationUnreadCount: 0,
     };
     mocks.theme = 'dark';
+    mocks.locale = 'en';
 });
 
 describe('useGlobalCommands', () => {
+    test('offers a language step listing the languages, current one marked', () => {
+        mocks.locale = 'pl';
+        render();
+
+        const language = byId('language');
+        expect(language.subtitle).toBe('Polski');
+        expect(language.group).toBe('preferences');
+
+        const steps = language.children?.() ?? [];
+        expect(steps.map((step) => step.title)).toEqual(['English', 'Polski']);
+        expect(steps.find((step) => step.id === 'language.pl')?.subtitle).toBe(
+            'Current',
+        );
+        expect(
+            steps.find((step) => step.id === 'language.en')?.subtitle,
+        ).toBeUndefined();
+
+        steps[0].perform?.();
+        expect(mocks.setLanguage).toHaveBeenCalledWith('en');
+    });
+
     test('registers nothing for guests', () => {
         mocks.page.props = { auth: { user: null } };
         render();

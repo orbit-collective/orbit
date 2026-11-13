@@ -59,6 +59,13 @@ const translate = (
         englishTexts[key] ?? key,
     );
 
+// Stable references, like the real provider's between renders: a hook that
+// lists `setLocale` as a dependency must not re-run on every render.
+const noop = () => {};
+const getLocales = () => ['en', 'pl'];
+const currentLocale = () => 'en';
+const isLocale = () => true;
+
 vi.mock('laravel-react-i18n', () => ({
     LaravelReactI18nProvider: ({ children }: { children: unknown }) => children,
     useLaravelReactI18n: () => ({
@@ -79,10 +86,10 @@ vi.mock('laravel-react-i18n', () => ({
                 form,
             );
         },
-        currentLocale: () => 'en',
-        getLocales: () => ['en', 'pl'],
-        isLocale: () => true,
-        setLocale: () => {},
+        currentLocale,
+        getLocales,
+        isLocale,
+        setLocale: noop,
         loading: false,
     }),
 }));
