@@ -4,6 +4,7 @@ import {
     DashboardWidget,
     DashboardWidgetConfig,
 } from '@/types/Dashboard';
+import { catalogText } from '@/utils/dashboardCatalogText';
 import { statTitle } from '@/utils/dashboardStat';
 
 /** Most widgets one dashboard may hold, as on the server. */
@@ -215,4 +216,10 @@ export const widgetLabel = (
 ): string =>
     widget.type === 'stat'
         ? statTitle(widget.config.metric, t)
-        : (entry?.label ?? widget.type);
+        : t
+          ? catalogText(
+                t,
+                `widgets.${widget.type}.label`,
+                entry?.label ?? widget.type,
+            )
+          : (entry?.label ?? widget.type);
