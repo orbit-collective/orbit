@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { DropdownOptionItem, DropdownProps } from '@/types/Dropdown';
@@ -401,5 +401,215 @@ describe('Dropdown', () => {
             );
             expect(screen.getByRole('listbox')).toBeInTheDocument();
         });
+    });
+});
+
+describe('Dropdown submenu', () => {
+    const menuOptions: DropdownOptionItem[] = [
+        { value: 'settings', label: 'Settings' },
+        {
+            value: 'languages',
+            label: 'Languages',
+            children: [
+                {
+                    value: 'en',
+                    label: 'English',
+                    role: 'menuitemradio',
+                    indicator: 'check',
+                },
+                {
+                    value: 'pl',
+                    label: 'Polski',
+                    role: 'menuitemradio',
+                    indicator: 'check',
+                },
+            ],
+        },
+    ];
+
+    const setupMenu = (props: Partial<DropdownProps> = {}) =>
+        setup({
+            variant: 'menu',
+            options: menuOptions,
+            selectedValues: ['pl'],
+            ...props,
+        });
+
+    test('marks the parent row as a menu popup and keeps the flyout closed', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+
+        const parent = screen.getByRole('menuitem', { name: 'Languages' });
+        expect(parent).toHaveAttribute('aria-haspopup', 'menu');
+        expect(parent).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByRole('menuitemradio')).not.toBeInTheDocument();
+    });
+
+    test('opens on click, exposing radio items and the current one', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        const parent = screen.getByRole('menuitem', { name: 'Languages' });
+
+        await userEvent.click(parent);
+
+        expect(parent).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getAllByRole('menu')).toHaveLength(2);
+        expect(
+            screen.getByRole('menuitemradio', { name: 'Polski' }),
+        ).toHaveAttribute('aria-checked', 'true');
+        expect(
+            screen.getByRole('menuitemradio', { name: 'English' }),
+        ).toHaveAttribute('aria-checked', 'false');
+    });
+
+    test('clicking the row again closes the flyout', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        const parent = screen.getByRole('menuitem', { name: 'Languages' });
+
+        await userEvent.click(parent);
+        expect(parent).toHaveAttribute('aria-expanded', 'true');
+
+        await userEvent.click(parent);
+        expect(parent).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByRole('menuitemradio')).not.toBeInTheDocument();
+    });
+
+    test('hovering the row does not open the flyout', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+
+        await userEvent.hover(
+            screen.getByRole('menuitem', { name: 'Languages' }),
+        );
+
+        expect(screen.queryByRole('menuitemradio')).not.toBeInTheDocument();
+    });
+
+    test('the flyout is placed before it is shown (never hidden, never at 0,0)', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        await userEvent.click(
+            screen.getByRole('menuitem', { name: 'Languages' }),
+        );
+
+        const flyout = screen.getAllByRole('menu')[1];
+        expect(flyout.style.visibility).not.toBe('hidden');
+        expect(flyout.style.left).not.toBe('');
+    });
+
+    test('picking a child reports it and closes the whole menu', async () => {
+        const { onSelect } = setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        await userEvent.click(
+            screen.getByRole('menuitem', { name: 'Languages' }),
+        );
+
+        await userEvent.click(
+            screen.getByRole('menuitemradio', { name: 'English' }),
+        );
+
+        expect(onSelect).toHaveBeenCalledTimes(1);
+        expect(onSelect).toHaveBeenCalledWith(
+            'en',
+            expect.objectContaining({ value: 'en' }),
+        );
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    test('a pointer press inside the flyout does not close the menu', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        await userEvent.click(
+            screen.getByRole('menuitem', { name: 'Languages' }),
+        );
+
+        fireEvent.mouseDown(
+            screen.getByRole('menuitemradio', { name: 'English' }),
+        );
+
+        expect(screen.getAllByRole('menu')).toHaveLength(2);
+    });
+
+    test('ArrowRight opens the flyout and focuses the current item; ArrowDown moves within it', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        screen.getByRole('menuitem', { name: 'Languages' }).focus();
+
+        await userEvent.keyboard('{ArrowRight}');
+
+        expect(
+            screen.getByRole('menuitemradio', { name: 'Polski' }),
+        ).toHaveFocus();
+
+        await userEvent.keyboard('{ArrowDown}');
+        expect(
+            screen.getByRole('menuitemradio', { name: 'English' }),
+        ).toHaveFocus();
+    });
+
+    test('Enter on the parent row opens the flyout with focus inside', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        screen.getByRole('menuitem', { name: 'Languages' }).focus();
+
+        await userEvent.keyboard('{Enter}');
+
+        expect(
+            screen.getByRole('menuitemradio', { name: 'Polski' }),
+        ).toHaveFocus();
+    });
+
+    test('ArrowLeft and Escape close only the flyout and return focus to its row', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        const parent = screen.getByRole('menuitem', { name: 'Languages' });
+        parent.focus();
+
+        await userEvent.keyboard('{ArrowRight}{ArrowLeft}');
+        expect(screen.queryByRole('menuitemradio')).not.toBeInTheDocument();
+        expect(parent).toHaveFocus();
+
+        await userEvent.keyboard('{ArrowRight}{Escape}');
+        expect(screen.queryByRole('menuitemradio')).not.toBeInTheDocument();
+        expect(screen.getByRole('menu')).toBeInTheDocument();
+        expect(parent).toHaveFocus();
+
+        await userEvent.keyboard('{Escape}');
+        expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    test('flips to the left of the menu when there is no room on the right', async () => {
+        Object.defineProperty(window, 'innerWidth', {
+            configurable: true,
+            value: 1024,
+        });
+        const rect = (left: number, right: number) =>
+            ({
+                left,
+                right,
+                top: 100,
+                bottom: 130,
+                width: right - left,
+                height: 30,
+                x: left,
+                y: 100,
+                toJSON: () => ({}),
+            }) as DOMRect;
+        const spy = vi
+            .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+            .mockImplementation(() => rect(800, 1000));
+
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        await userEvent.click(
+            screen.getByRole('menuitem', { name: 'Languages' }),
+        );
+
+        const flyout = screen.getAllByRole('menu')[1];
+        // 800 (menu left) - 208 (flyout width) - 2 (gap)
+        expect(flyout.style.left).toBe('590px');
+
+        spy.mockRestore();
     });
 });

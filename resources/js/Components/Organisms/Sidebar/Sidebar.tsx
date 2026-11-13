@@ -1,10 +1,12 @@
 import logo from '@assets/1820.webp';
 import { Link, router, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC, useEffect, useMemo, useState } from 'react';
 import Divider from '@/Components/Atoms/Divider/Divider';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import NewProjectModal from '@/Components/Organisms/NewProjectModal/NewProjectModal';
 import { useCommands } from '@/hooks/useCommands';
+import { useLanguage } from '@/hooks/useLanguage';
 import { PageProps } from '@/types';
 import { Command } from '@/types/Commands';
 import { DropdownOptionItem } from '@/types/Dropdown';
@@ -13,6 +15,7 @@ import { getSettingsTabByPath, SETTINGS_TABS } from '@/types/Settings';
 import { cn } from '@/utils/cn';
 import { getColorTheme } from '@/utils/colors';
 import { DOCS_URL, LEARN_URL, openExternal } from '@/utils/externalLinks';
+import { isSupportedLocale } from '@/utils/locale';
 import { isTourSidebarOpen, TOUR_SIDEBAR_EVENT } from '@/utils/tourSidebar';
 import Icon from '../../Atoms/Icon/Icon';
 import NavItem from '../../Molecules/NavItem/NavItem';
@@ -23,22 +26,19 @@ const USER_MENU_URLS: Record<string, string> = {
     docs: DOCS_URL,
 };
 
-const USER_MENU_OPTIONS: DropdownOptionItem[] = [
-    { value: 'learn', label: 'Learn', icon: 'BookOpen' },
-    { value: 'docs', label: 'Documentation', icon: 'CircleQuestionMark' },
-    { value: 'settings', label: 'Settings', icon: 'Settings' },
-    { value: 'logout', label: 'Log out', icon: 'LogOut', tone: 'danger' },
-];
-
 const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebar-collapsed';
 
+const LOCALE_OPTION_PREFIX = 'locale:';
+
 const SETTINGS_NAV_SECTIONS = [
-    { title: 'Account', section: 'account' as const },
-    { title: 'Workspace', section: 'workspace' as const },
-    { title: 'Developer', section: 'developer' as const },
+    { title: 'sidebar.sections.account', section: 'account' as const },
+    { title: 'sidebar.sections.workspace', section: 'workspace' as const },
+    { title: 'sidebar.sections.developer', section: 'developer' as const },
 ];
 
 const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
+    const { t } = useLaravelReactI18n();
+    const { locale, locales, setLanguage } = useLanguage();
     const [isOpen, setIsOpen] = useState(isTourSidebarOpen);
     const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(
@@ -93,8 +93,52 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
         return () => document.removeEventListener('keydown', handleEscape);
     }, [isOpen]);
 
+    const userMenuOptions = useMemo(
+        (): DropdownOptionItem[] => [
+            {
+                value: 'learn',
+                label: t('sidebar.learn'),
+                icon: 'BookOpen',
+            },
+            {
+                value: 'docs',
+                label: t('sidebar.documentation'),
+                icon: 'CircleQuestionMark',
+            },
+            {
+                value: 'settings',
+                label: t('sidebar.settings'),
+                icon: 'Settings',
+            },
+            {
+                value: 'languages',
+                label: t('sidebar.languages'),
+                icon: 'Languages',
+                children: locales.map((language): DropdownOptionItem => ({
+                    value: `${LOCALE_OPTION_PREFIX}${language.code}`,
+                    label: language.name,
+                    trailing: language.code.toUpperCase(),
+                    role: 'menuitemradio',
+                    indicator: 'check',
+                })),
+            },
+            { value: 'logout-separator', label: '', kind: 'separator' },
+            {
+                value: 'logout',
+                label: t('sidebar.log_out'),
+                icon: 'LogOut',
+                tone: 'danger',
+            },
+        ],
+        [t, locales],
+    );
+
     const handleUserMenuSelect = (action: string) => {
-        if (action === 'logout') {
+        if (action.startsWith(LOCALE_OPTION_PREFIX)) {
+            const next = action.slice(LOCALE_OPTION_PREFIX.length);
+
+            if (isSupportedLocale(next)) setLanguage(next);
+        } else if (action === 'logout') {
             router.post(route('logout'));
         } else if (action === 'settings') {
             router.visit(route('settings'));
@@ -107,24 +151,24 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
         (): Command[] => [
             {
                 id: 'project.create',
-                title: 'Create project',
+                title: t('sidebar.create_project'),
                 group: 'creation',
                 icon: 'FolderPlus',
                 shortcut: 'p',
-                keywords: ['new project'],
+                keywords: [t('sidebar.new_project_keyword')],
                 perform: () => setIsNewProjectModalOpen(true),
             },
             ...projects.map((project): Command => ({
                 id: `nav.project.${project.id}`,
                 title: project.name,
-                subtitle: 'Project',
+                subtitle: t('sidebar.project_subtitle'),
                 group: 'navigation',
                 icon: 'FolderGit2',
-                keywords: [project.slug, 'project'],
+                keywords: [project.slug, t('sidebar.project_keyword')],
                 perform: () => router.visit(`/projects/${project.id}`),
             })),
         ],
-        [projects],
+        [projects, t],
     );
 
     useCommands(commands);
@@ -134,7 +178,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
             <button
                 type="button"
                 onClick={() => setIsOpen(true)}
-                aria-label="Open sidebar"
+                aria-label={t('sidebar.open')}
                 aria-expanded={isOpen}
                 className="fixed top-4 left-4 z-40 rounded-md border border-solid border-(--bg-light-color) bg-(--bg-dark-color) p-2 text-(--text-gray-color) hover:text-(--text-color) md:hidden"
             >
@@ -190,13 +234,13 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                             onClick={() => setIsCollapsed((prev) => !prev)}
                             aria-label={
                                 isCollapsed
-                                    ? 'Expand sidebar'
-                                    : 'Collapse sidebar'
+                                    ? t('sidebar.expand')
+                                    : t('sidebar.collapse')
                             }
                             title={
                                 isCollapsed
-                                    ? 'Expand sidebar'
-                                    : 'Collapse sidebar'
+                                    ? t('sidebar.expand')
+                                    : t('sidebar.collapse')
                             }
                             className="hidden shrink-0 rounded-md p-2 text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color) md:flex"
                         >
@@ -213,7 +257,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}
-                            aria-label="Close sidebar"
+                            aria-label={t('sidebar.close')}
                             className="rounded-md p-2 text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color) md:hidden"
                         >
                             <Icon name="X" size={18} />
@@ -222,10 +266,13 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
 
                     <Divider className="mb-3" />
 
-                    <nav aria-label="Main" className={'flex shrink-0 flex-col'}>
+                    <nav
+                        aria-label={t('sidebar.main_nav')}
+                        className={'flex shrink-0 flex-col'}
+                    >
                         <NavItem
                             icon="LayoutDashboard"
-                            label="Dashboard"
+                            label={t('sidebar.dashboard')}
                             badge="Alt B"
                             link={'/'}
                             tourId="nav-dashboard"
@@ -234,7 +281,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                         />
                         <NavItem
                             icon="LayoutList"
-                            label="Projects"
+                            label={t('sidebar.projects')}
                             badge={'Alt P'}
                             link={'/projects'}
                             tourId="nav-projects"
@@ -256,11 +303,11 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                 <div key={section}>
                                     {!isCollapsed && (
                                         <h3 className="mb-1.5 px-2.5 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
-                                            {title}
+                                            {t(title)}
                                         </h3>
                                     )}
                                     <nav
-                                        aria-label={title}
+                                        aria-label={t(title)}
                                         className="flex flex-col"
                                     >
                                         {visibleSettingsTabs
@@ -272,7 +319,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                                 <NavItem
                                                     key={tab.id}
                                                     icon={tab.icon}
-                                                    label={tab.label}
+                                                    label={t(tab.label)}
                                                     link={tab.path}
                                                     isActive={
                                                         tab.id ===
@@ -293,8 +340,8 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     onClick={() =>
                                         setIsNewProjectModalOpen(true)
                                     }
-                                    title="New project"
-                                    aria-label="New project"
+                                    title={t('sidebar.new_project')}
+                                    aria-label={t('sidebar.new_project')}
                                     data-tour="new-project"
                                     className="mb-1.5 flex shrink-0 items-center justify-center rounded-md py-1.5 text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                 >
@@ -306,7 +353,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                     onClick={() =>
                                         setIsNewProjectModalOpen(true)
                                     }
-                                    aria-label="New project"
+                                    aria-label={t('sidebar.new_project')}
                                     data-tour="new-project"
                                     className={
                                         'group mb-1.5 flex shrink-0 items-center justify-between rounded-md px-2.5 py-1'
@@ -317,7 +364,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                             'text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase group-hover:text-(--text-color)'
                                         }
                                     >
-                                        PROJECTS
+                                        {t('sidebar.projects_heading')}
                                     </span>
                                     <span className="flex items-center gap-1.5 text-(--text-gray-color) group-hover:text-(--text-color)">
                                         {projects.length > 0 && (
@@ -330,7 +377,7 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                                 </button>
                             )}
                             <nav
-                                aria-label="Projects"
+                                aria-label={t('sidebar.projects')}
                                 /* eslint-disable-next-line react/no-unknown-property */
                                 scroll-region={''}
                                 className={
@@ -389,18 +436,21 @@ const Sidebar: FC<{ projects: Project[] }> = ({ projects }) => {
                 >
                     <Dropdown
                         variant="menu"
-                        ariaLabel="User menu"
+                        ariaLabel={t('sidebar.user_menu')}
                         placement="top"
                         width={isCollapsed ? 208 : 'trigger'}
                         triggerClassName="w-full"
-                        options={USER_MENU_OPTIONS}
+                        options={userMenuOptions}
+                        selectedValues={[`${LOCALE_OPTION_PREFIX}${locale}`]}
                         onSelect={handleUserMenuSelect}
                         trigger={
                             <button
                                 type="button"
                                 data-tour="user-menu"
                                 aria-label={
-                                    isCollapsed ? 'User menu' : undefined
+                                    isCollapsed
+                                        ? t('sidebar.user_menu')
+                                        : undefined
                                 }
                                 className={cn(
                                     'flex w-full cursor-pointer items-center rounded-lg px-2 py-1.5 text-left hover:bg-(--bg-light-color)',

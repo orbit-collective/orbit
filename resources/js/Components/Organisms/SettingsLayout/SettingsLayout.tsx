@@ -1,4 +1,5 @@
 import { MotionConfig, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ReactNode } from 'react';
 import Breadcrumb from '@/Components/Molecules/Breadcrumb/Breadcrumb';
 import CollapseAllButton from '@/Components/Molecules/CollapseAllButton/CollapseAllButton';
@@ -54,6 +55,7 @@ export default function SettingsLayout({
     children,
     fullBleed = false,
 }: SettingsLayoutProps) {
+    const { t } = useLaravelReactI18n();
     const tab = getSettingsTab(tabId);
 
     return (
@@ -89,18 +91,20 @@ export default function SettingsLayout({
                                         <Breadcrumb
                                             items={[
                                                 {
-                                                    label: 'Settings',
+                                                    label: t(
+                                                        'followup2_misc.settings',
+                                                    ),
                                                     className:
                                                         'uppercase tracking-[0.2em]',
                                                 },
-                                                { label: tab.label },
+                                                { label: t(tab.label) },
                                             ]}
                                         />
                                         <h1 className="text-2xl font-semibold text-(--text-color) sm:text-3xl">
-                                            {tab.label}
+                                            {t(tab.label)}
                                         </h1>
                                         <p className="max-w-2xl text-sm text-(--text-gray-color)">
-                                            {tab.description}
+                                            {t(tab.description)}
                                         </p>
                                     </div>
                                     {!fullBleed && <CollapseAll />}
