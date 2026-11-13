@@ -66,8 +66,8 @@ return [
         'activity_title' => 'Aktywność logu w tym tygodniu',
         'activity_empty' => 'Log nie zawiera nic z tych dni.',
         'problems_this_week' => 'problemy w tym tygodniu: :count',
-        'problems' => '{1} :count problem|[2,4] :count problemy|[5,*] :count problemów',
-        'count' => '{1} :count błąd|[2,4] :count błędy|[5,*] :count błędów',
+        'problems' => ':count problem|:count problemy|:count problemów',
+        'count' => ':count błąd|:count błędy|:count błędów',
         'none' => 'Brak błędów w logu. Świetnie.',
         'levels' => [
             'critical' => 'Krytyczne',
@@ -82,7 +82,7 @@ return [
         'search_placeholder' => 'Szukaj według nazwy lub sluga',
         'legend' => 'Legenda liczby zgłoszeń',
         'empty' => 'Brak pasujących projektów.',
-        'members' => '{1} :count członek|[2,4] :count członków|[5,*] :count członków',
+        'members' => ':count członek|:count członków|:count członków',
         'categories' => [
             'todo' => 'do zrobienia',
             'in_progress' => 'w toku',
@@ -95,7 +95,7 @@ return [
         'description' => 'Wszystkie konta w tej instancji (:count).',
         'search_placeholder' => 'Szukaj według nazwy lub e-maila',
         'empty' => 'Brak pasujących użytkowników.',
-        'projects' => '{1} :count projekt|[2,4] :count projekty|[5,*] :count projektów',
+        'projects' => ':count projekt|:count projekty|:count projektów',
         'joined' => 'dołączył(a) :date',
     ],
 ];

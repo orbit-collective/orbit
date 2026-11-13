@@ -269,7 +269,7 @@ return [
         'password_title' => 'Hasło',
         'password_description' => 'Zmień hasło lub wyślij sobie link do jego zresetowania.',
         'password_description_set' => 'Ustaw hasło, aby móc logować się także bez GitHub.',
-        'sessions_count' => '{1} :count sesja|[2,4] :count sesje|[5,*] :count sesji',
+        'sessions_count' => ':count sesja|:count sesje|:count sesji',
         'sessions_title' => 'Aktywne sesje',
         'sessions_description' => 'Przeglądaj i unieważniaj urządzenia, na których jesteś zalogowany.',
         'expiry_title' => 'Wygasanie sesji',

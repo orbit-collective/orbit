@@ -15,7 +15,7 @@ return [
     'pending_awaiting' => 'Czekają na odpowiedź',
     'pending_disabled' => 'Zaproszenia są wyłączone',
     'picker_description' => 'Wybierz projekt, którego członkami chcesz zarządzać.',
-    'summary' => '{1} :count członek|[2,4] :count członków|[5,*] :count członków',
+    'summary' => ':count członek|:count członków|:count członków',
     'panel_description' => 'Osoby z dostępem do projektu ":project".',
     'details_title' => 'Szczegóły projektu',
     'details_description' => 'Zmień nazwę projektu, zaktualizuj jego opis lub zmień kolor.',

@@ -17,7 +17,7 @@ return [
         'soon' => ':count z terminem w tym tygodniu',
     ],
     'sentence' => [
-        'head' => '{1} Masz :count otwarte zgłoszenie przypisane|[2,4] Masz :count otwarte zgłoszenia przypisane|[5,*] Masz :count otwartych zgłoszeń przypisanych',
+        'head' => 'Masz :count otwarte zgłoszenie przypisane|Masz :count otwarte zgłoszenia przypisane|Masz :count otwartych zgłoszeń przypisanych',
         'overdue' => ', :count po terminie',
         'soon' => ' i :count z terminem w tym tygodniu',
     ],

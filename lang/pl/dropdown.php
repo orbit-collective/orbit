@@ -7,6 +7,6 @@ return [
     'clear' => 'Wyczyść',
     'search' => 'Szukaj',
     'search_placeholder' => 'Szukaj…',
-    'results' => '{1} :count wynik|[2,4] :count wyniki|[5,*] :count wyników',
+    'results' => ':count wynik|:count wyniki|:count wyników',
     'select_all' => 'Zaznacz wszystko',
 ];
