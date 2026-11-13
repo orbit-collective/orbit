@@ -1,4 +1,5 @@
 import type { Decorator } from '@storybook/react-vite';
+import { LaravelReactI18nProvider } from 'laravel-react-i18n';
 import { useEffect } from 'react';
 import { ModalContainer } from '@/Components/Organisms/Modal';
 import { AccentProvider, useAccent } from '@/context/AccentContext';
@@ -58,22 +59,28 @@ export const withOrbitApp: Decorator = (Story, context) => {
         | undefined;
 
     return (
-        <InertiaMockProvider page={page}>
-            <ThemeProvider>
-                <AccentProvider>
-                    <GlobalsSync theme={theme} accent={accent} />
-                    <ModalProvider>
-                        <AlertProvider>
-                            <ShortcutProvider>
-                                <CommandProvider>
-                                    <Story />
-                                    <ModalContainer />
-                                </CommandProvider>
-                            </ShortcutProvider>
-                        </AlertProvider>
-                    </ModalProvider>
-                </AccentProvider>
-            </ThemeProvider>
-        </InertiaMockProvider>
+        <LaravelReactI18nProvider
+            locale="en"
+            fallbackLocale="en"
+            files={import.meta.glob('/lang/php_*.json', { eager: true })}
+        >
+            <InertiaMockProvider page={page}>
+                <ThemeProvider>
+                    <AccentProvider>
+                        <GlobalsSync theme={theme} accent={accent} />
+                        <ModalProvider>
+                            <AlertProvider>
+                                <ShortcutProvider>
+                                    <CommandProvider>
+                                        <Story />
+                                        <ModalContainer />
+                                    </CommandProvider>
+                                </ShortcutProvider>
+                            </AlertProvider>
+                        </ModalProvider>
+                    </AccentProvider>
+                </ThemeProvider>
+            </InertiaMockProvider>
+        </LaravelReactI18nProvider>
     );
 };
