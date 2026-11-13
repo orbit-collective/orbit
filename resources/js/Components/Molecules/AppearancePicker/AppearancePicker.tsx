@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { ReactNode } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -35,6 +36,7 @@ export default function AppearancePicker({
     children,
     ariaLabel,
 }: AppearancePickerProps) {
+    const { t } = useLaravelReactI18n();
     const offersIcons = Boolean(onIconChange && iconOptions?.length);
 
     return (
@@ -74,7 +76,9 @@ export default function AppearancePicker({
                                 type="button"
                                 data-nav
                                 onClick={() => onIconChange!(option)}
-                                aria-label={`Use icon ${option}`}
+                                aria-label={t('appearance_picker.use_icon', {
+                                    icon: option,
+                                })}
                                 aria-pressed={icon === option}
                                 className={cn(
                                     'flex h-8 w-8 cursor-pointer items-center justify-center justify-self-center touch-manipulation rounded-lg transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-(--accent-color)',

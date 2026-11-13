@@ -1,4 +1,5 @@
 import { cva } from 'class-variance-authority';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React from 'react';
 import { AvatarProps } from '@/types/Components';
 
@@ -20,12 +21,13 @@ const classVariants = cva(
 );
 
 const Avatar: React.FC<AvatarProps> = ({ src, alt, size = 'md', initials }) => {
+    const { t } = useLaravelReactI18n();
     return (
         <div className={classVariants({ size })}>
             {src ? (
                 <img
                     src={src}
-                    alt={alt || 'Avatar'}
+                    alt={alt || t('avatar.alt')}
                     className={'h-full w-full object-cover'}
                 />
             ) : (

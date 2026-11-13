@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import { AnimatePresence, motion, useAnimationControls } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useRef } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Badge from '@/Components/Atoms/Badge/Badge';
@@ -14,6 +15,7 @@ import { useRefreshEpoch } from '@/utils/refreshEpoch';
 const isPriorityColumn = (id: string) => id.startsWith('priority-');
 
 function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
+    const { t } = useLaravelReactI18n();
     const { setNodeRef, isOver } = useDroppable({ id: meta.id });
     // A refresh plays the column's entrance again without remounting it, so
     // the scroll position of its cards survives (only the cards re-enter).
@@ -113,7 +115,7 @@ function BoardColumn({ issues, meta, count, index = 0 }: BoardColumnProps) {
                         <Icon name="Inbox" size={20} />
                     </div>
                     <span className="text-xs font-medium text-(--text-muted-color)">
-                        No issues
+                        {t('board_column.empty')}
                     </span>
                 </div>
             ) : (

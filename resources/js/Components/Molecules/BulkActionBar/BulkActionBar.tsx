@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Badge from '@/Components/Atoms/Badge/Badge';
@@ -17,6 +18,7 @@ export const BulkActionBar: FC<BulkActionBarProps> = ({
     onClear,
     isDeleting,
 }) => {
+    const { t, tChoice } = useLaravelReactI18n();
     const isVisible = selectedCount > 0;
     const [isMounted, setIsMounted] = useState(isVisible);
     const [isOpen, setIsOpen] = useState(false);
@@ -62,7 +64,7 @@ export const BulkActionBar: FC<BulkActionBarProps> = ({
         <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
             <div
                 role="toolbar"
-                aria-label="Bulk actions"
+                aria-label={t('bulk_action_bar.label')}
                 className={cn(
                     'origin-bottom transform-gpu motion-reduce:transition-none',
                     isOpen
@@ -77,7 +79,7 @@ export const BulkActionBar: FC<BulkActionBarProps> = ({
                         {count}
                     </Badge>
                     <span className="text-sm font-medium whitespace-nowrap text-(--text-color)">
-                        {count === 1 ? 'issue' : 'issues'} selected
+                        {tChoice('bulk_action_bar.selected', count)}
                     </span>
                 </div>
 
@@ -89,7 +91,9 @@ export const BulkActionBar: FC<BulkActionBarProps> = ({
                     className="ml-1 h-10 rounded-xl px-4 active:scale-95"
                 >
                     <Icon name="Trash" size={15} />
-                    {isDeleting ? 'Removing...' : 'Delete Selected'}
+                    {isDeleting
+                        ? t('bulk_action_bar.removing')
+                        : t('bulk_action_bar.delete_selected')}
                 </Button>
 
                 {onClear && (
@@ -99,13 +103,15 @@ export const BulkActionBar: FC<BulkActionBarProps> = ({
                             type="button"
                             iconName="X"
                             iconSize={15}
-                            ariaLabel="Clear"
+                            ariaLabel={t('common.clear')}
                             onClick={onClear}
                             disabled={isDeleting}
                             className="h-10 gap-2 rounded-xl px-3 text-(--text-gray-color) hover:text-(--text-color)"
                         >
                             <Keybind
-                                tooltipText="Clear selection"
+                                tooltipText={t(
+                                    'bulk_action_bar.clear_selection',
+                                )}
                                 keybind="Esc"
                             />
                         </IconButton>

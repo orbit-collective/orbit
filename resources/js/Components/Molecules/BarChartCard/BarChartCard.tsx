@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useId } from 'react';
 import BarPlot from '@/Components/Molecules/BarPlot/BarPlot';
 import CardHeader from '@/Components/Molecules/CardHeader/CardHeader';
@@ -22,12 +23,13 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
     items,
     formatValue = (value) => String(Math.round(value)),
     summary,
-    emptyText = 'Nothing to chart yet.',
+    emptyText,
     collapsed = false,
     onToggleCollapse,
     collapsedSummary,
     className,
 }) => {
+    const { t } = useLaravelReactI18n();
     const bodyId = useId();
     const max = niceMax(Math.max(0, ...items.map((item) => item.value)));
     const average =
@@ -69,7 +71,7 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
 
                 {items.length === 0 ? (
                     <p className="py-10 text-center text-sm text-(--text-gray-color)">
-                        {emptyText}
+                        {emptyText ?? t('bar_chart_card.empty')}
                     </p>
                 ) : (
                     <BarPlot
@@ -84,7 +86,9 @@ const BarChartCard: React.FC<BarChartCardProps> = ({
                         highlightKey={items[highlighted]?.key}
                         marker={{
                             percent: (average / max) * 100,
-                            label: `Avg ${formatValue(average)}`,
+                            label: t('bar_chart_card.average', {
+                                value: formatValue(average),
+                            }),
                         }}
                         bars={items.map((item) => ({
                             key: item.key,

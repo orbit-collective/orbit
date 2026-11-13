@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
@@ -16,6 +17,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     onDelete,
     onImageUpload,
 }) => {
+    const { t } = useLaravelReactI18n();
     const renderText = (value: string, keyPrefix: string) =>
         splitMentionText(value, users).map((segment, index) =>
             segment.type === 'issue' ? (
@@ -80,10 +82,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-(--text-color)">
-                        {comment.user?.name ?? 'Unknown'}
+                        {comment.user?.name ?? t('comment_item.unknown')}
                     </span>
                     <span className="text-xs text-(--text-gray-color)">
-                        {formatTimeAgo(comment.created_at)} ago
+                        {t('comment_item.ago', {
+                            time: formatTimeAgo(comment.created_at, t),
+                        })}
                     </span>
                 </div>
                 <EditableText
@@ -101,7 +105,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                     <IconButton
                         iconName="Trash"
                         iconSize={14}
-                        ariaLabel="Delete comment"
+                        ariaLabel={t('comment_item.delete')}
                         onClick={() => onDelete?.(comment)}
                     />
                 )}

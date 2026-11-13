@@ -1,5 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import X from 'lucide-react/icons/x';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -39,6 +40,7 @@ interface AlertProps {
 
 export const Alert = ({ alert, onClose }: AlertProps) => {
     const { message, type, actionUrl } = alert;
+    const { t } = useLaravelReactI18n();
 
     const intent = (
         alertIcons[type as AlertIntent] ? type : 'information'
@@ -65,7 +67,7 @@ export const Alert = ({ alert, onClose }: AlertProps) => {
                         href={actionUrl}
                         className="ml-2 text-xs font-semibold underline underline-offset-2 hover:opacity-80"
                     >
-                        View details
+                        {t('alert.view_details')}
                     </a>
                 )}
             </div>
@@ -74,7 +76,7 @@ export const Alert = ({ alert, onClose }: AlertProps) => {
                 onClick={onClose}
                 type="button"
                 className="ml-1 flex shrink-0 items-center justify-center rounded-full p-1 text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
-                aria-label="Close Alert"
+                aria-label={t('alert.close')}
             >
                 <X className="h-3.5 w-3.5" />
             </button>
