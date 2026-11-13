@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { forwardRef, KeyboardEvent, useEffect, useRef } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { TourPopoverProps } from '@/types/Components';
@@ -31,6 +32,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
         },
         ref,
     ) => {
+        const { t } = useLaravelReactI18n();
         const nextRef = useRef<HTMLButtonElement>(null);
         const isFirstStep = currentStep === 0;
         const isLastStep = currentStep === totalSteps - 1;
@@ -89,7 +91,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                 <button
                     type="button"
                     onClick={onClose}
-                    aria-label="Close tour"
+                    aria-label={t('tour_popover.close')}
                     className="absolute top-2 right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-(--text-gray-color) hover:bg-(--bg-light-color) hover:text-(--text-color)"
                 >
                     <Icon name="X" size={16} />
@@ -114,7 +116,10 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                 <div className="mt-4 flex items-center justify-between">
                     <div
                         className="flex items-center gap-2"
-                        aria-label={`Step ${currentStep + 1} of ${totalSteps}`}
+                        aria-label={t('tour_popover.step', {
+                            current: currentStep + 1,
+                            total: totalSteps,
+                        })}
                     >
                         <div className="h-1.5 w-20 overflow-hidden rounded-full bg-(--bg-light-color)">
                             <div
@@ -137,7 +142,7 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                             type="button"
                             onClick={onPrev}
                             disabled={isFirstStep}
-                            aria-label="Previous step"
+                            aria-label={t('tour_popover.previous')}
                             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-solid border-(--border-color-strong) bg-transparent text-(--text-color) transition-colors hover:bg-(--bg-light-color) disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                         >
                             <Icon name="ChevronLeft" size={16} />
@@ -149,11 +154,13 @@ const TourPopover = forwardRef<HTMLDivElement, TourPopoverProps>(
                             disabled={nextDisabled}
                             title={
                                 nextDisabled
-                                    ? 'Fill in the field to continue'
+                                    ? t('tour_popover.fill_to_continue')
                                     : undefined
                             }
                             aria-label={
-                                isLastStep ? 'Finish tour' : 'Next step'
+                                isLastStep
+                                    ? t('tour_popover.finish')
+                                    : t('tour_popover.next')
                             }
                             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-none bg-(--accent-color) text-white transition-colors hover:bg-(--accent-light-color) disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-(--accent-color)"
                         >

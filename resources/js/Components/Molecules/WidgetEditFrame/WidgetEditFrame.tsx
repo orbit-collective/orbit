@@ -1,6 +1,7 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import {
     FC,
@@ -96,6 +97,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
     index = 0,
     children,
 }) => {
+    const { t } = useLaravelReactI18n();
     const cellRef = useRef<HTMLDivElement | null>(null);
     const {
         listeners,
@@ -214,9 +216,7 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                             className="flex h-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-(--border-color-strong) px-3 text-center text-xs text-(--text-muted-color)"
                         >
                             <Icon name="EyeOff" size={18} />
-                            <span>
-                                Hidden, it will not appear on the dashboard
-                            </span>
+                            <span>{t('widget_edit_frame.hidden')}</span>
                         </motion.div>
                     ) : (
                         <motion.div
@@ -240,8 +240,8 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                         role="button"
                         tabIndex={0}
                         aria-pressed={selected}
-                        aria-label={`${label}, widget`}
-                        title="Drag to move, click to pick"
+                        aria-label={t('widget_edit_frame.widget', { label })}
+                        title={t('widget_edit_frame.drag_hint')}
                         {...listeners}
                         onClick={onSelect}
                         onKeyDown={(event) => {
@@ -308,9 +308,19 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                         <button
                             type="button"
                             aria-label={
-                                hidden ? `Show ${label}` : `Hide ${label}`
+                                hidden
+                                    ? t('widget_edit_frame.show_label', {
+                                          label,
+                                      })
+                                    : t('widget_edit_frame.hide_label', {
+                                          label,
+                                      })
                             }
-                            title={hidden ? 'Show' : 'Hide'}
+                            title={
+                                hidden
+                                    ? t('widget_edit_frame.show')
+                                    : t('widget_edit_frame.hide')
+                            }
                             onClick={onToggleVisible}
                             className="pointer-events-auto flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                         >
@@ -327,7 +337,12 @@ const WidgetEditFrame: FC<WidgetEditFrameProps> = ({
                                     ? 'horizontal'
                                     : 'vertical'
                             }
-                            aria-label={`Resize ${label}, ${handle.name}`}
+                            aria-label={t('widget_edit_frame.resize', {
+                                label,
+                                handle: t(
+                                    `widget_edit_frame.handles.${handle.name}`,
+                                ),
+                            })}
                             data-testid={`resize-${handle.name}`}
                             onPointerDown={(event) =>
                                 startResize(event, handle.axes)

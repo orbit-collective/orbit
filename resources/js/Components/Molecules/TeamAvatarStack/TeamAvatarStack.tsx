@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import { ProjectMember } from '@/types/ProjectMembers';
 
@@ -6,6 +7,7 @@ interface TeamAvatarStackProps {
 }
 
 export default function TeamAvatarStack({ members }: TeamAvatarStackProps) {
+    const { tChoice } = useLaravelReactI18n();
     const visible = members.slice(0, 8);
     const overflow = members.length - visible.length;
 
@@ -31,9 +33,7 @@ export default function TeamAvatarStack({ members }: TeamAvatarStackProps) {
                 )}
             </div>
             <p className="text-sm text-(--text-gray-color)">
-                {members.length}{' '}
-                {members.length === 1 ? 'person has' : 'people have'} access to
-                this project.
+                {tChoice('team_avatar_stack.access', members.length)}
             </p>
         </div>
     );

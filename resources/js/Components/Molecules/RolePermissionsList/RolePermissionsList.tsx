@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -26,6 +27,8 @@ export default function RolePermissionsList({
     onToggle,
     onSetAll,
 }: RolePermissionsListProps) {
+    const { t } = useLaravelReactI18n();
+
     return (
         <>
             <div className="relative px-5 py-4">
@@ -37,7 +40,7 @@ export default function RolePermissionsList({
                 <Input
                     value={search}
                     onChange={(event) => onSearchChange(event.target.value)}
-                    placeholder="Search permissions..."
+                    placeholder={t('role_permissions_list.search_placeholder')}
                     className="pl-8"
                 />
             </div>
@@ -45,14 +48,16 @@ export default function RolePermissionsList({
             <div className="max-h-[520px] space-y-3 overflow-y-auto px-5 pb-5">
                 {groups.length === 0 && (
                     <p className="py-6 text-center text-sm text-(--text-gray-color)">
-                        No permissions match "{search}".
+                        {t('role_permissions_list.no_match', { search })}
                     </p>
                 )}
 
                 {groups.map((group, index) => (
                     <RowReveal key={group.group} index={index}>
                         <PermissionGroupCard
-                            label={group.label}
+                            label={
+                                group.labelKey ? t(group.labelKey) : group.label
+                            }
                             icon={group.icon}
                             sections={group.sections}
                             permissionIds={group.permissions.map((p) => p.id)}

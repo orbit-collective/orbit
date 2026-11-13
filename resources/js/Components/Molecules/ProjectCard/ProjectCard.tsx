@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
@@ -11,6 +12,7 @@ import ProgressRing from '../../Atoms/ProgressRing/ProgressRing';
 const NO_ISSUES = { todo: 0, in_progress: 0, done: 0 };
 
 const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
+    const { t } = useLaravelReactI18n();
     const { todo, in_progress, done } = project.issue_counts ?? NO_ISSUES;
     const totalIssuesCount = todo + in_progress + done;
     const completionRate =
@@ -63,7 +65,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
             </div>
 
             <p className="relative line-clamp-2 min-h-8 text-xs leading-relaxed break-all text-(--text-gray-color)">
-                {project.description || 'No description provided.'}
+                {project.description || t('project_card.no_description')}
             </p>
 
             <div className="relative mt-auto flex items-center gap-4 border-t border-(--border-color) pt-3.5">
@@ -87,7 +89,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
                     <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 text-(--text-gray-color)">
                             <StatusDot status={'todo'} />
-                            To Do
+                            {t('project_card.status.todo')}
                         </span>
                         <span className="font-semibold text-(--text-color)">
                             <AnimatedNumber value={todo} />
@@ -96,7 +98,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
                     <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 text-(--text-gray-color)">
                             <StatusDot status={'in_progress'} />
-                            In Progress
+                            {t('project_card.status.in_progress')}
                         </span>
                         <span className="font-semibold text-(--text-color)">
                             <AnimatedNumber value={in_progress} />
@@ -105,19 +107,22 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
                     <div className="flex items-center justify-between gap-2">
                         <span className="flex items-center gap-1.5 text-(--text-gray-color)">
                             <StatusDot status={'done'} />
-                            Done
+                            {t('project_card.status.done')}
                         </span>
                         <span className="font-semibold text-(--text-color)">
                             <AnimatedNumber value={done} />
                         </span>
                     </div>
                     <div className="flex items-center justify-between gap-2 text-(--text-muted-color)">
-                        <span>Total</span>
+                        <span>{t('project_card.total')}</span>
                         <span className="font-semibold text-(--text-color)">
                             <AnimatedNumber
                                 value={done}
                                 format={(n) =>
-                                    `${Math.round(n)}/${totalIssuesCount} Issues`
+                                    t('project_card.total_issues', {
+                                        done: Math.round(n),
+                                        total: totalIssuesCount,
+                                    })
                                 }
                             />
                         </span>
@@ -128,6 +133,7 @@ const ProjectCard: FC<ProjectCardProps> = ({ project }) => {
     );
 };
 export function ProjectNewCard() {
+    const { t } = useLaravelReactI18n();
     const { runCommand } = useCommandPalette();
 
     return (
@@ -146,7 +152,7 @@ export function ProjectNewCard() {
                 />
             </div>
             <span className="text-xs font-semibold text-(--text-muted-color) transition-colors duration-200 group-hover:text-(--accent-color)">
-                New Project
+                {t('project_card.new_project')}
             </span>
         </Link>
     );

@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import Reveal from '@/Components/Atoms/Reveal/Reveal';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -56,6 +57,7 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
     showHeader = true,
     showViewAll = true,
 }) => {
+    const { t } = useLaravelReactI18n();
     const ordered = [...projects].sort(SORTERS[sort] ?? SORTERS.latest);
     const shown = ordered.slice(0, limit);
     const [listRef, listWidth] = useElementWidth<HTMLDivElement>();
@@ -65,11 +67,15 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
             {showHeader && (
                 <div className="flex items-center justify-between">
                     <h3 className="text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
-                        Projects Directory
+                        {t('projects_directory_panel.title')}
                     </h3>
                     <span className="text-[10px] font-medium text-(--text-muted-color)">
-                        Showing {shown.length}{' '}
-                        {sort === 'latest' ? 'latest projects' : 'projects'}
+                        {t(
+                            sort === 'latest'
+                                ? 'projects_directory_panel.showing_latest'
+                                : 'projects_directory_panel.showing',
+                            { count: shown.length },
+                        )}
                     </span>
                 </div>
             )}
@@ -103,17 +109,23 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
                                 href="/projects"
                                 className="col-span-full cursor-pointer rounded-lg border border-dashed border-(--bg-light-color) py-2.5 text-center text-xs font-semibold text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                             >
-                                View all {projects.length} projects
+                                {t('projects_directory_panel.view_all', {
+                                    count: projects.length,
+                                })}
                             </Link>
                         )}
                     </>
                 ) : (
                     <Reveal>
                         <EmptyStateCard
-                            title="Create your first project"
-                            description="Get started by setting up a workspace for your tasks and team activity."
+                            title={t('projects_directory_panel.empty.title')}
+                            description={t(
+                                'projects_directory_panel.empty.description',
+                            )}
                             iconName="FolderPlus"
-                            actionLabel="Create Project"
+                            actionLabel={t(
+                                'projects_directory_panel.empty.action',
+                            )}
                             actionCommand="project.create"
                         />
                     </Reveal>
@@ -124,6 +136,7 @@ const ProjectsDirectoryPanel: FC<ProjectsDirectoryPanelProps> = ({
 };
 
 const CompactProjectRow: FC<{ project: Project }> = ({ project }) => {
+    const { tChoice } = useLaravelReactI18n();
     const theme = getColorTheme(project.color);
 
     return (
@@ -141,7 +154,7 @@ const CompactProjectRow: FC<{ project: Project }> = ({ project }) => {
                 </span>
             </span>
             <span className="shrink-0 text-[11px] font-medium text-(--text-muted-color)">
-                {totalOf(project)} issues
+                {tChoice('projects_directory_panel.issues', totalOf(project))}
             </span>
         </Link>
     );
@@ -149,6 +162,7 @@ const CompactProjectRow: FC<{ project: Project }> = ({ project }) => {
 
 /** A small tile for the `grid` variant: the project, its issues and progress. */
 const ProjectTile: FC<{ project: Project }> = ({ project }) => {
+    const { tChoice } = useLaravelReactI18n();
     const theme = getColorTheme(project.color);
     const total = totalOf(project);
     const pct = Math.round(progressOf(project) * 100);
@@ -168,7 +182,7 @@ const ProjectTile: FC<{ project: Project }> = ({ project }) => {
                 </span>
             </span>
             <span className="flex items-center justify-between text-[11px] text-(--text-muted-color)">
-                <span>{total} issues</span>
+                <span>{tChoice('projects_directory_panel.issues', total)}</span>
                 <span className="font-semibold tabular-nums">{pct}%</span>
             </span>
             <span className="h-1.5 w-full overflow-hidden rounded-full bg-(--bg-light-color)">

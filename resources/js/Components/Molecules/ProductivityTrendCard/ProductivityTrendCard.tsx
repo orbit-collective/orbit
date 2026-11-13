@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC, useId } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { ProductivityTrendCardProps } from '@/types/Components';
 import { smoothLinePath } from '@/utils/chart';
 import { DASHBOARD_COLOR_VALUES } from '@/utils/dashboardColors';
 import { DURATION, EASE, rowDelay } from '@/utils/motion';
+import { localizedWeekday } from '@/utils/time';
 import { VisualCard } from '../../Atoms/VisualCard/VisualCard';
 import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 
@@ -47,6 +49,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
     highlightToday = true,
     color = 'accent',
 }) => {
+    const { t, currentLocale } = useLaravelReactI18n();
     const gradientId = useId();
     const tint = DASHBOARD_COLOR_VALUES[color];
     const currentDay = new Date().toLocaleDateString('en-US', {
@@ -73,8 +76,8 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
         <VisualCard className={className}>
             {showHeader && (
                 <VisualCardHeader
-                    title="Productivity Trend"
-                    description="Daily issue updates and fixes from this week"
+                    title={t('productivity_trend_card.title')}
+                    description={t('productivity_trend_card.description')}
                 />
             )}
 
@@ -331,7 +334,7 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                                     key={idx}
                                     className="flex-1 text-center text-[10px] font-semibold text-(--text-muted-color)"
                                 >
-                                    {day.day}
+                                    {localizedWeekday(day.day, currentLocale())}
                                 </span>
                             ))}
                         </div>
@@ -344,11 +347,10 @@ export const ProductivityTrendCard: FC<ProductivityTrendCardProps> = ({
                     </div>
                     <div>
                         <p className="text-sm font-semibold text-(--text-color)">
-                            No activity yet this week
+                            {t('productivity_trend_card.empty.title')}
                         </p>
                         <p className="mt-1 max-w-[220px] text-xs text-(--text-muted-color)">
-                            Issue updates and fixes will show up here as your
-                            team gets to work.
+                            {t('productivity_trend_card.empty.description')}
                         </p>
                     </div>
                 </div>

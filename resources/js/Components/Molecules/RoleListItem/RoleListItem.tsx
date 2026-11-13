@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -31,6 +32,7 @@ export default function RoleListItem({
     selected,
     onClick,
 }: RoleListItemProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const ratio =
         totalPermissions === 0
             ? 0
@@ -78,13 +80,13 @@ export default function RoleListItem({
                     </div>
                     <p className="truncate text-[11px] text-(--text-gray-color)">
                         <AnimatedNumber value={role.memberCount} />{' '}
-                        {role.memberCount === 1 ? 'member' : 'members'}
+                        {tChoice('role_list_item.members', role.memberCount)}
                     </p>
                 </div>
 
                 <div
                     className="flex shrink-0 flex-col items-center gap-1"
-                    title={`${ratio}% of permissions granted`}
+                    title={t('role_list_item.granted', { ratio })}
                 >
                     <div className="relative">
                         <ProgressRing
@@ -99,7 +101,7 @@ export default function RoleListItem({
                         </span>
                     </div>
                     <span className="text-[8px] font-semibold tracking-wide text-(--text-gray-color) uppercase">
-                        % perms
+                        {t('role_list_item.perms')}
                     </span>
                 </div>
             </div>

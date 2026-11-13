@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { DURATION, EASE } from '@/utils/motion';
@@ -23,13 +24,14 @@ function NotificationSelectionBar({
     onDelete,
     onCancel,
 }: NotificationSelectionBarProps) {
+    const { t } = useLaravelReactI18n();
     const allSelected = totalCount > 0 && selectedCount === totalCount;
     const hasSelection = selectedCount > 0;
 
     return (
         <motion.div
             role="toolbar"
-            aria-label="Selection actions"
+            aria-label={t('notification_selection_bar.aria')}
             initial={{ opacity: 0, height: 0, marginTop: 0 }}
             animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
             exit={{
@@ -47,11 +49,17 @@ function NotificationSelectionBar({
                 disabled={totalCount === 0}
                 className="text-xs font-semibold text-(--text-color) hover:underline disabled:opacity-40"
             >
-                {allSelected ? 'Clear selection' : 'Select all'}
+                {allSelected
+                    ? t('notification_selection_bar.clear')
+                    : t('notification_selection_bar.select_all')}
             </button>
             <span className="text-xs text-(--text-gray-color)">
-                {selectedCount} selected
-                {limit !== undefined && selectedCount >= limit && ' (max)'}
+                {t('notification_selection_bar.selected', {
+                    count: selectedCount,
+                })}
+                {limit !== undefined &&
+                    selectedCount >= limit &&
+                    t('notification_selection_bar.max')}
             </span>
 
             <div className="ml-auto flex items-center gap-1.5">
@@ -62,7 +70,7 @@ function NotificationSelectionBar({
                     className="h-8 rounded-lg px-2.5 text-xs"
                 >
                     <Icon name="CheckCheck" size={13} />
-                    Mark read
+                    {t('notification_selection_bar.mark_read')}
                 </Button>
                 <Button
                     type="button"
@@ -72,13 +80,13 @@ function NotificationSelectionBar({
                     className="h-8 rounded-lg px-2.5 text-xs"
                 >
                     <Icon name="Trash" size={13} />
-                    Delete
+                    {t('notification_selection_bar.delete')}
                 </Button>
                 <button
                     type="button"
                     onClick={onCancel}
-                    aria-label="Cancel selection"
-                    title="Cancel selection"
+                    aria-label={t('notification_selection_bar.cancel')}
+                    title={t('notification_selection_bar.cancel')}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-(--text-gray-color) hover:text-(--text-color)"
                 >
                     <Icon name="X" size={14} />

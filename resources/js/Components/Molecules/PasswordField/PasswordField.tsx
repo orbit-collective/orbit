@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -15,6 +16,7 @@ const PasswordField = ({
     autoComplete,
     isDisabled = false,
 }: PasswordFieldProps) => {
+    const { t } = useLaravelReactI18n();
     const [isVisible, setIsVisible] = useState(false);
 
     return (
@@ -52,7 +54,11 @@ const PasswordField = ({
                     onClick={() => setIsVisible((prev) => !prev)}
                     tabIndex={-1}
                     className="absolute top-1/2 right-3 -translate-y-1/2 text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
-                    aria-label={isVisible ? 'Hide password' : 'Show password'}
+                    aria-label={
+                        isVisible
+                            ? t('password_field.hide')
+                            : t('password_field.show')
+                    }
                 >
                     <Icon name={isVisible ? 'EyeOff' : 'Eye'} size={16} />
                 </button>

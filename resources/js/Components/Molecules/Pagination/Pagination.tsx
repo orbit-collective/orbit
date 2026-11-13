@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Key } from 'react';
 import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
@@ -30,15 +31,6 @@ const paginationVariants = cva(
 );
 
 const rowsPerPageCounts: number[] = [10, 20, 50, 100];
-
-const ROWS_PER_PAGE_OPTIONS: DropdownOptionItem[] = rowsPerPageCounts.map(
-    (count) => ({
-        value: String(count),
-        label: `${count} rows`,
-        role: 'menuitemradio',
-        indicator: 'check',
-    }),
-);
 
 const range = (start: number, end: number): number[] =>
     Array.from({ length: end - start + 1 }, (_, i) => start + i);
@@ -92,9 +84,19 @@ const Pagination = ({
     only,
     className,
 }: PaginationProps) => {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
 
     if (total === 0) return null;
+
+    const rowsPerPageOptions: DropdownOptionItem[] = rowsPerPageCounts.map(
+        (count) => ({
+            value: String(count),
+            label: t('pagination_bar.rows', { count }),
+            role: 'menuitemradio',
+            indicator: 'check',
+        }),
+    );
 
     const renderLabel = (label: string) => {
         if (label.includes('Previous')) {
@@ -121,16 +123,16 @@ const Pagination = ({
             ...(only && { only }),
             onSuccess: () =>
                 addAlert(
-                    `Rows per page changed to ${newPerPage}`,
+                    t('pagination_bar.rows_changed', { count: newPerPage }),
                     'information',
                 ),
         });
     };
 
     const getLinkAriaLabel = (label: string) => {
-        if (label.includes('Previous')) return 'Previous page';
-        if (label.includes('Next')) return 'Next page';
-        return `Page ${label}`;
+        if (label.includes('Previous')) return t('pagination_bar.previous');
+        if (label.includes('Next')) return t('pagination_bar.next');
+        return t('pagination_bar.page', { page: label });
     };
 
     const prevLink = links[0];
@@ -198,19 +200,19 @@ const Pagination = ({
             )}
         >
             <div className="text-center text-sm text-(--text-gray-color) lg:text-left">
-                Showing{' '}
+                {t('pagination_bar.showing_prefix')}{' '}
                 <span className="font-semibold text-(--text-color)">
                     {from || 0}
                 </span>{' '}
-                to{' '}
+                {t('pagination_bar.to')}{' '}
                 <span className="font-semibold text-(--text-color)">
                     {to || 0}
                 </span>{' '}
-                of{' '}
+                {t('pagination_bar.of')}{' '}
                 <span className="font-semibold text-(--text-color)">
                     {total}
                 </span>{' '}
-                results
+                {t('pagination_bar.results')}
             </div>
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-4 lg:gap-6 xl:flex-nowrap">
                 <div className="flex shrink-0 items-center gap-2">
@@ -218,14 +220,14 @@ const Pagination = ({
                         aria-hidden="true"
                         className="whitespace-nowrap text-(--text-gray-color)"
                     >
-                        Rows per page:
+                        {t('pagination_bar.rows_per_page')}:
                     </span>
                     <Dropdown
                         variant="menu"
-                        ariaLabel="Rows per page"
+                        ariaLabel={t('pagination_bar.rows_per_page')}
                         placement="top"
                         width={176}
-                        options={ROWS_PER_PAGE_OPTIONS}
+                        options={rowsPerPageOptions}
                         selectedValues={[currentPerPage]}
                         onSelect={(count) => handlePerPageChange(Number(count))}
                         trigger={({ isOpen }) => (
@@ -234,7 +236,7 @@ const Pagination = ({
                                 label={
                                     <div className="flex items-center gap-2">
                                         <span className="sr-only">
-                                            Rows per page:
+                                            {t('pagination_bar.rows_per_page')}:
                                         </span>
                                         <span className="font-semibold text-(--text-color)">
                                             {currentPerPage}
@@ -247,7 +249,7 @@ const Pagination = ({
                 </div>
                 {links && numericLinks.length > 1 && (
                     <nav
-                        aria-label="Pagination"
+                        aria-label={t('pagination_bar.nav')}
                         className="flex scrollbar-none flex-nowrap items-center justify-center gap-1 overflow-x-auto sm:gap-2"
                     >
                         {renderLink(prevLink, 'prev')}

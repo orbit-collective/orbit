@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -38,6 +39,7 @@ export default function RoleDetailHeader({
     onCancelRename,
     onDeleteRequest,
 }: RoleDetailHeaderProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const theme = ROLE_TYPE_THEME[role.type];
 
     return (
@@ -52,7 +54,7 @@ export default function RoleDetailHeader({
                                 name: event.target.value,
                             })
                         }
-                        placeholder="Role name"
+                        placeholder={t('role_detail_header.name_placeholder')}
                         className="sm:w-48"
                     />
                     {!role.isSystem && (
@@ -64,7 +66,9 @@ export default function RoleDetailHeader({
                                     slug: event.target.value,
                                 })
                             }
-                            placeholder="slug"
+                            placeholder={t(
+                                'role_detail_header.slug_placeholder',
+                            )}
                             className="sm:w-32"
                         />
                     )}
@@ -123,11 +127,14 @@ export default function RoleDetailHeader({
                                         theme.dot,
                                     )}
                                 />
-                                {theme.label}
+                                {t(`role_detail_header.types.${role.type}`)}
                             </span>
                             <span>
                                 <AnimatedNumber value={role.memberCount} />{' '}
-                                {role.memberCount === 1 ? 'member' : 'members'}
+                                {tChoice(
+                                    'role_detail_header.members',
+                                    role.memberCount,
+                                )}
                             </span>
                             <span>&middot; /{role.slug}</span>
                         </p>
@@ -140,17 +147,17 @@ export default function RoleDetailHeader({
                     {role.type === 'owner' ? (
                         <span
                             className="flex items-center gap-1 text-xs text-(--text-gray-color)"
-                            title="The owner always has every permission and can't be changed."
+                            title={t('role_detail_header.owner_hint')}
                         >
                             <Icon name="Lock" size={12} />
-                            Owner role
+                            {t('role_detail_header.owner_role')}
                         </span>
                     ) : (
                         <>
                             {canUpdateRoles && (
                                 <button
                                     type="button"
-                                    title="Rename role"
+                                    title={t('role_detail_header.rename')}
                                     onClick={onStartRename}
                                     className="flex h-8 w-8 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                                 >
@@ -160,7 +167,9 @@ export default function RoleDetailHeader({
                             {role.isSystem ? (
                                 <span
                                     className="flex h-8 w-8 items-center justify-center text-(--text-gray-color)"
-                                    title="System roles can't be deleted."
+                                    title={t(
+                                        'role_detail_header.system_locked',
+                                    )}
                                 >
                                     <Icon name="Lock" size={12} />
                                 </span>
@@ -168,7 +177,7 @@ export default function RoleDetailHeader({
                                 canDeleteRoles && (
                                     <button
                                         type="button"
-                                        title="Delete role"
+                                        title={t('role_detail_header.delete')}
                                         onClick={onDeleteRequest}
                                         className="flex h-8 w-8 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-red-500/10 hover:text-red-400"
                                     >

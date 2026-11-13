@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useState } from 'react';
 import { ShowcaseDots } from '@/Components/Atoms/ShowcaseDots/ShowcaseDots';
 
+/** `text` and `highlightText` are translation keys. */
 export interface ShowcaseSlide {
     text: string;
     highlightText: string;
@@ -9,16 +11,16 @@ export interface ShowcaseSlide {
 
 const SLIDES: ShowcaseSlide[] = [
     {
-        text: 'Built for teams who plan, ship, and track work together',
-        highlightText: '— all in one orbit.',
+        text: 'showcase_slider.slides.one.text',
+        highlightText: 'showcase_slider.slides.one.highlight',
     },
     {
-        text: 'Keep all your workspace tools, code, and discussions',
-        highlightText: '— perfectly synchronized.',
+        text: 'showcase_slider.slides.two.text',
+        highlightText: 'showcase_slider.slides.two.highlight',
     },
     {
-        text: 'Automate daily routines and focus on building',
-        highlightText: '— faster than ever.',
+        text: 'showcase_slider.slides.three.text',
+        highlightText: 'showcase_slider.slides.three.highlight',
     },
 ];
 
@@ -29,6 +31,7 @@ interface ShowcaseSliderProps {
 export const ShowcaseSlider = ({
     autoPlayInterval = 5000,
 }: ShowcaseSliderProps) => {
+    const { t } = useLaravelReactI18n();
     const [activeIndex, setActiveIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
 
@@ -59,9 +62,9 @@ export const ShowcaseSlider = ({
                     transition={{ duration: 0.3 }}
                     className="max-w-xs text-xs leading-relaxed text-(--text-gray-color)"
                 >
-                    {SLIDES[activeIndex].text}{' '}
+                    {t(SLIDES[activeIndex].text)}{' '}
                     <span className="font-semibold text-(--text-color)">
-                        {SLIDES[activeIndex].highlightText}
+                        {t(SLIDES[activeIndex].highlightText)}
                     </span>
                 </motion.p>
             </AnimatePresence>

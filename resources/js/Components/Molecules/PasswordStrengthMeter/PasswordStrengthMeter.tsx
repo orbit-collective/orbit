@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import {
     getPasswordStrength,
     PasswordStrength,
@@ -13,6 +14,7 @@ const TIERS: PasswordStrength[] = ['weak', 'fair', 'strong'];
 export default function PasswordStrengthMeter({
     password,
 }: PasswordStrengthMeterProps) {
+    const { t } = useLaravelReactI18n();
     const strength = getPasswordStrength(password);
 
     if (!strength) {
@@ -36,7 +38,7 @@ export default function PasswordStrengthMeter({
                 ))}
             </div>
             <span className="text-[10px] font-medium text-(--text-muted-color)">
-                {passwordStrengthCopy[strength].label}
+                {t(`password_strength_meter.${strength}`)}
             </span>
         </div>
     );

@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useEffect, useMemo, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
@@ -20,12 +21,18 @@ const FILTERABLE_KEYS = [
     'priority',
 ] as const;
 
+type Translate = (
+    key: string,
+    replacements?: Record<string, string | number>,
+) => string;
+
+/** Translation keys of the filter names. */
 const FILTER_LABELS: Record<(typeof FILTERABLE_KEYS)[number], string> = {
-    labels: 'Labels',
-    status: 'Status',
-    workflow_status: 'Exact status',
-    assignee: 'Assignee',
-    priority: 'Priority',
+    labels: 'saved_filters_dropdown.filters.labels',
+    status: 'saved_filters_dropdown.filters.status',
+    workflow_status: 'saved_filters_dropdown.filters.workflow_status',
+    assignee: 'saved_filters_dropdown.filters.assignee',
+    priority: 'saved_filters_dropdown.filters.priority',
 };
 
 const pickFilters = (
@@ -42,12 +49,17 @@ const describeFilters = (
     filters: Record<string, any>,
     labels: ProjectLabel[],
     priorities: ProjectPriority[],
+    t: Translate,
 ) =>
     Object.entries(pickFilters(filters))
         .map(([key, value]) => {
-            const label =
-                FILTER_LABELS[key as (typeof FILTERABLE_KEYS)[number]];
+            const label = t(
+                FILTER_LABELS[key as (typeof FILTERABLE_KEYS)[number]],
+            );
             const values = String(value).split(',');
+            const selected = t('saved_filters_dropdown.selected', {
+                count: values.length,
+            });
 
             // Exact statuses and labels are stored as ids, which mean nothing
             // in a list: labels show their names while they still exist.
@@ -58,7 +70,7 @@ const describeFilters = (
 
                 return names.every(Boolean)
                     ? `${label}: ${names.join(', ')}`
-                    : `${label}: ${values.length} selected`;
+                    : `${label}: ${selected}`;
             }
 
             if (key === 'priority') {
@@ -71,11 +83,11 @@ const describeFilters = (
 
                 return names.every(Boolean)
                     ? `${label}: ${names.join(', ')}`
-                    : `${label}: ${values.length} selected`;
+                    : `${label}: ${selected}`;
             }
 
             return key === 'workflow_status'
-                ? `${label}: ${values.length} selected`
+                ? `${label}: ${selected}`
                 : `${label}: ${values.join(', ')}`;
         })
         .join(' · ');
@@ -87,6 +99,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
     isOpen,
     onOpenChange,
 }) => {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const { labels } = useProjectLabels();
     const { priorities } = useProjectPriorities();
@@ -117,7 +130,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
             preserveState: true,
             replace: true,
         });
-        addAlert('Filters applied successfully', 'success');
+        addAlert(t('saved_filters_dropdown.applied'), 'success');
     };
 
     const handleApply = (id: number) => {
@@ -146,7 +159,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
     return (
         <Dropdown
             variant="panel"
-            ariaLabel="Saved filters"
+            ariaLabel={t('saved_filters_dropdown.aria_label')}
             width={288}
             open={isOpen}
             onOpenChange={onOpenChange}
@@ -154,7 +167,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
             trigger={
                 <FilterButton
                     icon="ListFilter"
-                    label="Filters"
+                    label={t('saved_filters_dropdown.filters_label')}
                     value={
                         activeFilterCount > 0
                             ? String(activeFilterCount)
@@ -167,7 +180,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
         >
             <div className="flex items-center justify-between px-3 pt-3">
                 <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                    Filters
+                    {t('saved_filters_dropdown.filters_label')}
                 </p>
                 {activeFilterCount > 0 && (
                     <button
@@ -175,7 +188,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                         onClick={handleClearAll}
                         className="cursor-pointer text-[10px] font-medium text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                     >
-                        Clear all
+                        {t('saved_filters_dropdown.clear_all')}
                     </button>
                 )}
             </div>
@@ -184,7 +197,12 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                 {activeFilterCount > 0 ? (
                     <div className="flex flex-col gap-2">
                         <p className="truncate text-[11px] text-(--text-muted-color)">
-                            {describeFilters(activeFilters, labels, priorities)}
+                            {describeFilters(
+                                activeFilters,
+                                labels,
+                                priorities,
+                                t,
+                            )}
                         </p>
                         <div className="flex items-center gap-1.5">
                             <input
@@ -193,7 +211,9 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') handleSave();
                                 }}
-                                placeholder="Name this view…"
+                                placeholder={t(
+                                    'saved_filters_dropdown.name_placeholder',
+                                )}
                                 className="w-full rounded-lg bg-(--bg-light-color) px-2.5 py-1.5 text-xs text-(--text-color) outline-hidden transition-colors placeholder:text-(--text-muted-color)"
                             />
                             <button
@@ -206,13 +226,13 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                 )}
                             >
                                 <Icon name="BookmarkPlus" size={13} />
-                                Save
+                                {t('common.save')}
                             </button>
                         </div>
                     </div>
                 ) : (
                     <p className="text-[11px] text-(--text-muted-color)">
-                        Apply a filter above to save it as a view.
+                        {t('saved_filters_dropdown.apply_hint')}
                     </p>
                 )}
             </div>
@@ -221,7 +241,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
 
             <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
                 <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                    Saved Views
+                    {t('saved_filters_dropdown.saved_views')}
                 </p>
                 {savedFilters.length > 0 && (
                     <span className="text-[10px] text-(--text-muted-color)">
@@ -240,10 +260,10 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                         />
                     </span>
                     <p className="text-xs font-medium text-(--text-muted-color)">
-                        No saved views yet
+                        {t('saved_filters_dropdown.empty.title')}
                     </p>
                     <p className="text-[11px] text-(--text-muted-color)">
-                        Save a filter combination above to reuse it later.
+                        {t('saved_filters_dropdown.empty.description')}
                     </p>
                 </div>
             ) : (
@@ -298,6 +318,7 @@ const SavedFiltersDropdown: React.FC<SavedFiltersDropdownProps> = ({
                                             filter.query_params,
                                             labels,
                                             priorities,
+                                            t,
                                         )}
                                     </p>
                                 </div>

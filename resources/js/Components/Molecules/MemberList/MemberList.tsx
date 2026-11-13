@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import MemberRoleDropdown from '@/Components/Molecules/MemberRoleDropdown/MemberRoleDropdown';
 import MemberRow from '@/Components/Molecules/MemberRow/MemberRow';
@@ -34,6 +35,7 @@ export default function MemberList({
     onToggleCustomRole,
     onRemove,
 }: MemberListProps) {
+    const { t } = useLaravelReactI18n();
     return (
         <>
             <TeamAvatarStack members={members} />
@@ -66,7 +68,7 @@ export default function MemberList({
                         {canRemove && (
                             <button
                                 type="button"
-                                title="Remove from project"
+                                title={t('member_list.remove')}
                                 onClick={() => onRemove(member.id)}
                                 className="flex h-9 w-9 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-red-500/10 hover:text-red-400"
                             >

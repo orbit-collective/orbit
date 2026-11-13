@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useCallback, useMemo, useState } from 'react';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
 import { useModal } from '@/context/ModalContext';
@@ -22,6 +23,7 @@ export default function SelectionDropdown({
     onChange,
     trigger,
 }: SelectionDropdownProps) {
+    const { t } = useLaravelReactI18n();
     const [isOpen, setIsOpen] = useState(false);
     const { getIfAnyModalIsOpened } = useModal();
 
@@ -56,7 +58,7 @@ export default function SelectionDropdown({
         (): ShortcutDefinition[] => [
             {
                 key: 'alt+s',
-                description: 'Open selection dropdown',
+                description: t('selection_dropdown.shortcut'),
                 category: 'Search',
                 action: () => {
                     if (!getIfAnyModalIsOpened()) {
@@ -65,7 +67,7 @@ export default function SelectionDropdown({
                 },
             },
         ],
-        [getIfAnyModalIsOpened, toggle],
+        [getIfAnyModalIsOpened, toggle, t],
     );
 
     useShortcuts(shortcuts);
@@ -73,8 +75,8 @@ export default function SelectionDropdown({
     return (
         <Dropdown
             variant="menu"
-            title="Display Columns"
-            ariaLabel="Display columns"
+            title={t('selection_dropdown.title')}
+            ariaLabel={t('selection_dropdown.aria_label')}
             align="end"
             options={items}
             selectedValues={selectedValues}
