@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, {
     createContext,
     useCallback,
@@ -29,6 +30,7 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
     const [shortcuts, setShortcuts] = useState<ShortcutDefinition[]>([]);
+    const { t } = useLaravelReactI18n();
     const { openModal } = useModal();
     const comboRef = useRef<string[]>([]);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,8 +78,13 @@ export const ShortcutProvider: React.FC<{ children: React.ReactNode }> = ({
         const isAlreadyOpen = document.querySelector('.shortcut-modal-marker');
         if (isAlreadyOpen) return;
 
-        openModal('Keyboard Shortcuts', undefined, <ShortcutHelpModal />);
-    }, [openModal]);
+        openModal(
+            t('context_shortcut.help_title'),
+            undefined,
+            <ShortcutHelpModal />,
+            true,
+        );
+    }, [openModal, t]);
 
     useEffect(() => {
         if (!import.meta.env.DEV) return;

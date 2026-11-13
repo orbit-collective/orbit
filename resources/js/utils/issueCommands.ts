@@ -22,6 +22,8 @@ export interface IssueCommandContext {
     update: (data: Record<string, FormDataConvertible>) => void;
     copy: (text: string, successMessage: string) => void;
     visit: (url: string) => void;
+    /** Translator; the English wording is used when it is not given. */
+    t?: (key: string, replacements?: Record<string, string | number>) => string;
 }
 
 const issueLabel = (issue: Issue): string => `#${issue.number ?? issue.id}`;
@@ -36,6 +38,12 @@ const issueLabel = (issue: Issue): string => `#${issue.number ?? issue.id}`;
 export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
     const { issue, abilities, users, labels, priorities } = ctx;
     const context = issueLabel(issue);
+    const tr = (
+        key: string,
+        english: string,
+        replacements?: Record<string, string | number>,
+    ): string =>
+        ctx.t ? ctx.t(`util_issue_commands.${key}`, replacements) : english;
     const base = {
         group: 'suggested',
         scope: 'issue',
@@ -71,7 +79,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         if (issue.priority_id != null) {
             steps.push({
                 id: 'issue.priority.none',
-                title: 'No priority',
+                title: tr('no_priority', 'No priority'),
                 group: 'suggested',
                 icon: 'CircleDashed',
                 perform: () => ctx.update({ priority: null }),
@@ -88,7 +96,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         if (me && issue.assignee_id !== me.id) {
             steps.push({
                 id: 'issue.assign.me',
-                title: 'Assign to me',
+                title: tr('assign_me', 'Assign to me'),
                 subtitle: me.name,
                 group: 'suggested',
                 icon: 'UserCheck',
@@ -115,7 +123,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         if (issue.assignee_id) {
             steps.push({
                 id: 'issue.assign.none',
-                title: 'Unassign',
+                title: tr('unassign', 'Unassign'),
                 group: 'suggested',
                 icon: 'UserX',
                 perform: () => ctx.update({ assignee_id: null }),
@@ -134,7 +142,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
             return {
                 id: `issue.labels.${label.id}`,
                 title: label.name,
-                subtitle: active ? 'Added' : undefined,
+                subtitle: active ? tr('added', 'Added') : undefined,
                 group: 'suggested',
                 icon: active ? 'SquareCheck' : 'Square',
                 iconColor: label.color,
@@ -157,7 +165,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         {
             ...base,
             id: 'issue.status',
-            title: 'Change status…',
+            title: tr('change_status', 'Change status…'),
             subtitle: issue.workflowStatus?.name,
             icon: 'CircleDot',
             keywords: ['workflow', 'transition', 'state', 'move'],
@@ -168,7 +176,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         {
             ...base,
             id: 'issue.priority',
-            title: 'Change priority…',
+            title: tr('change_priority', 'Change priority…'),
             subtitle: issue.priority ?? undefined,
             icon: 'Flag',
             keywords: ['urgent', 'importance'],
@@ -178,7 +186,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         {
             ...base,
             id: 'issue.assign',
-            title: 'Assign to…',
+            title: tr('assign_to', 'Assign to…'),
             subtitle: issue.assignee?.name,
             icon: 'UserPlus',
             keywords: ['assignee', 'owner', 'member', 'unassign'],
@@ -189,7 +197,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         {
             ...base,
             id: 'issue.labels',
-            title: 'Labels…',
+            title: tr('labels', 'Labels…'),
             icon: 'Tag',
             keywords: ['tag', 'label'],
             when: () =>
@@ -199,18 +207,22 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         {
             ...base,
             id: 'issue.copy-link',
-            title: 'Copy link',
+            title: tr('copy_link', 'Copy link'),
             icon: 'Link',
             keywords: ['url', 'share'],
-            perform: () => ctx.copy(ctx.link, 'Link copied'),
+            perform: () => ctx.copy(ctx.link, tr('link_copied', 'Link copied')),
         },
         {
             ...base,
             id: 'issue.copy-id',
-            title: `Copy ${context}`,
+            title: tr('copy_id', `Copy ${context}`, { id: context }),
             icon: 'Hash',
             keywords: ['id', 'number'],
-            perform: () => ctx.copy(context, `Copied ${context}`),
+            perform: () =>
+                ctx.copy(
+                    context,
+                    tr('copied_id', `Copied ${context}`, { id: context }),
+                ),
         },
     ];
 
@@ -218,7 +230,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         commands.push({
             ...base,
             id: 'issue.parent',
-            title: 'Go to parent',
+            title: tr('go_parent', 'Go to parent'),
             subtitle: `${issueLabel(parent)} ${parent.title}`,
             icon: 'CornerLeftUp',
             keywords: ['up', 'epic', 'ancestor'],
@@ -230,7 +242,7 @@ export const buildIssueCommands = (ctx: IssueCommandContext): Command[] => {
         commands.push({
             ...base,
             id: 'issue.children',
-            title: 'Go to child…',
+            title: tr('go_child', 'Go to child…'),
             subtitle: `${children.length}`,
             icon: 'ListTree',
             keywords: ['sub-issue', 'subtask', 'down'],

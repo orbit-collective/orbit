@@ -71,6 +71,7 @@ export const scoreCommand = (
 export const searchCommands = (
     commands: Command[],
     query: string,
+    t?: (key: string) => string,
 ): CommandSection[] => {
     const hasQuery = query.trim().length > 0;
     const buckets = new Map<CommandGroup, ScoredCommand[]>();
@@ -89,7 +90,9 @@ export const searchCommands = (
         const items = buckets.get(group) as ScoredCommand[];
         return {
             group,
-            label: COMMAND_GROUP_LABELS[group],
+            label: t
+                ? t(`util_command_search.groups.${group}`)
+                : COMMAND_GROUP_LABELS[group],
             items: hasQuery
                 ? [...items].sort((a, b) => b.score - a.score)
                 : items,

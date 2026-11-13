@@ -329,6 +329,7 @@ describe('useShortcuts', () => {
             'Keyboard Shortcuts',
             undefined,
             expect.anything(),
+            true,
         );
     });
 

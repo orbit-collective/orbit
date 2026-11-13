@@ -101,6 +101,7 @@ import Info from 'lucide-react/icons/info';
 import Key from 'lucide-react/icons/key';
 import KeyRound from 'lucide-react/icons/key-round';
 import Keyboard from 'lucide-react/icons/keyboard';
+import Languages from 'lucide-react/icons/languages';
 import Layers from 'lucide-react/icons/layers';
 import LayoutDashboard from 'lucide-react/icons/layout-dashboard';
 import LayoutGrid from 'lucide-react/icons/layout-grid';
@@ -332,6 +333,7 @@ export const iconRegistry: Record<string, LucideIcon> = {
     Key,
     KeyRound,
     Keyboard,
+    Languages,
     Layers,
     LayoutDashboard,
     LayoutGrid,

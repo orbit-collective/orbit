@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useMemo, useState } from 'react';
 import { useAlert } from '@/context/AlertContext';
 import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
@@ -18,6 +19,7 @@ export function useRolesManagement({
     selectedProjectId,
     canUpdateRoles,
 }: UseRolesManagementArgs) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
 
     const [localRoles, setLocalRoles] = useState<WorkspaceRole[]>(roles);
@@ -65,7 +67,7 @@ export function useRolesManagement({
                         ...section,
                         permissions: section.permissions.filter(
                             (permission) =>
-                                getPermissionLabel(permission)
+                                getPermissionLabel(permission, t)
                                     .toLowerCase()
                                     .includes(query) ||
                                 permission.key.toLowerCase().includes(query),
@@ -74,7 +76,7 @@ export function useRolesManagement({
                     .filter((section) => section.permissions.length > 0),
             }))
             .filter((group) => group.sections.length > 0);
-    }, [permissionGroups, search]);
+    }, [permissionGroups, search, t]);
 
     const totalMembersGoverned = localRoles.reduce(
         (sum, role) => sum + role.memberCount,
@@ -144,7 +146,7 @@ export function useRolesManagement({
             role,
             nextIds,
             previousIds,
-            "Couldn't update that permission.",
+            t('hook_roles_management.permission_failed'),
         );
     };
 
@@ -163,7 +165,7 @@ export function useRolesManagement({
             role,
             nextIds,
             previousIds,
-            "Couldn't update those permissions.",
+            t('hook_roles_management.permissions_failed'),
         );
     };
 
@@ -184,12 +186,17 @@ export function useRolesManagement({
                 onStart: () => setIsSavingRename(true),
                 onFinish: () => setIsSavingRename(false),
                 onSuccess: () => {
-                    addAlert('Role updated.', 'success');
+                    addAlert(
+                        t('hook_roles_management.role_updated'),
+                        'success',
+                    );
                     setRenameDraft(null);
                 },
                 onError: (errors) => {
                     addAlert(
-                        errors.name ?? errors.slug ?? 'Failed to update role.',
+                        errors.name ??
+                            errors.slug ??
+                            t('hook_roles_management.role_update_failed'),
                         'error',
                     );
                 },

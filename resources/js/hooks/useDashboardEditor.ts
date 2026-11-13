@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     DashboardCatalogEntry,
@@ -30,6 +31,7 @@ export function useDashboardEditor(
     catalog: DashboardCatalogEntry[],
     loadedProps: string[],
 ) {
+    const { t } = useLaravelReactI18n();
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState<DashboardWidget[]>(saved);
     const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -103,10 +105,10 @@ export function useDashboardEditor(
                     setSaveLayoutError(
                         errors.name ??
                             Object.values(errors)[0] ??
-                            'The layout could not be changed.',
+                            t('hook_dashboard_editor.change_failed'),
                     ),
             }),
-        [],
+        [t],
     );
 
     const patch = useCallback(
@@ -144,7 +146,7 @@ export function useDashboardEditor(
                         setSaveLayoutError(
                             errors.name ??
                                 Object.values(errors)[0] ??
-                                'The layout could not be saved.',
+                                t('hook_dashboard_editor.save_failed'),
                         ),
                 },
             ),

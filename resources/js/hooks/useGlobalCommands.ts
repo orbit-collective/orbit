@@ -1,4 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useMemo } from 'react';
 import { useShortcuts } from '@/context/ShortcutContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -11,9 +12,13 @@ import { DOCS_URL, LEARN_URL, openExternal } from '@/utils/externalLinks';
 import { requestOpenNotifications } from '@/utils/notificationsPopupEvent';
 
 const THEMES: { mode: ThemeMode; title: string; icon: Command['icon'] }[] = [
-    { mode: 'dark', title: 'Switch to dark theme', icon: 'Moon' },
-    { mode: 'light', title: 'Switch to light theme', icon: 'Sun' },
-    { mode: 'system', title: 'Use system theme', icon: 'Monitor' },
+    { mode: 'dark', title: 'hook_global_commands.theme.dark', icon: 'Moon' },
+    { mode: 'light', title: 'hook_global_commands.theme.light', icon: 'Sun' },
+    {
+        mode: 'system',
+        title: 'hook_global_commands.theme.system',
+        icon: 'Monitor',
+    },
 ];
 
 /**
@@ -22,6 +27,7 @@ const THEMES: { mode: ThemeMode; title: string; icon: Command['icon'] }[] = [
  * registered by the component that owns the data they need.
  */
 export const useGlobalCommands = (): void => {
+    const { t } = useLaravelReactI18n();
     const { theme, setTheme } = useTheme();
     const { openHelp } = useShortcuts();
     const { props } = usePage<PageProps>();
@@ -34,17 +40,17 @@ export const useGlobalCommands = (): void => {
         return [
             {
                 id: 'nav.dashboard',
-                title: 'Go to Dashboard',
+                title: t('hook_global_commands.nav_dashboard.title'),
                 group: 'navigation',
                 icon: 'LayoutDashboard',
                 shortcut: ['g d', 'alt+b'],
                 category: 'Navigation',
-                keywords: ['home'],
+                keywords: [t('hook_global_commands.keywords.home')],
                 perform: () => router.visit('/'),
             },
             {
                 id: 'nav.projects',
-                title: 'Go to Projects',
+                title: t('hook_global_commands.nav_projects.title'),
                 group: 'navigation',
                 icon: 'LayoutList',
                 shortcut: ['g p', 'alt+p'],
@@ -53,82 +59,106 @@ export const useGlobalCommands = (): void => {
             },
             {
                 id: 'nav.notifications',
-                title: 'Go to Notifications',
+                title: t('hook_global_commands.nav_notifications.title'),
                 group: 'navigation',
                 icon: 'Bell',
                 shortcut: 'g n',
                 category: 'Navigation',
-                keywords: ['inbox'],
+                keywords: [t('hook_global_commands.keywords.inbox')],
                 perform: requestOpenNotifications,
             },
             {
                 id: 'nav.settings',
-                title: 'Open Settings',
+                title: t('hook_global_commands.nav_settings.title'),
                 group: 'navigation',
                 icon: 'Settings',
                 shortcut: 'g s',
                 category: 'Navigation',
-                keywords: ['preferences', 'configuration'],
+                keywords: [
+                    t('hook_global_commands.keywords.preferences'),
+                    t('hook_global_commands.keywords.configuration'),
+                ],
                 perform: () => router.visit(route('settings')),
             },
             ...SETTINGS_TABS.filter((tab) => tab.enabled).map(
                 (tab): Command => ({
                     id: `nav.settings.${tab.id}`,
-                    title: `Settings: ${tab.label}`,
-                    subtitle: tab.description,
+                    title: `${t('commands.settings_prefix')}: ${t(tab.label)}`,
+                    subtitle: t(tab.description),
                     group: 'navigation',
                     icon: tab.icon,
-                    keywords: [tab.label, tab.section],
+                    keywords: [t(tab.label), tab.section],
                     perform: () => router.visit(tab.path),
                 }),
             ),
             ...THEMES.map(({ mode, title, icon }): Command => ({
                 id: `theme.${mode}`,
-                title,
-                subtitle: theme === mode ? 'Current' : undefined,
+                title: t(title),
+                subtitle:
+                    theme === mode
+                        ? t('hook_global_commands.theme.current')
+                        : undefined,
                 group: 'preferences',
                 icon,
-                keywords: ['theme', 'appearance', 'color'],
+                keywords: [
+                    t('hook_global_commands.keywords.theme'),
+                    t('hook_global_commands.keywords.appearance'),
+                    t('hook_global_commands.keywords.color'),
+                ],
                 perform: () => setTheme(mode),
             })),
             {
                 id: 'page.refresh',
-                title: 'Refresh page',
+                title: t('hook_global_commands.refresh.title'),
                 group: 'preferences',
                 icon: 'RefreshCw',
-                keywords: ['reload'],
+                keywords: [t('hook_global_commands.keywords.reload')],
                 perform: () => router.reload(),
             },
             {
                 id: 'notifications.unread',
-                title: 'Show unread notifications',
+                title: t('hook_global_commands.unread.title'),
                 group: 'navigation',
                 icon: 'BellDot',
-                keywords: ['inbox', 'new', 'notifications'],
+                keywords: [
+                    t('hook_global_commands.keywords.inbox'),
+                    t('hook_global_commands.keywords.new'),
+                    t('hook_global_commands.keywords.notifications'),
+                ],
                 when: () => hasUnreadNotifications,
                 perform: () => requestOpenNotifications({ onlyUnread: true }),
             },
             {
                 id: 'notifications.select',
-                title: 'Select notifications',
-                subtitle: 'Mark as read or delete several at once',
+                title: t('hook_global_commands.select.title'),
+                subtitle: t('hook_global_commands.select.subtitle'),
                 group: 'account',
                 icon: 'ListChecks',
-                keywords: ['bulk', 'delete', 'notifications', 'inbox'],
+                keywords: [
+                    t('hook_global_commands.keywords.bulk'),
+                    t('hook_global_commands.keywords.delete'),
+                    t('hook_global_commands.keywords.notifications'),
+                    t('hook_global_commands.keywords.inbox'),
+                ],
                 perform: () => requestOpenNotifications({ selecting: true }),
             },
             {
                 id: 'notifications.cleanup',
-                title: 'Notification clean-up schedule',
-                subtitle: 'Delete old notifications and history automatically',
+                title: t('hook_global_commands.cleanup.title'),
+                subtitle: t('hook_global_commands.cleanup.subtitle'),
                 group: 'account',
                 icon: 'CalendarClock',
-                keywords: ['delete old', 'retention', 'prune', 'notifications'],
+                keywords: [
+                    t('hook_global_commands.keywords.delete_old'),
+                    t('hook_global_commands.keywords.retention'),
+                    t('hook_global_commands.keywords.prune'),
+                    t('hook_global_commands.keywords.notifications'),
+                ],
                 perform: () => router.visit('/settings/notifications'),
             },
             {
                 id: 'notifications.mark-all-read',
-                title: 'Mark all notifications as read',
+                title: t('hook_global_commands.mark_all_read.title'),
                 group: 'account',
                 icon: 'CheckCheck',
                 when: () => hasUnreadNotifications,
@@ -141,15 +171,15 @@ export const useGlobalCommands = (): void => {
             },
             {
                 id: 'account.logout',
-                title: 'Log out',
+                title: t('hook_global_commands.logout.title'),
                 group: 'account',
                 icon: 'LogOut',
-                keywords: ['sign out'],
+                keywords: [t('hook_global_commands.keywords.sign_out')],
                 perform: () => router.post(route('logout')),
             },
             {
                 id: 'help.shortcuts',
-                title: 'Show keyboard shortcuts',
+                title: t('hook_global_commands.shortcuts.title'),
                 group: 'help',
                 icon: 'Keyboard',
                 shortcut: '?',
@@ -158,22 +188,28 @@ export const useGlobalCommands = (): void => {
             },
             {
                 id: 'help.docs',
-                title: 'Open documentation',
+                title: t('hook_global_commands.docs.title'),
                 group: 'help',
                 icon: 'CircleQuestionMark',
-                keywords: ['docs', 'faq'],
+                keywords: [
+                    t('hook_global_commands.keywords.docs'),
+                    t('hook_global_commands.keywords.faq'),
+                ],
                 perform: () => openExternal(DOCS_URL),
             },
             {
                 id: 'help.learn',
-                title: 'Learn Orbit',
+                title: t('hook_global_commands.learn.title'),
                 group: 'help',
                 icon: 'BookOpen',
-                keywords: ['tutorial', 'guide'],
+                keywords: [
+                    t('hook_global_commands.keywords.tutorial'),
+                    t('hook_global_commands.keywords.guide'),
+                ],
                 perform: () => openExternal(LEARN_URL),
             },
         ];
-    }, [isAuthenticated, hasUnreadNotifications, theme, setTheme, openHelp]);
+    }, [isAuthenticated, hasUnreadNotifications, theme, setTheme, openHelp, t]);
 
     useCommands(commands);
 };

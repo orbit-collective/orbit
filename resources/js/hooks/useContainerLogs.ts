@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PortalLogLine, PortalLogs } from '@/types/DeveloperPortal';
 
@@ -23,6 +24,7 @@ export function useContainerLogs(
     containerId: string,
     { enabled, follow }: Options,
 ) {
+    const { t } = useLaravelReactI18n();
     const [lines, setLines] = useState<PortalLogLine[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -52,7 +54,7 @@ export function useContainerLogs(
             setLines(data.lines);
             setError(data.error);
         } catch {
-            if (mounted.current) setError('Could not load the logs.');
+            if (mounted.current) setError(t('hook_container_logs.load_failed'));
         } finally {
             inFlight.current = false;
             if (mounted.current) {
@@ -60,7 +62,7 @@ export function useContainerLogs(
                 setLoaded(true);
             }
         }
-    }, [containerId]);
+    }, [containerId, t]);
 
     useEffect(() => {
         if (enabled) void refresh();

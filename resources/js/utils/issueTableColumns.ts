@@ -3,6 +3,8 @@ import { SortingColumn } from '@/types/Issues';
 export interface IssueTableColumnDefinition {
     value: SortingColumn;
     label: string;
+    /** Translation key of `label`. */
+    labelKey: string;
     defaultWidth: number;
     defaultEnabled: boolean;
 }
@@ -17,48 +19,73 @@ export interface IssueTableColumnDefinition {
  * ListRow, which stays bespoke per column like the others).
  */
 export const ISSUE_TABLE_COLUMNS: IssueTableColumnDefinition[] = [
-    { value: 'id', label: 'ID', defaultWidth: 70, defaultEnabled: true },
-    { value: 'title', label: 'Title', defaultWidth: 400, defaultEnabled: true },
-    { value: 'type', label: 'Type', defaultWidth: 140, defaultEnabled: true },
+    {
+        value: 'id',
+        label: 'ID',
+        labelKey: 'util_issue_table_columns.id',
+        defaultWidth: 70,
+        defaultEnabled: true,
+    },
+    {
+        value: 'title',
+        label: 'Title',
+        labelKey: 'util_issue_table_columns.title',
+        defaultWidth: 400,
+        defaultEnabled: true,
+    },
+    {
+        value: 'type',
+        label: 'Type',
+        labelKey: 'util_issue_table_columns.type',
+        defaultWidth: 140,
+        defaultEnabled: true,
+    },
     {
         value: 'status',
         label: 'Status',
+        labelKey: 'util_issue_table_columns.status',
         defaultWidth: 120,
         defaultEnabled: true,
     },
     {
         value: 'assignee',
         label: 'Assignee',
+        labelKey: 'util_issue_table_columns.assignee',
         defaultWidth: 140,
         defaultEnabled: true,
     },
     {
         value: 'priority',
         label: 'Priority',
+        labelKey: 'util_issue_table_columns.priority',
         defaultWidth: 140,
         defaultEnabled: true,
     },
     {
         value: 'labels',
         label: 'Labels',
+        labelKey: 'util_issue_table_columns.labels',
         defaultWidth: 200,
         defaultEnabled: true,
     },
     {
         value: 'updated',
         label: 'Updated',
+        labelKey: 'util_issue_table_columns.updated',
         defaultWidth: 150,
         defaultEnabled: true,
     },
     {
         value: 'start_date',
         label: 'Start',
+        labelKey: 'util_issue_table_columns.start_date',
         defaultWidth: 150,
         defaultEnabled: false,
     },
     {
         value: 'end_date',
         label: 'End',
+        labelKey: 'util_issue_table_columns.end_date',
         defaultWidth: 150,
         defaultEnabled: false,
     },

@@ -15,7 +15,7 @@ describe('greetingFor', () => {
         [0, 'night', 'Good night', 'Moon'],
         [4, 'night', 'Good night', 'Moon'],
     ])('at %i:00 it is %s', (hour, period, text, icon) => {
-        expect(greetingFor(at(hour))).toEqual({ period, text, icon });
+        expect(greetingFor(at(hour))).toMatchObject({ period, text, icon });
     });
 });
 

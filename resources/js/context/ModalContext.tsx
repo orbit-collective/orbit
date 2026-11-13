@@ -22,12 +22,13 @@ export const ModalProvider = ({ children }: { children: ReactNode }) => {
             title: string,
             description: string | undefined,
             children: ReactNode,
+            bare?: boolean,
         ) => {
             const id = Math.random().toString(36).substring(2, 9);
 
             setModals((prev) => [
                 ...prev,
-                { id, title, description, children },
+                { id, title, description, children, bare },
             ]);
 
             return id;

@@ -117,13 +117,15 @@ export interface DeadlineGroup {
 export function groupDeadlines(
     rows: DashboardIssueRow[],
     now: Date = new Date(),
+    t?: (key: string) => string,
+    locale: string = 'en-US',
 ): DeadlineGroup[] {
     const groups: DeadlineGroup[] = [];
 
     for (const row of rows) {
         if (!row.endDate) continue;
 
-        const info = dueInfo(row.endDate, now);
+        const info = dueInfo(row.endDate, now, t, locale);
         const key = info.days < 0 ? 'overdue' : row.endDate.slice(0, 10);
         let group = groups.find((item) => item.key === key);
 
@@ -133,12 +135,21 @@ export function groupDeadlines(
                 tone: info.tone,
                 label:
                     key === 'overdue'
-                        ? 'Overdue'
+                        ? t
+                            ? t('util_dashboard_issues.overdue')
+                            : 'Overdue'
                         : info.days === 0
-                          ? 'Today'
+                          ? t
+                              ? t('util_dashboard_issues.today')
+                              : 'Today'
                           : info.days === 1
-                            ? 'Tomorrow'
-                            : formatWeekdayDate(key).replace(/ \d{4}$/, ''),
+                            ? t
+                                ? t('util_dashboard_issues.tomorrow')
+                                : 'Tomorrow'
+                            : formatWeekdayDate(key, locale).replace(
+                                  / \d{4}$/,
+                                  '',
+                              ),
                 rows: [],
             };
             groups.push(group);
