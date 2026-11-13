@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import React, { ReactNode } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -46,6 +47,7 @@ export default function AutomationFlowNode({
     setNodeRef,
     trailing,
 }: AutomationFlowNodeProps) {
+    const { t } = useLaravelReactI18n();
     return (
         <div
             ref={setNodeRef}
@@ -62,7 +64,7 @@ export default function AutomationFlowNode({
             {dragHandleProps && (
                 <button
                     type="button"
-                    aria-label={`Reorder ${title}`}
+                    aria-label={t('automation_flow_node.reorder', { title })}
                     className="shrink-0 cursor-grab text-(--text-muted-color) transition-colors hover:text-(--text-color) active:cursor-grabbing"
                     {...dragHandleProps.listeners}
                     {...dragHandleProps.attributes}
@@ -113,7 +115,7 @@ export default function AutomationFlowNode({
             {onDelete && (
                 <button
                     type="button"
-                    aria-label={`Remove ${title}`}
+                    aria-label={t('automation_flow_node.remove', { title })}
                     onClick={onDelete}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-(--text-gray-color) opacity-0 transition-opacity group-hover:opacity-100 hover:bg-(--error-color)/10 hover:text-(--error-color)"
                 >

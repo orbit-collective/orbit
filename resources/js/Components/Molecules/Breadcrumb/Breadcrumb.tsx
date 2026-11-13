@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { Fragment } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -15,8 +16,12 @@ interface BreadcrumbProps {
 }
 
 export default function Breadcrumb({ items }: BreadcrumbProps) {
+    const { t } = useLaravelReactI18n();
     return (
-        <nav aria-label="Breadcrumb" className="flex items-center text-xs">
+        <nav
+            aria-label={t('breadcrumb.label')}
+            className="flex items-center text-xs"
+        >
             {items.map((item, index) => {
                 const isLast = index === items.length - 1;
                 const content = (

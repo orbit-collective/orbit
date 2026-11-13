@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -7,7 +8,7 @@ import { getActivityLogVisual } from '@/utils/activityLog';
 import { renderActivityLogBody } from '@/utils/activityLogRichText';
 import { cn } from '@/utils/cn';
 import { DURATION, EASE, SPRING, rowDelay } from '@/utils/motion';
-import { formatTimeAgo } from '@/utils/time';
+import { formatTimeAgo, intlLocale } from '@/utils/time';
 
 const COLOR_TEXT_CLASSES = {
     accent: 'text-(--accent-color)',
@@ -24,6 +25,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
     issueTypes = [],
     compact = false,
 }) => {
+    const { t, currentLocale } = useLaravelReactI18n();
     return (
         <div>
             <div
@@ -33,10 +35,14 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                 )}
             >
                 <span
-                    title={new Date(group.createdAt).toLocaleString()}
+                    title={new Date(group.createdAt).toLocaleString(
+                        intlLocale(currentLocale()),
+                    )}
                     className="shrink-0 cursor-default text-[10px] font-medium whitespace-nowrap text-(--text-muted-color)"
                 >
-                    {formatTimeAgo(group.createdAt)} ago
+                    {t('activity_log_item.ago', {
+                        time: formatTimeAgo(group.createdAt, t),
+                    })}
                 </span>
                 <motion.span
                     aria-hidden="true"
@@ -73,7 +79,7 @@ const ActivityLogItem: React.FC<ActivityLogItemProps> = ({
                             compact ? 'text-xs' : 'text-sm',
                         )}
                     >
-                        {group.userName ?? 'Someone'}
+                        {group.userName ?? t('activity_log_item.someone')}
                     </span>
 
                     <div

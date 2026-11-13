@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import { CompletionRatioCardProps } from '@/types/Components';
@@ -10,7 +11,7 @@ import { VisualCardHeader } from '../VisualCardHeader/VisualCardHeader';
 const tierFor = (donePct: number) => {
     if (donePct >= 75) {
         return {
-            label: 'Excellent',
+            label: 'completion_ratio_card.tier.excellent',
             colorClass: 'bg-(--success-color)',
             ringClass: 'stroke-(--success-color)',
         };
@@ -18,14 +19,14 @@ const tierFor = (donePct: number) => {
 
     if (donePct >= 40) {
         return {
-            label: 'On track',
+            label: 'completion_ratio_card.tier.on_track',
             colorClass: 'bg-(--accent-color)',
             ringClass: 'stroke-(--accent-color)',
         };
     }
 
     return {
-        label: 'Needs attention',
+        label: 'completion_ratio_card.tier.needs_attention',
         colorClass: 'bg-(--warning-color)',
         ringClass: 'stroke-(--warning-color)',
     };
@@ -41,15 +42,20 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
     showHeader = true,
     showTier = true,
 }) => {
+    const { t } = useLaravelReactI18n();
     const bars = [
-        { label: 'To Do', value: todo, colorClass: 'bg-(--info-color)' },
         {
-            label: 'In Progress',
+            label: t('completion_ratio_card.bars.todo'),
+            value: todo,
+            colorClass: 'bg-(--info-color)',
+        },
+        {
+            label: t('completion_ratio_card.bars.in_progress'),
             value: inProgress,
             colorClass: 'bg-(--accent-color)',
         },
         {
-            label: 'Done',
+            label: t('completion_ratio_card.bars.done'),
             value: done,
             colorClass: 'bg-(--success-color)',
         },
@@ -64,8 +70,10 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                     <div className="flex items-start justify-between gap-2">
                         {showHeader ? (
                             <VisualCardHeader
-                                title="Completion Ratio"
-                                description="Resolution status of all logged tasks"
+                                title={t('completion_ratio_card.title')}
+                                description={t(
+                                    'completion_ratio_card.description',
+                                )}
                             />
                         ) : (
                             <span />
@@ -74,14 +82,14 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                             <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
                                 <motion.span
                                     // A new tier pops its dot in again.
-                                    key={tier.label}
+                                    key={tier.colorClass}
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={SPRING}
                                     className={`h-1.5 w-1.5 rounded-full ${tier.colorClass}`}
                                 />
                                 <span className="text-xs font-medium text-(--text-gray-color)">
-                                    {tier.label}
+                                    {t(tier.label)}
                                 </span>
                             </div>
                         )}
@@ -101,7 +109,10 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                 <AnimatedNumber
                                     value={done}
                                     format={(n) =>
-                                        `${Math.round(n)} of ${total} resolved`
+                                        t('completion_ratio_card.resolved_of', {
+                                            done: Math.round(n),
+                                            total,
+                                        })
                                     }
                                 />
                             </span>
@@ -187,13 +198,16 @@ export const CompletionRatioCard: FC<CompletionRatioCardProps> = ({
                                 />
                             </span>
                             <span className="mt-3 text-[10px] font-semibold tracking-widest text-(--text-muted-color) uppercase">
-                                Resolved
+                                {t('completion_ratio_card.resolved')}
                             </span>
                             <span className="mt-1 text-xs text-(--text-gray-color)">
                                 <AnimatedNumber
                                     value={done}
                                     format={(n) =>
-                                        `${Math.round(n)} of ${total} issues`
+                                        t('completion_ratio_card.issues_of', {
+                                            done: Math.round(n),
+                                            total,
+                                        })
                                     }
                                 />
                             </span>

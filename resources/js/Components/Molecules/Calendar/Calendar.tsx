@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { useAlert } from '@/context/AlertContext';
@@ -18,6 +19,7 @@ const Calendar: React.FC<CalendarProps> = ({
     minDate,
     rangeStart,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [currentMonth, setCurrentMonth] = useState(
         selectedDate || new Date(),
     );
@@ -88,18 +90,18 @@ const Calendar: React.FC<CalendarProps> = ({
     };
 
     const monthNames = [
-        'January',
-        'February',
-        'March',
-        'April',
-        'May',
-        'June',
-        'July',
-        'August',
-        'September',
-        'October',
-        'November',
-        'December',
+        t('calendar.months.january'),
+        t('calendar.months.february'),
+        t('calendar.months.march'),
+        t('calendar.months.april'),
+        t('calendar.months.may'),
+        t('calendar.months.june'),
+        t('calendar.months.july'),
+        t('calendar.months.august'),
+        t('calendar.months.september'),
+        t('calendar.months.october'),
+        t('calendar.months.november'),
+        t('calendar.months.december'),
     ];
 
     return (
@@ -136,12 +138,12 @@ const Calendar: React.FC<CalendarProps> = ({
             </div>
 
             <div className="mb-2 grid grid-cols-7 text-center">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
+                {['su', 'mo', 'tu', 'we', 'th', 'fr', 'sa'].map((day) => (
                     <span
                         key={day}
                         className="text-[10px] font-bold tracking-wider text-(--text-gray-color) uppercase"
                     >
-                        {day}
+                        {t(`calendar.days.${day}`)}
                     </span>
                 ))}
             </div>
@@ -269,14 +271,14 @@ const Calendar: React.FC<CalendarProps> = ({
                     }}
                     className="cursor-pointer text-[11px] font-medium text-(--accent-color) hover:underline"
                 >
-                    Today
+                    {t('calendar.today')}
                 </button>
                 <button
                     type="button"
                     onClick={onClose}
                     className="cursor-pointer text-[11px] font-medium text-(--text-gray-color) hover:text-(--text-color)"
                 >
-                    Close
+                    {t('common.close')}
                 </button>
             </div>
         </motion.div>

@@ -1,9 +1,11 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { cn } from '@/utils/cn';
 import { DueTone, dueInfo } from '@/utils/dueDate';
 import { SPRING } from '@/utils/motion';
+import { intlLocale } from '@/utils/time';
 
 const TONES: Record<
     DueTone,
@@ -44,7 +46,8 @@ interface DueChipProps {
  * full sentence ("due in 3 days") instead of the short label.
  */
 const DueChip: FC<DueChipProps> = ({ endDate, now, className }) => {
-    const info = dueInfo(endDate, now);
+    const { t, currentLocale } = useLaravelReactI18n();
+    const info = dueInfo(endDate, now, t, intlLocale(currentLocale()));
     const tone = TONES[info.tone];
 
     return (

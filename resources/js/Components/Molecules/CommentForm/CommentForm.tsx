@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, {
     SyntheticEvent,
     useEffect,
@@ -53,6 +54,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
     isSubmitting = false,
     onImageUpload,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [body, setBody] = useState('');
     // Tracked by character range, not by name - see applyRangeEdit. This is
     // what lets two project members sharing a display name still be told
@@ -162,10 +164,10 @@ const CommentForm: React.FC<CommentFormProps> = ({
 
     const issueEmptyLabel =
         issueQuery === ''
-            ? 'Type an issue number'
+            ? t('comment_form.empty.issue_type')
             : issueResults?.query === issueQuery
-              ? 'No issues found'
-              : 'Searching...';
+              ? t('comment_form.empty.issue_none')
+              : t('comment_form.empty.issue_searching');
 
     const captureEditRange = (
         el: HTMLTextAreaElement,
@@ -473,11 +475,11 @@ const CommentForm: React.FC<CommentFormProps> = ({
     return (
         <form
             onSubmit={handleSubmit}
-            aria-label="New comment"
+            aria-label={t('comment_form.aria_label')}
             className="relative flex flex-col rounded-xl border border-(--border-color) bg-(--bg-color-hover) transition-colors focus-within:border-(--accent-color)"
         >
             <label htmlFor={textareaId} className="sr-only">
-                Comment
+                {t('comment_form.label')}
             </label>
             <TextArea
                 id={textareaId}
@@ -505,21 +507,26 @@ const CommentForm: React.FC<CommentFormProps> = ({
                         ? `${listboxId}-option-${mention.activeIndex}`
                         : undefined
                 }
-                placeholder="Leave a comment..."
+                placeholder={t('comment_form.placeholder')}
                 className="min-h-[84px] resize-none rounded-t-xl border-none bg-transparent px-4 pt-3 pb-2 text-sm focus:border-none"
                 isDisabled={isSubmitting}
                 onDrop={handleDrop}
             />
             <div className="flex items-center justify-between gap-3 px-3 pt-1 pb-3">
                 <p id={hintId} className="text-xs text-(--text-muted-color)">
-                    <kbd className="font-sans font-medium">Enter</kbd> to send,{' '}
-                    <kbd className="font-sans font-medium">Shift + Enter</kbd>{' '}
-                    for a new line. Use <span aria-hidden="true">@</span>
-                    <span className="sr-only">at sign</span> to mention.
+                    <kbd className="font-sans font-medium">Enter</kbd>
+                    {t('comment_form.hint.send')}{' '}
+                    <kbd className="font-sans font-medium">Shift + Enter</kbd>
+                    {t('comment_form.hint.newline')}
+                    <span aria-hidden="true">@</span>
+                    <span className="sr-only">
+                        {t('comment_form.hint.at_sign')}
+                    </span>
+                    {t('comment_form.hint.mention')}
                 </p>
                 <button
                     type="submit"
-                    aria-label="Post comment"
+                    aria-label={t('comment_form.post')}
                     disabled={!canSubmit}
                     className={cn(
                         'group/send flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors',
@@ -538,7 +545,11 @@ const CommentForm: React.FC<CommentFormProps> = ({
                                 : 'transition-transform duration-200 group-hover/send:translate-x-0.5',
                         )}
                     />
-                    <span>{isSubmitting ? 'Posting…' : 'Comment'}</span>
+                    <span>
+                        {isSubmitting
+                            ? t('comment_form.posting')
+                            : t('comment_form.submit')}
+                    </span>
                 </button>
             </div>
             {mention && (
@@ -551,7 +562,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
                     emptyLabel={
                         mention.kind === 'issue'
                             ? issueEmptyLabel
-                            : 'No members found'
+                            : t('comment_form.empty.members')
                     }
                     activeIndex={mention.activeIndex}
                     position={mention.position}

@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import Input from '@/Components/Atoms/Input/Input';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
@@ -10,7 +11,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     value,
     onSave,
     placeholder,
-    emptyText = 'No content',
+    emptyText,
     multiline = false,
     as: Tag = 'div',
     displayClassName,
@@ -19,6 +20,7 @@ const EditableText: React.FC<EditableTextProps> = ({
     renderDisplay,
     onImageUpload,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [isEditing, setIsEditing] = useState(false);
     const [draft, setDraft] = useState(value);
     const [pendingCaret, setPendingCaret] = useState<number | null>(null);
@@ -190,7 +192,7 @@ const EditableText: React.FC<EditableTextProps> = ({
                 )
             ) : (
                 <span className="text-(--text-gray-color) italic">
-                    {placeholder || emptyText}
+                    {placeholder || emptyText || t('editable_text.empty')}
                 </span>
             )}
         </Tag>

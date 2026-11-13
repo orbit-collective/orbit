@@ -4,6 +4,7 @@ import {
     MotionConfig,
     motion,
 } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useId, useRef, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -41,6 +42,7 @@ export default function ColorPicker({
     onChange,
     palette,
 }: ColorPickerProps) {
+    const { t } = useLaravelReactI18n();
     const [expanded, setExpanded] = useState(false);
     const [draft, setDraft] = useState(value);
     const groupId = useId();
@@ -102,7 +104,7 @@ export default function ColorPicker({
                 type="button"
                 data-nav
                 onClick={() => onChange(color)}
-                aria-label={`Use color ${color}`}
+                aria-label={t('color_picker.use_color', { color })}
                 aria-pressed={selected}
                 title={color}
                 whileHover={{ scale: 1.14 }}
@@ -148,8 +150,10 @@ export default function ColorPicker({
             data-nav
             onClick={() => setExpanded((open) => !open)}
             aria-expanded={expanded}
-            aria-label={expanded ? 'Fewer colors' : 'More colors'}
-            title={expanded ? 'Fewer colors' : 'More colors'}
+            aria-label={
+                expanded ? t('color_picker.fewer') : t('color_picker.more')
+            }
+            title={expanded ? t('color_picker.fewer') : t('color_picker.more')}
             whileHover={{ scale: 1.14 }}
             whileTap={{ scale: 0.9 }}
             transition={SPRING}
@@ -233,7 +237,7 @@ export default function ColorPicker({
                                                 handleDraft(e.target.value)
                                             }
                                             onBlur={() => setDraft(value)}
-                                            aria-label="Hex color"
+                                            aria-label={t('color_picker.hex')}
                                             spellCheck={false}
                                             autoComplete="off"
                                             maxLength={7}

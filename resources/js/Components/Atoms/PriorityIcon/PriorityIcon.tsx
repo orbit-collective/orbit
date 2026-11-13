@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { PriorityIconProps } from '@/types/Components';
@@ -9,6 +10,7 @@ export const PriorityIcon = ({
     className,
     tooltip = true,
 }: PriorityIconProps) => {
+    const { t } = useLaravelReactI18n();
     if (priority) {
         return (
             <Badge
@@ -28,7 +30,11 @@ export const PriorityIcon = ({
     }
 
     return (
-        <Badge variant={'ghost'} tooltip={tooltip} tooltipText={'No priority'}>
+        <Badge
+            variant={'ghost'}
+            tooltip={tooltip}
+            tooltipText={t('priority_icon.none')}
+        >
             <span
                 className={cn(
                     'inline-flex items-center text-zinc-600',

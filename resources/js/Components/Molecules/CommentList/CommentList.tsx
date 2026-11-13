@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import CommentItem from '@/Components/Molecules/CommentItem/CommentItem';
@@ -13,6 +14,8 @@ const CommentList: React.FC<CommentListProps> = ({
     onDelete,
     onImageUpload,
 }) => {
+    const { t } = useLaravelReactI18n();
+
     if (comments.length === 0) {
         return (
             <motion.div
@@ -33,7 +36,7 @@ const CommentList: React.FC<CommentListProps> = ({
                     />
                 </motion.span>
                 <p className="text-xs font-medium text-(--text-muted-color)">
-                    No comments yet
+                    {t('comment_list.empty')}
                 </p>
             </motion.div>
         );
