@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.15.1](https://github.com/orbit-collective/orbit/compare/v0.15.0...v0.15.1) (2026-11-13)
+
+
+### Features
+
+* **i18n:** add language selection to global commands ([555a3ea](https://github.com/orbit-collective/orbit/commit/555a3ea0a0a85e7f7e4210c630cfb19511194a72))
+* **i18n:** add language switcher to sidebar and preferences ([1013847](https://github.com/orbit-collective/orbit/commit/1013847de3e4c89ba047f17db5049aa3334bfbc2))
+* **i18n:** add locale middleware and switch route ([c026db7](https://github.com/orbit-collective/orbit/commit/c026db7c947c8e4a355cc0cde62af5e0c04bfbcc))
+* **i18n:** implement locale cookie handling and storage ([2289dc5](https://github.com/orbit-collective/orbit/commit/2289dc5bbeb31bece5136c452c097b59911a4cd1))
+* **i18n:** reorder settings option in sidebar ([33d70fe](https://github.com/orbit-collective/orbit/commit/33d70fe8cd25007e68ef7bbe48192a15a97219a4))
+* **i18n:** set up the translation provider and lang files ([6c38a17](https://github.com/orbit-collective/orbit/commit/6c38a17934c6aa275e6b00bfb90bb23047010ea3))
+* **i18n:** translate account settings ([6b21a56](https://github.com/orbit-collective/orbit/commit/6b21a5678a6ada80af490e14341e1b166f1590b5))
+* **i18n:** translate atoms and molecules A-C ([5338c6f](https://github.com/orbit-collective/orbit/commit/5338c6ffdeb919195a60cdcd77ed7ee8da4a080e))
+* **i18n:** translate dashboard, palette and developer portal ([9cc97b6](https://github.com/orbit-collective/orbit/commit/9cc97b62ef565e466f272e02a78e7a8ee65876eb))
+* **i18n:** translate hooks, utils, types and contexts ([1fe545f](https://github.com/orbit-collective/orbit/commit/1fe545f2607c08f549170f568dcd4ddb3c8108ca))
+* **i18n:** translate issue boards, tables and calendar ([f0166fc](https://github.com/orbit-collective/orbit/commit/f0166fc8503b452a9aa297c35a4cfb3a2cc940f6))
+* **i18n:** translate list rows, modals, tour and shortcuts ([289f63e](https://github.com/orbit-collective/orbit/commit/289f63e05adebac64c5186a0ed6d48c4ac497cc1))
+* **i18n:** translate molecules D-L ([a69ce01](https://github.com/orbit-collective/orbit/commit/a69ce01d8be6f7b38b11f16daddfc623acf17567))
+* **i18n:** translate molecules M-Z ([5efac7a](https://github.com/orbit-collective/orbit/commit/5efac7a65705d7fc374ed3508bd679f64bc3d1f0))
+* **i18n:** translate pages and layouts ([2201a07](https://github.com/orbit-collective/orbit/commit/2201a0752e9a6bfa1c1e32d6f7a8805db31e59b8))
+* **i18n:** translate workspace settings ([08bddce](https://github.com/orbit-collective/orbit/commit/08bddce382506926e6ca4dc5c9ec82341198c025))
+* **i18n:** update translation documentation and add new guides ([87ea887](https://github.com/orbit-collective/orbit/commit/87ea8873e30885c6ff6e249610b74fa22b38e846))
+
+
+### Bug Fixes
+
+* **dashboard:** translate color choices by shared ids ([9928e0e](https://github.com/orbit-collective/orbit/commit/9928e0e314e6358a63c80aab0e5367eeefff68f7))
+* **dashboard:** translate the widget catalog by id ([3e039d4](https://github.com/orbit-collective/orbit/commit/3e039d4981f64996a782735267740e68d2cc28d2))
+* **i18n:** keep the app mounted while a language loads ([885dcd7](https://github.com/orbit-collective/orbit/commit/885dcd7ca259d6aa59a525bc6fdee47c9c938ed5))
+* **i18n:** use the language plural rules for Polish ([bff4e44](https://github.com/orbit-collective/orbit/commit/bff4e449e0cc3e22bc23c1b738b36e0f8bdc8174))
+* **ui:** focus the flyout when the keyboard enters it ([059386f](https://github.com/orbit-collective/orbit/commit/059386f21aaaef3d210350c7729dc8092d30be3f))
+
+
+### Miscellaneous Chores
+
+* release 0.15.1 ([213a693](https://github.com/orbit-collective/orbit/commit/213a693eebca9fcf8bfc70f1cf6980d451683ecb))
+
 ## [0.15.0](https://github.com/orbit-collective/orbit/compare/v0.14.2...v0.15.0) (2026-11-12)
 
 
