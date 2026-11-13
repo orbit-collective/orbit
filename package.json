@@ -78,7 +78,7 @@
         "class-variance-authority": "^0.7.1",
         "laravel-echo": "^2.6.3",
         "laravel-react-i18n": "^2.0.5",
-        "lucide-react": "^1.70.0",
+        "lucide-react": "^1.71.0",
         "pusher-js": "^8.6.0",
         "react-colorful": "^5.8.1",
         "react-markdown": "^10.1.0",
