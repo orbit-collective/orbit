@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { SyntheticEvent, useEffect, useState } from 'react';
 import { useAlert } from '@/context/AlertContext';
 import {
@@ -21,6 +22,7 @@ export function useMembersManagement({
     selectedProjectDetails,
     members,
 }: UseMembersManagementArgs) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
 
     const selectedProject =
@@ -69,9 +71,15 @@ export function useMembersManagement({
                 onStart: () => setIsSavingDetails(true),
                 onFinish: () => setIsSavingDetails(false),
                 onSuccess: () =>
-                    addAlert('Project details updated.', 'success'),
+                    addAlert(
+                        t('hook_members_management.details_updated'),
+                        'success',
+                    ),
                 onError: () =>
-                    addAlert("Couldn't update project details.", 'error'),
+                    addAlert(
+                        t('hook_members_management.details_failed'),
+                        'error',
+                    ),
             },
         );
     };
@@ -188,7 +196,9 @@ export function useMembersManagement({
                 preserveState: true,
                 onError: () => {
                     addAlert(
-                        `Couldn't update ${member.name}'s roles.`,
+                        t('hook_members_management.member_roles_failed', {
+                            name: member.name,
+                        }),
                         'error',
                     );
                 },

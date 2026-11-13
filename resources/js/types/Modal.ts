@@ -5,6 +5,8 @@ export interface ModalContent {
     title: string;
     description?: string;
     children: ReactNode;
+    /** Renders the content without the title/description header and body padding. */
+    bare?: boolean;
 }
 
 export interface ModalContextType {
@@ -13,6 +15,7 @@ export interface ModalContextType {
         title: string,
         description: string | undefined,
         children: ReactNode,
+        bare?: boolean,
     ) => string;
     closeModal: (id: string) => void;
     closeAllModals: () => void;

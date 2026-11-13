@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useCallback, useState } from 'react';
 import { useAlert } from '@/context/AlertContext';
 
@@ -11,6 +12,7 @@ import { useAlert } from '@/context/AlertContext';
  * that called it only has to care about the happy path.
  */
 export const useImageUpload = (projectId: number) => {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [isUploading, setIsUploading] = useState(false);
 
@@ -30,20 +32,23 @@ export const useImageUpload = (projectId: number) => {
 
                 return data.url;
             } catch (error) {
-                addAlert(resolveUploadError(error), 'error');
+                addAlert(resolveUploadError(error, t), 'error');
 
                 throw error;
             } finally {
                 setIsUploading(false);
             }
         },
-        [projectId, addAlert],
+        [projectId, addAlert, t],
     );
 
     return { uploadImage, isUploading };
 };
 
-const resolveUploadError = (error: unknown): string => {
+const resolveUploadError = (
+    error: unknown,
+    t: (key: string) => string,
+): string => {
     if (axios.isAxiosError(error)) {
         const data = error.response?.data as
             | { message?: string; errors?: Record<string, string[]> }
@@ -55,7 +60,7 @@ const resolveUploadError = (error: unknown): string => {
         if (data?.message) return data.message;
     }
 
-    return 'The image could not be uploaded. Please try again.';
+    return t('hook_image_upload.failed');
 };
 
 export default useImageUpload;

@@ -21,9 +21,13 @@ export interface TourContext {
  *   simply moves on.
  */
 export type TourInteraction =
-    | { type: 'click'; hint: string; advance?: 'click' | 'external' }
-    | { type: 'input'; hint: string; required?: boolean }
-    | { type: 'free'; hint: string };
+    | {
+          type: 'click';
+          hint: string /* translation key */;
+          advance?: 'click' | 'external';
+      }
+    | { type: 'input'; hint: string /* translation key */; required?: boolean }
+    | { type: 'free'; hint: string /* translation key */ };
 
 export interface TourRuntime {
     hasProjects: boolean;
@@ -31,7 +35,9 @@ export interface TourRuntime {
 
 export interface TourStep {
     id: string;
+    /** Translation key (a text that is not a key is shown as it is). */
     title: string;
+    /** Translation key. */
     description: string;
     /** `data-tour` value of the element to spotlight; omit for a centered card. */
     target?: string;
@@ -88,9 +94,8 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         visit: '/projects',
         when: needsProjectChapter,
         icon: 'FolderPlus',
-        title: 'Create your first project',
-        description:
-            'Optional, and it takes under a minute. We will point at each field — you do the clicking and typing. Press the arrow to start, or close this to skip.',
+        title: 'product_tour.steps.project_intro.title',
+        description: 'product_tour.steps.project_intro.description',
     },
     {
         id: 'project-open',
@@ -99,12 +104,11 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         target: 'new-project',
         placement: 'right',
         when: needsProjectChapter,
-        title: 'Open the new project form',
-        description:
-            'The + next to PROJECTS opens the form. Everything you set here can be changed later in settings.',
+        title: 'product_tour.steps.project_open.title',
+        description: 'product_tour.steps.project_open.description',
         interaction: {
             type: 'click',
-            hint: 'Click the + next to PROJECTS',
+            hint: 'product_tour.steps.project_open.hint',
         },
     },
     {
@@ -115,13 +119,12 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         completeWhen: ({ hasProjects }) => hasProjects,
         skipTo: 'project-created',
         when: needsProjectChapter,
-        title: 'Name it',
-        description:
-            'Pick something your team will recognise, like "Mobile App" or "Website redesign".',
+        title: 'product_tour.steps.project_name.title',
+        description: 'product_tour.steps.project_name.description',
         interaction: {
             type: 'input',
             required: true,
-            hint: 'Type a project name',
+            hint: 'product_tour.steps.project_name.hint',
         },
     },
     {
@@ -132,13 +135,12 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         completeWhen: ({ hasProjects }) => hasProjects,
         skipTo: 'project-created',
         when: needsProjectChapter,
-        title: 'Give it a short key',
-        description:
-            'A unique key that identifies the project — usually the first letters of its name, like MOB.',
+        title: 'product_tour.steps.project_slug.title',
+        description: 'product_tour.steps.project_slug.description',
         interaction: {
             type: 'input',
             required: true,
-            hint: 'Type a short key, e.g. MOB',
+            hint: 'product_tour.steps.project_slug.hint',
         },
     },
     {
@@ -149,12 +151,11 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         completeWhen: ({ hasProjects }) => hasProjects,
         skipTo: 'project-created',
         when: needsProjectChapter,
-        title: 'Describe it (optional)',
-        description:
-            'A sentence about what the project is for helps new teammates get oriented. You can leave it empty.',
+        title: 'product_tour.steps.project_description.title',
+        description: 'product_tour.steps.project_description.description',
         interaction: {
             type: 'input',
-            hint: 'Write a short description, or just move on',
+            hint: 'product_tour.steps.project_description.hint',
         },
     },
     {
@@ -165,10 +166,12 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         completeWhen: ({ hasProjects }) => hasProjects,
         skipTo: 'project-created',
         when: needsProjectChapter,
-        title: 'Pick a color',
-        description:
-            'The color tags the project across Orbit and shows up in the preview card below.',
-        interaction: { type: 'free', hint: 'Click a color you like' },
+        title: 'product_tour.steps.project_color.title',
+        description: 'product_tour.steps.project_color.description',
+        interaction: {
+            type: 'free',
+            hint: 'product_tour.steps.project_color.hint',
+        },
     },
     {
         id: 'project-submit',
@@ -176,12 +179,12 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         placement: 'top',
         backTo: 'project-open',
         when: needsProjectChapter,
-        title: 'Create it',
-        description: 'That is everything Orbit needs to set the project up.',
+        title: 'product_tour.steps.project_submit.title',
+        description: 'product_tour.steps.project_submit.description',
         interaction: {
             type: 'click',
             advance: 'external',
-            hint: 'Click "Create project"',
+            hint: 'product_tour.steps.project_submit.hint',
         },
         completeWhen: ({ hasProjects }) => hasProjects,
     },
@@ -192,9 +195,8 @@ export const PROJECT_CHAPTER_STEPS: TourStep[] = [
         placement: 'right',
         when: needsProjectChapter,
         icon: 'PartyPopper',
-        title: 'Your project is ready',
-        description:
-            'It now lives in the sidebar. Open it any time to add issues and invite your team.',
+        title: 'product_tour.steps.project_created.title',
+        description: 'product_tour.steps.project_created.description',
     },
 ];
 
@@ -202,10 +204,9 @@ export const TOUR_STEPS: TourStep[] = [
     {
         id: 'welcome',
         visit: '/',
-        title: 'Welcome to Orbit',
+        title: 'product_tour.steps.welcome.title',
         icon: 'Hand',
-        description:
-            'Take a 1-minute tour of the places you will use the most. We will jump between pages for you — use the arrows to move around, or close this at any time.',
+        description: 'product_tour.steps.welcome.description',
     },
     {
         id: 'dashboard',
@@ -213,9 +214,8 @@ export const TOUR_STEPS: TourStep[] = [
         visit: '/',
         target: 'nav-dashboard',
         placement: 'right',
-        title: 'Your dashboard',
-        description:
-            'Your home base: assigned issues, upcoming deadlines and recent activity across every project, at a glance.',
+        title: 'product_tour.steps.dashboard.title',
+        description: 'product_tour.steps.dashboard.description',
     },
     {
         id: 'projects',
@@ -223,9 +223,8 @@ export const TOUR_STEPS: TourStep[] = [
         visit: '/projects',
         target: 'nav-projects',
         placement: 'right',
-        title: 'All your projects',
-        description:
-            'Every project you belong to lives here. Pick one to see its issues, or browse and search the full list.',
+        title: 'product_tour.steps.projects.title',
+        description: 'product_tour.steps.projects.description',
     },
     {
         id: 'new-project',
@@ -234,9 +233,8 @@ export const TOUR_STEPS: TourStep[] = [
         target: 'new-project',
         placement: 'right',
         when: (context) => !needsProjectChapter(context),
-        title: 'Start a new project',
-        description:
-            'Use the + next to PROJECTS to spin up a workspace for a team, product or sprint in seconds.',
+        title: 'product_tour.steps.new_project.title',
+        description: 'product_tour.steps.new_project.description',
     },
     {
         id: 'open-project',
@@ -245,9 +243,8 @@ export const TOUR_STEPS: TourStep[] = [
         target: 'first-project',
         placement: 'right',
         when: hasProjects,
-        title: 'Jump into a project',
-        description:
-            'Your projects are pinned in the sidebar for quick access. Next we will open the first one.',
+        title: 'product_tour.steps.open_project.title',
+        description: 'product_tour.steps.open_project.description',
     },
     {
         id: 'views',
@@ -255,9 +252,8 @@ export const TOUR_STEPS: TourStep[] = [
         target: 'page-tabs',
         placement: 'bottom',
         when: hasProjects,
-        title: 'Four ways to see your work',
-        description:
-            'Switch between List, Board, Calendar and Activity. Your choice is remembered, so Orbit always opens the way you like it.',
+        title: 'product_tour.steps.views.title',
+        description: 'product_tour.steps.views.description',
     },
     {
         id: 'new-issue',
@@ -265,9 +261,8 @@ export const TOUR_STEPS: TourStep[] = [
         target: 'primary-action',
         placement: 'bottom',
         when: hasProjects,
-        title: 'Create an issue',
-        description:
-            'Capture bugs, tasks and ideas here. Pick a type, set a status, assign someone and add labels.',
+        title: 'product_tour.steps.new_issue.title',
+        description: 'product_tour.steps.new_issue.description',
     },
     {
         id: 'filters',
@@ -275,18 +270,16 @@ export const TOUR_STEPS: TourStep[] = [
         target: 'filter-bar',
         placement: 'bottom',
         when: hasProjects,
-        title: 'Find anything fast',
-        description:
-            'Search and filter by status, assignee, label or type, then save the combos you use often as reusable filters.',
+        title: 'product_tour.steps.filters.title',
+        description: 'product_tour.steps.filters.description',
     },
     {
         id: 'notifications',
         visit: '/',
         target: 'notifications',
         placement: 'bottom',
-        title: 'Stay in the loop',
-        description:
-            'Mentions, assignments and status changes show up here, so nothing slips past you.',
+        title: 'product_tour.steps.notifications.title',
+        description: 'product_tour.steps.notifications.description',
     },
     {
         id: 'settings',
@@ -294,9 +287,8 @@ export const TOUR_STEPS: TourStep[] = [
         visit: '/settings/preferences',
         target: 'settings-nav',
         placement: 'right',
-        title: 'Make Orbit yours',
-        description:
-            'Tune your profile, notifications and theme, then manage labels, issue types, members, roles, integrations and automation for your workspace.',
+        title: 'product_tour.steps.settings.title',
+        description: 'product_tour.steps.settings.description',
     },
     {
         id: 'user-menu',
@@ -304,18 +296,16 @@ export const TOUR_STEPS: TourStep[] = [
         visit: '/settings/preferences',
         target: 'user-menu',
         placement: 'top',
-        title: 'Help is always close',
-        description:
-            'Open your menu for the docs, the Learn hub, settings and sign out.',
+        title: 'product_tour.steps.user_menu.title',
+        description: 'product_tour.steps.user_menu.description',
     },
     ...PROJECT_CHAPTER_STEPS,
     {
         id: 'done',
         visit: '/',
-        title: "You're all set",
+        title: 'product_tour.steps.done.title',
         icon: 'Rocket',
-        description:
-            'That is the essentials. Explore at your own pace — and press the shortcut hints you see next to menu items to move even faster.',
+        description: 'product_tour.steps.done.description',
     },
 ];
 

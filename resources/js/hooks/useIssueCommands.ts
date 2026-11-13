@@ -1,5 +1,6 @@
 import type { FormDataConvertible } from '@inertiajs/core';
 import { router, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useMemo, useRef } from 'react';
 import { useAlert } from '@/context/AlertContext';
 import { useCommands } from '@/hooks/useCommands';
@@ -46,6 +47,7 @@ export const useIssueCommands = ({
     abilities = NO_ABILITIES,
     update,
 }: UseIssueCommandsInput): void => {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     // Read through a ref so a provider handing out a fresh `addAlert` never
     // re-registers the commands (which would re-render this page, in a loop).
@@ -70,13 +72,17 @@ export const useIssueCommands = ({
                 issueUrl: (id) =>
                     route('issues.show', { project: project.id, issue: id }),
                 update,
+                t,
                 visit: (url) => router.visit(url),
                 copy: (text, successMessage) => {
                     navigator.clipboard
                         ?.writeText(text)
                         .then(() => alertRef.current(successMessage, 'success'))
                         .catch(() =>
-                            alertRef.current('Could not copy.', 'error'),
+                            alertRef.current(
+                                t('hook_issue_commands.copy_failed'),
+                                'error',
+                            ),
                         );
                 },
             }),
@@ -90,6 +96,7 @@ export const useIssueCommands = ({
             abilities,
             currentUserId,
             update,
+            t,
         ],
     );
 

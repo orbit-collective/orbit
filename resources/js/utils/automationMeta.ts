@@ -66,6 +66,7 @@ export function actionMeta(type: string): AutomationNodeMeta {
 
 export interface ConditionFieldOption {
     value: string;
+    /** A translation key (`automation_meta.fields.*`), translated at render. */
     label: string;
 }
 
@@ -75,11 +76,26 @@ export interface ConditionFieldOption {
  * actually passes, nothing else.
  */
 const ISSUE_STATUS_CHANGED_FIELDS: ConditionFieldOption[] = [
-    { value: 'issue.id', label: 'Issue ID' },
-    { value: 'issue.status', label: 'Status name (new)' },
-    { value: 'issue.previousStatus', label: 'Status name (previous)' },
-    { value: 'issue.category', label: 'Status category (new)' },
-    { value: 'issue.previousCategory', label: 'Status category (previous)' },
+    {
+        value: 'issue.id',
+        label: 'automation_meta.fields.status_changed.issue_id',
+    },
+    {
+        value: 'issue.status',
+        label: 'automation_meta.fields.status_changed.issue_status',
+    },
+    {
+        value: 'issue.previousStatus',
+        label: 'automation_meta.fields.status_changed.issue_previousStatus',
+    },
+    {
+        value: 'issue.category',
+        label: 'automation_meta.fields.status_changed.issue_category',
+    },
+    {
+        value: 'issue.previousCategory',
+        label: 'automation_meta.fields.status_changed.issue_previousCategory',
+    },
 ];
 
 /** Condition fields whose value is a status category rather than free text. */
@@ -100,20 +116,62 @@ export const STATUS_NAME_CONDITION_FIELDS = [
  * site, so this single list covers all five GitHub trigger types.
  */
 const GITHUB_PULL_REQUEST_FIELDS: ConditionFieldOption[] = [
-    { value: 'issue.id', label: 'Issue ID' },
-    { value: 'issue.title', label: 'Issue title' },
-    { value: 'issue.status', label: 'Status name' },
-    { value: 'issue.category', label: 'Status category' },
-    { value: 'project.id', label: 'Project ID' },
-    { value: 'project.name', label: 'Project name' },
-    { value: 'repository.owner', label: 'Repository owner' },
-    { value: 'repository.name', label: 'Repository name' },
-    { value: 'pullRequest.number', label: 'Pull request number' },
-    { value: 'pullRequest.title', label: 'Pull request title' },
-    { value: 'pullRequest.url', label: 'Pull request URL' },
-    { value: 'pullRequest.sourceBranch', label: 'Pull request source branch' },
-    { value: 'pullRequest.targetBranch', label: 'Pull request target branch' },
-    { value: 'pullRequest.state', label: 'Pull request state' },
+    {
+        value: 'issue.id',
+        label: 'automation_meta.fields.pull_request.issue_id',
+    },
+    {
+        value: 'issue.title',
+        label: 'automation_meta.fields.pull_request.issue_title',
+    },
+    {
+        value: 'issue.status',
+        label: 'automation_meta.fields.pull_request.issue_status',
+    },
+    {
+        value: 'issue.category',
+        label: 'automation_meta.fields.pull_request.issue_category',
+    },
+    {
+        value: 'project.id',
+        label: 'automation_meta.fields.pull_request.project_id',
+    },
+    {
+        value: 'project.name',
+        label: 'automation_meta.fields.pull_request.project_name',
+    },
+    {
+        value: 'repository.owner',
+        label: 'automation_meta.fields.pull_request.repository_owner',
+    },
+    {
+        value: 'repository.name',
+        label: 'automation_meta.fields.pull_request.repository_name',
+    },
+    {
+        value: 'pullRequest.number',
+        label: 'automation_meta.fields.pull_request.pullRequest_number',
+    },
+    {
+        value: 'pullRequest.title',
+        label: 'automation_meta.fields.pull_request.pullRequest_title',
+    },
+    {
+        value: 'pullRequest.url',
+        label: 'automation_meta.fields.pull_request.pullRequest_url',
+    },
+    {
+        value: 'pullRequest.sourceBranch',
+        label: 'automation_meta.fields.pull_request.pullRequest_sourceBranch',
+    },
+    {
+        value: 'pullRequest.targetBranch',
+        label: 'automation_meta.fields.pull_request.pullRequest_targetBranch',
+    },
+    {
+        value: 'pullRequest.state',
+        label: 'automation_meta.fields.pull_request.pullRequest_state',
+    },
 ];
 
 /**
@@ -129,4 +187,21 @@ export function conditionFieldsForTrigger(
     return triggerType === 'issue.status_changed'
         ? ISSUE_STATUS_CHANGED_FIELDS
         : GITHUB_PULL_REQUEST_FIELDS;
+}
+
+/**
+ * Name of a trigger/action type. The server sends it in English; the
+ * translation (`followup2_automation.<kind>.<type>`) is looked up by the type
+ * and the server text stays as the fallback for a type without one.
+ */
+export function automationTypeLabel(
+    t: (key: string) => string,
+    kind: 'triggers' | 'actions',
+    type: string,
+    fallback: string,
+): string {
+    const key = `followup2_automation.${kind}.${type.replace(/\./g, '_')}`;
+    const translated = t(key);
+
+    return translated === key ? fallback : translated;
 }

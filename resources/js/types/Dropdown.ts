@@ -37,6 +37,12 @@ export interface DropdownOptionItem {
     role?: DropdownOptionRole;
     /** Overrides the variant's default close-on-select behavior for this row. */
     closeOnSelect?: boolean;
+    /**
+     * Turns the row into a submenu: it shows a chevron and opens these items
+     * in a flyout beside the panel (click, Enter, ArrowRight). Picking a
+     * child calls `onSelect` with the child; the row itself is never selected.
+     */
+    children?: DropdownOptionItem[];
 }
 
 export interface DropdownTriggerState {

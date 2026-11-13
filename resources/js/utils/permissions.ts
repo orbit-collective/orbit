@@ -193,10 +193,19 @@ function humanize(value: string): string {
         .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-export function getPermissionLabel(permission: PermissionDefinition): string {
+type Translate = (key: string) => string;
+
+const metaKey = (permission: PermissionDefinition, field: string): string =>
+    `util_permissions.${permission.key.replace(/\./g, '_')}.${field}`;
+
+/** Pass `t` to get the translated label; without it the English one is returned. */
+export function getPermissionLabel(
+    permission: PermissionDefinition,
+    t?: Translate,
+): string {
     const meta = PERMISSION_META[permission.key];
     if (meta) {
-        return meta.label;
+        return t ? t(metaKey(permission, 'label')) : meta.label;
     }
 
     const last = permission.key.split('.').pop() ?? permission.key;
@@ -205,8 +214,12 @@ export function getPermissionLabel(permission: PermissionDefinition): string {
 
 export function getPermissionDescription(
     permission: PermissionDefinition,
+    t?: Translate,
 ): string {
-    return PERMISSION_META[permission.key]?.description ?? '';
+    const meta = PERMISSION_META[permission.key];
+    if (!meta) return '';
+
+    return t ? t(metaKey(permission, 'description')) : meta.description;
 }
 
 export function getPermissionSection(key: string): string {
@@ -216,4 +229,14 @@ export function getPermissionSection(key: string): string {
     }
 
     return humanize(parts[1]);
+}
+
+/** Translates a section name from `getPermissionSection()`; unknown names pass through. */
+export function getPermissionSectionLabel(
+    section: string,
+    t: Translate,
+): string {
+    const key = `util_permissions.sections.${section.toLowerCase().replace(/ /g, '_')}`;
+    const translated = t(key);
+    return translated === key ? section : translated;
 }

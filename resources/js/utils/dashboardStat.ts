@@ -101,9 +101,17 @@ const oneOf = <T extends string>(
     fallback: T,
 ): T => options.find((option) => option === value) ?? fallback;
 
+type Translate = (key: string) => string;
+
 /** The title of a metric as the editor and the grid name it. */
-export const statTitle = (metric: unknown): string => {
+export const statTitle = (metric: unknown, t?: Translate): string => {
     const known = oneOf(STAT_METRICS, metric, 'open_issues');
+
+    if (t) {
+        return known === 'open_issues'
+            ? t('util_dashboard_stat.counts.open.title')
+            : t(`util_dashboard_stat.metrics.${known}.title`);
+    }
 
     return known === 'open_issues' ? COUNTS.open.title : METRICS[known].title;
 };
@@ -114,6 +122,34 @@ export const statTitle = (metric: unknown): string => {
  * about what is still to do.
  */
 export const statFigures = (
+    metricValue: unknown,
+    countValue: unknown,
+    stats: IssueStats,
+    projectCount: number,
+    t?: Translate,
+): StatFigures => {
+    const figures = statFiguresEnglish(
+        metricValue,
+        countValue,
+        stats,
+        projectCount,
+    );
+    if (!t) return figures;
+
+    const known = oneOf(STAT_METRICS, metricValue, 'open_issues');
+    const scope =
+        known === 'open_issues'
+            ? `counts.${oneOf(STAT_COUNTS, countValue, 'open')}`
+            : `metrics.${known}`;
+
+    return {
+        ...figures,
+        title: t(`util_dashboard_stat.${scope}.title`),
+        hint: t(`util_dashboard_stat.${scope}.hint`),
+    };
+};
+
+const statFiguresEnglish = (
     metricValue: unknown,
     countValue: unknown,
     stats: IssueStats,

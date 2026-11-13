@@ -26,32 +26,66 @@ export const daysUntil = (endDate: string, now: Date = new Date()): number =>
             DAY_MS,
     );
 
-const plural = (count: number, word: string) =>
-    `${count} ${word}${count === 1 ? '' : 's'}`;
+type Translate = (
+    key: string,
+    replacements?: Record<string, string | number>,
+) => string;
 
-/** Describes an end date for the dashboard: how far, how it is said, what tone. */
-export function dueInfo(endDate: string, now: Date = new Date()): DueInfo {
+/** "3d": the count with the day unit of the language. */
+const short = (count: number, t: Translate) =>
+    `${count}${t('util_due_date.unit_day')}`;
+
+const plural = (count: number, t?: Translate) => {
+    if (!t) return `${count} day${count === 1 ? '' : 's'}`;
+
+    return count === 1
+        ? t('util_due_date.day_one')
+        : t('util_due_date.day_other', { count });
+};
+
+/**
+ * Describes an end date for the dashboard: how far, how it is said, what tone.
+ * Pass `t` (and the `locale` of the date) to translate; the English wording is
+ * the default.
+ */
+export function dueInfo(
+    endDate: string,
+    now: Date = new Date(),
+    t?: Translate,
+    locale: string = 'en-US',
+): DueInfo {
     const days = daysUntil(endDate, now);
 
     if (days < 0) {
         return {
             days,
             tone: 'overdue',
-            label: `${-days}d overdue`,
-            spoken: `${plural(-days, 'day')} overdue`,
+            label: t
+                ? t('util_due_date.overdue', { days: short(-days, t) })
+                : `${-days}d overdue`,
+            spoken: t
+                ? t('util_due_date.overdue_spoken', {
+                      duration: plural(-days, t),
+                  })
+                : `${plural(-days)} overdue`,
         };
     }
 
     if (days === 0) {
-        return { days, tone: 'today', label: 'Today', spoken: 'due today' };
+        return {
+            days,
+            tone: 'today',
+            label: t ? t('util_due_date.today') : 'Today',
+            spoken: t ? t('util_due_date.due_today') : 'due today',
+        };
     }
 
     if (days === 1) {
         return {
             days,
             tone: 'soon',
-            label: 'Tomorrow',
-            spoken: 'due tomorrow',
+            label: t ? t('util_due_date.tomorrow') : 'Tomorrow',
+            spoken: t ? t('util_due_date.due_tomorrow') : 'due tomorrow',
         };
     }
 
@@ -59,19 +93,27 @@ export function dueInfo(endDate: string, now: Date = new Date()): DueInfo {
         return {
             days,
             tone: 'soon',
-            label: `in ${days}d`,
-            spoken: `due in ${plural(days, 'day')}`,
+            label: t
+                ? t('util_due_date.in_days', { days: short(days, t) })
+                : `in ${days}d`,
+            spoken: t
+                ? t('util_due_date.due_in_spoken', {
+                      duration: plural(days, t),
+                  })
+                : `due in ${plural(days)}`,
         };
     }
 
     return {
         days,
         tone: 'later',
-        label: parseDateKey(endDate.slice(0, 10)).toLocaleDateString('en-US', {
+        label: parseDateKey(endDate.slice(0, 10)).toLocaleDateString(locale, {
             month: 'short',
             day: 'numeric',
         }),
-        spoken: `due in ${plural(days, 'day')}`,
+        spoken: t
+            ? t('util_due_date.due_in_spoken', { duration: plural(days, t) })
+            : `due in ${plural(days)}`,
     };
 }
 
@@ -80,8 +122,12 @@ const dayAfter = (now: Date, offset: number) =>
     new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
 
 /** "Mon", "Tue"... for the day `offset` days from `now`. */
-export const weekdayOf = (offset: number, now: Date = new Date()): string =>
-    dayAfter(now, offset).toLocaleDateString('en-US', { weekday: 'short' });
+export const weekdayOf = (
+    offset: number,
+    now: Date = new Date(),
+    locale: string = 'en-US',
+): string =>
+    dayAfter(now, offset).toLocaleDateString(locale, { weekday: 'short' });
 
 /** The `YYYY-MM-DD` of the day `offset` days from `now`, in local time. */
 export function dateKeyOf(offset: number, now: Date = new Date()): string {

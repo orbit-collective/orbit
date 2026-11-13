@@ -23,6 +23,7 @@ const COLUMN_SNAP = 10;
 const ROW_SNAP = 10;
 
 /** Quick widths offered next to dragging an edge. */
+/** `label` is shown as is, except `Full`, which has the key `util_dashboard_layout.full`. */
 export const WIDTH_PRESETS = [
     { width: 30, label: '1/4' },
     { width: 40, label: '1/3' },
@@ -210,7 +211,8 @@ export const visibleOptions = (
 export const widgetLabel = (
     widget: Pick<DashboardWidget, 'type' | 'config'>,
     entry?: Pick<DashboardCatalogEntry, 'label'>,
+    t?: (key: string) => string,
 ): string =>
     widget.type === 'stat'
-        ? statTitle(widget.config.metric)
+        ? statTitle(widget.config.metric, t)
         : (entry?.label ?? widget.type);

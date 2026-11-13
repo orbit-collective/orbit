@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import {
     createContext,
     ReactNode,
@@ -48,6 +49,7 @@ const dedupeById = (registrations: Command[]): Command[] => {
 };
 
 export const CommandProvider = ({ children }: { children: ReactNode }) => {
+    const { t } = useLaravelReactI18n();
     const { registerBatch } = useShortcuts();
     const [registrations, setRegistrations] = useState<Command[]>([]);
     const [isOpen, setIsOpen] = useState(false);
@@ -163,18 +165,18 @@ export const CommandProvider = ({ children }: { children: ReactNode }) => {
         return registerBatch([
             {
                 key: 'mod+k',
-                description: 'Open command palette',
+                description: t('context_command.open_palette'),
                 category: 'Action',
                 action: togglePalette,
             },
             {
                 key: '/',
-                description: 'Search from the command palette',
+                description: t('context_command.search_palette'),
                 category: 'Search',
                 action: () => openPalette('search'),
             },
         ]);
-    }, [registerBatch, togglePalette, openPalette]);
+    }, [registerBatch, togglePalette, openPalette, t]);
 
     const value = useMemo(
         (): CommandContextType => ({

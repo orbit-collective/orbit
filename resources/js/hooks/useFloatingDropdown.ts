@@ -28,6 +28,8 @@ interface UseFloatingDropdownOptions {
     onOpenChange?: (open: boolean) => void;
     /** Anchor the panel to a point (e.g. a right-click) instead of the trigger. */
     anchorPoint?: { x: number; y: number } | null;
+    /** Extra floating surfaces (a submenu) that count as "inside" for outside clicks. */
+    isInside?: (target: Node) => boolean;
 }
 
 /**
@@ -43,7 +45,10 @@ export function useFloatingDropdown({
     open,
     onOpenChange,
     anchorPoint,
+    isInside,
 }: UseFloatingDropdownOptions = {}) {
+    const isInsideRef = useRef(isInside);
+    isInsideRef.current = isInside;
     const [internalOpen, setInternalOpen] = useState(false);
     const isControlled = open !== undefined;
     const isOpen = isControlled ? open : internalOpen;
@@ -159,7 +164,8 @@ export function useFloatingDropdown({
             const target = event.target as Node;
             if (
                 triggerRef.current?.contains(target) ||
-                panelRef.current?.contains(target)
+                panelRef.current?.contains(target) ||
+                isInsideRef.current?.(target)
             ) {
                 return;
             }

@@ -18,6 +18,8 @@ export interface PermissionSection {
 export interface PermissionGroup {
     group: string;
     label: string;
+    /** Translation key of `label`; empty for a group without a known name. */
+    labelKey: string;
     icon: keyof typeof icons;
     sections: PermissionSection[];
     permissions: PermissionDefinition[];
@@ -38,6 +40,9 @@ export function buildPermissionGroups(
             groups.set(permission.group, {
                 group: permission.group,
                 label: meta.label,
+                labelKey: GROUP_META[permission.group]
+                    ? `util_permission_groups.${permission.group}`
+                    : '',
                 icon: meta.icon,
                 sections: [],
                 permissions: [],
