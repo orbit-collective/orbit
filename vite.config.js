@@ -1,9 +1,10 @@
 /// <reference types="vitest" />
 
-import react from '@vitejs/plugin-react';
-import laravel from 'laravel-vite-plugin';
 import os from 'node:os';
 import path from 'node:path';
+import react from '@vitejs/plugin-react';
+import i18n from 'laravel-react-i18n/vite';
+import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -13,6 +14,10 @@ export default defineConfig({
             refresh: true,
         }),
         react(),
+        // Generates lang/php_<locale>.json for the app; it deletes them again when
+        // the process ends, so it must not run under Vitest (tests read lang/*.php
+        // themselves) or a test run would wipe the dev server's files.
+        ...(process.env.VITEST ? [] : [i18n()]),
     ],
     server: {
         host: '0.0.0.0',
@@ -47,6 +52,9 @@ export default defineConfig({
         },
     },
     resolve: {
+        // laravel-react-i18n lists react@18 as a regular dependency, so npm nests
+        // a second React inside it; two copies break hooks ("Invalid hook call").
+        dedupe: ['react', 'react-dom'],
         alias: {
             '@': '/resources/js',
             '@assets': path.resolve(__dirname, 'resources/js/assets'),
