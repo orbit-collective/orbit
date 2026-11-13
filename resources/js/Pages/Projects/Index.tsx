@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { PageSection, PageStage } from '@/Components/Atoms/PageStage/PageStage';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import EmptyStateCard from '@/Components/Molecules/EmptyStateCard/EmptyStateCard';
@@ -11,16 +12,17 @@ import { Project } from '@/types/Projects';
 
 function Index({ projects }: { projects: Project[] }) {
     const { runCommand } = useCommandPalette();
+    const { t } = useLaravelReactI18n();
 
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-(--bg-color)">
             <Sidebar projects={projects} />
             <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-(--bg-color-hover)">
                 <PageHeader
-                    title={'Projects'}
+                    title={t('page_projects.title')}
                     icon="FolderGit2"
                     primaryAction={{
-                        label: 'New project',
+                        label: t('page_projects.new_project'),
                         icon: 'Plus',
                         onClick: () => runCommand('project.create'),
                     }}
@@ -43,12 +45,12 @@ function Index({ projects }: { projects: Project[] }) {
                     ) : (
                         <PageSection>
                             <EmptyStateCard
-                                title={'Your dashboard is empty'}
-                                description={
-                                    'It looks like you don’t have any projects yet. Create your first project to start organizing your work.'
-                                }
+                                title={t('page_projects.empty.title')}
+                                description={t(
+                                    'page_projects.empty.description',
+                                )}
                                 iconName={'FolderPlus'}
-                                actionLabel={'Create Project'}
+                                actionLabel={t('page_projects.empty.action')}
                                 actionCommand={'project.create'}
                             />
                         </PageSection>

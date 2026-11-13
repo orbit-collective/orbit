@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useMemo } from 'react';
 import PageHeader from '@/Components/Organisms/PageHeader/PageHeader';
 import { useCommands } from '@/hooks/useCommands';
@@ -13,15 +14,25 @@ const LOOKS: {
     icon: Command['icon'];
     key: string;
 }[] = [
-    { look: 'List', title: 'List view', icon: 'Rows3', key: '1' },
-    { look: 'Board', title: 'Board view', icon: 'Columns3', key: '2' },
+    { look: 'List', title: 'layout_main.views.list', icon: 'Rows3', key: '1' },
+    {
+        look: 'Board',
+        title: 'layout_main.views.board',
+        icon: 'Columns3',
+        key: '2',
+    },
     {
         look: 'Calendar',
-        title: 'Calendar view',
+        title: 'layout_main.views.calendar',
         icon: 'CalendarDays',
         key: '3',
     },
-    { look: 'Activity', title: 'Activity view', icon: 'Activity', key: '4' },
+    {
+        look: 'Activity',
+        title: 'layout_main.views.activity',
+        icon: 'Activity',
+        key: '4',
+    },
 ];
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -31,44 +42,51 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     projects,
     project,
 }) => {
+    const { t } = useLaravelReactI18n();
     const commands = useMemo(
         (): Command[] => [
             {
                 id: 'issue.create',
-                title: 'Create issue',
+                title: t('layout_main.create_issue.title'),
                 subtitle: project.name,
                 group: 'creation',
                 icon: 'CirclePlus',
                 shortcut: ['c', 'ctrl+i'],
                 scope: 'project',
-                keywords: ['new issue', 'add issue'],
+                keywords: [
+                    t('layout_main.create_issue.keyword_0'),
+                    t('layout_main.create_issue.keyword_1'),
+                ],
                 perform: requestQuickAddIssue,
             },
             ...LOOKS.map(({ look, title, icon, key }): Command => ({
                 id: `view.${look.toLowerCase()}`,
-                title,
+                title: t(title),
                 subtitle: project.name,
                 group: 'navigation',
                 icon,
                 shortcut: key,
                 category: 'View',
                 scope: 'project',
-                keywords: ['view', look],
+                keywords: [t('layout_main.view_keyword'), look],
                 perform: () => setSelectedLook(look),
             })),
             {
                 id: 'issue.search',
-                title: 'Search issues in this project',
+                title: t('layout_main.search_issues.title'),
                 subtitle: project.name,
                 group: 'navigation',
                 icon: 'ListFilter',
                 scope: 'project',
-                keywords: ['find', 'filter'],
+                keywords: [
+                    t('layout_main.search_issues.keyword_0'),
+                    t('layout_main.search_issues.keyword_1'),
+                ],
                 perform: () =>
                     document.getElementById('global-search-input')?.focus(),
             },
         ],
-        [project.name, setSelectedLook],
+        [project.name, setSelectedLook, t],
     );
 
     useCommands(commands);
@@ -90,34 +108,34 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                     showDate={true}
                     showSettingsIcon={true}
                     primaryAction={{
-                        label: 'New issue',
+                        label: t('layout_main.new_issue'),
                         onClick: requestQuickAddIssue,
                     }}
                     tabs={[
                         {
                             id: 'List',
-                            label: 'List',
+                            label: t('layout_main.tabs.list'),
                             icon: 'Rows3',
                             isActive: selectedLook === 'List',
                             onClick: () => setSelectedLook('List'),
                         },
                         {
                             id: 'Board',
-                            label: 'Board',
+                            label: t('layout_main.tabs.board'),
                             icon: 'Columns3',
                             isActive: selectedLook === 'Board',
                             onClick: () => setSelectedLook('Board'),
                         },
                         {
                             id: 'Calendar',
-                            label: 'Calendar',
+                            label: t('layout_main.tabs.calendar'),
                             icon: 'CalendarDays',
                             isActive: selectedLook === 'Calendar',
                             onClick: () => setSelectedLook('Calendar'),
                         },
                         {
                             id: 'Activity',
-                            label: 'Activity Logs',
+                            label: t('layout_main.tabs.activity'),
                             icon: 'Activity',
                             isActive: selectedLook === 'Activity',
                             onClick: () => setSelectedLook('Activity'),

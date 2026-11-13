@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import ActivityLogs from '@/Components/Organisms/ActivityLogs/ActivityLogs';
@@ -83,6 +84,7 @@ export default function Show({
     issueAbilities?: IssueAbilities;
     projectRole?: string | null;
 }) {
+    const { t } = useLaravelReactI18n();
     const [filterPanelOpen, setFilterPanelOpen] = useState(false);
     const [selectedLook, setSelectedLook] = useState<IssuePageLooks>(() => {
         if (typeof window !== 'undefined') {
@@ -233,7 +235,9 @@ export default function Show({
                                         <div className="mt-2 flex min-h-[400px] flex-col overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4 lg:col-span-2">
                                             <div className="mb-2">
                                                 <h3 className="text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
-                                                    Recent Work Activity
+                                                    {t(
+                                                        'activity_feed_panel.title',
+                                                    )}
                                                 </h3>
                                             </div>
                                             <div

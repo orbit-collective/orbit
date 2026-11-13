@@ -1,4 +1,5 @@
 import { AnimatePresence, MotionConfig } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { PageStage } from '@/Components/Atoms/PageStage/PageStage';
@@ -46,6 +47,7 @@ export default function Dashboard({
 }) {
     const data: DashboardData = { projects, ...rest };
     const { runCommand } = useCommandPalette();
+    const { t } = useLaravelReactI18n();
 
     // `projects` always arrives (the sidebar needs it); the rest only when a
     // visible widget does.
@@ -71,15 +73,20 @@ export default function Dashboard({
         (): Command[] => [
             {
                 id: 'dashboard.edit',
-                title: 'Edit dashboard',
-                subtitle: 'Rearrange, hide and add widgets',
+                title: t('page_dashboard.edit.title'),
+                subtitle: t('page_dashboard.edit.subtitle'),
                 group: 'preferences',
                 icon: 'PenLine',
-                keywords: ['layout', 'widgets', 'customize', 'arrange'],
+                keywords: [
+                    t('page_dashboard.edit.keyword_0'),
+                    t('page_dashboard.edit.keyword_1'),
+                    t('page_dashboard.edit.keyword_2'),
+                    t('page_dashboard.edit.keyword_3'),
+                ],
                 perform: editor.start,
             },
         ],
-        [editor.start],
+        [editor.start, t],
     );
     useCommands(commands);
 
@@ -114,19 +121,19 @@ export default function Dashboard({
                 <Sidebar projects={projects} />
                 <div className="m-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-(--bg-color-hover)">
                     <PageHeader
-                        title="Dashboard"
+                        title={t('page_dashboard.title')}
                         icon="LayoutDashboard"
                         primaryAction={{
-                            label: 'New Project',
+                            label: t('page_dashboard.new_project'),
                             icon: 'Plus',
                             onClick: () => runCommand('project.create'),
                         }}
                     >
                         <button
                             type="button"
-                            aria-label="Open dashboard editor"
+                            aria-label={t('page_dashboard.open_editor')}
                             aria-pressed={editor.editing}
-                            title="Open dashboard editor"
+                            title={t('page_dashboard.open_editor')}
                             onClick={() => runCommand('dashboard.edit')}
                             disabled={editor.editing}
                             className="flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-1.5 hover:bg-(--bg-light-color) disabled:cursor-default disabled:bg-(--bg-light-color)"

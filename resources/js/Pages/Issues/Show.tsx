@@ -2,6 +2,7 @@ import type { FormDataConvertible } from '@inertiajs/core';
 import { Link, router, usePage } from '@inertiajs/react';
 import type { Variants } from 'framer-motion';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -71,10 +72,11 @@ const tabPanelVariants: Variants = {
 
 /** Stands in for the activity feed while its deferred data is on the way. */
 function ActivitySkeleton() {
+    const { t } = useLaravelReactI18n();
     return (
         <div
             role="status"
-            aria-label="Loading activity"
+            aria-label={t('page_issue_show.activity_loading')}
             className="flex flex-col gap-4"
         >
             {[0, 1, 2].map((index) => (
@@ -109,6 +111,7 @@ export default function Show({
     activityLogs,
     queryParams = null,
 }: IssuePageProps) {
+    const { t } = useLaravelReactI18n();
     const [showStartDate, setShowStartDate] = useState(false);
     const [showEndDate, setShowEndDate] = useState(false);
     const { uploadImage } = useImageUpload(project.id);
@@ -130,7 +133,7 @@ export default function Show({
                 preserveScroll: true,
                 onError: (errors) => {
                     addAlert(
-                        errors.branch ?? 'Failed to create the branch.',
+                        errors.branch ?? t('page_issue_show.errors.branch'),
                         'error',
                     );
                 },
@@ -157,7 +160,7 @@ export default function Show({
                 onError: (errors) => {
                     addAlert(
                         errors.pullRequest ??
-                            'Failed to create the pull request.',
+                            t('page_issue_show.errors.pull_request'),
                         'error',
                     );
                 },
@@ -263,11 +266,11 @@ export default function Show({
         })),
         {
             value: '',
-            searchLabel: 'No priority',
+            searchLabel: t('page_issue_show.no_priority'),
             label: (
                 <div className="flex items-center gap-2">
                     <PriorityIcon priority={null} tooltip={false} />
-                    <span>No priority</span>
+                    <span>{t('page_issue_show.no_priority')}</span>
                 </div>
             ),
         },
@@ -276,11 +279,11 @@ export default function Show({
     const assigneeOptions = [
         {
             value: '',
-            searchLabel: 'Unassigned',
+            searchLabel: t('page_issue_show.unassigned'),
             label: (
                 <span className="flex items-center gap-2 text-(--text-gray-color)">
                     <Icon name="UserX" size={14} />
-                    Unassigned
+                    {t('page_issue_show.unassigned')}
                 </span>
             ),
         },
@@ -300,9 +303,15 @@ export default function Show({
 
     type Tab = 'Comments' | 'Activity';
 
-    const tabs: { name: Tab; count?: number }[] = [
-        { name: 'Comments', count: issue.comments?.length ?? 0 },
-        { name: 'Activity' },
+    // The tab strip shows and keys tabs by their name, so it gets the
+    // translated labels while the state keeps the stable ids.
+    const tabs: { name: Tab; label: string; count?: number }[] = [
+        {
+            name: 'Comments',
+            label: t('page_issue_show.tabs.comments'),
+            count: issue.comments?.length ?? 0,
+        },
+        { name: 'Activity', label: t('page_issue_show.tabs.activity') },
     ];
 
     const [selectedTab, setSelectedTab] = useState<Tab>('Comments');
@@ -398,14 +407,18 @@ export default function Show({
                                             onSave={(value) =>
                                                 updateIssue({ title: value })
                                             }
-                                            placeholder="Issue title"
+                                            placeholder={t(
+                                                'page_issue_show.title_placeholder',
+                                            )}
                                             displayClassName="text-2xl font-semibold text-(--text-color)"
                                             inputClassName="text-2xl font-semibold"
                                         />
 
                                         <ConcurrentEditNotice
                                             names={editorNames}
-                                            subject="description"
+                                            subject={t(
+                                                'page_issue_show.description_subject',
+                                            )}
                                         />
                                         <EditableMarkdown
                                             onEditingChange={announceEditing}
@@ -418,7 +431,9 @@ export default function Show({
                                             onImageUpload={uploadImage}
                                             users={users}
                                             projectId={project.id}
-                                            placeholder="Add a description..."
+                                            placeholder={t(
+                                                'page_issue_show.description_placeholder',
+                                            )}
                                         />
                                     </PageSection>
 
@@ -537,7 +552,11 @@ export default function Show({
 
                                 <div className="sticky top-6 flex flex-col gap-3 self-start">
                                     {issueTypeOptions.length > 0 && (
-                                        <SidebarField label="Type">
+                                        <SidebarField
+                                            label={t(
+                                                'page_issue_show.fields.type',
+                                            )}
+                                        >
                                             <EditableSelect
                                                 value={
                                                     issue.issueType
@@ -549,7 +568,9 @@ export default function Show({
                                                 }
                                                 options={issueTypeOptions}
                                                 bare
-                                                header="Change issue type to..."
+                                                header={t(
+                                                    'page_issue_show.change_type',
+                                                )}
                                                 onSave={(value) =>
                                                     updateIssue({
                                                         issue_type_id:
@@ -565,7 +586,9 @@ export default function Show({
                                                         />
                                                     ) : (
                                                         <span className="text-sm text-(--text-gray-color)">
-                                                            No type
+                                                            {t(
+                                                                'page_issue_show.no_type',
+                                                            )}
                                                         </span>
                                                     )
                                                 }
@@ -573,7 +596,11 @@ export default function Show({
                                         </SidebarField>
                                     )}
 
-                                    <SidebarField label="Status">
+                                    <SidebarField
+                                        label={t(
+                                            'page_issue_show.fields.status',
+                                        )}
+                                    >
                                         {workflowStatusOptions.length > 0 ? (
                                             <EditableSelect
                                                 value={
@@ -585,7 +612,9 @@ export default function Show({
                                                 }
                                                 options={workflowStatusOptions}
                                                 bare
-                                                header="Change status to..."
+                                                header={t(
+                                                    'page_issue_show.change_status',
+                                                )}
                                                 onSave={(value) =>
                                                     updateIssue({
                                                         workflow_status_id:
@@ -601,7 +630,9 @@ export default function Show({
                                                         />
                                                     ) : (
                                                         <span className="text-sm text-(--text-gray-color)">
-                                                            No status
+                                                            {t(
+                                                                'page_issue_show.no_status',
+                                                            )}
                                                         </span>
                                                     )
                                                 }
@@ -612,16 +643,22 @@ export default function Show({
                                             />
                                         ) : (
                                             <span className="text-sm text-(--text-gray-color)">
-                                                No status
+                                                {t('page_issue_show.no_status')}
                                             </span>
                                         )}
                                     </SidebarField>
 
-                                    <SidebarField label="Priority">
+                                    <SidebarField
+                                        label={t(
+                                            'page_issue_show.fields.priority',
+                                        )}
+                                    >
                                         <EditableSelect
                                             value={issue.priority ?? ''}
                                             options={priorityOptions}
-                                            header="Change priority to..."
+                                            header={t(
+                                                'page_issue_show.change_priority',
+                                            )}
                                             onSave={(value) =>
                                                 updateIssue({
                                                     priority: value || null,
@@ -637,14 +674,20 @@ export default function Show({
                                                     />
                                                     <span className="text-sm text-(--text-color)">
                                                         {issue.priority ??
-                                                            'No priority'}
+                                                            t(
+                                                                'page_issue_show.no_priority',
+                                                            )}
                                                     </span>
                                                 </div>
                                             )}
                                         />
                                     </SidebarField>
 
-                                    <SidebarField label="Assignee">
+                                    <SidebarField
+                                        label={t(
+                                            'page_issue_show.fields.assignee',
+                                        )}
+                                    >
                                         <EditableSelect
                                             value={
                                                 issue.assignee_id
@@ -652,7 +695,9 @@ export default function Show({
                                                     : ''
                                             }
                                             options={assigneeOptions}
-                                            header="Change assignee to..."
+                                            header={t(
+                                                'page_issue_show.change_assignee',
+                                            )}
                                             onSave={(value) =>
                                                 updateIssue({
                                                     assignee_id: value
@@ -679,7 +724,9 @@ export default function Show({
                                                             name="UserX"
                                                             size={14}
                                                         />
-                                                        Unassigned
+                                                        {t(
+                                                            'page_issue_show.unassigned',
+                                                        )}
                                                     </span>
                                                 )
                                             }
@@ -712,7 +759,11 @@ export default function Show({
                                         </SidebarField>
                                     ))}
 
-                                    <SidebarField label="Labels">
+                                    <SidebarField
+                                        label={t(
+                                            'page_issue_show.fields.labels',
+                                        )}
+                                    >
                                         <EditableLabelList
                                             labels={issue.labels || []}
                                             onSave={(labels: IssueLabel[]) =>
@@ -722,7 +773,11 @@ export default function Show({
                                         />
                                     </SidebarField>
 
-                                    <SidebarField label="Project">
+                                    <SidebarField
+                                        label={t(
+                                            'page_issue_show.fields.project',
+                                        )}
+                                    >
                                         <Link
                                             href={route(
                                                 'projects.show',
@@ -737,7 +792,11 @@ export default function Show({
 
                                     {(linkedPullRequests.length > 0 ||
                                         githubRepositories.length > 0) && (
-                                        <SidebarField label="Development">
+                                        <SidebarField
+                                            label={t(
+                                                'page_issue_show.fields.development',
+                                            )}
+                                        >
                                             <IssueDevelopmentPanel
                                                 pullRequests={
                                                     linkedPullRequests
@@ -768,7 +827,11 @@ export default function Show({
                                         </SidebarField>
                                     )}
 
-                                    <SidebarField label="Dates">
+                                    <SidebarField
+                                        label={t(
+                                            'page_issue_show.fields.dates',
+                                        )}
+                                    >
                                         <div className="flex items-center gap-1">
                                             <Icon
                                                 name="Calendar"
@@ -784,7 +847,9 @@ export default function Show({
                                                 className="rounded-full px-1.5 py-1 text-xs text-(--text-color) hover:bg-(--bg-light-color)"
                                             >
                                                 {issue.start_date ||
-                                                    'Start date'}
+                                                    t(
+                                                        'page_issue_show.start_date',
+                                                    )}
                                             </button>
                                             <span className="text-xs text-(--text-gray-color)">
                                                 —
@@ -797,7 +862,10 @@ export default function Show({
                                                 }}
                                                 className="rounded-full px-1.5 py-1 text-xs text-(--text-color) hover:bg-(--bg-light-color)"
                                             >
-                                                {issue.end_date || 'End date'}
+                                                {issue.end_date ||
+                                                    t(
+                                                        'page_issue_show.end_date',
+                                                    )}
                                             </button>
                                         </div>
                                     </SidebarField>
@@ -808,7 +876,7 @@ export default function Show({
                                     >
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-medium tracking-wider text-(--text-gray-color) uppercase">
-                                                Created
+                                                {t('page_issue_show.created')}
                                             </span>
                                             <span className="text-xs text-(--text-gray-color)">
                                                 {formatDate(issue.created_at)}
@@ -816,7 +884,7 @@ export default function Show({
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="text-[10px] font-medium tracking-wider text-(--text-gray-color) uppercase">
-                                                Modified
+                                                {t('page_issue_show.modified')}
                                             </span>
                                             <span className="text-xs text-(--text-gray-color)">
                                                 {formatDate(issue.updated_at)}
