@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useMemo, useState } from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Reveal from '@/Components/Atoms/Reveal/Reveal';
@@ -13,7 +14,7 @@ import { cn } from '@/utils/cn';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
 import { rowDelay, rowIn } from '@/utils/motion';
 import { linksForCurrentQuery } from '@/utils/portalLinks';
-import { formatDate } from '@/utils/time';
+import { formatDate, intlLocale } from '@/utils/time';
 
 interface PortalErrorsSectionProps {
     /** Undefined while the deferred prop is still loading. */
@@ -37,7 +38,22 @@ export function deltaPercent(current: number, previous?: number) {
     return ((current - previous) / previous) * 100;
 }
 
-export function buildDays(errorLog: PortalErrorLog): DayBreakdownDay[] {
+const DEFAULT_LEVEL_LABELS = {
+    critical: 'Critical',
+    error: 'Errors',
+    warning: 'Warnings',
+};
+
+/** `labels` are the already translated names of the three levels. */
+export function buildDays(
+    errorLog: PortalErrorLog,
+    labels: Record<
+        'critical' | 'error' | 'warning',
+        string
+    > = DEFAULT_LEVEL_LABELS,
+    /** Intl locale; when set the weekday is drawn from the date instead of the server's English label. */
+    locale?: string,
+): DayBreakdownDay[] {
     return errorLog.daily.map((day, index): DayBreakdownDay => {
         const before = errorLog.daily[index - 1];
         const row = (
@@ -53,12 +69,18 @@ export function buildDays(errorLog: PortalErrorLog): DayBreakdownDay[] {
 
         return {
             key: day.date,
-            label: day.label,
+            label: locale
+                ? new Date(
+                      Number(day.date.slice(0, 4)),
+                      Number(day.date.slice(5, 7)) - 1,
+                      Number(day.date.slice(8, 10)),
+                  ).toLocaleDateString(locale, { weekday: 'short' })
+                : day.label,
             dayNumber: day.date.slice(8, 10),
             rows: [
-                row('critical', 'Critical'),
-                row('error', 'Errors'),
-                row('warning', 'Warnings'),
+                row('critical', labels.critical),
+                row('error', labels.error),
+                row('warning', labels.warning),
             ],
         };
     });
@@ -135,25 +157,39 @@ export default function PortalErrorsSection({
     queryParams = {},
     collapse,
 }: PortalErrorsSectionProps) {
+    const { t, tChoice, currentLocale } = useLaravelReactI18n();
     const days = useMemo(
-        () => (errorLog ? buildDays(errorLog) : []),
-        [errorLog],
+        () =>
+            errorLog
+                ? buildDays(
+                      errorLog,
+                      {
+                          critical: t(
+                              'developer_portal.errors.levels.critical',
+                          ),
+                          error: t('developer_portal.errors.levels.error'),
+                          warning: t('developer_portal.errors.levels.warning'),
+                      },
+                      intlLocale(currentLocale()),
+                  )
+                : [],
+        [errorLog, t, currentLocale],
     );
 
     if (!errorLog) {
         return (
             <Reveal key="loading">
                 <SettingsPanel
-                    title="Recent errors"
+                    title={t('developer_portal.errors.title')}
                     icon="Bug"
-                    description="The newest errors from the application log."
+                    description={t('developer_portal.errors.description')}
                     {...collapse?.('errors')}
                 >
                     <p
                         role="status"
                         className="animate-pulse px-5 py-6 text-sm text-(--text-gray-color)"
                     >
-                        Reading the log…
+                        {t('developer_portal.errors.reading')}
                     </p>
                 </SettingsPanel>
             </Reveal>
@@ -165,29 +201,37 @@ export default function PortalErrorsSection({
             <DayBreakdownCard
                 {...collapse?.(
                     'activity',
-                    `${errorLog.daily.reduce((sum, day) => sum + day.total, 0)} problems this week`,
+                    t('developer_portal.errors.problems_this_week', {
+                        count: errorLog.daily.reduce(
+                            (sum, day) => sum + day.total,
+                            0,
+                        ),
+                    }),
                 )}
-                title="Log activity this week"
+                title={t('developer_portal.errors.activity_title')}
                 icon="Activity"
                 days={days}
                 headline={(total) =>
-                    `${total} ${total === 1 ? 'problem' : 'problems'}`
+                    tChoice('developer_portal.errors.problems', total)
                 }
-                emptyText="The log has nothing for these days."
+                emptyText={t('developer_portal.errors.activity_empty')}
             />
 
             <SettingsPanel
-                title="Recent errors"
+                title={t('developer_portal.errors.title')}
                 icon="Bug"
-                description="The newest errors from the application log."
+                description={t('developer_portal.errors.description')}
                 {...collapse?.(
                     'errors',
-                    `${errorLog.entries.total} ${errorLog.entries.total === 1 ? 'error' : 'errors'}`,
+                    tChoice(
+                        'developer_portal.errors.count',
+                        errorLog.entries.total,
+                    ),
                 )}
             >
                 {errorLog.entries.data.length === 0 ? (
                     <p className="px-5 py-6 text-sm text-(--text-gray-color)">
-                        No errors in the log. Nice.
+                        {t('developer_portal.errors.none')}
                     </p>
                 ) : (
                     errorLog.entries.data.map((entry, index) => (

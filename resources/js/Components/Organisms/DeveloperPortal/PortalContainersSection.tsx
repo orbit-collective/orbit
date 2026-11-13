@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useState } from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -11,6 +12,7 @@ import { PortalContainer, PortalContainers } from '@/types/DeveloperPortal';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
 import { rowIn, rowDelay } from '@/utils/motion';
+import { intlLocale } from '@/utils/time';
 import {
     ERROR_TINT,
     ERROR_TINT_BORDER,
@@ -72,6 +74,7 @@ function ContainerRow({
     now: number;
     index: number;
 }) {
+    const { t, currentLocale } = useLaravelReactI18n();
     const [open, setOpen] = useState(false);
     const running = container.state === 'running';
     const panelId = `container-${container.id}`;
@@ -125,7 +128,9 @@ function ContainerRow({
                     )}
                     {container.restartCount > 0 && (
                         <Badge variant="outline">
-                            {container.restartCount} restarts
+                            {t('developer_portal.containers.restarts_badge', {
+                                count: container.restartCount,
+                            })}
                         </Badge>
                     )}
                     <span className="flex items-center gap-1.5 text-sm text-(--text-color) tabular-nums">
@@ -147,6 +152,7 @@ function ContainerRow({
                         {running
                             ? formatUptime(
                                   containerUptimeSeconds(container, now),
+                                  t,
                               )
                             : container.state}
                     </span>
@@ -156,23 +162,38 @@ function ContainerRow({
             <Collapse open={open} id={panelId} unmountWhenClosed>
                 <div className="space-y-4 border-t border-(--border-color) px-4 py-4 sm:px-5">
                     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        <Detail label="Container" value={container.id} />
                         <Detail
-                            label="Status"
+                            label={t(
+                                'developer_portal.containers.detail.container',
+                            )}
+                            value={container.id}
+                        />
+                        <Detail
+                            label={t(
+                                'developer_portal.containers.detail.status',
+                            )}
                             value={container.status || container.state}
                         />
                         <Detail
-                            label="Started"
+                            label={t(
+                                'developer_portal.containers.detail.started',
+                            )}
                             value={
                                 container.startedAt
                                     ? new Date(
                                           container.startedAt,
-                                      ).toLocaleString()
-                                    : 'not running'
+                                      ).toLocaleString(
+                                          intlLocale(currentLocale()),
+                                      )
+                                    : t(
+                                          'developer_portal.containers.not_running',
+                                      )
                             }
                         />
                         <Detail
-                            label="Restarts"
+                            label={t(
+                                'developer_portal.containers.detail.restarts',
+                            )}
                             value={String(container.restartCount)}
                         />
                     </dl>
@@ -187,22 +208,25 @@ export default function PortalContainersSection({
     containers,
     collapse,
 }: PortalContainersSectionProps) {
+    const { t } = useLaravelReactI18n();
     const now = useNow();
 
     if (!containers) {
         return (
             <Reveal key="loading">
                 <SettingsPanel
-                    title="Containers"
+                    title={t('developer_portal.containers.title')}
                     icon="Container"
-                    description="Uptime of this project's Docker containers."
+                    description={t(
+                        'developer_portal.containers.uptime_description',
+                    )}
                     {...collapse?.('containers')}
                 >
                     <p
                         role="status"
                         className="animate-pulse px-5 py-6 text-sm text-(--text-gray-color)"
                     >
-                        Reading Docker…
+                        {t('developer_portal.containers.reading')}
                     </p>
                 </SettingsPanel>
             </Reveal>
@@ -213,9 +237,11 @@ export default function PortalContainersSection({
         return (
             <Reveal key="unavailable">
                 <SettingsPanel
-                    title="Containers"
+                    title={t('developer_portal.containers.title')}
                     icon="Container"
-                    description="Uptime of this project's Docker containers."
+                    description={t(
+                        'developer_portal.containers.uptime_description',
+                    )}
                     {...collapse?.('containers')}
                 >
                     <p
@@ -227,7 +253,8 @@ export default function PortalContainersSection({
                             size={16}
                             className="mt-0.5 shrink-0"
                         />
-                        {containers.error ?? 'Docker is not available.'}
+                        {containers.error ??
+                            t('developer_portal.containers.docker_unavailable')}
                     </p>
                 </SettingsPanel>
             </Reveal>
@@ -241,11 +268,16 @@ export default function PortalContainersSection({
     return (
         <Reveal key="loaded" className="space-y-5">
             <BarChartCard
-                {...collapse?.('uptime', `${running.length} running`)}
-                title="Container uptime"
+                {...collapse?.(
+                    'uptime',
+                    t('developer_portal.containers.running_count', {
+                        count: running.length,
+                    }),
+                )}
+                title={t('developer_portal.containers.uptime_title')}
                 icon="ChartColumn"
                 formatValue={hours}
-                emptyText="No running containers."
+                emptyText={t('developer_portal.containers.no_running')}
                 items={running.map((container) => {
                     // The server's reading, not the ticking clock: the chart
                     // glides at each refresh instead of re-animating every second.
@@ -253,7 +285,7 @@ export default function PortalContainersSection({
                         key: container.id,
                         label: container.service,
                         value: container.uptimeSeconds,
-                        valueLabel: formatUptime(container.uptimeSeconds),
+                        valueLabel: formatUptime(container.uptimeSeconds, t),
                     };
                 })}
                 summary={
@@ -265,7 +297,7 @@ export default function PortalContainersSection({
                                 SUCCESS_TINT_BORDER,
                             )}
                         >
-                            Running
+                            {t('developer_portal.containers.running')}
                             <strong>
                                 {running.length}/{containers.containers.length}
                             </strong>
@@ -279,9 +311,14 @@ export default function PortalContainersSection({
                                 )}
                             >
                                 <Icon name="CircleExclamationPoint" size={12} />
-                                {containers.containers.length -
-                                    running.length}{' '}
-                                not running
+                                {t(
+                                    'developer_portal.containers.not_running_count',
+                                    {
+                                        count:
+                                            containers.containers.length -
+                                            running.length,
+                                    },
+                                )}
                             </Badge>
                         )}
                     </>
@@ -289,12 +326,17 @@ export default function PortalContainersSection({
             />
 
             <SettingsPanel
-                title="Containers"
+                title={t('developer_portal.containers.title')}
                 icon="Container"
-                description="Click a container for its details and live logs."
+                description={t(
+                    'developer_portal.containers.details_description',
+                )}
                 {...collapse?.(
                     'containers',
-                    `${running.length}/${containers.containers.length} running`,
+                    t('developer_portal.containers.running_of', {
+                        running: running.length,
+                        total: containers.containers.length,
+                    }),
                 )}
             >
                 {containers.containers.map((container, index) => (

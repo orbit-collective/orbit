@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Input from '@/Components/Atoms/Input/Input';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
@@ -18,10 +19,14 @@ interface PortalProjectsPanelProps {
     collapse?: CollapseProps;
 }
 
+/** `label` is a translation key. */
 const CATEGORIES = [
-    { key: 'todo', label: 'to do' },
-    { key: 'in_progress', label: 'in progress' },
-    { key: 'done', label: 'done' },
+    { key: 'todo', label: 'developer_portal.projects.categories.todo' },
+    {
+        key: 'in_progress',
+        label: 'developer_portal.projects.categories.in_progress',
+    },
+    { key: 'done', label: 'developer_portal.projects.categories.done' },
 ] as const;
 
 export default function PortalProjectsPanel({
@@ -29,6 +34,7 @@ export default function PortalProjectsPanel({
     queryParams,
     collapse,
 }: PortalProjectsPanelProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const [search, setSearch] = usePortalSearch(
         'projects_search',
         'projects_page',
@@ -38,33 +44,40 @@ export default function PortalProjectsPanel({
 
     return (
         <SettingsPanel
-            title="Projects"
+            title={t('developer_portal.projects.title')}
             icon="FolderGit2"
-            {...collapse?.('projects', `${projects.total} projects`)}
-            description={`Every project on this instance (${projects.total}).`}
+            {...collapse?.(
+                'projects',
+                t('developer_portal.projects.count', { count: projects.total }),
+            )}
+            description={t('developer_portal.projects.description', {
+                count: projects.total,
+            })}
         >
             <div className="space-y-2 px-4 py-3 sm:px-5">
                 <Input
                     type="search"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search by name or slug"
+                    placeholder={t(
+                        'developer_portal.projects.search_placeholder',
+                    )}
                 />
                 <ul
-                    aria-label="Issue counts legend"
+                    aria-label={t('developer_portal.projects.legend')}
                     className="hidden flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-(--text-muted-color) md:flex"
                 >
                     {CATEGORIES.map(({ key, label }) => (
                         <li key={key} className="flex items-center gap-1.5">
                             <StatusDot status={key} size="xs" />
-                            {label}
+                            {t(label)}
                         </li>
                     ))}
                 </ul>
             </div>
             {projects.data.length === 0 ? (
                 <p className="px-5 py-6 text-sm text-(--text-gray-color)">
-                    No projects match.
+                    {t('developer_portal.projects.empty')}
                 </p>
             ) : (
                 projects.data.map((project, index) => (
@@ -95,10 +108,11 @@ export default function PortalProjectsPanel({
                                     {project.name}
                                 </Link>
                                 <p className="truncate text-xs text-(--text-gray-color)">
-                                    {project.slug} · {project.membersCount}{' '}
-                                    {project.membersCount === 1
-                                        ? 'member'
-                                        : 'members'}
+                                    {project.slug} ·{' '}
+                                    {tChoice(
+                                        'developer_portal.projects.members',
+                                        project.membersCount,
+                                    )}
                                 </p>
                             </div>
                         </div>
@@ -107,13 +121,15 @@ export default function PortalProjectsPanel({
                             {CATEGORIES.map(({ key, label }) => (
                                 <li
                                     key={key}
-                                    title={`${project.issues[key]} ${label}`}
-                                    aria-label={`${project.issues[key]} ${label}`}
+                                    title={`${project.issues[key]} ${t(label)}`}
+                                    aria-label={`${project.issues[key]} ${t(label)}`}
                                     className="flex items-center gap-1"
                                 >
                                     <StatusDot status={key} size="xs" />
                                     {project.issues[key]}
-                                    <span className="md:hidden">{label}</span>
+                                    <span className="md:hidden">
+                                        {t(label)}
+                                    </span>
                                 </li>
                             ))}
                         </ul>

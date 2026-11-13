@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useMemo } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
@@ -24,7 +25,11 @@ const startOfToday = () => {
     return today;
 };
 
-const getDeadlineMeta = (endDate: string) => {
+const getDeadlineMeta = (
+    endDate: string,
+    t: (key: string, replacements?: Record<string, string | number>) => string,
+    locale: string,
+) => {
     const end = parseDateKey(endDate);
     const diffDays = Math.round(
         (end.getTime() - startOfToday().getTime()) / 86_400_000,
@@ -34,31 +39,36 @@ const getDeadlineMeta = (endDate: string) => {
         return {
             label:
                 diffDays === -1
-                    ? 'Overdue by 1 day'
-                    : `Overdue by ${Math.abs(diffDays)} days`,
+                    ? t('upcoming_deadlines.overdue_one')
+                    : t('upcoming_deadlines.overdue_many', {
+                          days: Math.abs(diffDays),
+                      }),
             colorClass: 'text-(--error-color)',
         };
     }
     if (diffDays === 0) {
         return {
-            label: 'Due today',
+            label: t('upcoming_deadlines.due_today'),
             colorClass: 'text-(--warning-color)',
         };
     }
     if (diffDays === 1) {
         return {
-            label: 'Due tomorrow',
+            label: t('upcoming_deadlines.due_tomorrow'),
             colorClass: 'text-(--warning-color)',
         };
     }
     if (diffDays <= 7) {
         return {
-            label: `Due in ${diffDays} days`,
+            label: t('upcoming_deadlines.due_in_days', { days: diffDays }),
             colorClass: 'text-(--text-muted-color)',
         };
     }
     return {
-        label: end.toLocaleDateString('en-US', SHORT_DATE_FORMAT),
+        label: end.toLocaleDateString(
+            locale === 'pl' ? 'pl-PL' : 'en-US',
+            SHORT_DATE_FORMAT,
+        ),
         colorClass: 'text-(--text-muted-color)',
     };
 };
@@ -66,6 +76,8 @@ const getDeadlineMeta = (endDate: string) => {
 const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
     issues,
 }) => {
+    const { t, currentLocale } = useLaravelReactI18n();
+    const locale = currentLocale();
     const upcoming = useMemo(() => {
         return issues
             .filter(
@@ -84,7 +96,7 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
             <div className="flex max-h-[420px] w-full flex-col overflow-hidden rounded-2xl border border-solid border-(--border-color) bg-(--surface-color) p-4 xl:w-80 xl:shrink-0">
                 <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
-                        Upcoming Deadlines
+                        {t('upcoming_deadlines.title')}
                     </h3>
                     {upcoming.length > 0 && (
                         <span className="text-[10px] font-medium text-(--text-muted-color)">
@@ -101,7 +113,7 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
                             className="text-(--text-muted-color)"
                         />
                         <p className="text-xs font-medium text-(--text-muted-color)">
-                            No upcoming deadlines
+                            {t('upcoming_deadlines.empty')}
                         </p>
                     </div>
                 ) : (
@@ -109,6 +121,8 @@ const UpcomingDeadlinesPanel: React.FC<UpcomingDeadlinesPanelProps> = ({
                         {upcoming.map((issue, index) => {
                             const { label, colorClass } = getDeadlineMeta(
                                 issue.end_date,
+                                t,
+                                locale,
                             );
 
                             return (

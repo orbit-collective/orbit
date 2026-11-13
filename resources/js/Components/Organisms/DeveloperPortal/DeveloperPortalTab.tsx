@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { MotionConfig, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useMemo } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
@@ -61,6 +62,7 @@ export default function DeveloperPortalTab({
     containers,
     errorLog,
 }: DeveloperPortalTabProps) {
+    const { t } = useLaravelReactI18n();
     useDeveloperPortalLive();
     const { collapse, setAll, allCollapsed } = useCollapsedSections(
         SECTIONS_STORAGE_KEY,
@@ -79,9 +81,21 @@ export default function DeveloperPortalTab({
     const { todo, in_progress, done } = totals.categories;
 
     const statuses = [
-        { key: 'todo', label: 'To do', count: todo },
-        { key: 'in_progress', label: 'In progress', count: in_progress },
-        { key: 'done', label: 'Done', count: done },
+        {
+            key: 'todo',
+            label: t('developer_portal.tab.status.todo'),
+            count: todo,
+        },
+        {
+            key: 'in_progress',
+            label: t('developer_portal.tab.status.in_progress'),
+            count: in_progress,
+        },
+        {
+            key: 'done',
+            label: t('developer_portal.tab.status.done'),
+            count: done,
+        },
     ] as const;
 
     const stat = (
@@ -103,7 +117,9 @@ export default function DeveloperPortalTab({
                     fresh && fresh > 0
                         ? {
                               value: fresh,
-                              label: `new in ${totals.recentDays} days`,
+                              label: t('developer_portal.tab.new_in_days', {
+                                  days: totals.recentDays,
+                              }),
                               isPositive: true,
                           }
                         : undefined
@@ -130,27 +146,27 @@ export default function DeveloperPortalTab({
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {stat(
-                            'Users',
+                            t('developer_portal.tab.stats.users'),
                             totals.users,
                             'Users',
                             'info',
                             totals.newUsers,
                         )}
                         {stat(
-                            'Projects',
+                            t('developer_portal.tab.stats.projects'),
                             totals.projects,
                             'FolderGit2',
                             'accent',
                         )}
                         {stat(
-                            'Issues',
+                            t('developer_portal.tab.stats.issues'),
                             totals.issues,
                             'CircleDot',
                             'success',
                             totals.newIssues,
                         )}
                         {stat(
-                            'Comments',
+                            t('developer_portal.tab.stats.comments'),
                             totals.comments,
                             'MessageSquare',
                             'warning',
@@ -161,17 +177,24 @@ export default function DeveloperPortalTab({
                         <PercentBarsCard
                             {...collapse(
                                 'status',
-                                `${totals.issues} issues · ${percent(done, totals.issues)}% done`,
+                                t('developer_portal.tab.summary', {
+                                    issues: totals.issues,
+                                    percent: percent(done, totals.issues),
+                                }),
                             )}
-                            title="Issues by status"
+                            title={t('developer_portal.tab.by_status')}
                             icon="ChartColumn"
-                            totalLabel="Total issues"
+                            totalLabel={t('developer_portal.tab.total_issues')}
                             total={<AnimatedNumber value={totals.issues} />}
                             bars={statuses.map(({ key, label, count }) => ({
                                 key,
                                 label,
                                 percent: percent(count, totals.issues),
-                                tooltip: `${count} ${label.toLowerCase()} · ${percent(count, totals.issues)}% of all issues`,
+                                tooltip: t('developer_portal.tab.bar_tooltip', {
+                                    count,
+                                    label: label.toLowerCase(),
+                                    percent: percent(count, totals.issues),
+                                }),
                             }))}
                             summary={statuses.map(({ key, label, count }) => (
                                 <WorkflowStatusBadge
@@ -181,13 +204,23 @@ export default function DeveloperPortalTab({
                                         color: STATUS_COLORS[key],
                                     }}
                                     suffix={<AnimatedNumber value={count} />}
-                                    tooltip={`${percent(count, totals.issues)}% of all issues`}
+                                    tooltip={t(
+                                        'developer_portal.tab.badge_tooltip',
+                                        {
+                                            percent: percent(
+                                                count,
+                                                totals.issues,
+                                            ),
+                                        },
+                                    )}
                                     className="px-2.5 py-1"
                                 />
                             ))}
                             footnote={
                                 totals.issues > 0
-                                    ? `${percent(done, totals.issues)}% of all issues are done.`
+                                    ? t('developer_portal.tab.footnote', {
+                                          percent: percent(done, totals.issues),
+                                      })
                                     : undefined
                             }
                         />

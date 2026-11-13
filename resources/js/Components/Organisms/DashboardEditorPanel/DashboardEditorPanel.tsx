@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC, ReactNode, useEffect, useState } from 'react';
 import ColorSwatches from '@/Components/Atoms/ColorSwatches/ColorSwatches';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -13,6 +14,7 @@ import {
     DashboardWidgetType,
 } from '@/types/Dashboard';
 import { cn } from '@/utils/cn';
+import { catalogText } from '@/utils/dashboardCatalogText';
 import {
     DASHBOARD_COLOR_VALUES,
     toDashboardColor,
@@ -115,6 +117,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
     onDeleteLayout,
     desktop = true,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [tab, setTab] = useState<PanelTab>('widgets');
     // Which way the content of a tab comes from: the way the pick moved.
     const [direction, setDirection] = useState<1 | -1>(1);
@@ -149,7 +152,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
 
     return (
         <motion.aside
-            aria-label="Dashboard widgets"
+            aria-label={t('dashboard_editor.aria')}
             // It opens by growing: the dashboard makes room for it smoothly.
             initial={
                 desktop ? { width: 0, opacity: 0 } : { height: 0, opacity: 0 }
@@ -168,13 +171,22 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
             <div className="flex h-full w-full flex-col lg:w-80">
                 <div className="shrink-0 border-b border-(--bg-light-color) p-3">
                     <SegmentedControl
-                        label="Panel"
+                        label={t('dashboard_editor.panel')}
                         fullWidth
                         value={tab}
                         options={[
-                            { value: 'widgets', label: 'Widgets' },
-                            { value: 'settings', label: 'Settings' },
-                            { value: 'saved', label: 'Saved' },
+                            {
+                                value: 'widgets',
+                                label: t('dashboard_editor.tabs.widgets'),
+                            },
+                            {
+                                value: 'settings',
+                                label: t('dashboard_editor.tabs.settings'),
+                            },
+                            {
+                                value: 'saved',
+                                label: t('dashboard_editor.tabs.saved'),
+                            },
                         ]}
                         onChange={changeTab}
                     />
@@ -200,7 +212,9 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                 onDelete={onDeleteLayout}
                             />
                         ) : tab === 'widgets' ? (
-                            <Section title="Add to dashboard">
+                            <Section
+                                title={t('dashboard_editor.add_to_dashboard')}
+                            >
                                 <ul className="m-0 flex list-none flex-col gap-2 p-0">
                                     {catalog.map((item, itemIndex) => {
                                         const count = widgets.filter(
@@ -223,11 +237,24 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                             hover: { x: 3 },
                                                         }}
                                                         transition={SPRING}
-                                                        aria-label={`Add ${item.label}`}
+                                                        aria-label={t(
+                                                            'dashboard_editor.add_widget',
+                                                            {
+                                                                name: catalogText(
+                                                                    t,
+                                                                    'labels',
+                                                                    item.label,
+                                                                ),
+                                                            },
+                                                        )}
                                                         title={
                                                             canAdd
-                                                                ? 'Add to dashboard'
-                                                                : 'The dashboard is full'
+                                                                ? t(
+                                                                      'dashboard_editor.add_to_dashboard',
+                                                                  )
+                                                                : t(
+                                                                      'dashboard_editor.full',
+                                                                  )
                                                         }
                                                         disabled={!canAdd}
                                                         onClick={() => {
@@ -245,7 +272,11 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                         <span className="min-w-0 flex-1">
                                                             <span className="flex items-center gap-1.5 text-sm font-medium text-(--text-color)">
                                                                 <span className="truncate">
-                                                                    {item.label}
+                                                                    {catalogText(
+                                                                        t,
+                                                                        'labels',
+                                                                        item.label,
+                                                                    )}
                                                                 </span>
                                                                 {count > 0 && (
                                                                     <motion.span
@@ -269,9 +300,11 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                                 )}
                                                             </span>
                                                             <span className="block text-[11px] leading-snug text-(--text-muted-color)">
-                                                                {
-                                                                    item.description
-                                                                }
+                                                                {catalogText(
+                                                                    t,
+                                                                    'descriptions',
+                                                                    item.description,
+                                                                )}
                                                             </span>
                                                         </span>
                                                         <motion.span
@@ -342,23 +375,39 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     <IconTile icon={entry.icon} />
                                     <div className="min-w-0">
                                         <h3 className="m-0 truncate text-sm font-semibold text-(--text-color)">
-                                            {widgetLabel(selected, entry)}
+                                            {catalogText(
+                                                t,
+                                                selected.type === 'stat'
+                                                    ? 'values'
+                                                    : 'labels',
+                                                widgetLabel(selected, entry, t),
+                                            )}
                                         </h3>
                                         <p className="m-0 text-[11px] leading-snug text-(--text-muted-color)">
-                                            {entry.description}
+                                            {catalogText(
+                                                t,
+                                                'descriptions',
+                                                entry.description,
+                                            )}
                                         </p>
                                     </div>
                                 </motion.div>
 
                                 {entry.variants.length > 1 && (
-                                    <Section title="Style">
+                                    <Section
+                                        title={t('dashboard_editor.style')}
+                                    >
                                         <SegmentedControl
-                                            label="Style"
+                                            label={t('dashboard_editor.style')}
                                             value={selected.variant}
                                             options={entry.variants.map(
                                                 (variant) => ({
                                                     value: variant,
-                                                    label: capitalize(variant),
+                                                    label: catalogText(
+                                                        t,
+                                                        'values',
+                                                        capitalize(variant),
+                                                    ),
                                                 }),
                                             )}
                                             onChange={(variant) =>
@@ -371,29 +420,35 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     </Section>
                                 )}
 
-                                <Section title="Size">
+                                <Section title={t('dashboard_editor.size')}>
                                     <SegmentedControl
-                                        label="Width"
+                                        label={t('dashboard_editor.width')}
                                         value={selected.width}
                                         options={WIDTH_PRESETS.filter(
                                             (preset) =>
                                                 preset.width >= entry.minWidth,
                                         ).map((preset) => ({
                                             value: preset.width,
-                                            label: preset.label,
+                                            label: catalogText(
+                                                t,
+                                                'values',
+                                                preset.label,
+                                            ),
                                         }))}
                                         onChange={(width) =>
                                             onWidthChange(selected.id, width)
                                         }
                                     />
                                     <p className="m-0 text-[11px] text-(--text-muted-color)">
-                                        {Math.round(
-                                            (selected.width / GRID_COLUMNS) *
-                                                100,
-                                        )}
-                                        % wide · {selected.height * ROW_HEIGHT}
-                                        px tall. Drag the edges of the widget
-                                        for any other size.
+                                        {t('dashboard_editor.size_hint', {
+                                            percent: Math.round(
+                                                (selected.width /
+                                                    GRID_COLUMNS) *
+                                                    100,
+                                            ),
+                                            height:
+                                                selected.height * ROW_HEIGHT,
+                                        })}
                                     </p>
                                 </Section>
 
@@ -405,19 +460,30 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                         const labelOf = (
                                             value: string | number,
                                         ) =>
-                                            option.labels?.[String(value)] ??
-                                            (typeof value === 'string'
-                                                ? capitalize(value)
-                                                : String(value));
+                                            catalogText(
+                                                t,
+                                                'values',
+                                                option.labels?.[
+                                                    String(value)
+                                                ] ??
+                                                    (typeof value === 'string'
+                                                        ? capitalize(value)
+                                                        : String(value)),
+                                            );
+                                        const optionLabel = catalogText(
+                                            t,
+                                            'labels',
+                                            option.label,
+                                        );
 
                                         return (
                                             <Section
                                                 key={option.key}
-                                                title={option.label}
+                                                title={optionLabel}
                                             >
                                                 {option.kind === 'color' ? (
                                                     <ColorSwatches
-                                                        label={option.label}
+                                                        label={optionLabel}
                                                         value={String(current)}
                                                         options={option.options.map(
                                                             (value) => ({
@@ -451,7 +517,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                     />
                                                 ) : (
                                                     <SegmentedControl
-                                                        label={option.label}
+                                                        label={optionLabel}
                                                         value={current}
                                                         options={option.options.map(
                                                             (value) => ({
@@ -475,7 +541,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     },
                                 )}
 
-                                <Section title="Position">
+                                <Section title={t('dashboard_editor.position')}>
                                     <div className="flex gap-2">
                                         <button
                                             type="button"
@@ -486,7 +552,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                             className={ACTION_BUTTON}
                                         >
                                             <Icon name="ArrowUp" size={13} />
-                                            Earlier
+                                            {t('dashboard_editor.earlier')}
                                         </button>
                                         <button
                                             type="button"
@@ -499,7 +565,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                             className={ACTION_BUTTON}
                                         >
                                             <Icon name="ArrowDown" size={13} />
-                                            Later
+                                            {t('dashboard_editor.later')}
                                         </button>
                                     </div>
                                 </Section>
@@ -509,10 +575,14 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     className="flex items-center justify-between gap-3 rounded-xl border border-solid border-(--border-color) bg-(--surface-color) px-3 py-2.5"
                                 >
                                     <span className="text-sm font-medium text-(--text-color)">
-                                        Show on dashboard
+                                        {t(
+                                            'dashboard_editor.show_on_dashboard',
+                                        )}
                                     </span>
                                     <ToggleSwitch
-                                        label="Show on dashboard"
+                                        label={t(
+                                            'dashboard_editor.show_on_dashboard',
+                                        )}
                                         checked={selected.visible}
                                         onChange={() =>
                                             onToggleVisible(selected.id)
@@ -536,7 +606,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--error-color)_16%,transparent)] transition-transform duration-150 group-hover:scale-110 group-hover:-rotate-12">
                                         <Icon name="Trash" size={12} />
                                     </span>
-                                    Remove widget
+                                    {t('dashboard_editor.remove_widget')}
                                 </motion.button>
                             </motion.div>
                         ) : (
@@ -553,11 +623,10 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     <Icon name="MousePointerClick" size={20} />
                                 </motion.span>
                                 <p className="m-0 text-sm font-semibold text-(--text-color)">
-                                    Pick a widget
+                                    {t('dashboard_editor.pick_title')}
                                 </p>
                                 <p className="m-0 text-xs text-(--text-muted-color)">
-                                    Click one on the dashboard to change its
-                                    style, size and options.
+                                    {t('dashboard_editor.pick_description')}
                                 </p>
                             </div>
                         )}

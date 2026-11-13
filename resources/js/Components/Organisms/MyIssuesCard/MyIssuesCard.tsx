@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import DashboardIssueRow, {
@@ -39,6 +40,7 @@ const MyIssuesCard: FC<MyIssuesCardProps> = ({
     show,
     now,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [ref, width] = useElementWidth<HTMLDivElement>();
     const clock = useNow();
     const today = now ?? clock;
@@ -53,12 +55,15 @@ const MyIssuesCard: FC<MyIssuesCardProps> = ({
             {showHeader && (
                 <div className="flex items-center justify-between gap-2">
                     <h3 className="m-0 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
-                        My Issues
+                        {t('my_issues_card.title')}
                     </h3>
                     <span className="text-[10px] font-medium text-(--text-muted-color)">
                         {issues.length === 0
-                            ? 'Nothing assigned'
-                            : `${shown.length} of ${issues.length} open`}
+                            ? t('my_issues_card.nothing_assigned')
+                            : t('my_issues_card.shown_of_open', {
+                                  shown: shown.length,
+                                  total: issues.length,
+                              })}
                     </span>
                 </div>
             )}
@@ -82,16 +87,16 @@ const MyIssuesCard: FC<MyIssuesCardProps> = ({
                         <Icon name="CircleCheck" size={20} />
                     </motion.span>
                     <p className="m-0 text-sm font-semibold text-(--text-color)">
-                        Nothing is waiting for you
+                        {t('my_issues_card.empty_title')}
                     </p>
                     <p className="m-0 max-w-[16rem] text-xs text-(--text-muted-color)">
-                        Open issues assigned to you show up here.
+                        {t('my_issues_card.empty_description')}
                     </p>
                 </motion.div>
             ) : (
                 <ul
                     role="list"
-                    aria-label="Open issues assigned to you"
+                    aria-label={t('my_issues_card.list_label')}
                     className={cn(
                         'm-0 grid min-h-0 flex-1 list-none content-start overflow-y-auto p-0',
                         isCards ? 'gap-2.5' : 'gap-0.5',
