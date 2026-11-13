@@ -3,104 +3,457 @@
 declare(strict_types=1);
 
 return [
-    'labels' => [
-        'statistic' => 'Statistic',
-        'productivity_trend' => 'Productivity Trend',
-        'completion_ratio' => 'Completion Ratio',
-        'priority_breakdown' => 'Priority Breakdown',
-        'recent_work_activity' => 'Recent Work Activity',
-        'projects_directory' => 'Projects Directory',
-        'my_issues' => 'My Issues',
-        'upcoming_deadlines' => 'Upcoming Deadlines',
-        'issue_types' => 'Issue Types',
-        'week_summary' => 'Week Summary',
-        'quick_actions' => 'Quick Actions',
-        'welcome' => 'Welcome',
-        'shows' => 'Shows',
-        'count' => 'Count',
-        'as' => 'As',
-        'color' => 'Color',
-        'icon' => 'Icon',
-        'description' => 'Description',
-        'title' => 'Title',
-        'grid_lines' => 'Grid lines',
-        'values' => 'Values',
-        'highlight_today' => 'Highlight today',
-        'status_label' => 'Status label',
-        'percentages' => 'Percentages',
-        'order' => 'Order',
-        'pagination' => 'Pagination',
-        'projects_shown' => 'Projects shown',
-        'labels' => 'Labels',
-        'issues_shown' => 'Issues shown',
-        'issue_type' => 'Issue type',
-        'project' => 'Project',
-        'priority' => 'Priority',
-        'due_date' => 'Due date',
-        'whose_issues' => 'Whose issues',
-        'looking_ahead' => 'Looking ahead',
-        'overdue_issues' => 'Overdue issues',
-        'daily_average' => 'Daily average',
-        'best_day' => 'Best day',
-        'search' => 'Search',
-        'projects' => 'Projects',
-        'notifications' => 'Notifications',
-        'keyboard_shortcuts' => 'Keyboard shortcuts',
-        'your_name' => 'Your name',
-        'date' => 'Date',
-        'day_in_numbers' => 'Day in numbers',
-        'time_of_day_icon' => 'Time of day icon',
+    'widgets' => [
+        'stat' => [
+            'label' => 'Statistic',
+            'description' => 'One number: pick what it counts, how it is shown and its style',
+            'options' => [
+                'metric' => [
+                    'label' => 'Shows',
+                    'values' => [
+                        'projects' => 'Active Projects',
+                        'open_issues' => 'Open Issues',
+                        'critical' => 'Critical Tasks',
+                        'resolution' => 'Resolution Rate',
+                        'overdue' => 'Overdue Issues',
+                        'assigned' => 'Assigned to Me',
+                        'due_soon' => 'Due Soon',
+                    ],
+                ],
+                'count' => [
+                    'label' => 'Count',
+                    'values' => [
+                        'open' => 'Open',
+                        'todo' => 'To do',
+                        'in_progress' => 'In progress',
+                        'done' => 'Done',
+                        'all' => 'All',
+                    ],
+                ],
+                'show' => [
+                    'label' => 'As',
+                    'values' => [
+                        'value' => 'Number',
+                        'fraction' => 'Part / whole',
+                        'percent' => 'Percent',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Color',
+                    'values' => [
+                        'auto' => 'Automatic',
+                    ],
+                ],
+                'icon' => [
+                    'label' => 'Icon',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'description' => [
+                    'label' => 'Description',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+            ],
+        ],
+        'trend' => [
+            'label' => 'Productivity Trend',
+            'description' => 'Issues created and resolved over time',
+            'options' => [
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'grid' => [
+                    'label' => 'Grid lines',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'values' => [
+                    'label' => 'Values',
+                    'values' => [
+                        'hover' => 'On hover',
+                        'always' => 'Always',
+                    ],
+                ],
+                'today' => [
+                    'label' => 'Highlight today',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Color',
+                ],
+            ],
+        ],
+        'completion' => [
+            'label' => 'Completion Ratio',
+            'description' => 'To do, in progress and done at a glance',
+            'options' => [
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'tier' => [
+                    'label' => 'Status label',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+            ],
+        ],
+        'priority_breakdown' => [
+            'label' => 'Priority Breakdown',
+            'description' => 'Your issues grouped by priority',
+            'options' => [
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'noPriority' => [
+                    'label' => 'No priority',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'percent' => [
+                    'label' => 'Percentages',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'sort' => [
+                    'label' => 'Order',
+                    'values' => [
+                        'priority' => 'By priority',
+                        'count' => 'By count',
+                    ],
+                ],
+            ],
+        ],
+        'activity' => [
+            'label' => 'Recent Work Activity',
+            'description' => 'Latest changes across your projects',
+            'options' => [
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'pagination' => [
+                    'label' => 'Pagination',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+            ],
+        ],
+        'projects' => [
+            'label' => 'Projects Directory',
+            'description' => 'Your projects with their progress',
+            'options' => [
+                'limit' => [
+                    'label' => 'Projects shown',
+                ],
+                'sort' => [
+                    'label' => 'Order',
+                    'values' => [
+                        'latest' => 'Latest',
+                        'name' => 'Name',
+                        'progress' => 'Progress',
+                        'issues' => 'Issues',
+                    ],
+                ],
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'viewAll' => [
+                    'label' => 'View all link',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+            ],
+        ],
+        'my_issues' => [
+            'label' => 'My Issues',
+            'description' => 'The open issues assigned to you',
+            'options' => [
+                'limit' => [
+                    'label' => 'Issues shown',
+                ],
+                'sort' => [
+                    'label' => 'Order',
+                    'values' => [
+                        'priority' => 'Priority',
+                        'due' => 'Due date',
+                        'updated' => 'Last updated',
+                    ],
+                ],
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'type' => [
+                    'label' => 'Issue type',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'project' => [
+                    'label' => 'Project',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'priority' => [
+                    'label' => 'Priority',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'due' => [
+                    'label' => 'Due date',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+            ],
+        ],
+        'deadlines' => [
+            'label' => 'Upcoming Deadlines',
+            'description' => 'What is due next, and what is late',
+            'options' => [
+                'scope' => [
+                    'label' => 'Whose issues',
+                    'values' => [
+                        'mine' => 'Assigned to Me',
+                        'all' => 'All projects',
+                    ],
+                ],
+                'range' => [
+                    'label' => 'Looking ahead',
+                    'values' => [
+                        '7' => '7 days',
+                        '14' => '14 days',
+                        '30' => '30 days',
+                    ],
+                ],
+                'overdue' => [
+                    'label' => 'Overdue issues',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'limit' => [
+                    'label' => 'Issues shown',
+                ],
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+            ],
+        ],
+        'types_breakdown' => [
+            'label' => 'Issue Types',
+            'description' => 'Your issues grouped by type',
+            'options' => [
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'percent' => [
+                    'label' => 'Percentages',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'sort' => [
+                    'label' => 'Order',
+                    'values' => [
+                        'count' => 'By count',
+                        'name' => 'By name',
+                    ],
+                ],
+            ],
+        ],
+        'week_summary' => [
+            'label' => 'Week Summary',
+            'description' => 'This week at a glance',
+            'options' => [
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'average' => [
+                    'label' => 'Daily average',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'best' => [
+                    'label' => 'Best day',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Color',
+                ],
+            ],
+        ],
+        'quick_actions' => [
+            'label' => 'Quick Actions',
+            'description' => 'Shortcuts to what you do often',
+            'options' => [
+                'header' => [
+                    'label' => 'Title',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'labels' => [
+                    'label' => 'Labels',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Color',
+                ],
+                'newProject' => [
+                    'label' => 'New project',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'search' => [
+                    'label' => 'Search',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'projects' => [
+                    'label' => 'Projects',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'notifications' => [
+                    'label' => 'Notifications',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'editDashboard' => [
+                    'label' => 'Edit dashboard',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'shortcuts' => [
+                    'label' => 'Keyboard shortcuts',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+            ],
+        ],
+        'greeting' => [
+            'label' => 'Welcome',
+            'description' => 'A greeting with your day in numbers',
+            'options' => [
+                'name' => [
+                    'label' => 'Your name',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'date' => [
+                    'label' => 'Date',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'summary' => [
+                    'label' => 'Day in numbers',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'icon' => [
+                    'label' => 'Time of day icon',
+                    'values' => [
+                        'on' => 'Show',
+                        'off' => 'Hide',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Color',
+                ],
+            ],
+        ],
     ],
-    'descriptions' => [
-        'one_number_pick_what_it_counts_how_it_is_shown_and_its_style' => 'One number: pick what it counts, how it is shown and its style',
-        'issues_created_and_resolved_over_time' => 'Issues created and resolved over time',
-        'to_do_in_progress_and_done_at_a_glance' => 'To do, in progress and done at a glance',
-        'your_issues_grouped_by_priority' => 'Your issues grouped by priority',
-        'latest_changes_across_your_projects' => 'Latest changes across your projects',
-        'your_projects_with_their_progress' => 'Your projects with their progress',
-        'the_open_issues_assigned_to_you' => 'The open issues assigned to you',
-        'what_is_due_next_and_what_is_late' => 'What is due next, and what is late',
-        'your_issues_grouped_by_type' => 'Your issues grouped by type',
-        'this_week_at_a_glance' => 'This week at a glance',
-        'shortcuts_to_what_you_do_often' => 'Shortcuts to what you do often',
-        'a_greeting_with_your_day_in_numbers' => 'A greeting with your day in numbers',
-    ],
-    'values' => [
-        'active_projects' => 'Active Projects',
-        'open_issues' => 'Open Issues',
-        'critical_tasks' => 'Critical Tasks',
-        'resolution_rate' => 'Resolution Rate',
-        'overdue_issues' => 'Overdue Issues',
-        'assigned_to_me' => 'Assigned to Me',
-        'due_soon' => 'Due Soon',
-        'open' => 'Open',
-        'to_do' => 'To do',
-        'in_progress' => 'In progress',
-        'done' => 'Done',
-        'all' => 'All',
-        'number' => 'Number',
-        'part_whole' => 'Part / whole',
-        'percent' => 'Percent',
-        'automatic' => 'Automatic',
-        'on_hover' => 'On hover',
-        'always' => 'Always',
-        'by_priority' => 'By priority',
-        'by_count' => 'By count',
-        'by_name' => 'By name',
-        'latest' => 'Latest',
-        'name' => 'Name',
-        'progress' => 'Progress',
-        'issues' => 'Issues',
-        'priority' => 'Priority',
-        'due_date' => 'Due date',
-        'last_updated' => 'Last updated',
-        'all_projects' => 'All projects',
-        '7_days' => '7 days',
-        '14_days' => '14 days',
-        '30_days' => '30 days',
-        'show' => 'Show',
-        'hide' => 'Hide',
-        'full' => 'Full',
+    'variants' => [
         'default' => 'Default',
         'vivid' => 'Vivid',
         'accent' => 'Accent',
@@ -124,9 +477,8 @@ return [
         'sparkline' => 'Sparkline',
         'banner' => 'Banner',
         'minimal' => 'Minimal',
-        'success' => 'Success',
-        'warning' => 'Warning',
-        'error' => 'Error',
-        'info' => 'Info',
+    ],
+    'widths' => [
+        '120' => 'Full',
     ],
 ];

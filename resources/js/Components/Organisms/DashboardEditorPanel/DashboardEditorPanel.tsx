@@ -242,7 +242,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                             {
                                                                 name: catalogText(
                                                                     t,
-                                                                    'labels',
+                                                                    `widgets.${item.type}.label`,
                                                                     item.label,
                                                                 ),
                                                             },
@@ -274,7 +274,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                                 <span className="truncate">
                                                                     {catalogText(
                                                                         t,
-                                                                        'labels',
+                                                                        `widgets.${item.type}.label`,
                                                                         item.label,
                                                                     )}
                                                                 </span>
@@ -302,7 +302,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                             <span className="block text-[11px] leading-snug text-(--text-muted-color)">
                                                                 {catalogText(
                                                                     t,
-                                                                    'descriptions',
+                                                                    `widgets.${item.type}.description`,
                                                                     item.description,
                                                                 )}
                                                             </span>
@@ -375,18 +375,12 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                     <IconTile icon={entry.icon} />
                                     <div className="min-w-0">
                                         <h3 className="m-0 truncate text-sm font-semibold text-(--text-color)">
-                                            {catalogText(
-                                                t,
-                                                selected.type === 'stat'
-                                                    ? 'values'
-                                                    : 'labels',
-                                                widgetLabel(selected, entry, t),
-                                            )}
+                                            {widgetLabel(selected, entry, t)}
                                         </h3>
                                         <p className="m-0 text-[11px] leading-snug text-(--text-muted-color)">
                                             {catalogText(
                                                 t,
-                                                'descriptions',
+                                                `widgets.${entry.type}.description`,
                                                 entry.description,
                                             )}
                                         </p>
@@ -405,7 +399,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                                     value: variant,
                                                     label: catalogText(
                                                         t,
-                                                        'values',
+                                                        `variants.${variant}`,
                                                         capitalize(variant),
                                                     ),
                                                 }),
@@ -431,7 +425,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                             value: preset.width,
                                             label: catalogText(
                                                 t,
-                                                'values',
+                                                `widths.${preset.width}`,
                                                 preset.label,
                                             ),
                                         }))}
@@ -462,7 +456,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                         ) =>
                                             catalogText(
                                                 t,
-                                                'values',
+                                                `widgets.${selected.type}.options.${option.key}.values.${value}`,
                                                 option.labels?.[
                                                     String(value)
                                                 ] ??
@@ -472,7 +466,7 @@ const DashboardEditorPanel: FC<DashboardEditorPanelProps> = ({
                                             );
                                         const optionLabel = catalogText(
                                             t,
-                                            'labels',
+                                            `widgets.${selected.type}.options.${option.key}.label`,
                                             option.label,
                                         );
 

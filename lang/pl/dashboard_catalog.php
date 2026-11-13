@@ -3,104 +3,457 @@
 declare(strict_types=1);
 
 return [
-    'labels' => [
-        'statistic' => 'Statystyka',
-        'productivity_trend' => 'Trend produktywności',
-        'completion_ratio' => 'Wskaźnik ukończenia',
-        'priority_breakdown' => 'Podział według priorytetu',
-        'recent_work_activity' => 'Ostatnia aktywność',
-        'projects_directory' => 'Katalog projektów',
-        'my_issues' => 'Moje zgłoszenia',
-        'upcoming_deadlines' => 'Nadchodzące terminy',
-        'issue_types' => 'Typy zgłoszeń',
-        'week_summary' => 'Podsumowanie tygodnia',
-        'quick_actions' => 'Szybkie akcje',
-        'welcome' => 'Powitanie',
-        'shows' => 'Pokazuje',
-        'count' => 'Liczba',
-        'as' => 'Jako',
-        'color' => 'Kolor',
-        'icon' => 'Ikona',
-        'description' => 'Opis',
-        'title' => 'Tytuł',
-        'grid_lines' => 'Linie siatki',
-        'values' => 'Wartości',
-        'highlight_today' => 'Wyróżnij dzisiaj',
-        'status_label' => 'Etykieta statusu',
-        'percentages' => 'Procenty',
-        'order' => 'Kolejność',
-        'pagination' => 'Paginacja',
-        'projects_shown' => 'Wyświetlane projekty',
-        'labels' => 'Etykiety',
-        'issues_shown' => 'Wyświetlane zgłoszenia',
-        'issue_type' => 'Typ zgłoszenia',
-        'project' => 'Projekt',
-        'priority' => 'Priorytet',
-        'due_date' => 'Termin',
-        'whose_issues' => 'Czyje zgłoszenia',
-        'looking_ahead' => 'Wybiegnięcie w przód',
-        'overdue_issues' => 'Zgłoszenia po terminie',
-        'daily_average' => 'Średnia dzienna',
-        'best_day' => 'Najlepszy dzień',
-        'search' => 'Wyszukiwanie',
-        'projects' => 'Projekty',
-        'notifications' => 'Powiadomienia',
-        'keyboard_shortcuts' => 'Skróty klawiszowe',
-        'your_name' => 'Twoje imię',
-        'date' => 'Data',
-        'day_in_numbers' => 'Dzień w liczbach',
-        'time_of_day_icon' => 'Ikona pory dnia',
+    'widgets' => [
+        'stat' => [
+            'label' => 'Statystyka',
+            'description' => 'Jedna liczba: wybierz, co zlicza, jak jest pokazana i jej styl',
+            'options' => [
+                'metric' => [
+                    'label' => 'Pokazuje',
+                    'values' => [
+                        'projects' => 'Aktywne projekty',
+                        'open_issues' => 'Otwarte zgłoszenia',
+                        'critical' => 'Zadania krytyczne',
+                        'resolution' => 'Wskaźnik rozwiązań',
+                        'overdue' => 'Zgłoszenia po terminie',
+                        'assigned' => 'Przypisane do mnie',
+                        'due_soon' => 'Wkrótce termin',
+                    ],
+                ],
+                'count' => [
+                    'label' => 'Liczba',
+                    'values' => [
+                        'open' => 'Otwarte',
+                        'todo' => 'Do zrobienia',
+                        'in_progress' => 'W toku',
+                        'done' => 'Zrobione',
+                        'all' => 'Wszystkie',
+                    ],
+                ],
+                'show' => [
+                    'label' => 'Jako',
+                    'values' => [
+                        'value' => 'Liczba',
+                        'fraction' => 'Część / całość',
+                        'percent' => 'Procent',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Kolor',
+                    'values' => [
+                        'auto' => 'Automatyczny',
+                    ],
+                ],
+                'icon' => [
+                    'label' => 'Ikona',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'description' => [
+                    'label' => 'Opis',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+            ],
+        ],
+        'trend' => [
+            'label' => 'Trend produktywności',
+            'description' => 'Zgłoszenia utworzone i rozwiązane w czasie',
+            'options' => [
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'grid' => [
+                    'label' => 'Linie siatki',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'values' => [
+                    'label' => 'Wartości',
+                    'values' => [
+                        'hover' => 'Po najechaniu',
+                        'always' => 'Zawsze',
+                    ],
+                ],
+                'today' => [
+                    'label' => 'Wyróżnij dzisiaj',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Kolor',
+                ],
+            ],
+        ],
+        'completion' => [
+            'label' => 'Wskaźnik ukończenia',
+            'description' => 'Do zrobienia, w toku i zrobione w jednym rzucie oka',
+            'options' => [
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'tier' => [
+                    'label' => 'Etykieta statusu',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+            ],
+        ],
+        'priority_breakdown' => [
+            'label' => 'Podział według priorytetu',
+            'description' => 'Twoje zgłoszenia pogrupowane według priorytetu',
+            'options' => [
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'noPriority' => [
+                    'label' => 'Brak priorytetu',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'percent' => [
+                    'label' => 'Procenty',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'sort' => [
+                    'label' => 'Kolejność',
+                    'values' => [
+                        'priority' => 'Według priorytetu',
+                        'count' => 'Według liczby',
+                    ],
+                ],
+            ],
+        ],
+        'activity' => [
+            'label' => 'Ostatnia aktywność',
+            'description' => 'Najnowsze zmiany w twoich projektach',
+            'options' => [
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'pagination' => [
+                    'label' => 'Paginacja',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+            ],
+        ],
+        'projects' => [
+            'label' => 'Katalog projektów',
+            'description' => 'Twoje projekty wraz z postępami',
+            'options' => [
+                'limit' => [
+                    'label' => 'Wyświetlane projekty',
+                ],
+                'sort' => [
+                    'label' => 'Kolejność',
+                    'values' => [
+                        'latest' => 'Najnowsze',
+                        'name' => 'Nazwa',
+                        'progress' => 'Postęp',
+                        'issues' => 'Zgłoszenia',
+                    ],
+                ],
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'viewAll' => [
+                    'label' => 'Link „Zobacz wszystko”',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+            ],
+        ],
+        'my_issues' => [
+            'label' => 'Moje zgłoszenia',
+            'description' => 'Otwarte zgłoszenia przypisane do ciebie',
+            'options' => [
+                'limit' => [
+                    'label' => 'Wyświetlane zgłoszenia',
+                ],
+                'sort' => [
+                    'label' => 'Kolejność',
+                    'values' => [
+                        'priority' => 'Priorytet',
+                        'due' => 'Termin',
+                        'updated' => 'Ostatnia aktualizacja',
+                    ],
+                ],
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'type' => [
+                    'label' => 'Typ zgłoszenia',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'project' => [
+                    'label' => 'Projekt',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'priority' => [
+                    'label' => 'Priorytet',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'due' => [
+                    'label' => 'Termin',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+            ],
+        ],
+        'deadlines' => [
+            'label' => 'Nadchodzące terminy',
+            'description' => 'Co ma termin w najbliższym czasie i co jest po terminie',
+            'options' => [
+                'scope' => [
+                    'label' => 'Czyje zgłoszenia',
+                    'values' => [
+                        'mine' => 'Przypisane do mnie',
+                        'all' => 'Wszystkie projekty',
+                    ],
+                ],
+                'range' => [
+                    'label' => 'Wybiegnięcie w przód',
+                    'values' => [
+                        '7' => '7 dni',
+                        '14' => '14 dni',
+                        '30' => '30 dni',
+                    ],
+                ],
+                'overdue' => [
+                    'label' => 'Zgłoszenia po terminie',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'limit' => [
+                    'label' => 'Wyświetlane zgłoszenia',
+                ],
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+            ],
+        ],
+        'types_breakdown' => [
+            'label' => 'Typy zgłoszeń',
+            'description' => 'Twoje zgłoszenia pogrupowane według typu',
+            'options' => [
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'percent' => [
+                    'label' => 'Procenty',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'sort' => [
+                    'label' => 'Kolejność',
+                    'values' => [
+                        'count' => 'Według liczby',
+                        'name' => 'Według nazwy',
+                    ],
+                ],
+            ],
+        ],
+        'week_summary' => [
+            'label' => 'Podsumowanie tygodnia',
+            'description' => 'Ten tydzień w jednym rzucie oka',
+            'options' => [
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'average' => [
+                    'label' => 'Średnia dzienna',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'best' => [
+                    'label' => 'Najlepszy dzień',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Kolor',
+                ],
+            ],
+        ],
+        'quick_actions' => [
+            'label' => 'Szybkie akcje',
+            'description' => 'Skróty do tego, co robisz najczęściej',
+            'options' => [
+                'header' => [
+                    'label' => 'Tytuł',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'labels' => [
+                    'label' => 'Etykiety',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Kolor',
+                ],
+                'newProject' => [
+                    'label' => 'Nowy projekt',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'search' => [
+                    'label' => 'Wyszukiwanie',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'projects' => [
+                    'label' => 'Projekty',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'notifications' => [
+                    'label' => 'Powiadomienia',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'editDashboard' => [
+                    'label' => 'Edytuj pulpit',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'shortcuts' => [
+                    'label' => 'Skróty klawiszowe',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+            ],
+        ],
+        'greeting' => [
+            'label' => 'Powitanie',
+            'description' => 'Powitanie z twoim dniem w liczbach',
+            'options' => [
+                'name' => [
+                    'label' => 'Twoje imię',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'date' => [
+                    'label' => 'Data',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'summary' => [
+                    'label' => 'Dzień w liczbach',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'icon' => [
+                    'label' => 'Ikona pory dnia',
+                    'values' => [
+                        'on' => 'Pokaż',
+                        'off' => 'Ukryj',
+                    ],
+                ],
+                'color' => [
+                    'label' => 'Kolor',
+                ],
+            ],
+        ],
     ],
-    'descriptions' => [
-        'one_number_pick_what_it_counts_how_it_is_shown_and_its_style' => 'Jedna liczba: wybierz, co zlicza, jak jest pokazana i jej styl',
-        'issues_created_and_resolved_over_time' => 'Zgłoszenia utworzone i rozwiązane w czasie',
-        'to_do_in_progress_and_done_at_a_glance' => 'Do zrobienia, w toku i zrobione w jednym rzucie oka',
-        'your_issues_grouped_by_priority' => 'Twoje zgłoszenia pogrupowane według priorytetu',
-        'latest_changes_across_your_projects' => 'Najnowsze zmiany w twoich projektach',
-        'your_projects_with_their_progress' => 'Twoje projekty wraz z postępami',
-        'the_open_issues_assigned_to_you' => 'Otwarte zgłoszenia przypisane do ciebie',
-        'what_is_due_next_and_what_is_late' => 'Co ma termin w najbliższym czasie i co jest po terminie',
-        'your_issues_grouped_by_type' => 'Twoje zgłoszenia pogrupowane według typu',
-        'this_week_at_a_glance' => 'Ten tydzień w jednym rzucie oka',
-        'shortcuts_to_what_you_do_often' => 'Skróty do tego, co robisz najczęściej',
-        'a_greeting_with_your_day_in_numbers' => 'Powitanie z twoim dniem w liczbach',
-    ],
-    'values' => [
-        'active_projects' => 'Aktywne projekty',
-        'open_issues' => 'Otwarte zgłoszenia',
-        'critical_tasks' => 'Zadania krytyczne',
-        'resolution_rate' => 'Wskaźnik rozwiązań',
-        'overdue_issues' => 'Zgłoszenia po terminie',
-        'assigned_to_me' => 'Przypisane do mnie',
-        'due_soon' => 'Wkrótce termin',
-        'open' => 'Otwarte',
-        'to_do' => 'Do zrobienia',
-        'in_progress' => 'W toku',
-        'done' => 'Zrobione',
-        'all' => 'Wszystkie',
-        'number' => 'Liczba',
-        'part_whole' => 'Część / całość',
-        'percent' => 'Procent',
-        'automatic' => 'Automatyczny',
-        'on_hover' => 'Po najechaniu',
-        'always' => 'Zawsze',
-        'by_priority' => 'Według priorytetu',
-        'by_count' => 'Według liczby',
-        'by_name' => 'Według nazwy',
-        'latest' => 'Najnowsze',
-        'name' => 'Nazwa',
-        'progress' => 'Postęp',
-        'issues' => 'Zgłoszenia',
-        'priority' => 'Priorytet',
-        'due_date' => 'Termin',
-        'last_updated' => 'Ostatnia aktualizacja',
-        'all_projects' => 'Wszystkie projekty',
-        '7_days' => '7 dni',
-        '14_days' => '14 dni',
-        '30_days' => '30 dni',
-        'show' => 'Pokaż',
-        'hide' => 'Ukryj',
-        'full' => 'Pełna',
+    'variants' => [
         'default' => 'Domyślny',
         'vivid' => 'Żywy',
         'accent' => 'Akcent',
@@ -124,9 +477,8 @@ return [
         'sparkline' => 'Wykres liniowy',
         'banner' => 'Baner',
         'minimal' => 'Minimalny',
-        'success' => 'Sukces',
-        'warning' => 'Ostrzeżenie',
-        'error' => 'Błąd',
-        'info' => 'Informacja',
+    ],
+    'widths' => [
+        '120' => 'Pełna',
     ],
 ];
