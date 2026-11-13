@@ -18,7 +18,7 @@ Copy every file of `lang/en/` that is not a framework file to `lang/de/` (same f
 npx vitest run resources/js/tests/translations.test.ts
 ```
 
-The test compares every folder of `lang/` with `en` (keys, `:placeholders`, empty values), so the new language is checked as soon as the folder exists. Use the vocabulary of the existing translations for consistency (issue, project, label, workspace ...). Plural forms follow the language's rules in the `{1} ...|[2,4] ...|[5,*] ...` syntax.
+The test compares every folder of `lang/` with `en` (keys, `:placeholders`, empty values), so the new language is checked as soon as the folder exists. Use the vocabulary of the existing translations for consistency (issue, project, label, workspace ...). Plural forms follow the language's rules in the `one|few|many` syntax.
 
 ## 3. Register the language
 
@@ -33,7 +33,7 @@ The Vite plugin turns `lang/de/*.php` into `lang/php_de.json` on the next `npm r
 ## 4. How the chosen language travels
 
 - The browser keeps the choice in `localStorage` (`locale`) and in a plain `locale` cookie (`storeLocale()` writes both; the cookie is excluded from encryption in `bootstrap/app.php`).
-- `SetLocale` reads the cookie on every web request (then the session, then `APP_LOCALE`), so validation errors, flash messages and pagination labels come back in the same language, for guests on the login page too.
+- `SetLocale` reads the cookie on every web request (then the session, then `APP_LOCALE`), so validation errors and pagination labels come back in the same language, for guests on the login page too.
 - Frontend code that reads a server text must not depend on its wording (see guide 02, step 4).
 
 ## 5. Check it

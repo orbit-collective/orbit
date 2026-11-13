@@ -18,7 +18,7 @@ Skopiuj każdy plik z `lang/en/`, który nie jest plikiem frameworka, do `lang/d
 npx vitest run resources/js/tests/translations.test.ts
 ```
 
-Test porównuje każdy folder z `lang/` z `en` (klucze, `:placeholdery`, puste wartości), więc nowy język jest sprawdzany, gdy tylko folder istnieje. Trzymaj się słownictwa istniejących tłumaczeń dla spójności (zgłoszenie, projekt, etykieta, przestrzeń robocza ...). Formy liczby mnogiej idą według reguł języka w składni `{1} ...|[2,4] ...|[5,*] ...`.
+Test porównuje każdy folder z `lang/` z `en` (klucze, `:placeholdery`, puste wartości), więc nowy język jest sprawdzany, gdy tylko folder istnieje. Trzymaj się słownictwa istniejących tłumaczeń dla spójności (zgłoszenie, projekt, etykieta, przestrzeń robocza ...). Formy liczby mnogiej idą według reguł języka w składni `one|few|many`.
 
 ## 3. Zarejestruj język
 
@@ -33,7 +33,7 @@ Wtyczka Vite zamienia `lang/de/*.php` na `lang/php_de.json` przy następnym `npm
 ## 4. Jak wybrany język podróżuje
 
 - Przeglądarka trzyma wybór w `localStorage` (`locale`) oraz w zwykłym ciasteczku `locale` (`storeLocale()` zapisuje oba; ciasteczko jest wyłączone z szyfrowania w `bootstrap/app.php`).
-- `SetLocale` czyta ciasteczko przy każdym żądaniu web (potem sesję, potem `APP_LOCALE`), więc błędy walidacji, komunikaty flash i etykiety paginacji wracają w tym samym języku, także dla gości na stronie logowania.
+- `SetLocale` czyta ciasteczko przy każdym żądaniu web (potem sesję, potem `APP_LOCALE`), więc błędy walidacji i etykiety paginacji wracają w tym samym języku, także dla gości na stronie logowania.
 - Kod frontendu czytający tekst z serwera nie może zależeć od jego brzmienia (patrz przewodnik 02, krok 4).
 
 ## 5. Sprawdź

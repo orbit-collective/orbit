@@ -25,7 +25,7 @@ return [                               return [
 ```
 
 - Plain single-quoted/double-quoted string literals only (the plugin's PHP reader cannot evaluate expressions).
-- Plurals: `':count issue|:count issues'`; Polish `'{1} :count zgłoszenie|[2,4] :count zgłoszenia|[5,*] :count zgłoszeń'`.
+- Plurals: `':count issue|:count issues'`; Polish `':count zgłoszenie|:count zgłoszenia|:count zgłoszeń'`.
 - Never call `t` at module scope: constants store a translation **key** (see `SETTINGS_TABS[].label`) and the component translates it at render.
 - Dates/`Intl`: pass `intlLocale(currentLocale())` (`utils/time.ts`).
 - `translations.test.ts` fails when `en` and `pl` differ in keys or `:placeholders`, or when a literal `t('...')` key does not exist.
