@@ -145,6 +145,9 @@ documentation/
       01-run-and-operate-redis.md
       02-cache-a-value-and-invalidate-it.md
       03-sessions-on-redis.md
+    i18n/
+      README.md              <- index for this category
+      01-translate-a-text-and-add-a-language.md
     live-updates/
       README.md              <- index for this category
       01-set-up-reverb.md
