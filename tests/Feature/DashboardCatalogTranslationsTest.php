@@ -28,6 +28,15 @@ test('every widget, option, value and style has a translation', function (string
         foreach ($widget->options() as $key => $option) {
             $has("widgets.$type.options.$key.label") || $missing[] = "widgets.$type.options.$key.label";
 
+            // Color choices share one set of names, whatever the widget.
+            if (($option['kind'] ?? null) === 'color') {
+                foreach ($option['options'] as $value) {
+                    $has("colors.$value") || $missing[] = "colors.$value";
+                }
+
+                continue;
+            }
+
             foreach (array_keys($option['labels'] ?? []) as $value) {
                 $has("widgets.$type.options.$key.values.$value")
                     || $missing[] = "widgets.$type.options.$key.values.$value";
