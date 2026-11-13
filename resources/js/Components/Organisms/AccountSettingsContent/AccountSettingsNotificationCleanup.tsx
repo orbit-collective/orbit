@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
@@ -14,25 +15,9 @@ import { formatTimeAgo } from '@/utils/time';
 
 const OFF = 'off';
 
-const FREQUENCY_OPTIONS: { value: RetentionFrequency; label: string }[] = [
-    { value: 'daily', label: 'Every day' },
-    { value: 'weekly', label: 'Every week' },
-    { value: 'monthly', label: 'Every month' },
-];
+const FREQUENCY_OPTIONS: RetentionFrequency[] = ['daily', 'weekly', 'monthly'];
 
 const AGE_DAYS = [7, 14, 30, 60, 90, 180, 365];
-
-const ageLabel = (days: number): string => `${days} days`;
-
-const AGE_OPTIONS = AGE_DAYS.map((days) => ({
-    value: String(days),
-    label: ageLabel(days),
-}));
-
-const AGE_OPTIONS_WITH_OFF = [
-    { value: OFF, label: "Don't delete" },
-    ...AGE_OPTIONS,
-];
 
 type PurgeTarget = 'notifications' | 'activity';
 
@@ -57,7 +42,22 @@ export default function AccountSettingsNotificationCleanup({
 }: {
     retention?: NotificationRetention;
 }) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
+
+    const frequencyOptions = FREQUENCY_OPTIONS.map((value) => ({
+        value,
+        label: t(`account_settings.cleanup.frequency_options.${value}`),
+    }));
+    const AGE_OPTIONS = AGE_DAYS.map((days) => ({
+        value: String(days),
+        label: t('account_settings.cleanup.age_days', { days }),
+    }));
+    const AGE_OPTIONS_WITH_OFF = [
+        { value: OFF, label: t('account_settings.cleanup.dont_delete') },
+        ...AGE_OPTIONS,
+    ];
+
     const [saved, setSaved] = useState(() => initialDraft(retention));
     const [draft, setDraft] = useState(saved);
     const [isSaving, setIsSaving] = useState(false);
@@ -85,12 +85,12 @@ export default function AccountSettingsNotificationCleanup({
             preserveScroll: true,
             onSuccess: () => {
                 setSaved(draft);
-                addAlert('Clean-up schedule saved.', 'success');
+                addAlert(t('account_settings.cleanup.saved'), 'success');
             },
             onError: (errors) => {
                 setError(
                     Object.values(errors)[0] ??
-                        'Failed to save the clean-up schedule.',
+                        t('account_settings.cleanup.save_failed'),
                 );
             },
             onFinish: () => setIsSaving(false),
@@ -109,7 +109,10 @@ export default function AccountSettingsNotificationCleanup({
             {
                 preserveScroll: true,
                 onError: () =>
-                    addAlert('Failed to delete the selected data.', 'error'),
+                    addAlert(
+                        t('account_settings.cleanup.purge_failed'),
+                        'error',
+                    ),
                 onFinish: () => {
                     setIsPurging(false);
                     setConfirming(null);
@@ -119,38 +122,48 @@ export default function AccountSettingsNotificationCleanup({
     };
 
     const lastRun = retention?.last_run_at
-        ? `Last ran ${formatTimeAgo(retention.last_run_at)} ago.`
-        : 'Has not run yet.';
+        ? t('account_settings.cleanup.last_ran', {
+              time: formatTimeAgo(retention.last_run_at, t),
+          })
+        : t('account_settings.cleanup.not_run');
 
     return (
         <>
             <SettingsPanel
                 id="cleanup"
-                collapsedSummary={draft.enabled ? 'On' : 'Off'}
-                title="Automatic clean-up"
-                description="Keep your inbox and history tidy by deleting old items on a schedule."
+                collapsedSummary={
+                    draft.enabled
+                        ? t('account_settings.on')
+                        : t('account_settings.off')
+                }
+                title={t('account_settings.cleanup.title')}
+                description={t('account_settings.cleanup.description')}
                 icon="CalendarClock"
             >
                 <SettingsPanelRow
-                    title="Run clean-up automatically"
+                    title={t('account_settings.cleanup.run_auto')}
                     description={draft.enabled ? lastRun : undefined}
                     action={
                         <ToggleSwitch
-                            label="Run clean-up automatically"
+                            label={t('account_settings.cleanup.run_auto')}
                             checked={draft.enabled}
                             onChange={(enabled) => update({ enabled })}
                         />
                     }
                 />
                 <SettingsPanelRow
-                    title="How often"
-                    description="The clean-up runs at most once per period."
+                    title={t('account_settings.cleanup.how_often')}
+                    description={t(
+                        'account_settings.cleanup.how_often_description',
+                    )}
                     action={
                         <InlineSelectDropdown
-                            label="Frequency"
-                            placeholder="Frequency"
+                            label={t('account_settings.cleanup.frequency')}
+                            placeholder={t(
+                                'account_settings.cleanup.frequency',
+                            )}
                             subtle
-                            options={FREQUENCY_OPTIONS}
+                            options={frequencyOptions}
                             value={draft.frequency}
                             onChange={(value) =>
                                 value &&
@@ -162,11 +175,15 @@ export default function AccountSettingsNotificationCleanup({
                     }
                 />
                 <SettingsPanelRow
-                    title="Delete notifications older than"
+                    title={t('account_settings.cleanup.notifications_older')}
                     action={
                         <InlineSelectDropdown
-                            label="Notification age"
-                            placeholder="Don't delete"
+                            label={t(
+                                'account_settings.cleanup.notification_age',
+                            )}
+                            placeholder={t(
+                                'account_settings.cleanup.dont_delete',
+                            )}
                             subtle
                             options={AGE_OPTIONS_WITH_OFF}
                             value={
@@ -186,11 +203,13 @@ export default function AccountSettingsNotificationCleanup({
                     }
                 />
                 <SettingsPanelRow
-                    title="Keep unread notifications"
-                    description="Only notifications you have already read are deleted."
+                    title={t('account_settings.cleanup.keep_unread')}
+                    description={t(
+                        'account_settings.cleanup.keep_unread_description',
+                    )}
                     action={
                         <ToggleSwitch
-                            label="Keep unread notifications"
+                            label={t('account_settings.cleanup.keep_unread')}
                             checked={draft.notifications_only_read}
                             onChange={(notifications_only_read) =>
                                 update({ notifications_only_read })
@@ -199,12 +218,16 @@ export default function AccountSettingsNotificationCleanup({
                     }
                 />
                 <SettingsPanelRow
-                    title="Delete activity history older than"
-                    description="Removes your own entries from the activity log."
+                    title={t('account_settings.cleanup.activity_older')}
+                    description={t(
+                        'account_settings.cleanup.activity_older_description',
+                    )}
                     action={
                         <InlineSelectDropdown
-                            label="Activity age"
-                            placeholder="Don't delete"
+                            label={t('account_settings.cleanup.activity_age')}
+                            placeholder={t(
+                                'account_settings.cleanup.dont_delete',
+                            )}
                             subtle
                             options={AGE_OPTIONS_WITH_OFF}
                             value={
@@ -232,31 +255,36 @@ export default function AccountSettingsNotificationCleanup({
                         onClick={save}
                         isDisabled={!isDirty || isSaving}
                     >
-                        {isSaving ? 'Saving...' : 'Save schedule'}
+                        {isSaving
+                            ? t('account_settings.cleanup.saving')
+                            : t('account_settings.cleanup.save_schedule')}
                     </Button>
                 </div>
             </SettingsPanel>
 
             <SettingsPanel
                 id="cleanup-now"
-                title="Clean up now"
-                description="Delete old items right away, independent of the schedule."
+                title={t('account_settings.cleanup.now_title')}
+                description={t('account_settings.cleanup.now_description')}
                 icon="Trash"
             >
                 {(
                     [
                         {
                             target: 'notifications',
-                            title: 'Delete old notifications',
+                            title: t(
+                                'account_settings.cleanup.purge_notifications',
+                            ),
                             description: draft.notifications_only_read
-                                ? 'Unread notifications are kept.'
-                                : 'Unread notifications are deleted too.',
+                                ? t('account_settings.cleanup.unread_kept')
+                                : t('account_settings.cleanup.unread_deleted'),
                         },
                         {
                             target: 'activity',
-                            title: 'Delete old activity history',
-                            description:
-                                'Removes your own activity log entries.',
+                            title: t('account_settings.cleanup.purge_activity'),
+                            description: t(
+                                'account_settings.cleanup.purge_activity_description',
+                            ),
                         },
                     ] as const
                 ).map((row) => (
@@ -267,8 +295,12 @@ export default function AccountSettingsNotificationCleanup({
                         action={
                             <div className="flex items-center gap-2">
                                 <InlineSelectDropdown
-                                    label="Older than"
-                                    placeholder="Older than"
+                                    label={t(
+                                        'account_settings.cleanup.older_than',
+                                    )}
+                                    placeholder={t(
+                                        'account_settings.cleanup.older_than',
+                                    )}
                                     subtle
                                     options={AGE_OPTIONS}
                                     value={String(purgeDays[row.target])}
@@ -288,14 +320,14 @@ export default function AccountSettingsNotificationCleanup({
                                             onClick={() => purge(row.target)}
                                             isDisabled={isPurging}
                                         >
-                                            Confirm
+                                            {t('common.confirm')}
                                         </Button>
                                         <button
                                             type="button"
                                             onClick={() => setConfirming(null)}
                                             className="text-xs font-medium text-(--text-gray-color) hover:underline"
                                         >
-                                            Cancel
+                                            {t('common.cancel')}
                                         </button>
                                     </>
                                 ) : (
@@ -307,7 +339,7 @@ export default function AccountSettingsNotificationCleanup({
                                         }
                                         isDisabled={isPurging}
                                     >
-                                        Delete
+                                        {t('common.delete')}
                                     </Button>
                                 )}
                             </div>

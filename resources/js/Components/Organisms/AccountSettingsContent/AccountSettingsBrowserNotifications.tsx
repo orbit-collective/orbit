@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
@@ -18,6 +19,7 @@ import {
  * without Reverb. The choice is stored per browser, not on the account.
  */
 export default function AccountSettingsBrowserNotifications() {
+    const { t } = useLaravelReactI18n();
     const live = usePage().props.live;
     const { addAlert } = useAlert();
     const [enabled, setEnabled] = useState(browserNotificationsEnabled);
@@ -36,10 +38,7 @@ export default function AccountSettingsBrowserNotifications() {
         setEnabled(granted);
 
         if (!granted) {
-            addAlert(
-                'Your browser did not allow notifications. Allow them for this site in the browser settings and try again.',
-                'warning',
-            );
+            addAlert(t('account_settings.browser.denied_alert'), 'warning');
         }
     };
 
@@ -49,26 +48,28 @@ export default function AccountSettingsBrowserNotifications() {
     return (
         <SettingsPanel
             id="browser"
-            collapsedSummary={enabled ? 'On' : 'Off'}
-            title="Browser notifications"
-            description="Get a system notification when something new arrives while Orbit is in a background tab."
+            collapsedSummary={
+                enabled ? t('account_settings.on') : t('account_settings.off')
+            }
+            title={t('account_settings.browser.title')}
+            description={t('account_settings.browser.description')}
             icon="BellRing"
         >
             <SettingsPanelRow
-                title="Show notifications on this device"
+                title={t('account_settings.browser.row_title')}
                 description={
                     unsupported
-                        ? 'This browser does not support notifications.'
+                        ? t('account_settings.browser.unsupported')
                         : blocked
-                          ? 'Notifications are blocked for this site in your browser settings.'
-                          : 'Applies to this browser only.'
+                          ? t('account_settings.browser.blocked')
+                          : t('account_settings.this_browser_only')
                 }
                 action={
                     <ToggleSwitch
                         checked={enabled}
                         onChange={(checked) => void change(checked)}
                         disabled={unsupported || blocked}
-                        label="Show browser notifications"
+                        label={t('account_settings.browser.toggle_label')}
                     />
                 }
             />

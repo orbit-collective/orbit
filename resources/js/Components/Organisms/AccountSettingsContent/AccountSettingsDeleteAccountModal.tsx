@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -17,6 +18,7 @@ export default function AccountSettingsDeleteAccountModal({
     isOpen,
     onClose,
 }: AccountSettingsDeleteAccountModalProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [confirmText, setConfirmText] = useState('');
 
@@ -35,10 +37,13 @@ export default function AccountSettingsDeleteAccountModal({
         router.delete(route('account.delete'), {
             preserveScroll: true,
             onSuccess: () => {
-                addAlert('Account has been deleted.', 'success');
+                addAlert(
+                    t('account_settings.delete_account.deleted'),
+                    'success',
+                );
             },
             onError: () => {
-                addAlert('Failed to delete account.', 'error');
+                addAlert(t('account_settings.delete_account.failed'), 'error');
             },
             onFinish: () => {
                 handleClose();
@@ -49,7 +54,7 @@ export default function AccountSettingsDeleteAccountModal({
     return (
         <Modal isOpen={isOpen} onClose={handleClose} size="sm">
             <ModalHeader
-                title="Delete account"
+                title={t('account_settings.delete_account.title')}
                 onClose={handleClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--error-color)/10 text-(--error-color)">
@@ -60,8 +65,7 @@ export default function AccountSettingsDeleteAccountModal({
 
             <div className="space-y-4 px-6 py-5">
                 <p className="text-sm text-(--text-gray-color)">
-                    This permanently deletes your account, profile, and all
-                    associated data. This action cannot be undone.
+                    {t('account_settings.delete_account.warning')}
                 </p>
                 <ul className="space-y-1.5 text-sm text-(--text-gray-color)">
                     <li className="flex items-start gap-2">
@@ -70,7 +74,9 @@ export default function AccountSettingsDeleteAccountModal({
                             size={13}
                             className="mt-0.5 shrink-0 text-(--error-color)"
                         />
-                        You will lose access to every workspace immediately.
+                        {t(
+                            'account_settings.delete_account.consequence_access',
+                        )}
                     </li>
                     <li className="flex items-start gap-2">
                         <Icon
@@ -78,8 +84,9 @@ export default function AccountSettingsDeleteAccountModal({
                             size={13}
                             className="mt-0.5 shrink-0 text-(--error-color)"
                         />
-                        Issues and comments you authored will remain, credited
-                        to a deleted user.
+                        {t(
+                            'account_settings.delete_account.consequence_content',
+                        )}
                     </li>
                 </ul>
 
@@ -88,11 +95,11 @@ export default function AccountSettingsDeleteAccountModal({
                         htmlFor="delete-confirm"
                         className="text-sm font-medium text-(--text-color)"
                     >
-                        Type{' '}
+                        {t('account_settings.delete_account.type_prefix')}{' '}
                         <span className="font-semibold text-(--error-color)">
                             {CONFIRM_PHRASE}
                         </span>{' '}
-                        to confirm
+                        {t('account_settings.delete_account.type_suffix')}
                     </label>
                     <Input
                         id="delete-confirm"
@@ -109,7 +116,7 @@ export default function AccountSettingsDeleteAccountModal({
                     onClick={handleClose}
                     className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
                 >
-                    Cancel
+                    {t('common.cancel')}
                 </button>
                 <button
                     type="button"
@@ -117,7 +124,7 @@ export default function AccountSettingsDeleteAccountModal({
                     disabled={!canConfirm}
                     className="cursor-pointer rounded-lg bg-(--error-color) px-4 py-2 text-sm font-medium text-(--text-color) transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    Delete account
+                    {t('account_settings.delete_account.title')}
                 </button>
             </footer>
         </Modal>

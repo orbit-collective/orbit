@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -43,6 +44,7 @@ export default function AccountSettingsAvatarLibrary({
     disabled = false,
     onSelect,
 }: AccountSettingsAvatarLibraryProps) {
+    const { t } = useLaravelReactI18n();
     const [selectedSrc, setSelectedSrc] = useState<string | null>(null);
 
     // The server only stores the uploaded PNG, so work out which face (if any)
@@ -83,7 +85,7 @@ export default function AccountSettingsAvatarLibrary({
     return (
         <div
             role="group"
-            aria-label="Avatar library"
+            aria-label={t('account_settings.avatar.library')}
             aria-busy={disabled}
             className="grid grid-cols-[repeat(auto-fill,minmax(3rem,3rem))] gap-2"
         >
@@ -95,7 +97,9 @@ export default function AccountSettingsAvatarLibrary({
                         <motion.button
                             type="button"
                             aria-pressed={selected}
-                            aria-label={`Use ${face.id} avatar`}
+                            aria-label={t('account_settings.avatar.use_face', {
+                                face: face.id,
+                            })}
                             title={face.id}
                             disabled={disabled}
                             onClick={() => onSelect(face.src)}

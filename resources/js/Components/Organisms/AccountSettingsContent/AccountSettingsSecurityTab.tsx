@@ -1,4 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
@@ -12,34 +13,10 @@ import { PageProps } from '@/types';
 import { Session } from '@/types/Users';
 
 const sessionTimeoutOptions = [
-    {
-        id: '1-hour',
-        label: '1 hour',
-        icon: 'Zap' as const,
-        description: 'Most secure. Re-authenticate frequently.',
-        value: 60,
-    },
-    {
-        id: '8-hours',
-        label: '8 hours',
-        icon: 'Clock3' as const,
-        description: 'Balanced for a typical workday.',
-        value: 480,
-    },
-    {
-        id: '24-hours',
-        label: '24 hours',
-        icon: 'CalendarClock' as const,
-        description: 'Stay signed in for a full day.',
-        value: 1440,
-    },
-    {
-        id: '7-days',
-        label: '7 days',
-        icon: 'TimerReset' as const,
-        description: 'Most convenient. Sign in less often.',
-        value: 10080,
-    },
+    { id: '1-hour', icon: 'Zap' as const, value: 60 },
+    { id: '8-hours', icon: 'Clock3' as const, value: 480 },
+    { id: '24-hours', icon: 'CalendarClock' as const, value: 1440 },
+    { id: '7-days', icon: 'TimerReset' as const, value: 10080 },
 ];
 
 interface AccountSettingsSecurityTabProps {
@@ -49,6 +26,7 @@ interface AccountSettingsSecurityTabProps {
 export default function AccountSettingsSecurityTab({
     sessions = [],
 }: AccountSettingsSecurityTabProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const { props } = usePage<PageProps>();
     const currentLifetime = props.auth?.user?.session_lifetime ?? 480;
@@ -68,10 +46,16 @@ export default function AccountSettingsSecurityTab({
             {
                 preserveScroll: true,
                 onSuccess: () => {
-                    addAlert('Session expiry has been updated.', 'success');
+                    addAlert(
+                        t('account_settings.security.expiry_updated'),
+                        'success',
+                    );
                 },
                 onError: () => {
-                    addAlert('Failed to update session expiry.', 'error');
+                    addAlert(
+                        t('account_settings.security.expiry_failed'),
+                        'error',
+                    );
                 },
                 onFinish: () => {
                     setPendingLifetime(null);
@@ -107,9 +91,10 @@ export default function AccountSettingsSecurityTab({
         setIsUnlinking(true);
         router.delete(route('auth.github.unlink'), {
             preserveScroll: true,
-            onSuccess: () => addAlert('GitHub account unlinked.', 'success'),
+            onSuccess: () =>
+                addAlert(t('account_settings.security.unlinked'), 'success'),
             onError: () =>
-                addAlert('Failed to unlink your GitHub account.', 'error'),
+                addAlert(t('account_settings.security.unlink_failed'), 'error'),
             onFinish: () => setIsUnlinking(false),
         });
     };
@@ -119,18 +104,26 @@ export default function AccountSettingsSecurityTab({
             <SettingsPanel
                 id="accounts"
                 collapsedSummary={
-                    githubUsername ? `GitHub @${githubUsername}` : 'Not linked'
+                    githubUsername
+                        ? t('account_settings.security.github_summary', {
+                              username: githubUsername,
+                          })
+                        : t('account_settings.security.not_linked')
                 }
-                title="Connected accounts"
-                description="Sign in faster by linking an external account."
+                title={t('account_settings.security.accounts_title')}
+                description={t(
+                    'account_settings.security.accounts_description',
+                )}
                 icon="Link2"
             >
                 <SettingsPanelRow
                     title="GitHub"
                     description={
                         githubUsername
-                            ? `Linked as @${githubUsername}. You can also sign in with this GitHub account.`
-                            : 'Link your GitHub account to sign in with it, and to create branches or pull requests from an issue.'
+                            ? t('account_settings.security.github_linked', {
+                                  username: githubUsername,
+                              })
+                            : t('account_settings.security.github_unlinked')
                     }
                     action={
                         githubUsername ? (
@@ -141,18 +134,22 @@ export default function AccountSettingsSecurityTab({
                                 title={
                                     hasPassword
                                         ? undefined
-                                        : 'Set a password first so you can still sign in after unlinking'
+                                        : t(
+                                              'account_settings.security.unlink_needs_password',
+                                          )
                                 }
                                 className="rounded-md bg-(--error-color)/10 px-3 py-1.5 text-xs font-medium text-(--error-color) transition-colors hover:bg-(--error-color)/20 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                {isUnlinking ? 'Unlinking...' : 'Unlink'}
+                                {isUnlinking
+                                    ? t('account_settings.security.unlinking')
+                                    : t('account_settings.security.unlink')}
                             </button>
                         ) : (
                             <a
                                 href={route('auth.github.redirect')}
                                 className="rounded-md bg-(--bg-color) px-3 py-1.5 text-xs font-medium text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                             >
-                                Link GitHub
+                                {t('account_settings.security.link_github')}
                             </a>
                         )
                     }
@@ -161,11 +158,13 @@ export default function AccountSettingsSecurityTab({
 
             <SettingsPanel
                 id="password"
-                title="Password"
+                title={t('account_settings.security.password_title')}
                 description={
                     hasPassword
-                        ? 'Change your password or send yourself a reset link.'
-                        : 'Set a password so you can also sign in without GitHub.'
+                        ? t('account_settings.security.password_description')
+                        : t(
+                              'account_settings.security.password_description_set',
+                          )
                 }
                 icon="KeyRound"
             >
@@ -191,9 +190,14 @@ export default function AccountSettingsSecurityTab({
 
             <SettingsPanel
                 id="sessions"
-                collapsedSummary={`${sessions.length} ${sessions.length === 1 ? 'session' : 'sessions'}`}
-                title="Active sessions"
-                description="Review and revoke devices currently signed in to your account."
+                collapsedSummary={tChoice(
+                    'account_settings.security.sessions_count',
+                    sessions.length,
+                )}
+                title={t('account_settings.security.sessions_title')}
+                description={t(
+                    'account_settings.security.sessions_description',
+                )}
                 icon="ShieldCheck"
             >
                 <AccountSettingsSessionsList sessions={sessions} />
@@ -201,8 +205,8 @@ export default function AccountSettingsSecurityTab({
 
             <SettingsPanel
                 id="expiry"
-                title="Session expiry"
-                description="Choose how long you stay signed in before re-authenticating."
+                title={t('account_settings.security.expiry_title')}
+                description={t('account_settings.security.expiry_description')}
                 icon="Clock3"
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
@@ -210,9 +214,13 @@ export default function AccountSettingsSecurityTab({
                         <RowReveal key={option.id} index={index} fill>
                             <AccountSettingsSessionTimeoutCard
                                 groupId="session-expiry"
-                                label={option.label}
+                                label={t(
+                                    `account_settings.security.timeout.${option.id}.label`,
+                                )}
                                 icon={option.icon}
-                                description={option.description}
+                                description={t(
+                                    `account_settings.security.timeout.${option.id}.description`,
+                                )}
                                 selected={
                                     (pendingLifetime ?? currentLifetime) ===
                                     option.value
@@ -230,20 +238,22 @@ export default function AccountSettingsSecurityTab({
             <SettingsPanel
                 id="delete-account"
                 defaultCollapsed
-                title="Delete account"
-                description="Permanently remove your Orbit account and associated data."
+                title={t('account_settings.delete_account.title')}
+                description={t('account_settings.security.delete_description')}
                 icon="Trash"
             >
                 <SettingsPanelRow
-                    title="Delete this account"
-                    description="This action is permanent and cannot be undone."
+                    title={t('account_settings.security.delete_row_title')}
+                    description={t(
+                        'account_settings.security.delete_row_description',
+                    )}
                     action={
                         <button
                             type="button"
                             onClick={() => setIsDeleteModalOpen(true)}
                             className="rounded-md bg-(--error-color)/10 px-3 py-1.5 text-xs font-medium text-(--error-color) transition-colors hover:bg-(--error-color)/20"
                         >
-                            Delete account
+                            {t('account_settings.delete_account.title')}
                         </button>
                     }
                 />

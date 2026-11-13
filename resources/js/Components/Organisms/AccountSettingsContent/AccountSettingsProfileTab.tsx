@@ -1,5 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { SyntheticEvent, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -35,6 +36,7 @@ export default function AccountSettingsProfileTab({
     userName = 'John Doe',
     userAvatar = null,
 }: AccountSettingsProfileTabProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
 
     const { data, setData, post, errors, processing, clearErrors } = useForm({
@@ -62,7 +64,7 @@ export default function AccountSettingsProfileTab({
 
     const handleResetAvatar = () => {
         setAvatarSrc(null);
-        addAlert('Avatar reset to default.', 'information');
+        addAlert(t('account_settings.profile.avatar_reset'), 'information');
     };
 
     // The upload endpoint only accepts JPEG/PNG/GIF, so rasterize the SVG face first.
@@ -82,13 +84,19 @@ export default function AccountSettingsProfileTab({
                 {
                     preserveScroll: true,
                     onSuccess: () => {
-                        addAlert('Avatar updated successfully.', 'success');
+                        addAlert(
+                            t('account_settings.profile.avatar_updated'),
+                            'success',
+                        );
                         setIsLibraryOpen(false);
                     },
                     onError: (e) => {
                         setAvatarSrc(previousAvatarSrc);
                         addAlert(
-                            e.avatar ?? 'Failed to update avatar.',
+                            e.avatar ??
+                                t(
+                                    'account_settings.profile.avatar_update_failed',
+                                ),
                             'error',
                         );
                     },
@@ -97,7 +105,7 @@ export default function AccountSettingsProfileTab({
             );
         } catch (error) {
             console.error(error);
-            addAlert('Failed to load the selected avatar.', 'error');
+            addAlert(t('account_settings.profile.avatar_load_failed'), 'error');
             setSavingFace(false);
         }
     };
@@ -107,13 +115,15 @@ export default function AccountSettingsProfileTab({
             <SettingsPanel
                 id="profile"
                 collapsedSummary={data.name}
-                title="Profile"
-                description="Manage your personal details and how you appear to teammates."
+                title={t('account_settings.profile.title')}
+                description={t('account_settings.profile.description')}
                 icon="User"
             >
                 <SettingsPanelRow
-                    title="Username"
-                    description="Teammates will see this name and can @mention you with it."
+                    title={t('account_settings.profile.username')}
+                    description={t(
+                        'account_settings.profile.username_description',
+                    )}
                     action={
                         <form
                             onSubmit={handleSubmitUsername}
@@ -128,7 +138,9 @@ export default function AccountSettingsProfileTab({
                                         clearErrors('name');
                                     }
                                 }}
-                                placeholder="Your name"
+                                placeholder={t(
+                                    'account_settings.profile.name_placeholder',
+                                )}
                                 className={cn(
                                     'w-56',
                                     errors.name &&
@@ -167,7 +179,9 @@ export default function AccountSettingsProfileTab({
                                                     size={14}
                                                     className="animate-spin"
                                                 />
-                                                Saving...
+                                                {t(
+                                                    'account_settings.profile.saving',
+                                                )}
                                             </>
                                         ) : hasUnsavedChanges ? (
                                             <>
@@ -175,7 +189,9 @@ export default function AccountSettingsProfileTab({
                                                     name="CircleExclamationPoint"
                                                     size={14}
                                                 />
-                                                Unsaved changes
+                                                {t(
+                                                    'account_settings.profile.unsaved',
+                                                )}
                                             </>
                                         ) : (
                                             <>
@@ -184,7 +200,9 @@ export default function AccountSettingsProfileTab({
                                                     size={14}
                                                     className="text-(--success-color)"
                                                 />
-                                                Changes saved
+                                                {t(
+                                                    'account_settings.profile.saved',
+                                                )}
                                             </>
                                         )}
                                     </motion.span>
@@ -194,8 +212,10 @@ export default function AccountSettingsProfileTab({
                     }
                 />
                 <SettingsPanelRow
-                    title="Profile photo"
-                    description="This photo will be visible to others across Orbit."
+                    title={t('account_settings.profile.photo')}
+                    description={t(
+                        'account_settings.profile.photo_description',
+                    )}
                     action={
                         <AccountSettingsAvatarUploader
                             avatarSrc={avatarSrc}
@@ -211,8 +231,10 @@ export default function AccountSettingsProfileTab({
                 />
                 <Collapse open={isLibraryOpen} unmountWhenClosed>
                     <SettingsPanelRow
-                        title="Avatar library"
-                        description="Pick one of the ready-made avatars instead of uploading a photo."
+                        title={t('account_settings.avatar.library')}
+                        description={t(
+                            'account_settings.avatar.library_description',
+                        )}
                     >
                         <AccountSettingsAvatarLibrary
                             avatarSrc={avatarSrc}
@@ -225,8 +247,8 @@ export default function AccountSettingsProfileTab({
 
             <SettingsPanel
                 id="preview"
-                title="Live preview"
-                description="Updates instantly as you edit your photo and name."
+                title={t('account_settings.profile.preview_title')}
+                description={t('account_settings.profile.preview_description')}
                 icon="Eye"
             >
                 <AccountSettingsProfilePreview
