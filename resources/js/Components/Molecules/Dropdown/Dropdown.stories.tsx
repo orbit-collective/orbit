@@ -77,6 +77,61 @@ export const Menu: Story = {
     },
 };
 
+/**
+ * A row with `children` becomes a submenu: a chevron on the row, and the
+ * children open in a flyout beside the menu (click, Enter, ArrowRight).
+ */
+export const Submenu: Story = {
+    args: {
+        variant: 'menu',
+        title: undefined,
+        selectedValues: ['pl'],
+        options: [
+            { value: 'settings', label: 'Settings', icon: 'Settings' },
+            {
+                value: 'languages',
+                label: 'Languages',
+                icon: 'Languages',
+                children: [
+                    {
+                        value: 'en',
+                        label: 'English',
+                        trailing: 'EN',
+                        role: 'menuitemradio',
+                        indicator: 'check',
+                    },
+                    {
+                        value: 'pl',
+                        label: 'Polski',
+                        trailing: 'PL',
+                        role: 'menuitemradio',
+                        indicator: 'check',
+                    },
+                ],
+            },
+        ],
+    },
+    play: async ({ args }) => {
+        const parent = await screen.findByRole('menuitem', {
+            name: /languages/i,
+        });
+        await expect(parent).toHaveAttribute('aria-haspopup', 'menu');
+
+        await userEvent.click(parent);
+        await expect(
+            await screen.findByRole('menuitemradio', { name: /polski/i }),
+        ).toHaveAttribute('aria-checked', 'true');
+
+        await userEvent.click(
+            screen.getByRole('menuitemradio', { name: /english/i }),
+        );
+        await expect(args.onSelect).toHaveBeenCalledWith(
+            'en',
+            expect.anything(),
+        );
+    },
+};
+
 /** Long lists get a search box automatically. */
 export const Searchable: Story = {
     args: {

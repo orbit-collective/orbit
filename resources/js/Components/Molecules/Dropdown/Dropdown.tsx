@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import {
     cloneElement,
     isValidElement,
@@ -13,6 +14,7 @@ import { createPortal } from 'react-dom';
 import DropdownOption from '@/Components/Atoms/DropdownOption/DropdownOption';
 import DropdownPanel from '@/Components/Atoms/DropdownPanel/DropdownPanel';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import DropdownSubmenu from '@/Components/Molecules/Dropdown/DropdownSubmenu';
 import { useFloatingDropdown } from '@/hooks/useFloatingDropdown';
 import {
     DropdownOptionItem,
@@ -55,10 +57,10 @@ export default function Dropdown({
     ariaLabel,
     searchable = 'auto',
     searchPlaceholder,
-    emptyMessage = 'No matches found',
+    emptyMessage,
     showCount = false,
     onClear,
-    clearLabel = 'Clear',
+    clearLabel,
     onSelectAll,
     footer,
     children,
@@ -73,9 +75,17 @@ export default function Dropdown({
     triggerClassName,
     panelClassName,
 }: DropdownProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const listId = useId();
     const searchRef = useRef<HTMLInputElement>(null);
     const [search, setSearch] = useState('');
+    // The row whose flyout is open; `focus` when the keyboard opened it.
+    const [submenu, setSubmenu] = useState<{
+        value: string;
+        focus: boolean;
+    } | null>(null);
+    const submenuRef = useRef<HTMLDivElement>(null);
+    const rowRefs = useRef(new Map<string, HTMLElement>());
     const { isOpen, setIsOpen, close, triggerRef, panelRef, position } =
         useFloatingDropdown({
             placement,
@@ -84,6 +94,7 @@ export default function Dropdown({
             open,
             onOpenChange,
             anchorPoint,
+            isInside: (target) => !!submenuRef.current?.contains(target),
         });
 
     const isPanel = variant === 'panel';
@@ -117,7 +128,10 @@ export default function Dropdown({
         enabledOptions.every((option) => selectedValues.includes(option.value));
 
     useEffect(() => {
-        if (!isOpen) setSearch('');
+        if (!isOpen) {
+            setSearch('');
+            setSubmenu(null);
+        }
     }, [isOpen]);
 
     const getNavItems = () =>
@@ -148,6 +162,13 @@ export default function Dropdown({
         // Escape is left alone: the hook closes the panel from a document
         // listener, which a stopped event would never reach.
         if (event.key !== 'Escape') event.stopPropagation();
+
+        if (event.key === 'Escape' && submenu) {
+            // Back out of the flyout first; a second Escape closes the menu.
+            event.nativeEvent.stopImmediatePropagation();
+            setSubmenu(null);
+            return;
+        }
 
         if (!isListVariant) return;
 
@@ -191,6 +212,15 @@ export default function Dropdown({
     const handleSelect = (option: DropdownOptionItem) => {
         if (option.disabled) return;
 
+        if (option.children) {
+            setSubmenu((previous) =>
+                previous?.value === option.value
+                    ? null
+                    : { value: option.value, focus: false },
+            );
+            return;
+        }
+
         onSelect?.(option.value, option);
         if (option.closeOnSelect ?? closeOnSelect ?? defaultCloseOnSelect) {
             close(true);
@@ -200,6 +230,7 @@ export default function Dropdown({
     const roleFor = (option: DropdownOptionItem): DropdownOptionRole => {
         if (option.role) return option.role;
         if (variant !== 'menu') return 'option';
+        if (option.children) return 'menuitem';
 
         return (option.indicator ?? 'none') === 'none'
             ? 'menuitem'
@@ -219,10 +250,17 @@ export default function Dropdown({
           )
         : renderedTrigger;
 
+    const submenuOption = submenu
+        ? options.find((option) => option.value === submenu.value)
+        : undefined;
+    const submenuAnchor = submenu
+        ? (rowRefs.current.get(submenu.value) ?? null)
+        : null;
+
     const showHeader = !!title || (!!onClear && selectedValues.length > 0);
     const hasLeadingChrome = showHeader || showSearch || showCount;
 
-    const renderRow = (option: DropdownOptionItem) => {
+    const renderRow = (option: DropdownOptionItem, nested = false) => {
         if (option.kind === 'separator') {
             return (
                 <div
@@ -243,6 +281,8 @@ export default function Dropdown({
             );
         }
 
+        const hasChildren = !!option.children;
+        const isSubmenuOpen = hasChildren && submenu?.value === option.value;
         const isSelected = selectedValues.includes(option.value);
         const role = roleFor(option);
         const indicator =
@@ -263,12 +303,46 @@ export default function Dropdown({
                 icon={option.icon}
                 iconColor={option.iconColor}
                 description={option.description}
-                trailing={option.trailing}
+                trailing={
+                    hasChildren ? (
+                        <>
+                            {option.trailing}
+                            <Icon name="ChevronRight" size={14} />
+                        </>
+                    ) : (
+                        option.trailing
+                    )
+                }
                 tone={option.tone}
                 isSelected={isSelected}
                 indicator={indicator}
                 disabled={option.disabled}
-                onClick={() => handleSelect(option)}
+                ref={(node: HTMLButtonElement | null) => {
+                    if (node) rowRefs.current.set(option.value, node);
+                    else rowRefs.current.delete(option.value);
+                }}
+                aria-haspopup={hasChildren ? 'menu' : undefined}
+                aria-expanded={hasChildren ? isSubmenuOpen : undefined}
+                aria-controls={isSubmenuOpen ? `${listId}-sub` : undefined}
+                onKeyDown={(event) => {
+                    if (hasChildren && event.key === 'ArrowRight') {
+                        event.preventDefault();
+                        setSubmenu({ value: option.value, focus: true });
+                    }
+                }}
+                onClick={(event) => {
+                    if (!hasChildren || option.disabled || nested) {
+                        handleSelect(option);
+                        return;
+                    }
+                    // Enter / Space (detail 0) moves focus into the flyout; a
+                    // pointer click or tap toggles it. Hover never opens it.
+                    if (event.detail === 0) {
+                        setSubmenu({ value: option.value, focus: true });
+                        return;
+                    }
+                    handleSelect(option);
+                }}
             />
         );
     };
@@ -337,7 +411,8 @@ export default function Dropdown({
                                                     }}
                                                     className="cursor-pointer rounded-xs text-[10px] font-medium text-(--text-muted-color) transition-colors hover:text-(--text-color) focus:outline-hidden focus-visible:text-(--text-color) focus-visible:ring-2 focus-visible:ring-(--accent-color)"
                                                 >
-                                                    {clearLabel}
+                                                    {clearLabel ??
+                                                        t('dropdown.clear')}
                                                 </button>
                                             )}
                                     </div>
@@ -355,7 +430,8 @@ export default function Dropdown({
                                             data-nav
                                             autoFocus
                                             aria-label={
-                                                searchPlaceholder ?? 'Search'
+                                                searchPlaceholder ??
+                                                t('dropdown.search')
                                             }
                                             aria-controls={`${listId}-list`}
                                             value={search}
@@ -363,7 +439,8 @@ export default function Dropdown({
                                                 setSearch(event.target.value)
                                             }
                                             placeholder={
-                                                searchPlaceholder ?? 'Search…'
+                                                searchPlaceholder ??
+                                                t('dropdown.search_placeholder')
                                             }
                                             className="w-full appearance-none rounded-md bg-transparent py-1 text-sm text-(--text-color) outline-hidden placeholder:text-(--text-muted-color)"
                                         />
@@ -372,14 +449,11 @@ export default function Dropdown({
 
                                 {showCount && (
                                     <p className="shrink-0 px-3 pt-2 pb-1.5 text-[11px] text-(--text-muted-color)">
-                                        {
+                                        {tChoice(
+                                            'dropdown.results',
                                             visibleOptions.filter(isSelectable)
-                                                .length
-                                        }{' '}
-                                        {visibleOptions.filter(isSelectable)
-                                            .length === 1
-                                            ? 'result'
-                                            : 'results'}
+                                                .length,
+                                        )}
                                     </p>
                                 )}
 
@@ -407,11 +481,14 @@ export default function Dropdown({
                                                 className="text-(--text-muted-color)"
                                             />
                                             <p className="text-xs font-medium text-(--text-muted-color)">
-                                                {emptyMessage}
+                                                {emptyMessage ??
+                                                    t('dropdown.empty')}
                                             </p>
                                         </div>
                                     ) : (
-                                        visibleOptions.map(renderRow)
+                                        visibleOptions.map((option) =>
+                                            renderRow(option),
+                                        )
                                     )}
                                 </div>
 
@@ -442,7 +519,7 @@ export default function Dropdown({
                                                 )}
                                             </span>
                                             <span className="font-medium">
-                                                Select all
+                                                {t('dropdown.select_all')}
                                             </span>
                                             <span className="ml-auto text-(--text-muted-color)">
                                                 {enabledOptions.length}
@@ -456,6 +533,29 @@ export default function Dropdown({
                     </DropdownPanel>,
                     document.body,
                 )}
+
+            {isOpen && position && submenuOption && submenuAnchor && (
+                <DropdownSubmenu
+                    key={submenuOption.value}
+                    id={`${listId}-sub`}
+                    panelRef={submenuRef}
+                    anchor={submenuAnchor}
+                    parentPanel={panelRef.current}
+                    items={submenuOption.children ?? []}
+                    ariaLabel={
+                        typeof submenuOption.label === 'string'
+                            ? submenuOption.label
+                            : (submenuOption.searchLabel ?? '')
+                    }
+                    focusFirst={submenu?.focus ?? false}
+                    renderRow={(option) => renderRow(option, true)}
+                    onClose={(restoreFocus) => {
+                        setSubmenu(null);
+                        if (restoreFocus) submenuAnchor.focus();
+                    }}
+                    onCloseAll={() => close(true)}
+                />
+            )}
         </>
     );
 }

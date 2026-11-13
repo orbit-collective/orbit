@@ -233,6 +233,27 @@ describe('Sidebar Component', () => {
         expect(mockRouterVisit).toHaveBeenCalledWith('/settings');
     });
 
+    test('offers the languages as a flyout of the user menu and applies the pick', async () => {
+        const user = userEvent.setup();
+        render(<Sidebar projects={[]} />);
+
+        await user.click(screen.getAllByText('John Doe')[0]);
+        const languages = screen.getByRole('menuitem', { name: 'Languages' });
+        expect(languages).toHaveAttribute('aria-haspopup', 'menu');
+        expect(screen.queryByText('Polski')).not.toBeInTheDocument();
+
+        await user.click(languages);
+        expect(
+            screen.getByRole('menuitemradio', { name: /English/ }),
+        ).toHaveAttribute('aria-checked', 'true');
+
+        await user.click(screen.getByRole('menuitemradio', { name: /Polski/ }));
+
+        expect(localStorage.getItem('locale')).toBe('pl');
+        expect(screen.queryByText('Log out')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /John Doe/ })).toHaveFocus();
+    });
+
     test('closes the user menu when clicking outside', async () => {
         const user = userEvent.setup();
         render(<Sidebar projects={[]} />);
