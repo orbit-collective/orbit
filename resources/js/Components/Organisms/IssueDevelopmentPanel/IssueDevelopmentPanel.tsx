@@ -1,4 +1,5 @@
 import { cva } from 'class-variance-authority';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ComponentProps, useId, useState } from 'react';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import Button from '@/Components/Atoms/Button/Button';
@@ -45,11 +46,22 @@ const badgeVariants = cva(
  */
 function pullRequestBadge(pr: LinkedPullRequest) {
     if (pr.status === 'merged')
-        return { label: 'Merged', tone: 'merged' as const };
+        return {
+            label: 'issue_development_panel.pr_status.merged',
+            tone: 'merged' as const,
+        };
     if (pr.status === 'closed')
-        return { label: 'Closed', tone: 'closed' as const };
+        return {
+            label: 'issue_development_panel.pr_status.closed',
+            tone: 'closed' as const,
+        };
     if (pr.status === 'open' || pr.draft !== null) {
-        return { label: pr.draft ? 'Draft' : 'Open', tone: 'neutral' as const };
+        return {
+            label: pr.draft
+                ? 'issue_development_panel.pr_status.draft'
+                : 'issue_development_panel.pr_status.open',
+            tone: 'neutral' as const,
+        };
     }
     return null;
 }
@@ -57,21 +69,39 @@ function pullRequestBadge(pr: LinkedPullRequest) {
 /** Hidden entirely when null - never fabricated for a legacy/unsynced link (same convention as the status badge). */
 function checkStatusBadge(pr: LinkedPullRequest) {
     if (pr.checkStatus === 'passed')
-        return { label: 'CI passed', tone: 'merged' as const };
+        return {
+            label: 'issue_development_panel.ci.passed',
+            tone: 'merged' as const,
+        };
     if (pr.checkStatus === 'failed')
-        return { label: 'CI failed', tone: 'closed' as const };
+        return {
+            label: 'issue_development_panel.ci.failed',
+            tone: 'closed' as const,
+        };
     if (pr.checkStatus === 'pending')
-        return { label: 'CI pending', tone: 'neutral' as const };
+        return {
+            label: 'issue_development_panel.ci.pending',
+            tone: 'neutral' as const,
+        };
     return null;
 }
 
 function reviewStatusBadge(pr: LinkedPullRequest) {
     if (pr.reviewStatus === 'approved')
-        return { label: 'Approved', tone: 'merged' as const };
+        return {
+            label: 'issue_development_panel.review.approved',
+            tone: 'merged' as const,
+        };
     if (pr.reviewStatus === 'changes_requested')
-        return { label: 'Changes requested', tone: 'closed' as const };
+        return {
+            label: 'issue_development_panel.review.changes_requested',
+            tone: 'closed' as const,
+        };
     if (pr.reviewStatus === 'commented')
-        return { label: 'Commented', tone: 'neutral' as const };
+        return {
+            label: 'issue_development_panel.review.commented',
+            tone: 'neutral' as const,
+        };
     return null;
 }
 
@@ -84,13 +114,15 @@ function RepositoryPicker({
     value: number;
     onChange: (repositoryId: number) => void;
 }) {
+    const { t } = useLaravelReactI18n();
+
     if (repositories.length <= 1) return null;
 
     return (
         <div className="[&>button]:w-full">
             <InlineSelectDropdown
-                label="Repository"
-                placeholder="Select repository"
+                label={t('issue_development_panel.repository')}
+                placeholder={t('issue_development_panel.select_repository')}
                 options={repositories.map((repository) => ({
                     value: String(repository.id),
                     label: `${repository.owner}/${repository.name}`,
@@ -135,6 +167,7 @@ function CreateBranchForm({
 }) {
     const [repositoryId, setRepositoryId] = useState(repositories[0].id);
     const [name, setName] = useState(defaultBranchName);
+    const { t } = useLaravelReactI18n();
 
     return (
         <form
@@ -150,10 +183,12 @@ function CreateBranchForm({
                 onChange={setRepositoryId}
             />
             <LabelledInput
-                label="Branch name"
+                label={t('issue_development_panel.branch_name')}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="branch-name"
+                placeholder={t(
+                    'issue_development_panel.branch_name_placeholder',
+                )}
             />
             <div className="flex items-center justify-end gap-2">
                 <button
@@ -161,14 +196,14 @@ function CreateBranchForm({
                     onClick={onCancel}
                     className="cursor-pointer rounded-xs text-xs font-medium text-(--text-gray-color) transition-colors hover:text-(--text-color) focus-visible:outline-2 focus-visible:outline-(--accent-color)"
                 >
-                    Cancel
+                    {t('issue_development_panel.cancel')}
                 </button>
                 <Button
                     type="submit"
                     isDisabled={name.trim() === ''}
                     className="px-2.5 py-1 text-xs"
                 >
-                    Create branch
+                    {t('issue_development_panel.create_branch')}
                 </Button>
             </div>
         </form>
@@ -195,6 +230,7 @@ function CreatePullRequestForm({
     const [title, setTitle] = useState('');
     const [head, setHead] = useState(defaultBranchName);
     const [base, setBase] = useState('');
+    const { t } = useLaravelReactI18n();
 
     return (
         <form
@@ -210,22 +246,24 @@ function CreatePullRequestForm({
                 onChange={setRepositoryId}
             />
             <LabelledInput
-                label="Pull request title"
+                label={t('issue_development_panel.pr_title')}
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
-                placeholder="Pull request title"
+                placeholder={t('issue_development_panel.pr_title')}
             />
             <LabelledInput
-                label="Source branch"
+                label={t('issue_development_panel.source_branch')}
                 value={head}
                 onChange={(event) => setHead(event.target.value)}
-                placeholder="Source branch"
+                placeholder={t('issue_development_panel.source_branch')}
             />
             <LabelledInput
-                label="Target branch"
+                label={t('issue_development_panel.target_branch')}
                 value={base}
                 onChange={(event) => setBase(event.target.value)}
-                placeholder="Target branch (default: main)"
+                placeholder={t(
+                    'issue_development_panel.target_branch_placeholder',
+                )}
             />
             <div className="flex items-center justify-end gap-2">
                 <button
@@ -233,14 +271,14 @@ function CreatePullRequestForm({
                     onClick={onCancel}
                     className="cursor-pointer rounded-xs text-xs font-medium text-(--text-gray-color) transition-colors hover:text-(--text-color) focus-visible:outline-2 focus-visible:outline-(--accent-color)"
                 >
-                    Cancel
+                    {t('issue_development_panel.cancel')}
                 </button>
                 <Button
                     type="submit"
                     isDisabled={title.trim() === '' || head.trim() === ''}
                     className="px-2.5 py-1 text-xs"
                 >
-                    Create pull request
+                    {t('issue_development_panel.create_pr')}
                 </Button>
             </div>
         </form>
@@ -270,6 +308,7 @@ export default function IssueDevelopmentPanel({
     onCreatePullRequest,
     requiresGithubAccountLink = false,
 }: IssueDevelopmentPanelProps) {
+    const { t } = useLaravelReactI18n();
     const [openForm, setOpenForm] = useState<'branch' | 'pullRequest' | null>(
         null,
     );
@@ -278,6 +317,11 @@ export default function IssueDevelopmentPanel({
         repositories.length > 0 && (onCreateBranch || onCreatePullRequest);
     const showGithubLinkHint =
         repositories.length > 0 && !canCreate && requiresGithubAccountLink;
+
+    // The sentence around the link ("<link> to create ...") keeps its own word order per language.
+    const linkHint = t('issue_development_panel.link_account_hint').split(
+        ':link',
+    );
 
     if (pullRequests.length === 0 && !canCreate && !showGithubLinkHint)
         return null;
@@ -311,7 +355,7 @@ export default function IssueDevelopmentPanel({
                                         tone: badge.tone,
                                     })}
                                 >
-                                    {badge.label}
+                                    {t(badge.label)}
                                 </span>
                             )}
                         </div>
@@ -338,7 +382,7 @@ export default function IssueDevelopmentPanel({
                                             tone: checkBadge.tone,
                                         })}
                                     >
-                                        {checkBadge.label}
+                                        {t(checkBadge.label)}
                                     </span>
                                 )}
                                 {reviewBadge && (
@@ -347,7 +391,7 @@ export default function IssueDevelopmentPanel({
                                             tone: reviewBadge.tone,
                                         })}
                                     >
-                                        {reviewBadge.label}
+                                        {t(reviewBadge.label)}
                                     </span>
                                 )}
                             </div>
@@ -358,13 +402,14 @@ export default function IssueDevelopmentPanel({
 
             {showGithubLinkHint && (
                 <span className="text-[11px] text-(--text-gray-color)">
+                    {linkHint[0]}
                     <a
                         href={route('settings.security-access')}
                         className="font-medium text-(--accent-color) hover:underline"
                     >
-                        Link your GitHub account
-                    </a>{' '}
-                    to create a branch or pull request.
+                        {t('issue_development_panel.link_account')}
+                    </a>
+                    {linkHint[1]}
                 </span>
             )}
 
@@ -372,7 +417,7 @@ export default function IssueDevelopmentPanel({
                 <div className="flex flex-col items-start gap-2">
                     {pullRequests.length === 0 && (
                         <span className="text-[11px] text-(--text-gray-color)">
-                            No linked pull requests yet.
+                            {t('issue_development_panel.no_pull_requests')}
                         </span>
                     )}
                     {onCreateBranch && (
@@ -381,7 +426,7 @@ export default function IssueDevelopmentPanel({
                             onClick={() => setOpenForm('branch')}
                             className="text-[11px] font-medium text-(--accent-color) hover:underline"
                         >
-                            Create branch
+                            {t('issue_development_panel.create_branch')}
                         </button>
                     )}
                     {onCreatePullRequest && (
@@ -390,7 +435,7 @@ export default function IssueDevelopmentPanel({
                             onClick={() => setOpenForm('pullRequest')}
                             className="text-[11px] font-medium text-(--accent-color) hover:underline"
                         >
-                            Create pull request
+                            {t('issue_development_panel.create_pr')}
                         </button>
                     )}
                 </div>

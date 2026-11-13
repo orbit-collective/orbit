@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -30,6 +31,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
     issueTypes = [],
     onPanelOpenChange,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [searchQuery, setSearchQuery] = useState(queryParams?.search || '');
     const [openFilter, setOpenFilter] = useState<OpenPanel>(null);
     const input = useRef<HTMLInputElement>(null);
@@ -70,7 +72,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
                         <Input
                             id="global-search-input"
                             type="text"
-                            placeholder="Search issue title, ID, labels..."
+                            placeholder={t('filter_bar.search_placeholder')}
                             value={searchQuery}
                             onChange={handleSearch}
                             variant={'modal'}

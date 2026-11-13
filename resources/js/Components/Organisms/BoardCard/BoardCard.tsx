@@ -1,6 +1,7 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
@@ -18,57 +19,63 @@ const BoardCardContent = ({
 }: {
     issue: Issue;
     isClosed: boolean;
-}) => (
-    <>
-        <div className="flex items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-1.5">
-                <StatusDot
-                    status={isClosed ? 'done' : undefined}
-                    color={isClosed ? undefined : issue.priorityDetails?.color}
-                />
-                <span className="truncate text-[11px] font-semibold text-(--text-muted-color)">
-                    {issue.assignee?.name || 'Unassigned'}
+}) => {
+    const { t } = useLaravelReactI18n();
+
+    return (
+        <>
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-1.5">
+                    <StatusDot
+                        status={isClosed ? 'done' : undefined}
+                        color={
+                            isClosed ? undefined : issue.priorityDetails?.color
+                        }
+                    />
+                    <span className="truncate text-[11px] font-semibold text-(--text-muted-color)">
+                        {issue.assignee?.name || t('board_card.unassigned')}
+                    </span>
+                </div>
+                <span className="shrink-0 font-mono text-[10px] font-medium text-(--text-muted-color)">
+                    #{issue.number ?? issue.id}
                 </span>
             </div>
-            <span className="shrink-0 font-mono text-[10px] font-medium text-(--text-muted-color)">
-                #{issue.number ?? issue.id}
-            </span>
-        </div>
-        <h4
-            className={cn(
-                'line-clamp-2 text-[13px] font-medium leading-snug text-(--text-color)',
-                isClosed && 'text-(--text-muted-color) line-through',
-            )}
-        >
-            {issue.title}
-        </h4>
-        {issue.labels && issue.labels.length > 0 && (
-            <LabelList
-                labels={issue.labels}
-                badgeClassName="px-1.5 py-0.5 text-[9px]"
-            />
-        )}
-        <div className="mt-0.5 flex items-center justify-between gap-2 border-t border-(--border-color) pt-2.5">
-            {issue.workflowStatus ? (
-                <WorkflowStatusBadge status={issue.workflowStatus} />
-            ) : (
-                <span />
-            )}
-            {issue.assignee ? (
-                <Avatar
-                    src={issue.assignee.avatar}
-                    alt={issue.assignee.name}
-                    initials={issue.assignee.name.charAt(0)}
-                    size="sm"
+            <h4
+                className={cn(
+                    'line-clamp-2 text-[13px] font-medium leading-snug text-(--text-color)',
+                    isClosed && 'text-(--text-muted-color) line-through',
+                )}
+            >
+                {issue.title}
+            </h4>
+            {issue.labels && issue.labels.length > 0 && (
+                <LabelList
+                    labels={issue.labels}
+                    badgeClassName="px-1.5 py-0.5 text-[9px]"
                 />
-            ) : (
-                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-(--surface-color) text-[10px] text-(--text-muted-color)">
-                    ?
-                </div>
             )}
-        </div>
-    </>
-);
+            <div className="mt-0.5 flex items-center justify-between gap-2 border-t border-(--border-color) pt-2.5">
+                {issue.workflowStatus ? (
+                    <WorkflowStatusBadge status={issue.workflowStatus} />
+                ) : (
+                    <span />
+                )}
+                {issue.assignee ? (
+                    <Avatar
+                        src={issue.assignee.avatar}
+                        alt={issue.assignee.name}
+                        initials={issue.assignee.name.charAt(0)}
+                        size="sm"
+                    />
+                ) : (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-(--surface-color) text-[10px] text-(--text-muted-color)">
+                        ?
+                    </div>
+                )}
+            </div>
+        </>
+    );
+};
 
 export const BoardCard = ({
     issue,

@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
@@ -23,6 +24,8 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
     onHeightMouseDown,
     onColumnToggle,
 }) => {
+    const { t } = useLaravelReactI18n();
+
     return (
         <thead>
             <tr>
@@ -60,29 +63,31 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
                     <SelectionDropdown
                         options={[
                             {
-                                label: 'Reset Column Sizes',
+                                label: t('issue_table_head.reset_sizes'),
                                 value: 'reset_sizes',
                                 kind: 'action',
                             },
                             { label: '', value: 'sep1', kind: 'separator' },
                             {
-                                label: 'Row: Compact',
+                                label: t('issue_table_head.row_compact'),
                                 value: 'row_compact',
                                 kind: 'radio',
                             },
                             {
-                                label: 'Row: Comfortable',
+                                label: t('issue_table_head.row_comfortable'),
                                 value: 'row_comfortable',
                                 kind: 'radio',
                             },
                             {
-                                label: 'Row: Spacious',
+                                label: t('issue_table_head.row_spacious'),
                                 value: 'row_spacious',
                                 kind: 'radio',
                             },
                             { label: '', value: 'sep2', kind: 'separator' },
                             ...ISSUE_TABLE_COLUMNS.map((column) => ({
-                                label: column.label,
+                                label: t(
+                                    `issue_table_head.columns.${column.value}`,
+                                ),
                                 value: column.value,
                             })),
                         ]}
@@ -103,7 +108,9 @@ export const IssueTableHead: FC<IssueTableHeadProps> = ({
                             <IconButton
                                 iconName="Settings"
                                 iconSize={13}
-                                ariaLabel="Table display options"
+                                ariaLabel={t(
+                                    'issue_table_head.display_options',
+                                )}
                                 className="text-(--text-muted-color) opacity-40 transition-opacity hover:opacity-100"
                             />
                         }

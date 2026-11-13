@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useRef, useState, type KeyboardEvent } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -29,6 +30,7 @@ export default function IssueChildrenPanel({
     issue,
     issueTypes,
 }: IssueChildrenPanelProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const children = issue.children ?? [];
     const allowedIds = issue.issueType?.allowedChildTypeIds ?? [];
@@ -83,7 +85,7 @@ export default function IssueChildrenPanel({
                 onError: (errors) =>
                     addAlert(
                         Object.values(errors)[0] ??
-                            'Could not create the sub-issue',
+                            t('issue_children_panel.create_failed'),
                         'error',
                     ),
                 onFinish: () => setIsSubmitting(false),
@@ -100,7 +102,7 @@ export default function IssueChildrenPanel({
         <section className="mt-2 flex flex-col gap-3 border-t border-(--border-color) pt-4">
             <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-(--text-color)">
-                    Sub-issues
+                    {t('issue_children_panel.title')}
                     {children.length > 0 && (
                         <span className="ml-1.5 text-xs font-normal text-(--text-gray-color)">
                             <AnimatedNumber value={children.length} />
@@ -114,7 +116,7 @@ export default function IssueChildrenPanel({
                         className="flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-(--text-muted-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                     >
                         <Icon name="Plus" size={13} />
-                        Add sub-issue
+                        {t('issue_children_panel.add')}
                     </button>
                 )}
             </div>
@@ -122,8 +124,7 @@ export default function IssueChildrenPanel({
             <div className="flex flex-col overflow-hidden rounded-xl border border-(--border-color)">
                 {children.length === 0 && !isAdding && (
                     <p className="px-3 py-4 text-xs text-(--text-gray-color)">
-                        No sub-issues yet. Break this one down into smaller
-                        pieces.
+                        {t('issue_children_panel.empty')}
                     </p>
                 )}
 
@@ -182,13 +183,15 @@ export default function IssueChildrenPanel({
                                 onChange={(e) => setTitle(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 disabled={isSubmitting}
-                                placeholder="What needs to be done?"
+                                placeholder={t(
+                                    'issue_children_panel.placeholder',
+                                )}
                                 className="min-w-0 flex-1 rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1 text-xs text-(--text-color) outline-hidden focus:border-(--accent-color) disabled:opacity-60"
                             />
                             {selectableTypes.length > 0 && (
                                 <InlineSelectDropdown
-                                    label="Issue type"
-                                    placeholder="Type"
+                                    label={t('issue_children_panel.issue_type')}
+                                    placeholder={t('issue_children_panel.type')}
                                     subtle
                                     options={selectableTypes.map((type) => ({
                                         value: String(type.id),
@@ -210,7 +213,7 @@ export default function IssueChildrenPanel({
                             )}
                             <button
                                 type="button"
-                                title="Cancel"
+                                title={t('issue_children_panel.cancel')}
                                 onClick={cancel}
                                 className="rounded-sm p-1 text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                             >
