@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -220,6 +221,7 @@ export default function AccountSettingsIssueViewCard({
     groupId,
     onSelect,
 }: AccountSettingsIssueViewCardProps) {
+    const { t } = useLaravelReactI18n();
     // The mock-up draws once on load and again each time this card is picked.
     const playKey = usePlayOnSelect(selected);
 
@@ -243,7 +245,9 @@ export default function AccountSettingsIssueViewCard({
                         <Icon name={icon} size={14} />
                     </span>
                     <p className="text-sm font-medium text-(--text-color)">
-                        {view}
+                        {t(
+                            `account_settings.preferences.issue_view.views.${view}.name`,
+                        )}
                     </p>
                 </div>
                 <p className="mb-3 text-xs leading-5 text-(--text-muted-color)">

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { ReactNode } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
@@ -77,13 +78,18 @@ export default function AccountSettingsProfilePreview({
     avatarSrc,
     initials,
 }: AccountSettingsProfilePreviewProps) {
-    const displayName = name.trim() || 'Your name';
+    const { t } = useLaravelReactI18n();
+    const displayName =
+        name.trim() || t('account_settings.profile.name_placeholder');
     const avatarProps = { src: avatarSrc ?? undefined, initials };
 
     return (
         <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-3">
             <PreviewFrame index={0}>
-                <PreviewCardLabel icon="LayoutPanelLeft" label="Sidebar" />
+                <PreviewCardLabel
+                    icon="LayoutPanelLeft"
+                    label={t('account_settings.preview.sidebar')}
+                />
                 <div className="overflow-hidden rounded-lg border border-(--border-color) bg-(--bg-color) p-1.5">
                     <div className="space-y-1">
                         <div className="flex items-center gap-1.5 rounded-md bg-(--bg-light-color) px-1.5 py-1">
@@ -106,7 +112,10 @@ export default function AccountSettingsProfilePreview({
             </PreviewFrame>
 
             <PreviewFrame index={1}>
-                <PreviewCardLabel icon="MessageSquare" label="Comment" />
+                <PreviewCardLabel
+                    icon="MessageSquare"
+                    label={t('account_settings.preview.comment')}
+                />
                 <div className="rounded-lg border border-(--border-color) bg-(--bg-color) p-2.5">
                     <div className="flex items-start gap-2">
                         <LiveAvatar {...avatarProps} />
@@ -116,7 +125,7 @@ export default function AccountSettingsProfilePreview({
                                     {displayName}
                                 </p>
                                 <span className="text-[10px] text-(--text-muted-color)">
-                                    2m ago
+                                    {t('account_settings.preview.time_ago')}
                                 </span>
                             </div>
                             <div className="mt-1.5 space-y-1">
@@ -127,13 +136,16 @@ export default function AccountSettingsProfilePreview({
                     </div>
                     <div className="mt-2.5 flex items-center gap-1.5 border-t border-(--border-color) pt-2 text-[10px] text-(--text-muted-color)">
                         <Icon name="Reply" size={10} />
-                        Reply
+                        {t('account_settings.preview.reply')}
                     </div>
                 </div>
             </PreviewFrame>
 
             <PreviewFrame index={2}>
-                <PreviewCardLabel icon="UserCheck" label="Issue row" />
+                <PreviewCardLabel
+                    icon="UserCheck"
+                    label={t('account_settings.preview.issue_row')}
+                />
                 <div className="overflow-hidden rounded-lg border border-(--border-color) bg-(--bg-color)">
                     <div className="flex items-center gap-2 border-b border-(--border-color) bg-(--bg-light-color) px-2 py-1.5">
                         <PreviewBar className="h-1 w-6 rounded-full bg-(--text-muted-color)" />

@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { useState } from 'react';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -15,8 +16,6 @@ import {
 interface NotificationTypeState {
     id: string;
     icon: keyof typeof icons;
-    title: string;
-    description: string;
     inApp: boolean;
     email: boolean;
 }
@@ -25,84 +24,60 @@ const defaultNotificationTypes: NotificationTypeState[] = [
     {
         id: 'issue_assigned',
         icon: 'UserCheck',
-        title: 'Assigned issues',
-        description: 'When an issue is assigned or unassigned to you.',
         inApp: true,
         email: false,
     },
     {
         id: 'issue_commented',
         icon: 'MessageSquare',
-        title: 'Comments',
-        description: "When an issue you're involved in is commented on.",
         inApp: true,
         email: false,
     },
     {
         id: 'issue_mentioned',
         icon: 'AtSign',
-        title: 'Mentions',
-        description: 'When someone mentions you in a comment.',
         inApp: true,
         email: false,
     },
     {
         id: 'issue_status_changed',
         icon: 'CircleCheckBig',
-        title: 'Status changes',
-        description: "When an issue you're involved in has its status updated.",
         inApp: true,
         email: false,
     },
     {
         id: 'issue_priority_changed',
         icon: 'Flag',
-        title: 'Priority changes',
-        description:
-            "When an issue you're involved in has its priority changed.",
         inApp: true,
         email: false,
     },
     {
         id: 'issue_labels_changed',
         icon: 'Tag',
-        title: 'Label updates',
-        description: "When labels change on an issue you're involved in.",
         inApp: true,
         email: false,
     },
     {
         id: 'issue_dates_changed',
         icon: 'CalendarClock',
-        title: 'Schedule changes',
-        description:
-            "When the start or due date changes on an issue you're involved in.",
         inApp: true,
         email: false,
     },
     {
         id: 'issue_updated',
         icon: 'Pencil',
-        title: 'Other issue updates',
-        description:
-            "When any other detail changes on an issue you're involved in.",
         inApp: true,
         email: false,
     },
     {
         id: 'project_invited',
         icon: 'Users',
-        title: 'Project invitations',
-        description: 'When you are invited to join a new project.',
         inApp: true,
         email: false,
     },
     {
         id: 'integration_activity',
         icon: 'Plug',
-        title: 'Integration activity',
-        description:
-            'When an import you started (e.g. from Jira) finishes or fails.',
         inApp: true,
         email: false,
     },
@@ -136,6 +111,7 @@ export default function AccountSettingsNotificationsTab({
     notificationSettings?: NotificationSettings;
     notificationRetention?: NotificationRetention;
 }) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [notificationTypes, setNotificationTypes] = useState(() =>
         mergeNotificationSettings(notificationSettings),
@@ -173,13 +149,13 @@ export default function AccountSettingsNotificationsTab({
                 preserveScroll: true,
                 onSuccess: () => {
                     addAlert(
-                        'Notification settings updated successfully.',
+                        t('account_settings.notifications.updated'),
                         'success',
                     );
                 },
                 onError: () => {
                     addAlert(
-                        'Failed to update notification settings.',
+                        t('account_settings.notifications.update_failed'),
                         'error',
                     );
                     setNotificationTypes((current) =>
@@ -199,21 +175,26 @@ export default function AccountSettingsNotificationsTab({
         <div className="space-y-5">
             <SettingsPanel
                 id="types"
-                collapsedSummary={`${notificationTypes.length} types`}
-                title="Notification types"
-                description="Choose which activity notifies you, and where."
+                collapsedSummary={t(
+                    'account_settings.notifications.types_summary',
+                    {
+                        count: notificationTypes.length,
+                    },
+                )}
+                title={t('account_settings.notifications.title')}
+                description={t('account_settings.notifications.description')}
                 icon="Bell"
             >
                 <div className="flex items-center justify-between gap-3 px-4 py-2.5 sm:px-5">
                     <span className="text-[10px] font-medium tracking-wide text-(--text-muted-color) uppercase">
-                        Type
+                        {t('account_settings.notifications.column_type')}
                     </span>
                     <div className="flex items-center gap-2 sm:gap-6">
                         <span className="w-12 text-center text-[10px] font-medium tracking-wide whitespace-nowrap text-(--text-muted-color) uppercase sm:w-16">
-                            In-app
+                            {t('account_settings.notifications.column_in_app')}
                         </span>
                         <span className="w-12 text-center text-[10px] font-medium tracking-wide whitespace-nowrap text-(--text-muted-color) uppercase sm:w-16">
-                            Email
+                            {t('account_settings.notifications.column_email')}
                         </span>
                     </div>
                 </div>
@@ -221,8 +202,12 @@ export default function AccountSettingsNotificationsTab({
                     <RowReveal key={type.id} index={index}>
                         <AccountSettingsNotificationTypeRow
                             icon={type.icon}
-                            title={type.title}
-                            description={type.description}
+                            title={t(
+                                `account_settings.notifications.types.${type.id}.title`,
+                            )}
+                            description={t(
+                                `account_settings.notifications.types.${type.id}.description`,
+                            )}
                             inAppChecked={type.inApp}
                             onInAppChange={(checked) =>
                                 updateNotificationType(

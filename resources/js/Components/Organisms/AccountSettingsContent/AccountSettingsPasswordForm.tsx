@@ -1,4 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { SyntheticEvent, useEffect, useRef, useState } from 'react';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -17,6 +18,7 @@ interface PasswordFormData {
 }
 
 export default function AccountSettingsPasswordForm() {
+    const { t } = useLaravelReactI18n();
     const { props } = usePage<PageProps>();
     const hasPassword = props.auth?.user?.has_password ?? true;
 
@@ -81,14 +83,17 @@ export default function AccountSettingsPasswordForm() {
         ) {
             setError(
                 'new_password',
-                'New password must be different from your current password.',
+                t('account_settings.password.must_differ'),
             );
             registerFailedAttempt();
             return;
         }
 
         if (data.new_password_confirmation !== data.new_password) {
-            setError('new_password_confirmation', 'Passwords do not match.');
+            setError(
+                'new_password_confirmation',
+                t('account_settings.password.mismatch'),
+            );
             registerFailedAttempt();
             return;
         }
@@ -119,7 +124,9 @@ export default function AccountSettingsPasswordForm() {
                         className="shrink-0 text-(--error-color)"
                     />
                     <p className="text-xs text-(--error-color)">
-                        Too many attempts. Try again in {lockoutSeconds}s.
+                        {t('account_settings.password.locked', {
+                            time: `${lockoutSeconds}s`,
+                        })}
                     </p>
                 </div>
             )}
@@ -129,7 +136,7 @@ export default function AccountSettingsPasswordForm() {
                     <div className="md:col-span-2">
                         <PasswordField
                             id="current-password"
-                            label="Current password"
+                            label={t('account_settings.password.current')}
                             value={data.current_password}
                             onChange={(event) =>
                                 setData('current_password', event.target.value)
@@ -145,7 +152,7 @@ export default function AccountSettingsPasswordForm() {
                 <div className="space-y-1.5">
                     <PasswordField
                         id="new-password"
-                        label="New password"
+                        label={t('account_settings.password.new')}
                         value={data.new_password}
                         onChange={(event) =>
                             setData('new_password', event.target.value)
@@ -160,7 +167,7 @@ export default function AccountSettingsPasswordForm() {
 
                 <PasswordField
                     id="confirm-password"
-                    label="Confirm new password"
+                    label={t('account_settings.password.confirm')}
                     value={data.new_password_confirmation}
                     onChange={(event) =>
                         setData('new_password_confirmation', event.target.value)
@@ -174,15 +181,16 @@ export default function AccountSettingsPasswordForm() {
 
             <div className="flex items-center justify-between gap-3 pt-1">
                 <p className="text-xs text-(--text-muted-color)">
-                    Use at least 8 characters with a mix of letters, numbers,
-                    and symbols.
+                    {t('account_settings.password.hint')}
                 </p>
                 <Button
                     type="submit"
                     isDisabled={isLocked || processing}
                     className="shrink-0 rounded-lg px-4 py-1.5"
                 >
-                    {hasPassword ? 'Update password' : 'Set password'}
+                    {hasPassword
+                        ? t('account_settings.password.update')
+                        : t('account_settings.password.set')}
                 </Button>
             </div>
         </form>

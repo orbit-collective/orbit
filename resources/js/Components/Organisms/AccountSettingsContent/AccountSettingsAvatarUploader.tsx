@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -29,6 +30,7 @@ export default function AccountSettingsAvatarUploader({
     busy = false,
     onProcessingChange,
 }: AccountSettingsAvatarUploaderProps) {
+    const { t } = useLaravelReactI18n();
     const inputRef = useRef<HTMLInputElement>(null);
     const { addAlert } = useAlert();
 
@@ -52,15 +54,12 @@ export default function AccountSettingsAvatarUploader({
 
         const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
         if (!validMimeTypes.includes(file.type)) {
-            addAlert(
-                'Invalid image. Please upload a JPEG, PNG, or GIF image.',
-                'error',
-            );
+            addAlert(t('account_settings.avatar.invalid_type'), 'error');
             return;
         }
 
         if (file.size > MAX_AVATAR_SIZE_BYTES) {
-            addAlert('Image must be smaller than 5 MB.', 'error');
+            addAlert(t('account_settings.avatar.too_large'), 'error');
             return;
         }
 
@@ -91,7 +90,7 @@ export default function AccountSettingsAvatarUploader({
                             preserveScroll: true,
                             onSuccess: () => {
                                 addAlert(
-                                    'Avatar uploaded successfully.',
+                                    t('account_settings.avatar.uploaded'),
                                     'success',
                                 );
                             },
@@ -105,22 +104,22 @@ export default function AccountSettingsAvatarUploader({
                     );
                 } else {
                     setProcessing(false);
-                    addAlert('Invalid image file.', 'error');
+                    addAlert(
+                        t('account_settings.avatar.invalid_file'),
+                        'error',
+                    );
                 }
             };
 
             image.onerror = () => {
                 setProcessing(false);
-                addAlert(
-                    'Failed to load the image. File might be corrupted.',
-                    'error',
-                );
+                addAlert(t('account_settings.avatar.load_failed'), 'error');
             };
         };
 
         reader.onerror = () => {
             setProcessing(false);
-            addAlert('Failed to read the image.', 'error');
+            addAlert(t('account_settings.avatar.read_failed'), 'error');
         };
 
         reader.readAsDataURL(file);
@@ -137,7 +136,10 @@ export default function AccountSettingsAvatarUploader({
                     onReset();
                 },
                 onError: () => {
-                    addAlert('Failed to reset avatar.', 'error');
+                    addAlert(
+                        t('account_settings.avatar.reset_failed'),
+                        'error',
+                    );
                 },
                 onFinish: () => {
                     setProcessing(false);
@@ -153,12 +155,12 @@ export default function AccountSettingsAvatarUploader({
                 onClick={onToggleLibrary}
                 disabled={!onToggleLibrary}
                 aria-expanded={onToggleLibrary ? isLibraryOpen : undefined}
-                aria-label="Choose an avatar from the library"
+                aria-label={t('account_settings.avatar.choose_aria')}
                 className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--accent-color) enabled:cursor-pointer enabled:hover:opacity-80"
             >
                 <Avatar
                     src={avatarSrc ?? undefined}
-                    alt="Avatar preview"
+                    alt={t('account_settings.avatar.preview_alt')}
                     initials={initials}
                     size="xl"
                 />
@@ -172,7 +174,7 @@ export default function AccountSettingsAvatarUploader({
                             onClick={openFilePicker}
                             className="rounded-md border border-(--border-color-strong) px-3 py-1.5 text-xs font-medium text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                         >
-                            Upload new photo
+                            {t('account_settings.avatar.upload')}
                         </button>
                         {onToggleLibrary && (
                             <button
@@ -182,7 +184,7 @@ export default function AccountSettingsAvatarUploader({
                                 className="flex items-center gap-1.5 rounded-md border border-(--border-color-strong) px-3 py-1.5 text-xs font-medium text-(--text-color) transition-colors hover:bg-(--bg-light-color)"
                             >
                                 <Icon name="Images" size={14} />
-                                Choose from library
+                                {t('account_settings.avatar.choose')}
                             </button>
                         )}
                         <button
@@ -191,7 +193,7 @@ export default function AccountSettingsAvatarUploader({
                             disabled={!avatarSrc}
                             className="px-1 text-xs font-medium text-(--error-color) transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:no-underline"
                         >
-                            Reset to default
+                            {t('account_settings.avatar.reset')}
                         </button>
                     </>
                 ) : (
@@ -201,7 +203,7 @@ export default function AccountSettingsAvatarUploader({
                             size={14}
                             className="animate-spin"
                         />
-                        Saving...
+                        {t('account_settings.avatar.saving')}
                     </span>
                 )}
             </div>
