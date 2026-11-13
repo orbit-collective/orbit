@@ -548,6 +548,24 @@ describe('Dropdown submenu', () => {
         ).toHaveFocus();
     });
 
+    test('ArrowRight moves focus into a flyout that a click already opened', async () => {
+        setupMenu();
+        await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+        const parent = screen.getByRole('menuitem', { name: 'Languages' });
+
+        await userEvent.click(parent);
+        expect(
+            screen.getByRole('menuitemradio', { name: 'Polski' }),
+        ).not.toHaveFocus();
+
+        parent.focus();
+        await userEvent.keyboard('{ArrowRight}');
+
+        expect(
+            screen.getByRole('menuitemradio', { name: 'Polski' }),
+        ).toHaveFocus();
+    });
+
     test('Enter on the parent row opens the flyout with focus inside', async () => {
         setupMenu();
         await userEvent.click(screen.getByRole('button', { name: 'Open' }));

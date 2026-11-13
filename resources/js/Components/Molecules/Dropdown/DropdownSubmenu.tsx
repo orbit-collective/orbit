@@ -117,8 +117,9 @@ export default function DropdownSubmenu({
             rows.find((row) => row.getAttribute('aria-checked') === 'true') ??
             rows[0]
         )?.focus({ preventScroll: true });
-        // Only when the flyout first appears.
-    }, []);
+        // When the flyout appears for the keyboard, and when the keyboard
+        // enters one that a click already opened.
+    }, [focusFirst]);
 
     const handleKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
         // Keys here must not reach the parent menu's own handler (the flyout
