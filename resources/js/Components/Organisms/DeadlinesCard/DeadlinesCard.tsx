@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import DashboardIssueRow from '@/Components/Molecules/DashboardIssueRow/DashboardIssueRow';
@@ -16,6 +17,7 @@ import {
 import { DueTone, daysUntil, weekdayOf } from '@/utils/dueDate';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
 import { DURATION, EASE, SPRING, rowDelay } from '@/utils/motion';
+import { intlLocale } from '@/utils/time';
 
 interface DeadlinesCardProps {
     issues: Row[];
@@ -43,30 +45,38 @@ const WEEK_DAYS = 7;
 /** Below this width the days of a week are a row to scroll, not seven columns. */
 const WEEK_COLUMNS_FROM = 520;
 
-const Empty: FC<{ scope: string }> = ({ scope }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: DURATION.base, ease: EASE }}
-        className="flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center"
-    >
-        <motion.span
-            animate={{ y: [0, -4, 0] }}
-            transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity }}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-(--bg-light-color) text-(--success-color)"
+const Empty: FC<{ scope: string }> = ({ scope }) => {
+    const { t } = useLaravelReactI18n();
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: DURATION.base, ease: EASE }}
+            className="flex flex-1 flex-col items-center justify-center gap-2 py-6 text-center"
         >
-            <Icon name="CalendarCheck" size={20} />
-        </motion.span>
-        <p className="m-0 text-sm font-semibold text-(--text-color)">
-            No deadlines ahead
-        </p>
-        <p className="m-0 max-w-[16rem] text-xs text-(--text-muted-color)">
-            {scope === 'mine'
-                ? 'Nothing assigned to you is due in this time.'
-                : 'Nothing in your projects is due in this time.'}
-        </p>
-    </motion.div>
-);
+            <motion.span
+                animate={{ y: [0, -4, 0] }}
+                transition={{
+                    duration: 3,
+                    ease: 'easeInOut',
+                    repeat: Infinity,
+                }}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-(--bg-light-color) text-(--success-color)"
+            >
+                <Icon name="CalendarCheck" size={20} />
+            </motion.span>
+            <p className="m-0 text-sm font-semibold text-(--text-color)">
+                {t('deadlines_card.empty_title')}
+            </p>
+            <p className="m-0 max-w-[16rem] text-xs text-(--text-muted-color)">
+                {scope === 'mine'
+                    ? t('deadlines_card.empty_mine')
+                    : t('deadlines_card.empty_all')}
+            </p>
+        </motion.div>
+    );
+};
 
 /** What is due next, and what is late: as rows, a timeline or the days of the week. */
 const DeadlinesCard: FC<DeadlinesCardProps> = ({
@@ -80,6 +90,8 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
     showHeader = true,
     now,
 }) => {
+    const { t, tChoice, currentLocale } = useLaravelReactI18n();
+    const locale = intlLocale(currentLocale());
     const [ref, width] = useElementWidth<HTMLDivElement>();
     const clock = useNow();
     const today = now ?? clock;
@@ -106,12 +118,12 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
     if (shown.length === 0) {
         body = <Empty scope={scope} />;
     } else if (variant === 'timeline') {
-        const groups = groupDeadlines(shown, today);
+        const groups = groupDeadlines(shown, today, t, locale);
 
         body = (
             <div className="min-h-0 flex-1 overflow-y-auto">
                 <ol
-                    aria-label="Deadlines by day"
+                    aria-label={t('deadlines_card.by_day')}
                     className="relative m-0 flex list-none flex-col gap-4 p-0 pl-6"
                 >
                     <motion.span
@@ -152,9 +164,11 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
                                 <span className="rounded-full bg-(--bg-light-color) px-1.5 text-[10px] font-medium text-(--text-gray-color)">
                                     {group.rows.length}
                                     <span className="sr-only">
-                                        {group.rows.length === 1
-                                            ? ' issue'
-                                            : ' issues'}
+                                        {' '}
+                                        {tChoice(
+                                            'deadlines_card.issue_word',
+                                            group.rows.length,
+                                        )}
                                     </span>
                                 </span>
                             </h4>
@@ -195,7 +209,7 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
 
         body = (
             <ol
-                aria-label="The next seven days"
+                aria-label={t('deadlines_card.next_seven_days')}
                 className={cn(
                     'm-0 flex min-h-0 flex-1 list-none gap-2 p-0 pb-1',
                     spread
@@ -206,7 +220,7 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
                 {late && (
                     <WeekColumn
                         key="overdue"
-                        title="Late"
+                        title={t('deadlines_card.late')}
                         sub=""
                         tone="overdue"
                         rows={shown.filter(
@@ -222,7 +236,9 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
                     <WeekColumn
                         key={offset}
                         title={
-                            offset === 0 ? 'Today' : weekdayOf(offset, today)
+                            offset === 0
+                                ? t('deadlines_card.today')
+                                : weekdayOf(offset, today, locale)
                         }
                         sub={String(
                             new Date(
@@ -243,7 +259,7 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
         body = (
             <ul
                 role="list"
-                aria-label="Upcoming deadlines"
+                aria-label={t('deadlines_card.upcoming')}
                 className="m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-0"
             >
                 {shown.map((row, index) => (
@@ -278,12 +294,16 @@ const DeadlinesCard: FC<DeadlinesCardProps> = ({
             {showHeader && (
                 <div className="flex items-center justify-between gap-2">
                     <h3 className="m-0 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
-                        Upcoming Deadlines
+                        {t('deadlines_card.title')}
                     </h3>
                     <span className="text-[10px] font-medium text-(--text-muted-color)">
                         {lateCount > 0
-                            ? `${lateCount} overdue`
-                            : `Next ${variant === 'week' ? WEEK_DAYS : range} days`}
+                            ? t('deadlines_card.overdue_count', {
+                                  count: lateCount,
+                              })
+                            : t('deadlines_card.next_days', {
+                                  days: variant === 'week' ? WEEK_DAYS : range,
+                              })}
                     </span>
                 </div>
             )}
@@ -310,7 +330,8 @@ const WeekColumn: FC<WeekColumnProps> = ({
     spread,
     index,
 }) => {
-    const label = `${title}${sub ? ` ${sub}` : ''}, ${rows.length === 0 ? 'nothing due' : `${rows.length} due`}`;
+    const { t } = useLaravelReactI18n();
+    const label = `${title}${sub ? ` ${sub}` : ''}, ${rows.length === 0 ? t('deadlines_card.nothing_due') : t('deadlines_card.n_due', { count: rows.length })}`;
 
     return (
         <motion.li
@@ -347,7 +368,7 @@ const WeekColumn: FC<WeekColumnProps> = ({
                     aria-hidden="true"
                     className="text-[11px] text-(--text-muted-color)"
                 >
-                    Free
+                    {t('deadlines_card.free')}
                 </span>
             ) : (
                 <ul
@@ -387,7 +408,9 @@ const WeekColumn: FC<WeekColumnProps> = ({
                     })}
                     {rows.length > 3 && (
                         <li className="px-1 text-[10px] font-medium text-(--text-muted-color)">
-                            +{rows.length - 3} more
+                            {t('deadlines_card.more', {
+                                count: rows.length - 3,
+                            })}
                         </li>
                     )}
                 </ul>

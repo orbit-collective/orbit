@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import {
     KeyboardEvent,
     useContext,
@@ -40,6 +41,7 @@ const FOCUSABLE =
     'a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled])';
 
 function CommandPalette() {
+    const { t, tChoice } = useLaravelReactI18n();
     const { isOpen, mode, commands, pages, closePalette, runCommand, popPage } =
         useCommandPalette();
     const modalContext = useContext(ModalContext);
@@ -89,7 +91,7 @@ function CommandPalette() {
             (command) => !command.when || command.when(),
         );
         const entityOnly = scope === 'issues' || scope === 'people';
-        const result = searchCommands(entityOnly ? [] : visible, text);
+        const result = searchCommands(entityOnly ? [] : visible, text, t);
 
         if (inRoot && scope === 'all' && text === '' && history.length > 0) {
             const recent = history.flatMap((entry): Command[] => {
@@ -104,7 +106,7 @@ function CommandPalette() {
                 const afterSuggested = result[0]?.group === 'suggested' ? 1 : 0;
                 result.splice(afterSuggested, 0, {
                     group: 'recent',
-                    label: 'Recent',
+                    label: t('command_palette.groups.recent'),
                     items: recent.map((command) => ({
                         command,
                         score: 0,
@@ -122,18 +124,18 @@ function CommandPalette() {
             const entities: [CommandSection['group'], string, Command[]][] = [
                 [
                     'issues',
-                    'Issues',
+                    t('command_palette.groups.issues'),
                     search.issues.map((i) => issueToCommand(i)),
                 ],
                 [
                     'projects',
-                    'Projects',
-                    search.projects.map((p) => projectToCommand(p)),
+                    t('command_palette.groups.projects'),
+                    search.projects.map((p) => projectToCommand(p, t)),
                 ],
                 [
                     'people',
-                    'People',
-                    search.people.map((person) => personToCommand(person)),
+                    t('command_palette.groups.people'),
+                    search.people.map((person) => personToCommand(person, t)),
                 ],
             ];
 
@@ -153,7 +155,7 @@ function CommandPalette() {
 
         return result;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [source, text, scope, inRoot, history, search, isOpen]);
+    }, [source, text, scope, inRoot, history, search, isOpen, t]);
     const flat = useMemo(() => flattenSections(sections), [sections]);
     const showSkeleton = inRoot && search.status === 'loading';
 
@@ -299,7 +301,7 @@ function CommandPalette() {
     const hasQuery = query.trim().length > 0;
     let rowIndex = 0;
 
-    let emptyMessage = 'No commands available';
+    let emptyMessage = t('command_palette.empty.no_commands');
     if (
         (scope === 'issues' || scope === 'people') &&
         inRoot &&
@@ -307,12 +309,14 @@ function CommandPalette() {
     ) {
         emptyMessage =
             scope === 'people'
-                ? 'Type a name to find a teammate'
+                ? t('command_palette.empty.type_name')
                 : text === ''
-                  ? 'Type an issue number or title'
-                  : 'Keep typing to search issues';
+                  ? t('command_palette.empty.type_issue')
+                  : t('command_palette.empty.keep_typing');
     } else if (hasQuery) {
-        emptyMessage = `No results for "${query.trim()}"`;
+        emptyMessage = t('command_palette.empty.no_results_for', {
+            query: query.trim(),
+        });
     }
 
     return createPortal(
@@ -330,7 +334,7 @@ function CommandPalette() {
                 ref={dialogRef}
                 role="dialog"
                 aria-modal="true"
-                aria-label="Command palette"
+                aria-label={t('command_palette.aria')}
                 className="relative flex max-h-[85dvh] w-full animate-[palette-in_120ms_ease-out] flex-col overflow-hidden rounded-b-2xl border border-(--border-color) bg-(--bg-color) shadow-2xl motion-reduce:animate-none md:max-h-[70vh] md:max-w-[640px] md:rounded-2xl"
             >
                 <CommandPaletteInput
@@ -340,10 +344,12 @@ function CommandPalette() {
                     onKeyDown={handleKeyDown}
                     placeholder={
                         currentPage
-                            ? `Search ${currentPage.title.toLowerCase()}...`
+                            ? t('command_palette.placeholder.page', {
+                                  title: currentPage.title.toLowerCase(),
+                              })
                             : mode === 'search'
-                              ? 'Search...'
-                              : 'Type a command or search...'
+                              ? t('command_palette.placeholder.search')
+                              : t('command_palette.placeholder.command')
                     }
                     listboxId={listboxId}
                     expanded={flat.length > 0}
@@ -375,7 +381,7 @@ function CommandPalette() {
                         <div
                             id={listboxId}
                             role="listbox"
-                            aria-label="Commands"
+                            aria-label={t('command_palette.commands')}
                         >
                             {sections.map((section) => (
                                 <CommandPaletteGroup
@@ -437,8 +443,7 @@ function CommandPalette() {
                         role="status"
                         className="border-t border-(--border-color) px-4 py-2 text-[11px] text-(--text-gray-color)"
                     >
-                        Issue and project search is unavailable. Showing
-                        commands only.
+                        {t('command_palette.search_unavailable')}
                     </div>
                 )}
 
@@ -449,62 +454,79 @@ function CommandPalette() {
                     data-testid="command-palette-live"
                 >
                     {showSkeleton
-                        ? 'Searching'
+                        ? t('command_palette.live.searching')
                         : flat.length === 0
-                          ? 'No results'
-                          : `${flat.length} ${flat.length === 1 ? 'result' : 'results'}`}
+                          ? t('command_palette.live.no_results')
+                          : tChoice(
+                                'command_palette.live.results',
+                                flat.length,
+                            )}
                 </div>
 
                 <div className="hidden items-center gap-5 border-t border-(--border-color) bg-(--bg-dark-color) px-4 py-2.5 text-[10px] text-(--text-gray-color) sm:flex">
                     <span className="flex items-center gap-1.5">
                         <Keybind
-                            tooltipText="Navigate"
+                            tooltipText={t(
+                                'command_palette.footer.navigate_tooltip',
+                            )}
                             tooltip={false}
                             keybind="↑↓"
                         />
-                        navigate
+                        {t('command_palette.footer.navigate')}
                     </span>
                     <span className="flex items-center gap-1.5">
                         <Keybind
-                            tooltipText="Run"
+                            tooltipText={t(
+                                'command_palette.footer.run_tooltip',
+                            )}
                             tooltip={false}
                             keybind="↵"
                         />
-                        run
+                        {t('command_palette.footer.run')}
                     </span>
                     <span className="flex items-center gap-1.5">
                         <Keybind
-                            tooltipText="Close"
+                            tooltipText={t(
+                                'command_palette.footer.close_tooltip',
+                            )}
                             tooltip={false}
                             keybind="ESC"
                         />
-                        {pages.length > 0 ? 'back' : 'close'}
+                        {pages.length > 0
+                            ? t('command_palette.footer.back')
+                            : t('command_palette.footer.close')}
                     </span>
                     {inRoot && (
                         <span className="ml-auto hidden items-center gap-3 sm:flex">
                             <span className="flex items-center gap-1.5">
                                 <Keybind
-                                    tooltipText="Commands only"
+                                    tooltipText={t(
+                                        'command_palette.footer.commands_only',
+                                    )}
                                     tooltip={false}
                                     keybind=">"
                                 />
-                                commands
+                                {t('command_palette.footer.commands')}
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <Keybind
-                                    tooltipText="Issues only"
+                                    tooltipText={t(
+                                        'command_palette.footer.issues_only',
+                                    )}
                                     tooltip={false}
                                     keybind="#"
                                 />
-                                issues
+                                {t('command_palette.footer.issues')}
                             </span>
                             <span className="flex items-center gap-1.5">
                                 <Keybind
-                                    tooltipText="People only"
+                                    tooltipText={t(
+                                        'command_palette.footer.people_only',
+                                    )}
                                     tooltip={false}
                                     keybind="@"
                                 />
-                                people
+                                {t('command_palette.footer.people')}
                             </span>
                         </span>
                     )}

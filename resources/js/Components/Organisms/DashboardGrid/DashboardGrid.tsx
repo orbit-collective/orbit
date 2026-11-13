@@ -8,6 +8,7 @@ import {
     useSensors,
 } from '@dnd-kit/core';
 import { AnimatePresence } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import { PageSection } from '@/Components/Atoms/PageStage/PageStage';
 import WidgetEditFrame from '@/Components/Molecules/WidgetEditFrame/WidgetEditFrame';
@@ -57,6 +58,7 @@ const DashboardGrid: FC<DashboardGridProps> = ({
     onResize,
     onToggleVisible,
 }) => {
+    const { t } = useLaravelReactI18n();
     // A small drag distance keeps a plain click a click; on touch a drag takes a
     // press and hold, so a swipe over a widget still scrolls the page.
     const sensors = useSensors(
@@ -110,7 +112,7 @@ const DashboardGrid: FC<DashboardGridProps> = ({
                             <WidgetEditFrame
                                 key={widget.id}
                                 widget={widget}
-                                label={widgetLabel(widget, entry)}
+                                label={widgetLabel(widget, entry, t)}
                                 icon={entry?.icon ?? 'LayoutDashboard'}
                                 minWidth={entry?.minWidth ?? 20}
                                 minHeight={entry?.minHeight ?? 20}

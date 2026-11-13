@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import { CompletionRatioCard } from '@/Components/Molecules/CompletionRatioCard/CompletionRatioCard';
@@ -92,6 +93,7 @@ const WidgetPlaceholder: FC = () => (
 
 /** Draws one widget of the dashboard from the page data. */
 const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
+    const { t } = useLaravelReactI18n();
     const { issueStats, projects } = data;
     const statProps = (
         defaultColor: (typeof STAT_COLORS)[number],
@@ -121,6 +123,7 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                 optionOf(widget, 'count', 'open'),
                 issueStats ?? EMPTY_STATS,
                 projects.length,
+                t,
             );
             // "Automatic" is not one of the colors, so the metric's own stands.
             const props = statProps(figures.color, figures.hint);
@@ -307,8 +310,8 @@ const DashboardWidget: FC<DashboardWidgetProps> = ({ widget, data }) => {
                             ? 'name'
                             : 'count'
                     }
-                    title="Issue Types"
-                    description="Issues distribution by type"
+                    title={t('dashboard_widget.issue_types.title')}
+                    description={t('dashboard_widget.issue_types.description')}
                 />
             ) : (
                 <WidgetPlaceholder />

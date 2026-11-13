@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC, FormEvent, useEffect, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -60,6 +61,7 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
     onOverwrite,
     onDelete,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [pending, setPending] = useState<'update' | 'delete' | null>(null);
     const [name, setName] = useState(layout.name);
     const [renameSent, setRenameSent] = useState(false);
@@ -137,7 +139,9 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                         />
                         <button
                             type="submit"
-                            aria-label={`Save the name of ${layout.name}`}
+                            aria-label={t('dashboard_saved_layouts.save_name', {
+                                name: layout.name,
+                            })}
                             className={cn(
                                 'flex shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-(--accent-color) px-2.5 text-white hover:bg-(--accent-light-color)',
                                 FOCUS_RING,
@@ -147,7 +151,9 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                         </button>
                         <button
                             type="button"
-                            aria-label="Cancel renaming"
+                            aria-label={t(
+                                'dashboard_saved_layouts.cancel_rename',
+                            )}
                             onClick={onStopRename}
                             className={ICON_BUTTON}
                         >
@@ -177,17 +183,16 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                                     transition={SPRING}
                                     className="shrink-0 rounded-full bg-(--accent-color-opacity) px-1.5 text-[10px] font-semibold text-(--accent-color)"
                                 >
-                                    Current
+                                    {t('dashboard_saved_layouts.current')}
                                 </motion.span>
                             )}
                         </span>
                         <span className="block text-[11px] text-(--text-muted-color)">
-                            {
-                                layout.widgets.filter(
+                            {t('dashboard_saved_layouts.widgets_count', {
+                                count: layout.widgets.filter(
                                     (widget) => widget.visible,
-                                ).length
-                            }{' '}
-                            widgets
+                                ).length,
+                            })}
                         </span>
                     </span>
                 </div>
@@ -205,16 +210,26 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                         <>
                             <span className="text-[11px] text-(--text-gray-color)">
                                 {pending === 'delete'
-                                    ? 'Delete this layout?'
-                                    : 'Replace it with the current layout?'}
+                                    ? t(
+                                          'dashboard_saved_layouts.delete_question',
+                                      )
+                                    : t(
+                                          'dashboard_saved_layouts.replace_question',
+                                      )}
                             </span>
                             <span className="flex shrink-0 gap-1.5">
                                 <button
                                     type="button"
                                     aria-label={
                                         pending === 'delete'
-                                            ? `Confirm deleting ${layout.name}`
-                                            : `Confirm replacing ${layout.name}`
+                                            ? t(
+                                                  'dashboard_saved_layouts.confirm_delete',
+                                                  { name: layout.name },
+                                              )
+                                            : t(
+                                                  'dashboard_saved_layouts.confirm_replace',
+                                                  { name: layout.name },
+                                              )
                                     }
                                     onClick={() => {
                                         const action = pending;
@@ -232,15 +247,15 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                                     )}
                                 >
                                     {pending === 'delete'
-                                        ? 'Delete'
-                                        : 'Replace'}
+                                        ? t('dashboard_saved_layouts.delete')
+                                        : t('dashboard_saved_layouts.replace')}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setPending(null)}
                                     className={SMALL_BUTTON}
                                 >
-                                    Keep
+                                    {t('dashboard_saved_layouts.keep')}
                                 </button>
                             </span>
                         </>
@@ -249,8 +264,11 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                             <span className="flex gap-1.5">
                                 <button
                                     type="button"
-                                    aria-label={`Rename ${layout.name}`}
-                                    title="Rename"
+                                    aria-label={t(
+                                        'dashboard_saved_layouts.rename_name',
+                                        { name: layout.name },
+                                    )}
+                                    title={t('dashboard_saved_layouts.rename')}
                                     onClick={onStartRename}
                                     className={ICON_BUTTON}
                                 >
@@ -258,11 +276,18 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                                 </button>
                                 <button
                                     type="button"
-                                    aria-label={`Replace ${layout.name} with the current layout`}
+                                    aria-label={t(
+                                        'dashboard_saved_layouts.replace_name_with_current',
+                                        { name: layout.name },
+                                    )}
                                     title={
                                         current
-                                            ? 'It already is the current layout'
-                                            : 'Replace with the current layout'
+                                            ? t(
+                                                  'dashboard_saved_layouts.already_current',
+                                              )
+                                            : t(
+                                                  'dashboard_saved_layouts.replace_with_current',
+                                              )
                                     }
                                     disabled={current}
                                     onClick={() => setPending('update')}
@@ -272,8 +297,11 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                                 </button>
                                 <button
                                     type="button"
-                                    aria-label={`Delete ${layout.name}`}
-                                    title="Delete"
+                                    aria-label={t(
+                                        'dashboard_saved_layouts.delete_name',
+                                        { name: layout.name },
+                                    )}
+                                    title={t('dashboard_saved_layouts.delete')}
                                     onClick={() => setPending('delete')}
                                     className={ICON_BUTTON}
                                 >
@@ -282,7 +310,12 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                             </span>
                             <button
                                 type="button"
-                                aria-label={`Apply ${layout.name}`}
+                                aria-label={t(
+                                    'dashboard_saved_layouts.apply_name',
+                                    {
+                                        name: layout.name,
+                                    },
+                                )}
                                 onClick={() => {
                                     onApply();
                                     setApplied(true);
@@ -297,7 +330,9 @@ const SavedLayoutCard: FC<SavedLayoutCardProps> = ({
                                     name={applied ? 'Check' : 'LayoutTemplate'}
                                     size={13}
                                 />
-                                {applied ? 'Applied' : 'Apply'}
+                                {applied
+                                    ? t('dashboard_saved_layouts.applied')
+                                    : t('dashboard_saved_layouts.apply')}
                             </button>
                         </>
                     )}
@@ -323,6 +358,7 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
     onOverwrite,
     onDelete,
 }) => {
+    const { t } = useLaravelReactI18n();
     const [name, setName] = useState('');
     const [submitted, setSubmitted] = useState(false);
     const [renamingId, setRenamingId] = useState<number | null>(null);
@@ -353,7 +389,7 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                     htmlFor="saved-layout-name"
                     className="text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase"
                 >
-                    Save this layout as
+                    {t('dashboard_saved_layouts.save_as')}
                 </label>
                 <div className="flex gap-2">
                     <Input
@@ -367,7 +403,7 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                                 ),
                             )
                         }
-                        placeholder="e.g. Focus"
+                        placeholder={t('dashboard_saved_layouts.placeholder')}
                         autoComplete="off"
                     />
                     <button
@@ -379,7 +415,9 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                         )}
                     >
                         <Icon name="BookmarkPlus" size={13} />
-                        {replaces ? 'Replace' : 'Save'}
+                        {replaces
+                            ? t('dashboard_saved_layouts.replace')
+                            : t('dashboard_saved_layouts.save')}
                     </button>
                 </div>
                 {error && renamingId === null ? (
@@ -392,7 +430,7 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                 ) : (
                     replaces && (
                         <p className="m-0 text-[11px] text-(--text-muted-color)">
-                            A layout with this name exists and will be replaced.
+                            {t('dashboard_saved_layouts.will_replace')}
                         </p>
                     )
                 )}
@@ -400,7 +438,7 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
 
             <section className="flex flex-col gap-2">
                 <h4 className="m-0 text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
-                    Saved layouts
+                    {t('dashboard_saved_layouts.title')}
                 </h4>
                 {layouts.length === 0 ? (
                     <motion.div
@@ -421,11 +459,10 @@ const DashboardSavedLayouts: FC<DashboardSavedLayoutsProps> = ({
                             <Icon name="Bookmark" size={20} />
                         </motion.span>
                         <p className="m-0 text-sm font-semibold text-(--text-color)">
-                            No saved layouts yet
+                            {t('dashboard_saved_layouts.empty_title')}
                         </p>
                         <p className="m-0 text-xs text-(--text-muted-color)">
-                            Arrange the dashboard, give it a name and come back
-                            to it whenever you like.
+                            {t('dashboard_saved_layouts.empty_description')}
                         </p>
                     </motion.div>
                 ) : (

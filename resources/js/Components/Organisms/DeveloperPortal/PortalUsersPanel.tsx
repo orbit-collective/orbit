@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Input from '@/Components/Atoms/Input/Input';
 import Pagination from '@/Components/Molecules/Pagination/Pagination';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
@@ -21,6 +22,7 @@ export default function PortalUsersPanel({
     queryParams,
     collapse,
 }: PortalUsersPanelProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const [search, setSearch] = usePortalSearch(
         'users_search',
         'users_page',
@@ -30,22 +32,27 @@ export default function PortalUsersPanel({
 
     return (
         <SettingsPanel
-            title="Users"
+            title={t('developer_portal.users.title')}
             icon="Users"
-            {...collapse?.('users', `${users.total} users`)}
-            description={`Every account on this instance (${users.total}).`}
+            {...collapse?.(
+                'users',
+                t('developer_portal.users.count', { count: users.total }),
+            )}
+            description={t('developer_portal.users.description', {
+                count: users.total,
+            })}
         >
             <div className="px-4 py-3 sm:px-5">
                 <Input
                     type="search"
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search by name or email"
+                    placeholder={t('developer_portal.users.search_placeholder')}
                 />
             </div>
             {users.data.length === 0 ? (
                 <p className="px-5 py-6 text-sm text-(--text-gray-color)">
-                    No users match.
+                    {t('developer_portal.users.empty')}
                 </p>
             ) : (
                 users.data.map((user, index) => (
@@ -69,10 +76,14 @@ export default function PortalUsersPanel({
                             />
                         </div>
                         <p className="pl-11.5 text-xs text-(--text-gray-color) sm:shrink-0 sm:pl-0">
-                            {user.projectsCount}{' '}
-                            {user.projectsCount === 1 ? 'project' : 'projects'}
+                            {tChoice(
+                                'developer_portal.users.projects',
+                                user.projectsCount,
+                            )}
                             {user.createdAt &&
-                                ` · joined ${formatShortDate(user.createdAt)}`}
+                                ` · ${t('developer_portal.users.joined', {
+                                    date: formatShortDate(user.createdAt),
+                                })}`}
                         </p>
                     </motion.div>
                 ))

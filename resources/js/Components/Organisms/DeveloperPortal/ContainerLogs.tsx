@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -26,6 +27,7 @@ const clock = (time: string | null) =>
     time ? new Date(time).toLocaleTimeString([], { hour12: false }) : '';
 
 export default function ContainerLogs({ containerId }: ContainerLogsProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [follow, setFollow] = useState(true);
     const [problemsOnly, setProblemsOnly] = useState(false);
@@ -57,9 +59,9 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
             await navigator.clipboard.writeText(
                 visible.map((line) => line.text).join('\n'),
             );
-            addAlert('Logs copied', 'success');
+            addAlert(t('developer_portal.logs.copied'), 'success');
         } catch {
-            addAlert('Could not copy the logs', 'error');
+            addAlert(t('developer_portal.logs.copy_failed'), 'error');
         }
     };
 
@@ -71,22 +73,24 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                         type="search"
                         value={filter}
                         onChange={(event) => setFilter(event.target.value)}
-                        placeholder="Filter lines"
+                        placeholder={t(
+                            'developer_portal.logs.filter_placeholder',
+                        )}
                     />
                 </div>
                 <ToggleChip
-                    label="Errors only"
+                    label={t('developer_portal.logs.errors_only')}
                     pressed={problemsOnly}
                     onClick={() => setProblemsOnly((value) => !value)}
                 />
                 <ToggleChip
-                    label="Follow"
+                    label={t('developer_portal.logs.follow')}
                     pressed={follow}
                     onClick={() => setFollow((value) => !value)}
                 />
                 <button
                     type="button"
-                    aria-label="Refresh logs"
+                    aria-label={t('developer_portal.logs.refresh')}
                     onClick={() => void refresh()}
                     className={cn(
                         'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-(--text-gray-color) transition-colors duration-200 hover:bg-(--bg-light-color) hover:text-(--text-color)',
@@ -101,7 +105,7 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
                 </button>
                 <button
                     type="button"
-                    aria-label="Copy logs"
+                    aria-label={t('developer_portal.logs.copy')}
                     onClick={() => void copy()}
                     className={cn(
                         'flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-(--text-gray-color) transition-colors duration-200 hover:bg-(--bg-light-color) hover:text-(--text-color)',
@@ -115,7 +119,7 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
             <div
                 ref={scroller}
                 role="log"
-                aria-label="Container logs"
+                aria-label={t('developer_portal.logs.aria')}
                 tabIndex={0}
                 className={cn(
                     'max-h-80 overflow-auto rounded-lg bg-(--bg-dark-color) p-3 font-mono text-[11px] leading-relaxed',
@@ -124,15 +128,15 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
             >
                 {!loaded ? (
                     <p className="animate-pulse text-(--text-gray-color)">
-                        Loading logs…
+                        {t('developer_portal.logs.loading')}
                     </p>
                 ) : error ? (
                     <p className="text-(--error-color)">{error}</p>
                 ) : visible.length === 0 ? (
                     <p className="text-(--text-gray-color)">
                         {lines.length === 0
-                            ? 'No output yet.'
-                            : 'No lines match.'}
+                            ? t('developer_portal.logs.empty')
+                            : t('developer_portal.logs.no_match')}
                     </p>
                 ) : (
                     visible.map((line, index) => (
@@ -163,8 +167,12 @@ export default function ContainerLogs({ containerId }: ContainerLogsProps) {
             </div>
 
             <p className="text-[11px] text-(--text-muted-color)">
-                {visible.length} of {lines.length} lines
-                {follow && ' · following'}
+                {t(
+                    follow
+                        ? 'developer_portal.logs.count_following'
+                        : 'developer_portal.logs.count',
+                    { visible: visible.length, total: lines.length },
+                )}
             </p>
         </div>
     );
