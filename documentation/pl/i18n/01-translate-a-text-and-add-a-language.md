@@ -30,8 +30,8 @@ return [                               return [
 - Daty/`Intl`: przekaż `intlLocale(currentLocale())` (`utils/time.ts`).
 - `translations.test.ts` oblewa, gdy `en` i `pl` różnią się kluczami lub `:placeholderami`, albo gdy literalny klucz `t('...')` nie istnieje.
 
-## 2. Dodaj język
+## 2. Dalej
 
-1. Utwórz `lang/<locale>/` z kopią każdego pliku z `lang/en/`, przetłumaczoną.
-2. Dodaj kod do `SUPPORTED_LOCALES` i `LOCALE_NAMES` w `resources/js/utils/locale.ts` (oraz do `intlLocale()` w `utils/time.ts` i do `SetLocale` w PHP).
-3. Menu w pasku bocznym wylistuje `SUPPORTED_LOCALES` automatycznie.
+- [02 - Dodaj pliki tłumaczeń](02-add-translation-files.md): nazewnictwo, zasady kluczy, stałe, katalogi z serwera.
+- [03 - Dodaj nowy język](03-add-a-new-language.md): pełna lista kroków (`lang/<code>/`, `utils/locale.ts`, `SetLocale`, flaga, `intlLocale`).
+- [04 - Przełączniki języka](04-language-switchers.md): menu w pasku bocznym, Preferencje, paleta poleceń.

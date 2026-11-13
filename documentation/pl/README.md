@@ -172,6 +172,9 @@ documentation/
     i18n/
       README.md              <- indeks tej kategorii
       01-translate-a-text-and-add-a-language.md
+      02-add-translation-files.md
+      03-add-a-new-language.md
+      04-language-switchers.md
     live-updates/
       README.md              <- indeks tej kategorii
       01-set-up-reverb.md
