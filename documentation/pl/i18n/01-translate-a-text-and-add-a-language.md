@@ -25,7 +25,7 @@ return [                               return [
 ```
 
 - Tylko literały tekstowe (czytnik PHP wtyczki nie wykonuje wyrażeń).
-- Liczba mnoga: `':count issue|:count issues'`; po polsku `'{1} :count zgłoszenie|[2,4] :count zgłoszenia|[5,*] :count zgłoszeń'`.
+- Liczba mnoga: `':count issue|:count issues'`; po polsku `':count zgłoszenie|:count zgłoszenia|:count zgłoszeń'`.
 - Nie wołaj `t` na poziomie modułu: stałe trzymają **klucz** tłumaczenia (patrz `SETTINGS_TABS[].label`), a komponent tłumaczy go przy renderze.
 - Daty/`Intl`: przekaż `intlLocale(currentLocale())` (`utils/time.ts`).
 - `translations.test.ts` oblewa, gdy `en` i `pl` różnią się kluczami lub `:placeholderami`, albo gdy literalny klucz `t('...')` nie istnieje.

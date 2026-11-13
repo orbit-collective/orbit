@@ -45,7 +45,7 @@ return [
     'hint' => [
         'send' => 'aby wysłać',
     ],
-    'count' => '{1} :count komentarz|[2,4] :count komentarze|[5,*] :count komentarzy',
+    'count' => ':count komentarz|:count komentarze|:count komentarzy',
     'edited_by' => 'Edytowane przez :name',
 ];
 ```
@@ -55,7 +55,7 @@ Zasady (wtyczka Vite czyta pliki małym parserem tablic PHP, nie PHP):
 - Tylko literały tekstowe i zagnieżdżone tablice. Bez konkatenacji, stałych, `sprintf`, `__()` ani innych wywołań funkcji.
 - `'` w tekście w pojedynczych cudzysłowach zapisz jako `\'` albo użyj podwójnych cudzysłowów (i `\n` dla łamania linii).
 - Placeholdery to `:name`; polski tekst musi używać tych samych.
-- Liczba mnoga to `one|other` po angielsku i `{1} ...|[2,4] ...|[5,*] ...` po polsku; czytaj ją przez `tChoice(key, count)`.
+- Liczba mnoga to `one|other` po angielsku i `one|few|many` po polsku; czytaj ją przez `tChoice(key, count)`. Nie pisz zakresów (`{1}`, `[2,4]`, `[5,*]`): biblioteka wybiera formę według reguły liczby mnogiej danego języka, a zakres ją nadpisuje (22 nie byłoby „few” po polsku). Sprawdza to `translations.test.ts`.
 - Nie edytuj plików frameworka (`auth.php`, `pagination.php`, `passwords.php`, `validation.php`) dla tekstów UI - to komunikaty backendu.
 
 ## 3. Użyj kluczy
@@ -85,9 +85,11 @@ const { t, tChoice } = useLaravelReactI18n();
 
 ## 4. Tekst z serwera
 
-Własne teksty serwera (błędy walidacji, komunikaty flash, etykiety paginacji) są już w języku użytkownika, patrz [03 - Dodaj nowy język](03-add-a-new-language.md). Nigdy nie dopasowuj ich po brzmieniu we frontendzie (`label.includes('Previous')`): rozróżniaj je po pozycji lub id, tak jak robi to `Pagination`.
+Własne teksty frameworka po stronie serwera (błędy walidacji, etykiety paginacji) są już w języku użytkownika, patrz [03 - Dodaj nowy język](03-add-a-new-language.md). Nigdy nie dopasowuj ich po brzmieniu we frontendzie (`label.includes('Previous')`): rozróżniaj je po pozycji lub id, tak jak robi to `Pagination`.
 
 Katalog, który serwer wysyła po angielsku (nazwy widżetów, etykiety wyzwalaczy), jest mapowany po id na klucze z tekstem serwera jako rezerwą - patrz `utils/dashboardCatalogText.ts` i `automationTypeLabel()` w `utils/automationMeta.ts`. Nowy wpis katalogu działa wtedy bez tłumaczenia, dopóki nie dodasz jego kluczy.
+
+Komunikaty flash zapisane w kontrolerach (`->with('success', 'Comment added.')`) są angielskimi literałami i **nie** są jeszcze tłumaczone: alert pokazuje je tak, jak przyszły. Aby przetłumaczyć jeden, użyj w kontrolerze `__('flash.comment_added')` z kluczem w `lang/<locale>/`, wtedy serwer rozwiąże go w języku z ciasteczka.
 
 ## 5. Sprawdź
 

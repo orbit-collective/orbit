@@ -45,7 +45,7 @@ return [
     'hint' => [
         'send' => 'aby wysłać',
     ],
-    'count' => '{1} :count komentarz|[2,4] :count komentarze|[5,*] :count komentarzy',
+    'count' => ':count komentarz|:count komentarze|:count komentarzy',
     'edited_by' => 'Edytowane przez :name',
 ];
 ```
@@ -55,7 +55,7 @@ Rules (the Vite plugin reads the files with a small PHP array parser, not PHP):
 - Only string literals and nested arrays. No concatenation, constants, `sprintf`, `__()` or other function calls.
 - Escape a `'` inside a single-quoted string as `\'`, or use double quotes (and `\n` for a line break).
 - Placeholders are `:name`; the Polish text must use the same ones.
-- Plurals are `one|other` in English and `{1} ...|[2,4] ...|[5,*] ...` in Polish; read them with `tChoice(key, count)`.
+- Plurals are `one|other` in English and `one|few|many` in Polish; read them with `tChoice(key, count)`. Do not write ranges (`{1}`, `[2,4]`, `[5,*]`): the library picks the form by the language's own plural rule, and a range overrides it (22 would not be "few" in Polish). `translations.test.ts` checks it.
 - Do not edit the framework files (`auth.php`, `pagination.php`, `passwords.php`, `validation.php`) for UI texts - they are the backend's messages.
 
 ## 3. Use the keys
@@ -85,9 +85,11 @@ const { t, tChoice } = useLaravelReactI18n();
 
 ## 4. Text that comes from the server
 
-The server's own texts (validation errors, flash messages, pagination labels) are already in the user's language, see [03 - Add a new language](03-add-a-new-language.md). Never match them by their wording in the frontend (`label.includes('Previous')`): tell them apart by position or id, as `Pagination` does.
+The server's own framework texts (validation errors, pagination labels) are already in the user's language, see [03 - Add a new language](03-add-a-new-language.md). Never match them by their wording in the frontend (`label.includes('Previous')`): tell them apart by position or id, as `Pagination` does.
 
 A catalog the server sends in English (widget names, trigger labels) is mapped by id to keys with the server text as the fallback - see `utils/dashboardCatalogText.ts` and `automationTypeLabel()` in `utils/automationMeta.ts`. A new catalog entry then works untranslated until you add its keys.
+
+Flash messages written by controllers (`->with('success', 'Comment added.')`) are English literals and are **not** translated yet: the alert shows them as they come. To translate one, give the controller `__('flash.comment_added')` with the key in `lang/<locale>/`, so the server resolves it in the language from the cookie.
 
 ## 5. Check it
 
