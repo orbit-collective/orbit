@@ -38,7 +38,7 @@ export default function PasswordStrengthMeter({
                 ))}
             </div>
             <span className="text-[10px] font-medium text-(--text-muted-color)">
-                {t(`password_strength_meter.${strength}`)}
+                {t(passwordStrengthCopy[strength].labelKey)}
             </span>
         </div>
     );
