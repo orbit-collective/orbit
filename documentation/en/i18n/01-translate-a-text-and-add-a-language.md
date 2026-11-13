@@ -30,8 +30,8 @@ return [                               return [
 - Dates/`Intl`: pass `intlLocale(currentLocale())` (`utils/time.ts`).
 - `translations.test.ts` fails when `en` and `pl` differ in keys or `:placeholders`, or when a literal `t('...')` key does not exist.
 
-## 2. Add a language
+## 2. Go further
 
-1. Create `lang/<locale>/` with a copy of every file in `lang/en/`, translated.
-2. Add the code to `SUPPORTED_LOCALES` and `LOCALE_NAMES` in `resources/js/utils/locale.ts` (and to `intlLocale()` in `utils/time.ts`, and to `SetLocale` in PHP).
-3. The sidebar menu lists `SUPPORTED_LOCALES` automatically.
+- [02 - Add translation files](02-add-translation-files.md): naming, key rules, constants, server catalogs.
+- [03 - Add a new language](03-add-a-new-language.md): the full checklist (`lang/<code>/`, `utils/locale.ts`, `SetLocale`, flag, `intlLocale`).
+- [04 - The language switchers](04-language-switchers.md): sidebar menu, Preferences, command palette.
