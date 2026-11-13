@@ -29,6 +29,14 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WorkflowController;
 use Illuminate\Support\Facades\Route;
 
+Route::post('/locale/{locale}', function (string $locale) {
+    if (in_array($locale, ['en', 'pl'])) {
+        Session::put('locale', $locale);
+    }
+
+    return Redirect::back();
+})->name('locale.update');
+
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::put('/dashboard/layout', [DashboardLayoutController::class, 'update'])->name('dashboard.layout.update');
