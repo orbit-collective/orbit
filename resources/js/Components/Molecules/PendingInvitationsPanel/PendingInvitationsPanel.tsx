@@ -1,10 +1,10 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import { PendingProjectInvitation } from '@/types/ProjectMembers';
 import { WorkspaceRole } from '@/types/Roles';
-import { ROLE_LABELS } from '@/utils/projectMemberRoles';
 import { formatDate } from '@/utils/time';
 
 interface PendingInvitationsPanelProps {
@@ -18,18 +18,23 @@ export default function PendingInvitationsPanel({
     assignableRoles,
     onRevoke,
 }: PendingInvitationsPanelProps) {
+    const { t } = useLaravelReactI18n();
     return (
         <SettingsPanel
             id="pending-invitations"
-            collapsedSummary={`${invitations.length} pending`}
-            title="Pending invitations"
-            description="Invitations that haven't been accepted yet."
+            collapsedSummary={t('pending_invitations_panel.pending', {
+                count: invitations.length,
+            })}
+            title={t('pending_invitations_panel.title')}
+            description={t('pending_invitations_panel.description')}
             icon="Clock"
         >
             {invitations.length === 0 ? (
                 <SettingsPanelRow
-                    title="No pending invitations"
-                    description="Everyone you've invited has already joined, or you haven't invited anyone yet."
+                    title={t('pending_invitations_panel.empty.title')}
+                    description={t(
+                        'pending_invitations_panel.empty.description',
+                    )}
                 />
             ) : (
                 invitations.map((invitation) => (
@@ -46,21 +51,33 @@ export default function PendingInvitationsPanel({
                                     {invitation.email}
                                 </p>
                                 <p className="text-sm text-(--text-gray-color)">
-                                    Invited by{' '}
-                                    {invitation.invitedByName ?? 'someone'} as{' '}
-                                    {ROLE_LABELS[invitation.role]} · expires{' '}
-                                    {formatDate(invitation.expiresAt)}
+                                    {t('pending_invitations_panel.invited', {
+                                        name:
+                                            invitation.invitedByName ??
+                                            t(
+                                                'pending_invitations_panel.someone',
+                                            ),
+                                        role: t(
+                                            `pending_invitations_panel.roles.${invitation.role}`,
+                                        ),
+                                        date: formatDate(invitation.expiresAt),
+                                    })}
                                 </p>
                                 {invitation.roleIds.length > 0 && (
                                     <p className="text-xs text-(--text-gray-color)">
-                                        + custom roles:{' '}
+                                        {t(
+                                            'pending_invitations_panel.custom_roles',
+                                        )}{' '}
                                         {invitation.roleIds
                                             .map(
                                                 (roleId) =>
                                                     assignableRoles.find(
                                                         (role) =>
                                                             role.id === roleId,
-                                                    )?.name ?? 'Unknown role',
+                                                    )?.name ??
+                                                    t(
+                                                        'pending_invitations_panel.unknown_role',
+                                                    ),
                                             )
                                             .join(', ')}
                                     </p>
@@ -73,7 +90,7 @@ export default function PendingInvitationsPanel({
                             className="h-9 shrink-0 px-3"
                             onClick={() => onRevoke(invitation.id)}
                         >
-                            Revoke
+                            {t('pending_invitations_panel.revoke')}
                         </Button>
                     </div>
                 ))

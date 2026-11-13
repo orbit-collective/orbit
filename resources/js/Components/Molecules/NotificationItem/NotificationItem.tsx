@@ -1,11 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import { Notification, NotificationTypes } from '@/types/Notification';
 import { cn } from '@/utils/cn';
 import { SPRING } from '@/utils/motion';
-import { formatShortDate } from '@/utils/time';
+import { formatShortDate, intlLocale } from '@/utils/time';
 
 interface NotificationItemProps {
     notification: Notification;
@@ -32,6 +33,7 @@ function NotificationItem({
     selected = false,
     onToggleSelect,
 }: NotificationItemProps) {
+    const { t, currentLocale } = useLaravelReactI18n();
     return (
         <div
             className={cn(
@@ -58,7 +60,9 @@ function NotificationItem({
                         onChange={() => onToggleSelect?.(notification.id)}
                         label={
                             <span className="sr-only">
-                                Select notification {notification.title}
+                                {t('notification_item.select', {
+                                    title: notification.title,
+                                })}
                             </span>
                         }
                         className="p-2"
@@ -67,7 +71,7 @@ function NotificationItem({
                     <IconButton
                         iconName={'Trash'}
                         iconSize={12}
-                        ariaLabel="Delete notification"
+                        ariaLabel={t('notification_item.delete')}
                         onClick={() => onRemove(notification.id)}
                     />
                 )}
@@ -82,7 +86,12 @@ function NotificationItem({
 
                 <div className="mt-2 flex items-center gap-1.5 text-xs text-(--text-muted-color)">
                     <Icon name="Calendar" size={12} />
-                    <span>{formatShortDate(notification.created_at)}</span>
+                    <span>
+                        {formatShortDate(
+                            notification.created_at,
+                            intlLocale(currentLocale()),
+                        )}
+                    </span>
                     <span>&bull;</span>
                     <AnimatePresence mode="wait" initial={false}>
                         {notification.read ? (
@@ -94,20 +103,20 @@ function NotificationItem({
                                 className="flex items-center gap-1 font-medium text-(--success-color)"
                             >
                                 <Icon name="CircleCheck" size={12} />
-                                Read
+                                {t('notification_item.read')}
                             </motion.span>
                         ) : (
                             <motion.button
                                 key="unread"
                                 type="button"
                                 onClick={() => onMarkAsRead(notification.id)}
-                                title="Mark as read"
+                                title={t('notification_item.mark_as_read')}
                                 exit={{ opacity: 0, scale: 0.8 }}
                                 transition={{ duration: 0.12 }}
                                 className="flex cursor-pointer items-center gap-1 font-medium text-(--info-color) hover:underline"
                             >
                                 <Icon name="Clock" size={12} />
-                                Unread
+                                {t('notification_item.unread')}
                             </motion.button>
                         )}
                     </AnimatePresence>
@@ -119,7 +128,7 @@ function NotificationItem({
                             href={notification.action_url}
                             className="text-xs font-medium text-(--accent-color) hover:underline"
                         >
-                            View details
+                            {t('notification_item.view_details')}
                         </a>
                     </div>
                 )}

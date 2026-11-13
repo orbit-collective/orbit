@@ -4,7 +4,8 @@ import { cn } from '@/utils/cn';
 import { SPRING } from '@/utils/motion';
 
 interface TabSelectionProps<T extends string> {
-    tabs: { name: T; count?: number }[];
+    /** `name` is the id; `label` (default: `name`) is the text shown. */
+    tabs: { name: T; label?: string; count?: number }[];
     selectedTab: T;
     onSelectTab: (tab: T) => void;
     /** Shared prefix of the tab and panel ids, so each tab can point at its panel. */
@@ -81,7 +82,7 @@ function TabSelection<T extends string>({
                                 transition={SPRING}
                             />
                         )}
-                        {tab.name}
+                        {tab.label ?? tab.name}
                         {tab.count !== undefined && (
                             <span className="rounded-full bg-(--bg-light-color) px-1.5 text-xs text-(--text-gray-color)">
                                 {tab.count}

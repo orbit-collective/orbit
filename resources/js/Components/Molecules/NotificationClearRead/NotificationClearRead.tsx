@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 
 interface NotificationClearReadProps {
@@ -6,6 +7,7 @@ interface NotificationClearReadProps {
 
 /** "Delete all read" with an inline second step, since it cannot be undone. */
 function NotificationClearRead({ onConfirm }: NotificationClearReadProps) {
+    const { t } = useLaravelReactI18n();
     const [isConfirming, setIsConfirming] = useState(false);
 
     if (!isConfirming) {
@@ -15,7 +17,7 @@ function NotificationClearRead({ onConfirm }: NotificationClearReadProps) {
                 onClick={() => setIsConfirming(true)}
                 className="text-xs font-medium text-(--text-gray-color) hover:text-(--text-color) hover:underline"
             >
-                Delete all read
+                {t('notification_clear_read.delete_all')}
             </button>
         );
     }
@@ -23,7 +25,7 @@ function NotificationClearRead({ onConfirm }: NotificationClearReadProps) {
     return (
         <span className="flex items-center gap-2 text-xs">
             <span className="text-(--text-gray-color)">
-                Delete every read notification?
+                {t('notification_clear_read.confirm')}
             </span>
             <button
                 type="button"
@@ -33,14 +35,14 @@ function NotificationClearRead({ onConfirm }: NotificationClearReadProps) {
                 }}
                 className="font-semibold text-(--error-color) hover:underline"
             >
-                Delete
+                {t('notification_clear_read.delete')}
             </button>
             <button
                 type="button"
                 onClick={() => setIsConfirming(false)}
                 className="font-medium text-(--text-gray-color) hover:underline"
             >
-                Cancel
+                {t('notification_clear_read.cancel')}
             </button>
         </span>
     );

@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useMemo } from 'react';
 import DropdownTrigger from '@/Components/Atoms/DropdownTrigger/DropdownTrigger';
 import Dropdown from '@/Components/Molecules/Dropdown/Dropdown';
@@ -7,11 +8,7 @@ import {
     ProjectMemberRole,
 } from '@/types/ProjectMembers';
 import { WorkspaceRole } from '@/types/Roles';
-import {
-    ASSIGNABLE_ROLES,
-    ROLE_ICONS,
-    ROLE_LABELS,
-} from '@/utils/projectMemberRoles';
+import { ASSIGNABLE_ROLES, ROLE_ICONS } from '@/utils/projectMemberRoles';
 
 const CUSTOM_ROLE_PREFIX = 'custom:';
 
@@ -40,11 +37,12 @@ export default function MemberRoleDropdown({
     canAssignCustomRoles,
     onToggleCustomRole,
 }: MemberRoleDropdownProps) {
+    const { t } = useLaravelReactI18n();
     const options = useMemo((): DropdownOptionItem[] => {
         const roleOptions: DropdownOptionItem[] = ASSIGNABLE_ROLES.map(
             (option) => ({
                 value: option,
-                label: ROLE_LABELS[option],
+                label: t(`member_role_dropdown.roles.${option}`),
                 icon: ROLE_ICONS[option],
                 role: 'menuitemradio',
                 indicator: 'check',
@@ -55,18 +53,26 @@ export default function MemberRoleDropdown({
 
         if (customRoles.length === 0) {
             return [
-                { value: 'heading:role', label: 'Role', kind: 'heading' },
+                {
+                    value: 'heading:role',
+                    label: t('member_role_dropdown.role'),
+                    kind: 'heading',
+                },
                 ...roleOptions,
             ];
         }
 
         return [
-            { value: 'heading:role', label: 'Role', kind: 'heading' },
+            {
+                value: 'heading:role',
+                label: t('member_role_dropdown.role'),
+                kind: 'heading',
+            },
             ...roleOptions,
             { value: 'separator:custom', label: '', kind: 'separator' },
             {
                 value: 'heading:custom',
-                label: 'Custom roles',
+                label: t('member_role_dropdown.custom_roles'),
                 kind: 'heading',
             },
             ...customRoles.map((customRole): DropdownOptionItem => ({
@@ -78,7 +84,7 @@ export default function MemberRoleDropdown({
                 closeOnSelect: false,
             })),
         ];
-    }, [canChangeRole, canAssignCustomRoles, customRoles]);
+    }, [canChangeRole, canAssignCustomRoles, customRoles, t]);
 
     const selectedValues = useMemo(
         () => [
@@ -101,7 +107,7 @@ export default function MemberRoleDropdown({
     return (
         <Dropdown
             variant="menu"
-            ariaLabel="Member roles"
+            ariaLabel={t('member_role_dropdown.aria')}
             options={options}
             selectedValues={selectedValues}
             onSelect={handleSelect}
@@ -114,7 +120,7 @@ export default function MemberRoleDropdown({
                     badge={selectedCustomRoleIds.length}
                     isOpen={isOpen}
                     disabled={!canChangeRole && !canAssignCustomRoles}
-                    label={ROLE_LABELS[role]}
+                    label={t(`member_role_dropdown.roles.${role}`)}
                 />
             )}
         />

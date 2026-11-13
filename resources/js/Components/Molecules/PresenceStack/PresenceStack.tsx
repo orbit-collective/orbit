@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import { PresenceUser } from '@/types/Live';
 import { SPRING } from '@/utils/motion';
@@ -15,6 +16,7 @@ interface PresenceStackProps {
  * with their name on hover. Renders nothing when nobody else is here.
  */
 export default function PresenceStack({ users, max = 4 }: PresenceStackProps) {
+    const { t } = useLaravelReactI18n();
     if (users.length === 0) return null;
 
     const visible = users.slice(0, max);
@@ -24,8 +26,8 @@ export default function PresenceStack({ users, max = 4 }: PresenceStackProps) {
     return (
         <div
             role="group"
-            aria-label={`Also viewing: ${names}`}
-            title={`Also viewing: ${names}`}
+            aria-label={t('presence_stack.viewing', { names })}
+            title={t('presence_stack.viewing', { names })}
             className="flex items-center -space-x-2"
         >
             <AnimatePresence initial={false}>

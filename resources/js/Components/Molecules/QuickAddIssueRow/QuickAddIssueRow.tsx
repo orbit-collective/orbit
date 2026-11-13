@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import {
     forwardRef,
     useImperativeHandle,
@@ -111,12 +112,13 @@ export const QuickAddIssueRow = forwardRef<
             users = [],
             onSubmit,
             isSubmitting = false,
-            label = 'New issue',
+            label,
             indent = 0,
             nextIssueId = null,
         },
         ref,
     ) => {
+        const { t } = useLaravelReactI18n();
         const { priorities, defaultPriority } = useProjectPriorities();
         const [isEditing, setIsEditing] = useState(false);
         const [title, setTitle] = useState('');
@@ -257,7 +259,7 @@ export const QuickAddIssueRow = forwardRef<
                             className="flex cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 text-xs font-medium text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                         >
                             <Icon name="Plus" size={13} />
-                            {label}
+                            {label ?? t('quick_add_issue_row.new_issue')}
                         </button>
                     </td>
                 </tr>
@@ -290,7 +292,7 @@ export const QuickAddIssueRow = forwardRef<
                             onChange={(e) => setTitle(e.target.value)}
                             onKeyDown={handleKeyDown}
                             disabled={isSubmitting}
-                            placeholder="What needs to be done?"
+                            placeholder={t('quick_add_issue_row.placeholder')}
                             className="w-full min-w-[160px] rounded-md border border-(--border-color) bg-(--bg-color) px-2 py-1 text-xs text-(--text-color) outline-hidden focus:border-(--accent-color) focus-visible:ring-2 focus-visible:ring-(--accent-color) disabled:opacity-60"
                         />
                     </td>
@@ -300,8 +302,8 @@ export const QuickAddIssueRow = forwardRef<
                         {issueTypes.length > 0 ? (
                             <Dropdown
                                 variant="select"
-                                title="Issue type"
-                                ariaLabel="Issue type"
+                                title={t('quick_add_issue_row.issue_type')}
+                                ariaLabel={t('quick_add_issue_row.issue_type')}
                                 options={typeOptions}
                                 disabled={isSubmitting}
                                 selectedValues={
@@ -313,7 +315,9 @@ export const QuickAddIssueRow = forwardRef<
                                 trigger={
                                     <button
                                         type="button"
-                                        aria-label="Issue type"
+                                        aria-label={t(
+                                            'quick_add_issue_row.issue_type',
+                                        )}
                                         disabled={isSubmitting}
                                         className="inline-flex cursor-pointer items-center gap-1 rounded-full border-none bg-transparent p-0 focus-visible:ring-2 focus-visible:ring-(--accent-color) focus-visible:outline-hidden"
                                     >
@@ -323,7 +327,7 @@ export const QuickAddIssueRow = forwardRef<
                                             />
                                         ) : (
                                             <span className="text-xs text-(--text-muted-color)">
-                                                Type
+                                                {t('quick_add_issue_row.type')}
                                             </span>
                                         )}
                                         <Icon
@@ -385,13 +389,13 @@ export const QuickAddIssueRow = forwardRef<
                 )}
                 {enabledColumns.updated && (
                     <td className={cn(cellBase, 'text-(--text-muted-color)')}>
-                        Just now
+                        {t('quick_add_issue_row.just_now')}
                     </td>
                 )}
                 {enabledColumns.start_date && (
                     <td className={cellBase}>
                         <DatePicker
-                            label="Start date"
+                            label={t('quick_add_issue_row.start_date')}
                             value={startDate}
                             disabled={isSubmitting}
                             onChange={(next) => {
@@ -407,7 +411,7 @@ export const QuickAddIssueRow = forwardRef<
                 {enabledColumns.end_date && (
                     <td className={cellBase}>
                         <DatePicker
-                            label="End date"
+                            label={t('quick_add_issue_row.end_date')}
                             value={endDate}
                             minDate={startDate}
                             disabled={isSubmitting}
@@ -419,7 +423,7 @@ export const QuickAddIssueRow = forwardRef<
                 <td className={cn(cellBase, 'w-[50px] text-right')}>
                     <button
                         type="button"
-                        title="Cancel"
+                        title={t('common.cancel')}
                         onClick={cancel}
                         className="rounded-sm p-1 text-(--text-muted-color) transition-colors hover:text-(--text-color)"
                     >

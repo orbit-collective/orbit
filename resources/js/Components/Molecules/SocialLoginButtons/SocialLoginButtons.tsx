@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { SocialLoginButtonsProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 
@@ -58,6 +59,8 @@ const disabledButtonClassName =
     'flex cursor-not-allowed items-center justify-center rounded-md border border-(--bg-light-color) bg-(--bg-color) py-2 opacity-50 transition-opacity duration-150 hover:opacity-70';
 
 const SocialLoginButtons = ({ className }: SocialLoginButtonsProps) => {
+    const { t } = useLaravelReactI18n();
+
     return (
         <div className={cn('grid grid-cols-3 gap-3', className)}>
             {providers.map((provider) =>
@@ -65,7 +68,9 @@ const SocialLoginButtons = ({ className }: SocialLoginButtonsProps) => {
                     <a
                         key={provider.name}
                         href={route('auth.github.redirect')}
-                        aria-label={`Continue with ${provider.name}`}
+                        aria-label={t('social_login_buttons.continue', {
+                            provider: provider.name,
+                        })}
                         className={enabledButtonClassName}
                     >
                         {provider.icon}
@@ -75,8 +80,15 @@ const SocialLoginButtons = ({ className }: SocialLoginButtonsProps) => {
                         key={provider.name}
                         type="button"
                         disabled
-                        title={`${provider.name} sign-in is coming soon`}
-                        aria-label={`Continue with ${provider.name} (coming soon)`}
+                        title={t('social_login_buttons.coming_soon_title', {
+                            provider: provider.name,
+                        })}
+                        aria-label={t(
+                            'social_login_buttons.coming_soon_label',
+                            {
+                                provider: provider.name,
+                            },
+                        )}
                         className={disabledButtonClassName}
                     >
                         {provider.icon}

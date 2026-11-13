@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import RoleListItem from '@/Components/Molecules/RoleListItem/RoleListItem';
@@ -21,6 +22,8 @@ export default function RoleSidebar({
     onSelect,
     onCreateRequest,
 }: RoleSidebarProps) {
+    const { t } = useLaravelReactI18n();
+
     return (
         <div className="space-y-2 border-b border-(--border-color) p-4 lg:border-r lg:border-b-0">
             {roles.map((role, index) => (
@@ -42,7 +45,7 @@ export default function RoleSidebar({
                     className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-(--bg-light-color) px-3 py-2.5 text-xs font-semibold text-(--text-gray-color) transition-colors hover:border-(--border-color-strong) hover:text-(--text-color)"
                 >
                     <Icon name="Plus" size={13} />
-                    Create role
+                    {t('role_sidebar.create')}
                 </button>
             )}
         </div>

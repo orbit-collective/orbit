@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { cva } from 'class-variance-authority';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import React from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import Keybind from '@/Components/Atoms/Keybind/Keybind';
@@ -46,6 +47,7 @@ const NavItem: React.FC<NavItemProps> = ({
     disabled = false,
     tourId,
 }) => {
+    const { t } = useLaravelReactI18n();
     const className = classVariants({ isActive, collapsed, disabled });
     const title = titleOverride ?? (collapsed ? label : undefined);
 
@@ -63,12 +65,12 @@ const NavItem: React.FC<NavItemProps> = ({
             </div>
             {!collapsed && disabled && (
                 <Badge color="done" className="shrink-0 tracking-wide">
-                    Soon
+                    {t('nav_item.soon')}
                 </Badge>
             )}
             {!collapsed && !disabled && badge !== undefined && (
                 <Keybind
-                    tooltipText={`Press ${badge}`}
+                    tooltipText={t('nav_item.press', { key: String(badge) })}
                     keybind={badge.toString()}
                 />
             )}

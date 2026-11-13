@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
@@ -20,6 +21,8 @@ export default function ProjectPickerPanel({
     description,
     onSelect,
 }: ProjectPickerPanelProps) {
+    const { t } = useLaravelReactI18n();
+
     if (projects.length <= 1) {
         return null;
     }
@@ -31,7 +34,7 @@ export default function ProjectPickerPanel({
                 projects.find((project) => project.id === selectedProjectId)
                     ?.name
             }
-            title="Project"
+            title={t('project_picker_panel.title')}
             description={description}
             icon="FolderKanban"
         >
@@ -80,8 +83,8 @@ export default function ProjectPickerPanel({
                                             )}
                                         />
                                         {selected
-                                            ? 'Currently viewing'
-                                            : 'Switch to this project'}
+                                            ? t('project_picker_panel.current')
+                                            : t('project_picker_panel.switch')}
                                     </span>
                                 </span>
                                 {selected && (

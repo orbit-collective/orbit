@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import QuickActionsCard, { QUICK_ACTIONS } from './QuickActionsCard';
 
@@ -105,9 +106,10 @@ describe('QuickActionsCard', () => {
     test('a bar of icons alone still names every button for assistive technology', () => {
         render(<QuickActionsCard variant="bar" showLabels={false} />);
 
+        const { t } = useLaravelReactI18n();
         for (const action of QUICK_ACTIONS) {
             expect(
-                screen.getByRole('button', { name: action.label }),
+                screen.getByRole('button', { name: t(action.label) }),
             ).toBeInTheDocument();
         }
         expect(screen.queryByText('New project')).not.toBeInTheDocument();

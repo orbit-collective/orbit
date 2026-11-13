@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { FC } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -22,6 +23,7 @@ type QuickActionId =
 
 interface QuickAction {
     id: QuickActionId;
+    /** A translation key. */
     label: string;
     icon: keyof typeof icons;
     /** The command to run; `null` opens the command palette. */
@@ -34,40 +36,40 @@ interface QuickAction {
 export const QUICK_ACTIONS: QuickAction[] = [
     {
         id: 'newProject',
-        label: 'New project',
+        label: 'quick_actions_card.actions.newProject',
         icon: 'FolderPlus',
         command: 'project.create',
     },
     {
         id: 'search',
-        label: 'Search',
+        label: 'quick_actions_card.actions.search',
         icon: 'Search',
         command: null,
         hint: 'Ctrl K',
     },
     {
         id: 'projects',
-        label: 'Projects',
+        label: 'quick_actions_card.actions.projects',
         icon: 'FolderOpen',
         command: 'nav.projects',
         hint: 'G P',
     },
     {
         id: 'notifications',
-        label: 'Notifications',
+        label: 'quick_actions_card.actions.notifications',
         icon: 'Bell',
         command: 'nav.notifications',
         hint: 'G N',
     },
     {
         id: 'editDashboard',
-        label: 'Edit dashboard',
+        label: 'quick_actions_card.actions.editDashboard',
         icon: 'PenLine',
         command: 'dashboard.edit',
     },
     {
         id: 'shortcuts',
-        label: 'Shortcuts',
+        label: 'quick_actions_card.actions.shortcuts',
         icon: 'Keyboard',
         command: 'help.shortcuts',
         hint: '?',
@@ -93,6 +95,7 @@ const QuickActionsCard: FC<QuickActionsCardProps> = ({
     showLabels = true,
     color = 'accent',
 }) => {
+    const { t } = useLaravelReactI18n();
     const { runCommand } = useCommandPalette();
     const tint = DASHBOARD_COLOR_VALUES[color];
     const actions = QUICK_ACTIONS.filter(
@@ -127,19 +130,18 @@ const QuickActionsCard: FC<QuickActionsCardProps> = ({
         <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden rounded-xl border border-solid border-(--border-color) bg-(--surface-color) p-4">
             {showHeader && (
                 <h3 className="m-0 text-xs font-semibold tracking-wider text-(--text-gray-color) uppercase">
-                    Quick Actions
+                    {t('quick_actions_card.title')}
                 </h3>
             )}
 
             {actions.length === 0 ? (
                 <p className="m-auto max-w-[16rem] text-center text-xs text-(--text-muted-color)">
-                    No actions are on. Turn some on in the settings of this
-                    widget.
+                    {t('quick_actions_card.none')}
                 </p>
             ) : (
                 <div
                     role="group"
-                    aria-label="Quick actions"
+                    aria-label={t('quick_actions_card.group_label')}
                     className={cn(
                         'min-h-0 flex-1 overflow-y-auto',
                         variant === 'list' && 'flex flex-col gap-1',
@@ -160,8 +162,8 @@ const QuickActionsCard: FC<QuickActionsCardProps> = ({
                         <motion.button
                             key={action.id}
                             type="button"
-                            aria-label={iconOnly ? action.label : undefined}
-                            title={action.label}
+                            aria-label={iconOnly ? t(action.label) : undefined}
+                            title={t(action.label)}
                             onClick={() => run(action)}
                             initial="rest"
                             whileHover="hover"
@@ -191,7 +193,7 @@ const QuickActionsCard: FC<QuickActionsCardProps> = ({
                                 {icon(action, 16)}
                                 {(variant !== 'bar' || showLabels) && (
                                     <span className="truncate">
-                                        {action.label}
+                                        {t(action.label)}
                                     </span>
                                 )}
                             </span>

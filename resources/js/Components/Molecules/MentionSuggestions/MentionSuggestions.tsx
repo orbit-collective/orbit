@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
@@ -35,6 +36,7 @@ export default function MentionSuggestions({
     onSelectIssue,
     emptyLabel,
 }: MentionSuggestionsProps) {
+    const { t } = useLaravelReactI18n();
     const [cardAnchor, setCardAnchor] = useState<DOMRect | null>(null);
     const isIssue = kind === 'issue';
     const activeIssue = isIssue ? issues[activeIndex] : undefined;
@@ -115,7 +117,9 @@ export default function MentionSuggestions({
                     }}
                 >
                     <p className="px-3 pt-3 text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                        {isIssue ? 'Issues' : 'Members'}
+                        {isIssue
+                            ? t('mention_suggestions.issues')
+                            : t('mention_suggestions.members')}
                     </p>
                     {isEmpty ? (
                         <div
@@ -137,8 +141,10 @@ export default function MentionSuggestions({
                             role="listbox"
                             aria-label={
                                 isIssue
-                                    ? 'Issue suggestions'
-                                    : 'Member suggestions'
+                                    ? t('mention_suggestions.issue_suggestions')
+                                    : t(
+                                          'mention_suggestions.member_suggestions',
+                                      )
                             }
                             className="mt-2 max-h-64 min-h-0 flex-1 space-y-0.5 overflow-x-hidden overflow-y-auto p-1.5 pt-0"
                         >

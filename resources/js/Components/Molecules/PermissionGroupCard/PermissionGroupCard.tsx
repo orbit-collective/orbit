@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { useState } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
@@ -10,6 +11,7 @@ import { DURATION, EASE } from '@/utils/motion';
 import {
     getPermissionDescription,
     getPermissionLabel,
+    getPermissionSectionLabel,
 } from '@/utils/permissions';
 import { SUCCESS_TINT } from '@/utils/tints';
 
@@ -41,6 +43,7 @@ export default function PermissionGroupCard({
     onToggle,
     onSetAll,
 }: PermissionGroupCardProps) {
+    const { t } = useLaravelReactI18n();
     const [expanded, setExpanded] = useState(true);
     const isExpanded = forceExpanded || expanded;
 
@@ -107,7 +110,7 @@ export default function PermissionGroupCard({
                                 onClick={() => onSetAll(permissionIds, true)}
                                 className="text-(--accent-color) hover:underline"
                             >
-                                All
+                                {t('permission_group_card.all')}
                             </button>
                             <span className="text-(--text-gray-color)">/</span>
                             <button
@@ -115,7 +118,7 @@ export default function PermissionGroupCard({
                                 onClick={() => onSetAll(permissionIds, false)}
                                 className="text-(--text-gray-color) hover:text-(--text-color)"
                             >
-                                None
+                                {t('permission_group_card.none')}
                             </button>
                         </div>
                     )}
@@ -137,7 +140,10 @@ export default function PermissionGroupCard({
                         <div key={section.section} className="px-4 py-3">
                             {section.section !== 'General' && (
                                 <p className="mb-2 text-[10px] font-semibold tracking-wider text-(--text-gray-color) uppercase">
-                                    {section.section}
+                                    {getPermissionSectionLabel(
+                                        section.section,
+                                        t,
+                                    )}
                                 </p>
                             )}
                             <div className="space-y-2.5">
@@ -148,11 +154,15 @@ export default function PermissionGroupCard({
                                     >
                                         <div className="min-w-0">
                                             <p className="text-sm text-(--text-color)">
-                                                {getPermissionLabel(permission)}
+                                                {getPermissionLabel(
+                                                    permission,
+                                                    t,
+                                                )}
                                             </p>
                                             <p className="text-xs text-(--text-gray-color)">
                                                 {getPermissionDescription(
                                                     permission,
+                                                    t,
                                                 )}
                                             </p>
                                         </div>

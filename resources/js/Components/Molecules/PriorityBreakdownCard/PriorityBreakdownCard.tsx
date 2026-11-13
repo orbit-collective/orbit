@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { FC } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -25,9 +26,10 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
     showNoPriority = true,
     showPercent = true,
     sort = 'priority',
-    title = 'Priority Breakdown',
-    description = 'Issues distribution by level of urgency',
+    title,
+    description,
 }) => {
+    const { t } = useLaravelReactI18n();
     const items = [
         ...priorities.map((priority) => ({
             key: priority.name,
@@ -39,7 +41,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
             ? [
                   {
                       key: '__none__',
-                      label: 'No priority',
+                      label: t('priority_breakdown_card.no_priority'),
                       color: NO_PRIORITY_COLOR,
                       count: noPriority,
                   },
@@ -57,7 +59,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
         <div className="flex flex-col gap-2.5">
             {items.length === 0 && (
                 <span className="text-xs text-(--text-muted-color)">
-                    No issues yet
+                    {t('priority_breakdown_card.empty')}
                 </span>
             )}
             {items.map((item, index) => (
@@ -99,7 +101,12 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
     return (
         <VisualCard className="min-h-0 overflow-hidden">
             {showHeader && (
-                <VisualCardHeader title={title} description={description} />
+                <VisualCardHeader
+                    title={title ?? t('priority_breakdown_card.title')}
+                    description={
+                        description ?? t('priority_breakdown_card.description')
+                    }
+                />
             )}
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto py-4 pr-1">
                 <div className="my-auto">
@@ -161,7 +168,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                                         <AnimatedNumber value={total} />
                                     </span>
                                     <span className="text-[10px] font-semibold tracking-wider text-(--text-muted-color) uppercase">
-                                        issues
+                                        {t('priority_breakdown_card.issues')}
                                     </span>
                                 </div>
                             </div>
@@ -171,7 +178,7 @@ export const PriorityBreakdownCard: FC<PriorityBreakdownCardProps> = ({
                         <div className="flex flex-col gap-4">
                             {items.length === 0 && (
                                 <span className="text-xs text-(--text-muted-color)">
-                                    No issues yet
+                                    {t('priority_breakdown_card.empty')}
                                 </span>
                             )}
                             {items.map((item, index) => (

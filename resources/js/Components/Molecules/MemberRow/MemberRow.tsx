@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ReactNode } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
@@ -16,6 +17,7 @@ export default function MemberRow({
     index = 0,
     children,
 }: MemberRowProps) {
+    const { t } = useLaravelReactI18n();
     return (
         <RowReveal
             index={index}
@@ -36,7 +38,9 @@ export default function MemberRow({
                         <span className="mx-1.5 text-(--border-color-strong)">
                             &middot;
                         </span>
-                        Joined {formatDate(member.joinedAt)}
+                        {t('member_row.joined', {
+                            date: formatDate(member.joinedAt),
+                        })}
                     </p>
                 </div>
             </div>

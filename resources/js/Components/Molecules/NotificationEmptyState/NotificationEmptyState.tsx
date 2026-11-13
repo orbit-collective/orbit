@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import { SPRING, riseIn } from '@/utils/motion';
 
@@ -10,6 +11,7 @@ interface NotificationEmptyStateProps {
 function NotificationEmptyState({
     filtered = false,
 }: NotificationEmptyStateProps) {
+    const { t } = useLaravelReactI18n();
     return (
         <motion.div
             variants={riseIn}
@@ -31,8 +33,8 @@ function NotificationEmptyState({
             </motion.span>
             <p className="text-xs font-medium text-(--text-muted-color)">
                 {filtered
-                    ? 'No notifications match these filters'
-                    : 'No notifications to display'}
+                    ? t('notification_empty_state.filtered')
+                    : t('notification_empty_state.empty')}
             </p>
         </motion.div>
     );
