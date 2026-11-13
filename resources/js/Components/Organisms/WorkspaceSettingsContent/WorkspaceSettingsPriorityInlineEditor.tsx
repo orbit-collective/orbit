@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useId, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import AppearancePicker from '@/Components/Molecules/AppearancePicker/AppearancePicker';
@@ -41,6 +42,7 @@ export default function WorkspaceSettingsPriorityInlineEditor({
     onSave,
     onCancel,
 }: WorkspaceSettingsPriorityInlineEditorProps) {
+    const { t } = useLaravelReactI18n();
     const errorId = useId();
     const [name, setName] = useState(priority?.name ?? '');
     const [color, setColor] = useState(priority?.color ?? NEW_PRIORITY_COLOR);
@@ -67,7 +69,9 @@ export default function WorkspaceSettingsPriorityInlineEditor({
                     icon={icon}
                     onIconChange={setIcon}
                     iconOptions={PRIORITY_ICON_OPTIONS}
-                    ariaLabel="Priority icon and color"
+                    ariaLabel={t(
+                        'workspace_settings_priorities.editor.appearance_aria',
+                    )}
                 >
                     <Icon
                         name={resolvePriorityIcon(icon)}
@@ -80,14 +84,20 @@ export default function WorkspaceSettingsPriorityInlineEditor({
                 <button
                     type="button"
                     aria-pressed={isDefault}
-                    aria-label="Default for new issues"
+                    aria-label={t(
+                        'workspace_settings_priorities.editor.default_aria',
+                    )}
                     // The default only ever moves to another priority; it is
                     // never switched off on its own.
                     disabled={isCurrentDefault}
                     title={
                         isCurrentDefault
-                            ? 'The default for new issues - make another priority the default to change it'
-                            : 'Use as the default for new issues'
+                            ? t(
+                                  'workspace_settings_priorities.editor.default_current_hint',
+                              )
+                            : t(
+                                  'workspace_settings_priorities.editor.default_hint',
+                              )
                     }
                     onClick={() => setIsDefault((current) => !current)}
                     className={cn(
@@ -99,11 +109,17 @@ export default function WorkspaceSettingsPriorityInlineEditor({
                     )}
                 >
                     <Icon name="Star" size={13} />
-                    <span className="hidden sm:inline">Default</span>
+                    <span className="hidden sm:inline">
+                        {t('workspace_settings_priorities.editor.default')}
+                    </span>
                 </button>
             }
             canSave={canSave}
-            saveLabel={isEditing ? 'Save priority' : 'Create priority'}
+            saveLabel={
+                isEditing
+                    ? t('workspace_settings_priorities.editor.save')
+                    : t('workspace_settings_priorities.editor.create')
+            }
             error={errors.name ?? errors.is_default}
             errorId={errorId}
             onSave={handleSave}
@@ -113,8 +129,10 @@ export default function WorkspaceSettingsPriorityInlineEditor({
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Priority name"
-                aria-label="Priority name"
+                placeholder={t(
+                    'workspace_settings_priorities.editor.name_placeholder',
+                )}
+                aria-label={t('workspace_settings_priorities.editor.name_aria')}
                 aria-invalid={Boolean(errors.name)}
                 aria-describedby={errors.name ? errorId : undefined}
                 autoComplete="off"

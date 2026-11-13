@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import {
     GithubConnectedRepository,
@@ -23,13 +24,6 @@ interface WorkspaceSettingsGithubConnectPanelProps {
     isRefreshingRepositories?: boolean;
 }
 
-const HEALTH_LABELS: Record<Exclude<GithubIntegrationHealth, null>, string> = {
-    healthy: 'Healthy',
-    degraded: 'Degraded',
-    error: 'Needs attention',
-    revoked: 'Disconnected',
-};
-
 const HEALTH_COLOR_CLASSES: Record<
     Exclude<GithubIntegrationHealth, null>,
     string
@@ -41,55 +35,85 @@ const HEALTH_COLOR_CLASSES: Record<
 };
 
 function HealthPill({ health }: { health: GithubIntegrationHealth }) {
+    const { t } = useLaravelReactI18n();
+
     if (!health) return null;
 
     return (
         <span
             className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${HEALTH_COLOR_CLASSES[health]}`}
         >
-            {HEALTH_LABELS[health]}
+            {t(`workspace_settings_integrations.github.health.${health}`)}
         </span>
     );
 }
 
 function GithubDiagnostics({ status }: { status: GithubConnectStatus }) {
+    const { t } = useLaravelReactI18n();
+    const ago = (value: string) =>
+        t('workspace_settings_integrations.time_ago', {
+            time: formatTimeAgo(value, t),
+        });
+
     return (
         <details className="rounded-xl border border-(--border-color) px-4 py-3 text-sm">
             <summary className="cursor-pointer font-medium text-(--text-color)">
-                Diagnostics
+                {t('workspace_settings_integrations.github.diagnostics')}
             </summary>
             <dl className="mt-3 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 text-(--text-gray-color)">
-                <dt>Connection status</dt>
+                <dt>
+                    {t(
+                        'workspace_settings_integrations.github.connection_status',
+                    )}
+                </dt>
                 <dd>{status.status}</dd>
-                <dt>Health</dt>
+                <dt>
+                    {t('workspace_settings_integrations.github.health_label')}
+                </dt>
                 <dd>{status.health ?? '—'}</dd>
                 {status.repository && (
                     <>
-                        <dt>Repository</dt>
+                        <dt>
+                            {t(
+                                'workspace_settings_integrations.github.repository',
+                            )}
+                        </dt>
                         <dd>
                             {status.repository.owner}/{status.repository.name}
                         </dd>
                     </>
                 )}
-                <dt>Last successful sync</dt>
+                <dt>
+                    {t(
+                        'workspace_settings_integrations.github.last_successful_sync',
+                    )}
+                </dt>
                 <dd>
                     {status.lastSuccessfulSyncAt
-                        ? `${formatTimeAgo(status.lastSuccessfulSyncAt)} ago`
+                        ? ago(status.lastSuccessfulSyncAt)
                         : '—'}
                 </dd>
-                <dt>Last sync attempt</dt>
+                <dt>
+                    {t(
+                        'workspace_settings_integrations.github.last_sync_attempt',
+                    )}
+                </dt>
                 <dd>
                     {status.lastSyncAttemptAt
-                        ? `${formatTimeAgo(status.lastSyncAttemptAt)} ago`
+                        ? ago(status.lastSyncAttemptAt)
                         : '—'}
                 </dd>
-                <dt>Last failure</dt>
+                <dt>
+                    {t('workspace_settings_integrations.github.last_failure')}
+                </dt>
                 <dd>
                     {status.lastFailedSyncAt
-                        ? `${formatTimeAgo(status.lastFailedSyncAt)} ago`
+                        ? ago(status.lastFailedSyncAt)
                         : '—'}
                 </dd>
-                <dt>Pending events</dt>
+                <dt>
+                    {t('workspace_settings_integrations.github.pending_events')}
+                </dt>
                 <dd>
                     {status.pendingEventCount === null
                         ? '—'
@@ -123,13 +147,16 @@ function ConnectedRepositories({
     onRefreshRepositories?: () => void;
     isRefreshingRepositories?: boolean;
 }) {
+    const { t } = useLaravelReactI18n();
     const [isPickerOpen, setIsPickerOpen] = useState(false);
 
     return (
         <div className="rounded-xl border border-(--border-color) px-4 py-3">
             <div className="flex items-center justify-between gap-4">
                 <p className="text-sm font-medium text-(--text-color)">
-                    Connected repositories
+                    {t(
+                        'workspace_settings_integrations.github.connected_repositories',
+                    )}
                 </p>
                 <div className="flex items-center gap-2">
                     {canUpdate && onRefreshRepositories && (
@@ -140,8 +167,12 @@ function ConnectedRepositories({
                             className="rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-1.5 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong) disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isRefreshingRepositories
-                                ? 'Refreshing…'
-                                : 'Refresh'}
+                                ? t(
+                                      'workspace_settings_integrations.github.refreshing',
+                                  )
+                                : t(
+                                      'workspace_settings_integrations.github.refresh',
+                                  )}
                         </button>
                     )}
                     {canUpdate && onAddRepository && (
@@ -156,7 +187,11 @@ function ConnectedRepositories({
                             }}
                             className="rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-1.5 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                         >
-                            {isPickerOpen ? 'Close' : 'Add repository'}
+                            {isPickerOpen
+                                ? t('common.close')
+                                : t(
+                                      'workspace_settings_integrations.github.add_repository',
+                                  )}
                         </button>
                     )}
                 </div>
@@ -164,7 +199,9 @@ function ConnectedRepositories({
 
             {repositories.length === 0 ? (
                 <p className="mt-2 text-sm text-(--text-gray-color)">
-                    No repositories connected.
+                    {t(
+                        'workspace_settings_integrations.github.no_repositories',
+                    )}
                 </p>
             ) : (
                 <ul className="mt-2 space-y-1">
@@ -184,7 +221,7 @@ function ConnectedRepositories({
                                     }
                                     className="text-(--text-gray-color) transition-colors hover:text-(--error-color)"
                                 >
-                                    Remove
+                                    {t('common.remove')}
                                 </button>
                             )}
                         </li>
@@ -196,13 +233,14 @@ function ConnectedRepositories({
                 <div className="mt-3 border-t border-(--border-color) pt-3">
                     {isLoadingAvailableRepositories ? (
                         <p className="text-sm text-(--text-gray-color)">
-                            Loading…
+                            {t('common.loading')}
                         </p>
                     ) : !availableRepositories ||
                       availableRepositories.length === 0 ? (
                         <p className="text-sm text-(--text-gray-color)">
-                            No other repositories are accessible to this
-                            installation.
+                            {t(
+                                'workspace_settings_integrations.github.no_other_repositories',
+                            )}
                         </p>
                     ) : (
                         <ul className="space-y-1">
@@ -256,13 +294,18 @@ export default function WorkspaceSettingsGithubConnectPanel({
     onRefreshRepositories,
     isRefreshingRepositories,
 }: WorkspaceSettingsGithubConnectPanelProps) {
+    const { t } = useLaravelReactI18n();
+    const ago = (value: string) =>
+        t('workspace_settings_integrations.time_ago', {
+            time: formatTimeAgo(value, t),
+        });
     const state = status?.status ?? 'not_connected';
     const health = status?.health ?? null;
 
     return (
         <section className="mt-6">
             <h3 className="text-sm font-semibold text-(--text-color)">
-                Connect
+                {t('workspace_settings_integrations.github.connect')}
             </h3>
 
             {state === 'connected' && status?.repository ? (
@@ -278,10 +321,13 @@ export default function WorkspaceSettingsGithubConnectPanel({
                             </div>
                             {health === 'healthy' && (
                                 <p className="mt-0.5 text-sm text-(--text-gray-color)">
-                                    Pull requests with an{' '}
+                                    {t(
+                                        'workspace_settings_integrations.github.marker_before',
+                                    )}{' '}
                                     <code>{'<!-- orbit-issue:ID -->'}</code>{' '}
-                                    marker in their description will be linked
-                                    automatically.
+                                    {t(
+                                        'workspace_settings_integrations.github.marker_after',
+                                    )}
                                 </p>
                             )}
                             {(health === 'degraded' || health === 'error') &&
@@ -293,19 +339,36 @@ export default function WorkspaceSettingsGithubConnectPanel({
                             {health === 'healthy' &&
                                 status.lastSuccessfulSyncAt && (
                                     <p className="mt-1 text-xs text-(--text-gray-color)">
-                                        Last synced:{' '}
-                                        {formatTimeAgo(
-                                            status.lastSuccessfulSyncAt,
-                                        )}{' '}
-                                        ago
+                                        {t(
+                                            'workspace_settings_integrations.github.last_synced',
+                                            {
+                                                time: ago(
+                                                    status.lastSuccessfulSyncAt,
+                                                ),
+                                            },
+                                        )}
                                     </p>
                                 )}
                             {health === 'degraded' && (
                                 <p className="mt-1 text-xs text-(--text-gray-color)">
                                     {status.lastSuccessfulSyncAt &&
-                                        `Last successful sync: ${formatTimeAgo(status.lastSuccessfulSyncAt)} ago`}
+                                        t(
+                                            'workspace_settings_integrations.github.last_successful_sync_inline',
+                                            {
+                                                time: ago(
+                                                    status.lastSuccessfulSyncAt,
+                                                ),
+                                            },
+                                        )}
                                     {status.lastSyncAttemptAt &&
-                                        ` · Last attempt: ${formatTimeAgo(status.lastSyncAttemptAt)} ago`}
+                                        ` · ${t(
+                                            'workspace_settings_integrations.github.last_attempt_inline',
+                                            {
+                                                time: ago(
+                                                    status.lastSyncAttemptAt,
+                                                ),
+                                            },
+                                        )}`}
                                 </p>
                             )}
                         </div>
@@ -317,7 +380,9 @@ export default function WorkspaceSettingsGithubConnectPanel({
                                         onClick={onRetry}
                                         className="rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-2 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                                     >
-                                        Retry sync
+                                        {t(
+                                            'workspace_settings_integrations.github.retry_sync',
+                                        )}
                                     </button>
                                 )}
                                 {health === 'error' && (
@@ -326,7 +391,9 @@ export default function WorkspaceSettingsGithubConnectPanel({
                                         onClick={onConnect}
                                         className="rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                                     >
-                                        Reconnect
+                                        {t(
+                                            'workspace_settings_integrations.github.reconnect',
+                                        )}
                                     </button>
                                 )}
                                 <button
@@ -334,7 +401,9 @@ export default function WorkspaceSettingsGithubConnectPanel({
                                     onClick={onDisconnect}
                                     className="rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-2 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                                 >
-                                    Disconnect
+                                    {t(
+                                        'workspace_settings_integrations.github.disconnect',
+                                    )}
                                 </button>
                             </div>
                         )}
@@ -358,8 +427,12 @@ export default function WorkspaceSettingsGithubConnectPanel({
                 <div className="mt-3 space-y-3">
                     <p className="text-sm text-(--text-gray-color)">
                         {canUpdate
-                            ? 'The GitHub connection was disconnected. Reconnect to resume linking pull requests.'
-                            : 'The GitHub connection was disconnected.'}
+                            ? t(
+                                  'workspace_settings_integrations.github.revoked_can_update',
+                              )
+                            : t(
+                                  'workspace_settings_integrations.github.revoked',
+                              )}
                     </p>
                     {canUpdate && (
                         <button
@@ -367,16 +440,16 @@ export default function WorkspaceSettingsGithubConnectPanel({
                             onClick={onConnect}
                             className="rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                         >
-                            Reconnect
+                            {t(
+                                'workspace_settings_integrations.github.reconnect',
+                            )}
                         </button>
                     )}
                 </div>
             ) : canUpdate ? (
                 <div className="mt-3 space-y-3">
                     <p className="text-sm text-(--text-gray-color)">
-                        Connect a GitHub repository to link pull requests to
-                        Orbit issues via a hidden marker in the pull request's
-                        description.
+                        {t('workspace_settings_integrations.github.intro')}
                     </p>
                     <button
                         type="button"
@@ -384,20 +457,28 @@ export default function WorkspaceSettingsGithubConnectPanel({
                         className="rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                     >
                         {state === 'pending'
-                            ? 'Reopen install page'
-                            : 'Connect with GitHub'}
+                            ? t(
+                                  'workspace_settings_integrations.github.reopen_install',
+                              )
+                            : t(
+                                  'workspace_settings_integrations.github.connect_with_github',
+                              )}
                     </button>
                     {state === 'pending' && (
                         <p className="text-sm text-(--text-gray-color)">
-                            Waiting for the GitHub App installation to finish…
+                            {t(
+                                'workspace_settings_integrations.github.waiting',
+                            )}
                         </p>
                     )}
                 </div>
             ) : (
                 <p className="mt-1 text-sm text-(--text-gray-color)">
                     {state === 'pending'
-                        ? 'A connection is pending.'
-                        : 'Not connected yet.'}
+                        ? t('workspace_settings_integrations.github.pending')
+                        : t(
+                              'workspace_settings_integrations.github.not_connected',
+                          )}
                 </p>
             )}
         </section>

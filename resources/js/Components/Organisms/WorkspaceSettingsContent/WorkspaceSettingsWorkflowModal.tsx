@@ -9,6 +9,7 @@ import {
     type DragEndEvent,
 } from '@dnd-kit/core';
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Fragment, ReactNode, useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Input from '@/Components/Atoms/Input/Input';
@@ -30,15 +31,10 @@ interface WorkspaceSettingsWorkflowModalProps {
     canUpdateWorkflow?: boolean;
 }
 
-const CATEGORY_OPTIONS: { value: WorkflowStatusCategory; label: string }[] = [
-    { value: 'todo', label: 'To Do' },
-    { value: 'in_progress', label: 'In Progress' },
-    { value: 'done', label: 'Done' },
-];
+const CATEGORIES: WorkflowStatusCategory[] = ['todo', 'in_progress', 'done'];
 
-const categoryLabel = (category: WorkflowStatusCategory) =>
-    CATEGORY_OPTIONS.find((option) => option.value === category)?.label ??
-    category;
+const categoryKey = (category: WorkflowStatusCategory) =>
+    `workspace_settings_workflow.categories.${category}`;
 
 const Chip = ({
     children,
@@ -84,6 +80,7 @@ function StatusCard({
     onMakeInitial,
     onDelete,
 }: StatusCardProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const draggable = useDraggable({
         id: status.id,
         disabled: !canUpdateWorkflow,
@@ -114,7 +111,9 @@ function StatusCard({
             {canUpdateWorkflow && (
                 <button
                     type="button"
-                    aria-label={`Reorder ${status.name}`}
+                    aria-label={t('workspace_settings_workflow.reorder_aria', {
+                        name: status.name,
+                    })}
                     className="shrink-0 cursor-grab text-(--text-muted-color) transition-colors hover:text-(--text-color) active:cursor-grabbing"
                     {...draggable.listeners}
                     {...draggable.attributes}
@@ -138,15 +137,23 @@ function StatusCard({
                 </p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                     <span className="text-[11px] text-(--text-gray-color)">
-                        {categoryLabel(status.category)}
+                        {t(categoryKey(status.category))}
                     </span>
-                    {status.isInitial && <Chip tone="accent">Start</Chip>}
+                    {status.isInitial && (
+                        <Chip tone="accent">
+                            {t('workspace_settings_workflow.start')}
+                        </Chip>
+                    )}
                     {outgoingCount === 0 ? (
-                        <Chip tone="warning">No transitions</Chip>
+                        <Chip tone="warning">
+                            {t('workspace_settings_workflow.no_transitions')}
+                        </Chip>
                     ) : (
                         <Chip>
-                            {outgoingCount} transition
-                            {outgoingCount === 1 ? '' : 's'}
+                            {tChoice(
+                                'workspace_settings_workflow.transitions_count',
+                                outgoingCount,
+                            )}
                         </Chip>
                     )}
                 </div>
@@ -157,8 +164,15 @@ function StatusCard({
                     {!status.isInitial && (
                         <button
                             type="button"
-                            title="Make this the starting status"
-                            aria-label={`Make ${status.name} the starting status`}
+                            title={t(
+                                'workspace_settings_workflow.make_initial_title',
+                            )}
+                            aria-label={t(
+                                'workspace_settings_workflow.make_initial_aria',
+                                {
+                                    name: status.name,
+                                },
+                            )}
                             onClick={() => onMakeInitial(status.id)}
                             className="flex h-7 w-7 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--accent-color)"
                         >
@@ -167,8 +181,11 @@ function StatusCard({
                     )}
                     <button
                         type="button"
-                        title="Delete status"
-                        aria-label={`Delete ${status.name}`}
+                        title={t('workspace_settings_workflow.delete_title')}
+                        aria-label={t(
+                            'workspace_settings_workflow.delete_aria',
+                            { name: status.name },
+                        )}
                         onClick={() => onDelete(status.id)}
                         className="flex h-7 w-7 items-center justify-center rounded-md text-(--text-gray-color) transition-colors hover:bg-(--error-color)/10 hover:text-(--error-color)"
                     >
@@ -187,7 +204,12 @@ export default function WorkspaceSettingsWorkflowModal({
     issueType,
     canUpdateWorkflow = false,
 }: WorkspaceSettingsWorkflowModalProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
+    const categoryOptions = CATEGORIES.map((value) => ({
+        value,
+        label: t(categoryKey(value)),
+    }));
     const [newName, setNewName] = useState('');
     const [newColor, setNewColor] = useState(LABEL_COLOR_PALETTE[0]);
     const [newCategory, setNewCategory] =
@@ -206,11 +228,11 @@ export default function WorkspaceSettingsWorkflowModal({
 
     const transitionExists = (fromId: number, toId: number) =>
         transitions.some(
-            (t) => t.fromStatusId === fromId && t.toStatusId === toId,
+            (item) => item.fromStatusId === fromId && item.toStatusId === toId,
         );
 
     const outgoingCountFor = (statusId: number) =>
-        transitions.filter((t) => t.fromStatusId === statusId).length;
+        transitions.filter((item) => item.fromStatusId === statusId).length;
 
     const handleAddStatus = () => {
         const name = newName.trim();
@@ -226,7 +248,11 @@ export default function WorkspaceSettingsWorkflowModal({
                 preserveScroll: true,
                 preserveState: true,
                 onSuccess: () => setNewName(''),
-                onError: () => addAlert('Could not add this status.', 'error'),
+                onError: () =>
+                    addAlert(
+                        t('workspace_settings_workflow.add_error'),
+                        'error',
+                    ),
             },
         );
     };
@@ -252,7 +278,10 @@ export default function WorkspaceSettingsWorkflowModal({
                 preserveScroll: true,
                 preserveState: true,
                 onError: () =>
-                    addAlert('Could not reorder the statuses.', 'error'),
+                    addAlert(
+                        t('workspace_settings_workflow.reorder_error'),
+                        'error',
+                    ),
             },
         );
     };
@@ -269,7 +298,10 @@ export default function WorkspaceSettingsWorkflowModal({
                 preserveScroll: true,
                 preserveState: true,
                 onError: () =>
-                    addAlert('Could not change the starting status.', 'error'),
+                    addAlert(
+                        t('workspace_settings_workflow.initial_error'),
+                        'error',
+                    ),
             },
         );
     };
@@ -286,7 +318,7 @@ export default function WorkspaceSettingsWorkflowModal({
                 preserveState: true,
                 onError: () =>
                     addAlert(
-                        'Could not remove this status. Make sure no issues use it and at least one status remains.',
+                        t('workspace_settings_workflow.delete_error'),
                         'error',
                     ),
             },
@@ -298,7 +330,8 @@ export default function WorkspaceSettingsWorkflowModal({
 
         if (transitionExists(fromId, toId)) {
             const transition = transitions.find(
-                (t) => t.fromStatusId === fromId && t.toStatusId === toId,
+                (item) =>
+                    item.fromStatusId === fromId && item.toStatusId === toId,
             );
             if (!transition) return;
 
@@ -326,7 +359,9 @@ export default function WorkspaceSettingsWorkflowModal({
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
             <ModalHeader
-                title={`${issueType.name} workflow`}
+                title={t('workspace_settings_workflow.title', {
+                    type: issueType.name,
+                })}
                 onClose={onClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
@@ -339,12 +374,16 @@ export default function WorkspaceSettingsWorkflowModal({
                 <section className="space-y-4">
                     <div>
                         <h4 className="text-sm font-semibold text-(--text-color)">
-                            Flow
+                            {t('workspace_settings_workflow.flow')}
                         </h4>
                         <p className="mt-0.5 text-xs text-(--text-gray-color)">
                             {canUpdateWorkflow
-                                ? 'The stages an issue of this type moves through. Drag a status to reorder the flow.'
-                                : 'The stages an issue of this type moves through.'}
+                                ? t(
+                                      'workspace_settings_workflow.flow_description_edit',
+                                  )
+                                : t(
+                                      'workspace_settings_workflow.flow_description',
+                                  )}
                         </p>
                     </div>
 
@@ -388,15 +427,21 @@ export default function WorkspaceSettingsWorkflowModal({
                                 <Input
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
-                                    placeholder="New status name"
+                                    placeholder={t(
+                                        'workspace_settings_workflow.new_status_placeholder',
+                                    )}
                                     variant="modal"
                                     className="max-w-[180px]"
                                 />
                                 <div data-testid="new-status-category">
                                     <InlineSelectDropdown
-                                        label="Category"
-                                        placeholder="Category"
-                                        options={CATEGORY_OPTIONS}
+                                        label={t(
+                                            'workspace_settings_workflow.category',
+                                        )}
+                                        placeholder={t(
+                                            'workspace_settings_workflow.category',
+                                        )}
+                                        options={categoryOptions}
                                         value={newCategory}
                                         onChange={(value) =>
                                             value &&
@@ -412,7 +457,9 @@ export default function WorkspaceSettingsWorkflowModal({
                                     disabled={!newName.trim()}
                                     className="ml-auto rounded-md bg-(--accent-color) px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    Add status
+                                    {t(
+                                        'workspace_settings_workflow.add_status',
+                                    )}
                                 </button>
                             </div>
                             <div className="flex flex-wrap gap-1.5">
@@ -422,7 +469,12 @@ export default function WorkspaceSettingsWorkflowModal({
                                             key={swatch}
                                             type="button"
                                             onClick={() => setNewColor(swatch)}
-                                            aria-label={`Use color ${swatch}`}
+                                            aria-label={t(
+                                                'workspace_settings_workflow.use_color',
+                                                {
+                                                    color: swatch,
+                                                },
+                                            )}
                                             className={cn(
                                                 'h-5 w-5 shrink-0 rounded-full border transition-transform',
                                                 newColor === swatch
@@ -443,11 +495,12 @@ export default function WorkspaceSettingsWorkflowModal({
                 <section className="space-y-4">
                     <div>
                         <h4 className="text-sm font-semibold text-(--text-color)">
-                            Transitions
+                            {t('workspace_settings_workflow.transitions')}
                         </h4>
                         <p className="mt-0.5 text-xs text-(--text-gray-color)">
-                            For each status, pick which other statuses an issue
-                            may move directly to from there.
+                            {t(
+                                'workspace_settings_workflow.transitions_description',
+                            )}
                         </p>
                     </div>
 
@@ -459,12 +512,14 @@ export default function WorkspaceSettingsWorkflowModal({
                             >
                                 <div className="mb-2.5 flex flex-wrap items-center gap-2">
                                     <span className="text-xs font-medium tracking-wide text-(--text-gray-color) uppercase">
-                                        From
+                                        {t('workspace_settings_workflow.from')}
                                     </span>
                                     <WorkflowStatusBadge status={from} />
                                     {outgoingCountFor(from.id) === 0 && (
                                         <Chip tone="warning">
-                                            No transitions
+                                            {t(
+                                                'workspace_settings_workflow.no_transitions',
+                                            )}
                                         </Chip>
                                     )}
                                 </div>
@@ -484,7 +539,13 @@ export default function WorkspaceSettingsWorkflowModal({
                                                         !canUpdateWorkflow
                                                     }
                                                     aria-pressed={isAllowed}
-                                                    aria-label={`Allow transition from ${from.name} to ${to.name}`}
+                                                    aria-label={t(
+                                                        'workspace_settings_workflow.allow_transition',
+                                                        {
+                                                            from: from.name,
+                                                            to: to.name,
+                                                        },
+                                                    )}
                                                     onClick={() =>
                                                         handleToggleTransition(
                                                             from.id,

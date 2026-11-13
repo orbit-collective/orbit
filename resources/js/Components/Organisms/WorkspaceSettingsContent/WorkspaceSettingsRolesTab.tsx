@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Reveal from '@/Components/Atoms/Reveal/Reveal';
@@ -38,6 +39,7 @@ export default function WorkspaceSettingsRolesTab({
     canDeleteRoles = false,
     hasSettingsAccess = false,
 }: WorkspaceSettingsRolesTabProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const selectedProject =
         memberProjects.find((project) => project.id === selectedProjectId) ??
         null;
@@ -83,20 +85,20 @@ export default function WorkspaceSettingsRolesTab({
         return (
             <SettingsPanel
                 id="roles"
-                title="Roles and permissions"
-                description="Define granular roles and control exactly what each one can do."
+                title={t('workspace_settings_roles.title')}
+                description={t('workspace_settings_roles.description')}
                 icon="Shield"
             >
                 <SettingsPanelRow
                     title={
                         !selectedProject
-                            ? "You're not part of any project yet"
-                            : "You don't have access to this project's settings"
+                            ? t('workspace_settings_roles.no_project')
+                            : t('workspace_settings_roles.no_access')
                     }
                     description={
                         !selectedProject
-                            ? 'Create or join a project to manage its roles here.'
-                            : 'Ask a project admin for the settings.view permission to see roles and permissions here.'
+                            ? t('workspace_settings_roles.no_project_hint')
+                            : t('workspace_settings_roles.no_access_hint')
                     }
                 />
             </SettingsPanel>
@@ -108,32 +110,38 @@ export default function WorkspaceSettingsRolesTab({
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <motion.div variants={riseIn}>
                     <StatCard
-                        title="Custom roles"
+                        title={t('workspace_settings_roles.custom_roles')}
                         value={<AnimatedNumber value={localRoles.length} />}
                         icon="Shield"
                         color="accent"
                         variant="vivid"
-                        description={`Defined for "${selectedProject.name}"`}
+                        description={t('workspace_settings_roles.defined_for', {
+                            project: selectedProject.name,
+                        })}
                     />
                 </motion.div>
                 <motion.div variants={riseIn}>
                     <StatCard
-                        title="Permissions"
+                        title={t('workspace_settings_roles.permissions')}
                         value={<AnimatedNumber value={permissions.length} />}
                         icon="KeyRound"
                         color="info"
                         variant="vivid"
-                        description="Granular capabilities available"
+                        description={t(
+                            'workspace_settings_roles.permissions_hint',
+                        )}
                     />
                 </motion.div>
                 <motion.div variants={riseIn}>
                     <StatCard
-                        title="Members governed"
+                        title={t('workspace_settings_roles.governed')}
                         value={<AnimatedNumber value={totalMembersGoverned} />}
                         icon="Users"
                         color={totalMembersGoverned > 0 ? 'success' : 'warning'}
                         variant="vivid"
-                        description="Assignments across all custom roles"
+                        description={t(
+                            'workspace_settings_roles.governed_hint',
+                        )}
                     />
                 </motion.div>
             </div>
@@ -141,15 +149,18 @@ export default function WorkspaceSettingsRolesTab({
             <ProjectPickerPanel
                 projects={memberProjects}
                 selectedProjectId={selectedProject.id}
-                description="Choose which project's roles to manage."
+                description={t('workspace_settings_roles.picker_description')}
                 onSelect={switchProject}
             />
 
             <SettingsPanel
                 id="roles"
-                collapsedSummary={`${localRoles.length} ${localRoles.length === 1 ? 'role' : 'roles'}`}
-                title="Custom roles"
-                description="Define roles beyond the base Admin/Member access and grant them exactly the permissions they need."
+                collapsedSummary={tChoice(
+                    'workspace_settings_roles.summary',
+                    localRoles.length,
+                )}
+                title={t('workspace_settings_roles.custom_roles')}
+                description={t('workspace_settings_roles.panel_description')}
                 icon="Shield"
             >
                 {localRoles.length === 0 ? (
@@ -158,12 +169,10 @@ export default function WorkspaceSettingsRolesTab({
                             <Icon name="ShieldPlus" size={22} />
                         </span>
                         <p className="text-sm font-medium text-(--text-color)">
-                            No custom roles yet
+                            {t('workspace_settings_roles.empty_title')}
                         </p>
                         <p className="max-w-sm text-sm text-(--text-gray-color)">
-                            Create a role to grant a precise set of permissions
-                            to members, on top of their base Admin/Member
-                            access.
+                            {t('workspace_settings_roles.empty_description')}
                         </p>
                         {canCreateRoles && (
                             <button
@@ -172,7 +181,7 @@ export default function WorkspaceSettingsRolesTab({
                                 className="mt-1 flex items-center gap-1.5 rounded-md border border-dashed border-(--bg-light-color) px-3 py-1.5 text-xs font-semibold text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                             >
                                 <Icon name="Plus" size={13} />
-                                Create role
+                                {t('workspace_settings_roles.create')}
                             </button>
                         )}
                     </div>
@@ -243,13 +252,19 @@ export default function WorkspaceSettingsRolesTab({
             {!canCreateRoles && !canUpdateRoles && !canDeleteRoles && (
                 <SettingsPanel
                     id="read-only"
-                    title="Read-only access"
-                    description="You can see how roles are configured, but you don't have permission to change them."
+                    title={t('workspace_settings_roles.read_only_title')}
+                    description={t(
+                        'workspace_settings_roles.read_only_description',
+                    )}
                     icon="Eye"
                 >
                     <SettingsPanelRow
-                        title="Ask a project admin"
-                        description="Only members with the roles.create, roles.update or roles.delete permission can manage roles."
+                        title={t(
+                            'workspace_settings_roles.read_only_row_title',
+                        )}
+                        description={t(
+                            'workspace_settings_roles.read_only_row_description',
+                        )}
                     />
                 </SettingsPanel>
             )}

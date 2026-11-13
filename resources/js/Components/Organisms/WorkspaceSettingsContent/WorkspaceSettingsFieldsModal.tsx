@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { icons } from 'lucide-react';
 import { useState } from 'react';
 import Checkbox from '@/Components/Atoms/Checkbox/Checkbox';
@@ -19,18 +20,47 @@ interface WorkspaceSettingsFieldsModalProps {
     canManageFields?: boolean;
 }
 
+/** `label` is a translation key, translated at render. */
 const FIELD_TYPE_OPTIONS: {
     value: IssueFieldType;
     label: string;
     icon: keyof typeof icons;
 }[] = [
-    { value: 'text', label: 'Short text', icon: 'Type' },
-    { value: 'textarea', label: 'Long text', icon: 'TextAlignStart' },
-    { value: 'number', label: 'Number', icon: 'Hash' },
-    { value: 'date', label: 'Date', icon: 'Calendar' },
-    { value: 'select', label: 'Choice', icon: 'List' },
-    { value: 'checkbox', label: 'Checkbox', icon: 'SquareCheck' },
-    { value: 'url', label: 'Link', icon: 'Link' },
+    {
+        value: 'text',
+        label: 'workspace_settings_modals_a.fields.types.text',
+        icon: 'Type',
+    },
+    {
+        value: 'textarea',
+        label: 'workspace_settings_modals_a.fields.types.textarea',
+        icon: 'TextAlignStart',
+    },
+    {
+        value: 'number',
+        label: 'workspace_settings_modals_a.fields.types.number',
+        icon: 'Hash',
+    },
+    {
+        value: 'date',
+        label: 'workspace_settings_modals_a.fields.types.date',
+        icon: 'Calendar',
+    },
+    {
+        value: 'select',
+        label: 'workspace_settings_modals_a.fields.types.select',
+        icon: 'List',
+    },
+    {
+        value: 'checkbox',
+        label: 'workspace_settings_modals_a.fields.types.checkbox',
+        icon: 'SquareCheck',
+    },
+    {
+        value: 'url',
+        label: 'workspace_settings_modals_a.fields.types.url',
+        icon: 'Link',
+    },
 ];
 
 const typeMeta = (type: IssueFieldType) =>
@@ -43,6 +73,7 @@ export default function WorkspaceSettingsFieldsModal({
     issueType,
     canManageFields = false,
 }: WorkspaceSettingsFieldsModalProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [editingId, setEditingId] = useState<number | null>(null);
     const [isComposing, setIsComposing] = useState(false);
@@ -55,6 +86,10 @@ export default function WorkspaceSettingsFieldsModal({
     if (!issueType) return null;
 
     const fields = issueType.fields ?? [];
+    const translatedTypeOptions = FIELD_TYPE_OPTIONS.map((option) => ({
+        ...option,
+        label: t(option.label),
+    }));
     const isEditing = editingId !== null;
     const isFormOpen = isComposing || isEditing;
 
@@ -105,7 +140,11 @@ export default function WorkspaceSettingsFieldsModal({
             preserveScroll: true,
             preserveState: true,
             onSuccess: closeForm,
-            onError: () => addAlert('Could not save this field.', 'error'),
+            onError: () =>
+                addAlert(
+                    t('workspace_settings_modals_a.fields.save_failed'),
+                    'error',
+                ),
         };
 
         if (isEditing) {
@@ -143,7 +182,10 @@ export default function WorkspaceSettingsFieldsModal({
                 preserveState: true,
                 onSuccess: closeForm,
                 onError: () =>
-                    addAlert('Could not remove this field.', 'error'),
+                    addAlert(
+                        t('workspace_settings_modals_a.fields.remove_failed'),
+                        'error',
+                    ),
             },
         );
     };
@@ -151,7 +193,9 @@ export default function WorkspaceSettingsFieldsModal({
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
             <ModalHeader
-                title={`${issueType.name} fields`}
+                title={t('workspace_settings_modals_a.fields.title', {
+                    name: issueType.name,
+                })}
                 onClose={onClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--accent-color-opacity) text-(--accent-color)">
@@ -163,9 +207,9 @@ export default function WorkspaceSettingsFieldsModal({
             <div className="max-h-[75vh] space-y-5 overflow-y-auto px-6 py-6">
                 <div className="flex items-start justify-between gap-3">
                     <p className="text-xs text-(--text-gray-color)">
-                        Extra fields shown on every {issueType.name}, on top of
-                        the built-in title, description, assignee, labels,
-                        priority and dates.
+                        {t('workspace_settings_modals_a.fields.intro', {
+                            name: issueType.name,
+                        })}
                     </p>
                     {canManageFields && !isFormOpen && (
                         <button
@@ -174,14 +218,14 @@ export default function WorkspaceSettingsFieldsModal({
                             className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 text-xs font-medium text-(--text-muted-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                         >
                             <Icon name="Plus" size={13} />
-                            New field
+                            {t('workspace_settings_modals_a.fields.new_field')}
                         </button>
                     )}
                 </div>
 
                 {fields.length === 0 && !isFormOpen ? (
                     <p className="rounded-xl border border-dashed border-(--border-color) px-3.5 py-6 text-center text-xs text-(--text-gray-color)">
-                        No extra fields yet.
+                        {t('workspace_settings_modals_a.fields.empty')}
                     </p>
                 ) : (
                     <div className="space-y-2">
@@ -212,12 +256,14 @@ export default function WorkspaceSettingsFieldsModal({
                                             </p>
                                             {field.isRequired && (
                                                 <span className="rounded-full border border-(--accent-color) px-1.5 py-0.5 text-[10px] font-medium text-(--accent-color)">
-                                                    Required
+                                                    {t(
+                                                        'workspace_settings_modals_a.fields.required',
+                                                    )}
                                                 </span>
                                             )}
                                         </div>
                                         <p className="mt-0.5 text-[11px] text-(--text-gray-color)">
-                                            {meta?.label ?? field.type}
+                                            {meta ? t(meta.label) : field.type}
                                             {field.placeholder
                                                 ? ` · ${field.placeholder}`
                                                 : ''}
@@ -240,8 +286,13 @@ export default function WorkspaceSettingsFieldsModal({
                                         <div className="flex shrink-0 items-center gap-1">
                                             <button
                                                 type="button"
-                                                title="Edit field"
-                                                aria-label={`Edit ${field.label}`}
+                                                title={t(
+                                                    'workspace_settings_modals_a.fields.edit_title',
+                                                )}
+                                                aria-label={t(
+                                                    'workspace_settings_modals_a.fields.edit_aria',
+                                                    { label: field.label },
+                                                )}
                                                 onClick={() =>
                                                     startEditing(field)
                                                 }
@@ -251,8 +302,13 @@ export default function WorkspaceSettingsFieldsModal({
                                             </button>
                                             <button
                                                 type="button"
-                                                title="Delete field"
-                                                aria-label={`Delete ${field.label}`}
+                                                title={t(
+                                                    'workspace_settings_modals_a.fields.delete_title',
+                                                )}
+                                                aria-label={t(
+                                                    'workspace_settings_modals_a.fields.delete_aria',
+                                                    { label: field.label },
+                                                )}
                                                 onClick={() =>
                                                     handleDelete(field.id)
                                                 }
@@ -271,25 +327,37 @@ export default function WorkspaceSettingsFieldsModal({
                 {canManageFields && isFormOpen && (
                     <div className="space-y-3 rounded-xl border border-(--border-color) bg-(--surface-color) p-4">
                         <h4 className="text-sm font-semibold text-(--text-color)">
-                            {isEditing ? 'Edit field' : 'New field'}
+                            {isEditing
+                                ? t(
+                                      'workspace_settings_modals_a.fields.edit_title',
+                                  )
+                                : t(
+                                      'workspace_settings_modals_a.fields.new_field',
+                                  )}
                         </h4>
 
                         <Input
                             value={label}
                             onChange={(e) => setLabel(e.target.value)}
-                            placeholder="Field label"
+                            placeholder={t(
+                                'workspace_settings_modals_a.fields.label_placeholder',
+                            )}
                             variant="modal"
                         />
 
                         <div className="space-y-1.5">
                             <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                                Field type
+                                {t('workspace_settings_modals_a.fields.type')}
                             </p>
                             <div data-testid="new-field-type">
                                 <InlineSelectDropdown
-                                    label="Field type"
-                                    placeholder="Field type"
-                                    options={FIELD_TYPE_OPTIONS}
+                                    label={t(
+                                        'workspace_settings_modals_a.fields.type',
+                                    )}
+                                    placeholder={t(
+                                        'workspace_settings_modals_a.fields.type',
+                                    )}
+                                    options={translatedTypeOptions}
                                     value={type}
                                     onChange={(value) =>
                                         value &&
@@ -303,12 +371,16 @@ export default function WorkspaceSettingsFieldsModal({
                         {type === 'select' && (
                             <div className="space-y-1.5">
                                 <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                                    Choices
+                                    {t(
+                                        'workspace_settings_modals_a.fields.choices',
+                                    )}
                                 </p>
                                 <Input
                                     value={options}
                                     onChange={(e) => setOptions(e.target.value)}
-                                    placeholder="Low, Medium, High"
+                                    placeholder={t(
+                                        'workspace_settings_modals_a.fields.choices_placeholder',
+                                    )}
                                     variant="modal"
                                 />
                             </div>
@@ -317,14 +389,18 @@ export default function WorkspaceSettingsFieldsModal({
                         {type !== 'checkbox' && (
                             <div className="space-y-1.5">
                                 <p className="text-[10px] font-bold tracking-wider text-(--text-muted-color) uppercase">
-                                    Hint
+                                    {t(
+                                        'workspace_settings_modals_a.fields.hint',
+                                    )}
                                 </p>
                                 <Input
                                     value={placeholder}
                                     onChange={(e) =>
                                         setPlaceholder(e.target.value)
                                     }
-                                    placeholder="Shown while the field is empty (optional)"
+                                    placeholder={t(
+                                        'workspace_settings_modals_a.fields.hint_placeholder',
+                                    )}
                                     variant="modal"
                                 />
                             </div>
@@ -333,7 +409,9 @@ export default function WorkspaceSettingsFieldsModal({
                         <Checkbox
                             checked={isRequired}
                             onChange={(e) => setIsRequired(e.target.checked)}
-                            label="Required before an issue of this type can be saved"
+                            label={t(
+                                'workspace_settings_modals_a.fields.required_label',
+                            )}
                         />
 
                         <div className="flex items-center justify-end gap-2 pt-1">
@@ -342,7 +420,7 @@ export default function WorkspaceSettingsFieldsModal({
                                 onClick={closeForm}
                                 className="rounded-md px-3 py-1.5 text-sm font-medium text-(--text-gray-color) transition-colors hover:bg-(--bg-light-color) hover:text-(--text-color)"
                             >
-                                Cancel
+                                {t('common.cancel')}
                             </button>
                             <button
                                 type="button"
@@ -350,7 +428,13 @@ export default function WorkspaceSettingsFieldsModal({
                                 disabled={!label.trim()}
                                 className="rounded-md bg-(--accent-color) px-3 py-1.5 text-sm font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                {isEditing ? 'Save changes' : 'Add field'}
+                                {isEditing
+                                    ? t(
+                                          'workspace_settings_modals_a.fields.save_changes',
+                                      )
+                                    : t(
+                                          'workspace_settings_modals_a.fields.add_field',
+                                      )}
                             </button>
                         </div>
                     </div>

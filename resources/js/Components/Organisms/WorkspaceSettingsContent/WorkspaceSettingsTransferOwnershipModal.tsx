@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useState } from 'react';
 import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -21,6 +22,7 @@ export default function WorkspaceSettingsTransferOwnershipModal({
     projectId,
     members,
 }: WorkspaceSettingsTransferOwnershipModalProps) {
+    const { t } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [selectedMemberId, setSelectedMemberId] = useState<number | null>(
         null,
@@ -58,13 +60,18 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                 onFinish: () => setIsSubmitting(false),
                 onSuccess: () => {
                     addAlert(
-                        `Ownership has been transferred to ${selectedMember.name}.`,
+                        t('workspace_settings_transfer_ownership.success', {
+                            name: selectedMember.name,
+                        }),
                         'success',
                     );
                     onClose();
                 },
                 onError: () => {
-                    addAlert("Couldn't transfer ownership.", 'error');
+                    addAlert(
+                        t('workspace_settings_transfer_ownership.error'),
+                        'error',
+                    );
                 },
             },
         );
@@ -73,7 +80,7 @@ export default function WorkspaceSettingsTransferOwnershipModal({
     return (
         <Modal isOpen={isOpen} onClose={handleClose} size="sm">
             <ModalHeader
-                title="Transfer ownership"
+                title={t('workspace_settings_transfer_ownership.title')}
                 onClose={handleClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--warning-color)/10 text-(--warning-color)">
@@ -84,15 +91,14 @@ export default function WorkspaceSettingsTransferOwnershipModal({
 
             <div className="space-y-3 px-6 py-5">
                 <p className="text-sm text-(--text-gray-color)">
-                    You'll be demoted to Admin. The new owner gains full,
-                    unconditional control over this project, including deleting
-                    it.
+                    {t('workspace_settings_transfer_ownership.warning')}
                 </p>
 
                 {candidates.length === 0 ? (
                     <p className="text-sm text-(--text-gray-color)">
-                        There's no one else in this project to transfer
-                        ownership to.
+                        {t(
+                            'workspace_settings_transfer_ownership.no_candidates',
+                        )}
                     </p>
                 ) : (
                     <div className="max-h-64 space-y-1 overflow-y-auto">
@@ -140,7 +146,7 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                     onClick={handleClose}
                     className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
                 >
-                    Cancel
+                    {t('common.cancel')}
                 </button>
                 <button
                     type="button"
@@ -148,7 +154,11 @@ export default function WorkspaceSettingsTransferOwnershipModal({
                     disabled={!selectedMember || isSubmitting}
                     className="cursor-pointer rounded-lg bg-(--warning-color) px-4 py-2 text-sm font-medium text-(--text-color) transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                    {isSubmitting ? 'Transferring...' : 'Transfer ownership'}
+                    {isSubmitting
+                        ? t(
+                              'workspace_settings_transfer_ownership.transferring',
+                          )
+                        : t('workspace_settings_transfer_ownership.title')}
                 </button>
             </footer>
         </Modal>

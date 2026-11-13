@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Icon from '@/Components/Atoms/Icon/Icon';
@@ -39,6 +40,7 @@ export default function WorkspaceSettingsLabelsTab({
     canUpdateLabels = false,
     canDeleteLabels = false,
 }: WorkspaceSettingsLabelsTabProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const { addAlert } = useAlert();
     const [editorTarget, setEditorTarget] = useState<string | null>(null);
     const [deletingLabel, setDeletingLabel] = useState<ProjectLabel | null>(
@@ -62,20 +64,20 @@ export default function WorkspaceSettingsLabelsTab({
         return (
             <SettingsPanel
                 id="taxonomy"
-                title="Label taxonomy"
-                description="Define label taxonomy used across issues and projects."
+                title={t('workspace_settings_labels.tab.title')}
+                description={t('workspace_settings_labels.tab.description')}
                 icon="Tag"
             >
                 <SettingsPanelRow
                     title={
                         !selectedProject
-                            ? "You're not part of any project yet"
-                            : "You don't have access to this project's labels"
+                            ? t('workspace_settings_labels.tab.no_project')
+                            : t('workspace_settings_labels.tab.no_access')
                     }
                     description={
                         !selectedProject
-                            ? 'Create or join a project to manage its labels here.'
-                            : 'Ask a project admin for the labels.view permission to see labels here.'
+                            ? t('workspace_settings_labels.tab.no_project_hint')
+                            : t('workspace_settings_labels.tab.no_access_hint')
                     }
                 />
             </SettingsPanel>
@@ -109,7 +111,8 @@ export default function WorkspaceSettingsLabelsTab({
         description: string;
     }) => {
         const onSuccess = () => setEditorTarget(null);
-        const onError = () => addAlert('Could not save this label.', 'error');
+        const onError = () =>
+            addAlert(t('workspace_settings_labels.tab.save_error'), 'error');
 
         if (editingLabel) {
             router.patch(
@@ -152,7 +155,10 @@ export default function WorkspaceSettingsLabelsTab({
                     if (editorTarget === target) setEditorTarget(null);
                 },
                 onError: () =>
-                    addAlert('Could not delete this label.', 'error'),
+                    addAlert(
+                        t('workspace_settings_labels.tab.delete_error'),
+                        'error',
+                    ),
             },
         );
     };
@@ -163,7 +169,7 @@ export default function WorkspaceSettingsLabelsTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="Total labels"
+                        title={t('workspace_settings_labels.tab.total')}
                         value={<AnimatedNumber value={labels.length} />}
                         icon="Tag"
                         color="accent"
@@ -172,7 +178,7 @@ export default function WorkspaceSettingsLabelsTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="Custom labels"
+                        title={t('workspace_settings_labels.tab.custom')}
                         value={<AnimatedNumber value={customCount} />}
                         icon="Sparkles"
                         color="info"
@@ -181,7 +187,7 @@ export default function WorkspaceSettingsLabelsTab({
                 <motion.div variants={riseIn}>
                     <StatCard
                         variant="vivid"
-                        title="System labels"
+                        title={t('workspace_settings_labels.tab.system_count')}
                         value={<AnimatedNumber value={systemCount} />}
                         icon="ShieldCheck"
                         color="warning"
@@ -192,15 +198,25 @@ export default function WorkspaceSettingsLabelsTab({
             <ProjectPickerPanel
                 projects={memberProjects}
                 selectedProjectId={selectedProject.id}
-                description="Choose which project's label taxonomy you're editing."
+                description={t(
+                    'workspace_settings_labels.tab.picker_description',
+                )}
                 onSelect={switchProject}
             />
 
             <SettingsPanel
                 id="taxonomy"
-                collapsedSummary={`${labels.length} ${labels.length === 1 ? 'label' : 'labels'}`}
-                title="Label taxonomy"
-                description={`Labels available for issues in ${selectedProject.name}.`}
+                collapsedSummary={tChoice(
+                    'workspace_settings_labels.tab.summary',
+                    labels.length,
+                )}
+                title={t('workspace_settings_labels.tab.title')}
+                description={t(
+                    'workspace_settings_labels.tab.panel_description',
+                    {
+                        project: selectedProject.name,
+                    },
+                )}
                 icon="Tag"
             >
                 {labels.length === 0 &&
@@ -210,11 +226,12 @@ export default function WorkspaceSettingsLabelsTab({
                                 <Icon name="Tag" size={16} />
                             </span>
                             <p className="text-sm font-medium text-(--text-color)">
-                                No labels yet
+                                {t('workspace_settings_labels.tab.empty_title')}
                             </p>
                             <p className="max-w-xs text-sm text-(--text-gray-color)">
-                                Create your first label to start categorizing
-                                issues in this project.
+                                {t(
+                                    'workspace_settings_labels.tab.empty_description',
+                                )}
                             </p>
                         </div>
                     )}
@@ -249,7 +266,9 @@ export default function WorkspaceSettingsLabelsTab({
                                 </p>
                                 {label.isSystem && (
                                     <span className="shrink-0 rounded-full border border-(--border-color) px-1.5 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
-                                        System
+                                        {t(
+                                            'workspace_settings_labels.tab.system',
+                                        )}
                                     </span>
                                 )}
                                 {label.description && (
@@ -262,7 +281,9 @@ export default function WorkspaceSettingsLabelsTab({
                                 <div className="flex shrink-0 items-center gap-0.5 transition-opacity [@media(hover:hover)]:sm:opacity-0 [@media(hover:hover)]:sm:group-hover:opacity-100 [@media(hover:hover)]:sm:focus-within:opacity-100">
                                     {canUpdateLabels && (
                                         <RowAction
-                                            title="Edit label"
+                                            title={t(
+                                                'workspace_settings_labels.tab.edit',
+                                            )}
                                             icon="Pencil"
                                             onClick={() =>
                                                 toggleEditEditor(label)
@@ -271,7 +292,9 @@ export default function WorkspaceSettingsLabelsTab({
                                     )}
                                     {canDeleteLabels && (
                                         <RowAction
-                                            title="Delete label"
+                                            title={t(
+                                                'workspace_settings_labels.tab.delete',
+                                            )}
                                             icon="Trash"
                                             danger
                                             onClick={() =>
@@ -296,7 +319,7 @@ export default function WorkspaceSettingsLabelsTab({
                 ) : (
                     canCreateLabels && (
                         <AddRowButton
-                            label="Add label"
+                            label={t('workspace_settings_labels.tab.add')}
                             onClick={toggleCreateEditor}
                         />
                     )

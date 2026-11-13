@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useEffect, useState } from 'react';
 import Input from '@/Components/Atoms/Input/Input';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
@@ -28,13 +29,6 @@ interface WorkspaceSettingsImportPanelProps {
     onImport: (projectKey: string, syncExisting: boolean) => void;
 }
 
-const MAPPING_TYPE_LABELS: Record<IntegrationFieldMappingType, string> = {
-    status: 'Statuses',
-    priority: 'Priorities',
-    label: 'Labels',
-    issue_type: 'Issue types',
-};
-
 function mappingKey(mappingType: string, externalValue: string): string {
     return `${mappingType}:${externalValue}`;
 }
@@ -59,6 +53,7 @@ export default function WorkspaceSettingsImportPanel({
     onSaveMappings,
     onImport,
 }: WorkspaceSettingsImportPanelProps) {
+    const { t } = useLaravelReactI18n();
     const importConfig = integration.importConfig;
 
     const [credentialDrafts, setCredentialDrafts] = useState<
@@ -186,7 +181,7 @@ export default function WorkspaceSettingsImportPanel({
         <>
             <section className="mt-6">
                 <h3 className="text-sm font-semibold text-(--text-color)">
-                    Connect
+                    {t('workspace_settings_integrations.import.connect')}
                 </h3>
                 {canUpdate ? (
                     <div className="mt-3 space-y-3">
@@ -196,7 +191,10 @@ export default function WorkspaceSettingsImportPanel({
                                     htmlFor={`import-credential-${field.id}`}
                                     className="mb-1 block text-sm text-(--text-gray-color)"
                                 >
-                                    {field.label}
+                                    {t(
+                                        `workspace_settings_integrations.import.credentials.${field.id}`,
+                                        { name: integration.name },
+                                    )}
                                 </label>
                                 <Input
                                     id={`import-credential-${field.id}`}
@@ -218,19 +216,37 @@ export default function WorkspaceSettingsImportPanel({
                             onClick={() => onConnect(credentialDrafts)}
                             className="rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                         >
-                            {settings?.hasCredentials ? 'Reconnect' : 'Connect'}
+                            {settings?.hasCredentials
+                                ? t(
+                                      'workspace_settings_integrations.import.reconnect',
+                                  )
+                                : t(
+                                      'workspace_settings_integrations.import.connect',
+                                  )}
                         </button>
                         {settings?.hasCredentials && (
                             <p className="text-sm text-(--text-gray-color)">
-                                Connected to {settings.instanceUrl}.
+                                {t(
+                                    'workspace_settings_integrations.import.connected_to',
+                                    {
+                                        url: settings.instanceUrl ?? '',
+                                    },
+                                )}
                             </p>
                         )}
                     </div>
                 ) : (
                     <p className="mt-1 text-sm text-(--text-gray-color)">
                         {settings?.hasCredentials
-                            ? `Connected to ${settings.instanceUrl}.`
-                            : 'Not connected yet.'}
+                            ? t(
+                                  'workspace_settings_integrations.import.connected_to',
+                                  {
+                                      url: settings.instanceUrl ?? '',
+                                  },
+                              )
+                            : t(
+                                  'workspace_settings_integrations.import.not_connected',
+                              )}
                     </p>
                 )}
             </section>
@@ -239,12 +255,17 @@ export default function WorkspaceSettingsImportPanel({
                 <>
                     <section className="mt-6">
                         <h3 className="text-sm font-semibold text-(--text-color)">
-                            Field mapping
+                            {t(
+                                'workspace_settings_integrations.import.field_mapping',
+                            )}
                         </h3>
                         <p className="mt-1 text-sm text-(--text-gray-color)">
-                            Map {integration.name}&apos;s values to Orbit&apos;s
-                            — anything left unmapped falls back to a sensible
-                            default.
+                            {t(
+                                'workspace_settings_integrations.import.field_mapping_hint',
+                                {
+                                    name: integration.name,
+                                },
+                            )}
                         </p>
                         {importConfig.mappingTypes.map((mappingType) => {
                             const options = mappingOptionsFor(mappingType);
@@ -254,7 +275,9 @@ export default function WorkspaceSettingsImportPanel({
                             return (
                                 <div key={mappingType} className="mt-4">
                                     <p className="text-sm font-medium text-(--text-color)">
-                                        {MAPPING_TYPE_LABELS[mappingType]}
+                                        {t(
+                                            `workspace_settings_integrations.import.mapping_types.${mappingType}`,
+                                        )}
                                     </p>
                                     <div className="mt-2 divide-y divide-(--border-color) rounded-xl border border-(--border-color)">
                                         {options.map((option) => (
@@ -266,8 +289,12 @@ export default function WorkspaceSettingsImportPanel({
                                                     {option.label}
                                                 </span>
                                                 <InlineSelectDropdown
-                                                    label={`Map to Orbit ${MAPPING_TYPE_LABELS[mappingType].toLowerCase()}`}
-                                                    placeholder="Default"
+                                                    label={t(
+                                                        `workspace_settings_integrations.import.map_to.${mappingType}`,
+                                                    )}
+                                                    placeholder={t(
+                                                        'workspace_settings_integrations.import.default',
+                                                    )}
                                                     options={orbitOptionsFor(
                                                         mappingType,
                                                     )}
@@ -306,14 +333,16 @@ export default function WorkspaceSettingsImportPanel({
                                 onClick={handleSaveMappings}
                                 className="mt-3 rounded-lg border border-(--bg-light-color) bg-(--bg-dark-color) px-3 py-2 text-sm font-medium text-(--text-color) transition-colors hover:border-(--border-color-strong)"
                             >
-                                Save mapping
+                                {t(
+                                    'workspace_settings_integrations.import.save_mapping',
+                                )}
                             </button>
                         )}
                     </section>
 
                     <section className="mt-6">
                         <h3 className="text-sm font-semibold text-(--text-color)">
-                            Import
+                            {t('workspace_settings_integrations.import.import')}
                         </h3>
                         {canUpdate ? (
                             <>
@@ -325,7 +354,12 @@ export default function WorkspaceSettingsImportPanel({
                                         onChange={(event) =>
                                             setProjectKey(event.target.value)
                                         }
-                                        placeholder={`${integration.name} project key`}
+                                        placeholder={t(
+                                            'workspace_settings_integrations.import.project_key',
+                                            {
+                                                name: integration.name,
+                                            },
+                                        )}
                                         className="flex-1"
                                     />
                                     <button
@@ -336,19 +370,23 @@ export default function WorkspaceSettingsImportPanel({
                                         }
                                         className="shrink-0 rounded-lg bg-(--accent-color) px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                                     >
-                                        Import
+                                        {t(
+                                            'workspace_settings_integrations.import.import',
+                                        )}
                                     </button>
                                 </div>
                                 <div className="mt-3 flex items-center justify-between gap-4 rounded-xl border border-(--border-color) px-4 py-2.5">
                                     <div className="min-w-0">
                                         <p className="text-sm font-medium text-(--text-color)">
-                                            Update already-imported issues
+                                            {t(
+                                                'workspace_settings_integrations.import.update_existing',
+                                            )}
                                         </p>
                                         <p className="mt-0.5 text-sm text-(--text-gray-color)">
-                                            {integration.name} always wins on
-                                            conflict — any local changes to a
-                                            previously imported issue are
-                                            overwritten.
+                                            {t(
+                                                'workspace_settings_integrations.import.update_existing_hint',
+                                                { name: integration.name },
+                                            )}
                                         </p>
                                     </div>
                                     <ToggleSwitch
@@ -359,19 +397,25 @@ export default function WorkspaceSettingsImportPanel({
                             </>
                         ) : (
                             <p className="mt-1 text-sm text-(--text-gray-color)">
-                                Only a project admin can trigger an import.
+                                {t(
+                                    'workspace_settings_integrations.import.admin_only',
+                                )}
                             </p>
                         )}
                         {settings?.lastImport && (
                             <p className="mt-2 text-sm text-(--text-gray-color)">
-                                Last import (
-                                {new Date(
-                                    settings.lastImport.ranAt,
-                                ).toLocaleString()}
-                                ): {settings.lastImport.imported} imported,{' '}
-                                {settings.lastImport.updated} updated,{' '}
-                                {settings.lastImport.skipped} skipped,{' '}
-                                {settings.lastImport.failed} failed.
+                                {t(
+                                    'workspace_settings_integrations.import.last_import',
+                                    {
+                                        date: new Date(
+                                            settings.lastImport.ranAt,
+                                        ).toLocaleString(),
+                                        imported: settings.lastImport.imported,
+                                        updated: settings.lastImport.updated,
+                                        skipped: settings.lastImport.skipped,
+                                        failed: settings.lastImport.failed,
+                                    },
+                                )}
                             </p>
                         )}
                     </section>

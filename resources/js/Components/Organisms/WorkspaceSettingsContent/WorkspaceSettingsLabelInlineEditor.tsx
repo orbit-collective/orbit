@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import AppearancePicker from '@/Components/Molecules/AppearancePicker/AppearancePicker';
 import InlineEditRow, {
@@ -23,6 +24,7 @@ export default function WorkspaceSettingsLabelInlineEditor({
     onSave,
     onCancel,
 }: WorkspaceSettingsLabelInlineEditorProps) {
+    const { t } = useLaravelReactI18n();
     const [name, setName] = useState(label?.name ?? '');
     const [description, setDescription] = useState(label?.description ?? '');
     const [color, setColor] = useState(label?.color ?? LABEL_COLOR_PALETTE[0]);
@@ -42,7 +44,7 @@ export default function WorkspaceSettingsLabelInlineEditor({
                     color={color}
                     onColorChange={setColor}
                     palette={LABEL_COLOR_PALETTE}
-                    ariaLabel="Label color"
+                    ariaLabel={t('workspace_settings_labels.editor.color_aria')}
                 >
                     <span
                         className="h-3.5 w-3.5 rounded-full"
@@ -51,7 +53,11 @@ export default function WorkspaceSettingsLabelInlineEditor({
                 </AppearancePicker>
             }
             canSave={trimmedName !== ''}
-            saveLabel={isEditing ? 'Save label' : 'Create label'}
+            saveLabel={
+                isEditing
+                    ? t('workspace_settings_labels.editor.save')
+                    : t('workspace_settings_labels.editor.create')
+            }
             onSave={handleSave}
             onCancel={onCancel}
         >
@@ -59,8 +65,10 @@ export default function WorkspaceSettingsLabelInlineEditor({
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Label name"
-                aria-label="Label name"
+                placeholder={t(
+                    'workspace_settings_labels.editor.name_placeholder',
+                )}
+                aria-label={t('workspace_settings_labels.editor.name_aria')}
                 autoComplete="off"
                 maxLength={50}
                 className={cn(inlineFieldClass, 'font-medium sm:w-44')}
@@ -68,8 +76,12 @@ export default function WorkspaceSettingsLabelInlineEditor({
             <input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description (optional)"
-                aria-label="Label description"
+                placeholder={t(
+                    'workspace_settings_labels.editor.description_placeholder',
+                )}
+                aria-label={t(
+                    'workspace_settings_labels.editor.description_aria',
+                )}
                 autoComplete="off"
                 maxLength={255}
                 className={cn(

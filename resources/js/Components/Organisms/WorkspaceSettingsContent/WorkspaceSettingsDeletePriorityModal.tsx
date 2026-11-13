@@ -1,3 +1,4 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Modal from '@/Components/Atoms/Modal/Modal';
@@ -24,6 +25,7 @@ export default function WorkspaceSettingsDeletePriorityModal({
     otherPriorities,
     onConfirm,
 }: WorkspaceSettingsDeletePriorityModalProps) {
+    const { t, tChoice } = useLaravelReactI18n();
     const [replacement, setReplacement] = useState(NO_PRIORITY);
 
     if (!priority) return null;
@@ -47,7 +49,7 @@ export default function WorkspaceSettingsDeletePriorityModal({
     return (
         <Modal isOpen={isOpen} onClose={handleClose} size="sm">
             <ModalHeader
-                title="Delete priority"
+                title={t('workspace_settings_modals_a.delete_priority.title')}
                 onClose={handleClose}
                 icon={
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-(--error-color)/10 text-(--error-color)">
@@ -58,7 +60,7 @@ export default function WorkspaceSettingsDeletePriorityModal({
 
             <div className="space-y-4 px-6 py-5">
                 <p className="text-sm text-(--text-gray-color)">
-                    This removes{' '}
+                    {t('workspace_settings_modals_a.delete_priority.before')}{' '}
                     <span
                         className="inline-flex items-center gap-1.5 rounded-full border border-(--border-color) px-2 py-0.5 text-xs font-medium text-(--text-color)"
                         style={{ verticalAlign: 'middle' }}
@@ -66,8 +68,7 @@ export default function WorkspaceSettingsDeletePriorityModal({
                         <PriorityIcon priority={priority} tooltip={false} />
                         {priority.name}
                     </span>{' '}
-                    from this project&apos;s priority scale. This cannot be
-                    undone.
+                    {t('workspace_settings_modals_a.delete_priority.after')}
                 </p>
 
                 {priority.issueCount > 0 ? (
@@ -76,9 +77,10 @@ export default function WorkspaceSettingsDeletePriorityModal({
                             htmlFor="priority-replacement"
                             className="text-xs font-medium text-(--text-gray-color)"
                         >
-                            {priority.issueCount === 1
-                                ? 'Move its 1 issue to'
-                                : `Move its ${priority.issueCount} issues to`}
+                            {tChoice(
+                                'workspace_settings_modals_a.delete_priority.move_issues',
+                                priority.issueCount,
+                            )}
                         </label>
                         <select
                             id="priority-replacement"
@@ -91,22 +93,32 @@ export default function WorkspaceSettingsDeletePriorityModal({
                                     {other.name}
                                 </option>
                             ))}
-                            <option value={NO_PRIORITY}>No priority</option>
+                            <option value={NO_PRIORITY}>
+                                {t(
+                                    'workspace_settings_modals_a.delete_priority.no_priority',
+                                )}
+                            </option>
                         </select>
                     </div>
                 ) : (
                     <p className="text-sm text-(--text-gray-color)">
-                        No issues use this priority.
+                        {t(
+                            'workspace_settings_modals_a.delete_priority.no_issues',
+                        )}
                     </p>
                 )}
 
                 {nextDefault && (
                     <p className="rounded-lg border border-(--border-color) bg-(--bg-light-color) px-3 py-2 text-xs text-(--text-gray-color)">
-                        This is the default for new issues.{' '}
+                        {t(
+                            'workspace_settings_modals_a.delete_priority.default_before',
+                        )}{' '}
                         <span className="font-medium text-(--text-color)">
                             {nextDefault.name}
                         </span>{' '}
-                        becomes the default instead.
+                        {t(
+                            'workspace_settings_modals_a.delete_priority.default_after',
+                        )}
                     </p>
                 )}
             </div>
@@ -117,14 +129,14 @@ export default function WorkspaceSettingsDeletePriorityModal({
                     onClick={handleClose}
                     className="cursor-pointer rounded-lg border-none bg-transparent px-4 py-2 text-sm font-medium text-(--text-gray-color) transition-colors duration-150 hover:text-(--text-color)"
                 >
-                    Cancel
+                    {t('workspace_settings_modals_a.cancel')}
                 </button>
                 <button
                     type="button"
                     onClick={handleConfirm}
                     className="cursor-pointer rounded-lg bg-(--error-color) px-4 py-2 text-sm font-medium text-(--text-color) transition-opacity hover:opacity-90"
                 >
-                    Delete priority
+                    {t('workspace_settings_modals_a.delete_priority.submit')}
                 </button>
             </footer>
         </Modal>

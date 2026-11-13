@@ -1,64 +1,103 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 
 export default function WorkspaceSettingsDocumentsTab() {
-    const [documentAccess, setDocumentAccess] = useState('Members only');
+    const { t } = useLaravelReactI18n();
+    const [documentAccess, setDocumentAccess] = useState<'members' | 'guests'>(
+        'members',
+    );
 
     return (
         <div className="space-y-5">
             <SettingsPanel
-                title="Documentation defaults"
-                description="Set structure and access defaults for workspace docs."
+                title={t('workspace_settings_documents.defaults.title')}
+                description={t(
+                    'workspace_settings_documents.defaults.description',
+                )}
             >
                 <div className="grid grid-cols-1 gap-3 px-5 py-4 md:grid-cols-2">
                     <div className="rounded-xl border border-(--bg-light-color) bg-(--bg-color) p-4">
                         <p className="text-sm font-medium text-(--text-color)">
-                            Default access level
+                            {t(
+                                'workspace_settings_documents.defaults.access_level',
+                            )}
                         </p>
                         <button
                             type="button"
                             className="mt-3 rounded-full border border-(--bg-light-color) px-3 py-1.5 text-xs font-medium text-(--text-color)"
                             onClick={() =>
                                 setDocumentAccess(
-                                    documentAccess === 'Members only'
-                                        ? 'Workspace and guests'
-                                        : 'Members only',
+                                    documentAccess === 'members'
+                                        ? 'guests'
+                                        : 'members',
                                 )
                             }
                         >
-                            {documentAccess}
+                            {documentAccess === 'members'
+                                ? t(
+                                      'workspace_settings_documents.defaults.members_only',
+                                  )
+                                : t(
+                                      'workspace_settings_documents.defaults.workspace_and_guests',
+                                  )}
                         </button>
                         <div className="mt-3 flex gap-2">
                             <button
                                 type="button"
                                 className="rounded-md border border-(--bg-light-color) px-2 py-1 text-xs text-(--text-color)"
                             >
-                                New folder
+                                {t(
+                                    'workspace_settings_documents.defaults.new_folder',
+                                )}
                             </button>
                             <button
                                 type="button"
                                 className="rounded-md border border-(--bg-light-color) px-2 py-1 text-xs text-(--text-color)"
                             >
-                                New template
+                                {t(
+                                    'workspace_settings_documents.defaults.new_template',
+                                )}
                             </button>
                         </div>
                     </div>
                     <div className="rounded-xl border border-(--bg-light-color) bg-(--bg-color) p-4">
                         <p className="text-sm font-medium text-(--text-color)">
-                            Document structure preview
+                            {t(
+                                'workspace_settings_documents.defaults.structure_preview',
+                            )}
                         </p>
                         <div className="mt-2 space-y-1.5">
                             {[
-                                { name: 'Product', docs: 7 },
-                                { name: 'Engineering', docs: 11 },
-                                { name: 'Operations', docs: 5 },
+                                {
+                                    name: t('followup2_misc.folders.product'),
+                                    docs: 7,
+                                },
+                                {
+                                    name: t(
+                                        'followup2_misc.folders.engineering',
+                                    ),
+                                    docs: 11,
+                                },
+                                {
+                                    name: t(
+                                        'followup2_misc.folders.operations',
+                                    ),
+                                    docs: 5,
+                                },
                             ].map((folder) => (
                                 <div
                                     key={folder.name}
                                     className="rounded-md bg-(--bg-light-color) px-2 py-1 text-xs text-(--text-gray-color)"
                                 >
-                                    {folder.name} · {folder.docs} docs
+                                    {t(
+                                        'workspace_settings_documents.defaults.folder_docs',
+                                        {
+                                            name: folder.name,
+                                            count: folder.docs,
+                                        },
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -66,22 +105,34 @@ export default function WorkspaceSettingsDocumentsTab() {
                 </div>
             </SettingsPanel>
             <SettingsPanel
-                title="Knowledge operations"
-                description="Improve organization and long-term discoverability."
+                title={t('workspace_settings_documents.knowledge.title')}
+                description={t(
+                    'workspace_settings_documents.knowledge.description',
+                )}
             >
                 <SettingsPanelRow
-                    title="Content indexing"
-                    description="Continuously index workspace documents for fast search."
+                    title={t(
+                        'workspace_settings_documents.knowledge.indexing.title',
+                    )}
+                    description={t(
+                        'workspace_settings_documents.knowledge.indexing.description',
+                    )}
                 />
                 <SettingsPanelRow
-                    title="Retention policy"
-                    description="Archive stale documents after a selected inactivity period."
+                    title={t(
+                        'workspace_settings_documents.knowledge.retention.title',
+                    )}
+                    description={t(
+                        'workspace_settings_documents.knowledge.retention.description',
+                    )}
                     action={
                         <button
                             type="button"
                             className="rounded-full border border-(--bg-light-color) px-3 py-1.5 text-xs font-medium text-(--text-color)"
                         >
-                            180 days
+                            {t(
+                                'workspace_settings_documents.knowledge.retention.value',
+                            )}
                         </button>
                     }
                 />

@@ -1,4 +1,6 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
+import { useIntegrationText } from '@/hooks/useIntegrationText';
 import { IntegrationDefinition } from '@/types/Integrations';
 
 interface WorkspaceSettingsIntegrationPreviewProps {
@@ -13,6 +15,9 @@ interface WorkspaceSettingsIntegrationPreviewProps {
 export default function WorkspaceSettingsIntegrationPreview({
     integration,
 }: WorkspaceSettingsIntegrationPreviewProps) {
+    const { t } = useLaravelReactI18n();
+    const text = useIntegrationText();
+
     return (
         <div className="overflow-hidden rounded-xl border border-(--border-color) bg-(--bg-color)">
             <div className="flex items-center justify-between border-b border-(--border-color) bg-(--surface-color) px-4 py-2.5">
@@ -26,17 +31,19 @@ export default function WorkspaceSettingsIntegrationPreview({
                         />
                     </span>
                     <span className="text-xs font-medium text-(--text-color)">
-                        {integration.name} preview
+                        {t('workspace_settings_integrations.preview.title', {
+                            name: integration.name,
+                        })}
                     </span>
                 </div>
                 <span className="rounded-full bg-(--bg-light-color) px-2 py-0.5 text-[10px] font-medium text-(--text-gray-color)">
-                    Sample
+                    {t('workspace_settings_integrations.preview.sample')}
                 </span>
             </div>
             <div className="divide-y divide-(--border-color)">
-                {integration.previewSamples.map((sample) => (
+                {integration.previewSamples.map((sample, index) => (
                     <div
-                        key={sample.title}
+                        key={text.sampleTitle(integration, index, sample)}
                         className="flex items-start gap-3 px-4 py-3"
                     >
                         <span
@@ -48,10 +55,10 @@ export default function WorkspaceSettingsIntegrationPreview({
                             />
                         </span>
                         <p className="min-w-0 flex-1 text-sm text-(--text-color)">
-                            {sample.title}
+                            {text.sampleTitle(integration, index, sample)}
                         </p>
                         <span className="shrink-0 text-[11px] text-(--text-muted-color)">
-                            {sample.time}
+                            {text.sampleTime(integration, index, sample)}
                         </span>
                     </div>
                 ))}

@@ -1,7 +1,9 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import BrandIcon from '@/Components/Atoms/BrandIcon/BrandIcon';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import ToggleSwitch from '@/Components/Atoms/ToggleSwitch/ToggleSwitch';
+import { useIntegrationText } from '@/hooks/useIntegrationText';
 import { IntegrationDefinition } from '@/types/Integrations';
 import { getCategoryBadgeClassName } from '@/utils/integrationCategoryColors';
 
@@ -20,6 +22,9 @@ export default function WorkspaceSettingsIntegrationCard({
     onToggle,
     onOpen,
 }: WorkspaceSettingsIntegrationCardProps) {
+    const { t } = useLaravelReactI18n();
+    const text = useIntegrationText();
+
     return (
         <div
             role="button"
@@ -59,21 +64,27 @@ export default function WorkspaceSettingsIntegrationCard({
                     {integration.comingSoon ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-(--bg-light-color) px-2 py-0.5 text-[11px] font-medium text-(--text-gray-color)">
                             <Icon name="Lock" size={10} />
-                            Soon
+                            {t('workspace_settings_integrations.card.soon')}
                         </span>
                     ) : (
                         <span
                             className={`rounded-full ${enabled ? 'bg-(--accent-color-opacity) text-(--accent-color)' : 'bg-(--bg-muted-color) text-(--text-muted-color)'} px-2 py-0.5 text-[11px] font-semibold`}
                         >
-                            {enabled ? 'Enabled' : 'Disabled'}
+                            {enabled
+                                ? t(
+                                      'workspace_settings_integrations.card.enabled',
+                                  )
+                                : t(
+                                      'workspace_settings_integrations.card.disabled',
+                                  )}
                         </span>
                     )}
                 </div>
                 <p className="mt-0.5 text-sm text-(--text-muted-color)">
-                    {integration.vendor}
+                    {text.vendor(integration)}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-(--text-gray-color)">
-                    {integration.description}
+                    {text.description(integration)}
                 </p>
             </div>
 
@@ -82,10 +93,12 @@ export default function WorkspaceSettingsIntegrationCard({
                     variant="outline"
                     className={getCategoryBadgeClassName(integration.category)}
                 >
-                    {integration.category}
+                    {t(
+                        `workspace_settings_integrations.categories.${integration.category.toLowerCase().replace(' ', '_')}`,
+                    )}
                 </Badge>
                 <span className="flex items-center gap-1 text-sm font-medium text-(--text-gray-color) transition-colors group-hover:text-(--accent-color)">
-                    View details
+                    {t('workspace_settings_integrations.card.view_details')}
                     <Icon name="ChevronRight" size={14} />
                 </span>
             </div>
