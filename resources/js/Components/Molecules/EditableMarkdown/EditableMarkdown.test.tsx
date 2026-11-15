@@ -551,6 +551,35 @@ describe('EditableMarkdown Component', () => {
         expect(onSave).toHaveBeenCalledWith('Changed');
     });
 
+    test('the Image block opens the file picker and uploads the chosen images', async () => {
+        const onImageUpload = vi.fn().mockResolvedValue('/storage/p.png');
+        const { getEditor } = setup('Text', vi.fn(), false, onImageUpload);
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+        const input = screen.getByTestId('editable-markdown-file-input');
+
+        await userEvent.upload(input, [
+            imageFile('picked.png'),
+            new File(['x'], 'notes.txt', { type: 'text/plain' }),
+        ]);
+
+        await waitFor(() =>
+            expect(getEditor().insertContentAt).toHaveBeenCalledWith(3, {
+                type: 'image',
+                attrs: { src: '/storage/p.png', alt: 'picked.png' },
+            }),
+        );
+        expect(onImageUpload).toHaveBeenCalledTimes(1);
+    });
+
+    test('no file picker without an uploader', () => {
+        setup('Text');
+
+        expect(
+            screen.queryByTestId('editable-markdown-file-input'),
+        ).not.toBeInTheDocument();
+    });
+
     test('pressing Escape cancels the edit and reverts the content', () => {
         const onSave = vi.fn();
         const { getEditor } = setup('Original', onSave);
