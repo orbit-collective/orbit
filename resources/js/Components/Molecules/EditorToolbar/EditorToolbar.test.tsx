@@ -182,6 +182,21 @@ describe('EditorToolbar link field', () => {
         expect(markdown()).toBe('<https://example.com>');
     });
 
+    test('a caret next to an existing link adds a link instead of replacing the linked text', async () => {
+        setup('hello [site](https://old.example)');
+        // Right before "site", where the link starts.
+        editor!.commands.setTextSelection(7);
+
+        await userEvent.click(button('Link'));
+        await userEvent.type(
+            screen.getByRole('textbox', { name: 'Link address' }),
+            'new.example{Enter}',
+        );
+
+        expect(markdown()).toContain('[site](https://old.example)');
+        expect(markdown()).toContain('https://new.example');
+    });
+
     test('an unsafe address is refused and flagged', async () => {
         setup();
         editor!.commands.selectAll();
