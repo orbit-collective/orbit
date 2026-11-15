@@ -33,6 +33,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             id,
             name,
             autoComplete,
+            'aria-label': ariaLabel,
         },
         ref,
     ) => {
@@ -54,6 +55,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                 onKeyDown={onKeyDown}
                 onBlur={onBlur}
                 autoComplete={autoComplete}
+                aria-label={ariaLabel}
                 ref={ref}
             />
         );

@@ -121,6 +121,7 @@ export interface InputProps extends VariantProps<typeof inputVariants> {
     id?: string;
     name?: string;
     autoComplete?: string;
+    'aria-label'?: string;
     ref?: React.Ref<HTMLInputElement> | null;
 }
 export interface ModalProps {
