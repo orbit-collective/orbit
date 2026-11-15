@@ -25,5 +25,7 @@ final class IssuesImported
         public readonly Project $project,
         public readonly User $importedBy,
         public readonly ImportResultDTO $result,
+        /** The integration the issues came from, e.g. 'jira': names the settings page the notification links to. */
+        public readonly string $integration,
     ) {}
 }

@@ -147,7 +147,7 @@ class ImportOrchestratorService
 
         $result = new ImportResultDTO($imported, $updated, $skipped, $failed, $errors);
 
-        event(new IssuesImported($project, $importedBy, $result));
+        event(new IssuesImported($project, $importedBy, $result, $projectIntegration->integration));
 
         return $result;
     }

@@ -139,7 +139,7 @@ test('the settings page never exposes the relay token to the frontend', function
 
     $this->actingAs($this->admin)->post("/projects/{$this->project->id}/integrations/github/connect");
 
-    $response = $this->actingAs($this->admin)->get("/settings/integrations?project={$this->project->id}");
+    $response = $this->actingAs($this->admin)->get("/settings/integrations/github?project={$this->project->id}");
 
     $response->assertOk();
     $response->assertDontSee('orb_local_super_secret_token', false);
@@ -160,7 +160,7 @@ test('the settings page loads instead of 500ing when the stored relay token cann
         'github_relay_token' => 'not-a-valid-encrypted-payload',
     ]);
 
-    $response = $this->actingAs($this->admin)->get("/settings/integrations?project={$this->project->id}");
+    $response = $this->actingAs($this->admin)->get("/settings/integrations/github?project={$this->project->id}");
 
     $response->assertOk();
 });
@@ -288,4 +288,21 @@ test('a member without the integrations.update permission cannot fetch available
     $response = $this->actingAs($member)->get("/projects/{$this->project->id}/integrations/github/repositories/available");
 
     $response->assertForbidden();
+});
+
+test('the integrations overview loads when the stored relay token cannot be decrypted', function () {
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'connected',
+    ]);
+
+    DB::table('project_integrations')->where('id', $projectIntegration->id)->update([
+        'github_relay_token' => 'not-a-valid-encrypted-payload',
+    ]);
+
+    $this->actingAs($this->admin)->get("/settings/integrations?project={$this->project->id}")
+        ->assertOk();
 });
