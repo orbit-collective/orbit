@@ -1,3 +1,4 @@
+import type { Editor } from '@tiptap/core';
 import type { VariantProps } from 'class-variance-authority';
 import type { icons } from 'lucide-react';
 import React, {
@@ -750,6 +751,12 @@ export interface MentionSuggestionsProps {
     onSelectIssue?: (issue: IssueSuggestion) => void;
     /** Shown instead of hiding the menu when there is nothing to suggest. */
     emptyLabel?: string;
+}
+export interface EditorToolbarProps {
+    editor: Editor;
+    /** Shows the image button; called when it is pressed. Omit when uploads are off. */
+    onPickImage?: () => void;
+    className?: string;
 }
 export interface SlashMenuItem {
     id: string;
