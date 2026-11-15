@@ -250,7 +250,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     }, [viewMode, month, year, weekViewDays, locale]);
 
     return (
-        <div className="flex min-h-[600px] min-w-0 flex-1 flex-col p-6 xl:h-full xl:min-h-0">
+        <div className="flex min-h-150 min-w-0 flex-1 flex-col p-6 xl:h-full xl:min-h-0">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
                     <AnimatePresence mode="wait" initial={false}>
@@ -386,8 +386,8 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                 className={cn(
                                     'relative flex flex-col gap-1.5 border-b border-(--border-color) p-2.5 transition-colors hover:bg-(--bg-light-color) sm:border-r',
                                     viewMode === 'month'
-                                        ? 'min-h-[132px]'
-                                        : 'min-h-[260px]',
+                                        ? 'min-h-33'
+                                        : 'min-h-65',
                                     isToday && 'bg-(--accent-color)/4',
                                     !dayObj.isCurrentMonth &&
                                         'hidden bg-(--overlay-color) opacity-40 sm:flex',
