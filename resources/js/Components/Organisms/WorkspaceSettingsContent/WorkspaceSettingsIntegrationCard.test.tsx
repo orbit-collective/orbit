@@ -154,6 +154,27 @@ describe('WorkspaceSettingsIntegrationCard', () => {
             ).toBeDisabled();
         });
 
+        test('the switch is centred with the row and a row without one keeps its column', () => {
+            const { container, rerender } = renderCard({ variant: 'row' });
+
+            const wrapper = screen.getByRole('switch').parentElement!;
+
+            expect(wrapper).toHaveClass('flex', 'items-center');
+
+            rerender(
+                <WorkspaceSettingsIntegrationCard
+                    integration={discord}
+                    enabled={false}
+                    canUpdate
+                    href="/x"
+                    variant="row"
+                />,
+            );
+
+            expect(screen.queryByRole('switch')).toBeNull();
+            expect(container.querySelector('span.h-5.w-9')).not.toBeNull();
+        });
+
         test('is one line, not the tall card', () => {
             const { container } = renderCard({ variant: 'row' });
 
