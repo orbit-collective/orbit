@@ -50,9 +50,22 @@ const Modal: React.FC<ModalProps> = ({
         if (!isOpen) return;
 
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                onClose();
+            if (event.key !== 'Escape') return;
+
+            // This listener runs in the capture phase, before anything inside
+            // the modal sees the key. A field with an open suggestion list
+            // (it points `aria-activedescendant` at the active option only
+            // while the list is open) owns that Escape: it closes the list
+            // and the modal stays, so one keypress does one thing.
+            if (
+                (event.target as Element | null)?.closest?.(
+                    '[aria-activedescendant]',
+                )
+            ) {
+                return;
             }
+
+            onClose();
         };
 
         window.addEventListener('keydown', handleKeyDown, true);

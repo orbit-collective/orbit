@@ -55,6 +55,56 @@ describe('Modal Component', () => {
         expect(handleClose).toHaveBeenCalledTimes(1);
     });
 
+    test('Escape in a field with an open suggestion list is left to that field', async () => {
+        const handleClose = vi.fn();
+        render(
+            <Modal isOpen onClose={handleClose}>
+                <input aria-label="Search" aria-activedescendant="option-1" />
+            </Modal>,
+        );
+
+        screen.getByLabelText('Search').focus();
+        await userEvent.keyboard('{Escape}');
+
+        expect(handleClose).not.toHaveBeenCalled();
+    });
+
+    test('Escape in a field without an open list still closes it', async () => {
+        const handleClose = vi.fn();
+        render(
+            <Modal isOpen onClose={handleClose}>
+                <input aria-label="Search" />
+            </Modal>,
+        );
+
+        screen.getByLabelText('Search').focus();
+        await userEvent.keyboard('{Escape}');
+
+        expect(handleClose).toHaveBeenCalledTimes(1);
+    });
+
+    test('Escape closes the modal again once the list has closed', async () => {
+        const handleClose = vi.fn();
+        const { rerender } = render(
+            <Modal isOpen onClose={handleClose}>
+                <input aria-label="Search" aria-activedescendant="option-1" />
+            </Modal>,
+        );
+
+        screen.getByLabelText('Search').focus();
+        await userEvent.keyboard('{Escape}');
+        expect(handleClose).not.toHaveBeenCalled();
+
+        rerender(
+            <Modal isOpen onClose={handleClose}>
+                <input aria-label="Search" />
+            </Modal>,
+        );
+        await userEvent.keyboard('{Escape}');
+
+        expect(handleClose).toHaveBeenCalledTimes(1);
+    });
+
     test('does not call onClose when the panel content is clicked', async () => {
         const handleClose = vi.fn();
         render(
