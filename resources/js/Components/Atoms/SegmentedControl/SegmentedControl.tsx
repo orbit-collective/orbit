@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
+import type { icons } from 'lucide-react';
 import { useId } from 'react';
+import Icon from '@/Components/Atoms/Icon/Icon';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
 import { SPRING } from '@/utils/motion';
@@ -8,10 +10,15 @@ interface SegmentedControlProps<T extends string | number> {
     /** Names the group for assistive technology. */
     label: string;
     value: T;
-    options: { value: T; label: string }[];
+    options: { value: T; label: string; icon?: keyof typeof icons }[];
     onChange: (value: T) => void;
     /** Stretch the segments over the whole row. */
     fullWidth?: boolean;
+    /**
+     * Show only each option's `icon`; its label becomes the accessible name
+     * and a tooltip. Options without an icon keep their text.
+     */
+    iconOnly?: boolean;
     className?: string;
 }
 
@@ -26,6 +33,7 @@ function SegmentedControl<T extends string | number>({
     options,
     onChange,
     fullWidth = false,
+    iconOnly = false,
     className,
 }: SegmentedControlProps<T>) {
     const pillId = useId();
@@ -42,12 +50,15 @@ function SegmentedControl<T extends string | number>({
         >
             {options.map((option) => {
                 const active = option.value === value;
+                const iconShown = iconOnly && option.icon;
 
                 return (
                     <button
                         key={option.value}
                         type="button"
                         aria-pressed={active}
+                        aria-label={iconShown ? option.label : undefined}
+                        title={iconShown ? option.label : undefined}
                         onClick={() => onChange(option.value)}
                         className={cn(
                             'relative cursor-pointer rounded-md border-none bg-transparent px-2.5 py-1 text-xs font-medium transition-colors duration-150',
@@ -67,7 +78,15 @@ function SegmentedControl<T extends string | number>({
                                 className="absolute inset-0 rounded-md bg-(--surface-color) shadow-xs"
                             />
                         )}
-                        <span className="relative">{option.label}</span>
+                        {iconShown ? (
+                            <Icon
+                                name={option.icon!}
+                                size={14}
+                                className="relative"
+                            />
+                        ) : (
+                            <span className="relative">{option.label}</span>
+                        )}
                     </button>
                 );
             })}
