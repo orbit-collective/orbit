@@ -130,11 +130,16 @@ export default function RoleDetailHeader({
                                 {t(`role_detail_header.types.${role.type}`)}
                             </span>
                             <span>
-                                <AnimatedNumber value={role.memberCount} />{' '}
-                                {tChoice(
-                                    'role_detail_header.members',
-                                    role.memberCount,
-                                )}
+                                {/* The translation already carries the number. */}
+                                <AnimatedNumber
+                                    value={role.memberCount}
+                                    format={(n) =>
+                                        tChoice(
+                                            'role_detail_header.members',
+                                            Math.round(n),
+                                        )
+                                    }
+                                />
                             </span>
                             <span>&middot; /{role.slug}</span>
                         </p>
