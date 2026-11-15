@@ -576,7 +576,7 @@ w `SettingsController::integrations()`) — celowo nie połączony z
 po metadane mapowania; odpytywanie tego co ~1.5s podczas trwania
 importu bez potrzeby zarzucałoby Jirę żądaniami.
 
-`WorkspaceSettingsIntegrationsTab.tsx` to miejsce, które faktycznie
+`resources/js/hooks/useIntegrationActions.ts` to miejsce, które faktycznie
 zamienia to w toast na żywo: przy triggerowaniu importu otwiera
 **trwały** alert (`AlertContext::addAlert(msg, type, 0)` — `duration: 0`
 oznacza "nie znikaj automatycznie"), zapamiętuje `runId`, jaki był w
@@ -620,7 +620,7 @@ proces `queue:listen` w `composer dev`.
 
 ## Krok 8 — Podłączenie frontendu
 
-Plik: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationsTab.tsx`
+Plik: `resources/js/hooks/useIntegrationActions.ts`
 
 Dodaj wpis do `IMPORT_ROUTE_NAMES`:
 
@@ -644,7 +644,7 @@ const IMPORT_ROUTE_NAMES: Partial<
 To **cała** zmiana na froncie potrzebna dla samego przepływu
 connect/mapping/import — `WorkspaceSettingsImportPanel.tsx` już
 renderuje wszystko, co opisuje `importConfig` (Krok 1), a
-`WorkspaceSettingsIntegrationDetailModal.tsx` już kieruje każdą
+`WorkspaceSettingsIntegrationDetail.tsx` już kieruje każdą
 integrację `kind: 'import'` do tego panelu. Żaden z tych dwóch plików
 nie jest specyficzny dla Jiry — dotyczy to też przełącznika "Update
 already-imported issues" obok przycisku Import, który wysyła
@@ -654,8 +654,8 @@ specyficznego dla importera do dodania dla niego na froncie.
 
 To, czego wciąż musisz dotknąć, zgodnie z uwagą architektoniczną z
 Kroku 6: prop `jiraSettings`, przekazywany przez `SettingsController` →
-`Settings/Integrations.tsx` → `WorkspaceSettingsIntegrationsTab.tsx` →
-modal → panel, jest obecnie
+`SettingsController::integration()` → `Settings/IntegrationDetail.tsx` →
+`WorkspaceSettingsIntegrationDetail.tsx` → panel, jest obecnie
 pojedynczy i specyficzny dla Jiry. Uogólnij go (mapa per-integracja albo
 drugi, identycznie ukształtowany prop), zanim ustawienia Lineara będą
 mogły renderować się obok ustawień Jiry — nie używaj po cichu propa
@@ -745,7 +745,7 @@ każdego przyszłego źródła:
   ciężkość `'success'`, gdy nic nie zawiodło, `'warning'`, gdy
   `failed > 0`.
 - Vitest: blok `describe` "Jira import live progress toast" w
-  `WorkspaceSettingsIntegrationsTab.test.tsx` — trwały toast pojawia się
+  `WorkspaceSettingsIntegrationDetail.test.tsx` — trwały toast pojawia się
   natychmiast i zaczyna odpytywać `jiraImportProgress` + `flash` dopiero
   po upłynięciu interwału odpytywania (`await waitFor(...)`, nie fake
   timers — te nie współgrają dobrze z wewnętrznym taktowaniem

@@ -101,8 +101,8 @@ Notes on each field:
   the way to `ProjectIntegration.options` in the database and to
   `NotifyProjectIntegrationsListener`'s category matching. Get the
   spelling right in both places or a toggle will silently do nothing.
-- `previewSamples` are two fake activity lines shown in the modal's
-  preview block (`WorkspaceSettingsIntegrationPreview`) — purely
+- `previewSamples` are two fake activity lines shown in the preview
+  banner of the integration's page (`WorkspaceSettingsIntegrationPreview`) — purely
   cosmetic, not read by any backend code.
 
 ## Step 3 — (only if brand-new) add a Pest/Vitest smoke test for the catalog data
@@ -279,12 +279,16 @@ comingSoon: false, // was true
 ```
 
 This one flag does a lot on the frontend automatically: the card's
-toggle switch and the modal's per-option toggles stop being
-force-disabled, the "New"/"Soon" badge switches to "New", and the
-modal header shows a real Connect/Connected button instead of "Coming
-soon" — see `WorkspaceSettingsIntegrationCard.tsx` and
-`WorkspaceSettingsIntegrationDetailModal.tsx` for exactly where
-`integration.comingSoon` is read.
+switch and the page's per-option switches stop being
+force-disabled, the "Soon" badge switches to a state badge, and the
+page hero shows a real Enable / Disable button instead of "Coming
+soon" — see `WorkspaceSettingsIntegrationCard.tsx`,
+`WorkspaceSettingsIntegrationHero.tsx` and
+`WorkspaceSettingsIntegrationDetail.tsx` for exactly where
+`integration.comingSoon` is read. The integration's page itself
+(`/settings/integrations/<id>`) needs its id in
+`ProjectIntegrationService::CATALOG_INTEGRATIONS` — it already lists
+every catalog entry, so only a brand new id has to be added there.
 
 ## Step 8 — Tests
 

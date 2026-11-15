@@ -113,7 +113,7 @@ mogą same sobie przyznać szerszego dostępu.
    (`GithubIntegrationService::connect()`), zapisuje identyfikator
    połączenia i token relay (zaszyfrowany) oraz otwiera zwrócony URL
    instalacji GitHub App w nowej karcie.
-3. Strona ustawień odpytuje w tle (`WorkspaceSettingsIntegrationsTab`,
+3. Strona ustawień odpytuje w tle (`useIntegrationActions`,
    co ~2 sekundy, rezygnując po 5 minutach), dopóki połączenie jest w
    stanie `pending`.
 4. Gdy instalacja GitHub App zakończy się, orbit-api oznacza połączenie

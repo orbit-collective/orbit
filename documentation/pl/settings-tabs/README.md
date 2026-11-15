@@ -11,3 +11,14 @@
 ## Architektura w jednym akapicie
 
 `SETTINGS_TABS` (`resources/js/types/Settings.ts`) to płaska tablica każdej zakładki — id, `path` (jej URL), etykieta, ikona, `section` (`'account'` albo `'workspace'`), opis oraz boolean `enabled`. Każda włączona zakładka ma odpowiadającą jej trasę w `routes/web.php` (`/settings/<id>`, nazwa trasy `settings.<id>`) wskazującą na własną akcję `SettingsController`, która renderuje własną stronę pod `resources/js/Pages/Settings/` i przekazuje **tylko** te propy, które ta zakładka renderuje — `Settings/Members` nigdy nie wysyła ustawień integracji, a `Settings/Preferences` nigdy listy członków. Samo `/settings` to już tylko przekierowanie na domyślną zakładkę (`settings.preferences`). Wyłączone zakładki nie mają trasy w ogóle: pokazują się w nawigacji z plakietką "Soon", a `Sidebar.tsx` renderuje je jako zwykły `div`, nie link, więc są nieosiągalne zarówno przez kliknięcie, jak i przez URL. Każda strona jest cienką otoczką: deklaruje swoje propy i renderuje swój komponent zakładki wewnątrz `SettingsLayout` (`resources/js/Components/Organisms/SettingsLayout/SettingsLayout.tsx`), który rysuje `Sidebar` oraz breadcrumb/nagłówek/opis czytane prosto z wpisu zakładki w rejestrze — dlatego każda strona dostaje też prop `projects` (potrzebuje go Sidebar) i dlatego żadna strona nie powtarza własnego tytułu. Same komponenty zakładek wciąż żyją w `Components/Organisms/AccountSettingsContent/` i `Components/Organisms/WorkspaceSettingsContent/`, po jednym `*Tab.tsx` na zakładkę, nietknięte przez ten podział — przeniosło się tylko to, co decyduje, który z nich się renderuje: z łańcucha `if` po stronie klienta do routera. Zakładki Workspace działające w kontekście projektu biorą dodatkowo `memberProjects` / `selectedProjectId` dla przełącznika projektów i rozstrzygają wybrany projekt ze stringa zapytania `?project=<id>`, który jest jedynym parametrem zapytania, jakiego ustawienia jeszcze używają; przełączenie projektu odwiedza *tę samą* ścieżkę zakładki z nowym `?project=`.
+
+**Strona pod zakładką.** Zakładka może mieć własne strony pod swoją
+ścieżką: `/settings/integrations/<id>` to jedna strona na integrację,
+renderowana przez `SettingsController::integration()` i
+`Pages/Settings/IntegrationDetail.tsx`. `getSettingsTabByPath()`
+dopasowuje też `/settings/<tab>/…`, więc sidebar utrzymuje aktywną
+zakładkę, a `SettingsLayout` przyjmuje `breadcrumbTrail` (okruszki po
+okruszku zakładki, który wtedy linkuje wstecz) i `hideTitle` dla strony
+z własnym nagłówkiem. Trasę samej zakładki trzymaj lekką, a ciężkie dane
+niech ładuje podstrona — zobacz
+[`../integrations/07-integration-pages.md`](../integrations/07-integration-pages.md).

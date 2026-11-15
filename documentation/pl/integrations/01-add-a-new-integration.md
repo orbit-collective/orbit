@@ -70,7 +70,7 @@ Plik: `resources/js/types/Integrations.ts`
 Uwagi do poszczególnych pól:
 - `overview` jest renderowane jako **markdown** (przez `EditableMarkdown` w trybie disabled — zobacz przewodnik 4) — używaj `\n\n` na odstępy między akapitami oraz składni markdown `**pogrubienie**`/`- lista`, nie HTML.
 - `subOptions[].id` **musi dokładnie pasować** do kluczy tekstowych, których użyjesz na backendzie (`issue-activity`, `comment-activity` albo nowych — zobacz przewodnik 2). Te id płyną, niezmienione, od interfejsu na froncie aż po `ProjectIntegration.options` w bazie danych oraz dopasowanie kategorii w `NotifyProjectIntegrationsListener`. Popraw pisownię w obu miejscach, inaczej przełącznik po cichu nic nie zrobi.
-- `previewSamples` to dwie fikcyjne linijki aktywności pokazywane w bloku podglądu w modalu (`WorkspaceSettingsIntegrationPreview`) — czysto kosmetyczne, nieczytane przez żaden kod backendu.
+- `previewSamples` to dwie fikcyjne linijki aktywności pokazywane w banerze podglądu na stronie integracji (`WorkspaceSettingsIntegrationPreview`) — czysto kosmetyczne, nieczytane przez żaden kod backendu.
 
 ## Krok 3 — (tylko dla zupełnie nowej integracji) dodaj test dymny Pest/Vitest dla danych katalogu
 
@@ -221,7 +221,7 @@ Plik: `resources/js/types/Integrations.ts`
 comingSoon: false, // było true
 ```
 
-Ta jedna flaga automatycznie robi dużo na froncie: przełącznik karty i przełączniki pod-opcji w modalu przestają być na siłę wyłączone, plakietka "New"/"Soon" zmienia się na "New", a nagłówek modala pokazuje prawdziwy przycisk Connect/Connected zamiast "Coming soon" — zobacz `WorkspaceSettingsIntegrationCard.tsx` i `WorkspaceSettingsIntegrationDetailModal.tsx`, żeby zobaczyć dokładnie, gdzie czytane jest `integration.comingSoon`.
+Ta jedna flaga automatycznie robi dużo na froncie: przełącznik karty i przełączniki pod-opcji na stronie integracji przestają być na siłę wyłączone, plakietka "Soon" zmienia się na plakietkę stanu, a nagłówek strony pokazuje prawdziwy przycisk Enable / Disable zamiast "Coming soon" — zobacz `WorkspaceSettingsIntegrationCard.tsx`, `WorkspaceSettingsIntegrationHero.tsx` i `WorkspaceSettingsIntegrationDetail.tsx`, żeby zobaczyć dokładnie, gdzie czytane jest `integration.comingSoon`. Sama strona integracji (`/settings/integrations/<id>`) wymaga id w `ProjectIntegrationService::CATALOG_INTEGRATIONS` — lista zawiera już każdy wpis katalogu, więc dopisać trzeba tylko zupełnie nowe id.
 
 ## Krok 8 — Testy
 
