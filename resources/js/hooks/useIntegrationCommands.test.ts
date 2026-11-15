@@ -29,6 +29,55 @@ const slack = INTEGRATIONS.find(({ id }) => id === 'slack')!;
 
 beforeEach(() => vi.clearAllMocks());
 
+describe('stable registration', () => {
+    test('new handler functions on a re-render do not change the commands', () => {
+        const props = (onToggle: () => void) => ({
+            projectId: 4,
+            canUpdate: true,
+            statuses: { discord: true },
+            onToggle,
+        });
+        const { rerender } = renderHook((p) => useIntegrationListCommands(p), {
+            initialProps: props(vi.fn()),
+        });
+        const first = registered();
+
+        rerender(props(vi.fn()));
+
+        // The same array again: useCommands would otherwise re-register it,
+        // re-render the page and loop.
+        expect(registered()).toBe(first);
+    });
+
+    test('the page commands keep their identity too, and call the latest handler', () => {
+        const base = {
+            integration: discord,
+            projectId: 4,
+            enabled: false,
+            canUpdate: true,
+            githubStatus: null,
+            onConnectGithub: vi.fn(),
+            onDisconnectGithub: vi.fn(),
+            onRefreshGithubRepositories: vi.fn(),
+        };
+        const oldToggle = vi.fn();
+        const newToggle = vi.fn();
+        const { rerender } = renderHook((p) => useIntegrationCommands(p), {
+            initialProps: { ...base, onToggle: oldToggle },
+        });
+        const first = registered();
+
+        rerender({ ...base, onToggle: newToggle });
+
+        expect(registered()).toBe(first);
+
+        byId('integration.toggle')!.perform!();
+
+        expect(newToggle).toHaveBeenCalledWith(true);
+        expect(oldToggle).not.toHaveBeenCalled();
+    });
+});
+
 describe('useIntegrationListCommands', () => {
     const render = (
         overrides: Partial<

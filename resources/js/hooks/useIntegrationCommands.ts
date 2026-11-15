@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useCommands } from '@/hooks/useCommands';
 import { Command } from '@/types/Commands';
 import {
@@ -35,6 +35,15 @@ export function useIntegrationListCommands({
     onToggle,
 }: UseIntegrationListCommandsOptions) {
     const { t } = useLaravelReactI18n();
+    // The handlers are new functions on every render of the page. Read through
+    // a ref so they stay out of the memo's deps: useCommands() subscribes the
+    // page to the palette, so commands that changed on every render would
+    // re-register, re-render the page and loop forever.
+    // `statuses` is a fresh object whenever its prop is left out, so the memo
+    // is keyed on what is in it.
+    const statusesKey = JSON.stringify(statuses);
+    const onToggleRef = useRef(onToggle);
+    onToggleRef.current = onToggle;
 
     const commands = useMemo(
         (): Command[] =>
@@ -75,11 +84,13 @@ export function useIntegrationListCommands({
                         group: 'suggested',
                         icon: enabled ? 'Power' : 'Plug',
                         keywords,
-                        perform: () => onToggle(integration.id, !enabled),
+                        perform: () =>
+                            onToggleRef.current(integration.id, !enabled),
                     },
                 ];
             }),
-        [projectId, canUpdate, statuses, onToggle, t],
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [projectId, canUpdate, statusesKey, t],
     );
 
     useCommands(commands);
@@ -115,6 +126,20 @@ export function useIntegrationCommands({
 }: UseIntegrationCommandsOptions) {
     const { t } = useLaravelReactI18n();
     const githubState = githubStatus?.status;
+    // See useIntegrationListCommands: handlers are read through a ref so the
+    // commands only change when what they offer changes, not on every render.
+    const handlers = useRef({
+        onToggle,
+        onConnectGithub,
+        onDisconnectGithub,
+        onRefreshGithubRepositories,
+    });
+    handlers.current = {
+        onToggle,
+        onConnectGithub,
+        onDisconnectGithub,
+        onRefreshGithubRepositories,
+    };
 
     const commands = useMemo((): Command[] => {
         const name = integration.name;
@@ -159,7 +184,7 @@ export function useIntegrationCommands({
                 group: 'suggested',
                 icon: enabled ? 'Power' : 'Plug',
                 keywords,
-                perform: () => onToggle(!enabled),
+                perform: () => handlers.current.onToggle(!enabled),
             });
         }
 
@@ -176,7 +201,8 @@ export function useIntegrationCommands({
                         group: 'suggested',
                         icon: 'RefreshCw',
                         keywords,
-                        perform: onRefreshGithubRepositories,
+                        perform: () =>
+                            handlers.current.onRefreshGithubRepositories(),
                     },
                     {
                         id: 'integration.github.disconnect',
@@ -184,7 +210,7 @@ export function useIntegrationCommands({
                         group: 'suggested',
                         icon: 'Power',
                         keywords,
-                        perform: onDisconnectGithub,
+                        perform: () => handlers.current.onDisconnectGithub(),
                     },
                 );
             } else if (githubState !== 'pending') {
@@ -194,24 +220,13 @@ export function useIntegrationCommands({
                     group: 'suggested',
                     icon: 'Plug',
                     keywords,
-                    perform: onConnectGithub,
+                    perform: () => handlers.current.onConnectGithub(),
                 });
             }
         }
 
         return list;
-    }, [
-        integration,
-        projectId,
-        enabled,
-        canUpdate,
-        githubState,
-        onToggle,
-        onConnectGithub,
-        onDisconnectGithub,
-        onRefreshGithubRepositories,
-        t,
-    ]);
+    }, [integration, projectId, enabled, canUpdate, githubState, t]);
 
     useCommands(commands);
 }
