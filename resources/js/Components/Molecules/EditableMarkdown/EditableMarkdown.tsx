@@ -72,8 +72,13 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     const listboxId = useId();
     const slashListboxId = useId();
     const hintId = useId();
-    const { menu, setActiveIndex, userSuggestion, issueSuggestion } =
-        useMentionSuggestions({ users, projectId });
+    const {
+        menu,
+        closeMenu: closeMentionMenu,
+        setActiveIndex,
+        userSuggestion,
+        issueSuggestion,
+    } = useMentionSuggestions({ users, projectId });
     const {
         menu: slashMenu,
         closeMenu: closeSlashMenu,
@@ -307,6 +312,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         restoreFocusRef.current = true;
         // A menu left open would run its block on a read-only editor.
         closeSlashMenu();
+        closeMentionMenu();
         setIsEditing(false);
         editor.setEditable(false);
 
@@ -324,6 +330,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
 
         restoreFocusRef.current = true;
         closeSlashMenu();
+        closeMentionMenu();
         editor.commands.setContent(value || '');
         editor.setEditable(false);
         setIsEditing(false);

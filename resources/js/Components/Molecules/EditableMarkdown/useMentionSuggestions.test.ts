@@ -159,6 +159,72 @@ describe('user suggestions', () => {
     });
 });
 
+describe('menu position and closing', () => {
+    test('the menu follows the caret when a container scrolls', () => {
+        const { hook, userRenderer } = setup();
+        let caret = { top: 100, bottom: 120, left: 50 } as DOMRect;
+
+        act(() => {
+            userRenderer().onStart!({
+                items: [users[0]],
+                query: '',
+                command: vi.fn(),
+                clientRect: () => caret,
+            } as never);
+        });
+        expect(hook.result.current.menu?.position.top).toBe(124);
+
+        caret = { top: 40, bottom: 60, left: 50 } as DOMRect;
+        act(() => {
+            window.dispatchEvent(new Event('scroll'));
+        });
+
+        expect(hook.result.current.menu?.position).toEqual({
+            top: 64,
+            lineTop: 36,
+            left: 50,
+        });
+    });
+
+    test('an issue menu follows the caret too, and listeners go once it closes', () => {
+        const remove = vi.spyOn(window, 'removeEventListener');
+        const { hook, issueRenderer } = setup();
+        let caret = { top: 100, bottom: 120, left: 50 } as DOMRect;
+
+        act(() => {
+            issueRenderer().onStart!({
+                items: [],
+                query: '2',
+                command: vi.fn(),
+                clientRect: () => caret,
+            } as never);
+        });
+        caret = { top: 10, bottom: 30, left: 70 } as DOMRect;
+        act(() => {
+            window.dispatchEvent(new Event('resize'));
+        });
+        expect(hook.result.current.menu?.position.left).toBe(70);
+
+        act(() => issueRenderer().onExit!({} as never));
+
+        expect(remove).toHaveBeenCalledWith('resize', expect.any(Function));
+        remove.mockRestore();
+    });
+
+    test('closeMenu hides an open menu', () => {
+        const { hook, userRenderer } = setup();
+
+        act(() => {
+            userRenderer().onStart!(suggestionProps([users[0]]));
+        });
+        expect(hook.result.current.menu).not.toBeNull();
+
+        act(() => hook.result.current.closeMenu());
+
+        expect(hook.result.current.menu).toBeNull();
+    });
+});
+
 describe('issue suggestions', () => {
     const issue = { id: 201, number: 3, title: 'Login [urgent] bug' };
 
