@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.15.3](https://github.com/orbit-collective/orbit/compare/v0.15.2...v0.15.3) (2026-11-15)
+
+
+### Features
+
+* **comments:** highlight mentions while typing ([d6ccd66](https://github.com/orbit-collective/orbit/commit/d6ccd66f4d21834044d35044a15c8794e03b3d52))
+* **issue-types:** write templates in the rich editor ([95684f2](https://github.com/orbit-collective/orbit/commit/95684f203415a5a3139d15305c0353e3e918a646))
+* **issues:** add "/" block menu to description ([f18dee3](https://github.com/orbit-collective/orbit/commit/f18dee3d48ee15d7ff609653fa7a8ff5a5b33aa7))
+* **issues:** add field variant to markdown editor ([ef4f623](https://github.com/orbit-collective/orbit/commit/ef4f62302cd2072a358d92f9b5c16eabd938c0ce))
+* **issues:** add formatting toolbar to editor ([bc9a253](https://github.com/orbit-collective/orbit/commit/bc9a2530855ac67e263645cd64f0b2cf6afc92fa))
+* **issues:** save description with buttons ([5ce3302](https://github.com/orbit-collective/orbit/commit/5ce33022c1a629a04ba22bccbb60013f256de2a7))
+
+
+### Bug Fixes
+
+* **issues:** add a link at the caret next to an existing one ([f7c7a62](https://github.com/orbit-collective/orbit/commit/f7c7a62db4c2b17735c385ec37ab72bf54104898))
+* **issues:** close and reposition the "@" and "#" menus ([1974a66](https://github.com/orbit-collective/orbit/commit/1974a662bad9c034cfa4e4f7e7830269fea792ee))
+* **issues:** close the "/" menu and Escape correctly ([e89ffe8](https://github.com/orbit-collective/orbit/commit/e89ffe843922f9920e9124c2ad88a34a766ab6e2))
+* **issues:** keep columns aligned for rowspan tables on save ([5f731d2](https://github.com/orbit-collective/orbit/commit/5f731d2f9367a3db07e1ba4a24c046a4506720c0))
+* **issues:** keep tables and text safe on save ([1452e19](https://github.com/orbit-collective/orbit/commit/1452e19d53377e75c32613cf67ccaee4c231601a))
+* **ui:** let an open suggestion list own Escape in modals ([e5ef0d0](https://github.com/orbit-collective/orbit/commit/e5ef0d0cd62e16640e3f8b731f44dc06f0a9796a))
+* **ui:** show the member count once on roles ([98e6602](https://github.com/orbit-collective/orbit/commit/98e6602b330c7efdef7e99ac3e10b5fd131ed9cd))
+
+
+### Miscellaneous Chores
+
+* release 0.15.3 ([9c2038b](https://github.com/orbit-collective/orbit/commit/9c2038bbcffc3515c299499776da647e0ce073c1))
+
 ## [0.15.2](https://github.com/orbit-collective/orbit/compare/v0.15.1...v0.15.2) (2026-11-15)
 
 
