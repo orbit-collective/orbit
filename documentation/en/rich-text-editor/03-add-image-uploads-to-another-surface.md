@@ -428,6 +428,16 @@ separately as it always was.
 
 ## Part B — Issue type templates (built)
 
+> **Update:** the template body is no longer a textarea. The form in
+> `WorkspaceSettingsTemplatesModal.tsx` uses
+> `<EditableMarkdown variant="field" />` — the same Tiptap editor as the
+> issue description, with the formatting bar, the `/` menu and image
+> paste/drop — and a saved template is previewed rendered, not as raw
+> text. The upload pipeline below is unchanged (`onImageUpload` gets the
+> project's `uploadImage`); the textarea-specific steps (`useImageInsertion`,
+> `handleDescriptionPaste/Drop`) describe the earlier version and now
+> only apply to comments. See guide 5, "Use the editor as a form field".
+
 A template's `description` is the markdown a new issue of that type
 starts from (see
 [`../issue-types/README.md`](../issue-types/README.md)), which means

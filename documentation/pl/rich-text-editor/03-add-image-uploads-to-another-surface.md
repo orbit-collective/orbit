@@ -320,6 +320,17 @@ const renderBody = (value: string) =>
 
 ## Część B — Szablony typów issue (zbudowane)
 
+> **Aktualizacja:** treść szablonu nie jest już textarea. Formularz w
+> `WorkspaceSettingsTemplatesModal.tsx` używa
+> `<EditableMarkdown variant="field" />` — tego samego edytora Tiptap co
+> opis issue, z paskiem formatowania, menu `/` i wklejaniem/upuszczaniem
+> obrazów — a zapisany szablon jest podglądany wyrenderowany, nie jako
+> surowy tekst. Pipeline uploadu poniżej się nie zmienił (`onImageUpload`
+> dostaje `uploadImage` projektu); kroki specyficzne dla textarea
+> (`useImageInsertion`, `handleDescriptionPaste/Drop`) opisują wcześniejszą
+> wersję i dotyczą teraz tylko komentarzy. Zobacz przewodnik 5, „Użyj
+> edytora jako pola formularza”.
+
 `description` szablonu to markdown, od którego zaczyna nowe issue danego typu (zobacz [`../issue-types/README.md`](../issue-types/README.md)), co oznacza, że obraz wklejony do szablonu pojawia się w każdym issue z niego utworzonym — załącznik jest zapisany raz i referowany z każdego z tych opisów. I tak ma być: załączniki należą do projektu, a nie do issue, więc żadne issue nie „posiada" pliku i usunięcie jednego nigdy nie zepsuje obrazka w innym.
 
 Dwie rzeczy czynią z tego prostszą z dwóch powierzchni i na nie właśnie warto patrzeć, oceniając kolejną:
