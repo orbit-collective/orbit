@@ -85,6 +85,35 @@ rejestrowana tylko wtedy, gdy zadziała (bez przełącznika bez
 gdy instalacja trwa). Teksty są w
 `lang/<locale>/hook_integration_commands.php`.
 
+## Wyszukiwanie i filtry na przeglądzie
+
+Przegląd filtruje w przeglądarce, na katalogu, który już tam jest, więc
+podczas pisania nic nie jest wysyłane. `WorkspaceSettingsIntegrationsTab`
+trzyma trzy niezależne filtry: pole wyszukiwania, pigułki kategorii i
+kontrolkę stanu (All / Enabled / Disabled / Coming soon,
+`SegmentedControl`). Łączą się: karta pojawia się tylko, jeśli przejdzie
+wszystkie trzy.
+
+- **Wyszukiwanie** (`matchesSearch()` w `utils/integrationFilters.ts`):
+  każde słowo musi wystąpić, w dowolnej kolejności, w nazwie, dostawcy,
+  opisie lub kategorii tak, jak widzi je użytkownik (przetłumaczone
+  teksty), bez względu na wielkość liter i akcenty. Escape lub przycisk
+  czyszczenia opróżnia pole.
+- **Stan** (`integrationState()`): `soon` dla wpisu katalogu, który nie jest
+  wydany, w pozostałych przypadkach `enabled` lub `disabled` z
+  `integrationStatuses` (dla GitHuba wartość oznacza "połączony").
+- **Liczniki**: przyciski stanu liczą to, co pokazałby wybór, przy
+  zastosowanym wyszukiwaniu i kategorii; pigułki kategorii liczą przy
+  zastosowanym wyszukiwaniu i stanie.
+- **Pusty wynik**: panel z przyciskiem Clear filters; uprzejmy region live
+  czyta, ile integracji jest widocznych.
+- **Paleta**: **Szukaj integracji** (w Suggested) ustawia kursor w polu.
+
+Nowy wymiar filtra ma ten sam kształt: czysty helper w
+`utils/integrationFilters.ts` (z testem), stan w zakładce i jeden warunek
+więcej w łańcuchu `inSearchAndCategory` / `filteredIntegrations`, a do
+tego klucze pod `workspace_settings_integrations.tab` w obu językach.
+
 ## Klawiatura i małe ekrany
 
 - Karta to jeden punkt Tab: nazwa integracji jest linkiem rozciągniętym
