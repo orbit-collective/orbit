@@ -708,6 +708,9 @@ export default function Show({
                                             renderValue={() =>
                                                 issue.assignee ? (
                                                     <UserBadge
+                                                        userId={
+                                                            issue.assignee.id
+                                                        }
                                                         avatarSrc={
                                                             issue.assignee
                                                                 .avatar

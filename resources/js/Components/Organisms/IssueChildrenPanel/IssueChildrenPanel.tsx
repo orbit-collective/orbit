@@ -154,6 +154,7 @@ export default function IssueChildrenPanel({
                             )}
                             {child.assignee && (
                                 <UserBadge
+                                    userId={child.assignee.id}
                                     avatarSrc={child.assignee.avatar}
                                     name={child.assignee.name}
                                     size="sm"

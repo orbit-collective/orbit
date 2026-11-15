@@ -62,6 +62,7 @@ const BoardCardContent = ({
                 )}
                 {issue.assignee ? (
                     <Avatar
+                        userId={issue.assignee.id}
                         src={issue.assignee.avatar}
                         alt={issue.assignee.name}
                         initials={issue.assignee.name.charAt(0)}

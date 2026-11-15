@@ -166,7 +166,7 @@ export const StatusPicker = ({
 interface AssigneePickerProps extends PickerProps {
     users: AssignableUser[];
     /** The assignee as the issue carries it, which may not be a listed member any more. */
-    value: { name: string; avatar?: string | null } | null;
+    value: { id?: number; name: string; avatar?: string | null } | null;
     selectedId: number | null;
     onChange: (userId: number | null) => void;
 }
@@ -210,6 +210,7 @@ export const AssigneePicker = ({
 
     const display = value ? (
         <UserBadge
+            userId={value.id}
             avatarSrc={value.avatar ?? undefined}
             name={value.name}
             size="sm"
