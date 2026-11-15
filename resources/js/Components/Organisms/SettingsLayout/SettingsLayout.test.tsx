@@ -50,10 +50,9 @@ describe('SettingsLayout', () => {
             </SettingsLayout>,
         );
 
-        expect(screen.getByRole('link', { name: 'Integrations' })).toHaveAttribute(
-            'href',
-            '/settings/integrations',
-        );
+        expect(
+            screen.getByRole('link', { name: 'Integrations' }),
+        ).toHaveAttribute('href', '/settings/integrations');
         expect(screen.getByText('GitHub')).toBeInTheDocument();
         expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
     });
