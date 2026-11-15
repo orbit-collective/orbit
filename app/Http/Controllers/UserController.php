@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Services\NsfwDetectionService;
 use App\Services\UserService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +17,18 @@ class UserController extends Controller
     public function __construct(
         protected UserService $userService
     ) {}
+
+    /**
+     * JSON data for the hover card on a user's avatar.
+     */
+    public function preview(Request $request, User $user): JsonResponse
+    {
+        $payload = $this->userService->previewFor($request->user()->id, $user);
+
+        abort_if($payload === null, 404);
+
+        return response()->json($payload);
+    }
 
     public function completeOnboarding(): RedirectResponse
     {

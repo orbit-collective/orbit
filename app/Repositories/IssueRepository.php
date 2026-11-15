@@ -118,6 +118,29 @@ class IssueRepository
      *
      * @return Collection<array-key, Issue>
      */
+    /**
+     * The issues a person created or is assigned to, most recently edited
+     * first, limited to projects the viewer is also a member of.
+     *
+     * @return Collection<array-key, Issue>
+     */
+    public function recentlyEditedForUser(int $viewerId, int $userId, int $limit = 3): Collection
+    {
+        return Issue::query()
+            ->whereIn('issues.project_id', fn ($members) => $members
+                ->select('project_id')
+                ->from('project_user')
+                ->where('user_id', $viewerId))
+            ->where(fn (Builder $mine) => $mine
+                ->where('issues.assignee_id', $userId)
+                ->orWhere('issues.user_id', $userId))
+            ->with(['workflowStatus', 'project'])
+            ->orderByDesc('issues.updated_at')
+            ->orderByDesc('issues.id')
+            ->limit($limit)
+            ->get();
+    }
+
     public function searchForUser(int $userId, string $q, int $limit = 8, ?int $number = null): Collection
     {
         $titleLower = 'LOWER(issues.title)';

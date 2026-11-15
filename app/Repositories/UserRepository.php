@@ -63,6 +63,23 @@ class UserRepository {
             ->get();
     }
 
+    /**
+     * Whether two users are members of at least one common project (a user
+     * always shares projects with themselves).
+     */
+    public function sharesProject(int $userId, int $otherUserId): bool
+    {
+        if ($userId === $otherUserId) {
+            return true;
+        }
+
+        return DB::table('project_user as theirs')
+            ->join('project_user as mine', 'mine.project_id', '=', 'theirs.project_id')
+            ->where('mine.user_id', $userId)
+            ->where('theirs.user_id', $otherUserId)
+            ->exists();
+    }
+
     public function update(User $user, array $data): User {
         $user->update($data);
         return $user;

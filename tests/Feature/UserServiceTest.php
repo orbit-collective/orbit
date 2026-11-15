@@ -15,7 +15,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->userRepository = Mockery::mock(UserRepository::class);
     $this->activityLogService = Mockery::mock(ActivityLogService::class);
-    $this->service = new UserService($this->userRepository, $this->activityLogService);
+    $this->service = new UserService($this->userRepository, $this->activityLogService, app(\App\Repositories\IssueRepository::class));
 });
 
 test('it delegates fetching a project\'s assignable users to the repository', function () {
