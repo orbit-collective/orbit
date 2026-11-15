@@ -197,7 +197,16 @@ export interface EditableLabelListProps {
 }
 export interface EditableMarkdownProps {
     value: string;
-    onSave: (value: string) => void;
+    /** Called with the markdown when an edit is saved (the `inline` variant). */
+    onSave?: (value: string) => void;
+    /**
+     * `inline` (default) shows the rendered text and opens the editor on click,
+     * ending with Save or Cancel. `field` is an editor that is always open, for
+     * a form: no Edit/Save/Cancel, every change goes to `onChange`.
+     */
+    variant?: 'inline' | 'field';
+    /** Called with the markdown on every change of a `field` editor. */
+    onChange?: (value: string) => void;
     /** Resolves with the stored URL of an image pasted or dropped into the editor. Omit it to disable image uploads for this instance. */
     onImageUpload?: (file: File) => Promise<string>;
     placeholder?: string;

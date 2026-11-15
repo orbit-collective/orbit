@@ -39,6 +39,8 @@ const editorDom = (editor: Editor | null): HTMLElement | null => {
 const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     value,
     onSave,
+    variant = 'inline',
+    onChange,
     onImageUpload,
     placeholder,
     disabled = false,
@@ -48,7 +50,9 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     onEditingChange,
 }) => {
     const { t, tChoice } = useLaravelReactI18n();
-    const [isEditing, setIsEditing] = useState(false);
+    const isField = variant === 'field';
+    // A form field is open from the start; the inline variant opens on click.
+    const [isEditing, setIsEditing] = useState(isField && !disabled);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [pendingUploads, setPendingUploads] = useState(0);
     // Read by save()/cancel(), which can run from a Tiptap key handler: ending
@@ -61,6 +65,9 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     const restoreFocusRef = useRef(false);
     // Tiptap's key handler is created once; it saves through this ref.
     const saveRef = useRef(() => {});
+    // Same for the change handler of a field.
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
 
     const listboxId = useId();
     const slashListboxId = useId();
@@ -77,7 +84,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     });
 
     const editor = useEditor({
-        editable: false,
+        editable: isField && !disabled,
         content: value || '',
         extensions: [
             StarterKit.configure({
@@ -114,12 +121,20 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         ],
         editorProps: {
             attributes: {
-                class: 'prose max-w-none text-sm focus:outline-hidden',
+                class: cn(
+                    'prose max-w-none text-sm focus:outline-hidden',
+                    // Room to click into below a short text.
+                    isField && 'min-h-32',
+                ),
             },
             // Ctrl/Cmd+Enter saves. Handled here, not on the wrapper, because
             // Tiptap's own keymap would otherwise also insert a line break.
             handleKeyDown: (_view, event) => {
-                if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                if (
+                    !isField &&
+                    event.key === 'Enter' &&
+                    (event.ctrlKey || event.metaKey)
+                ) {
                     event.preventDefault();
                     saveRef.current();
 
@@ -139,7 +154,20 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                 return true;
             },
         },
+        onUpdate: ({ editor }) => {
+            if (isField) {
+                onChangeRef.current?.(editor.storage.markdown.getMarkdown());
+            }
+        },
     });
+
+    // A field follows `disabled` (a permission can change under it).
+    useEffect(() => {
+        if (!isField || !editor) return;
+
+        editor.setEditable(!disabled);
+        setIsEditing(!disabled);
+    }, [editor, isField, disabled]);
 
     useEffect(() => {
         onEditingChange?.(isEditing);
@@ -172,7 +200,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
 
         dom.setAttribute('aria-label', t('editable_markdown.aria_label'));
 
-        if (isEditing) dom.setAttribute('aria-describedby', hintId);
+        if (isEditing && !isField) dom.setAttribute('aria-describedby', hintId);
         else dom.removeAttribute('aria-describedby');
 
         if (openList) {
@@ -188,7 +216,10 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     }, [editor, isEditing, openList?.id, openList?.index, hintId, t]);
 
     useEffect(() => {
-        if (!editor || isEditing) return;
+        // An inline editor keeps the draft; a field follows its parent's value
+        // (it is the same text after every change, so this only fires when the
+        // parent swaps the text, e.g. another template is opened).
+        if (!editor || (isEditing && !isField)) return;
 
         const current = editor.storage.markdown.getMarkdown();
         if (current !== (value || '')) {
@@ -268,7 +299,9 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     // Leaving the editor (a click elsewhere, the keyboard focus moving on) no
     // longer saves: the draft stays open until Save or Cancel.
     const save = () => {
-        if (!editor || !isEditing || pendingUploadsRef.current > 0) return;
+        if (isField || !editor || !isEditing || pendingUploadsRef.current > 0) {
+            return;
+        }
 
         restoreFocusRef.current = true;
         setIsEditing(false);
@@ -276,13 +309,13 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
 
         const markdown = editor.storage.markdown.getMarkdown();
         if (markdown !== (value || '')) {
-            onSave(markdown);
+            onSave?.(markdown);
         }
     };
     saveRef.current = save;
 
     const cancel = () => {
-        if (!editor || pendingUploadsRef.current > 0) return;
+        if (isField || !editor || pendingUploadsRef.current > 0) return;
 
         restoreFocusRef.current = true;
         editor.commands.setContent(value || '');
@@ -291,7 +324,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     };
 
     const startEditing = () => {
-        if (disabled || !editor || isEditing) return;
+        if (disabled || isField || !editor || isEditing) return;
 
         editor.setEditable(true);
         setIsEditing(true);
@@ -315,6 +348,9 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
      * of the way, so the image node can still be selected and deleted.
      */
     const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        // A field is already open; an image in it is selected, not opened.
+        if (isField) return;
+
         const target = event.target as HTMLElement;
         const image = target.closest?.('img');
 
@@ -362,7 +398,8 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
             ref={containerRef}
             onClick={handleClick}
             onKeyDown={(e) => {
-                if (e.key === 'Escape') {
+                // A field sits in a form or modal that owns Escape.
+                if (e.key === 'Escape' && !isField) {
                     e.preventDefault();
                     cancel();
                 }
@@ -381,11 +418,17 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                 // states, with the same negative margin, so entering the edit
                 // mode never moves the text.
                 !disabled &&
+                    !isField &&
                     'group/editable -mx-3 rounded-lg border border-transparent px-3 py-2 transition-colors',
+                isField &&
+                    !disabled &&
+                    'rounded-lg border border-(--border-color) bg-(--bg-color) px-3 py-2 transition-colors focus-within:border-(--accent-color)',
                 !disabled &&
+                    !isField &&
                     !isEditing &&
                     'cursor-text hover:bg-(--bg-light-color)/30 pointer-coarse:pr-12',
                 !disabled &&
+                    !isField &&
                     isEditing &&
                     'border-(--accent-color)/60 bg-(--bg-color)',
                 isDraggingOver &&
@@ -401,11 +444,11 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                             ? () => fileInputRef.current?.click()
                             : undefined
                     }
-                    className="sticky top-0 z-10 mb-2 bg-(--bg-color) pt-0.5"
+                    className="sticky top-0 z-10 -mx-3 mb-2 bg-(--bg-color) px-3 pt-0.5"
                 />
             )}
             <EditorContent editor={editor} />
-            {!disabled && !isEditing && (
+            {!disabled && !isField && !isEditing && (
                 <button
                     type="button"
                     data-edit-trigger
@@ -425,7 +468,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                     <Icon name="Pencil" size={14} />
                 </button>
             )}
-            {isEditing && (
+            {isEditing && !isField && (
                 <div
                     onClick={(e) => e.stopPropagation()}
                     className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-(--border-color) pt-3"

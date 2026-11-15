@@ -17,6 +17,8 @@ type KeyHandler = (view: unknown, event: KeyboardEvent) => boolean;
 type EditorOptions = {
     content: string;
     onBlur?: (args: { editor: FakeEditor }) => void;
+    editable?: boolean;
+    onUpdate?: (args: { editor: FakeEditor }) => void;
     editorProps?: { handlePaste?: PasteHandler; handleKeyDown?: KeyHandler };
 };
 
@@ -677,5 +679,94 @@ describe('EditableMarkdown image clicks', () => {
         await userEvent.click(screen.getByRole('img', { name: 'shot.png' }));
 
         expect(openSpy).not.toHaveBeenCalled();
+    });
+});
+
+describe('EditableMarkdown field variant', () => {
+    const setupField = (
+        value: string,
+        props: Partial<React.ComponentProps<typeof EditableMarkdown>> = {},
+    ) => {
+        const editor = new FakeEditor({ content: value });
+        let options: EditorOptions | undefined;
+        mockUseEditor.mockImplementation((next: EditorOptions) => {
+            options = next;
+
+            return editor;
+        });
+
+        const utils = render(
+            <EditableMarkdown value={value} variant="field" {...props} />,
+        );
+
+        return { ...utils, editor, getOptions: () => options! };
+    };
+
+    test('is editable from the start, with the formatting bar and no buttons', () => {
+        const { getOptions } = setupField('Text');
+
+        expect(getOptions().editable).toBe(true);
+        expect(screen.getByTestId('editor-toolbar')).toBeInTheDocument();
+        for (const name of ['Edit', 'Save', 'Cancel']) {
+            expect(
+                screen.queryByRole('button', { name }),
+            ).not.toBeInTheDocument();
+        }
+    });
+
+    test('every change is reported as markdown', () => {
+        const onChange = vi.fn();
+        const { editor, getOptions } = setupField('Text', { onChange });
+
+        editor.setContent('## New');
+        act(() => getOptions().onUpdate?.({ editor }));
+
+        expect(onChange).toHaveBeenCalledWith('## New');
+    });
+
+    test('Escape and Ctrl+Enter are left to the surrounding form', () => {
+        const { editor, getOptions } = setupField('Text');
+        editor.setContent('Draft');
+
+        fireEvent.keyDown(screen.getByTestId('editor-content'), {
+            key: 'Escape',
+        });
+        const handled = getOptions().editorProps?.handleKeyDown?.(null, {
+            key: 'Enter',
+            ctrlKey: true,
+            preventDefault: vi.fn(),
+        } as unknown as KeyboardEvent);
+
+        expect(handled).toBe(false);
+        expect(editor.setContent).toHaveBeenCalledTimes(1);
+        expect(editor.setEditable).not.toHaveBeenCalledWith(false);
+    });
+
+    test('clicking it does not start or end an edit', async () => {
+        const { editor } = setupField('Text');
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+
+        expect(editor.focus).not.toHaveBeenCalled();
+    });
+
+    test('follows a value the parent swaps in, but not its own echo', () => {
+        const { editor, rerender } = setupField('First');
+        editor.setContent.mockClear();
+
+        // The echo of what the editor holds is left alone.
+        rerender(<EditableMarkdown value="First" variant="field" />);
+        expect(editor.setContent).not.toHaveBeenCalled();
+
+        // Another text (e.g. another template opened) replaces it.
+        rerender(<EditableMarkdown value="Second" variant="field" />);
+        expect(editor.setContent).toHaveBeenCalledWith('Second');
+    });
+
+    test('a disabled field is read-only without a frame or bar', () => {
+        const { editor } = setupField('Text', { disabled: true });
+
+        expect(editor.setEditable).toHaveBeenCalledWith(false);
+        expect(screen.queryByTestId('editor-toolbar')).not.toBeInTheDocument();
     });
 });
