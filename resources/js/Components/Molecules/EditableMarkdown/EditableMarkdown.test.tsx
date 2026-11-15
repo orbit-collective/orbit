@@ -112,7 +112,10 @@ vi.mock('@tiptap/extension-task-list', () => ({ default: {} }));
 vi.mock('@tiptap/extension-task-item', () => ({
     default: { configure: () => ({}) },
 }));
-vi.mock('@tiptap/extension-table', () => ({ TableKit: {} }));
+vi.mock('@tiptap/extension-table', () => ({
+    TableKit: { configure: () => ({}) },
+    Table: { extend: () => ({}) },
+}));
 vi.mock('@tiptap/extension-image', () => ({ default: {} }));
 vi.mock('tiptap-markdown', () => ({
     Markdown: { configure: () => ({}) },
