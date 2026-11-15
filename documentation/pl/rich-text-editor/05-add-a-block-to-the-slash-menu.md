@@ -30,13 +30,36 @@ stronie issue: wyrenderowany tekst, klik albo **Edytuj**, żeby otworzyć, i
 **zawsze otwarty**, do formularza (treść szablonu typu issue):
 
 ```tsx
-<EditableMarkdown
-    variant="field"
-    value={description}
-    onChange={setDescription}
-    onImageUpload={uploadImage}
-    placeholder={t('...')}
-/>
+import { useLaravelReactI18n } from 'laravel-react-i18n';
+import { useState } from 'react';
+import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
+import { useImageUpload } from '@/hooks/useImageUpload';
+
+interface TemplateBodyFieldProps {
+    projectId: number;
+    initialDescription: string;
+}
+
+export default function TemplateBodyField({
+    projectId,
+    initialDescription,
+}: TemplateBodyFieldProps) {
+    const { t } = useLaravelReactI18n();
+    const { uploadImage } = useImageUpload(projectId);
+    const [description, setDescription] = useState(initialDescription);
+
+    return (
+        <EditableMarkdown
+            variant="field"
+            value={description}
+            onChange={setDescription}
+            onImageUpload={uploadImage}
+            placeholder={t(
+                'workspace_settings_templates_modal.description_placeholder',
+            )}
+        />
+    );
+}
 ```
 
 Nie ma Edytuj/Zapisz/Anuluj; każda zmiana woła `onChange` z markdownem, a
@@ -60,7 +83,10 @@ Zasady, których hook już przestrzega — zachowaj je przy czymś podobnym:
 
 - **`Escape` zamyka tylko menu.** Wrapper anuluje edycję na `Escape`, więc
   hook woła `stopPropagation()` — nawet gdy nic nie pasuje i menu nie jest
-  widoczne.
+  widoczne. W modalu polega to na `Modal`, którego nasłuchiwacz Escape
+  działa pierwszy (faza capture), więc ignoruje klawisz, gdy aktywne pole ma
+  `aria-activedescendant`, a `EditableMarkdown` ustawia je tylko wtedy, gdy
+  otwarte jest menu z opcjami.
 - **Wiersze połykają `mousedown`**, żeby edytor zachował zaznaczenie, a
   sugestia żyła w trakcie kliknięcia lub tapnięcia wiersza.
 - **Brak dopasowań chowa menu, ale zostawia trigger żywy**, więc skasowanie
@@ -74,7 +100,7 @@ Zasady, których hook już przestrzega — zachowaj je przy czymś podobnym:
 
 ## Przykład — blok „Callout”
 
-### Krok 1 — Dodaj teksty (oba języki)
+## Krok 1 — Dodaj teksty (oba języki)
 
 Pliki: `lang/en/editable_markdown.php`, `lang/pl/editable_markdown.php`, w
 tablicy `slash`:
@@ -90,30 +116,39 @@ tablicy `slash`:
 `keywords` to dodatkowe słowa dopasowywane do zapytania (pasuje słowo
 _zaczynające się_ od zapytania), w języku danego pliku.
 
-### Krok 2 — Dodaj ikonę do rejestru
+## Krok 2 — Dodaj ikonę do rejestru
 
 Plik: `resources/js/utils/iconRegistry.ts`. Zaimportuj ikonę z
 `lucide-react/icons/<name>` i dodaj do mapy (pierwszy bundle niesie tylko
 wymienione tam ikony). `utils/lucideIconNames.ts` nie wymaga zmian, chyba że
 podniesiono wersję lucide.
 
-### Krok 3 — Dodaj blok
+## Krok 3 — Dodaj blok
 
 Plik: `slashCommands.ts`. Dodaj wpis do `SLASH_COMMANDS`; kolejność tutaj to
 kolejność w menu.
 
 ```ts
-{
-    id: 'callout',
-    icon: 'MessageSquareExclamationPoint',
-    titleKey: 'editable_markdown.slash.callout.title',
-    descriptionKey: 'editable_markdown.slash.callout.description',
-    keywordsKey: 'editable_markdown.slash.callout.keywords',
-    // Opcjonalnie: ukryj tam, gdzie nie ma sensu.
-    // isAvailable: (editor) => !editor.isActive('table'),
-    run: (editor, range) =>
-        void editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
-},
+// resources/js/Components/Molecules/EditableMarkdown/slashCommands.ts
+export const SLASH_COMMANDS: SlashCommand[] = [
+    // ...the existing blocks, in menu order...
+    {
+        id: 'callout',
+        icon: 'MessageSquareExclamationPoint',
+        titleKey: 'editable_markdown.slash.callout.title',
+        descriptionKey: 'editable_markdown.slash.callout.description',
+        keywordsKey: 'editable_markdown.slash.callout.keywords',
+        // Optional: hide it where it makes no sense.
+        // isAvailable: (editor) => !editor.isActive('table'),
+        run: (editor, range) =>
+            void editor
+                .chain()
+                .focus()
+                .deleteRange(range)
+                .toggleBlockquote()
+                .run(),
+    },
+];
 ```
 
 `run` dostaje edytor i zakres wpisanego `/query`; zawsze najpierw usuń ten
@@ -128,7 +163,7 @@ kończy go komponent: `onPickImage` w `useSlashCommands` jest podpięte do
 ukrytego inputa pliku w `EditableMarkdown`. Idź tym kształtem przy każdym
 innym bloku, który po wyborze potrzebuje UI.
 
-### Krok 4 — Testy i story
+## Krok 4 — Testy i story
 
 - `slashCommands.test.ts`: dodaj blok do grupy „what each block does”
   (prawdziwy `Editor`, `run()` na linii z `/`, asercja dokumentu lub

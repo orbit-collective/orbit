@@ -75,11 +75,12 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
 That's the entire integration — Tiptap extensions are self-contained;
 adding one to the array is what registers its commands, its
 schema additions, and (for `Highlight` specifically) its keyboard
-shortcut (`Ctrl+Shift+H` by default) all at once. No separate toolbar
-button is wired up anywhere in this editor today (formatting happens
-via Markdown-style typing shortcuts and keyboard shortcuts, not a
-button bar), so a new extension needs no additional UI wiring unless
-you're also adding a toolbar, which doesn't exist yet.
+shortcut (`Ctrl+Shift+H` by default) all at once. The editor's
+formatting bar (`EditorToolbar`) is separate: a new extension does not
+get a button automatically, so it works through typing shortcuts and
+its keyboard shortcut until you add one. To give it a button, add an
+entry to `TOOLBAR_GROUPS` in `toolbarItems.ts` with its text in
+`lang/{en,pl}/editor_toolbar.php` (guide 5, "The formatting bar").
 
 ## Step 3 — Confirm it survives the markdown round-trip
 

@@ -65,7 +65,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     // ...rest of the component is unchanged...
 ```
 
-To cała integracja — rozszerzenia Tiptapa są samowystarczalne; dodanie jednego do tablicy to wszystko, co rejestruje jego komendy, dodatki do schematu i (konkretnie dla `Highlight`) jego skrót klawiszowy (`Ctrl+Shift+H` domyślnie) naraz. Żaden osobny przycisk paska narzędzi nie jest dziś podłączony nigdzie w tym edytorze (formatowanie dzieje się przez skróty typu Markdown podczas pisania i skróty klawiszowe, nie pasek przycisków), więc nowe rozszerzenie nie potrzebuje żadnego dodatkowego podłączenia UI, chyba że dodajesz też pasek narzędzi, którego jeszcze nie ma.
+To cała integracja — rozszerzenia Tiptapa są samowystarczalne; dodanie jednego do tablicy to wszystko, co rejestruje jego komendy, dodatki do schematu i (konkretnie dla `Highlight`) jego skrót klawiszowy (`Ctrl+Shift+H` domyślnie) naraz. Pasek formatowania edytora (`EditorToolbar`) jest osobny: nowe rozszerzenie nie dostaje przycisku automatycznie, więc działa przez skróty podczas pisania i własny skrót klawiszowy, dopóki go nie dodasz. Żeby dać mu przycisk, dodaj wpis do `TOOLBAR_GROUPS` w `toolbarItems.ts`, a jego tekst do `lang/{en,pl}/editor_toolbar.php` (przewodnik 5, „Pasek formatowania”).
 
 ## Krok 3 — Potwierdź, że przeżywa rundę markdown
 

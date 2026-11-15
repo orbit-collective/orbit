@@ -2,15 +2,15 @@
 
 How the upload pipeline from
 [`02-add-image-paste-and-drop-uploads.md`](./02-add-image-paste-and-drop-uploads.md)
-reaches the app's markdown fields that are **not** Tiptap: **Part A**
-issue comments and **Part B** an issue type's template body. Both are
-built; together they are the two shapes any further surface will
-take — one that has to render the markdown itself (comments) and one
-whose rendering is somebody else's problem (templates).
+reaches the app's other markdown fields: **Part A** issue comments, a
+plain textarea that has to do everything itself, and **Part B** an
+issue type's template body, which is the Tiptap editor and needs almost
+nothing. Both are built; together they are the two shapes any further
+surface will take.
 
-Read Part A first even if you only care about templates — every
-helper Part B uses comes from it, and the two differ in exactly the
-ways listed in Part B's opening.
+Read Part A for the textarea case (every helper it describes lives in
+`imagePaste.ts` and `useImageInsertion`); Part B shows what a Tiptap
+surface has to do, which is hand the editor an uploader.
 
 **No backend work is needed for either.** `POST
 /projects/{project}/attachments` is deliberately scoped to a project
@@ -22,10 +22,11 @@ the design being worked around, not extended.
 
 ## The three jobs a non-Tiptap surface has to do itself
 
-Neither the comment box nor the template body is a Tiptap editor;
-both are plain `TextArea` atoms holding markdown as a string. So
-there is no `insertContentAt` to call and no `Image` node to render,
-and each surface needs all three of:
+The comment box is not a Tiptap editor; it is a plain `TextArea` atom
+holding markdown as a string (the template body used to be one too,
+and is now the Tiptap field editor of Part B). So there is no
+`insertContentAt` to call and no `Image` node to render, and such a
+surface needs all three of:
 
 1. **Splice** `![name](url)` into the string at the caret, then put
    the caret back — a `<textarea>` loses its selection the moment
@@ -35,8 +36,8 @@ and each surface needs all three of:
    sees literal `![shot.png](/storage/…)` text.
 
 Part A does all three; miss the third and everything looks like it
-works until you reload. Part B only does the first two, for the
-reason given there.
+works until you reload. Part B needs none of them, because Tiptap
+does all three.
 
 ## Step 1 — The shared textarea helpers
 
@@ -428,15 +429,12 @@ separately as it always was.
 
 ## Part B — Issue type templates (built)
 
-> **Update:** the template body is no longer a textarea. The form in
-> `WorkspaceSettingsTemplatesModal.tsx` uses
-> `<EditableMarkdown variant="field" />` — the same Tiptap editor as the
-> issue description, with the formatting bar, the `/` menu and image
-> paste/drop — and a saved template is previewed rendered, not as raw
-> text. The upload pipeline below is unchanged (`onImageUpload` gets the
-> project's `uploadImage`); the textarea-specific steps (`useImageInsertion`,
-> `handleDescriptionPaste/Drop`) describe the earlier version and now
-> only apply to comments. See guide 5, "Use the editor as a form field".
+> **Note:** the template body is the same Tiptap editor as the issue
+> description, `<EditableMarkdown variant="field" />` (guide 5, "Use the
+> editor as a form field"), with the formatting bar, the `/` menu and
+> image paste and drop built in. Earlier versions used a textarea with
+> `useImageInsertion` handlers; that code is gone, and those handlers
+> now only serve comments (Part A).
 
 A template's `description` is the markdown a new issue of that type
 starts from (see
@@ -450,118 +448,73 @@ deleting one issue can never break another's image.
 Two things make this the simpler of the two surfaces, and they are
 what to look for when judging a new one:
 
-- **Rendering is somebody else's problem.** A template body is only
-  ever displayed after it has been copied into an issue description,
-  and that is rendered by `EditableMarkdown` — Tiptap draws the image
-  natively. Nothing here needs `splitMarkdownImages`.
-- **There are no mentions**, so no range bookkeeping: the splice is
-  just `setDescription`.
+- **Rendering is Tiptap's problem.** The field editor draws the image
+  natively, and the template list previews the saved body with a
+  read-only `EditableMarkdown`, as the issue page does. Nothing here
+  needs `splitMarkdownImages`.
+- **There are no mentions and no splicing code**, so no range
+  bookkeeping: the editor inserts the image itself and reports the new
+  markdown through `onChange`.
 
-### Step B1 — Upload from the modal
+### Step B1 — Give the field editor the uploader
 
 File: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsTemplatesModal.tsx`
 
-The modal already receives `projectId` and already uses `useAlert`,
-so the hook drops straight in — note both go above the
-`if (!issueType) return null;` early return, like every other hook in
-the component:
+The modal already receives `projectId`, so the hook drops straight in
+(it goes above the `if (!issueType) return null;` early return, like
+every other hook in the component), and the uploader is handed to the
+editor:
 
 ```tsx
 const { uploadImage } = useImageUpload(projectId);
-const descriptionRef = useRef<HTMLTextAreaElement>(null);
-```
 
-The `ref` is new: unlike `CommentForm` this component holds no
-textarea ref today, and the caret has to be restored after the
-splice.
+// ...
 
-### Step B2 — Paste and drop on the description textarea
-
-```tsx
-const { insertImages: spliceImages } = useImageInsertion(
-    description,
-    setDescription,
-);
-
-const insertImages = (
-    files: File[],
-    range: { start: number; end: number },
-) =>
-    spliceImages(files, range, uploadImage, ({ caret }) => {
-        // This component has no pendingCaret effect the way CommentForm
-        // does, and needs none for a single field - the textarea is still
-        // mounted, it just lost its selection to the re-render.
-        requestAnimationFrame(() => {
-            descriptionRef.current?.focus();
-            descriptionRef.current?.setSelectionRange(caret, caret);
-        });
-    });
-
-const handleDescriptionPaste = (
-    e: React.ClipboardEvent<HTMLTextAreaElement>,
-) => {
-    const files = extractImageFiles(e.clipboardData);
-
-    if (files.length === 0) return;
-
-    e.preventDefault();
-
-    const { selectionStart: start, selectionEnd: end } = e.currentTarget;
-
-    void insertImages(files, { start, end });
-};
-
-const handleDescriptionDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
-    const files = extractImageFiles(e.dataTransfer);
-
-    if (files.length === 0) return;
-
-    e.preventDefault();
-
-    const caret = e.currentTarget.selectionStart;
-
-    void insertImages(files, { start: caret, end: caret });
-};
-```
-
-and on the existing description field:
-
-```tsx
-<TextArea
-    ref={descriptionRef}
+<EditableMarkdown
+    variant="field"
     value={description}
-    onChange={(e) => setDescription(e.target.value)}
-    onPaste={handleDescriptionPaste}
-    onDrop={handleDescriptionDrop}
-    placeholder="Description every new issue of this type starts from"
-    variant="modal"
-    className="min-h-[120px] font-mono text-xs"
+    onChange={setDescription}
+    onImageUpload={uploadImage}
+    placeholder={t(
+        'workspace_settings_templates_modal.description_placeholder',
+    )}
 />
 ```
 
-The `requestAnimationFrame` stands in for `CommentForm`'s
-`pendingCaret` effect — this component has no such mechanism and
-doesn't need a general one for a single field.
+That is the whole upload wiring. Pasting or dropping an image, and the
+"Image" entries of the formatting bar and the `/` menu, all end in
+`EditableMarkdown.insertImages`, which uploads one file after another,
+inserts each image where it was pasted however the text changed
+meanwhile, and keeps a count of uploads in flight (guide 2). Without
+`onImageUpload` the editor offers none of them.
 
-`uploadImage` already toasts and re-throws on failure, which the hook
-swallows for that file only, and `insertImages`'s promise is left
-unawaited (`void`): a rejected upload has already been surfaced to
-the user, the description is left exactly as it was, and the rest of
-the batch still gets its turn.
+`uploadImage` already toasts and re-throws on failure, which the editor
+swallows for that file only: the text is left exactly as it was and the
+rest of the batch still gets its turn. A `field` has no Save to guard,
+because the modal saves with its own "Add template" / "Save changes"
+button, so losing focus mid-upload commits nothing.
 
-There is no blur guard here, unlike `EditableText`'s: this form is
-saved by an explicit "Add template"/"Save" button, so losing focus
-mid-upload commits nothing.
+### Step B2 — Preview a saved template rendered
+
+The template list shows the description as it will look on the issue it
+creates, with the same component in its read-only form:
+
+```tsx
+<EditableMarkdown value={template.description} disabled />
+```
+
+`disabled` without a `variant` renders the markdown (images included)
+and offers no editing; `onSave` is optional for exactly this use.
 
 ### Step B3 — Guard it behind the existing permission
 
 The modal renders the form only when `canManageTemplates` is true,
 which is the frontend mirror of
 `$this->authorize('updateIssueTypes', $project)` in
-`IssueTypeTemplateController`. Keep the paste/drop handlers inside
-that same conditional block — the upload endpoint only checks project
-membership, so a member who is not allowed to manage templates must
-not be given a textarea to paste into in the first place.
+`IssueTypeTemplateController`. Keep the editor inside that same
+conditional block: the upload endpoint only checks project membership,
+so a member who is not allowed to manage templates must not be given
+an editor to paste into in the first place.
 
 ### Step B4 — Nothing to change on the backend
 
@@ -619,17 +572,21 @@ modelled on:
   That is all the backend needs: no new route, no new validation, no
   new service.
 
-Part B's equivalents, thinner because there is no rendering and no
-mention bookkeeping to protect:
+Part B's equivalents, thinner because the image handling is the
+editor's own and is covered where it lives:
 
+- `resources/js/Components/Molecules/EditableMarkdown/EditableMarkdown.test.tsx` —
+  paste and drop uploads, the insertion point surviving edits made
+  during the upload, a failed upload inserting nothing, a paste with no
+  image or no uploader left to the browser, and the `field` variant
+  (always editable, every change reported through `onChange`, Escape
+  and `Ctrl+Enter` left to the form).
 - `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsTemplatesModal.test.tsx` —
-  mock `@/hooks/useImageUpload` (the real one calls `axios` and
-  `route()`), then assert: pasting inserts the markdown link *and*
-  `router.post` receives that `description`; drop inserts at the
-  caret; a failed upload leaves the description untouched; a paste
-  with no image is left to the browser; and, for the permission
-  gate, that `canManageTemplates: false` renders no description field
-  at all.
+  the editor is replaced by a stand-in there, so the tests assert the
+  wiring: the field receives the project's uploader, a saved template
+  is previewed rendered (no `<pre>`), editing swaps the card for the
+  form in place, and `canManageTemplates: false` renders no description
+  field at all.
 - `tests/Feature/IssueTypeTemplateControllerTest.php` — creating and
   updating a template whose `description` contains
   `![shot.png](/storage/…)` round-trips unchanged.
