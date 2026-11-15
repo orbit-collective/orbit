@@ -751,6 +751,22 @@ export interface MentionSuggestionsProps {
     /** Shown instead of hiding the menu when there is nothing to suggest. */
     emptyLabel?: string;
 }
+export interface SlashMenuItem {
+    id: string;
+    icon: keyof typeof icons;
+    title: string;
+    description: string;
+}
+export interface SlashCommandMenuProps {
+    /** Id of the listbox; option ids are derived as `${id}-option-${index}`. */
+    id: string;
+    items: SlashMenuItem[];
+    activeIndex: number;
+    /** `top` is just below the caret line, `lineTop` just above it. */
+    position: { top: number; lineTop: number; left: number };
+    onSelect: (index: number) => void;
+    onHover: (index: number) => void;
+}
 export interface IssueTableProps {
     issues: Issue[];
     queryParams?: { sort?: string; direction?: string; [key: string]: any };

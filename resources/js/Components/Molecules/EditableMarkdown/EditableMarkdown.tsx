@@ -14,13 +14,16 @@ import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Keybind from '@/Components/Atoms/Keybind/Keybind';
 import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
+import SlashCommandMenu from '@/Components/Molecules/SlashCommandMenu/SlashCommandMenu';
 import { EditableMarkdownProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
 import { extractImageFiles, markdownImageAlt } from '@/utils/imagePaste';
 import { formatBindingParts } from '@/utils/shortcutKeys';
 import { IssueMention, UserMention } from './mentionExtensions';
+import { SlashCommands } from './slashExtension';
 import { useMentionSuggestions } from './useMentionSuggestions';
+import { useSlashCommands } from './useSlashCommands';
 
 /** The editing surface; null while the editor is not mounted yet (it throws then). */
 const editorDom = (editor: Editor | null): HTMLElement | null => {
@@ -51,15 +54,25 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     // longer editable and never saved.
     const pendingUploadsRef = useRef(0);
     const containerRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     // Set when a session ends so focus goes back to the "Edit" button.
     const restoreFocusRef = useRef(false);
     // Tiptap's key handler is created once; it saves through this ref.
     const saveRef = useRef(() => {});
 
     const listboxId = useId();
+    const slashListboxId = useId();
     const hintId = useId();
     const { menu, setActiveIndex, userSuggestion, issueSuggestion } =
         useMentionSuggestions({ users, projectId });
+    const {
+        menu: slashMenu,
+        setActiveIndex: setSlashActiveIndex,
+        slashSuggestion,
+    } = useSlashCommands({
+        canInsertImage: Boolean(onImageUpload) && !disabled,
+        onPickImage: () => fileInputRef.current?.click(),
+    });
 
     const editor = useEditor({
         editable: false,
@@ -77,6 +90,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
             TaskItem.configure({ nested: true }),
             TableKit,
             Image,
+            SlashCommands.configure({ suggestion: slashSuggestion }),
             // "@member" mentions need the project's members and "#12" mentions
             // need its id; an editor given neither keeps plain text behaviour.
             ...(users
@@ -138,10 +152,11 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     // The editing surface is a role="textbox": name it, point it at the
     // keyboard hints while editing, and while a suggestion menu is open at its
     // active row so a screen reader announces the option the arrows landed on.
-    const openList =
-        menu && menu.users.length + menu.issues.length > 0
-            ? { id: listboxId, index: menu.activeIndex }
-            : null;
+    const openList = slashMenu
+        ? { id: slashListboxId, index: slashMenu.activeIndex }
+        : menu && menu.users.length + menu.issues.length > 0
+          ? { id: listboxId, index: menu.activeIndex }
+          : null;
 
     useEffect(() => {
         const dom = editorDom(editor);
@@ -274,6 +289,17 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         editor.setEditable(true);
         setIsEditing(true);
         editor.commands.focus('end');
+    };
+
+    const insertPickedImages = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target.files ?? []).filter((file) =>
+            file.type.startsWith('image/'),
+        );
+
+        // Clearing the input lets the same file be picked twice in a row.
+        event.target.value = '';
+
+        if (files.length > 0) void insertImages(files);
     };
 
     /**
@@ -429,8 +455,39 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                             />
                             {t('editable_markdown.hint.cancel')}
                         </span>
+                        <span className="flex items-center gap-1">
+                            <Keybind
+                                keybind="/"
+                                tooltip={false}
+                                tooltipText=""
+                            />
+                            {t('editable_markdown.hint.blocks')}
+                        </span>
                     </p>
                 </div>
+            )}
+            {canUploadImages() && (
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    data-testid="editable-markdown-file-input"
+                    className="sr-only"
+                    onChange={insertPickedImages}
+                />
+            )}
+            {slashMenu && (
+                <SlashCommandMenu
+                    id={slashListboxId}
+                    items={slashMenu.items}
+                    activeIndex={slashMenu.activeIndex}
+                    position={slashMenu.position}
+                    onSelect={slashMenu.select}
+                    onHover={setSlashActiveIndex}
+                />
             )}
             {menu && (
                 <MentionSuggestions

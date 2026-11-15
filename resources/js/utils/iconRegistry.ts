@@ -93,8 +93,12 @@ import Goal from 'lucide-react/icons/goal';
 import GripVertical from 'lucide-react/icons/grip-vertical';
 import Hand from 'lucide-react/icons/hand';
 import Hash from 'lucide-react/icons/hash';
+import Heading1 from 'lucide-react/icons/heading-1';
+import Heading2 from 'lucide-react/icons/heading-2';
+import Heading3 from 'lucide-react/icons/heading-3';
 import Hourglass from 'lucide-react/icons/hourglass';
 import Image from 'lucide-react/icons/image';
+import ImagePlus from 'lucide-react/icons/image-plus';
 import Images from 'lucide-react/icons/images';
 import Inbox from 'lucide-react/icons/inbox';
 import Info from 'lucide-react/icons/info';
@@ -115,6 +119,7 @@ import Link2 from 'lucide-react/icons/link-2';
 import List from 'lucide-react/icons/list';
 import ListChecks from 'lucide-react/icons/list-checks';
 import ListFilter from 'lucide-react/icons/list-filter';
+import ListOrdered from 'lucide-react/icons/list-ordered';
 import ListTodo from 'lucide-react/icons/list-todo';
 import ListTree from 'lucide-react/icons/list-tree';
 import LoaderCircle from 'lucide-react/icons/loader-circle';
@@ -152,6 +157,7 @@ import Percent from 'lucide-react/icons/percent';
 import Pin from 'lucide-react/icons/pin';
 import Plug from 'lucide-react/icons/plug';
 import Plus from 'lucide-react/icons/plus';
+import Quote from 'lucide-react/icons/quote';
 import Rabbit from 'lucide-react/icons/rabbit';
 import RefreshCw from 'lucide-react/icons/refresh-cw';
 import Replace from 'lucide-react/icons/replace';
@@ -185,10 +191,12 @@ import Snowflake from 'lucide-react/icons/snowflake';
 import Sparkles from 'lucide-react/icons/sparkles';
 import Square from 'lucide-react/icons/square';
 import SquareCheck from 'lucide-react/icons/square-check';
+import SquareCode from 'lucide-react/icons/square-code';
 import Star from 'lucide-react/icons/star';
 import Sun from 'lucide-react/icons/sun';
 import Sunrise from 'lucide-react/icons/sunrise';
 import Sunset from 'lucide-react/icons/sunset';
+import Table from 'lucide-react/icons/table';
 import Tag from 'lucide-react/icons/tag';
 import TagX from 'lucide-react/icons/tag-x';
 import Target from 'lucide-react/icons/target';
@@ -325,8 +333,12 @@ export const iconRegistry: Record<string, LucideIcon> = {
     GripVertical,
     Hand,
     Hash,
+    Heading1,
+    Heading2,
+    Heading3,
     Hourglass,
     Image,
+    ImagePlus,
     Images,
     Inbox,
     Info,
@@ -347,6 +359,7 @@ export const iconRegistry: Record<string, LucideIcon> = {
     List,
     ListChecks,
     ListFilter,
+    ListOrdered,
     ListTodo,
     ListTree,
     LoaderCircle,
@@ -384,6 +397,7 @@ export const iconRegistry: Record<string, LucideIcon> = {
     Pin,
     Plug,
     Plus,
+    Quote,
     Rabbit,
     RefreshCw,
     Replace,
@@ -417,10 +431,12 @@ export const iconRegistry: Record<string, LucideIcon> = {
     Sparkles,
     Square,
     SquareCheck,
+    SquareCode,
     Star,
     Sun,
     Sunrise,
     Sunset,
+    Table,
     Tag,
     TagX,
     Target,
