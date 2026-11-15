@@ -7,6 +7,8 @@ import { IntegrationId, INTEGRATIONS } from '@/types/Integrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsIntegrationDetail from './WorkspaceSettingsIntegrationDetail';
 
+vi.mock('@/hooks/useCommands', () => ({ useCommands: vi.fn() }));
+
 vi.stubGlobal(
     'route',
     vi.fn(

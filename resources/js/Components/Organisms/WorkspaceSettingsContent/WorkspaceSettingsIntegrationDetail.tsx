@@ -9,6 +9,7 @@ import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/Projec
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import { useIntegrationActions } from '@/hooks/useIntegrationActions';
+import { useIntegrationCommands } from '@/hooks/useIntegrationCommands';
 import { useIntegrationText } from '@/hooks/useIntegrationText';
 import { IntegrationDefinition } from '@/types/Integrations';
 import { IssueType } from '@/types/IssueTypes';
@@ -78,6 +79,19 @@ export default function WorkspaceSettingsIntegrationDetail({
         memberProjects.find((project) => project.id === selectedProjectId) ??
         null;
     const isGithub = integration.kind === 'github';
+
+    useIntegrationCommands({
+        integration,
+        projectId: selectedProjectId,
+        enabled,
+        canUpdate: hasIntegrationsAccess && canUpdateIntegrations,
+        githubStatus: githubConnectStatus,
+        onToggle: (checked) =>
+            actions.toggleIntegration(integration.id, checked),
+        onConnectGithub: actions.connectGithub,
+        onDisconnectGithub: actions.disconnectGithub,
+        onRefreshGithubRepositories: actions.refreshGithubRepositories,
+    });
 
     if (!selectedProject || !hasIntegrationsAccess) {
         return (
