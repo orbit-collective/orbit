@@ -78,7 +78,8 @@ utrzymuje aktywne Integrations.
 które są zwykłym przełącznikiem. `useIntegrationCommands` (strona
 integracji) rejestruje **Wróć do integracji**, **Otwórz stronę <nazwa>**,
 **Włącz / Wyłącz <nazwa>** oraz, dla GitHuba, **Połącz GitHub**,
-**Rozłącz GitHub** i **Odśwież repozytoria GitHub**. Komenda jest
+**Rozłącz GitHub** i **Odśwież repozytoria GitHub**. Wszystkie leżą w **Suggested**, więc są pierwszym, co widać na
+stronie. Komenda jest
 rejestrowana tylko wtedy, gdy zadziała (bez przełącznika bez
 `integrations.update`, bez Włącz dla wpisu "coming soon", bez Połącz,
 gdy instalacja trwa). Teksty są w

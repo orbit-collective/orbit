@@ -77,7 +77,8 @@ matches a path *under* a tab, so the sidebar keeps Integrations active.
 ones that are a plain toggle. `useIntegrationCommands` (an integration's
 page) registers **Back to integrations**, **Open the <name> website**,
 **Enable / Disable <name>** and, for GitHub, **Connect GitHub**,
-**Disconnect GitHub** and **Refresh GitHub repositories**. A command is
+**Disconnect GitHub** and **Refresh GitHub repositories**. They all sit under **Suggested** so they are the first thing on the
+page. A command is
 only registered when it would work (no toggle without
 `integrations.update`, no Enable for a "coming soon" entry, no Connect
 while an installation is pending). The texts live in
