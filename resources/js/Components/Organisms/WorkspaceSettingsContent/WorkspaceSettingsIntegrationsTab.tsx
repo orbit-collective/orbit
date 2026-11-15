@@ -8,6 +8,7 @@ import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/Projec
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import { useIntegrationActions } from '@/hooks/useIntegrationActions';
+import { useIntegrationListCommands } from '@/hooks/useIntegrationCommands';
 import {
     INTEGRATION_CATEGORIES,
     IntegrationCategory,
@@ -47,6 +48,12 @@ export default function WorkspaceSettingsIntegrationsTab({
     const { t } = useLaravelReactI18n();
     const { toggleIntegration } = useIntegrationActions({
         projectId: selectedProjectId,
+    });
+    useIntegrationListCommands({
+        projectId: selectedProjectId,
+        canUpdate: hasIntegrationsAccess && canUpdateIntegrations,
+        statuses: integrationStatuses,
+        onToggle: toggleIntegration,
     });
     const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
 

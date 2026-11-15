@@ -6,6 +6,8 @@ import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import WorkspaceSettingsIntegrationsTab from './WorkspaceSettingsIntegrationsTab';
 
+vi.mock('@/hooks/useCommands', () => ({ useCommands: vi.fn() }));
+
 vi.stubGlobal(
     'route',
     vi.fn(
