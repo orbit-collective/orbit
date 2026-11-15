@@ -1,6 +1,26 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, test } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import UserBadge from './UserBadge';
+
+const mockAxios = vi.hoisted(() => ({ get: vi.fn() }));
+
+vi.mock('axios', () => ({ default: mockAxios }));
+
+beforeEach(() => {
+    mockAxios.get.mockReset();
+    mockAxios.get.mockResolvedValue({
+        data: {
+            id: 7,
+            name: 'Jane Doe',
+            email: 'jane@acme.com',
+            avatar: null,
+            recentIssues: [],
+        },
+    });
+    globalThis.route = vi.fn(
+        (name: string, id: number) => `/${name}/${id}`,
+    ) as unknown as typeof globalThis.route;
+});
 
 describe('UserBadge Component', () => {
     test('renders the name', () => {
@@ -38,5 +58,20 @@ describe('UserBadge Component', () => {
         render(<UserBadge name="Jane Doe" avatarSrc="/jane.png" />);
 
         expect(screen.getByRole('img')).toHaveAttribute('src', '/jane.png');
+    });
+
+    test('focusing the surrounding control opens one preview, not one per tooltip copy', async () => {
+        render(
+            <button type="button">
+                <UserBadge name="Jane Doe" userId={7} />
+            </button>,
+        );
+
+        await act(async () => {
+            fireEvent.focusIn(screen.getByRole('button'));
+        });
+
+        expect(mockAxios.get).toHaveBeenCalledTimes(1);
+        expect(await screen.findAllByText('jane@acme.com')).toHaveLength(1);
     });
 });

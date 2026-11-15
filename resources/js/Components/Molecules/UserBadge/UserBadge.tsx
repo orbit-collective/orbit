@@ -1,5 +1,6 @@
 import { cva } from 'class-variance-authority';
 import React from 'react';
+import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import { UserBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
@@ -29,22 +30,21 @@ const UserBadge: React.FC<UserBadgeProps> = ({
     showTooltip = true,
     className,
 }) => {
-    return (
-        <Badge
-            className={cn(
-                classVariants({ size }),
-                'w-fit self-start',
-                className,
+    // The tooltip repeats the badge's content, so its copy must use the plain
+    // avatar: a second UserAvatar would also react to the surrounding
+    // control's focus and open a second preview card.
+    const content = (interactive: boolean) => (
+        <>
+            {interactive ? (
+                <UserAvatar
+                    src={avatarSrc}
+                    initials={name.charAt(0)}
+                    size={size}
+                    userId={userId}
+                />
+            ) : (
+                <Avatar src={avatarSrc} initials={name.charAt(0)} size={size} />
             )}
-            variant={'avatar'}
-            tooltip={showTooltip}
-        >
-            <UserAvatar
-                src={avatarSrc}
-                initials={name.charAt(0)}
-                size={size}
-                userId={userId}
-            />
             {(showName || (showDetails && email)) && (
                 <div className={'flex min-w-0 flex-col'}>
                     {showName && (
@@ -65,6 +65,21 @@ const UserBadge: React.FC<UserBadgeProps> = ({
                     )}
                 </div>
             )}
+        </>
+    );
+
+    return (
+        <Badge
+            className={cn(
+                classVariants({ size }),
+                'w-fit self-start',
+                className,
+            )}
+            variant={'avatar'}
+            tooltip={showTooltip}
+            tooltipText={showTooltip ? content(false) : undefined}
+        >
+            {content(true)}
         </Badge>
     );
 };
