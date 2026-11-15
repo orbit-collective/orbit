@@ -140,6 +140,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings/members', [SettingsController::class, 'members'])->name('settings.members');
     Route::get('/settings/roles-management', [SettingsController::class, 'rolesManagement'])->name('settings.roles-management');
     Route::get('/settings/integrations', [SettingsController::class, 'integrations'])->name('settings.integrations');
+    // One page per integration, so the overview only carries the catalog state
+    // and a request loads just the data of the integration being opened.
+    Route::get('/settings/integrations/{integration}', [SettingsController::class, 'integration'])
+        ->where('integration', '[a-z0-9-]+')
+        ->name('settings.integrations.show');
     Route::get('/settings/automation', [SettingsController::class, 'automation'])->name('settings.automation');
     // Instance-wide diagnostics: 404 unless APP_ENV=local, 403 without developer.portal.view.
     Route::get('/settings/dev-portal', [SettingsController::class, 'developerPortal'])

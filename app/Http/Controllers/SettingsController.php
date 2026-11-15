@@ -268,6 +268,11 @@ class SettingsController extends Controller
         ]);
     }
 
+    /**
+     * The integrations overview: only each integration's enabled state. The
+     * data an integration's own page needs (Jira mappings, GitHub repositories,
+     * the project's issue types…) stays out of it, see integration().
+     */
     public function integrations(Request $request): Response
     {
         $user = $request->user();
@@ -281,41 +286,72 @@ class SettingsController extends Controller
         return Inertia::render('Settings/Integrations', [
             ...$this->projectScope($projects, $selectedProject),
             'integrationStatuses' => $hasIntegrationsAccess
-                ? $this->projectIntegrationService->getStatuses($selectedProject)
-                : [],
-            'integrationSettings' => $hasIntegrationsAccess
-                ? $this->mapIntegrationSettings(
-                    $this->projectIntegrationService->getSettings($selectedProject),
-                    $canUpdateIntegrations,
-                )
+                ? [
+                    ...$this->projectIntegrationService->getStatuses($selectedProject),
+                    'github' => $this->githubIntegrationService->isConnected($selectedProject),
+                ]
                 : [],
             'hasIntegrationsAccess' => $hasIntegrationsAccess,
             'canUpdateIntegrations' => $canUpdateIntegrations,
-            'jiraSettings' => $canUpdateIntegrations
+        ]);
+    }
+
+    /** One integration's own page: its settings and nothing of the other integrations. */
+    public function integration(Request $request, string $integration): Response
+    {
+        abort_unless(in_array($integration, ProjectIntegrationService::CATALOG_INTEGRATIONS, true), 404);
+
+        $user = $request->user();
+        $projects = $this->projects($request);
+        $selectedProject = $this->resolveSelectedProject($projects, $request->query('project'));
+
+        $hasIntegrationsAccess = $selectedProject?->hasPermission($user, PermissionEnum::INTEGRATIONS_VIEW) ?? false;
+        $canUpdateIntegrations = $hasIntegrationsAccess
+            && $selectedProject->hasPermission($user, PermissionEnum::INTEGRATIONS_UPDATE);
+        $isGithub = $integration === 'github';
+        $isJira = $integration === 'jira';
+        $settings = $hasIntegrationsAccess
+            ? $this->mapIntegrationSettings(
+                $this->projectIntegrationService->getSettings($selectedProject),
+                $canUpdateIntegrations,
+            )[$integration] ?? null
+            : null;
+
+        return Inertia::render('Settings/IntegrationDetail', [
+            ...$this->projectScope($projects, $selectedProject),
+            'integrationId' => $integration,
+            'integrationEnabled' => $hasIntegrationsAccess
+                && ($isGithub
+                    ? $this->githubIntegrationService->isConnected($selectedProject)
+                    : ($settings['enabled'] ?? false)),
+            'integrationSettings' => $settings,
+            'hasIntegrationsAccess' => $hasIntegrationsAccess,
+            'canUpdateIntegrations' => $canUpdateIntegrations,
+            'jiraSettings' => $isJira && $canUpdateIntegrations
                 ? $this->jiraIntegrationService->getSettingsExtras($selectedProject)
                 : null,
             // Deliberately separate from jiraSettings above: the frontend
             // polls just this prop while an import is running (see
             // JiraIntegrationService::getImportProgress()'s docblock for
             // why it must not also re-fetch Jira's live mapping metadata).
-            'jiraImportProgress' => $canUpdateIntegrations
+            'jiraImportProgress' => $isJira && $canUpdateIntegrations
                 ? $this->jiraIntegrationService->getImportProgress($selectedProject)
                 : null,
             // Gated on view access (not update) since a read-only viewer is
             // still allowed to see which repository is connected.
-            'githubConnectStatus' => $hasIntegrationsAccess
+            'githubConnectStatus' => $isGithub && $hasIntegrationsAccess
                 ? $this->githubIntegrationService->getConnectStatus($selectedProject)
                 : null,
             // Only the import mapping UI reads these, and that is gated on
             // being able to change the integration in the first place.
-            'issueTypes' => $canUpdateIntegrations
+            'issueTypes' => $isJira && $canUpdateIntegrations
                 ? $this->issueTypeService->getIssueTypes($selectedProject)
                 : [],
-            'labels' => $canUpdateIntegrations
+            'labels' => $isJira && $canUpdateIntegrations
                 ? $this->mapLabels($this->labelService->getLabels($selectedProject))
                 : [],
             // The priority mapping lands Jira priorities on the project's own.
-            'priorities' => $canUpdateIntegrations
+            'priorities' => $isJira && $canUpdateIntegrations
                 ? $this->priorityOptions($selectedProject, $user)
                 : [],
         ]);
