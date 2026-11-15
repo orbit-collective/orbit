@@ -54,21 +54,44 @@ function serializeTable(state: SerializerState, table: ProseMirrorNode): void {
 
     const rows: string[][] = [];
     let firstRowIsHeader = false;
+    // How many more rows each column is covered by a cell above it that spans
+    // rows. ProseMirror leaves such a column out of the rows below, so without
+    // this the later cells would slide one column to the left.
+    const covered: number[] = [];
 
     table.forEach((row, _offset, index) => {
         const cells: string[] = [];
         let headers = 0;
+        let column = 0;
+
+        const skipCovered = () => {
+            while ((covered[column] ?? 0) > 0) {
+                cells[column] = '';
+                covered[column]--;
+                column++;
+            }
+        };
 
         row.forEach((cell) => {
+            skipCovered();
+
             if (cell.type.name === 'tableHeader') headers++;
 
-            cells.push(cellMarkdown(state, cell));
+            const colspan = cell.attrs.colspan ?? 1;
+            const rowspan = cell.attrs.rowspan ?? 1;
 
-            // A merged cell keeps its text and pads the columns it covered.
-            for (let extra = 1; extra < (cell.attrs.colspan ?? 1); extra++) {
-                cells.push('');
+            // A merged cell keeps its text and pads the columns it covers.
+            for (let extra = 0; extra < colspan; extra++) {
+                cells[column + extra] =
+                    extra === 0 ? cellMarkdown(state, cell) : '';
+
+                if (rowspan > 1) covered[column + extra] = rowspan - 1;
             }
+
+            column += colspan;
         });
+
+        skipCovered();
 
         if (index === 0)
             firstRowIsHeader = headers > 0 && headers === row.childCount;
