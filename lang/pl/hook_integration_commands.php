@@ -9,6 +9,13 @@ return [
     'search' => [
         'title' => 'Szukaj integracji',
     ],
+    'filters' => [
+        'title' => 'Pokaż lub ukryj filtry',
+    ],
+    'view' => [
+        'grid' => 'Pokaż integracje w siatce',
+        'list' => 'Pokaż integracje jako listę',
+    ],
     'open' => [
         'title' => 'Otwórz integrację: :name',
     ],
