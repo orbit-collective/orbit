@@ -45,7 +45,7 @@ export default function WorkspaceSettingsIntegrationCard({
     const text = useIntegrationText();
 
     const toggle = onToggle && (
-        <div className="relative z-10 shrink-0">
+        <div className="relative z-10 flex shrink-0 items-center">
             <ToggleSwitch
                 checked={enabled}
                 onChange={onToggle}
@@ -117,7 +117,10 @@ export default function WorkspaceSettingsIntegrationCard({
                 <span className="hidden shrink-0 md:inline-flex">
                     {categoryBadge}
                 </span>
-                {toggle}
+                {/* Keeps the columns of the rows aligned when one has no switch. */}
+                {toggle ?? (
+                    <span aria-hidden="true" className="h-5 w-9 shrink-0" />
+                )}
                 <Icon
                     name="ChevronRight"
                     size={14}
