@@ -114,6 +114,24 @@ Nowy wymiar filtra ma ten sam kształt: czysty helper w
 więcej w łańcuchu `inSearchAndCategory` / `filteredIntegrations`, a do
 tego klucze pod `workspace_settings_integrations.tab` w obu językach.
 
+## Układ i przycisk filtrów
+
+Dwie kolejne kontrolki stoją obok pola wyszukiwania, obie zapamiętywane w
+tej przeglądarce (`useStoredChoice`, klucze `integrations:view` i
+`integrations:filters`):
+
+- **Filtry** (przycisk z ikoną z `aria-expanded` i `aria-controls`)
+  pokazują lub chowają filtry stanu i kategorii w `Collapse`. Plakietka na
+  przycisku liczy włączone filtry, a schowany filtr nadal filtruje.
+- **Układ** (`SegmentedControl` tylko z ikonami) przełącza między `grid`,
+  czyli wysokimi kartami z limitem `max-w-md`, żeby nie rozciągały się na
+  szerokim ekranie, a `list`, czyli kompaktowymi wierszami. Oba to ta sama
+  `WorkspaceSettingsIntegrationCard`, przez jej `variant` (`card` lub
+  `row`): nowy element karty trafia do obu układów.
+
+Paleta ma **Pokaż lub ukryj filtry**, **Pokaż integracje w siatce** i
+**Pokaż integracje jako listę** w Suggested.
+
 ## Klawiatura i małe ekrany
 
 - Karta to jeden punkt Tab: nazwa integracji jest linkiem rozciągniętym

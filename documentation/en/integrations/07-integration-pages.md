@@ -113,6 +113,25 @@ more condition in the tab's `inSearchAndCategory` / `filteredIntegrations`
 chain, plus keys under `workspace_settings_integrations.tab` in both
 languages.
 
+## Layout and the filters toggle
+
+Two more controls sit next to the search field, both remembered in this
+browser (`useStoredChoice`, keys `integrations:view` and
+`integrations:filters`):
+
+- **Filters** (an icon button with `aria-expanded` and `aria-controls`)
+  shows or hides the status and category filters inside a `Collapse`. A
+  badge on the button counts the filters that are on, and a hidden
+  filter keeps filtering.
+- **Layout** (an icon-only `SegmentedControl`) switches between `grid`,
+  the tall cards with a `max-w-md` cap so they do not stretch on a wide
+  screen, and `list`, compact rows. Both are the same
+  `WorkspaceSettingsIntegrationCard`, through its `variant` (`card` or
+  `row`): a new element on a card goes into both layouts.
+
+The palette has **Show or hide the filters**, **Show integrations as a
+grid** and **Show integrations as a list** under Suggested.
+
 ## Keyboard and small screens
 
 - A card is a single Tab stop: the integration name is a link that is
