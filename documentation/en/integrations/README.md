@@ -37,6 +37,10 @@ pipeline that links a GitHub pull request to an Orbit issue.
    actual, already-wired-up **github**-kind integration works:
    architecture (via the `orbit-api` relay), connecting a project, the
    `<!-- orbit-issue:ID -->` marker syntax, and troubleshooting.
+7. **[Integration pages](./07-integration-pages.md)** — how an
+   integration's own page (`/settings/integrations/<id>`) is loaded,
+   built and extended: the slim overview, per-integration props, the
+   Details table, the command palette commands and the keyboard cues.
 
 Need to gate a new integration ability behind its own permission? See
 [`../permissions/01-add-a-new-permission.md`](../permissions/01-add-a-new-permission.md)
