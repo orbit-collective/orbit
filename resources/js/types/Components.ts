@@ -42,7 +42,7 @@ import {
 } from '@/types/Priorities';
 import { Project, ProjectColors } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
-import { AssignableUser } from '@/types/Users';
+import { AssignableUser, UserPreview } from '@/types/Users';
 import { WorkflowStatus } from '@/types/Workflow';
 import type { StatusGroup } from '@/utils/workflow';
 
@@ -51,6 +51,8 @@ export interface AvatarProps {
     alt?: string;
     size?: 'sm' | 'md' | 'lg' | 'xl';
     initials?: string;
+    /** When set, hovering the avatar shows that user's preview card. */
+    userId?: number;
 }
 export interface BadgeProps
     extends
@@ -457,6 +459,8 @@ export interface UserBadgeProps {
     name: string;
     email?: string;
     avatarSrc?: string;
+    /** When set, hovering the avatar shows that user's preview card. */
+    userId?: number;
     size?: 'sm' | 'md' | 'lg';
     showDetails?: boolean;
     showName?: boolean;
@@ -642,6 +646,10 @@ export interface IssuePreviewCardProps {
     anchorRect: DOMRect;
     /** 'top' always sits above the anchor; 'auto' prefers below when it fits. */
     placement?: 'auto' | 'top';
+}
+export interface UserPreviewCardProps {
+    user: UserPreview;
+    anchorRect: DOMRect;
 }
 export interface UpcomingDeadlinesPanelProps {
     issues: Issue[];
