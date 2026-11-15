@@ -20,6 +20,7 @@ export default function TeamAvatarStack({ members }: TeamAvatarStackProps) {
                         className="rounded-full ring-2 ring-(--surface-color)"
                     >
                         <Avatar
+                            userId={member.id}
                             src={member.avatar ?? undefined}
                             initials={member.name.charAt(0)}
                             size="lg"

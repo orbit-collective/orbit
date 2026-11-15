@@ -356,6 +356,7 @@ export const ListRow = ({
                             </Editable>
                         ) : (
                             <UserBadge
+                                userId={issue.assignee?.id}
                                 avatarSrc={issue.assignee?.avatar}
                                 name={
                                     issue.assignee?.name ??

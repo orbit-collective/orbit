@@ -25,6 +25,7 @@ export default function MemberRow({
         >
             <div className="flex min-w-0 items-center gap-3">
                 <Avatar
+                    userId={member.id}
                     src={member.avatar ?? undefined}
                     initials={member.name.charAt(0)}
                     size="lg"

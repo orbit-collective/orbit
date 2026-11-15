@@ -22,6 +22,7 @@ const UserBadge: React.FC<UserBadgeProps> = ({
     name,
     email,
     avatarSrc,
+    userId,
     size = 'md',
     showDetails = false,
     showName = true,
@@ -38,7 +39,12 @@ const UserBadge: React.FC<UserBadgeProps> = ({
             variant={'avatar'}
             tooltip={showTooltip}
         >
-            <Avatar src={avatarSrc} initials={name.charAt(0)} size={size} />
+            <Avatar
+                src={avatarSrc}
+                initials={name.charAt(0)}
+                size={size}
+                userId={userId}
+            />
             {(showName || (showDetails && email)) && (
                 <div className={'flex min-w-0 flex-col'}>
                     {showName && (

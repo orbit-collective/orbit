@@ -75,6 +75,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
     return (
         <div className="group flex gap-3">
             <Avatar
+                userId={comment.user?.id}
                 src={comment.user?.avatar}
                 initials={comment.user?.name.charAt(0) ?? '?'}
                 size="sm"
