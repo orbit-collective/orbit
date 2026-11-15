@@ -38,7 +38,8 @@ describe('RoleListItem', () => {
 
         expect(screen.getByText('QA Reviewer')).toBeInTheDocument();
         await waitFor(() => expect(screen.getByText('50')).toBeInTheDocument());
-        expect(screen.getByText(/members/)).toHaveTextContent('3 members');
+        // Exactly once: a substring match let "3 3 members" through.
+        expect(screen.getByText(/members/)).toHaveTextContent(/^3 members$/);
         expect(screen.getByTestId('progress-arc')).toHaveAttribute(
             'data-progress',
             '50',
@@ -48,7 +49,7 @@ describe('RoleListItem', () => {
     test('says "member" for one and shows a lock for system roles', () => {
         renderItem({ role: { ...role, memberCount: 1, isSystem: true } });
 
-        expect(screen.getByText(/member/)).toHaveTextContent('1 member');
+        expect(screen.getByText(/member/)).toHaveTextContent(/^1 member$/);
     });
 
     test('a role without permissions to share shows zero', () => {

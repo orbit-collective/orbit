@@ -79,8 +79,15 @@ export default function RoleListItem({
                         )}
                     </div>
                     <p className="truncate text-[11px] text-(--text-gray-color)">
-                        <AnimatedNumber value={role.memberCount} />{' '}
-                        {tChoice('role_list_item.members', role.memberCount)}
+                        {/* The translation already carries the number; the
+                            animated value is rendered through it so the count
+                            appears once and the plural follows it. */}
+                        <AnimatedNumber
+                            value={role.memberCount}
+                            format={(n) =>
+                                tChoice('role_list_item.members', Math.round(n))
+                            }
+                        />
                     </p>
                 </div>
 
