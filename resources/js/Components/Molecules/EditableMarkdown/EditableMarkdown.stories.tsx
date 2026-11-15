@@ -97,3 +97,18 @@ export const IssueMentionNodeViewPreview: Story = {
         />
     ),
 };
+
+/** An always-open editor for a form: formatting bar, "/" menu, every change goes to `onChange`. */
+export const Field: Story = {
+    args: { variant: 'field', value: '', placeholder: 'Describe the issue...' },
+    play: async ({ canvasElement }) => {
+        const canvas = within(canvasElement);
+
+        await expect(
+            await canvas.findByRole('toolbar', { name: 'Text formatting' }),
+        ).toBeVisible();
+        await expect(
+            canvas.queryByRole('button', { name: 'Save' }),
+        ).not.toBeInTheDocument();
+    },
+};
