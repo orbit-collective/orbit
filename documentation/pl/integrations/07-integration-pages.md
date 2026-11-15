@@ -124,8 +124,8 @@ tej przeglądarce (`useStoredChoice`, klucze `integrations:view` i
   pokazują lub chowają filtry stanu i kategorii w `Collapse`. Plakietka na
   przycisku liczy włączone filtry, a schowany filtr nadal filtruje.
 - **Układ** (`SegmentedControl` tylko z ikonami) przełącza między `grid`,
-  czyli wysokimi kartami z limitem `max-w-md`, żeby nie rozciągały się na
-  szerokim ekranie, a `list`, czyli kompaktowymi wierszami. Oba to ta sama
+  czyli wysokimi kartami w kolumnach `auto-fill` o szerokości najwyżej 26rem,
+  więc szeroki ekran dostaje więcej kolumn zamiast dwóch rozciągniętych, a `list`, czyli kompaktowymi wierszami. Oba to ta sama
   `WorkspaceSettingsIntegrationCard`, przez jej `variant` (`card` lub
   `row`): nowy element karty trafia do obu układów.
 

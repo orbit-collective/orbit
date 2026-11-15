@@ -458,16 +458,11 @@ export default function WorkspaceSettingsIntegrationsTab({
                 className={
                     view === 'list'
                         ? 'flex flex-col gap-2'
-                        : 'grid grid-cols-1 gap-5 sm:grid-cols-2'
+                        : 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,18rem),26rem))] gap-5'
                 }
             >
                 {filteredIntegrations.map((integration, index) => (
-                    <RowReveal
-                        key={integration.id}
-                        index={index}
-                        fill
-                        className={cn(view === 'grid' && 'w-full max-w-md')}
-                    >
+                    <RowReveal key={integration.id} index={index} fill>
                         <WorkspaceSettingsIntegrationCard
                             integration={integration}
                             variant={view === 'list' ? 'row' : 'card'}
