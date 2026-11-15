@@ -1,7 +1,7 @@
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ReactNode } from 'react';
-import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
+import UserAvatar from '@/Components/Molecules/UserAvatar/UserAvatar';
 import { ProjectMember } from '@/types/ProjectMembers';
 import { formatDate } from '@/utils/time';
 
@@ -24,7 +24,7 @@ export default function MemberRow({
             className="flex flex-col gap-3 px-4 py-3.5 transition-colors hover:bg-(--bg-light-color) sm:px-5 md:flex-row md:items-center md:justify-between"
         >
             <div className="flex min-w-0 items-center gap-3">
-                <Avatar
+                <UserAvatar
                     userId={member.id}
                     src={member.avatar ?? undefined}
                     initials={member.name.charAt(0)}

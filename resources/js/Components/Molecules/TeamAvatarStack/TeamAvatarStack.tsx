@@ -1,5 +1,5 @@
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import Avatar from '@/Components/Atoms/Avatar/Avatar';
+import UserAvatar from '@/Components/Molecules/UserAvatar/UserAvatar';
 import { ProjectMember } from '@/types/ProjectMembers';
 
 interface TeamAvatarStackProps {
@@ -19,7 +19,7 @@ export default function TeamAvatarStack({ members }: TeamAvatarStackProps) {
                         key={member.id}
                         className="rounded-full ring-2 ring-(--surface-color)"
                     >
-                        <Avatar
+                        <UserAvatar
                             userId={member.id}
                             src={member.avatar ?? undefined}
                             initials={member.name.charAt(0)}

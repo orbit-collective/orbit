@@ -3,7 +3,7 @@ import React from 'react';
 import Badge from '@/Components/Atoms/Badge/Badge';
 import { UserBadgeProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
-import Avatar from '../../Atoms/Avatar/Avatar';
+import UserAvatar from '../UserAvatar/UserAvatar';
 
 const classVariants = cva('flex items-center gap-2.5 text-(--text-color)', {
     variants: {
@@ -39,7 +39,7 @@ const UserBadge: React.FC<UserBadgeProps> = ({
             variant={'avatar'}
             tooltip={showTooltip}
         >
-            <Avatar
+            <UserAvatar
                 src={avatarSrc}
                 initials={name.charAt(0)}
                 size={size}
