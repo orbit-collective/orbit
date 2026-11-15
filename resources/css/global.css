@@ -258,6 +258,55 @@
     flex: 1;
 }
 
+/* Tables in the description editor and rendered descriptions. The prose
+   defaults are 8%-opacity hairlines on a transparent cell, which all but
+   disappear on the dark surface, so the grid gets a clearly visible line,
+   a tinted header row and a faint body fill. */
+.tiptap .tableWrapper {
+    margin: 1rem 0;
+    overflow-x: auto;
+}
+
+.tiptap table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    overflow: hidden;
+    border-radius: 0.5rem;
+}
+
+.tiptap th,
+.tiptap td {
+    position: relative;
+    min-width: 5rem;
+    padding: 0.5rem 0.75rem;
+    vertical-align: top;
+    border: 1px solid color-mix(in srgb, var(--text-color) 28%, transparent);
+    background: var(--surface-color);
+}
+
+.tiptap th {
+    font-weight: 600;
+    text-align: left;
+    background: color-mix(in srgb, var(--text-color) 12%, transparent);
+}
+
+.tiptap th > p,
+.tiptap td > p {
+    margin: 0;
+}
+
+/* Cells picked with a drag selection. */
+.tiptap .selectedCell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: color-mix(in srgb, var(--accent-color) 22%, transparent);
+}
+
 /* Images in a description open in a new tab on click (see
    EditableMarkdown's handleClick) - the cursor has to say so, since the
    surrounding wrapper advertises click-to-edit with a text cursor. */
