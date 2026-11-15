@@ -45,6 +45,7 @@ import { Project, ProjectColors } from '@/types/Projects';
 import { RoleNameSummary } from '@/types/Roles';
 import { AssignableUser, UserPreview } from '@/types/Users';
 import { WorkflowStatus } from '@/types/Workflow';
+import type { MentionRange } from '@/utils/mentions';
 import type { StatusGroup } from '@/utils/workflow';
 
 export interface AvatarProps {
@@ -765,6 +766,14 @@ export interface EditorToolbarProps {
     editor: Editor;
     /** Shows the image button; called when it is pressed. Omit when uploads are off. */
     onPickImage?: () => void;
+    className?: string;
+}
+export interface MentionBackdropProps {
+    /** The textarea's current text. */
+    text: string;
+    /** Picked mentions, by character range (see `MentionRange`). */
+    ranges: MentionRange[];
+    /** Typography and padding shared with the textarea it sits behind. */
     className?: string;
 }
 export interface SlashMenuItem {
