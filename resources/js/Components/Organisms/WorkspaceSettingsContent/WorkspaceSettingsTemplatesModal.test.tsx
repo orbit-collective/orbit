@@ -29,6 +29,35 @@ vi.mock('@/hooks/useImageUpload', () => ({
     }),
 }));
 
+// The editor itself is covered by its own tests; here it is a stand-in that
+// shows how the modal drives it: a textarea for the form field and plain text
+// for the rendered preview of a saved template.
+vi.mock('@/Components/Molecules/EditableMarkdown/EditableMarkdown', () => ({
+    default: ({
+        value,
+        onChange,
+        variant,
+        placeholder,
+        onImageUpload,
+    }: {
+        value: string;
+        onChange?: (value: string) => void;
+        variant?: string;
+        placeholder?: string;
+        onImageUpload?: unknown;
+    }) =>
+        variant === 'field' ? (
+            <textarea
+                placeholder={placeholder}
+                value={value}
+                data-uploader={onImageUpload ? 'yes' : 'no'}
+                onChange={(event) => onChange?.(event.target.value)}
+            />
+        ) : (
+            <div data-testid="description-preview">{value}</div>
+        ),
+}));
+
 const routerMock = vi.hoisted(() => ({
     post: vi.fn(),
     patch: vi.fn(),
@@ -156,7 +185,7 @@ describe('WorkspaceSettingsTemplatesModal', () => {
         });
         fireEvent.change(
             screen.getByPlaceholderText(
-                'Description every new issue of this type starts from',
+                'Description every new issue of this type starts from. Type / for blocks.',
             ),
             { target: { value: '## Steps' } },
         );
@@ -292,137 +321,70 @@ describe('WorkspaceSettingsTemplatesModal', () => {
 
 const descriptionField = () =>
     screen.getByPlaceholderText(
-        'Description every new issue of this type starts from',
+        'Description every new issue of this type starts from. Type / for blocks.',
     ) as HTMLTextAreaElement;
 
-const transfer = (files: File[]) =>
-    ({ files, items: [] }) as unknown as DataTransfer;
-
-const imageFile = (name = 'shot.png') =>
-    new File(['x'], name, { type: 'image/png' });
-
-describe('WorkspaceSettingsTemplatesModal image uploads', () => {
+describe('WorkspaceSettingsTemplatesModal description editor', () => {
     beforeEach(() => vi.clearAllMocks());
 
-    test('pasting an image into the description stores the markdown link', async () => {
-        uploadImageMock.mockResolvedValue('/storage/attachments/1/shot.png');
+    test('the description is written in the rich editor, with the project uploader', () => {
         renderModal({ canManageTemplates: true });
 
         fireEvent.click(screen.getByText('New template'));
-        fireEvent.change(screen.getByPlaceholderText('Template name'), {
-            target: { value: 'Quick Report' },
-        });
 
-        const description = descriptionField();
-        fireEvent.change(description, { target: { value: 'Repro: ' } });
-        description.setSelectionRange(7, 7);
-        fireEvent.paste(description, {
-            clipboardData: transfer([imageFile()]),
-        });
+        expect(descriptionField()).toHaveAttribute('data-uploader', 'yes');
+    });
 
-        expect(uploadImageMock).toHaveBeenCalledWith(expect.any(File));
-        await waitFor(() =>
-            expect(description).toHaveValue(
-                'Repro: ![shot.png](/storage/attachments/1/shot.png)',
-            ),
+    test('a saved description is shown rendered, not as raw text in a <pre>', () => {
+        const { container } = renderModal({ canManageTemplates: false });
+
+        expect(screen.getByTestId('description-preview')).toHaveTextContent(
+            'Steps to reproduce...',
         );
-
-        fireEvent.click(screen.getByText('Add template'));
-
-        expect(routerMock.post).toHaveBeenCalledWith(
-            expect.stringContaining('issue-types.templates.store'),
-            expect.objectContaining({
-                description:
-                    'Repro: ![shot.png](/storage/attachments/1/shot.png)',
-            }),
-            expect.any(Object),
-        );
+        expect(container.ownerDocument.querySelector('pre')).toBeNull();
     });
 
-    test('dropping an image inserts it at the caret', async () => {
-        uploadImageMock.mockResolvedValue('/storage/b.png');
-        renderModal({ canManageTemplates: true });
-
-        fireEvent.click(screen.getByText('New template'));
-
-        const description = descriptionField();
-        fireEvent.change(description, { target: { value: 'End' } });
-        description.setSelectionRange(0, 0);
-        fireEvent.drop(description, {
-            dataTransfer: transfer([imageFile('dropped.png')]),
-        });
-
-        await waitFor(() =>
-            expect(description).toHaveValue(
-                '![dropped.png](/storage/b.png)End',
-            ),
-        );
-    });
-
-    test('pasting several images at once keeps them in order', async () => {
-        uploadImageMock
-            .mockResolvedValueOnce('/storage/1.png')
-            .mockResolvedValueOnce('/storage/2.png');
-        renderModal({ canManageTemplates: true });
-
-        fireEvent.click(screen.getByText('New template'));
-
-        const description = descriptionField();
-        fireEvent.change(description, { target: { value: 'Both: ' } });
-        description.setSelectionRange(6, 6);
-        fireEvent.paste(description, {
-            clipboardData: transfer([
-                imageFile('one.png'),
-                imageFile('two.png'),
-            ]),
-        });
-
-        await waitFor(() =>
-            expect(description).toHaveValue(
-                'Both: ![one.png](/storage/1.png)![two.png](/storage/2.png)',
-            ),
-        );
-    });
-
-    test('a failed upload leaves the description untouched', async () => {
-        uploadImageMock.mockRejectedValue(new Error('nope'));
-        renderModal({ canManageTemplates: true });
-
-        fireEvent.click(screen.getByText('New template'));
-
-        const description = descriptionField();
-        fireEvent.change(description, { target: { value: 'Repro' } });
-        fireEvent.paste(description, {
-            clipboardData: transfer([imageFile()]),
-        });
-
-        await waitFor(() => expect(uploadImageMock).toHaveBeenCalled());
-        expect(description).toHaveValue('Repro');
-    });
-
-    test('a paste carrying no image is left to the browser', () => {
-        renderModal({ canManageTemplates: true });
-
-        fireEvent.click(screen.getByText('New template'));
-
-        const event = new Event('paste', { bubbles: true, cancelable: true });
-        Object.defineProperty(event, 'clipboardData', {
-            value: transfer([]),
-        });
-        fireEvent(descriptionField(), event);
-
-        expect(event.defaultPrevented).toBe(false);
-        expect(uploadImageMock).not.toHaveBeenCalled();
-    });
-
-    test('without permission there is no description field to paste into', () => {
+    test('without permission there is no description field', () => {
         renderModal({ canManageTemplates: false });
 
         expect(
             screen.queryByPlaceholderText(
-                'Description every new issue of this type starts from',
+                'Description every new issue of this type starts from. Type / for blocks.',
             ),
         ).not.toBeInTheDocument();
-        expect(uploadImageMock).not.toHaveBeenCalled();
+    });
+
+    test('editing a template swaps its card for the form, in place', () => {
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.click(screen.getByLabelText('Edit Standard Bug Report'));
+
+        expect(
+            screen.queryByLabelText('Edit Standard Bug Report'),
+        ).not.toBeInTheDocument();
+        expect(descriptionField()).toHaveValue('Steps to reproduce...');
+    });
+
+    test('a new template opens its form above the list', () => {
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.click(screen.getByText('New template'));
+
+        const form = screen.getByText('Add template').closest('div.space-y-4')!;
+        const card = screen.getByText('Standard Bug Report');
+
+        expect(
+            form.compareDocumentPosition(card) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy();
+    });
+
+    test('the fields are labelled', () => {
+        renderModal({ canManageTemplates: true });
+
+        fireEvent.click(screen.getByText('New template'));
+
+        expect(screen.getByLabelText('Name')).toBeInTheDocument();
+        expect(screen.getByText('Description')).toBeInTheDocument();
     });
 });
