@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { issue, users } from '@/stories/fixtures';
 import EditableMarkdown from './EditableMarkdown';
 import IssueMentionNodeView from './IssueMentionNodeView';
@@ -34,12 +34,32 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Rendered markdown; clicking it switches to the editor and saves on blur. */
+/** Rendered markdown; the Edit button (or a click) opens the editor, Save and Cancel end it. */
 export const Default: Story = {
     play: async ({ canvasElement }) => {
         await expect(
             await within(canvasElement).findByText(/Steps to reproduce/),
         ).toBeVisible();
+    },
+};
+
+/** While editing, nothing is saved until Save (or Ctrl/Cmd+Enter); Cancel (or Escape) discards. */
+export const Editing: Story = {
+    play: async ({ canvasElement, args }) => {
+        const canvas = within(canvasElement);
+
+        await userEvent.click(
+            await canvas.findByRole('button', { name: 'Edit' }),
+        );
+        await expect(
+            await canvas.findByRole('button', { name: 'Save' }),
+        ).toBeVisible();
+
+        await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
+        await expect(args.onSave).not.toHaveBeenCalled();
+        await expect(
+            await canvas.findByRole('button', { name: 'Edit' }),
+        ).toBeInTheDocument();
     },
 };
 

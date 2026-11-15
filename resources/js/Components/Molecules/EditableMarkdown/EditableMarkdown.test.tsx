@@ -12,16 +12,17 @@ import EditableMarkdown from './EditableMarkdown';
 
 type PasteHandler = (view: unknown, event: ClipboardEvent) => boolean;
 
+type KeyHandler = (view: unknown, event: KeyboardEvent) => boolean;
+
 type EditorOptions = {
     content: string;
     onBlur?: (args: { editor: FakeEditor }) => void;
-    editorProps?: { handlePaste?: PasteHandler };
+    editorProps?: { handlePaste?: PasteHandler; handleKeyDown?: KeyHandler };
 };
 
 class FakeEditor {
     markdown: string;
     editable = false;
-    onBlur?: (args: { editor: FakeEditor }) => void;
     setEditable = vi.fn((value: boolean) => {
         this.editable = value;
     });
@@ -77,7 +78,6 @@ class FakeEditor {
 
     constructor(options: EditorOptions) {
         this.markdown = options.content;
-        this.onBlur = options.onBlur;
     }
 }
 
@@ -131,9 +131,12 @@ const setup = (
     // instance right after the click handler ran.
     const editor = new FakeEditor({ content: value });
     let handlePaste: PasteHandler | undefined;
+    let handleKeyDown: KeyHandler | undefined;
+    let editorOptions: EditorOptions | undefined;
     mockUseEditor.mockImplementation((options: EditorOptions) => {
-        editor.onBlur = options.onBlur;
+        editorOptions = options;
         handlePaste = options.editorProps?.handlePaste;
+        handleKeyDown = options.editorProps?.handleKeyDown;
         return editor;
     });
 
@@ -151,6 +154,9 @@ const setup = (
         ...utils,
         onSave,
         getEditor: () => editor,
+        getOptions: () => editorOptions,
+        keyDown: (event: Partial<KeyboardEvent>) =>
+            handleKeyDown?.(null, event as KeyboardEvent) ?? false,
         paste: (event: Partial<ClipboardEvent>) =>
             handlePaste?.(null, event as ClipboardEvent) ?? false,
     };
@@ -178,9 +184,9 @@ describe('EditableMarkdown Component', () => {
         await userEvent.click(screen.getByTestId('editor-content'));
         expect(onEditingChange).toHaveBeenLastCalledWith(true);
 
-        const editor = getEditor();
-        act(() => editor.onBlur?.({ editor }));
+        await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
         expect(onEditingChange).toHaveBeenLastCalledWith(false);
+        expect(getEditor().setEditable).toHaveBeenLastCalledWith(false);
     });
 
     test('renders the editor content initialized with the current value', () => {
@@ -224,26 +230,135 @@ describe('EditableMarkdown Component', () => {
         expect(getEditor().setEditable).not.toHaveBeenCalled();
     });
 
-    test('committing on blur-sm calls onSave when the markdown changed', () => {
+    test('losing focus no longer saves or ends the edit', async () => {
         const onSave = vi.fn();
-        const { getEditor } = setup('Old text', onSave);
-        const editor = getEditor();
+        const { getEditor, getOptions } = setup('Old text', onSave);
 
-        editor.setContent('New text');
-        editor.onBlur?.({ editor });
+        await userEvent.click(screen.getByTestId('editor-content'));
+        getEditor().setContent('New text');
+        await userEvent.click(document.body);
 
-        expect(editor.setEditable).toHaveBeenCalledWith(false);
-        expect(onSave).toHaveBeenCalledWith('New text');
+        expect(getOptions()?.onBlur).toBeUndefined();
+        expect(onSave).not.toHaveBeenCalled();
+        expect(screen.getByRole('button', { name: 'Save' })).toBeVisible();
     });
 
-    test('does not call onSave on blur-sm when the markdown is unchanged', () => {
+    test('the Save button saves the changed markdown and ends the edit', async () => {
         const onSave = vi.fn();
-        const { getEditor } = setup('Same text', onSave);
-        const editor = getEditor();
+        const { getEditor } = setup('Old text', onSave);
 
-        editor.onBlur?.({ editor });
+        await userEvent.click(screen.getByTestId('editor-content'));
+        getEditor().setContent('New text');
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(getEditor().setEditable).toHaveBeenLastCalledWith(false);
+        expect(onSave).toHaveBeenCalledWith('New text');
+        expect(
+            screen.queryByRole('button', { name: 'Save' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('saving unchanged markdown just ends the edit', async () => {
+        const onSave = vi.fn();
+        setup('Same text', onSave);
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
         expect(onSave).not.toHaveBeenCalled();
+        expect(
+            screen.queryByRole('button', { name: 'Save' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('the Cancel button reverts the content without saving', async () => {
+        const onSave = vi.fn();
+        const { getEditor } = setup('Original', onSave);
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+        getEditor().setContent('Changed');
+        await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+        expect(getEditor().setContent).toHaveBeenLastCalledWith('Original');
+        expect(onSave).not.toHaveBeenCalled();
+    });
+
+    test('Ctrl+Enter and Cmd+Enter save from inside the editor', async () => {
+        const onSave = vi.fn();
+        const { getEditor, keyDown } = setup('Old', onSave);
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+        getEditor().setContent('New');
+
+        const preventDefault = vi.fn();
+        let handled = false;
+        act(() => {
+            handled = keyDown({ key: 'Enter', ctrlKey: true, preventDefault });
+        });
+
+        expect(handled).toBe(true);
+        expect(preventDefault).toHaveBeenCalled();
+        expect(onSave).toHaveBeenCalledWith('New');
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+        getEditor().setContent('Newer');
+        act(() => {
+            keyDown({ key: 'Enter', metaKey: true, preventDefault });
+        });
+
+        expect(onSave).toHaveBeenLastCalledWith('Newer');
+    });
+
+    test('a plain Enter is left to the editor', () => {
+        const { keyDown } = setup('Text');
+
+        expect(keyDown({ key: 'Enter', preventDefault: vi.fn() })).toBe(false);
+    });
+
+    test('Save and Cancel only exist while editing', async () => {
+        setup('Text');
+
+        expect(
+            screen.queryByRole('button', { name: 'Save' }),
+        ).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+
+        expect(screen.getByRole('button', { name: 'Save' })).toBeVisible();
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeVisible();
+    });
+
+    test('the Edit button starts editing and is reachable by keyboard', async () => {
+        const { getEditor } = setup('Text');
+
+        await userEvent.tab();
+        const edit = screen.getByRole('button', { name: 'Edit' });
+        expect(edit).toHaveFocus();
+
+        await userEvent.keyboard('{Enter}');
+
+        expect(getEditor().setEditable).toHaveBeenCalledWith(true);
+        expect(getEditor().focus).toHaveBeenCalledWith('end');
+        expect(
+            screen.queryByRole('button', { name: 'Edit' }),
+        ).not.toBeInTheDocument();
+    });
+
+    test('focus goes back to the Edit button once the edit ends', async () => {
+        setup('Text');
+
+        await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+        expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
+    });
+
+    test('there is no Edit button when disabled', () => {
+        setup('Text', vi.fn(), true);
+
+        expect(
+            screen.queryByRole('button', { name: 'Edit' }),
+        ).not.toBeInTheDocument();
     });
 
     test('pasting an image uploads it and inserts it at the caret', async () => {
@@ -397,13 +512,13 @@ describe('EditableMarkdown Component', () => {
         expect(getEditor().setEditable).not.toHaveBeenCalled();
     });
 
-    test('blurring while an upload is in flight does not end the edit', async () => {
+    test('Save and Cancel wait for an upload that is in flight', async () => {
         let resolveUpload: (url: string) => void = () => {};
         const onImageUpload = vi.fn(
             () => new Promise<string>((resolve) => (resolveUpload = resolve)),
         );
         const onSave = vi.fn();
-        const { getEditor, paste } = setup(
+        const { getEditor, paste, keyDown } = setup(
             'Text',
             onSave,
             false,
@@ -411,6 +526,7 @@ describe('EditableMarkdown Component', () => {
         );
         const editor = getEditor();
 
+        await userEvent.click(screen.getByTestId('editor-content'));
         paste({
             preventDefault: vi.fn(),
             clipboardData: transfer([imageFile()]),
@@ -418,14 +534,20 @@ describe('EditableMarkdown Component', () => {
         await screen.findByText('Uploading 1 image...');
 
         editor.setContent('Changed');
-        editor.onBlur?.({ editor });
-
+        expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled();
+        expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+        act(() => {
+            keyDown({ key: 'Enter', ctrlKey: true, preventDefault: vi.fn() });
+        });
         expect(onSave).not.toHaveBeenCalled();
 
         resolveUpload('/storage/c.png');
         await waitFor(() => expect(editor.insertContentAt).toHaveBeenCalled());
+        await waitFor(() =>
+            expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled(),
+        );
 
-        editor.onBlur?.({ editor });
+        await userEvent.click(screen.getByRole('button', { name: 'Save' }));
         expect(onSave).toHaveBeenCalledWith('Changed');
     });
 
