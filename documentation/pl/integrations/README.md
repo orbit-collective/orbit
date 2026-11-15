@@ -10,6 +10,10 @@ Orbit pozwala projektowi połączyć się z zewnętrznymi narzędziami, wzdłuż
 4. **[Przegląd połączenia frontend ↔ backend](./04-frontend-backend-wiring-overview.md)** — pełny kształt request/response dla funkcji integracji notify, przydatny jako mapa przed zagłębieniem się w przewodniki 1–3.
 5. **[Dodaj integrację typu import](./05-add-an-import-integration.md)** — zamień wpis w katalogu oznaczony jako "coming soon" w realnie działającą integrację **import** (na przykładzie Lineara, zbudowanym na już kompletnej implementacji Jiry).
 6. **[Integracja z GitHubem](./06-github-integration.md)** — jak działa faktyczna, już podłączona integracja typu **github**: architektura (poprzez relay `orbit-api`), łączenie projektu, składnia znacznika `<!-- orbit-issue:ID -->` oraz rozwiązywanie problemów.
+7. **[Strony integracji](./07-integration-pages.md)** — jak własna strona
+   integracji (`/settings/integrations/<id>`) jest ładowana, budowana i
+   rozszerzana: odchudzony przegląd, propsy per integracja, tabela
+   Details, komendy palety poleceń i wskazówki dla klawiatury.
 
 Potrzebujesz zabezpieczyć nową zdolność integracji własnym uprawnieniem? Zobacz [`../permissions/01-add-a-new-permission.md`](../permissions/01-add-a-new-permission.md) w kategorii [role i uprawnienia](../permissions/README.md) — ten przewodnik nie jest tu powtórzony, ponieważ dotyczy dowolnego uprawnienia `projects.*`/`issues.*`/`comments.*`, nie tylko tych związanych z integracjami.
 
