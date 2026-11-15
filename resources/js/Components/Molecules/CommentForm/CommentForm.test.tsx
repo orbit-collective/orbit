@@ -804,3 +804,97 @@ describe('CommentForm image uploads', () => {
         expect(container.querySelector('.animate-spin')).not.toBeNull();
     });
 });
+
+describe('CommentForm mention highlight', () => {
+    const marks = () =>
+        Array.from(
+            screen.getByTestId('mention-backdrop').querySelectorAll('mark'),
+        ).map((mark) => mark.textContent);
+
+    test('a picked member is highlighted while typing, not only after sending', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        await userEvent.type(textarea, 'Hi @jane');
+
+        // Still being typed: nothing is registered yet.
+        expect(marks()).toEqual([]);
+
+        await userEvent.click(screen.getByText('Jane Cooper'));
+
+        expect(marks()).toEqual(['@Jane Cooper']);
+    });
+
+    test('a picked issue is highlighted too', async () => {
+        mockAxios.get.mockResolvedValue({
+            data: [{ id: 2, title: 'Fix login' }],
+        });
+        render(<CommentForm onSubmit={() => {}} users={users} projectId={7} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            'See #2',
+        );
+        await userEvent.click(
+            await screen.findByRole('option', { name: /Fix login/ }),
+        );
+
+        expect(marks()).toEqual(['#2']);
+    });
+
+    test('the highlight follows the mention when text is typed before it', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        await userEvent.type(textarea, '@jane');
+        await userEvent.click(screen.getByText('Jane Cooper'));
+
+        textarea.focus();
+        (textarea as HTMLTextAreaElement).setSelectionRange(0, 0);
+        await userEvent.keyboard('Hey ');
+
+        expect(marks()).toEqual(['@Jane Cooper']);
+        expect(screen.getByTestId('mention-backdrop')).toHaveTextContent(
+            'Hey @Jane Cooper',
+        );
+    });
+
+    test('a mention that was edited into plain text loses its highlight', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        await userEvent.type(textarea, 'Hi @jane');
+        await userEvent.click(screen.getByText('Jane Cooper'));
+
+        textarea.focus();
+        (textarea as HTMLTextAreaElement).setSelectionRange(8, 8);
+        await userEvent.keyboard('{Backspace}');
+
+        expect(marks()).toEqual([]);
+    });
+
+    test('is cleared once the comment is sent', async () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        await userEvent.type(
+            screen.getByPlaceholderText('Leave a comment...'),
+            'Hi @jane',
+        );
+        await userEvent.click(screen.getByText('Jane Cooper'));
+        await userEvent.click(
+            screen.getByRole('button', { name: 'Post comment' }),
+        );
+
+        expect(marks()).toEqual([]);
+    });
+
+    test('the layer scrolls with the textarea', () => {
+        render(<CommentForm onSubmit={() => {}} users={users} />);
+
+        const textarea = screen.getByPlaceholderText('Leave a comment...');
+        textarea.scrollTop = 24;
+        fireEvent.scroll(textarea);
+
+        expect(screen.getByTestId('mention-backdrop').scrollTop).toBe(24);
+    });
+});

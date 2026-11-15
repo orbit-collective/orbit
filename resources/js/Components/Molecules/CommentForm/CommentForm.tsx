@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import TextArea from '@/Components/Atoms/TextArea/TextArea';
+import MentionBackdrop from '@/Components/Molecules/MentionBackdrop/MentionBackdrop';
 import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
 import { useImageInsertion } from '@/hooks/useImageInsertion';
 import { CommentFormProps, IssueSuggestion } from '@/types/Components';
@@ -47,6 +48,9 @@ const menuPosition = (textarea: HTMLTextAreaElement, start: number) => {
     };
 };
 
+/** Typography and padding of the comment text, for the textarea and the highlight layer behind it. */
+const TEXT_BOX = 'rounded-t-xl px-4 pt-3 pb-2 text-sm';
+
 const CommentForm: React.FC<CommentFormProps> = ({
     onSubmit,
     users = [],
@@ -72,6 +76,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
     const textareaId = useId();
     const hintId = useId();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const backdropRef = useRef<HTMLDivElement>(null);
     // The selection right before the current edit is applied - captured on
     // keydown/paste/cut, since that's the only reliable way to know exactly
     // which characters an edit replaced. Diffing the before/after text
@@ -85,6 +90,31 @@ const CommentForm: React.FC<CommentFormProps> = ({
     // "unaccounted for" rather than silently reusing a stale range from
     // whatever edit came before it.
     const editRangeRef = useRef<{ start: number; end: number } | null>(null);
+
+    // The highlight layer scrolls with the textarea it sits behind.
+    useEffect(() => {
+        const textarea = textareaRef.current;
+
+        if (!textarea) return;
+
+        const follow = () => {
+            if (backdropRef.current) {
+                backdropRef.current.scrollTop = textarea.scrollTop;
+            }
+        };
+
+        textarea.addEventListener('scroll', follow);
+
+        return () => textarea.removeEventListener('scroll', follow);
+    }, []);
+
+    // A new line can make the textarea scroll without a scroll event firing
+    // before the layer renders the extra text.
+    useEffect(() => {
+        if (backdropRef.current && textareaRef.current) {
+            backdropRef.current.scrollTop = textareaRef.current.scrollTop;
+        }
+    }, [body]);
 
     useEffect(() => {
         if (pendingCaret === null || !textareaRef.current) return;
@@ -481,37 +511,52 @@ const CommentForm: React.FC<CommentFormProps> = ({
             <label htmlFor={textareaId} className="sr-only">
                 {t('comment_form.label')}
             </label>
-            <TextArea
-                id={textareaId}
-                ref={textareaRef}
-                value={body}
-                rows={3}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                onClick={handleSelectionChange}
-                onSelect={handleSelectionChange}
-                onPaste={handlePaste}
-                onCut={handleCut}
-                onBlur={() => setMention(null)}
-                role="combobox"
-                aria-autocomplete="list"
-                aria-haspopup="listbox"
-                aria-describedby={hintId}
-                aria-busy={isSubmitting}
-                aria-expanded={mention !== null && optionCount > 0}
-                aria-controls={
-                    mention !== null && optionCount > 0 ? listboxId : undefined
-                }
-                aria-activedescendant={
-                    mention !== null && optionCount > 0
-                        ? `${listboxId}-option-${mention.activeIndex}`
-                        : undefined
-                }
-                placeholder={t('comment_form.placeholder')}
-                className="min-h-[84px] resize-none rounded-t-xl border-none bg-transparent px-4 pt-3 pb-2 text-sm focus:border-none"
-                isDisabled={isSubmitting}
-                onDrop={handleDrop}
-            />
+            {/* The text and its padding are shared by the textarea and the
+                layer behind it, so the highlight lands on the right words. */}
+            <div className="relative">
+                <MentionBackdrop
+                    ref={backdropRef}
+                    text={body}
+                    ranges={mentionRanges}
+                    className={TEXT_BOX}
+                />
+                <TextArea
+                    id={textareaId}
+                    ref={textareaRef}
+                    value={body}
+                    rows={3}
+                    onChange={handleChange}
+                    onKeyDown={handleKeyDown}
+                    onClick={handleSelectionChange}
+                    onSelect={handleSelectionChange}
+                    onPaste={handlePaste}
+                    onCut={handleCut}
+                    onBlur={() => setMention(null)}
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-haspopup="listbox"
+                    aria-describedby={hintId}
+                    aria-busy={isSubmitting}
+                    aria-expanded={mention !== null && optionCount > 0}
+                    aria-controls={
+                        mention !== null && optionCount > 0
+                            ? listboxId
+                            : undefined
+                    }
+                    aria-activedescendant={
+                        mention !== null && optionCount > 0
+                            ? `${listboxId}-option-${mention.activeIndex}`
+                            : undefined
+                    }
+                    placeholder={t('comment_form.placeholder')}
+                    className={cn(
+                        TEXT_BOX,
+                        'relative z-10 block min-h-[84px] resize-none border-none bg-transparent text-(--text-color) focus:border-none',
+                    )}
+                    isDisabled={isSubmitting}
+                    onDrop={handleDrop}
+                />
+            </div>
             <div className="flex items-center justify-between gap-3 px-3 pt-1 pb-3">
                 <p id={hintId} className="text-xs text-(--text-muted-color)">
                     <kbd className="font-sans font-medium">Enter</kbd>
