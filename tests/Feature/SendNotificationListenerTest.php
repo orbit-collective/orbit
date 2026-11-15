@@ -404,10 +404,10 @@ test('IssuesImported notifies the importing user with a success severity when no
             'success',
             'Import finished',
             'Imported 3, updated 1, skipped 2, failed 0 issue(s) into "Orbit".',
-            route('settings.integrations', ['project' => $project->id])
+            route('settings.integrations.show', ['integration' => 'jira', 'project' => $project->id])
         );
 
-    $this->listener->handle(new IssuesImported($project, $importedBy, $result));
+    $this->listener->handle(new IssuesImported($project, $importedBy, $result, 'jira'));
 });
 
 test('IssuesImported notifies with a warning severity when some issues failed', function () {
@@ -419,5 +419,5 @@ test('IssuesImported notifies with a warning severity when some issues failed', 
         ->once()
         ->with($importedBy->id, NotificationType::IntegrationActivity, 'warning', Mockery::any(), Mockery::any(), Mockery::any());
 
-    $this->listener->handle(new IssuesImported($project, $importedBy, $result));
+    $this->listener->handle(new IssuesImported($project, $importedBy, $result, 'jira'));
 });
