@@ -304,12 +304,12 @@ test('settings page exposes the webhook url to an admin who can update integrati
         'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
     ]);
 
-    $response = $this->actingAs($user)->get('/settings/integrations');
+    $response = $this->actingAs($user)->get('/settings/integrations/discord');
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->where('integrationSettings.discord.hasWebhookUrl', true)
+        ->where('integrationSettings.hasWebhookUrl', true)
         ->where(
-            'integrationSettings.discord.webhookUrl',
+            'integrationSettings.webhookUrl',
             'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
         )
     );
@@ -323,11 +323,121 @@ test('settings page masks the webhook url from a member who cannot update integr
         'webhook_url' => 'https://discord.com/api/webhooks/123456789012345678/aBcDeF-ghijk_LMNOP',
     ]);
 
-    $response = $this->actingAs($user)->get('/settings/integrations');
+    $response = $this->actingAs($user)->get('/settings/integrations/discord');
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->where('integrationSettings.discord.hasWebhookUrl', true)
-        ->where('integrationSettings.discord.webhookUrl', null)
+        ->where('integrationSettings.hasWebhookUrl', true)
+        ->where('integrationSettings.webhookUrl', null)
+    );
+});
+
+test('the integrations overview carries only the enabled states, not the integrations\' own data', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'owner');
+
+    $this->actingAs($user)->get('/settings/integrations')->assertInertia(fn (Assert $page) => $page
+        ->component('Settings/Integrations')
+        ->where('integrationStatuses.github', false)
+        ->missing('integrationSettings')
+        ->missing('jiraSettings')
+        ->missing('githubConnectStatus')
+        ->missing('issueTypes')
+        ->missing('labels')
+        ->missing('priorities')
+    );
+});
+
+test('an integration page renders for the selected project with its enabled state', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'owner');
+    app(ProjectIntegrationService::class)->setEnabled($project, 'discord', true);
+
+    $this->actingAs($user)->get("/settings/integrations/discord?project={$project->id}")
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Settings/IntegrationDetail')
+            ->where('integrationId', 'discord')
+            ->where('integrationEnabled', true)
+            ->where('selectedProjectId', $project->id)
+            ->where('canUpdateIntegrations', true)
+            ->where('githubConnectStatus', null)
+            ->where('jiraSettings', null)
+        );
+});
+
+test('an integration page that is not wired up yet has no settings', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'owner');
+
+    $this->actingAs($user)->get('/settings/integrations/slack')->assertInertia(fn (Assert $page) => $page
+        ->where('integrationId', 'slack')
+        ->where('integrationEnabled', false)
+        ->where('integrationSettings', null)
+    );
+});
+
+test('an unknown integration page is a 404', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'owner');
+
+    $this->actingAs($user)->get('/settings/integrations/not-a-thing')->assertNotFound();
+});
+
+test('the jira page loads the import data only for jira and only for who can update it', function () {
+    $admin = User::factory()->create();
+    $member = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $admin->id, 'admin');
+    addProjectMember($project, $member->id, 'member');
+
+    $this->actingAs($admin)->get('/settings/integrations/jira')->assertInertia(fn (Assert $page) => $page
+        ->has('issueTypes')
+        ->has('priorities')
+        ->has('labels')
+        ->has('jiraImportProgress')
+    );
+
+    $this->actingAs($admin)->get('/settings/integrations/discord')->assertInertia(fn (Assert $page) => $page
+        ->where('issueTypes', [])
+        ->where('jiraSettings', null)
+        ->where('jiraImportProgress', null)
+    );
+
+    $this->actingAs($member)->get('/settings/integrations/jira')->assertInertia(fn (Assert $page) => $page
+        ->where('issueTypes', [])
+        ->where('jiraSettings', null)
+        ->where('jiraImportProgress', null)
+    );
+});
+
+test('the github page carries the connect status and every other integration page does not', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'owner');
+
+    $this->actingAs($user)->get('/settings/integrations/github')->assertInertia(fn (Assert $page) => $page
+        ->where('githubConnectStatus.status', 'not_connected')
+        ->where('integrationEnabled', false)
+    );
+    $this->actingAs($user)->get('/settings/integrations/discord')->assertInertia(fn (Assert $page) => $page
+        ->where('githubConnectStatus', null)
+    );
+});
+
+test('an integration page hides everything from a viewer whose role lacks the view permission', function () {
+    $user = User::factory()->create();
+    $project = Project::factory()->create();
+    addProjectMember($project, $user->id, 'viewer');
+    $project->roles()->where('slug', 'viewer')->first()->permissions()
+        ->detach(Permission::where('key', PermissionEnum::INTEGRATIONS_VIEW->value)->value('id'));
+
+    $this->actingAs($user)->get('/settings/integrations/discord')->assertInertia(fn (Assert $page) => $page
+        ->where('hasIntegrationsAccess', false)
+        ->where('integrationEnabled', false)
+        ->where('integrationSettings', null)
     );
 });
 
@@ -512,12 +622,12 @@ test('the issue types page hides the catalog from a user outside the project', f
     );
 });
 
-test('the issue types, integrations and automation tabs carry the project priorities for their pickers', function () {
+test('the issue types and automation tabs and the jira page carry the project priorities for their pickers', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create();
     addProjectMember($project, $user->id, 'admin');
 
-    foreach (['/settings/issue-types', '/settings/integrations', '/settings/automation'] as $path) {
+    foreach (['/settings/issue-types', '/settings/integrations/jira', '/settings/automation'] as $path) {
         $this->actingAs($user)->get($path)->assertInertia(fn (Assert $page) => $page
             ->has('priorities', 3)
             ->where('priorities.0.name', 'High')
