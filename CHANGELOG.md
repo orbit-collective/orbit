@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.15.2](https://github.com/orbit-collective/orbit/compare/v0.15.1...v0.15.2) (2026-11-15)
+
+
+### Features
+
+* **ui:** add user preview card on avatar hover ([75b9098](https://github.com/orbit-collective/orbit/commit/75b90988a0fb858a3cc35ffdbbf4e350bf627c3b))
+* **ui:** show user preview on member and assignee avatars ([a612bf5](https://github.com/orbit-collective/orbit/commit/a612bf57c5faeac22b44d6f99571f049583f7f79))
+* **users:** add user preview endpoint ([e2f05e8](https://github.com/orbit-collective/orbit/commit/e2f05e801903bc52a5578979e2ca9068e205bca1))
+
+
+### Bug Fixes
+
+* **ui:** move avatar preview into UserAvatar molecule ([5155c6c](https://github.com/orbit-collective/orbit/commit/5155c6cda26b337cc9b66a646f3e756f37b7f80e))
+* **ui:** open one user preview per badge on focus ([586293d](https://github.com/orbit-collective/orbit/commit/586293dddc14751d07e321a74330d69baf2770bd))
+
+
+### Miscellaneous Chores
+
+* release 0.15.2 ([7db68ca](https://github.com/orbit-collective/orbit/commit/7db68ca8326521839019b42d5a045cf85b6cd83c))
+
 ## [0.15.1](https://github.com/orbit-collective/orbit/compare/v0.15.0...v0.15.1) (2026-11-13)
 
 
