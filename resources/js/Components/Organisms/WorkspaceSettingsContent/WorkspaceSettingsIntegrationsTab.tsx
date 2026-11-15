@@ -1,19 +1,22 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
+import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import Input from '@/Components/Atoms/Input/Input';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import SegmentedControl from '@/Components/Atoms/SegmentedControl/SegmentedControl';
+import Collapse from '@/Components/Molecules/Collapse/Collapse';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import { useIntegrationActions } from '@/hooks/useIntegrationActions';
 import { useIntegrationListCommands } from '@/hooks/useIntegrationCommands';
 import { useIntegrationText } from '@/hooks/useIntegrationText';
+import { useStoredChoice } from '@/hooks/useStoredChoice';
 import {
     INTEGRATION_CATEGORIES,
     IntegrationCategory,
@@ -34,6 +37,10 @@ import { SPRING, riseIn } from '@/utils/motion';
 import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
 
 type CategoryFilter = IntegrationCategory | 'All';
+
+type IntegrationView = 'grid' | 'list';
+
+const VIEWS: IntegrationView[] = ['grid', 'list'];
 
 const CATEGORY_FILTERS: CategoryFilter[] = ['All', ...INTEGRATION_CATEGORIES];
 
@@ -67,12 +74,27 @@ export default function WorkspaceSettingsIntegrationsTab({
     const [activeState, setActiveState] =
         useState<IntegrationStateFilter>('all');
     const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
+    const filtersId = useId();
+    // The layout and whether the filters are shown are remembered in this browser.
+    const [view, setView] = useStoredChoice<IntegrationView>(
+        'integrations:view',
+        'grid',
+        VIEWS,
+    );
+    const [filtersChoice, setFiltersChoice] = useStoredChoice<
+        'open' | 'closed'
+    >('integrations:filters', 'closed', ['open', 'closed']);
+    const filtersOpen = filtersChoice === 'open';
+    const setFiltersOpen = (open: boolean) =>
+        setFiltersChoice(open ? 'open' : 'closed');
     useIntegrationListCommands({
         projectId: selectedProjectId,
         canUpdate: hasIntegrationsAccess && canUpdateIntegrations,
         statuses: integrationStatuses,
         onToggle: toggleIntegration,
         onSearch: () => searchRef.current?.focus(),
+        onToggleFilters: () => setFiltersOpen(!filtersOpen),
+        onChangeView: setView,
     });
 
     const selectedProject =
@@ -131,6 +153,8 @@ export default function WorkspaceSettingsIntegrationsTab({
             : inSearchAndCategory.filter(
                   (integration) => stateOf(integration) === state,
               ).length;
+    const activeFilterCount =
+        (activeState === 'all' ? 0 : 1) + (activeCategory === 'All' ? 0 : 1);
     const hasFilters =
         query.trim() !== '' ||
         activeState !== 'all' ||
@@ -267,80 +291,131 @@ export default function WorkspaceSettingsIntegrationsTab({
                     )}
                 </div>
 
-                <SegmentedControl
-                    label={t(
-                        'workspace_settings_integrations.tab.filter_by_state',
+                <IconButton
+                    iconName="ListFilter"
+                    ariaLabel={t('workspace_settings_integrations.tab.filters')}
+                    type="button"
+                    aria-expanded={filtersOpen}
+                    aria-controls={filtersId}
+                    onClick={() => setFiltersOpen(!filtersOpen)}
+                    className={cn(
+                        'relative h-9 w-9 shrink-0 rounded-md border border-(--bg-light-color) bg-(--bg-color) p-0 text-(--text-gray-color) hover:text-(--text-color)',
+                        FOCUS_RING,
+                        filtersOpen &&
+                            'border-(--accent-color) text-(--accent-color)',
                     )}
-                    value={activeState}
-                    onChange={setActiveState}
-                    options={INTEGRATION_STATE_FILTERS.map((state) => ({
-                        value: state,
-                        label: `${t(`workspace_settings_integrations.tab.states.${state}`)} ${stateCount(state)}`,
+                >
+                    {activeFilterCount > 0 && (
+                        <span
+                            data-testid="active-filters"
+                            className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-(--accent-color) px-1 text-[10px] font-semibold text-white"
+                        >
+                            {activeFilterCount}
+                            <span className="sr-only">
+                                {t(
+                                    'workspace_settings_integrations.tab.filters_active',
+                                )}
+                            </span>
+                        </span>
+                    )}
+                </IconButton>
+
+                <SegmentedControl
+                    label={t('workspace_settings_integrations.tab.view_label')}
+                    value={view}
+                    onChange={setView}
+                    iconOnly
+                    className="ml-auto"
+                    options={VIEWS.map((option) => ({
+                        value: option,
+                        icon: option === 'grid' ? 'LayoutGrid' : 'List',
+                        label: t(
+                            `workspace_settings_integrations.tab.views.${option}`,
+                        ),
                     }))}
                 />
             </motion.div>
 
-            <motion.div
-                variants={riseIn}
-                role="group"
-                aria-label={t(
-                    'workspace_settings_integrations.tab.filter_by_category',
-                )}
-                className="flex flex-wrap gap-2"
-            >
-                {CATEGORY_FILTERS.map((category) => {
-                    const isActive = category === activeCategory;
-                    const count = searchable.filter(
-                        ({ integration, text: haystack }) =>
-                            (category === 'All' ||
-                                integration.category === category) &&
-                            matchesSearch(haystack, query) &&
-                            (activeState === 'all' ||
-                                stateOf(integration) === activeState),
-                    ).length;
+            <motion.div variants={riseIn}>
+                <Collapse
+                    id={filtersId}
+                    open={filtersOpen}
+                    className="space-y-3"
+                >
+                    <SegmentedControl
+                        label={t(
+                            'workspace_settings_integrations.tab.filter_by_state',
+                        )}
+                        value={activeState}
+                        onChange={setActiveState}
+                        options={INTEGRATION_STATE_FILTERS.map((state) => ({
+                            value: state,
+                            label: `${t(`workspace_settings_integrations.tab.states.${state}`)} ${stateCount(state)}`,
+                        }))}
+                    />
 
-                    return (
-                        <button
-                            key={category}
-                            type="button"
-                            onClick={() => setActiveCategory(category)}
-                            aria-pressed={isActive}
-                            className={cn(
-                                'relative inline-flex items-center gap-1.5 rounded-full border-0 px-3.5 py-1.5 text-sm font-medium transition-colors duration-200',
-                                FOCUS_RING,
-                                isActive
-                                    ? 'text-white'
-                                    : 'bg-(--bg-light-color) text-(--text-gray-color) hover:text-(--text-color)',
-                            )}
-                        >
-                            {isActive && (
-                                <motion.span
-                                    layoutId="integration-category"
-                                    transition={SPRING}
-                                    aria-hidden="true"
-                                    className="absolute inset-0 rounded-full bg-(--accent-color)"
-                                />
-                            )}
-                            <span className="relative">
-                                {category === 'All'
-                                    ? t('common.all')
-                                    : t(
-                                          `workspace_settings_integrations.categories.${category.toLowerCase().replace(' ', '_')}`,
-                                      )}
-                            </span>
-                            <span
-                                className={cn(
-                                    'relative text-xs',
-                                    isActive
-                                        ? 'text-white/70'
-                                        : 'text-(--text-muted-color)',
-                                )}
-                            >
-                                <AnimatedNumber value={count} />
-                            </span>
-                        </button>
-                    );
-                })}
+                    <div
+                        role="group"
+                        aria-label={t(
+                            'workspace_settings_integrations.tab.filter_by_category',
+                        )}
+                        className="flex flex-wrap gap-2"
+                    >
+                        {CATEGORY_FILTERS.map((category) => {
+                            const isActive = category === activeCategory;
+                            const count = searchable.filter(
+                                ({ integration, text: haystack }) =>
+                                    (category === 'All' ||
+                                        integration.category === category) &&
+                                    matchesSearch(haystack, query) &&
+                                    (activeState === 'all' ||
+                                        stateOf(integration) === activeState),
+                            ).length;
+
+                            return (
+                                <button
+                                    key={category}
+                                    type="button"
+                                    onClick={() => setActiveCategory(category)}
+                                    aria-pressed={isActive}
+                                    className={cn(
+                                        'relative inline-flex items-center gap-1.5 rounded-full border-0 px-3.5 py-1.5 text-sm font-medium transition-colors duration-200',
+                                        FOCUS_RING,
+                                        isActive
+                                            ? 'text-white'
+                                            : 'bg-(--bg-light-color) text-(--text-gray-color) hover:text-(--text-color)',
+                                    )}
+                                >
+                                    {isActive && (
+                                        <motion.span
+                                            layoutId="integration-category"
+                                            transition={SPRING}
+                                            aria-hidden="true"
+                                            className="absolute inset-0 rounded-full bg-(--accent-color)"
+                                        />
+                                    )}
+                                    <span className="relative">
+                                        {category === 'All'
+                                            ? t('common.all')
+                                            : t(
+                                                  `workspace_settings_integrations.categories.${category.toLowerCase().replace(' ', '_')}`,
+                                              )}
+                                    </span>
+                                    <span
+                                        className={cn(
+                                            'relative text-xs',
+                                            isActive
+                                                ? 'text-white/70'
+                                                : 'text-(--text-muted-color)',
+                                        )}
+                                    >
+                                        <AnimatedNumber value={count} />
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </Collapse>
             </motion.div>
 
             <div role="status" aria-live="polite" className="sr-only">
@@ -379,11 +454,23 @@ export default function WorkspaceSettingsIntegrationsTab({
                 </SettingsPanel>
             )}
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div
+                className={
+                    view === 'list'
+                        ? 'flex flex-col gap-2'
+                        : 'grid grid-cols-1 gap-5 sm:grid-cols-2'
+                }
+            >
                 {filteredIntegrations.map((integration, index) => (
-                    <RowReveal key={integration.id} index={index} fill>
+                    <RowReveal
+                        key={integration.id}
+                        index={index}
+                        fill
+                        className={cn(view === 'grid' && 'w-full max-w-md')}
+                    >
                         <WorkspaceSettingsIntegrationCard
                             integration={integration}
+                            variant={view === 'list' ? 'row' : 'card'}
                             enabled={
                                 integrationStatuses[integration.id] ?? false
                             }

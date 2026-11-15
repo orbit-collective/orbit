@@ -11,6 +11,13 @@ return [
         'productivity' => 'Productivity',
     ],
     'tab' => [
+        'filters' => 'Filters',
+        'filters_active' => ' active filters',
+        'view_label' => 'Layout',
+        'views' => [
+            'grid' => 'Grid',
+            'list' => 'List',
+        ],
         'search_label' => 'Search integrations',
         'search_placeholder' => 'Search integrations…',
         'clear_search' => 'Clear search',

@@ -37,6 +37,8 @@ describe('stable registration', () => {
             statuses: { discord: true },
             onToggle,
             onSearch: vi.fn(),
+            onToggleFilters: vi.fn(),
+            onChangeView: vi.fn(),
         });
         const { rerender } = renderHook((p) => useIntegrationListCommands(p), {
             initialProps: props(vi.fn()),
@@ -94,6 +96,8 @@ describe('useIntegrationListCommands', () => {
                 statuses: { discord: true },
                 onToggle,
                 onSearch: vi.fn(),
+                onToggleFilters: vi.fn(),
+                onChangeView: vi.fn(),
                 ...overrides,
             }),
         );
@@ -110,6 +114,23 @@ describe('useIntegrationListCommands', () => {
         byId('integrations.search')!.perform!();
 
         expect(onSearch).toHaveBeenCalled();
+    });
+
+    test('shows or hides the filters and switches the layout, whatever the permissions', () => {
+        const onToggleFilters = vi.fn();
+        const onChangeView = vi.fn();
+        render({ canUpdate: false, onToggleFilters, onChangeView });
+
+        byId('integrations.filters')!.perform!();
+        byId('integrations.view.list')!.perform!();
+        byId('integrations.view.grid')!.perform!();
+
+        expect(onToggleFilters).toHaveBeenCalled();
+        expect(onChangeView).toHaveBeenNthCalledWith(1, 'list');
+        expect(onChangeView).toHaveBeenNthCalledWith(2, 'grid');
+        expect(byId('integrations.view.list')!.title).toBe(
+            'Show integrations as a list',
+        );
     });
 
     test('has an open command for every integration that goes to its page', () => {

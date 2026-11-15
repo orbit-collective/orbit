@@ -9,6 +9,13 @@ return [
     'search' => [
         'title' => 'Search integrations',
     ],
+    'filters' => [
+        'title' => 'Show or hide the filters',
+    ],
+    'view' => [
+        'grid' => 'Show integrations as a grid',
+        'list' => 'Show integrations as a list',
+    ],
     'open' => [
         'title' => 'Open integration: :name',
     ],

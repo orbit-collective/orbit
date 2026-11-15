@@ -11,6 +11,13 @@ return [
         'productivity' => 'Produktywność',
     ],
     'tab' => [
+        'filters' => 'Filtry',
+        'filters_active' => ' aktywne filtry',
+        'view_label' => 'Układ',
+        'views' => [
+            'grid' => 'Siatka',
+            'list' => 'Lista',
+        ],
         'search_label' => 'Szukaj integracji',
         'search_placeholder' => 'Szukaj integracji…',
         'clear_search' => 'Wyczyść wyszukiwanie',

@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
 import { expectPanelsToFold, inSettingsPage } from '@/tests/settingsPanels';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
@@ -75,6 +75,14 @@ const pill = (name: RegExp) =>
         { name },
     );
 
+const openFilters = async () => {
+    const button = screen.getByRole('button', { name: 'Filters' });
+
+    if (button.getAttribute('aria-expanded') !== 'true') {
+        await userEvent.click(button);
+    }
+};
+
 const projectA: MemberProjectSummary = { id: 1, name: 'Orbit', color: 'blue' };
 const projectB: MemberProjectSummary = {
     id: 2,
@@ -83,6 +91,8 @@ const projectB: MemberProjectSummary = {
 };
 
 describe('WorkspaceSettingsIntegrationsTab', () => {
+    beforeEach(() => localStorage.clear());
+
     test('shows a message when the user has no project', () => {
         renderTab({ memberProjects: [], selectedProjectId: null });
 
@@ -230,6 +240,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
     });
 
     test('filters the grid down to the selected category', async () => {
+        localStorage.setItem('integrations:filters', 'open');
         renderTab({
             memberProjects: [projectA],
             selectedProjectId: projectA.id,
@@ -248,6 +259,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
     });
 
     test('the category pills report which one is on, and the grid follows', async () => {
+        localStorage.setItem('integrations:filters', 'open');
         renderTab({
             memberProjects: [projectA],
             selectedProjectId: projectA.id,
@@ -269,6 +281,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
     });
 
     test('the category pills are one named group', () => {
+        localStorage.setItem('integrations:filters', 'open');
         renderTab({
             memberProjects: [projectA],
             selectedProjectId: projectA.id,
@@ -282,6 +295,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
     });
 
     test('the category pills count their integrations', async () => {
+        localStorage.setItem('integrations:filters', 'open');
         renderTab({
             memberProjects: [projectA],
             selectedProjectId: projectA.id,
@@ -294,6 +308,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
     });
 
     test('the category pills show the keyboard focus ring', () => {
+        localStorage.setItem('integrations:filters', 'open');
         renderTab({
             memberProjects: [projectA],
             selectedProjectId: projectA.id,
@@ -317,6 +332,148 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         ).toBeVisible();
     });
 
+    describe('the filters toggle and the layout', () => {
+        const props = {
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+            integrationStatuses: { discord: true },
+        };
+
+        test('the filters start hidden behind an icon button that reports its state', async () => {
+            renderTab(props);
+
+            const button = screen.getByRole('button', { name: 'Filters' });
+
+            expect(button).toHaveAttribute('aria-expanded', 'false');
+            expect(
+                screen.queryByRole('group', { name: 'Filter by category' }),
+            ).toBeNull();
+
+            await userEvent.click(button);
+
+            expect(button).toHaveAttribute('aria-expanded', 'true');
+            expect(
+                screen.getByRole('group', { name: 'Filter by category' }),
+            ).toBeVisible();
+            expect(
+                screen.getByRole('group', { name: 'Filter by status' }),
+            ).toBeVisible();
+        });
+
+        test('remembers whether the filters are shown', async () => {
+            const { unmount } = renderTab(props);
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Filters' }),
+            );
+            unmount();
+            renderTab(props);
+
+            expect(
+                screen.getByRole('button', { name: 'Filters' }),
+            ).toHaveAttribute('aria-expanded', 'true');
+        });
+
+        test('the button shows how many filters are on, even while they are hidden', async () => {
+            renderTab(props);
+
+            expect(screen.queryByTestId('active-filters')).toBeNull();
+
+            await openFilters();
+            await userEvent.click(
+                screen.getByRole('button', { name: /^Enabled/ }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: /^Communication/ }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Filters' }),
+            );
+
+            expect(screen.getByTestId('active-filters')).toHaveTextContent(
+                '2 active filters',
+            );
+        });
+
+        test('a hidden filter keeps filtering', async () => {
+            renderTab(props);
+
+            await openFilters();
+            await userEvent.click(
+                screen.getByRole('button', { name: /^Enabled/ }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Filters' }),
+            );
+
+            expect(
+                screen.getByRole('link', { name: 'Discord' }),
+            ).toBeInTheDocument();
+            expect(screen.queryByRole('link', { name: 'Slack' })).toBeNull();
+        });
+
+        test('switches between the grid and the list and remembers it', async () => {
+            const { container, unmount } = renderTab(props);
+            const layout = screen.getByRole('group', { name: 'Layout' });
+
+            expect(
+                within(layout).getByRole('button', { name: 'Grid' }),
+            ).toHaveAttribute('aria-pressed', 'true');
+            expect(container.querySelector('.grid')).not.toBeNull();
+
+            await userEvent.click(
+                within(layout).getByRole('button', { name: 'List' }),
+            );
+
+            expect(container.querySelector('.grid')).toBeNull();
+            expect(
+                within(layout).getByRole('button', { name: 'List' }),
+            ).toHaveAttribute('aria-pressed', 'true');
+            // The row keeps the link and the switch of the card.
+            expect(
+                screen.getByRole('link', { name: 'Discord' }),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole('switch', { name: 'Toggle Discord' }),
+            ).toBeInTheDocument();
+
+            unmount();
+            renderTab(props);
+
+            expect(
+                within(screen.getByRole('group', { name: 'Layout' })).getByRole(
+                    'button',
+                    { name: 'List' },
+                ),
+            ).toHaveAttribute('aria-pressed', 'true');
+        });
+
+        test('the grid cards have a maximum width', () => {
+            const { container } = renderTab(props);
+
+            expect(container.querySelector('.grid > .max-w-md')).not.toBeNull();
+        });
+
+        test('search and filters apply in the list too', async () => {
+            renderTab(props);
+
+            await userEvent.click(
+                within(screen.getByRole('group', { name: 'Layout' })).getByRole(
+                    'button',
+                    { name: 'List' },
+                ),
+            );
+            await userEvent.type(screen.getByRole('searchbox'), 'disc');
+
+            expect(
+                screen.getByRole('link', { name: 'Discord' }),
+            ).toBeInTheDocument();
+            expect(screen.queryByRole('link', { name: 'Slack' })).toBeNull();
+        });
+    });
+
     describe('search and filters', () => {
         const props = {
             memberProjects: [projectA],
@@ -325,6 +482,8 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
             canUpdateIntegrations: true,
             integrationStatuses: { discord: true, jira: false, github: true },
         };
+        beforeEach(() => localStorage.setItem('integrations:filters', 'open'));
+
         const names = () =>
             screen
                 .getAllByRole('heading', { level: 3 })

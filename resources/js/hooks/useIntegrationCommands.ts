@@ -23,6 +23,10 @@ interface UseIntegrationListCommandsOptions {
     onToggle: (integrationId: IntegrationId, enabled: boolean) => void;
     /** Puts the cursor in the overview's search field. */
     onSearch: () => void;
+    /** Shows or hides the status and category filters. */
+    onToggleFilters: () => void;
+    /** Switches the overview between the grid and the list. */
+    onChangeView: (view: 'grid' | 'list') => void;
 }
 
 /**
@@ -36,6 +40,8 @@ export function useIntegrationListCommands({
     statuses,
     onToggle,
     onSearch,
+    onToggleFilters,
+    onChangeView,
 }: UseIntegrationListCommandsOptions) {
     const { t } = useLaravelReactI18n();
     // The handlers are new functions on every render of the page. Read through
@@ -49,6 +55,10 @@ export function useIntegrationListCommands({
     onToggleRef.current = onToggle;
     const onSearchRef = useRef(onSearch);
     onSearchRef.current = onSearch;
+    const onToggleFiltersRef = useRef(onToggleFilters);
+    onToggleFiltersRef.current = onToggleFilters;
+    const onChangeViewRef = useRef(onChangeView);
+    onChangeViewRef.current = onChangeView;
 
     const commands = useMemo(
         (): Command[] => [
@@ -59,6 +69,30 @@ export function useIntegrationListCommands({
                 icon: 'Search',
                 keywords: [t('hook_integration_commands.keywords.integration')],
                 perform: () => onSearchRef.current(),
+            },
+            {
+                id: 'integrations.filters',
+                title: t('hook_integration_commands.filters.title'),
+                group: 'suggested',
+                icon: 'ListFilter',
+                keywords: [t('hook_integration_commands.keywords.integration')],
+                perform: () => onToggleFiltersRef.current(),
+            },
+            {
+                id: 'integrations.view.grid',
+                title: t('hook_integration_commands.view.grid'),
+                group: 'suggested',
+                icon: 'LayoutGrid',
+                keywords: [t('hook_integration_commands.keywords.integration')],
+                perform: () => onChangeViewRef.current('grid'),
+            },
+            {
+                id: 'integrations.view.list',
+                title: t('hook_integration_commands.view.list'),
+                group: 'suggested',
+                icon: 'List',
+                keywords: [t('hook_integration_commands.keywords.integration')],
+                perform: () => onChangeViewRef.current('list'),
             },
             ...INTEGRATIONS.flatMap((integration): Command[] => {
                 const keywords = [
