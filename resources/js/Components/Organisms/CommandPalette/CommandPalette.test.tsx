@@ -383,6 +383,22 @@ describe('CommandPalette', () => {
             );
         });
 
+        test('hovering a row does not scroll the list, so the wheel is not fought', async () => {
+            const scrollIntoView = vi.fn();
+            Element.prototype.scrollIntoView = scrollIntoView;
+            const user = setup(BASE);
+            open();
+            scrollIntoView.mockClear();
+
+            await user.hover(screen.getByText('Create project'));
+
+            expect(scrollIntoView).not.toHaveBeenCalled();
+
+            await user.type(screen.getByRole('combobox'), '{ArrowDown}');
+
+            expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+        });
+
         test('clicking a row keeps keyboard focus in the input', async () => {
             const user = setup([
                 makeCommand({

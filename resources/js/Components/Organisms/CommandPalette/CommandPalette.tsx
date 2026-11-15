@@ -54,6 +54,11 @@ function CommandPalette() {
     // in. Zero on open, so opening itself only plays the dialog's own entrance.
     const [stepChanges, setStepChanges] = useState(0);
     const previousSteps = useRef(0);
+    // Whether the active row was last moved by the pointer. Scrolling the list
+    // with the wheel slides rows under a still cursor, which fires a hover on a
+    // row at the edge; scrolling that row "into view" then fights the wheel and
+    // makes the list stutter. Only the keyboard may scroll to the active row.
+    const hoverMovedActive = useRef(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const dialogRef = useRef<HTMLDivElement>(null);
     const baseId = useId();
@@ -204,6 +209,10 @@ function CommandPalette() {
 
     useEffect(() => {
         if (!isOpen) return;
+        if (hoverMovedActive.current) {
+            hoverMovedActive.current = false;
+            return;
+        }
         document
             .getElementById(optionId(activeIndex))
             ?.scrollIntoView?.({ block: 'nearest' });
@@ -239,6 +248,8 @@ function CommandPalette() {
             closePalette();
             return;
         }
+
+        hoverMovedActive.current = false;
 
         switch (event.key) {
             case 'ArrowDown':
@@ -401,9 +412,14 @@ function CommandPalette() {
                                                 onSelect={() =>
                                                     run(item.command)
                                                 }
-                                                onHover={() =>
-                                                    setActiveIndex(index)
-                                                }
+                                                onHover={() => {
+                                                    if (index === activeIndex) {
+                                                        return;
+                                                    }
+
+                                                    hoverMovedActive.current = true;
+                                                    setActiveIndex(index);
+                                                }}
                                             />
                                         );
                                     })}
