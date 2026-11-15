@@ -8,6 +8,7 @@ import {
     users,
 } from '@/stories/fixtures';
 import { AutomationOption, AutomationRule } from '@/types/Automation';
+import { INTEGRATIONS } from '@/types/Integrations';
 import { ProjectIntegrationSettings } from '@/types/ProjectIntegrations';
 import {
     MemberProjectSummary,
@@ -17,6 +18,7 @@ import {
 import { PermissionDefinition, WorkspaceRole } from '@/types/Roles';
 import WorkspaceSettingsAutomationTab from './WorkspaceSettingsAutomationTab';
 import WorkspaceSettingsDocumentsTab from './WorkspaceSettingsDocumentsTab';
+import WorkspaceSettingsIntegrationDetail from './WorkspaceSettingsIntegrationDetail';
 import WorkspaceSettingsIntegrationsTab from './WorkspaceSettingsIntegrationsTab';
 import WorkspaceSettingsIssueTypesTab from './WorkspaceSettingsIssueTypesTab';
 import WorkspaceSettingsLabelsTab from './WorkspaceSettingsLabelsTab';
@@ -249,6 +251,19 @@ export const Integrations: Story = {
         <WorkspaceSettingsIntegrationsTab
             {...projectScope}
             integrationStatuses={{ discord: true }}
+            hasIntegrationsAccess
+            canUpdateIntegrations
+        />
+    ),
+};
+
+export const IntegrationDetail: Story = {
+    render: () => (
+        <WorkspaceSettingsIntegrationDetail
+            {...projectScope}
+            integration={INTEGRATIONS.find(({ id }) => id === 'discord')!}
+            enabled
+            settings={discordSettings.discord}
             hasIntegrationsAccess
             canUpdateIntegrations
         />
