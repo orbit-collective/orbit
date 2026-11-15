@@ -76,6 +76,7 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         useMentionSuggestions({ users, projectId });
     const {
         menu: slashMenu,
+        closeMenu: closeSlashMenu,
         setActiveIndex: setSlashActiveIndex,
         slashSuggestion,
     } = useSlashCommands({
@@ -304,6 +305,8 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         }
 
         restoreFocusRef.current = true;
+        // A menu left open would run its block on a read-only editor.
+        closeSlashMenu();
         setIsEditing(false);
         editor.setEditable(false);
 
@@ -315,9 +318,12 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
     saveRef.current = save;
 
     const cancel = () => {
-        if (isField || !editor || pendingUploadsRef.current > 0) return;
+        if (isField || !editor || !isEditing || pendingUploadsRef.current > 0) {
+            return;
+        }
 
         restoreFocusRef.current = true;
+        closeSlashMenu();
         editor.commands.setContent(value || '');
         editor.setEditable(false);
         setIsEditing(false);
@@ -399,7 +405,9 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
             onClick={handleClick}
             onKeyDown={(e) => {
                 // A field sits in a form or modal that owns Escape.
-                if (e.key === 'Escape' && !isField) {
+                // ...and an inline editor that is not open leaves Escape alone
+                // for whatever contains it (a modal, a popup).
+                if (e.key === 'Escape' && !isField && isEditing) {
                     e.preventDefault();
                     cancel();
                 }
