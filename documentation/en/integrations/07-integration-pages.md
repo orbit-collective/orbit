@@ -124,8 +124,8 @@ browser (`useStoredChoice`, keys `integrations:view` and
   badge on the button counts the filters that are on, and a hidden
   filter keeps filtering.
 - **Layout** (an icon-only `SegmentedControl`) switches between `grid`,
-  the tall cards with a `max-w-md` cap so they do not stretch on a wide
-  screen, and `list`, compact rows. Both are the same
+  the tall cards in `auto-fill` columns of at most 26rem, so a wide
+  screen gets more columns instead of two stretched ones, and `list`, compact rows. Both are the same
   `WorkspaceSettingsIntegrationCard`, through its `variant` (`card` or
   `row`): a new element on a card goes into both layouts.
 

@@ -450,10 +450,14 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
             ).toHaveAttribute('aria-pressed', 'true');
         });
 
-        test('the grid cards have a maximum width', () => {
+        test('the grid columns have a maximum width and sit side by side', () => {
             const { container } = renderTab(props);
 
-            expect(container.querySelector('.grid > .max-w-md')).not.toBeNull();
+            // auto-fill tracks of at most 26rem: on a wide screen more
+            // columns appear instead of two stretched ones with gaps.
+            expect(container.querySelector('.grid')!.className).toContain(
+                'auto-fill,minmax(min(100%,18rem),26rem)',
+            );
         });
 
         test('search and filters apply in the list too', async () => {
