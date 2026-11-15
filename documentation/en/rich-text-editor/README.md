@@ -29,6 +29,15 @@ format, just a `TEXT` column holding whatever markdown Tiptap's
    markdown tokens comments use, the bridge from Tiptap's suggestion
    plugin to the shared `MentionSuggestions` menu, and the listener
    that notifies members named in a description.
+5. **[Add a block to the "/" menu](./05-add-a-block-to-the-slash-menu.md)**
+   — the block menu opened by typing `/` in the description: the
+   command list, the suggestion extension and hook behind it, and the
+   Save/Cancel, keyboard and touch behaviour of the editing frame, and
+   the formatting bar above the text.
+6. **[Keep a node safe through the markdown round trip](./06-keep-content-safe-through-the-markdown-round-trip.md)**
+   — why a table used to turn into `[table]` or `||` after a save, the
+   custom table serializer that fixed it, and how to check any other
+   node or mark before shipping it.
 
 ## The architecture in one paragraph
 
@@ -37,9 +46,10 @@ wraps a single `useEditor()` call from `@tiptap/react`, always
 mounted but toggling `editable: false`/`true` on click rather than
 conditionally rendering a separate read/edit component — clicking the
 rendered content calls `startEditing()` (sets `editable: true`,
-focuses the end), and losing focus (`onBlur`) or pressing `Escape`
-exits editing, calling `onSave(markdown)` only if the content actually
-changed (compared via `tiptap-markdown`'s `editor.storage.markdown.getMarkdown()`
+focuses the end), and the **Save** button (or `Ctrl/Cmd+Enter`) or
+**Cancel** (or `Escape`) exits editing — leaving the editor by
+clicking or tabbing away no longer saves — calling `onSave(markdown)`
+only if the content actually changed (compared via `tiptap-markdown`'s `editor.storage.markdown.getMarkdown()`
 against the last-saved `value` prop). The extension list —
 `StarterKit` (bold/italic/lists/headings/code/etc., with `link`
 configured not to open on click while editing), `Markdown` (the

@@ -625,30 +625,32 @@ real `<a target="_blank">` elements with `stopPropagation`, because
 there the body is rendered by React rather than by ProseMirror (see
 [`03-add-image-uploads-to-another-surface.md`](./03-add-image-uploads-to-another-surface.md)).
 
-### The gotcha: blur must not end the edit mid-upload
+### The gotcha: Save and Cancel must not end the edit mid-upload
 
-`EditableMarkdown` commits on blur. Clicking away — or just the focus
-shuffle a browser file dialog causes — while an upload is in flight
-would run `commit()`, set `editable: false` and save, and the image
-would then be inserted into an editor nobody is editing and never
-persisted. Hence the ref, read by both exits:
+`EditableMarkdown` ends an edit through `save()` (the Save button,
+`Ctrl/Cmd+Enter`) or `cancel()` (the Cancel button, `Escape`); leaving
+the editor no longer ends it, so the focus shuffle a browser file
+dialog causes is harmless. But pressing either while an upload is in
+flight would set `editable: false`, and the image would then be
+inserted into an editor nobody is editing and never persisted. Hence
+the ref, read by both exits (the buttons are disabled meanwhile):
 
 ```tsx
-const commit = (ed: NonNullable<typeof editor>) => {
-    if (pendingUploadsRef.current > 0) return;
+const save = () => {
+    if (!editor || !isEditing || pendingUploadsRef.current > 0) return;
 
     setIsEditing(false);
-    ed.setEditable(false);
+    editor.setEditable(false);
 
-    const markdown = ed.storage.markdown.getMarkdown();
+    const markdown = editor.storage.markdown.getMarkdown();
     if (markdown !== (value || '')) {
         onSave(markdown);
     }
 };
 ```
 
-A **ref**, not the `pendingUploads` state, because `commit()` is
-called from a Tiptap callback that closed over an older render. The
+A **ref**, not the `pendingUploads` state, because `save()` can be
+called from a Tiptap key handler that closed over an older render. The
 state exists only for the "Uploading N images..." hint and the
 drag-over ring.
 
@@ -716,8 +718,8 @@ the editor needs the uploader.
   mock. Cover: paste inserts at the caret, paste without an uploader
   or without an image returns `false`, a failed upload inserts
   nothing, drop starts editing and inserts at the drop position, drop
-  while `disabled` does nothing, and blur during an in-flight upload
-  does not call `onSave`. For the click behaviour the mock
+  while `disabled` does nothing, and Save/Cancel during an in-flight
+  upload are disabled and do not call `onSave`. For the click behaviour the mock
   `EditorContent` also renders an `<img>` per markdown image link
   (standing in for the real `Image` extension's output), which lets
   three more cases assert that clicking an image calls `window.open`
