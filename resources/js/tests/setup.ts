@@ -18,6 +18,21 @@ if (typeof window.performance.getEntriesByType !== 'function') {
     });
 }
 
+// jsdom has no layout, so a DOM Range cannot be measured. ProseMirror measures
+// one whenever it scrolls the caret into view (every Tiptap `focus()`), so give
+// it an empty, zero-sized answer (never override a real one).
+if (typeof Range.prototype.getClientRects !== 'function') {
+    Range.prototype.getClientRects = () =>
+        ({
+            length: 0,
+            item: () => null,
+            [Symbol.iterator]: [][Symbol.iterator],
+        }) as unknown as DOMRectList;
+}
+if (typeof Range.prototype.getBoundingClientRect !== 'function') {
+    Range.prototype.getBoundingClientRect = () => new DOMRect(0, 0, 0, 0);
+}
+
 // Mock localStorage
 const localStorageMock = (() => {
     let store: Record<string, string> = {};
