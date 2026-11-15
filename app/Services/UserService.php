@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Issue;
 use App\Models\User;
+use App\Repositories\IssueRepository;
 use App\Repositories\UserRepository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
@@ -16,8 +18,41 @@ class UserService
 {
     public function __construct(
         protected UserRepository $userRepository,
-        protected ActivityLogService $activityLogService
+        protected ActivityLogService $activityLogService,
+        protected IssueRepository $issueRepository,
     ) {}
+
+    /**
+     * Hover-card data for a person: null unless the viewer shares a project
+     * with them, so nobody outside the viewer's projects leaks.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function previewFor(int $viewerId, User $user): ?array
+    {
+        if (! $this->userRepository->sharesProject($viewerId, $user->id)) {
+            return null;
+        }
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar' => $user->avatar,
+            'recentIssues' => $this->issueRepository
+                ->recentlyEditedForUser($viewerId, $user->id)
+                ->map(fn (Issue $issue) => [
+                    'id' => $issue->id,
+                    'number' => $issue->number,
+                    'title' => $issue->title,
+                    'project_id' => $issue->project_id,
+                    'workflowStatus' => $issue->workflowStatus?->toArray(),
+                    'updated_at' => $issue->updated_at?->toIso8601String(),
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
 
     public function getAssignableUsersForProject(int $projectId): Collection {
         return $this->userRepository->getAssignableUsersForProject($projectId);
