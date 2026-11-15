@@ -69,6 +69,26 @@ test('connect (reconnect) clears any leftover failure state from a previous conn
         ->and($projectIntegration->github_last_failed_sync_at)->toBeNull();
 });
 
+test('isConnected is true only for a finished installation', function () {
+    expect($this->service->isConnected($this->project))->toBeFalse();
+
+    $projectIntegration = ProjectIntegration::query()->create([
+        'project_id' => $this->project->id,
+        'integration' => 'github',
+        'enabled' => true,
+        'github_relay_token' => 'orb_local_secret',
+        'github_status' => 'pending',
+    ]);
+
+    Http::fake();
+    expect($this->service->isConnected($this->project))->toBeFalse();
+    Http::assertNothingSent();
+
+    $projectIntegration->update(['github_status' => 'connected']);
+
+    expect($this->service->isConnected($this->project))->toBeTrue();
+});
+
 test('getConnectStatus reports not_connected when no integration exists', function () {
     expect($this->service->getConnectStatus($this->project))->toBe([
         'status' => 'not_connected', 'installUrl' => null, 'repository' => null, 'repositories' => [], 'connectedAt' => null,

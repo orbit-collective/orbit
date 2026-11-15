@@ -130,3 +130,8 @@ test('it rejects saving settings for an integration that is not available yet', 
 
     $this->service->updateSettings($project, 'slack', ['options' => ['issue-activity' => true]]);
 })->throws(ValidationException::class);
+
+test('the catalog ids cover the wired up integrations and github', function () {
+    expect(ProjectIntegrationService::CATALOG_INTEGRATIONS)
+        ->toContain('github', ...ProjectIntegrationService::AVAILABLE_INTEGRATIONS);
+});
