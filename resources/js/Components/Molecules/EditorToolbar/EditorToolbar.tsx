@@ -129,9 +129,11 @@ export default function EditorToolbar({
             return;
         }
 
-        const chain = editor.chain().focus().extendMarkRange('link');
+        const chain = editor.chain().focus();
 
         if (editor.state.selection.empty && !editor.isActive('link')) {
+            // Nothing selected and no link under the caret: the address
+            // itself becomes the link, inserted at the caret.
             chain
                 .insertContent({
                     type: 'text',
@@ -140,7 +142,9 @@ export default function EditorToolbar({
                 })
                 .run();
         } else {
-            chain.setLink({ href }).run();
+            // Only here may the range grow: `extendMarkRange` selects the
+            // whole link, which an insert at a plain caret would replace.
+            chain.extendMarkRange('link').setLink({ href }).run();
         }
 
         setIsLinkOpen(false);
