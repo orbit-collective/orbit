@@ -560,6 +560,56 @@ describe('EditableMarkdown Component', () => {
         expect(getEditor().setEditable).not.toHaveBeenCalled();
     });
 
+    describe('an open "/" menu when the edit ends', () => {
+        // The slash extension is real here; its suggestion callbacks are what
+        // Tiptap would call as the user types "/".
+        const openSlashMenu = (getOptions: () => EditorOptions | undefined) => {
+            const extension = (
+                getOptions() as unknown as {
+                    extensions: {
+                        name?: string;
+                        options?: {
+                            suggestion?: {
+                                render?: () => {
+                                    onStart: (props: unknown) => void;
+                                };
+                            };
+                        };
+                    }[];
+                }
+            ).extensions.find((item) => item.name === 'slashCommands');
+
+            act(() =>
+                extension!.options!.suggestion!.render!().onStart({
+                    items: [
+                        {
+                            id: 'divider',
+                            icon: 'Minus',
+                            titleKey: 'editable_markdown.slash.divider.title',
+                            descriptionKey:
+                                'editable_markdown.slash.divider.description',
+                        },
+                    ],
+                    query: '',
+                    command: vi.fn(),
+                    clientRect: () => ({ top: 10, bottom: 30, left: 5 }),
+                }),
+            );
+        };
+
+        test.each(['Save', 'Cancel'])('%s hides it', async (name) => {
+            const { getOptions } = setup('Text');
+
+            await userEvent.click(screen.getByTestId('editor-content'));
+            openSlashMenu(getOptions);
+            expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+            await userEvent.click(screen.getByRole('button', { name }));
+
+            expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+        });
+    });
+
     test('Save and Cancel wait for an upload that is in flight', async () => {
         let resolveUpload: (url: string) => void = () => {};
         const onImageUpload = vi.fn(
@@ -628,11 +678,27 @@ describe('EditableMarkdown Component', () => {
         ).not.toBeInTheDocument();
     });
 
-    test('pressing Escape cancels the edit and reverts the content', () => {
+    test('Escape is left alone when no edit is open', () => {
+        const { getEditor } = setup('Original');
+        const editor = getEditor();
+
+        // `fireEvent` returns false when the event was default-prevented.
+        const untouched = fireEvent.keyDown(
+            screen.getByTestId('editor-content'),
+            { key: 'Escape' },
+        );
+
+        expect(untouched).toBe(true);
+        expect(editor.setContent).not.toHaveBeenCalled();
+        expect(editor.setEditable).not.toHaveBeenCalled();
+    });
+
+    test('pressing Escape cancels the edit and reverts the content', async () => {
         const onSave = vi.fn();
         const { getEditor } = setup('Original', onSave);
         const editor = getEditor();
 
+        await userEvent.click(screen.getByTestId('editor-content'));
         editor.setContent('Changed but not saved');
         fireEvent.keyDown(screen.getByTestId('editor-content'), {
             key: 'Escape',

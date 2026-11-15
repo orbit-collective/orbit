@@ -4,7 +4,7 @@ import type {
 } from '@tiptap/suggestion';
 import { SuggestionOptions } from '@tiptap/suggestion';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SlashMenuItem } from '@/types/Components';
 import {
     filterSlashCommands,
@@ -47,13 +47,25 @@ export function useSlashCommands({ canInsertImage, onPickImage }: Options) {
 
     const [menu, setMenu] = useState<SlashMenu | null>(null);
     const menuRef = useRef<SlashMenu | null>(null);
+    // The latest suggestion state, for re-measuring the caret on scroll.
+    const suggestionRef = useRef<SuggestionProps<
+        SlashCommand,
+        SlashCommand
+    > | null>(null);
 
     const update = (next: SlashMenu | null) => {
         menuRef.current = next;
         setMenu(next);
     };
 
+    const menuPosition = (rect: DOMRect) => ({
+        top: rect.bottom + 4,
+        lineTop: rect.top - 4,
+        left: rect.left,
+    });
+
     const showMenu = (props: SuggestionProps<SlashCommand, SlashCommand>) => {
+        suggestionRef.current = props;
         const rect = props.clientRect?.();
 
         // Nothing matches (or there is no caret to anchor to): the menu hides
@@ -68,11 +80,7 @@ export function useSlashCommands({ canInsertImage, onPickImage }: Options) {
                 description: tRef.current(command.descriptionKey),
             })),
             activeIndex: 0,
-            position: {
-                top: rect.bottom + 4,
-                lineTop: rect.top - 4,
-                left: rect.left,
-            },
+            position: menuPosition(rect),
             select: (index) => {
                 const command = props.items[index];
 
@@ -117,6 +125,32 @@ export function useSlashCommands({ canInsertImage, onPickImage }: Options) {
         return false;
     };
 
+    // The menu is fixed to viewport coordinates and Tiptap only reports the
+    // caret when the text changes, so scrolling a container around the editor
+    // (or resizing the window) would leave it behind: measure the caret again.
+    const isOpen = menu !== null;
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const reposition = () => {
+            const rect = suggestionRef.current?.clientRect?.();
+            const current = menuRef.current;
+
+            if (rect && current) {
+                update({ ...current, position: menuPosition(rect) });
+            }
+        };
+
+        window.addEventListener('scroll', reposition, true);
+        window.addEventListener('resize', reposition);
+
+        return () => {
+            window.removeEventListener('scroll', reposition, true);
+            window.removeEventListener('resize', reposition);
+        };
+    }, [isOpen]);
+
     const slashSuggestion: Suggestion = {
         char: '/',
         items: ({ query, editor }) =>
@@ -148,6 +182,8 @@ export function useSlashCommands({ canInsertImage, onPickImage }: Options) {
 
     return {
         menu,
+        /** Hides the menu, e.g. when the edit it belongs to ends. */
+        closeMenu: () => update(null),
         setActiveIndex: (activeIndex: number) => {
             if (menuRef.current) update({ ...menuRef.current, activeIndex });
         },

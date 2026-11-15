@@ -189,6 +189,57 @@ describe('useSlashCommands menu', () => {
         expect(hook.result.current.menu).toBeNull();
     });
 
+    test('the menu follows the caret when a container scrolls', () => {
+        const hook = setup();
+        let caret = { top: 100, bottom: 120, left: 50 } as DOMRect;
+
+        act(() =>
+            renderer(hook).onStart!({
+                items: blocks,
+                query: '',
+                command: vi.fn(),
+                clientRect: () => caret,
+            } as never),
+        );
+        expect(hook.result.current.menu?.position.top).toBe(124);
+
+        caret = { top: 40, bottom: 60, left: 50 } as DOMRect;
+        act(() => {
+            window.dispatchEvent(new Event('scroll'));
+        });
+
+        expect(hook.result.current.menu?.position).toEqual({
+            top: 64,
+            lineTop: 36,
+            left: 50,
+        });
+    });
+
+    test('stops listening for scrolls once the menu is closed', () => {
+        const remove = vi.spyOn(window, 'removeEventListener');
+        const hook = setup();
+        start(hook, blocks);
+
+        act(() => renderer(hook).onExit!({} as never));
+
+        expect(remove).toHaveBeenCalledWith(
+            'scroll',
+            expect.any(Function),
+            true,
+        );
+        remove.mockRestore();
+    });
+
+    test('closeMenu hides an open menu', () => {
+        const hook = setup();
+        start(hook, blocks);
+        expect(hook.result.current.menu).not.toBeNull();
+
+        act(() => hook.result.current.closeMenu());
+
+        expect(hook.result.current.menu).toBeNull();
+    });
+
     test('select ignores an index with no block', () => {
         const command = vi.fn();
         const hook = setup();
