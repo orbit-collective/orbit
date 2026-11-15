@@ -102,6 +102,7 @@ import ImagePlus from 'lucide-react/icons/image-plus';
 import Images from 'lucide-react/icons/images';
 import Inbox from 'lucide-react/icons/inbox';
 import Info from 'lucide-react/icons/info';
+import Italic from 'lucide-react/icons/italic';
 import Key from 'lucide-react/icons/key';
 import KeyRound from 'lucide-react/icons/key-round';
 import Keyboard from 'lucide-react/icons/keyboard';
@@ -113,6 +114,7 @@ import LayoutList from 'lucide-react/icons/layout-list';
 import LayoutPanelLeft from 'lucide-react/icons/layout-panel-left';
 import LayoutTemplate from 'lucide-react/icons/layout-template';
 import Leaf from 'lucide-react/icons/leaf';
+import LetterB from 'lucide-react/icons/letter-b';
 import Lightbulb from 'lucide-react/icons/lightbulb';
 import Link from 'lucide-react/icons/link';
 import Link2 from 'lucide-react/icons/link-2';
@@ -193,6 +195,7 @@ import Square from 'lucide-react/icons/square';
 import SquareCheck from 'lucide-react/icons/square-check';
 import SquareCode from 'lucide-react/icons/square-code';
 import Star from 'lucide-react/icons/star';
+import Strikethrough from 'lucide-react/icons/strikethrough';
 import Sun from 'lucide-react/icons/sun';
 import Sunrise from 'lucide-react/icons/sunrise';
 import Sunset from 'lucide-react/icons/sunset';
@@ -342,6 +345,7 @@ export const iconRegistry: Record<string, LucideIcon> = {
     Images,
     Inbox,
     Info,
+    Italic,
     Key,
     KeyRound,
     Keyboard,
@@ -353,6 +357,7 @@ export const iconRegistry: Record<string, LucideIcon> = {
     LayoutPanelLeft,
     LayoutTemplate,
     Leaf,
+    LetterB,
     Lightbulb,
     Link,
     Link2,
@@ -433,6 +438,7 @@ export const iconRegistry: Record<string, LucideIcon> = {
     SquareCheck,
     SquareCode,
     Star,
+    Strikethrough,
     Sun,
     Sunrise,
     Sunset,

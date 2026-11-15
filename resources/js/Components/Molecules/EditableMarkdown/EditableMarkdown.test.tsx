@@ -102,6 +102,18 @@ vi.mock('@tiptap/react', () => ({
     ),
 }));
 
+vi.mock('@/Components/Molecules/EditorToolbar/EditorToolbar', () => ({
+    default: ({ onPickImage }: { onPickImage?: () => void }) => (
+        <div data-testid="editor-toolbar">
+            {onPickImage && (
+                <button type="button" onClick={onPickImage}>
+                    pick image
+                </button>
+            )}
+        </div>
+    ),
+}));
+
 vi.mock('@tiptap/starter-kit', () => ({
     default: { configure: () => ({}) },
 }));
@@ -316,6 +328,37 @@ describe('EditableMarkdown Component', () => {
         const { keyDown } = setup('Text');
 
         expect(keyDown({ key: 'Enter', preventDefault: vi.fn() })).toBe(false);
+    });
+
+    test('the formatting bar only exists while editing', async () => {
+        setup('Text');
+
+        expect(screen.queryByTestId('editor-toolbar')).not.toBeInTheDocument();
+
+        await userEvent.click(screen.getByTestId('editor-content'));
+
+        expect(screen.getByTestId('editor-toolbar')).toBeInTheDocument();
+    });
+
+    test('the bar offers the image button only when images can be uploaded', async () => {
+        setup('Text');
+        await userEvent.click(screen.getByTestId('editor-content'));
+        expect(
+            screen.queryByRole('button', { name: 'pick image' }),
+        ).not.toBeInTheDocument();
+
+        cleanup();
+
+        setup('Text', vi.fn(), false, vi.fn());
+        await userEvent.click(screen.getByTestId('editor-content'));
+        const input = screen.getByTestId('editable-markdown-file-input');
+        const click = vi.spyOn(input, 'click');
+
+        await userEvent.click(
+            screen.getByRole('button', { name: 'pick image' }),
+        );
+
+        expect(click).toHaveBeenCalled();
     });
 
     test('Save and Cancel only exist while editing', async () => {

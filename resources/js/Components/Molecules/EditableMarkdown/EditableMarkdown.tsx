@@ -13,6 +13,7 @@ import { Markdown } from 'tiptap-markdown';
 import Button from '@/Components/Atoms/Button/Button';
 import Icon from '@/Components/Atoms/Icon/Icon';
 import Keybind from '@/Components/Atoms/Keybind/Keybind';
+import EditorToolbar from '@/Components/Molecules/EditorToolbar/EditorToolbar';
 import MentionSuggestions from '@/Components/Molecules/MentionSuggestions/MentionSuggestions';
 import SlashCommandMenu from '@/Components/Molecules/SlashCommandMenu/SlashCommandMenu';
 import { EditableMarkdownProps } from '@/types/Components';
@@ -392,6 +393,17 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                 className,
             )}
         >
+            {isEditing && editor && (
+                <EditorToolbar
+                    editor={editor}
+                    onPickImage={
+                        canUploadImages()
+                            ? () => fileInputRef.current?.click()
+                            : undefined
+                    }
+                    className="sticky top-0 z-10 mb-2 bg-(--bg-color) pt-0.5"
+                />
+            )}
             <EditorContent editor={editor} />
             {!disabled && !isEditing && (
                 <button
