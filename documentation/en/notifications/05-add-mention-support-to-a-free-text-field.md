@@ -551,6 +551,26 @@ the whole page session.
 `IssueMentionLink.test.tsx` (hover preview, cache expiry) and
 `IssueControllerTest.php` (search and preview scoping).
 
+## Showing the mention while typing
+
+A textarea cannot style part of its text, so until a comment was sent
+a picked mention looked like any other word. `CommentForm` now lays a
+`MentionBackdrop` (`Components/Molecules/MentionBackdrop/`) **behind**
+the textarea: a `div` with the same text, font, padding and wrapping
+(the shared `TEXT_BOX` classes), its text transparent, so only the
+background of each tracked range (`mentionRanges`) shows — the
+textarea still draws the real glyphs on top. It adds no padding or
+weight to a highlight (that would move the text out from under the
+caret), and `CommentForm` keeps its `scrollTop` equal to the
+textarea's. A range that no longer starts with `@`/`#`, overlaps
+another or overruns the text is skipped, so a drifted range never
+paints the wrong words — and a mention that was edited into plain text
+loses its highlight at the same moment it stops being submitted.
+
+Reuse it for any textarea that tracks mentions by range: render it
+first inside a `relative` wrapper, give the textarea `relative z-10
+block bg-transparent` and the same typography classes.
+
 ## How the backend resolves and notifies mentions
 
 ### Step 6 — Validate and resolve `mentioned_user_ids`

@@ -504,6 +504,26 @@ do końca sesji strony.
 `IssueMentionLink.test.tsx` (podgląd, wygaśnięcie cache) i
 `IssueControllerTest.php` (zakres search i preview).
 
+## Pokazanie wzmianki podczas pisania
+
+Textarea nie potrafi ostylować części swojego tekstu, więc do wysłania
+komentarza wybrana wzmianka wyglądała jak każde inne słowo.
+`CommentForm` kładzie teraz **za** textarea `MentionBackdrop`
+(`Components/Molecules/MentionBackdrop/`): `div` z tym samym tekstem,
+fontem, paddingiem i zawijaniem (wspólne klasy `TEXT_BOX`), z
+przezroczystym tekstem, więc widać tylko tło każdego śledzonego zakresu
+(`mentionRanges`) — prawdziwe glify dalej rysuje textarea na wierzchu.
+Podświetlenie nie dodaje paddingu ani grubości (przesunęłoby tekst spod
+kursora), a `CommentForm` utrzymuje jego `scrollTop` równy `scrollTop`
+textarea. Zakres, który nie zaczyna się już od `@`/`#`, nachodzi na inny
+albo wychodzi poza tekst, jest pomijany, więc zdryfowany zakres nigdy nie
+zamaluje złych słów — a wzmianka zedytowana do zwykłego tekstu traci
+podświetlenie w tej samej chwili, w której przestaje być wysyłana.
+
+Użyj go przy każdym textarea śledzącym wzmianki po zakresach: wyrenderuj go
+pierwszy w wrapperze `relative`, textarea daj `relative z-10 block
+bg-transparent` i te same klasy typografii.
+
 ## Jak backend rozwiązuje i powiadamia o wzmiankach
 
 ### Krok 6 — Zwaliduj i rozwiąż `mentioned_user_ids`
