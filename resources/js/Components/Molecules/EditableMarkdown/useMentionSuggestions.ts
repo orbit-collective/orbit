@@ -5,7 +5,7 @@ import {
 } from '@tiptap/suggestion';
 import axios from 'axios';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IssueSuggestion } from '@/types/Components';
 import { AssignableUser } from '@/types/Users';
 import { filterUsersByMention } from '@/utils/mentions';
@@ -48,6 +48,10 @@ export function useMentionSuggestions({ users, projectId }: Options) {
     tRef.current = t;
     const [menu, setMenu] = useState<MentionMenu | null>(null);
     const menuRef = useRef<MentionMenu | null>(null);
+    // The latest suggestion state, for re-measuring the caret on scroll.
+    const suggestionRef = useRef<SuggestionProps<Item, MentionAttrs> | null>(
+        null,
+    );
     const usersRef = useRef(users ?? []);
     usersRef.current = users ?? [];
     const projectIdRef = useRef(projectId);
@@ -61,10 +65,17 @@ export function useMentionSuggestions({ users, projectId }: Options) {
         setMenu(next);
     };
 
+    const menuPosition = (rect: DOMRect) => ({
+        top: rect.bottom + 4,
+        lineTop: rect.top - 4,
+        left: rect.left,
+    });
+
     const showMenu = (
         kind: 'user' | 'issue',
         props: SuggestionProps<Item, MentionAttrs>,
     ) => {
+        suggestionRef.current = props;
         const rect = props.clientRect?.();
 
         if (!rect) return update(null);
@@ -76,11 +87,7 @@ export function useMentionSuggestions({ users, projectId }: Options) {
             users: kind === 'user' ? (items as AssignableUser[]) : [],
             issues: kind === 'issue' ? (items as IssueSuggestion[]) : [],
             activeIndex: 0,
-            position: {
-                top: rect.bottom + 4,
-                lineTop: rect.top - 4,
-                left: rect.left,
-            },
+            position: menuPosition(rect),
             emptyLabel:
                 kind === 'user'
                     ? tRef.current('editable_markdown.members_empty')
@@ -176,6 +183,32 @@ export function useMentionSuggestions({ users, projectId }: Options) {
                 .run();
         };
 
+    // The menu is fixed to viewport coordinates and Tiptap only reports the
+    // caret when the text changes, so scrolling a container around the editor
+    // (or resizing the window) would leave it behind: measure the caret again.
+    const isOpen = menu !== null;
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const reposition = () => {
+            const rect = suggestionRef.current?.clientRect?.();
+            const current = menuRef.current;
+
+            if (rect && current) {
+                update({ ...current, position: menuPosition(rect) });
+            }
+        };
+
+        window.addEventListener('scroll', reposition, true);
+        window.addEventListener('resize', reposition);
+
+        return () => {
+            window.removeEventListener('scroll', reposition, true);
+            window.removeEventListener('resize', reposition);
+        };
+    }, [isOpen]);
+
     const userSuggestion: Suggestion = {
         char: '@',
         items: ({ query }) => filterUsersByMention(usersRef.current, query),
@@ -215,6 +248,8 @@ export function useMentionSuggestions({ users, projectId }: Options) {
 
     return {
         menu,
+        /** Hides the menu, e.g. when the edit it belongs to ends. */
+        closeMenu: () => update(null),
         setActiveIndex: (activeIndex: number) => {
             if (menuRef.current) update({ ...menuRef.current, activeIndex });
         },

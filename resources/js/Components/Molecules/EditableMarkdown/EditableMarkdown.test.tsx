@@ -610,6 +610,55 @@ describe('EditableMarkdown Component', () => {
         });
     });
 
+    describe('an open "@" menu when the edit ends', () => {
+        test.each(['Save', 'Cancel'])('%s hides it', async (name) => {
+            const editor = new FakeEditor({ content: 'Text' });
+            let options: EditorOptions | undefined;
+            mockUseEditor.mockImplementation((next: EditorOptions) => {
+                options = next;
+
+                return editor;
+            });
+            render(
+                <EditableMarkdown
+                    value="Text"
+                    users={[{ id: 1, name: 'Jane Cooper' }]}
+                    onSave={vi.fn()}
+                />,
+            );
+
+            await userEvent.click(screen.getByTestId('editor-content'));
+
+            const extension = (
+                options as unknown as {
+                    extensions: {
+                        name?: string;
+                        options?: {
+                            suggestion?: {
+                                render?: () => {
+                                    onStart: (props: unknown) => void;
+                                };
+                            };
+                        };
+                    }[];
+                }
+            ).extensions.find((item) => item.name === 'userMention');
+            act(() =>
+                extension!.options!.suggestion!.render!().onStart({
+                    items: [{ id: 1, name: 'Jane Cooper' }],
+                    query: 'ja',
+                    command: vi.fn(),
+                    clientRect: () => ({ top: 10, bottom: 30, left: 5 }),
+                }),
+            );
+            expect(screen.getByRole('listbox')).toBeInTheDocument();
+
+            await userEvent.click(screen.getByRole('button', { name }));
+
+            expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+        });
+    });
+
     test('Save and Cancel wait for an upload that is in flight', async () => {
         let resolveUpload: (url: string) => void = () => {};
         const onImageUpload = vi.fn(
