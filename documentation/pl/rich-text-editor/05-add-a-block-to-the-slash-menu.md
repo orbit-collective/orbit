@@ -22,6 +22,31 @@ bo menu na nim polega.
   (a nie na wrapperze), żeby wykonało się przed własną mapą klawiszy
   Tiptapa, która w przeciwnym razie wstawiłaby też twardy podział linii.
 
+## Użyj edytora jako pola formularza
+
+`EditableMarkdown` ma dwa warianty. Domyślny, `inline`, jest używany na
+stronie issue: wyrenderowany tekst, klik albo **Edytuj**, żeby otworzyć, i
+**Zapisz** / **Anuluj**, żeby zakończyć. `variant="field"` to edytor
+**zawsze otwarty**, do formularza (treść szablonu typu issue):
+
+```tsx
+<EditableMarkdown
+    variant="field"
+    value={description}
+    onChange={setDescription}
+    onImageUpload={uploadImage}
+    placeholder={t('...')}
+/>
+```
+
+Nie ma Edytuj/Zapisz/Anuluj; każda zmiana woła `onChange` z markdownem, a
+`value` podmienione przez rodzica (otwarty inny rekord) jest wczytywane do
+edytora — echo jego własnego tekstu jest ignorowane. `Escape` i
+`Ctrl/Cmd+Enter` zostają dla otaczającego formularza lub modala. Ramka,
+pasek, menu `/` i upload obrazów są te same. `disabled` robi go tylko do
+odczytu. Do wyrenderowanego, nieedytowalnego podglądu użyj `disabled` bez
+wariantu, jak robi to lista szablonów.
+
 ## Elementy
 
 | Plik (`resources/js/Components/Molecules/EditableMarkdown/`) | Rola                                                                                                                |

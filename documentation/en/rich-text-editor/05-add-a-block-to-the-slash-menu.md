@@ -22,6 +22,31 @@ block to it. It also records how the editing frame around the editor
   (not on the wrapper) so it runs before Tiptap's own keymap, which
   would otherwise also insert a hard break.
 
+## Use the editor as a form field
+
+`EditableMarkdown` has two variants. The default, `inline`, is what the
+issue page uses: rendered text, click or **Edit** to open, **Save** /
+**Cancel** to end. `variant="field"` is an editor that is **always
+open**, for a form (the issue type template body):
+
+```tsx
+<EditableMarkdown
+    variant="field"
+    value={description}
+    onChange={setDescription}
+    onImageUpload={uploadImage}
+    placeholder={t('...')}
+/>
+```
+
+It has no Edit/Save/Cancel; every change calls `onChange` with the
+markdown, and a `value` the parent swaps in (another record opened) is
+loaded into the editor — the echo of its own text is ignored.
+`Escape` and `Ctrl/Cmd+Enter` are left to the surrounding form or modal.
+The frame, toolbar, `/` menu and image upload are the same.
+`disabled` makes it read-only. For a rendered, non-editable preview use
+`disabled` without the variant, as the template list does.
+
 ## The pieces
 
 | File (`resources/js/Components/Molecules/EditableMarkdown/`) | Role                                                                                                                              |
