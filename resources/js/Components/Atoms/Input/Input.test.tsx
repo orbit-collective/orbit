@@ -24,6 +24,12 @@ describe('Input Component', () => {
         expect(screen.getByRole('textbox')).toHaveAttribute('type', 'text');
     });
 
+    test('passes an accessible name through', () => {
+        render(<Input value="" onChange={noop} aria-label="Webhook URL" />);
+
+        expect(screen.getByLabelText('Webhook URL')).toBeInTheDocument();
+    });
+
     test('honours a custom type', () => {
         render(<Input value="" onChange={noop} type="email" />);
 
