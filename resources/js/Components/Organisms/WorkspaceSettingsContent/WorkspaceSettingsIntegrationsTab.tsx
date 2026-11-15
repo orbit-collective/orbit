@@ -215,9 +215,9 @@ export default function WorkspaceSettingsIntegrationsTab({
 
             <motion.div
                 variants={riseIn}
-                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-wrap items-center gap-3"
             >
-                <div className="relative w-full sm:max-w-xs">
+                <div className="relative w-full min-w-0 sm:w-72">
                     <Icon
                         name="Search"
                         size={14}
