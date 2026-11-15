@@ -84,6 +84,35 @@ only registered when it would work (no toggle without
 while an installation is pending). The texts live in
 `lang/<locale>/hook_integration_commands.php`.
 
+## Search and filters on the overview
+
+The overview filters in the browser, on the catalog that is already
+there, so nothing is requested while typing. `WorkspaceSettingsIntegrationsTab`
+holds three independent filters: a search field, the category pills and a
+status control (All / Enabled / Disabled / Coming soon, a
+`SegmentedControl`). They combine: a card shows only if it passes all three.
+
+- **Search** (`matchesSearch()` in `utils/integrationFilters.ts`): every
+  word has to appear, in any order, in the name, vendor, description or
+  category as the user reads them (the translated texts), ignoring case
+  and accents. Escape or the clear button empties the field.
+- **State** (`integrationState()`): `soon` for a catalog entry that is not
+  shipped, otherwise `enabled` or `disabled` from `integrationStatuses`
+  (GitHub's value is "connected").
+- **Counts**: the status buttons count what choosing them would show, with
+  the search and the category applied; the category pills count with the
+  search and the status applied.
+- **Empty result**: a panel with a Clear filters button; a polite live
+  region reads how many integrations are shown.
+- **Palette**: **Search integrations** (under Suggested) puts the cursor in
+  the field.
+
+A new filter dimension follows the same shape: a pure helper in
+`utils/integrationFilters.ts` (with a test), a state in the tab, and one
+more condition in the tab's `inSearchAndCategory` / `filteredIntegrations`
+chain, plus keys under `workspace_settings_integrations.tab` in both
+languages.
+
 ## Keyboard and small screens
 
 - A card is a single Tab stop: the integration name is a link that is
