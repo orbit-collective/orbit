@@ -72,7 +72,7 @@ export function useIntegrationListCommands({
                                 : 'hook_integration_commands.toggle.enable',
                             { name: integration.name },
                         ),
-                        group: 'preferences',
+                        group: 'suggested',
                         icon: enabled ? 'Power' : 'Plug',
                         keywords,
                         perform: () => onToggle(integration.id, !enabled),
@@ -127,7 +127,7 @@ export function useIntegrationCommands({
             {
                 id: 'integration.back',
                 title: t('hook_integration_commands.back.title'),
-                group: 'navigation',
+                group: 'suggested',
                 icon: 'ArrowLeft',
                 keywords,
                 perform: () => router.visit(integrationsPath(projectId)),
@@ -135,7 +135,7 @@ export function useIntegrationCommands({
             {
                 id: 'integration.website',
                 title: t('hook_integration_commands.website.title', { name }),
-                group: 'navigation',
+                group: 'suggested',
                 icon: 'ExternalLink',
                 keywords,
                 perform: () =>
@@ -156,7 +156,7 @@ export function useIntegrationCommands({
                         : 'hook_integration_commands.toggle.enable',
                     { name },
                 ),
-                group: 'preferences',
+                group: 'suggested',
                 icon: enabled ? 'Power' : 'Plug',
                 keywords,
                 perform: () => onToggle(!enabled),
@@ -173,7 +173,7 @@ export function useIntegrationCommands({
                     {
                         id: 'integration.github.refresh',
                         title: t('hook_integration_commands.github.refresh'),
-                        group: 'preferences',
+                        group: 'suggested',
                         icon: 'RefreshCw',
                         keywords,
                         perform: onRefreshGithubRepositories,
@@ -181,7 +181,7 @@ export function useIntegrationCommands({
                     {
                         id: 'integration.github.disconnect',
                         title: t('hook_integration_commands.github.disconnect'),
-                        group: 'preferences',
+                        group: 'suggested',
                         icon: 'Power',
                         keywords,
                         perform: onDisconnectGithub,
@@ -191,7 +191,7 @@ export function useIntegrationCommands({
                 list.push({
                     id: 'integration.github.connect',
                     title: t('hook_integration_commands.github.connect'),
-                    group: 'preferences',
+                    group: 'suggested',
                     icon: 'Plug',
                     keywords,
                     perform: onConnectGithub,
