@@ -48,6 +48,7 @@ export default function SettingsIntegrationDetail({
             projects={projects}
             hideTitle
             breadcrumbTrail={[{ label: integration.name }]}
+            fullBleed
         >
             <WorkspaceSettingsIntegrationDetail
                 integration={integration}
