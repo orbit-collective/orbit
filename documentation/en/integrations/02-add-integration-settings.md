@@ -38,7 +38,7 @@ subOptions: [
 ],
 ```
 
-The modal (`WorkspaceSettingsIntegrationDetailModal.tsx`) renders one
+The integration's page (`WorkspaceSettingsIntegrationNotifyPanel.tsx`) renders one
 `ToggleSwitch` row per entry in this array automatically — nothing
 else on the frontend needs to change for the toggle itself to appear,
 save, and reflect its stored state. (It reads/writes
@@ -289,7 +289,7 @@ export interface ProjectIntegrationSettings {
 }
 ```
 
-File: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetailModal.tsx`
+File: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationNotifyPanel.tsx`
 — add local draft state and a field, following the exact pattern
 `webhookUrlDraft` already uses (sync via `useEffect` keyed on
 `integration?.id`, a controlled `Input`, a `Save` button disabled while
@@ -322,8 +322,8 @@ useEffect(() => {
 ```
 
 Add the matching `onSaveChannelName: (channelName: string) => void`
-prop, and in `WorkspaceSettingsIntegrationsTab.tsx` wire it to the same
-`saveIntegrationSettings()` helper the webhook URL save button already
+prop, and in `WorkspaceSettingsIntegrationDetail.tsx` wire it to the same
+`useIntegrationActions().saveIntegrationSettings()` helper the webhook URL save button already
 uses, just with a different payload key:
 
 ```tsx
@@ -344,6 +344,6 @@ onSaveChannelName={(channelName) => {
 - `tests/Feature/SettingsControllerTest.php` — only if you added
   masking (B5); assert the field is/isn't exposed the same way the
   `webhookUrl` tests do.
-- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetailModal.test.tsx`
+- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetail.test.tsx`
   — a "lets an editor type and save a channel name" test mirroring the
   existing webhook URL one.

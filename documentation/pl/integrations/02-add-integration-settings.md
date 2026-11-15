@@ -30,7 +30,7 @@ subOptions: [
 ],
 ```
 
-Modal (`WorkspaceSettingsIntegrationDetailModal.tsx`) renderuje jeden wiersz `ToggleSwitch` na każdy wpis w tej tablicy automatycznie — nic więcej na froncie nie musi się zmienić, żeby sam przełącznik się pojawił, zapisywał i odzwierciedlał swój przechowywany stan. (Czyta/zapisuje `settings.options[option.id]` generycznie, kluczowane dowolnymi stringami `id` z tej tablicy.)
+Strona integracji (`WorkspaceSettingsIntegrationNotifyPanel.tsx`) renderuje jeden wiersz `ToggleSwitch` na każdy wpis w tej tablicy automatycznie — nic więcej na froncie nie musi się zmienić, żeby sam przełącznik się pojawił, zapisywał i odzwierciedlał swój przechowywany stan. (Czyta/zapisuje `settings.options[option.id]` generycznie, kluczowane dowolnymi stringami `id` z tej tablicy.)
 
 ### A2 — dodaj nowy klucz do białej listy na backendzie
 
@@ -232,7 +232,7 @@ export interface ProjectIntegrationSettings {
 }
 ```
 
-Plik: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetailModal.tsx`
+Plik: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationNotifyPanel.tsx`
 — dodaj lokalny stan roboczy i pole, trzymając się dokładnie wzorca, jakiego już używa `webhookUrlDraft` (synchronizacja przez `useEffect` kluczowany na `integration?.id`, kontrolowany `Input`, przycisk `Save` wyłączony, dopóki nic się nie zmieniło):
 
 ```tsx
@@ -261,7 +261,7 @@ useEffect(() => {
 </button>
 ```
 
-Dodaj odpowiadający prop `onSaveChannelName: (channelName: string) => void`, a w `WorkspaceSettingsIntegrationsTab.tsx` podłącz go do tego samego helpera `saveIntegrationSettings()`, którego już używa przycisk zapisu URL-a webhooka, tylko z innym kluczem w payloadzie:
+Dodaj odpowiadający prop `onSaveChannelName: (channelName: string) => void`, a w `WorkspaceSettingsIntegrationDetail.tsx` podłącz go do tego samego helpera `saveIntegrationSettings()`, którego już używa przycisk zapisu URL-a webhooka, tylko z innym kluczem w payloadzie:
 
 ```tsx
 onSaveChannelName={(channelName) => {
@@ -275,5 +275,5 @@ onSaveChannelName={(channelName) => {
 - `tests/Feature/ProjectIntegrationServiceTest.php` — test "it can save a channel name" oraz test "it does not clobber the webhook url when only channel_name is sent" (to właśnie ten, który faktycznie dowodzi, że zachowanie częściowej aktualizacji działa).
 - `tests/Feature/ProjectIntegrationControllerTest.php` — test walidacji requestu, jeśli dodałeś reguły formatu (np. maksymalną długość).
 - `tests/Feature/SettingsControllerTest.php` — tylko jeśli dodałeś maskowanie (B5); asertuj, że pole jest/nie jest ujawniane w ten sam sposób co testy `webhookUrl`.
-- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetailModal.test.tsx`
+- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationDetail.test.tsx`
   — test "lets an editor type and save a channel name" odzwierciedlający istniejący test dla URL-a webhooka.

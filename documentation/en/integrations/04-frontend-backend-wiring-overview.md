@@ -8,41 +8,44 @@ somewhere else in the app reaching Discord.
 ## 1. Reading: how the Integrations tab gets its data
 
 ```
-GET /settings/integrations?project=<id>
+GET /settings/integrations?project=<id>            (the overview)
+GET /settings/integrations/{integration}?project=<id>   (one integration)
         │
         ▼
-SettingsController::integrations()
+SettingsController::integrations()  /  ::integration($integration)
   - resolves $selectedProject from ?project= (or the user's first project)
   - computes $hasIntegrationsAccess / $canUpdateIntegrations directly off
     Project::hasPermission() (NOT via a Policy — Policies here are
     only for authorizing mutating requests, see
     ../permissions/01-add-a-new-permission.md step 4)
-  - calls ProjectIntegrationService::getStatuses() / getSettings()
-  - masks the decrypted webhookUrl out of the payload unless
-    $canUpdateIntegrations (SettingsController::mapIntegrationSettings())
+  - the overview only sends integrationStatuses (every integration's
+    enabled state; GitHub's comes from GithubIntegrationService::isConnected())
+  - an integration's page 404s for an id outside
+    ProjectIntegrationService::CATALOG_INTEGRATIONS and sends only
+    that integration's data: integrationId, integrationEnabled,
+    integrationSettings (the webhookUrl is masked unless
+    $canUpdateIntegrations), plus jiraSettings / jiraImportProgress /
+    issueTypes / labels / priorities for Jira only and
+    githubConnectStatus for GitHub only
         │
-        ▼  Inertia props: memberProjects, selectedProjectId,
-        │  integrationStatuses, integrationSettings,
-        │  hasIntegrationsAccess, canUpdateIntegrations
         ▼
-resources/js/Pages/Settings/Integrations.tsx
-  - the Integrations tab's own page (one page per settings tab, see
+resources/js/Pages/Settings/Integrations.tsx  /  IntegrationDetail.tsx
+  - the overview's page and the integration's page, both inside
+    SettingsLayout (tabId="integrations"; the detail page adds a
+    breadcrumbTrail and hides the generic title, see
     ../settings-tabs/README.md)
-  - passes every one of the props above straight through, unmodified,
-    into WorkspaceSettingsIntegrationsTab, wrapped in SettingsLayout
         │
         ▼
-WorkspaceSettingsIntegrationsTab.tsx
-  - looks up selectedProject from memberProjects + selectedProjectId
-  - if no project, or !hasIntegrationsAccess → renders an access-denied
-    SettingsPanel and stops here
-  - otherwise renders: ProjectPickerPanel (only if >1 project),
-    category filter pills, a WorkspaceSettingsIntegrationCard per
-    catalog entry (from the static resources/js/types/Integrations.ts
-    list — NOT server data), each fed enabled={integrationStatuses[id]}
-  - the currently-open card's full settings come from
-    integrationSettings[id], passed to
-    WorkspaceSettingsIntegrationDetailModal
+WorkspaceSettingsIntegrationsTab.tsx  (overview)
+  - if no project, or !hasIntegrationsAccess → an access-denied
+    SettingsPanel
+  - otherwise ProjectPickerPanel (only if >1 project), category filter
+    pills and a WorkspaceSettingsIntegrationCard per catalog entry (from
+    the static resources/js/types/Integrations.ts list — NOT server
+    data), each a link to its own page with a switch next to it
+WorkspaceSettingsIntegrationDetail.tsx  (one integration)
+  - hero, preview banner, Details table, overview and the configuration
+    panels (see 07-integration-pages.md)
 ```
 
 **Key thing to internalize:** the *catalog* (name, icon, description,
@@ -61,8 +64,8 @@ makes locked cards render correctly with zero special-casing.
 Three different user actions, same two backend endpoints:
 
 ```
-Card toggle / modal Connect button
-  → WorkspaceSettingsIntegrationsTab::toggleIntegration()
+Card switch / the page's Enable button / a palette command
+  → useIntegrationActions().toggleIntegration()
   → router.patch(route('projects.integrations.update', [projectId, integrationId]), { enabled })
   → PATCH /projects/{project}/integrations/{integration}
   → ProjectIntegrationController::update()
@@ -74,8 +77,8 @@ Card toggle / modal Connect button
 ```
 
 ```
-Modal "Save" button (webhook URL) / option toggle inside the modal
-  → WorkspaceSettingsIntegrationsTab::saveIntegrationSettings()
+"Save" button (webhook URL) / option switch on the integration's page
+  → useIntegrationActions().saveIntegrationSettings()
   → router.patch(route('projects.integrations.settings.update', [projectId, integrationId]), { webhook_url } | { options })
   → PATCH /projects/{project}/integrations/{integration}/settings
   → ProjectIntegrationController::updateSettings()
@@ -92,7 +95,7 @@ Modal "Save" button (webhook URL) / option toggle inside the modal
 Every one of these requests is a `router.patch(...)` with
 `preserveScroll: true, preserveState: true` and `onSuccess`/`onError`
 callbacks that call `addAlert(...)` from `useAlert()` — see
-`WorkspaceSettingsIntegrationsTab.tsx` for the exact options object to
+`resources/js/hooks/useIntegrationActions.ts` for the exact options object to
 copy for a new mutating action.
 
 ## 3. Activity happening: how a comment/issue update reaches Discord
@@ -149,12 +152,14 @@ register it for the same event classes in `AppServiceProvider::boot()`.
 - `resources/js/utils/integrationCategoryColors.ts` — category badge colors
 
 **Frontend — components:**
-- `resources/js/Pages/Settings/Integrations.tsx` — the tab's page: prop threading
+- `resources/js/Pages/Settings/Integrations.tsx` and `IntegrationDetail.tsx` — the overview's page and one integration's page: prop threading
 - `resources/js/Components/Organisms/SettingsLayout/SettingsLayout.tsx` — sidebar + heading chrome shared by every settings page
-- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationsTab.tsx` — the tab: project picker, filters, grid, save handlers
-- `.../WorkspaceSettingsIntegrationCard.tsx` — one grid card
-- `.../WorkspaceSettingsIntegrationDetailModal.tsx` — the detail modal (webhook URL, options, connect button)
-- `.../WorkspaceSettingsIntegrationPreview.tsx` — the modal's mock activity feed
+- `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationsTab.tsx` — the overview: project picker, filters, grid of cards
+- `.../WorkspaceSettingsIntegrationCard.tsx` — one grid card (a link plus a switch)
+- `.../WorkspaceSettingsIntegrationDetail.tsx` — the body of an integration's page
+- `.../WorkspaceSettingsIntegrationHero.tsx`, `...NotifyPanel.tsx`, `...Preview.tsx` — its header, the webhook/options panel and the mock activity feed
+- `resources/js/hooks/useIntegrationActions.ts` — every action (toggle, settings, Jira import, GitHub flow)
+- `resources/js/hooks/useIntegrationCommands.ts` — the command palette commands
 - `resources/js/types/ProjectIntegrations.ts` — the per-project settings shape sent from the server
 
 **Backend — data layer:**
@@ -171,7 +176,7 @@ register it for the same event classes in `AppServiceProvider::boot()`.
 - `app/Policies/ProjectPolicy.php` — `viewIntegrations`/`updateIntegrations`
 - `app/Http/Controllers/SettingsController.php` — computes the UI-facing booleans
 - `app/Http/Controllers/ProjectIntegrationController.php` — authorizes + validates mutations
-- `routes/web.php` — `settings.integrations` (the page) plus `projects.integrations.update` / `projects.integrations.settings.update` (the mutations)
+- `routes/web.php` — `settings.integrations` (the overview), `settings.integrations.show` (one integration) plus `projects.integrations.update` / `projects.integrations.settings.update` (the mutations)
 
 **Backend — event-driven delivery:**
 - `app/Events/*.php` — the domain facts (`IssueAssigned`, `IssueUnassigned`, `IssueUpdated`, `CommentAdded`, ...)

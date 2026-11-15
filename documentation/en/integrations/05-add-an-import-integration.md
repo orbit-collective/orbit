@@ -562,7 +562,7 @@ wired in `SettingsController::integrations()`) — deliberately not folded into
 for mapping metadata; polling that every ~1.5s while an import runs
 would hammer Jira for no reason.
 
-`WorkspaceSettingsIntegrationsTab.tsx` is what actually turns this into
+`resources/js/hooks/useIntegrationActions.ts` is what actually turns this into
 a live toast: on triggering an import it opens a **persistent** alert
 (`AlertContext::addAlert(msg, type, 0)` — `duration: 0` means "don't
 auto-dismiss"), remembers the `runId` that was already in
@@ -603,7 +603,7 @@ is required for anything to actually happen — see `composer dev`'s
 
 ## Step 8 — Frontend wiring
 
-File: `resources/js/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationsTab.tsx`
+File: `resources/js/hooks/useIntegrationActions.ts`
 
 Add an entry to `IMPORT_ROUTE_NAMES`:
 
@@ -627,7 +627,7 @@ const IMPORT_ROUTE_NAMES: Partial<
 That's the **entire** frontend change needed for the connect/mapping/
 import flow itself — `WorkspaceSettingsImportPanel.tsx` already renders
 whatever `importConfig` (Step 1) describes, and
-`WorkspaceSettingsIntegrationDetailModal.tsx` already routes any
+`WorkspaceSettingsIntegrationDetail.tsx` already routes any
 `kind: 'import'` integration to that panel. Nothing about either file
 is Jira-specific — that includes the "Update already-imported issues"
 toggle next to the Import button, which posts `sync_existing` to
@@ -637,7 +637,7 @@ to add for it on the frontend.
 
 What you do still need to touch, per the Step 6 architecture note: the
 `jiraSettings` prop threaded through `SettingsController` →
-`Settings/Integrations.tsx` → `WorkspaceSettingsIntegrationsTab.tsx` → the modal → the panel is
+`SettingsController::integration()` → `Settings/IntegrationDetail.tsx` → `WorkspaceSettingsIntegrationDetail.tsx` → the panel is
 currently singular and Jira-specific. Generalize it (a per-integration
 map, or a second identically-shaped prop) before Linear's settings can
 render alongside Jira's — don't silently reuse the `jiraSettings` prop
@@ -729,7 +729,7 @@ for any future source:
   cases alongside the existing `ProjectInvited`/`IssueAssigned`/etc.
   ones: `'success'` severity when nothing failed, `'warning'` when
   `failed > 0`.
-- Vitest: `WorkspaceSettingsIntegrationsTab.test.tsx`'s "Jira import
+- Vitest: `WorkspaceSettingsIntegrationDetail.test.tsx`'s "Jira import
   live progress toast" `describe` block — the persistent toast appears
   immediately and only starts polling `jiraImportProgress` + `flash`
   after the poll interval elapses (`await waitFor(...)`, not fake

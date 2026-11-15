@@ -58,3 +58,13 @@ scoped Workspace tabs additionally take `memberProjects` /
 project from a `?project=<id>` query string, which is the one query
 parameter settings still uses; switching projects re-visits the *same*
 tab path with a new `?project=`.
+
+**A page below a tab.** A tab can have pages of its own under its path:
+`/settings/integrations/<id>` is one page per integration, rendered by
+`SettingsController::integration()` and `Pages/Settings/IntegrationDetail.tsx`.
+`getSettingsTabByPath()` matches `/settings/<tab>/…` too, so the sidebar
+keeps the tab active, and `SettingsLayout` takes a `breadcrumbTrail`
+(crumbs after the tab's, which then links back) and `hideTitle` for a
+page that brings its own heading. Keep the tab's own route light and let
+the sub-page load the heavy data — see
+[`../integrations/07-integration-pages.md`](../integrations/07-integration-pages.md).

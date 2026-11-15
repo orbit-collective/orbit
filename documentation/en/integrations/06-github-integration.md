@@ -111,7 +111,7 @@ themselves broader access.
    (`GithubIntegrationService::connect()`), stores the connection id
    and relay token (encrypted), and opens the returned GitHub App
    install URL in a new tab.
-3. The settings page polls (`WorkspaceSettingsIntegrationsTab`, every
+3. The settings page polls (`useIntegrationActions`, every
    ~2 seconds, giving up after 5 minutes) while the connection is
    `pending`.
 4. Once the GitHub App installation completes, orbit-api marks the
