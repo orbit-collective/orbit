@@ -36,6 +36,7 @@ describe('stable registration', () => {
             canUpdate: true,
             statuses: { discord: true },
             onToggle,
+            onSearch: vi.fn(),
         });
         const { rerender } = renderHook((p) => useIntegrationListCommands(p), {
             initialProps: props(vi.fn()),
@@ -92,12 +93,24 @@ describe('useIntegrationListCommands', () => {
                 canUpdate: true,
                 statuses: { discord: true },
                 onToggle,
+                onSearch: vi.fn(),
                 ...overrides,
             }),
         );
 
         return { onToggle };
     };
+
+    test('can put the cursor in the search field, even without permission to update', () => {
+        const onSearch = vi.fn();
+        render({ canUpdate: false, onSearch });
+
+        expect(byId('integrations.search')!.title).toBe('Search integrations');
+
+        byId('integrations.search')!.perform!();
+
+        expect(onSearch).toHaveBeenCalled();
+    });
 
     test('has an open command for every integration that goes to its page', () => {
         render();

@@ -6,6 +6,9 @@ return [
     'keywords' => [
         'integration' => 'integration',
     ],
+    'search' => [
+        'title' => 'Search integrations',
+    ],
     'open' => [
         'title' => 'Open integration: :name',
     ],

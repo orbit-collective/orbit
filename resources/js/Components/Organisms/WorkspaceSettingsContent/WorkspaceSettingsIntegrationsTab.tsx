@@ -1,22 +1,34 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
+import Button from '@/Components/Atoms/Button/Button';
+import Icon from '@/Components/Atoms/Icon/Icon';
+import Input from '@/Components/Atoms/Input/Input';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
+import SegmentedControl from '@/Components/Atoms/SegmentedControl/SegmentedControl';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
 import { useIntegrationActions } from '@/hooks/useIntegrationActions';
 import { useIntegrationListCommands } from '@/hooks/useIntegrationCommands';
+import { useIntegrationText } from '@/hooks/useIntegrationText';
 import {
     INTEGRATION_CATEGORIES,
     IntegrationCategory,
+    IntegrationDefinition,
     INTEGRATIONS,
 } from '@/types/Integrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
+import {
+    INTEGRATION_STATE_FILTERS,
+    IntegrationStateFilter,
+    integrationState,
+    matchesSearch,
+} from '@/utils/integrationFilters';
 import { integrationPath, integrationsPath } from '@/utils/integrationPaths';
 import { SPRING, riseIn } from '@/utils/motion';
 import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
@@ -45,17 +57,23 @@ export default function WorkspaceSettingsIntegrationsTab({
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsIntegrationsTabProps) {
-    const { t } = useLaravelReactI18n();
+    const { t, tChoice } = useLaravelReactI18n();
     const { toggleIntegration } = useIntegrationActions({
         projectId: selectedProjectId,
     });
+    const text = useIntegrationText();
+    const searchRef = useRef<HTMLInputElement>(null);
+    const [query, setQuery] = useState('');
+    const [activeState, setActiveState] =
+        useState<IntegrationStateFilter>('all');
+    const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
     useIntegrationListCommands({
         projectId: selectedProjectId,
         canUpdate: hasIntegrationsAccess && canUpdateIntegrations,
         statuses: integrationStatuses,
         onToggle: toggleIntegration,
+        onSearch: () => searchRef.current?.focus(),
     });
-    const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
 
     const selectedProject =
         memberProjects.find((project) => project.id === selectedProjectId) ??
@@ -69,15 +87,59 @@ export default function WorkspaceSettingsIntegrationsTab({
         );
     };
 
-    const filteredIntegrations = useMemo(
+    // What the search words are matched against: the name, the vendor, the
+    // description and the category, all as the user reads them.
+    const searchable = useMemo(
         () =>
-            activeCategory === 'All'
-                ? INTEGRATIONS
-                : INTEGRATIONS.filter(
-                      (integration) => integration.category === activeCategory,
-                  ),
-        [activeCategory],
+            INTEGRATIONS.map((integration) => ({
+                integration,
+                text: [
+                    integration.name,
+                    text.vendor(integration),
+                    text.description(integration),
+                    t(
+                        `workspace_settings_integrations.categories.${integration.category.toLowerCase().replace(' ', '_')}`,
+                    ),
+                ].join(' '),
+            })),
+        [t, text],
     );
+    const stateOf = (integration: IntegrationDefinition) =>
+        integrationState(
+            integration,
+            integration.id === 'github'
+                ? (integrationStatuses.github ?? false)
+                : (integrationStatuses[integration.id] ?? false),
+        );
+    // The search and the category narrow the list first; the state counts are
+    // taken on that, so each count is what choosing it would show.
+    const inSearchAndCategory = searchable
+        .filter(
+            ({ integration, text: haystack }) =>
+                (activeCategory === 'All' ||
+                    integration.category === activeCategory) &&
+                matchesSearch(haystack, query),
+        )
+        .map(({ integration }) => integration);
+    const filteredIntegrations = inSearchAndCategory.filter(
+        (integration) =>
+            activeState === 'all' || stateOf(integration) === activeState,
+    );
+    const stateCount = (state: IntegrationStateFilter) =>
+        state === 'all'
+            ? inSearchAndCategory.length
+            : inSearchAndCategory.filter(
+                  (integration) => stateOf(integration) === state,
+              ).length;
+    const hasFilters =
+        query.trim() !== '' ||
+        activeState !== 'all' ||
+        activeCategory !== 'All';
+    const resetFilters = () => {
+        setQuery('');
+        setActiveState('all');
+        setActiveCategory('All');
+    };
 
     if (!selectedProject || !hasIntegrationsAccess) {
         return (
@@ -153,6 +215,73 @@ export default function WorkspaceSettingsIntegrationsTab({
 
             <motion.div
                 variants={riseIn}
+                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+                <div className="relative w-full sm:max-w-xs">
+                    <Icon
+                        name="Search"
+                        size={14}
+                        className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-(--text-gray-color)"
+                    />
+                    {/* The Input has no focus style of its own; the ring is drawn around it. */}
+                    <div className="rounded-md focus-within:ring-2 focus-within:ring-(--accent-color) focus-within:ring-offset-2 focus-within:ring-offset-(--bg-color-hover)">
+                        <Input
+                            ref={searchRef}
+                            type="search"
+                            aria-label={t(
+                                'workspace_settings_integrations.tab.search_label',
+                            )}
+                            value={query}
+                            onChange={(event) => setQuery(event.target.value)}
+                            onKeyDown={(event) => {
+                                if (event.key === 'Escape' && query !== '') {
+                                    event.preventDefault();
+                                    event.stopPropagation();
+                                    setQuery('');
+                                }
+                            }}
+                            placeholder={t(
+                                'workspace_settings_integrations.tab.search_placeholder',
+                            )}
+                            autoComplete="off"
+                            className="pr-8 pl-8 [&::-webkit-search-cancel-button]:hidden"
+                        />
+                    </div>
+                    {query !== '' && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setQuery('');
+                                searchRef.current?.focus();
+                            }}
+                            aria-label={t(
+                                'workspace_settings_integrations.tab.clear_search',
+                            )}
+                            className={cn(
+                                'absolute top-1/2 right-2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-sm text-(--text-gray-color) hover:text-(--text-color)',
+                                FOCUS_RING,
+                            )}
+                        >
+                            <Icon name="X" size={12} />
+                        </button>
+                    )}
+                </div>
+
+                <SegmentedControl
+                    label={t(
+                        'workspace_settings_integrations.tab.filter_by_state',
+                    )}
+                    value={activeState}
+                    onChange={setActiveState}
+                    options={INTEGRATION_STATE_FILTERS.map((state) => ({
+                        value: state,
+                        label: `${t(`workspace_settings_integrations.tab.states.${state}`)} ${stateCount(state)}`,
+                    }))}
+                />
+            </motion.div>
+
+            <motion.div
+                variants={riseIn}
                 role="group"
                 aria-label={t(
                     'workspace_settings_integrations.tab.filter_by_category',
@@ -161,13 +290,14 @@ export default function WorkspaceSettingsIntegrationsTab({
             >
                 {CATEGORY_FILTERS.map((category) => {
                     const isActive = category === activeCategory;
-                    const count =
-                        category === 'All'
-                            ? INTEGRATIONS.length
-                            : INTEGRATIONS.filter(
-                                  (integration) =>
-                                      integration.category === category,
-                              ).length;
+                    const count = searchable.filter(
+                        ({ integration, text: haystack }) =>
+                            (category === 'All' ||
+                                integration.category === category) &&
+                            matchesSearch(haystack, query) &&
+                            (activeState === 'all' ||
+                                stateOf(integration) === activeState),
+                    ).length;
 
                     return (
                         <button
@@ -212,6 +342,42 @@ export default function WorkspaceSettingsIntegrationsTab({
                     );
                 })}
             </motion.div>
+
+            <div role="status" aria-live="polite" className="sr-only">
+                {tChoice(
+                    'workspace_settings_integrations.tab.results',
+                    filteredIntegrations.length,
+                )}
+            </div>
+
+            {filteredIntegrations.length === 0 && (
+                <SettingsPanel
+                    title={t('workspace_settings_integrations.tab.no_results')}
+                    description={t(
+                        'workspace_settings_integrations.tab.no_results_hint',
+                    )}
+                    icon="Search"
+                >
+                    <SettingsPanelRow
+                        title={t(
+                            'workspace_settings_integrations.tab.no_results_title',
+                        )}
+                        action={
+                            hasFilters && (
+                                <Button
+                                    type="button"
+                                    onClick={resetFilters}
+                                    className="px-3 py-1.5"
+                                >
+                                    {t(
+                                        'workspace_settings_integrations.tab.clear_filters',
+                                    )}
+                                </Button>
+                            )
+                        }
+                    />
+                </SettingsPanel>
+            )}
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {filteredIntegrations.map((integration, index) => (

@@ -11,6 +11,21 @@ return [
         'productivity' => 'Produktywność',
     ],
     'tab' => [
+        'search_label' => 'Szukaj integracji',
+        'search_placeholder' => 'Szukaj integracji…',
+        'clear_search' => 'Wyczyść wyszukiwanie',
+        'filter_by_state' => 'Filtruj według stanu',
+        'states' => [
+            'all' => 'Wszystkie',
+            'enabled' => 'Włączone',
+            'disabled' => 'Wyłączone',
+            'soon' => 'Wkrótce',
+        ],
+        'no_results' => 'Nie znaleziono integracji',
+        'no_results_hint' => 'Nic nie pasuje do bieżącego wyszukiwania i filtrów.',
+        'no_results_title' => 'Spróbuj innego słowa albo wyczyść filtry.',
+        'clear_filters' => 'Wyczyść filtry',
+        'results' => ':count integracja|:count integracje|:count integracji',
         'filter_by_category' => 'Filtruj według kategorii',
         'counts' => [
             'imported' => 'zaimportowano: :count',

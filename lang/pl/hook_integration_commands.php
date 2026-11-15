@@ -6,6 +6,9 @@ return [
     'keywords' => [
         'integration' => 'integracja',
     ],
+    'search' => [
+        'title' => 'Szukaj integracji',
+    ],
     'open' => [
         'title' => 'Otwórz integrację: :name',
     ],
