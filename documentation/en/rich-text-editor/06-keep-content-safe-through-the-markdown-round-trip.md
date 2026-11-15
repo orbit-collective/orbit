@@ -29,8 +29,8 @@ underline, so `Ctrl+U` looked fine while editing and vanished on save.
   `Table` node with its own `addStorage().markdown.serialize`.
   `EditableMarkdown` uses `TableKit.configure({ table: false })` plus
   `MarkdownTable`. It always writes valid GFM: an empty header row is
-  added when there is none, merged cells keep their text and pad the
-  columns, a cell's paragraphs and hard breaks collapse to one line, and
+  added when there is none, merged cells (across columns or rows) keep their text and
+  leave the columns they cover empty, a cell's paragraphs and hard breaks collapse to one line, and
   `|` becomes `\|`. Parsing is still markdown-it's.
 - `StarterKit.configure({ underline: false })`.
 

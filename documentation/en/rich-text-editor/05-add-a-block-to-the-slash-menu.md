@@ -30,13 +30,36 @@ issue page uses: rendered text, click or **Edit** to open, **Save** /
 open**, for a form (the issue type template body):
 
 ```tsx
-<EditableMarkdown
-    variant="field"
-    value={description}
-    onChange={setDescription}
-    onImageUpload={uploadImage}
-    placeholder={t('...')}
-/>
+import { useLaravelReactI18n } from 'laravel-react-i18n';
+import { useState } from 'react';
+import EditableMarkdown from '@/Components/Molecules/EditableMarkdown/EditableMarkdown';
+import { useImageUpload } from '@/hooks/useImageUpload';
+
+interface TemplateBodyFieldProps {
+    projectId: number;
+    initialDescription: string;
+}
+
+export default function TemplateBodyField({
+    projectId,
+    initialDescription,
+}: TemplateBodyFieldProps) {
+    const { t } = useLaravelReactI18n();
+    const { uploadImage } = useImageUpload(projectId);
+    const [description, setDescription] = useState(initialDescription);
+
+    return (
+        <EditableMarkdown
+            variant="field"
+            value={description}
+            onChange={setDescription}
+            onImageUpload={uploadImage}
+            placeholder={t(
+                'workspace_settings_templates_modal.description_placeholder',
+            )}
+        />
+    );
+}
 ```
 
 It has no Edit/Save/Cancel; every change calls `onChange` with the
@@ -60,7 +83,10 @@ Rules the hook already follows, keep them for anything similar:
 
 - **`Escape` closes only the menu.** The wrapper cancels editing on
   `Escape`, so the hook calls `stopPropagation()` — even when nothing
-  matched and no menu is showing.
+  matched and no menu is showing. Inside a modal this relies on
+  `Modal`, whose Escape listener runs first (capture phase) and so
+  ignores the key while the focused field has `aria-activedescendant`,
+  which `EditableMarkdown` sets only while a menu with options is open.
 - **Rows swallow `mousedown`** so the editor keeps its selection and the
   suggestion stays alive while a row is clicked or tapped.
 - **No match hides the menu but keeps the trigger live**, so deleting a
@@ -74,7 +100,7 @@ Rules the hook already follows, keep them for anything similar:
 
 ## Worked example — a "Callout" block
 
-### Step 1 — Add the texts (both languages)
+## Step 1 — Add the texts (both languages)
 
 Files: `lang/en/editable_markdown.php`, `lang/pl/editable_markdown.php`,
 inside the `slash` array:
@@ -90,30 +116,39 @@ inside the `slash` array:
 `keywords` are extra words the query matches (a word _starting with_
 the query matches), in the language of the file.
 
-### Step 2 — Add the icon to the registry
+## Step 2 — Add the icon to the registry
 
 File: `resources/js/utils/iconRegistry.ts`. Import the icon from
 `lucide-react/icons/<name>` and add it to the map (the first bundle only
 carries the icons listed there). `utils/lucideIconNames.ts` needs no
 change unless lucide itself was upgraded.
 
-### Step 3 — Add the block
+## Step 3 — Add the block
 
 File: `slashCommands.ts`. Add an entry to `SLASH_COMMANDS`; the order
 here is the order in the menu.
 
 ```ts
-{
-    id: 'callout',
-    icon: 'MessageSquareExclamationPoint',
-    titleKey: 'editable_markdown.slash.callout.title',
-    descriptionKey: 'editable_markdown.slash.callout.description',
-    keywordsKey: 'editable_markdown.slash.callout.keywords',
-    // Optional: hide it where it makes no sense.
-    // isAvailable: (editor) => !editor.isActive('table'),
-    run: (editor, range) =>
-        void editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
-},
+// resources/js/Components/Molecules/EditableMarkdown/slashCommands.ts
+export const SLASH_COMMANDS: SlashCommand[] = [
+    // ...the existing blocks, in menu order...
+    {
+        id: 'callout',
+        icon: 'MessageSquareExclamationPoint',
+        titleKey: 'editable_markdown.slash.callout.title',
+        descriptionKey: 'editable_markdown.slash.callout.description',
+        keywordsKey: 'editable_markdown.slash.callout.keywords',
+        // Optional: hide it where it makes no sense.
+        // isAvailable: (editor) => !editor.isActive('table'),
+        run: (editor, range) =>
+            void editor
+                .chain()
+                .focus()
+                .deleteRange(range)
+                .toggleBlockquote()
+                .run(),
+    },
+];
 ```
 
 `run` receives the editor and the range of the typed `/query`; always
@@ -130,7 +165,7 @@ filter and is finished by the component: `onPickImage` in
 `EditableMarkdown`. Follow that shape for anything else that needs UI
 after the block is chosen.
 
-### Step 4 — Tests and story
+## Step 4 — Tests and story
 
 - `slashCommands.test.ts`: add the block to the "what each block does"
   group (a real `Editor`, `run()` on a `/` line, assert the document or

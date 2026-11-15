@@ -510,14 +510,19 @@ Komentarze dochodzą do tego samego zachowania inaczej — ich obrazy to prawdzi
 
 ```tsx
 const save = () => {
-    if (!editor || !isEditing || pendingUploadsRef.current > 0) return;
+    if (isField || !editor || !isEditing || pendingUploadsRef.current > 0) {
+        return;
+    }
 
+    restoreFocusRef.current = true;
+    // A menu left open would run its block on a read-only editor.
+    closeSlashMenu();
     setIsEditing(false);
     editor.setEditable(false);
 
     const markdown = editor.storage.markdown.getMarkdown();
     if (markdown !== (value || '')) {
-        onSave(markdown);
+        onSave?.(markdown);
     }
 };
 ```

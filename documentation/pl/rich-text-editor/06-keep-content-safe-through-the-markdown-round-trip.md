@@ -32,7 +32,7 @@ przy zapisie.
   `Table` z własnym `addStorage().markdown.serialize`. `EditableMarkdown`
   używa `TableKit.configure({ table: false })` plus `MarkdownTable`.
   Zawsze zapisuje poprawny GFM: dodaje pusty wiersz nagłówka, gdy go
-  brak, scalone komórki zachowują tekst i dopełniają kolumny, akapity i
+  brak, scalone komórki (w poziomie lub pionie) zachowują tekst i zostawiają puste kolumny, które zakrywają, akapity i
   twarde podziały w komórce zwijają się do jednej linii, a `|` staje się
   `\|`. Parsowanie nadal należy do markdown-it.
 - `StarterKit.configure({ underline: false })`.
