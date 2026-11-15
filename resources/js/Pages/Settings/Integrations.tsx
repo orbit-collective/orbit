@@ -21,7 +21,7 @@ export default function SettingsIntegrations({
     canUpdateIntegrations = false,
 }: SettingsIntegrationsProps) {
     return (
-        <SettingsLayout tabId="integrations" projects={projects}>
+        <SettingsLayout tabId="integrations" projects={projects} fullBleed>
             <WorkspaceSettingsIntegrationsTab
                 memberProjects={memberProjects}
                 selectedProjectId={selectedProjectId}
