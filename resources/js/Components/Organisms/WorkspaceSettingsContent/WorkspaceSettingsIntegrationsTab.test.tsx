@@ -267,6 +267,19 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         ).toBeVisible();
     });
 
+    test('the category pills are one named group', () => {
+        renderTab({
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+        });
+
+        expect(
+            screen.getByRole('group', { name: 'Filter by category' }),
+        ).toContainElement(screen.getByRole('button', { name: /^All/ }));
+    });
+
     test('the category pills count their integrations', async () => {
         renderTab({
             memberProjects: [projectA],

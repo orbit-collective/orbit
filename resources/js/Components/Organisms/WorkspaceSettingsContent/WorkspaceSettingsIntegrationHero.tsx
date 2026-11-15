@@ -70,7 +70,6 @@ export default function WorkspaceSettingsIntegrationHero({
                     <Button
                         type="button"
                         onClick={() => onToggle(!enabled)}
-                        aria-pressed={enabled}
                         className={cn(
                             'px-4 py-2',
                             enabled &&
