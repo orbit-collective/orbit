@@ -191,7 +191,11 @@ export const getSettingsTabByPath = (url: string): SettingsTabId => {
     const normalized = pathname.replace(/\/+$/, '');
 
     return (
-        SETTINGS_TABS.find((tab) => tab.path === normalized && tab.enabled)
-            ?.id ?? SETTINGS_DEFAULT_TAB
+        SETTINGS_TABS.find(
+            (tab) =>
+                tab.enabled &&
+                (tab.path === normalized ||
+                    normalized.startsWith(`${tab.path}/`)),
+        )?.id ?? SETTINGS_DEFAULT_TAB
     );
 };
