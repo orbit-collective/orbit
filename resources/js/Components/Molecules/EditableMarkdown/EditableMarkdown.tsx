@@ -19,6 +19,7 @@ import { EditableMarkdownProps } from '@/types/Components';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING_INSET } from '@/utils/focusRing';
 import { extractImageFiles, markdownImageAlt } from '@/utils/imagePaste';
+import { MarkdownTable } from '@/utils/markdownTable';
 import { formatBindingParts } from '@/utils/shortcutKeys';
 import { IssueMention, UserMention } from './mentionExtensions';
 import { SlashCommands } from './slashExtension';
@@ -80,6 +81,8 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
         extensions: [
             StarterKit.configure({
                 link: { openOnClick: false },
+                // Markdown has no underline, so Ctrl+U would be lost on save.
+                underline: false,
             }),
             Markdown.configure({ html: false }),
             Placeholder.configure({
@@ -88,7 +91,10 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
             }),
             TaskList,
             TaskItem.configure({ nested: true }),
-            TableKit,
+            // The table node is our own: tiptap-markdown drops a table that
+            // has no header row or a multi-line cell.
+            TableKit.configure({ table: false }),
+            MarkdownTable,
             Image,
             SlashCommands.configure({ suggestion: slashSuggestion }),
             // "@member" mentions need the project's members and "#12" mentions
