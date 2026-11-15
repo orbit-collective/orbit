@@ -123,4 +123,42 @@ describe('WorkspaceSettingsIntegrationCard', () => {
 
         expect(screen.queryByRole('switch')).toBeNull();
     });
+
+    describe('as a row', () => {
+        test('keeps the link, the state and the switch of the card', async () => {
+            const onToggle = vi.fn();
+            renderCard({ variant: 'row', onToggle, enabled: true });
+
+            expect(
+                screen.getByRole('link', { name: 'Discord' }),
+            ).toHaveAttribute(
+                'href',
+                '/settings/integrations/discord?project=1',
+            );
+            expect(screen.getByText('Enabled')).toBeInTheDocument();
+            expect(screen.getByText(discord.description)).toBeInTheDocument();
+
+            await userEvent.click(
+                screen.getByRole('switch', { name: 'Toggle Discord' }),
+            );
+
+            expect(onToggle).toHaveBeenCalledWith(false);
+        });
+
+        test('a locked integration is marked soon and its switch is off limits', () => {
+            renderCard({ variant: 'row', integration: slack });
+
+            expect(screen.getByText('Soon')).toBeInTheDocument();
+            expect(
+                screen.getByRole('switch', { name: 'Toggle Slack' }),
+            ).toBeDisabled();
+        });
+
+        test('is one line, not the tall card', () => {
+            const { container } = renderCard({ variant: 'row' });
+
+            expect(container.firstChild).toHaveClass('items-center');
+            expect(container.firstChild).not.toHaveClass('flex-col');
+        });
+    });
 });

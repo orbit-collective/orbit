@@ -20,6 +20,11 @@ interface WorkspaceSettingsIntegrationCardProps {
      * plain toggle (GitHub is an installation flow on its own page).
      */
     onToggle?: (enabled: boolean) => void;
+    /**
+     * `card` is the tall tile of the grid, `row` a compact line for the
+     * list: the same link, switch and badges, laid out in one row.
+     */
+    variant?: 'card' | 'row';
 }
 
 /**
@@ -34,9 +39,93 @@ export default function WorkspaceSettingsIntegrationCard({
     canUpdate,
     href,
     onToggle,
+    variant = 'card',
 }: WorkspaceSettingsIntegrationCardProps) {
     const { t } = useLaravelReactI18n();
     const text = useIntegrationText();
+
+    const toggle = onToggle && (
+        <div className="relative z-10 shrink-0">
+            <ToggleSwitch
+                checked={enabled}
+                onChange={onToggle}
+                disabled={integration.comingSoon || !canUpdate}
+                label={t('workspace_settings_integrations.card.toggle', {
+                    name: integration.name,
+                })}
+            />
+        </div>
+    );
+    const stateBadge = integration.comingSoon ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-(--bg-light-color) px-2 py-0.5 text-[11px] font-medium text-(--text-gray-color)">
+            <Icon name="Lock" size={10} />
+            {t('workspace_settings_integrations.card.soon')}
+        </span>
+    ) : (
+        <span
+            className={`rounded-full ${enabled ? 'bg-(--accent-color-opacity) text-(--accent-color)' : 'bg-(--bg-muted-color) text-(--text-muted-color)'} px-2 py-0.5 text-[11px] font-semibold`}
+        >
+            {enabled
+                ? t('workspace_settings_integrations.card.enabled')
+                : t('workspace_settings_integrations.card.disabled')}
+        </span>
+    );
+    const nameLink = (
+        <Link
+            href={href}
+            className="rounded-sm outline-hidden after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-(--accent-color)"
+        >
+            {integration.name}
+        </Link>
+    );
+    const categoryBadge = (
+        <Badge
+            variant="outline"
+            className={getCategoryBadgeClassName(integration.category)}
+        >
+            {t(
+                `workspace_settings_integrations.categories.${integration.category.toLowerCase().replace(' ', '_')}`,
+            )}
+        </Badge>
+    );
+
+    if (variant === 'row') {
+        return (
+            <div
+                className={cn(
+                    'group relative flex items-center gap-3 rounded-xl border border-(--border-color) bg-(--surface-color) p-3 text-left transition-colors duration-150 sm:gap-4 sm:px-4',
+                    'hover:border-(--border-color-strong) hover:bg-(--bg-light-color)',
+                    'focus-within:border-(--accent-color)',
+                )}
+            >
+                <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${integration.accentClassName}`}
+                >
+                    <BrandIcon name={integration.brand} className="h-5 w-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <h3 className="text-sm font-semibold text-(--text-color)">
+                            {nameLink}
+                        </h3>
+                        {stateBadge}
+                    </div>
+                    <p className="mt-0.5 truncate text-sm text-(--text-gray-color)">
+                        {text.description(integration)}
+                    </p>
+                </div>
+                <span className="hidden shrink-0 md:inline-flex">
+                    {categoryBadge}
+                </span>
+                {toggle}
+                <Icon
+                    name="ChevronRight"
+                    size={14}
+                    className="hidden shrink-0 text-(--text-muted-color) transition-colors group-focus-within:text-(--accent-color) group-hover:text-(--accent-color) sm:block"
+                />
+            </div>
+        );
+    }
 
     return (
         <div
@@ -52,49 +141,15 @@ export default function WorkspaceSettingsIntegrationCard({
                 >
                     <BrandIcon name={integration.brand} className="h-5 w-5" />
                 </span>
-                {onToggle && (
-                    <div className="relative z-10 pt-0.5">
-                        <ToggleSwitch
-                            checked={enabled}
-                            onChange={onToggle}
-                            disabled={integration.comingSoon || !canUpdate}
-                            label={t(
-                                'workspace_settings_integrations.card.toggle',
-                                { name: integration.name },
-                            )}
-                        />
-                    </div>
-                )}
+                {toggle && <div className="pt-0.5">{toggle}</div>}
             </div>
 
             <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-sm font-semibold text-(--text-color)">
-                        <Link
-                            href={href}
-                            className="rounded-sm outline-hidden after:absolute after:inset-0 after:rounded-2xl after:content-[''] focus-visible:after:ring-2 focus-visible:after:ring-(--accent-color)"
-                        >
-                            {integration.name}
-                        </Link>
+                        {nameLink}
                     </h3>
-                    {integration.comingSoon ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-(--bg-light-color) px-2 py-0.5 text-[11px] font-medium text-(--text-gray-color)">
-                            <Icon name="Lock" size={10} />
-                            {t('workspace_settings_integrations.card.soon')}
-                        </span>
-                    ) : (
-                        <span
-                            className={`rounded-full ${enabled ? 'bg-(--accent-color-opacity) text-(--accent-color)' : 'bg-(--bg-muted-color) text-(--text-muted-color)'} px-2 py-0.5 text-[11px] font-semibold`}
-                        >
-                            {enabled
-                                ? t(
-                                      'workspace_settings_integrations.card.enabled',
-                                  )
-                                : t(
-                                      'workspace_settings_integrations.card.disabled',
-                                  )}
-                        </span>
-                    )}
+                    {stateBadge}
                 </div>
                 <p className="mt-0.5 text-sm text-(--text-muted-color)">
                     {text.vendor(integration)}
@@ -105,14 +160,7 @@ export default function WorkspaceSettingsIntegrationCard({
             </div>
 
             <div className="flex items-center justify-between border-t border-(--border-color) pt-3">
-                <Badge
-                    variant="outline"
-                    className={getCategoryBadgeClassName(integration.category)}
-                >
-                    {t(
-                        `workspace_settings_integrations.categories.${integration.category.toLowerCase().replace(' ', '_')}`,
-                    )}
-                </Badge>
+                {categoryBadge}
                 <span
                     aria-hidden="true"
                     className="flex items-center gap-1 text-sm font-medium text-(--text-gray-color) transition-colors group-focus-within:text-(--accent-color) group-hover:text-(--accent-color)"
