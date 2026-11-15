@@ -21,6 +21,8 @@ interface UseIntegrationListCommandsOptions {
     canUpdate: boolean;
     statuses: Record<string, boolean>;
     onToggle: (integrationId: IntegrationId, enabled: boolean) => void;
+    /** Puts the cursor in the overview's search field. */
+    onSearch: () => void;
 }
 
 /**
@@ -33,6 +35,7 @@ export function useIntegrationListCommands({
     canUpdate,
     statuses,
     onToggle,
+    onSearch,
 }: UseIntegrationListCommandsOptions) {
     const { t } = useLaravelReactI18n();
     // The handlers are new functions on every render of the page. Read through
@@ -44,10 +47,20 @@ export function useIntegrationListCommands({
     const statusesKey = JSON.stringify(statuses);
     const onToggleRef = useRef(onToggle);
     onToggleRef.current = onToggle;
+    const onSearchRef = useRef(onSearch);
+    onSearchRef.current = onSearch;
 
     const commands = useMemo(
-        (): Command[] =>
-            INTEGRATIONS.flatMap((integration): Command[] => {
+        (): Command[] => [
+            {
+                id: 'integrations.search',
+                title: t('hook_integration_commands.search.title'),
+                group: 'suggested',
+                icon: 'Search',
+                keywords: [t('hook_integration_commands.keywords.integration')],
+                perform: () => onSearchRef.current(),
+            },
+            ...INTEGRATIONS.flatMap((integration): Command[] => {
                 const keywords = [
                     integration.vendor,
                     integration.category,
@@ -89,6 +102,7 @@ export function useIntegrationListCommands({
                     },
                 ];
             }),
+        ],
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [projectId, canUpdate, statusesKey, t],
     );

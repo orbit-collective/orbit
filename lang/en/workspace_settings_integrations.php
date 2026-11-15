@@ -11,6 +11,21 @@ return [
         'productivity' => 'Productivity',
     ],
     'tab' => [
+        'search_label' => 'Search integrations',
+        'search_placeholder' => 'Search integrations…',
+        'clear_search' => 'Clear search',
+        'filter_by_state' => 'Filter by status',
+        'states' => [
+            'all' => 'All',
+            'enabled' => 'Enabled',
+            'disabled' => 'Disabled',
+            'soon' => 'Coming soon',
+        ],
+        'no_results' => 'No integrations found',
+        'no_results_hint' => 'Nothing matches the current search and filters.',
+        'no_results_title' => 'Try a different word or clear the filters.',
+        'clear_filters' => 'Clear filters',
+        'results' => ':count integration|:count integrations',
         'filter_by_category' => 'Filter by category',
         'counts' => [
             'imported' => ':count imported',

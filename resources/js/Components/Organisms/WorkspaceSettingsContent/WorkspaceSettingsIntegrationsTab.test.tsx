@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import { AlertProvider } from '@/context/AlertContext';
@@ -66,6 +66,13 @@ const renderTab = (
         <AlertProvider>
             <WorkspaceSettingsIntegrationsTab {...props} />
         </AlertProvider>,
+    );
+
+/** A category pill; the status filter has an "All" button of its own. */
+const pill = (name: RegExp) =>
+    within(screen.getByRole('group', { name: 'Filter by category' })).getByRole(
+        'button',
+        { name },
     );
 
 const projectA: MemberProjectSummary = { id: 1, name: 'Orbit', color: 'blue' };
@@ -248,20 +255,14 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
             canUpdateIntegrations: true,
         });
 
-        expect(screen.getByRole('button', { name: /^All/ })).toHaveAttribute(
-            'aria-pressed',
-            'true',
-        );
+        expect(pill(/^All/)).toHaveAttribute('aria-pressed', 'true');
 
         await userEvent.click(screen.getByRole('button', { name: /^Storage/ }));
 
         expect(
             screen.getByRole('button', { name: /^Storage/ }),
         ).toHaveAttribute('aria-pressed', 'true');
-        expect(screen.getByRole('button', { name: /^All/ })).toHaveAttribute(
-            'aria-pressed',
-            'false',
-        );
+        expect(pill(/^All/)).toHaveAttribute('aria-pressed', 'false');
         expect(
             await screen.findByRole('heading', { name: 'Google Drive' }),
         ).toBeVisible();
@@ -277,7 +278,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
 
         expect(
             screen.getByRole('group', { name: 'Filter by category' }),
-        ).toContainElement(screen.getByRole('button', { name: /^All/ }));
+        ).toContainElement(pill(/^All/));
     });
 
     test('the category pills count their integrations', async () => {
@@ -288,7 +289,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
             canUpdateIntegrations: true,
         });
 
-        const all = screen.getByRole('button', { name: /^All/ });
+        const all = pill(/^All/);
         await waitFor(() => expect(all).toHaveTextContent(/All\s*[1-9]/));
     });
 
@@ -300,9 +301,7 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
             canUpdateIntegrations: true,
         });
 
-        expect(
-            screen.getByRole('button', { name: /^All/ }).className,
-        ).toContain('focus-visible:ring-2');
+        expect(pill(/^All/).className).toContain('focus-visible:ring-2');
     });
 
     test('the integration cards rise in and end up visible', async () => {
@@ -316,6 +315,156 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         expect(
             await screen.findByRole('heading', { name: 'Discord' }),
         ).toBeVisible();
+    });
+
+    describe('search and filters', () => {
+        const props = {
+            memberProjects: [projectA],
+            selectedProjectId: projectA.id,
+            hasIntegrationsAccess: true,
+            canUpdateIntegrations: true,
+            integrationStatuses: { discord: true, jira: false, github: true },
+        };
+        const names = () =>
+            screen
+                .getAllByRole('heading', { level: 3 })
+                .map((heading) => heading.textContent);
+
+        test('typing narrows the grid at once, by name, vendor and description', async () => {
+            renderTab(props);
+
+            await userEvent.type(
+                screen.getByRole('searchbox', { name: 'Search integrations' }),
+                'disc',
+            );
+
+            expect(names()).toEqual(['Discord']);
+
+            await userEvent.clear(screen.getByRole('searchbox'));
+            await userEvent.type(screen.getByRole('searchbox'), 'sentry');
+
+            expect(names()).toEqual(['Sentry']);
+        });
+
+        test('every word has to match, in any order', async () => {
+            renderTab(props);
+
+            await userEvent.type(
+                screen.getByRole('searchbox'),
+                'communication discord',
+            );
+
+            expect(names()).toEqual(['Discord']);
+        });
+
+        test('the status filter shows only the enabled, the disabled or the unreleased', async () => {
+            renderTab(props);
+
+            await userEvent.click(
+                screen.getByRole('button', { name: /^Enabled/ }),
+            );
+            expect(names().sort()).toEqual(['Discord', 'GitHub']);
+
+            await userEvent.click(
+                screen.getByRole('button', { name: /^Disabled/ }),
+            );
+            expect(names()).toEqual(['Jira']);
+
+            await userEvent.click(
+                screen.getByRole('button', { name: /^Coming soon/ }),
+            );
+            expect(names()).not.toContain('Discord');
+            expect(names()).toContain('Slack');
+        });
+
+        test('the status buttons count what they would show', async () => {
+            renderTab(props);
+
+            expect(
+                screen.getByRole('button', { name: /^Enabled 2$/ }),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole('button', { name: /^Disabled 1$/ }),
+            ).toBeInTheDocument();
+
+            await userEvent.type(screen.getByRole('searchbox'), 'jira');
+
+            expect(
+                screen.getByRole('button', { name: /^Enabled 0$/ }),
+            ).toBeInTheDocument();
+            expect(
+                screen.getByRole('button', { name: /^Disabled 1$/ }),
+            ).toBeInTheDocument();
+        });
+
+        test('the search, the category and the status work together', async () => {
+            renderTab(props);
+
+            await userEvent.click(
+                screen.getByRole('button', { name: /^Enabled/ }),
+            );
+            await userEvent.click(
+                screen.getByRole('button', { name: /^Communication/ }),
+            );
+
+            expect(names()).toEqual(['Discord']);
+        });
+
+        test('shows an empty state that clears the filters', async () => {
+            renderTab(props);
+
+            await userEvent.type(screen.getByRole('searchbox'), 'zzzz');
+
+            expect(
+                screen.getByText('No integrations found'),
+            ).toBeInTheDocument();
+            expect(screen.queryByRole('link', { name: 'Discord' })).toBeNull();
+
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Clear filters' }),
+            );
+
+            expect(screen.getByRole('searchbox')).toHaveValue('');
+            expect(
+                screen.getByRole('link', { name: 'Discord' }),
+            ).toBeInTheDocument();
+        });
+
+        test('announces how many integrations are shown', async () => {
+            renderTab(props);
+
+            await userEvent.type(screen.getByRole('searchbox'), 'disc');
+
+            expect(screen.getByRole('status')).toHaveTextContent(
+                '1 integration',
+            );
+        });
+
+        test('Escape clears the search and the clear button too, keeping focus in the field', async () => {
+            renderTab(props);
+            const field = screen.getByRole('searchbox');
+
+            await userEvent.type(field, 'disc');
+            await userEvent.keyboard('{Escape}');
+
+            expect(field).toHaveValue('');
+
+            await userEvent.type(field, 'jira');
+            await userEvent.click(
+                screen.getByRole('button', { name: 'Clear search' }),
+            );
+
+            expect(field).toHaveValue('');
+            expect(field).toHaveFocus();
+        });
+
+        test('has no clear button while the field is empty', () => {
+            renderTab(props);
+
+            expect(
+                screen.queryByRole('button', { name: 'Clear search' }),
+            ).toBeNull();
+        });
     });
 
     test('the read-only and no-access panels fold', () => {
