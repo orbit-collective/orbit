@@ -2,10 +2,10 @@ import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import StatusDot from '@/Components/Atoms/StatusDot/StatusDot';
 import WorkflowStatusBadge from '@/Components/Atoms/WorkflowStatusBadge/WorkflowStatusBadge';
 import LabelList from '@/Components/Molecules/LabelList/LabelList';
+import UserAvatar from '@/Components/Molecules/UserAvatar/UserAvatar';
 import { BoardCardProps } from '@/types/Components';
 import { Issue } from '@/types/Issues';
 import { cn } from '@/utils/cn';
@@ -61,7 +61,7 @@ const BoardCardContent = ({
                     <span />
                 )}
                 {issue.assignee ? (
-                    <Avatar
+                    <UserAvatar
                         userId={issue.assignee.id}
                         src={issue.assignee.avatar}
                         alt={issue.assignee.name}

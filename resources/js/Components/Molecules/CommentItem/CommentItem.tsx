@@ -4,6 +4,7 @@ import Avatar from '@/Components/Atoms/Avatar/Avatar';
 import EditableText from '@/Components/Atoms/EditableText/EditableText';
 import IconButton from '@/Components/Atoms/IconButton/IconButton';
 import IssueMentionLink from '@/Components/Molecules/IssueMentionLink/IssueMentionLink';
+import UserAvatar from '@/Components/Molecules/UserAvatar/UserAvatar';
 import { CommentItemProps } from '@/types/Components';
 import { splitMarkdownImages } from '@/utils/imagePaste';
 import { splitMentionText } from '@/utils/mentions';
@@ -74,7 +75,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
     return (
         <div className="group flex gap-3">
-            <Avatar
+            <UserAvatar
                 userId={comment.user?.id}
                 src={comment.user?.avatar}
                 initials={comment.user?.name.charAt(0) ?? '?'}

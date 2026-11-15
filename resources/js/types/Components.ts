@@ -51,6 +51,8 @@ export interface AvatarProps {
     alt?: string;
     size?: 'sm' | 'md' | 'lg' | 'xl';
     initials?: string;
+}
+export interface UserAvatarProps extends AvatarProps {
     /** When set, hovering the avatar shows that user's preview card. */
     userId?: number;
 }
