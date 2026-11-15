@@ -9,6 +9,48 @@ const options = [
 ];
 
 describe('SegmentedControl', () => {
+    test('with iconOnly shows the icon and keeps the label as the name', async () => {
+        const onChange = vi.fn();
+        render(
+            <SegmentedControl
+                label="Layout"
+                value="list"
+                iconOnly
+                options={[
+                    { value: 'list', label: 'List', icon: 'List' },
+                    { value: 'grid', label: 'Grid', icon: 'LayoutGrid' },
+                ]}
+                onChange={onChange}
+            />,
+        );
+
+        const grid = screen.getByRole('button', { name: 'Grid' });
+
+        expect(grid).toHaveAttribute('title', 'Grid');
+        expect(grid.querySelector('svg')).not.toBeNull();
+        expect(grid).not.toHaveTextContent('Grid');
+
+        await userEvent.click(grid);
+
+        expect(onChange).toHaveBeenCalledWith('grid');
+    });
+
+    test('with iconOnly an option without an icon keeps its text', () => {
+        render(
+            <SegmentedControl
+                label="Layout"
+                value="a"
+                iconOnly
+                options={options}
+                onChange={vi.fn()}
+            />,
+        );
+
+        expect(screen.getByRole('button', { name: 'Alpha' })).toHaveTextContent(
+            'Alpha',
+        );
+    });
+
     test('is a named group with the current choice pressed', () => {
         render(
             <SegmentedControl
