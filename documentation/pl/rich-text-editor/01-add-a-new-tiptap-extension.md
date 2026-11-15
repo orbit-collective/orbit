@@ -60,7 +60,6 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                 class: 'prose max-w-none text-sm focus:outline-none',
             },
         },
-        onBlur: ({ editor }) => commit(editor),
     });
 
     // ...rest of the component is unchanged...
@@ -70,7 +69,7 @@ To cała integracja — rozszerzenia Tiptapa są samowystarczalne; dodanie jedne
 
 ## Krok 3 — Potwierdź, że przeżywa rundę markdown
 
-Rozszerzenie `Markdown` z `tiptap-markdown` to to, co faktycznie serializuje treść edytora do zwykłego tekstowego markdownu zapisywanego na backendzie (przez `editor.storage.markdown.getMarkdown()`, wywoływane z `commit()`) — nowe rozszerzenie mark/node zapisuje się i przywraca poprawnie tylko wtedy, gdy `tiptap-markdown` wie, jak je (de)serializować. Wyjście `Highlight` to standardowa składnia markdown `==podświetlony tekst==`, którą `tiptap-markdown` wspiera od razu; bardziej egzotyczne rozszerzenie (własny typ węzła bez standardowej reprezentacji markdown) może potrzebować własnych, jawnych reguł serializacji markdown — sprawdź własną dokumentację rozszerzenia po opcję `markdown`/`storage`, zanim założysz, że przechodzi rundę za darmo.
+Rozszerzenie `Markdown` z `tiptap-markdown` to to, co faktycznie serializuje treść edytora do zwykłego tekstowego markdownu zapisywanego na backendzie (przez `editor.storage.markdown.getMarkdown()`, wywoływane z `save()`) — nowe rozszerzenie mark/node zapisuje się i przywraca poprawnie tylko wtedy, gdy `tiptap-markdown` wie, jak je (de)serializować. Wyjście `Highlight` to standardowa składnia markdown `==podświetlony tekst==`, którą `tiptap-markdown` wspiera od razu; bardziej egzotyczne rozszerzenie (własny typ węzła bez standardowej reprezentacji markdown) może potrzebować własnych, jawnych reguł serializacji markdown — sprawdź własną dokumentację rozszerzenia po opcję `markdown`/`storage`, zanim założysz, że przechodzi rundę za darmo.
 
 ## Krok 4 — Ostyluj je, jeśli domyślne style nie pasują do motywu
 
@@ -87,5 +86,5 @@ dodane do `resources/css/global.css` blisko istniejących reguł `.prose`/`.tipt
 
 ## Testy
 
-- `resources/js/Components/Molecules/EditableMarkdown/EditableMarkdown.test.tsx` — dodaj przypadek asercujący, że edytor poprawnie przechodzi rundę markdown `==highlighted==` (ustaw `value` na string zawierający to, asercuj, że `editor.storage.markdown.getMarkdown()` zwraca to bez zmian po cyklu edycji/blur bez efektu), na wzór kształtu konfiguracji istniejącego testu "committing on blur calls onSave when the markdown changed".
+- `resources/js/Components/Molecules/EditableMarkdown/EditableMarkdown.test.tsx` — dodaj przypadek asercujący, że edytor poprawnie przechodzi rundę markdown `==highlighted==` (ustaw `value` na string zawierający to, asercuj, że `editor.storage.markdown.getMarkdown()` zwraca to bez zmian po cyklu edycji/zapisu bez efektu), na wzór kształtu konfiguracji istniejącego testu "the Save button saves the changed markdown and ends the edit".
 - Żadne zmiany testów backendu nie są potrzebne — zapisana kolumna to wciąż zwykły tekst; backend nie ma żadnego zdania na temat tego, jaką składnię markdown zawiera.

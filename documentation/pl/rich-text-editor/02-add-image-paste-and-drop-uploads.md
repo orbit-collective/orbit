@@ -504,25 +504,25 @@ Afordancja ląduje w `resources/css/global.css`, bo wrapper reklamuje edycję po
 
 Komentarze dochodzą do tego samego zachowania inaczej — ich obrazy to prawdziwe elementy `<a target="_blank">` ze `stopPropagation`, bo tam treść renderuje React, a nie ProseMirror (zobacz [`03-add-image-uploads-to-another-surface.md`](./03-add-image-uploads-to-another-surface.md)).
 
-### Pułapka: blur nie może zakończyć edycji w trakcie uploadu
+### Pułapka: Zapisz i Anuluj nie mogą zakończyć edycji w trakcie uploadu
 
-`EditableMarkdown` zatwierdza przy blurze. Kliknięcie obok — albo samo przetasowanie fokusu, które wywołuje przeglądarkowe okno wyboru pliku — w trakcie trwającego uploadu uruchomiłoby `commit()`, ustawiło `editable: false` i zapisało, a obraz zostałby potem wstawiony do edytora, którego nikt nie edytuje, i nigdy nie zapisany. Stąd ref, czytany przez oba wyjścia:
+`EditableMarkdown` kończy edycję przez `save()` (przycisk Zapisz, `Ctrl/Cmd+Enter`) albo `cancel()` (przycisk Anuluj, `Escape`); opuszczenie edytora jej nie kończy, więc przetasowanie fokusu wywołane przeglądarkowym oknem wyboru pliku jest nieszkodliwe. Ale naciśnięcie któregokolwiek w trakcie trwającego uploadu ustawiłoby `editable: false`, a obraz zostałby wstawiony do edytora, którego nikt nie edytuje, i nigdy nie zapisany. Stąd ref, czytany przez oba wyjścia (przyciski są w tym czasie wyłączone):
 
 ```tsx
-const commit = (ed: NonNullable<typeof editor>) => {
-    if (pendingUploadsRef.current > 0) return;
+const save = () => {
+    if (!editor || !isEditing || pendingUploadsRef.current > 0) return;
 
     setIsEditing(false);
-    ed.setEditable(false);
+    editor.setEditable(false);
 
-    const markdown = ed.storage.markdown.getMarkdown();
+    const markdown = editor.storage.markdown.getMarkdown();
     if (markdown !== (value || '')) {
         onSave(markdown);
     }
 };
 ```
 
-**Ref**, a nie stan `pendingUploads`, bo `commit()` jest wołane z callbacku Tiptapa, który domknął się nad starszym renderem. Stan istnieje wyłącznie dla podpowiedzi „Uploading N images..." i obwódki przy przeciąganiu.
+**Ref**, a nie stan `pendingUploads`, bo `save()` bywa wołane z handlera klawiszy Tiptapa, który domknął się nad starszym renderem. Stan istnieje wyłącznie dla podpowiedzi „Uploading N images..." i obwódki przy przeciąganiu.
 
 ## Krok 11 — Użyj tego na stronie
 
@@ -551,4 +551,4 @@ To całe podłączenie na poziomie strony: hook potrzebuje id projektu, edytor p
 - `tests/Feature/Models/AttachmentTest.php` — relacje `project`/`user` oraz to, że usunięcie projektu kaskadowo usuwa jego załączniki.
 - `resources/js/utils/imagePaste.test.ts` — same `files`, same `items`, prawdziwe upuszczenie wielu plików zwracające każdy obraz, odrzucanie nie-obrazów i elementów niebędących plikami oraz — regresja, która ma tu znaczenie — ten sam obraz podany przez `files` *i* `items` jako dwa różne obiekty `File` wracający pojedynczo.
 - `resources/js/hooks/useImageUpload.test.ts` — zamockuj `axios` i `@/context/AlertContext`; asercuj, że `FormData` niesie `file`, że flaga `isUploading` przełącza się wokół żądania i że każdy kształt błędu (`errors.file[0]`, `message`, nie-HTTP) daje właściwy toast.
-- `resources/js/Components/Molecules/EditableMarkdown/EditableMarkdown.test.tsx` — istniejący `FakeEditor` potrzebuje `chain().focus().insertContentAt()`, `state.selection`/`state.doc` i atrapy `view.posAtCoords()`, a mock `useEditor` musi przechwycić `options.editorProps.handlePaste`. Pokryj: wklejenie wstawia w miejscu kursora, wklejenie bez uploadera albo bez obrazu zwraca `false`, nieudany upload nie wstawia nic, upuszczenie zaczyna edycję i wstawia w miejscu upuszczenia, upuszczenie przy `disabled` nie robi nic, a blur w trakcie trwającego uploadu nie wywołuje `onSave`. Na potrzeby zachowania kliknięcia mockowy `EditorContent` renderuje dodatkowo `<img>` dla każdego linku markdown do obrazu (zastępując wyjście prawdziwego rozszerzenia `Image`), co pozwala trzem kolejnym przypadkom asercować, że kliknięcie obrazu woła `window.open` i nie zaczyna edycji, że kliknięcie tekstu dalej ją zaczyna, a kliknięcie obrazu w trakcie edycji nie otwiera niczego.
+- `resources/js/Components/Molecules/EditableMarkdown/EditableMarkdown.test.tsx` — istniejący `FakeEditor` potrzebuje `chain().focus().insertContentAt()`, `state.selection`/`state.doc` i atrapy `view.posAtCoords()`, a mock `useEditor` musi przechwycić `options.editorProps.handlePaste`. Pokryj: wklejenie wstawia w miejscu kursora, wklejenie bez uploadera albo bez obrazu zwraca `false`, nieudany upload nie wstawia nic, upuszczenie zaczyna edycję i wstawia w miejscu upuszczenia, upuszczenie przy `disabled` nie robi nic, a Zapisz/Anuluj w trakcie trwającego uploadu są wyłączone i nie wywołują `onSave`. Na potrzeby zachowania kliknięcia mockowy `EditorContent` renderuje dodatkowo `<img>` dla każdego linku markdown do obrazu (zastępując wyjście prawdziwego rozszerzenia `Image`), co pozwala trzem kolejnym przypadkom asercować, że kliknięcie obrazu woła `window.open` i nie zaczyna edycji, że kliknięcie tekstu dalej ją zaczyna, a kliknięcie obrazu w trakcie edycji nie otwiera niczego.

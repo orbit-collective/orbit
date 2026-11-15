@@ -67,7 +67,6 @@ const EditableMarkdown: React.FC<EditableMarkdownProps> = ({
                 class: 'prose max-w-none text-sm focus:outline-none',
             },
         },
-        onBlur: ({ editor }) => commit(editor),
     });
 
     // ...rest of the component is unchanged...
@@ -86,7 +85,7 @@ you're also adding a toolbar, which doesn't exist yet.
 
 `tiptap-markdown`'s `Markdown` extension is what actually serializes
 editor content to the plain-text markdown stored on the backend (via
-`editor.storage.markdown.getMarkdown()`, called from `commit()`) — a
+`editor.storage.markdown.getMarkdown()`, called from `save()`) — a
 new mark/node extension only stores and restores correctly if
 `tiptap-markdown` knows how to (de)serialize it. `Highlight`'s output
 is standard `==highlighted text==` markdown syntax, which
@@ -122,8 +121,8 @@ convention of a CSS variable over a hardcoded color.
   add a case asserting the editor round-trips `==highlighted==`
   markdown correctly (set `value` to a string containing it, assert
   `editor.storage.markdown.getMarkdown()` returns it unchanged after a
-  no-op edit/blur cycle), mirroring the existing "committing on blur
-  calls onSave when the markdown changed" test's setup shape.
+  no-op edit/save cycle), mirroring the existing "the Save button saves
+  the changed markdown and ends the edit" test's setup shape.
 - No backend test changes are needed — the stored column is still
   plain text; the backend has no opinion on what markdown syntax it
   contains.

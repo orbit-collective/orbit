@@ -10,7 +10,7 @@ Worked example: `@member` and `#issue` mentions in the **issue description**, th
 ## Gotchas this design already handles
 
 - **Every `Suggestion` plugin needs its own `pluginKey`.** Two suggestion plugins sharing the default key make ProseMirror throw `Adding different instances of a keyed plugin (suggestion$)` the moment the editor is created. `createMentionNode` builds one key per node type, so a new mention node cannot collide with the existing two.
-- **The menu must not steal focus.** `EditableMarkdown` commits and leaves edit mode on `onBlur`. `MentionSuggestions` already calls `preventDefault()` on `mousedown` for its rows, so clicking an option leaves the editor focused; keep that if you build a different menu.
+- **The menu must not steal focus.** Editing now ends only through Save/Cancel, so a blur is harmless, but the typed trigger lives in the editor's selection: `MentionSuggestions` calls `preventDefault()` on `mousedown` for its rows so clicking an option leaves the editor focused and the suggestion alive; keep that if you build a different menu.
 - **`Escape` closes the menu, not the edit.** The wrapper cancels editing on `Escape`; the hook calls `event.stopPropagation()` on the native event while a menu is open so one keypress does only one thing.
 - **A mention is a link, not a request to edit.** Clicking the rendered description normally starts editing. `handleClick` returns early for anything inside an `<a>`, which is what an issue mention renders as.
 - **Plain text stays plain.** `markdown-it`'s `text` rule stops at `@` and `#`, and the mention rules only match the full `@[…](…)` / `#[…](…)` token, so `jane@example.com`, `issue #12` and a `# Heading` are untouched.
