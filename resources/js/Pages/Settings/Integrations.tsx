@@ -1,14 +1,5 @@
 import SettingsLayout from '@/Components/Organisms/SettingsLayout/SettingsLayout';
 import WorkspaceSettingsIntegrationsTab from '@/Components/Organisms/WorkspaceSettingsContent/WorkspaceSettingsIntegrationsTab';
-import { IssueType } from '@/types/IssueTypes';
-import { ProjectLabel } from '@/types/Labels';
-import { ProjectPriority } from '@/types/Priorities';
-import {
-    GithubConnectStatus,
-    ImportIntegrationSettings,
-    IntegrationImportProgress,
-    ProjectIntegrationSettings,
-} from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { Project } from '@/types/Projects';
 
@@ -17,15 +8,8 @@ interface SettingsIntegrationsProps {
     memberProjects?: MemberProjectSummary[];
     selectedProjectId?: number | null;
     integrationStatuses?: Record<string, boolean>;
-    integrationSettings?: Record<string, ProjectIntegrationSettings>;
-    jiraSettings?: ImportIntegrationSettings | null;
-    jiraImportProgress?: IntegrationImportProgress | null;
-    githubConnectStatus?: GithubConnectStatus | null;
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
-    issueTypes?: IssueType[];
-    labels?: ProjectLabel[];
-    priorities?: ProjectPriority[];
 }
 
 export default function SettingsIntegrations({
@@ -33,15 +17,8 @@ export default function SettingsIntegrations({
     memberProjects = [],
     selectedProjectId = null,
     integrationStatuses = {},
-    integrationSettings = {},
-    jiraSettings = null,
-    jiraImportProgress = null,
-    githubConnectStatus = null,
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
-    issueTypes = [],
-    labels = [],
-    priorities = [],
 }: SettingsIntegrationsProps) {
     return (
         <SettingsLayout tabId="integrations" projects={projects}>
@@ -49,15 +26,8 @@ export default function SettingsIntegrations({
                 memberProjects={memberProjects}
                 selectedProjectId={selectedProjectId}
                 integrationStatuses={integrationStatuses}
-                integrationSettings={integrationSettings}
-                jiraSettings={jiraSettings}
-                jiraImportProgress={jiraImportProgress}
-                githubConnectStatus={githubConnectStatus}
                 hasIntegrationsAccess={hasIntegrationsAccess}
                 canUpdateIntegrations={canUpdateIntegrations}
-                issueTypes={issueTypes}
-                labels={labels}
-                priorities={priorities}
             />
         </SettingsLayout>
     );

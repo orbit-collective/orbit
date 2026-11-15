@@ -249,9 +249,6 @@ export const Integrations: Story = {
         <WorkspaceSettingsIntegrationsTab
             {...projectScope}
             integrationStatuses={{ discord: true }}
-            integrationSettings={discordSettings}
-            issueTypes={issueTypes}
-            labels={labels}
             hasIntegrationsAccess
             canUpdateIntegrations
         />
