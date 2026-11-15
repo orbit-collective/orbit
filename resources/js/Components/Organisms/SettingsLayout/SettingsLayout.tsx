@@ -1,7 +1,9 @@
 import { MotionConfig, motion } from 'framer-motion';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ReactNode } from 'react';
-import Breadcrumb from '@/Components/Molecules/Breadcrumb/Breadcrumb';
+import Breadcrumb, {
+    BreadcrumbItem,
+} from '@/Components/Molecules/Breadcrumb/Breadcrumb';
 import CollapseAllButton from '@/Components/Molecules/CollapseAllButton/CollapseAllButton';
 import Sidebar from '@/Components/Organisms/Sidebar/Sidebar';
 import {
@@ -30,6 +32,16 @@ interface SettingsLayoutProps {
      * flow canvas, which is unusably narrow/short under the normal cap).
      */
     fullBleed?: boolean;
+    /**
+     * Crumbs after the tab's own, for a page that sits below a tab (an
+     * integration's page). The tab crumb then links back to the tab.
+     */
+    breadcrumbTrail?: BreadcrumbItem[];
+    /**
+     * Drops the title and description under the breadcrumb, for a page
+     * that brings its own heading (the integration page's hero).
+     */
+    hideTitle?: boolean;
 }
 
 /**
@@ -54,6 +66,8 @@ export default function SettingsLayout({
     projects = [],
     children,
     fullBleed = false,
+    breadcrumbTrail = [],
+    hideTitle = false,
 }: SettingsLayoutProps) {
     const { t } = useLaravelReactI18n();
     const tab = getSettingsTab(tabId);
@@ -97,15 +111,27 @@ export default function SettingsLayout({
                                                     className:
                                                         'uppercase tracking-[0.2em]',
                                                 },
-                                                { label: t(tab.label) },
+                                                {
+                                                    label: t(tab.label),
+                                                    href:
+                                                        breadcrumbTrail.length >
+                                                        0
+                                                            ? tab.path
+                                                            : undefined,
+                                                },
+                                                ...breadcrumbTrail,
                                             ]}
                                         />
-                                        <h1 className="text-2xl font-semibold text-(--text-color) sm:text-3xl">
-                                            {t(tab.label)}
-                                        </h1>
-                                        <p className="max-w-2xl text-sm text-(--text-gray-color)">
-                                            {t(tab.description)}
-                                        </p>
+                                        {!hideTitle && (
+                                            <>
+                                                <h1 className="text-2xl font-semibold text-(--text-color) sm:text-3xl">
+                                                    {t(tab.label)}
+                                                </h1>
+                                                <p className="max-w-2xl text-sm text-(--text-gray-color)">
+                                                    {t(tab.description)}
+                                                </p>
+                                            </>
+                                        )}
                                     </div>
                                     {!fullBleed && <CollapseAll />}
                                 </motion.header>

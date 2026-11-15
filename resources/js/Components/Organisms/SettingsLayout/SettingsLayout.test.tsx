@@ -39,6 +39,25 @@ describe('SettingsLayout', () => {
         expect(screen.getByText('Tab body')).toBeInTheDocument();
     });
 
+    test('links the tab crumb back and drops the title for a page below a tab', () => {
+        render(
+            <SettingsLayout
+                tabId="integrations"
+                hideTitle
+                breadcrumbTrail={[{ label: 'GitHub' }]}
+            >
+                <p>Tab body</p>
+            </SettingsLayout>,
+        );
+
+        expect(screen.getByRole('link', { name: 'Integrations' })).toHaveAttribute(
+            'href',
+            '/settings/integrations',
+        );
+        expect(screen.getByText('GitHub')).toBeInTheDocument();
+        expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+    });
+
     test('passes the projects through to the sidebar', () => {
         render(
             <SettingsLayout
