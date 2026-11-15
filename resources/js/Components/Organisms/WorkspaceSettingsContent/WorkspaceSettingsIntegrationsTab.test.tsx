@@ -215,7 +215,9 @@ describe('WorkspaceSettingsIntegrationsTab', () => {
         expect(
             screen.queryByRole('switch', { name: 'Toggle GitHub' }),
         ).toBeNull();
-        expect(screen.getByRole('link', { name: 'GitHub' })).toBeInTheDocument();
+        expect(
+            screen.getByRole('link', { name: 'GitHub' }),
+        ).toBeInTheDocument();
     });
 
     test('filters the grid down to the selected category', async () => {

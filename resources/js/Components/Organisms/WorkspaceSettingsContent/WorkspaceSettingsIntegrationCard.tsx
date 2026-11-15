@@ -115,7 +115,7 @@ export default function WorkspaceSettingsIntegrationCard({
                 </Badge>
                 <span
                     aria-hidden="true"
-                    className="flex items-center gap-1 text-sm font-medium text-(--text-gray-color) transition-colors group-hover:text-(--accent-color) group-focus-within:text-(--accent-color)"
+                    className="flex items-center gap-1 text-sm font-medium text-(--text-gray-color) transition-colors group-focus-within:text-(--accent-color) group-hover:text-(--accent-color)"
                 >
                     {t('workspace_settings_integrations.card.view_details')}
                     <Icon name="ChevronRight" size={14} />

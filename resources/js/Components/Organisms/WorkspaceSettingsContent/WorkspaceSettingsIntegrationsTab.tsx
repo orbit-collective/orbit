@@ -204,7 +204,9 @@ export default function WorkspaceSettingsIntegrationsTab({
                     <RowReveal key={integration.id} index={index} fill>
                         <WorkspaceSettingsIntegrationCard
                             integration={integration}
-                            enabled={integrationStatuses[integration.id] ?? false}
+                            enabled={
+                                integrationStatuses[integration.id] ?? false
+                            }
                             canUpdate={canUpdateIntegrations}
                             href={integrationPath(
                                 integration.id,
@@ -223,7 +225,6 @@ export default function WorkspaceSettingsIntegrationsTab({
                     </RowReveal>
                 ))}
             </div>
-
         </div>
     );
 }

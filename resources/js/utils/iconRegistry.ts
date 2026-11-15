@@ -159,6 +159,7 @@ import Percent from 'lucide-react/icons/percent';
 import Pin from 'lucide-react/icons/pin';
 import Plug from 'lucide-react/icons/plug';
 import Plus from 'lucide-react/icons/plus';
+import Power from 'lucide-react/icons/power';
 import Quote from 'lucide-react/icons/quote';
 import Rabbit from 'lucide-react/icons/rabbit';
 import RefreshCw from 'lucide-react/icons/refresh-cw';
@@ -470,4 +471,5 @@ export const iconRegistry: Record<string, LucideIcon> = {
     Wrench,
     X,
     Zap,
+    Power,
 };
