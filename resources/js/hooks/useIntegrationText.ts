@@ -25,6 +25,23 @@ export function useIntegrationText() {
     );
 
     return {
+        /** The state line of an integration: connected / active / coming soon… */
+        status: (integration: IntegrationDefinition, enabled: boolean) => {
+            if (integration.comingSoon) {
+                return t('workspace_settings_integrations.detail.coming_soon');
+            }
+
+            const key =
+                integration.kind === 'import'
+                    ? enabled
+                        ? 'active'
+                        : 'not_active'
+                    : enabled
+                      ? 'connected'
+                      : 'not_connected';
+
+            return t(`workspace_settings_integrations.detail.${key}`);
+        },
         vendor: (integration: IntegrationDefinition) =>
             translate(
                 `integrations_catalog.${integration.id}.vendor`,
