@@ -20,6 +20,7 @@ documentation/
     theme-colors/            <- angielskie tłumaczenie każdego przewodnika poniżej
     accent-colors/           <- angielskie tłumaczenie każdego przewodnika poniżej
     avatars/                 <- angielskie tłumaczenie każdego przewodnika poniżej
+    preview-cards/           <- angielskie tłumaczenie każdego przewodnika poniżej
     architecture/            <- angielskie tłumaczenie każdego przewodnika poniżej
     settings-tabs/           <- angielskie tłumaczenie każdego przewodnika poniżej
     shortcuts/               <- angielskie tłumaczenie każdego przewodnika poniżej
@@ -81,6 +82,10 @@ documentation/
     avatars/
       README.md              <- indeks tej kategorii
       01-add-a-new-avatar-face.md
+    preview-cards/
+      README.md              <- indeks tej kategorii
+      01-show-an-issue-preview-card.md
+      02-show-a-user-preview-card.md
     architecture/
       README.md              <- indeks tej kategorii
       01-tech-stack-and-project-structure.md

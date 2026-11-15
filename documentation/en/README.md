@@ -57,6 +57,10 @@ documentation/
     avatars/
       README.md              <- index for this category
       01-add-a-new-avatar-face.md
+    preview-cards/
+      README.md              <- index for this category
+      01-show-an-issue-preview-card.md
+      02-show-a-user-preview-card.md
     architecture/
       README.md              <- index for this category
       01-tech-stack-and-project-structure.md
@@ -173,6 +177,7 @@ documentation/
     theme-colors/            <- Polish translation of every guide above
     accent-colors/           <- Polish translation of every guide above
     avatars/                 <- Polish translation of every guide above
+    preview-cards/           <- Polish translation of every guide above
     settings-tabs/           <- Polish translation of every guide above
     shortcuts/               <- Polish translation of every guide above
     command-palette/         <- Polish translation of every guide above
