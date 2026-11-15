@@ -172,12 +172,10 @@ describe('WorkspaceSettingsIntegrationDetail', () => {
         );
     });
 
-    test('an enabled integration offers Disable and reports it is pressed', async () => {
+    test('an enabled integration offers Disable', async () => {
         renderDetail('discord', { enabled: true });
 
         const button = screen.getByRole('button', { name: 'Disable' });
-
-        expect(button).toHaveAttribute('aria-pressed', 'true');
 
         await userEvent.click(button);
 

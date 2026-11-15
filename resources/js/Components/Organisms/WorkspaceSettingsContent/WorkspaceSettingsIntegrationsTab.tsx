@@ -151,7 +151,14 @@ export default function WorkspaceSettingsIntegrationsTab({
                 </SettingsPanel>
             )}
 
-            <motion.div variants={riseIn} className="flex flex-wrap gap-2">
+            <motion.div
+                variants={riseIn}
+                role="group"
+                aria-label={t(
+                    'workspace_settings_integrations.tab.filter_by_category',
+                )}
+                className="flex flex-wrap gap-2"
+            >
                 {CATEGORY_FILTERS.map((category) => {
                     const isActive = category === activeCategory;
                     const count =

@@ -11,6 +11,7 @@ return [
         'productivity' => 'Productivity',
     ],
     'tab' => [
+        'filter_by_category' => 'Filter by category',
         'counts' => [
             'imported' => ':count imported',
             'updated' => ':count updated',
