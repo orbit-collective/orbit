@@ -21,6 +21,20 @@ class ProjectIntegrationService
     public const array AVAILABLE_INTEGRATIONS = ['discord', 'jira'];
 
     /**
+     * Every integration the settings catalog (resources/js/types/Integrations.ts)
+     * lists, wired up or not: each has its own page under
+     * `/settings/integrations/{integration}`, so an id outside this list is a 404.
+     * 'github' is not in AVAILABLE_INTEGRATIONS because it is a GitHub App
+     * installation (GithubIntegrationService), not an enabled/disabled record.
+     */
+    public const array CATALOG_INTEGRATIONS = [
+        'discord', 'slack', 'microsoft-teams', 'zoom', 'telegram',
+        'github', 'gitlab', 'bitbucket', 'jira', 'sentry', 'circleci',
+        'google-drive', 'dropbox', 'microsoft-onedrive', 'box',
+        'google-calendar', 'notion', 'trello', 'asana', 'linear', 'figma',
+    ];
+
+    /**
      * The sub-options each available integration actually understands. Keys
      * outside this list are silently dropped when settings are saved, so a
      * client can never persist an option a given integration doesn't have.

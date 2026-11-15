@@ -102,6 +102,20 @@ class GithubIntegrationService
     }
 
     /**
+     * Whether the project has a finished GitHub installation. A single local
+     * row read (no relay call, no repository list), so the integrations
+     * overview can show the state without building the full connect status.
+     */
+    public function isConnected(Project $project): bool
+    {
+        $projectIntegration = $this->projectIntegrationRepository->findForProject($project, self::INTEGRATION_KEY);
+
+        return $projectIntegration !== null
+            && $projectIntegration->getRawOriginal('github_relay_token') !== null
+            && $projectIntegration->github_status === 'connected';
+    }
+
+    /**
      * The live connect-status readout for the settings UI to poll after
      * starting an installation. Reads only the local DB row unless still
      * "pending", in which case it checks orbit-api once per call — cheap
