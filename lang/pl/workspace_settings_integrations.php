@@ -55,6 +55,7 @@ return [
         'ask_admin_description' => 'Tylko członkowie z uprawnieniem integrations.update mogą włączać i wyłączać integracje.',
     ],
     'card' => [
+        'toggle' => 'Przełącz :name',
         'soon' => 'Wkrótce',
         'enabled' => 'Włączona',
         'disabled' => 'Wyłączona',

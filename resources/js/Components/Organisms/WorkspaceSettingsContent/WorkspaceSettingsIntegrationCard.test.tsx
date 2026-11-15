@@ -4,22 +4,44 @@ import { describe, expect, test, vi } from 'vitest';
 import { INTEGRATIONS } from '@/types/Integrations';
 import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
 
+vi.mock('@inertiajs/react', () => ({
+    Link: ({
+        children,
+        href,
+        className,
+    }: {
+        children: React.ReactNode;
+        href: string;
+        className?: string;
+    }) => (
+        <a href={href} className={className}>
+            {children}
+        </a>
+    ),
+}));
+
 const discord = INTEGRATIONS.find(
     (integration) => integration.id === 'discord',
 )!;
 const slack = INTEGRATIONS.find((integration) => integration.id === 'slack')!;
 
+const renderCard = (
+    props: Partial<Parameters<typeof WorkspaceSettingsIntegrationCard>[0]> = {},
+) =>
+    render(
+        <WorkspaceSettingsIntegrationCard
+            integration={discord}
+            enabled={false}
+            canUpdate
+            href="/settings/integrations/discord?project=1"
+            onToggle={() => {}}
+            {...props}
+        />,
+    );
+
 describe('WorkspaceSettingsIntegrationCard', () => {
     test('renders the integration name, vendor, and description', () => {
-        render(
-            <WorkspaceSettingsIntegrationCard
-                integration={discord}
-                enabled={false}
-                canUpdate
-                onToggle={() => {}}
-                onOpen={() => {}}
-            />,
-        );
+        renderCard();
 
         expect(
             screen.getByRole('heading', { name: 'Discord' }),
@@ -29,124 +51,76 @@ describe('WorkspaceSettingsIntegrationCard', () => {
         expect(screen.getByText(discord.category)).toBeInTheDocument();
     });
 
-    test('shows a "Disabled" badge and an enabled toggle for an available integration', () => {
-        render(
-            <WorkspaceSettingsIntegrationCard
-                integration={discord}
-                enabled={false}
-                canUpdate
-                onToggle={() => {}}
-                onOpen={() => {}}
-            />,
+    test('the name links to the integration page', () => {
+        renderCard();
+
+        expect(screen.getByRole('link', { name: 'Discord' })).toHaveAttribute(
+            'href',
+            '/settings/integrations/discord?project=1',
         );
+    });
+
+    test('shows a "Disabled" badge and a named switch for an available integration', () => {
+        renderCard();
 
         expect(screen.getByText('Disabled')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: '' })).not.toBeDisabled();
+        expect(
+            screen.getByRole('switch', { name: 'Toggle Discord' }),
+        ).not.toBeDisabled();
     });
 
-    test('shows a "Soon" badge and a disabled toggle for a locked integration', () => {
-        render(
-            <WorkspaceSettingsIntegrationCard
-                integration={slack}
-                enabled={false}
-                canUpdate
-                onToggle={() => {}}
-                onOpen={() => {}}
-            />,
-        );
+    test('shows an "Enabled" badge and the switch on when enabled', () => {
+        renderCard({ enabled: true });
+
+        expect(screen.getByText('Enabled')).toBeInTheDocument();
+        expect(
+            screen.getByRole('switch', { name: 'Toggle Discord' }),
+        ).toBeChecked();
+    });
+
+    test('shows a "Soon" badge and a disabled switch for a locked integration', () => {
+        renderCard({ integration: slack });
 
         expect(screen.getByText('Soon')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: '' })).toBeDisabled();
+        expect(
+            screen.getByRole('switch', { name: 'Toggle Slack' }),
+        ).toBeDisabled();
     });
 
-    test('clicking the card calls onOpen', async () => {
-        const onOpen = vi.fn();
-        render(
-            <WorkspaceSettingsIntegrationCard
-                integration={discord}
-                enabled={false}
-                canUpdate
-                onToggle={() => {}}
-                onOpen={onOpen}
-            />,
-        );
-
-        await userEvent.click(screen.getByRole('heading', { name: 'Discord' }));
-
-        expect(onOpen).toHaveBeenCalledTimes(1);
-    });
-
-    test('clicking the toggle calls onToggle without triggering onOpen', async () => {
-        const onOpen = vi.fn();
+    test('the switch calls onToggle', async () => {
         const onToggle = vi.fn();
-        render(
-            <WorkspaceSettingsIntegrationCard
-                integration={discord}
-                enabled={false}
-                canUpdate
-                onToggle={onToggle}
-                onOpen={onOpen}
-            />,
-        );
+        renderCard({ onToggle });
 
-        await userEvent.click(screen.getByRole('button', { name: '' }));
+        await userEvent.click(
+            screen.getByRole('switch', { name: 'Toggle Discord' }),
+        );
 
         expect(onToggle).toHaveBeenCalledWith(true);
-        expect(onOpen).not.toHaveBeenCalled();
     });
 
-    test('pressing Enter or Space on the focused card calls onOpen', async () => {
-        const onOpen = vi.fn();
-        render(
-            <WorkspaceSettingsIntegrationCard
-                integration={discord}
-                enabled={false}
-                canUpdate
-                onToggle={() => {}}
-                onOpen={onOpen}
-            />,
-        );
+    test('the switch and the link are separate Tab stops', async () => {
+        renderCard();
 
-        const card = screen.getByRole('button', { name: /Discord/ });
-        card.focus();
+        await userEvent.tab();
+        expect(
+            screen.getByRole('switch', { name: 'Toggle Discord' }),
+        ).toHaveFocus();
 
-        await userEvent.keyboard('{Enter}');
-        await userEvent.keyboard(' ');
-
-        expect(onOpen).toHaveBeenCalledTimes(2);
+        await userEvent.tab();
+        expect(screen.getByRole('link', { name: 'Discord' })).toHaveFocus();
     });
 
-    test('disables the toggle for an available integration when the viewer cannot update integrations', () => {
-        render(
-            <WorkspaceSettingsIntegrationCard
-                integration={discord}
-                enabled={false}
-                canUpdate={false}
-                onToggle={() => {}}
-                onOpen={() => {}}
-            />,
-        );
+    test('disables the switch when the viewer cannot update integrations', () => {
+        renderCard({ canUpdate: false });
 
-        expect(screen.getByRole('button', { name: '' })).toBeDisabled();
+        expect(
+            screen.getByRole('switch', { name: 'Toggle Discord' }),
+        ).toBeDisabled();
     });
 
-    test('pressing an unrelated key on the card does not call onOpen', async () => {
-        const onOpen = vi.fn();
-        render(
-            <WorkspaceSettingsIntegrationCard
-                integration={discord}
-                enabled={false}
-                canUpdate
-                onToggle={() => {}}
-                onOpen={onOpen}
-            />,
-        );
+    test('has no switch for an integration without a plain toggle', () => {
+        renderCard({ onToggle: undefined });
 
-        const card = screen.getByRole('button', { name: /Discord/ });
-        card.focus();
-
-        await userEvent.keyboard('{Tab}');
-
-        expect(onOpen).not.toHaveBeenCalled();
+        expect(screen.queryByRole('switch')).toBeNull();
     });
 });

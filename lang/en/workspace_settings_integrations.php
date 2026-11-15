@@ -55,6 +55,7 @@ return [
         'ask_admin_description' => 'Only members with the integrations.update permission can enable or disable integrations.',
     ],
     'card' => [
+        'toggle' => 'Toggle :name',
         'soon' => 'Soon',
         'enabled' => 'Enabled',
         'disabled' => 'Disabled',

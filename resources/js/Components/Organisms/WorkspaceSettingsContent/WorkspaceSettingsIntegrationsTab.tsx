@@ -1,37 +1,24 @@
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import AnimatedNumber from '@/Components/Atoms/AnimatedNumber/AnimatedNumber';
 import RowReveal from '@/Components/Atoms/RowReveal/RowReveal';
 import ProjectPickerPanel from '@/Components/Molecules/ProjectPickerPanel/ProjectPickerPanel';
 import SettingsPanel from '@/Components/Molecules/SettingsPanel/SettingsPanel';
 import SettingsPanelRow from '@/Components/Molecules/SettingsPanelRow/SettingsPanelRow';
-import { useAlert } from '@/context/AlertContext';
 import { useIntegrationActions } from '@/hooks/useIntegrationActions';
 import {
     INTEGRATION_CATEGORIES,
     IntegrationCategory,
-    IntegrationId,
     INTEGRATIONS,
 } from '@/types/Integrations';
-import { IssueType } from '@/types/IssueTypes';
-import { ProjectLabel } from '@/types/Labels';
-import { ProjectPriority } from '@/types/Priorities';
-import {
-    GithubConnectedRepository,
-    GithubConnectStatus,
-    ImportIntegrationSettings,
-    IntegrationFieldMappingDraft,
-    IntegrationImportProgress,
-    ProjectIntegrationSettings,
-} from '@/types/ProjectIntegrations';
 import { MemberProjectSummary } from '@/types/ProjectMembers';
 import { cn } from '@/utils/cn';
 import { FOCUS_RING } from '@/utils/focusRing';
+import { integrationPath, integrationsPath } from '@/utils/integrationPaths';
 import { SPRING, riseIn } from '@/utils/motion';
 import WorkspaceSettingsIntegrationCard from './WorkspaceSettingsIntegrationCard';
-import WorkspaceSettingsIntegrationDetailModal from './WorkspaceSettingsIntegrationDetailModal';
 
 type CategoryFilter = IntegrationCategory | 'All';
 
@@ -41,55 +28,26 @@ interface WorkspaceSettingsIntegrationsTabProps {
     memberProjects?: MemberProjectSummary[];
     selectedProjectId?: number | null;
     integrationStatuses?: Record<string, boolean>;
-    integrationSettings?: Record<string, ProjectIntegrationSettings>;
-    jiraSettings?: ImportIntegrationSettings | null;
-    jiraImportProgress?: IntegrationImportProgress | null;
-    githubConnectStatus?: GithubConnectStatus | null;
-    issueTypes?: IssueType[];
-    labels?: ProjectLabel[];
-    priorities?: ProjectPriority[];
     hasIntegrationsAccess?: boolean;
     canUpdateIntegrations?: boolean;
 }
 
+/**
+ * The integrations overview: a grid of cards, each linking to the
+ * integration's own page. It only knows the enabled states, so it stays
+ * light however much an integration's page has to load.
+ */
 export default function WorkspaceSettingsIntegrationsTab({
     memberProjects = [],
     selectedProjectId = null,
     integrationStatuses = {},
-    integrationSettings = {},
-    jiraSettings = null,
-    jiraImportProgress = null,
-    githubConnectStatus = null,
-    issueTypes = [],
-    labels = [],
-    priorities = [],
     hasIntegrationsAccess = false,
     canUpdateIntegrations = false,
 }: WorkspaceSettingsIntegrationsTabProps) {
     const { t } = useLaravelReactI18n();
-    const {
-        toggleIntegration,
-        saveIntegrationSettings,
-        connectImportIntegration,
-        saveImportMappings,
-        triggerImport,
-        connectGithub,
-        disconnectGithub,
-        retryGithub,
-        availableGithubRepositories,
-        isLoadingAvailableGithubRepositories,
-        openGithubRepositoryPicker,
-        addGithubRepository,
-        removeGithubRepository,
-        refreshGithubRepositories,
-        isRefreshingGithubRepositories,
-    } = useIntegrationActions({
+    const { toggleIntegration } = useIntegrationActions({
         projectId: selectedProjectId,
-        jiraImportProgress,
-        githubConnectStatus,
     });
-    const [openIntegrationId, setOpenIntegrationId] =
-        useState<IntegrationId | null>(null);
     const [activeCategory, setActiveCategory] = useState<CategoryFilter>('All');
 
     const selectedProject =
@@ -98,16 +56,11 @@ export default function WorkspaceSettingsIntegrationsTab({
 
     const switchProject = (projectId: number) => {
         router.get(
-            `/settings/integrations?project=${projectId}`,
+            integrationsPath(projectId),
             {},
             { preserveScroll: true, preserveState: true },
         );
     };
-
-    const openIntegration =
-        INTEGRATIONS.find(
-            (integration) => integration.id === openIntegrationId,
-        ) ?? null;
 
     const filteredIntegrations = useMemo(
         () =>
@@ -251,101 +204,26 @@ export default function WorkspaceSettingsIntegrationsTab({
                     <RowReveal key={integration.id} index={index} fill>
                         <WorkspaceSettingsIntegrationCard
                             integration={integration}
-                            enabled={
-                                integration.id === 'github'
-                                    ? githubConnectStatus?.status ===
-                                      'connected'
-                                    : (integrationStatuses[integration.id] ??
-                                      false)
-                            }
+                            enabled={integrationStatuses[integration.id] ?? false}
                             canUpdate={canUpdateIntegrations}
-                            onToggle={(checked) =>
+                            href={integrationPath(
+                                integration.id,
+                                selectedProject.id,
+                            )}
+                            onToggle={
                                 integration.id === 'github'
-                                    ? checked
-                                        ? connectGithub()
-                                        : disconnectGithub()
-                                    : toggleIntegration(integration.id, checked)
+                                    ? undefined
+                                    : (checked) =>
+                                          toggleIntegration(
+                                              integration.id,
+                                              checked,
+                                          )
                             }
-                            onOpen={() => setOpenIntegrationId(integration.id)}
                         />
                     </RowReveal>
                 ))}
             </div>
 
-            <WorkspaceSettingsIntegrationDetailModal
-                integration={openIntegration}
-                enabled={
-                    openIntegration
-                        ? openIntegration.id === 'github'
-                            ? githubConnectStatus?.status === 'connected'
-                            : (integrationStatuses[openIntegration.id] ?? false)
-                        : false
-                }
-                canUpdate={canUpdateIntegrations}
-                settings={
-                    openIntegration
-                        ? (integrationSettings[openIntegration.id] ?? null)
-                        : null
-                }
-                importSettings={
-                    openIntegration?.id === 'jira' ? jiraSettings : null
-                }
-                githubStatus={
-                    openIntegration?.id === 'github'
-                        ? githubConnectStatus
-                        : null
-                }
-                issueTypes={issueTypes}
-                labels={labels}
-                priorities={priorities}
-                onToggle={(checked) => {
-                    if (!openIntegration) return;
-
-                    toggleIntegration(openIntegration.id, checked);
-                }}
-                onSaveWebhookUrl={(webhookUrl) => {
-                    if (!openIntegration) return;
-
-                    saveIntegrationSettings(openIntegration.id, {
-                        webhook_url: webhookUrl,
-                    });
-                }}
-                onToggleOption={(optionId, checked) => {
-                    if (!openIntegration) return;
-
-                    saveIntegrationSettings(openIntegration.id, {
-                        options: { [optionId]: checked },
-                    });
-                }}
-                onConnectImport={(credentials) => {
-                    if (!openIntegration) return;
-
-                    connectImportIntegration(openIntegration.id, credentials);
-                }}
-                onSaveImportMappings={(mappings) => {
-                    if (!openIntegration) return;
-
-                    saveImportMappings(openIntegration.id, mappings);
-                }}
-                onTriggerImport={(projectKey, syncExisting) => {
-                    if (!openIntegration) return;
-
-                    triggerImport(openIntegration.id, projectKey, syncExisting);
-                }}
-                onConnectGithub={connectGithub}
-                onDisconnectGithub={disconnectGithub}
-                onRetryGithub={retryGithub}
-                onOpenGithubRepositoryPicker={openGithubRepositoryPicker}
-                availableGithubRepositories={availableGithubRepositories}
-                isLoadingAvailableGithubRepositories={
-                    isLoadingAvailableGithubRepositories
-                }
-                onAddGithubRepository={addGithubRepository}
-                onRemoveGithubRepository={removeGithubRepository}
-                onRefreshGithubRepositories={refreshGithubRepositories}
-                isRefreshingGithubRepositories={isRefreshingGithubRepositories}
-                onClose={() => setOpenIntegrationId(null)}
-            />
         </div>
     );
 }
